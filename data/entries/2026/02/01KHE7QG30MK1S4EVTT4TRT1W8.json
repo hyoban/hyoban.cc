@@ -1,0 +1,18 @@
+{
+  "uid": "01KHE7QG30MK1S4EVTT4TRT1W8",
+  "at": "2026-02-14T22:09+08:00",
+  "end": "2026-02-14T21:48:00Z",
+  "parts": {
+    "charge": {
+      "v": 1,
+      "type": "AC",
+      "energyWh": 53600,
+      "durationMin": 459
+    }
+  },
+  "published": {
+    "at": "2026-02-14T22:09+08:00"
+  },
+  "createdAt": "2026-02-14T22:09+08:00",
+  "updatedAt": "2026-02-14T22:09+08:00"
+}

@@ -154,6 +154,7 @@ import cc.hyoban.moments.ui.components.dayCardKey
 import cc.hyoban.moments.ui.components.dayRowKey
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.components.isMediumWidth
+import cc.hyoban.moments.ui.components.isExpandedWidth
 import cc.hyoban.moments.ui.components.rememberReducedMotion
 import cc.hyoban.moments.ui.compose.NewMomentScreen
 import cc.hyoban.moments.ui.feed.DayScreen
@@ -220,6 +221,10 @@ private val ViewerSaver = listSaver<Viewer?, Any>(
 @Serializable
 data class Trip(val id: String)
 
+/** A trip's name, days and who sees it, to change. */
+@Serializable
+data class TripEdit(val id: String)
+
 /** A trip played back along its route. */
 @Serializable
 data class TripPlay(val id: String)
@@ -249,6 +254,10 @@ object FootprintSettings
 /** Who sees what by default: the books' new bills and the public spans of the footprints. */
 @Serializable
 object Items
+
+/** The settings, a row for each section. */
+@Serializable
+object SettingsHome
 
 /** A Moment to write, kept on the phone, with a bill or the [bill] alone. */
 @Serializable
@@ -513,7 +522,9 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     // foldable, the tabs stand down a side instead, as a navigation rail; a narrower window,
     // turned or not, keeps the navigation bar.
     val landscape = isLandscape()
-    val railed = isMediumWidth()
+    // The tabs stand down a rail from the expanded breakpoint on, as the design has it (L01), and
+    // on a phone on its side, too short for the floating bar; otherwise they float at the foot.
+    val railed = isExpandedWidth() || cc.hyoban.moments.ui.components.isLandscapeWindow()
     val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     // What a tab's page keeps clear of: the system's navigation beside a rail, else the
     // navigation bar, the system's navigation under it included. A page keeps its own while it
@@ -704,7 +715,11 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onBack = back,
                                     onDay = openDay,
                                     onMap = { showOnMap(MapFocus.Trip(it)) },
+                                    onEdit = { navController.navigate(TripEdit(it)) },
                                 )
+                            }
+                            screen<TripEdit>(link = "trip-edit/{id}") { entry ->
+                                cc.hyoban.moments.ui.trips.TripEditScreen(container, entry.toRoute<TripEdit>().id, onBack = back)
                             }
                             screen<TripPlay>(link = "play/{id}") { entry ->
                                 TripPlayerScreen(container, entry.toRoute<TripPlay>().id, onMoment = openMoment, onBack = back)
@@ -728,9 +743,9 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     container,
                                     onChanges = { navController.navigate(Changes) },
                                     onLedger = { navController.goTo(LedgerHome(it)) },
-                                    onSection = { navController.navigate(SettingsPage(it.name)) },
-                                    onLedgerSettings = { navController.navigate(LedgerSettings()) },
+                                    onFootprints = { showOnMap(MapFocus.Footprints) },
                                     onItems = { navController.navigate(Items) },
+                                    onSettings = { navController.navigate(SettingsHome) },
                                 )
                             }
                             screen<SettingsPage>(link = "settings/{section}") { entry ->
@@ -741,6 +756,13 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onBack = back,
                                     onFootprints = { showOnMap(MapFocus.Footprints) },
                                     onFootprintSettings = { navController.navigate(FootprintSettings) },
+                                )
+                            }
+                            screen<SettingsHome>(link = "settings-home") {
+                                cc.hyoban.moments.ui.settings.SettingsHomeScreen(
+                                    onBack = back,
+                                    onSection = { navController.navigate(SettingsPage(it.name)) },
+                                    onLedgerSettings = { navController.navigate(LedgerSettings()) },
                                 )
                             }
                             screen<Items>(link = "items") {
@@ -1170,6 +1192,7 @@ fun routeOf(link: Uri): Any? {
         "footprints" -> Atlas
         "footprint-settings" -> FootprintSettings
         "items" -> Items
+        "settings-home" -> SettingsHome
         "new" -> NewMoment()
         "edit" -> id?.let(::EditMoment)
         "changes" -> Changes

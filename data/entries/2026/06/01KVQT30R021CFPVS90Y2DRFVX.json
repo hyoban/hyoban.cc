@@ -1,0 +1,18 @@
+{
+  "uid": "01KVQT30R021CFPVS90Y2DRFVX",
+  "at": "2026-06-22T22:00+08:00",
+  "end": "2026-06-22T14:46:00Z",
+  "parts": {
+    "charge": {
+      "v": 1,
+      "type": "AC",
+      "energyWh": 5300,
+      "durationMin": 46
+    }
+  },
+  "published": {
+    "at": "2026-06-22T22:00+08:00"
+  },
+  "createdAt": "2026-06-22T22:00+08:00",
+  "updatedAt": "2026-06-22T22:00+08:00"
+}

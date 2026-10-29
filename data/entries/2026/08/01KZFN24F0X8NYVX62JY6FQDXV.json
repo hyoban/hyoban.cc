@@ -1,0 +1,18 @@
+{
+  "uid": "01KZFN24F0X8NYVX62JY6FQDXV",
+  "at": "2026-08-08T11:01+08:00",
+  "end": "2026-08-08T03:18:00Z",
+  "parts": {
+    "charge": {
+      "v": 1,
+      "type": "DC",
+      "energyWh": 28400,
+      "durationMin": 17
+    }
+  },
+  "published": {
+    "at": "2026-08-08T11:01+08:00"
+  },
+  "createdAt": "2026-08-08T11:01+08:00",
+  "updatedAt": "2026-08-08T11:01+08:00"
+}

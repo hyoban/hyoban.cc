@@ -41,7 +41,12 @@ Only publish the statistical projection created by:
 vp run zeekr:prepare .private/zeekr/captures/<capture>.json zeekr-007gt
 vp run zeekr:convert
 vp run zeekr:check
+vp run zeekr:entries --write
 ```
+
+`zeekr:entries` turns each charging session into an entry with a `charge` part under
+`data/entries` (no place, its uid made from when it started), adding only the new ones;
+send them with `vp run data:push <the new files>` after `vp run data:export`.
 
 This retains daily statistics and exact charging times, as authorized by the owner,
 and removes identities, location, account images, report links and vehicle state.

@@ -6,7 +6,7 @@ import { momentToEntry } from '@hyoban/data-spec/entry'
 import { dataRoot, readMomentRecords as readRecords } from '../../src/data/store.ts'
 
 /**
- * Every published Moment under data/moments, with its media's R2 metadata keyed by file
+ * Every published Moment under data/ (entries with words, or the first layout's Moments), with its media's R2 metadata keyed by file
  * name, the way the audit, the garbage collector and the variants generator read them.
  */
 export async function readMomentRecords() {

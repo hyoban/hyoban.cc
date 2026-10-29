@@ -20,8 +20,9 @@ const { prepareImage, prepareVideo, uploadAssets } = await fromRepository(
   'scripts/lib/moment-media.mjs',
 )
 const { ulid } = await fromRepository('scripts/lib/ulid.mjs')
-const { getMomentFile, momentRecordSchema } = await fromRepository(
-  'packages/data-spec/src/index.ts',
+const { momentRecordSchema } = await fromRepository('packages/data-spec/src/index.ts')
+const { entrySchema, getEntryFile, momentToEntry } = await fromRepository(
+  'packages/data-spec/src/entry.ts',
 )
 const { readMomentRecords } = await fromRepository('src/data/store.ts')
 const config = JSON.parse(
@@ -104,7 +105,7 @@ try {
     ),
   )
 
-  /** Writes the Moment's record, or leaves an identical one from an interrupted run alone. */
+  /** Writes the Moment's entry, or leaves an identical one from an interrupted run alone. */
   async function writeRecord(media) {
     const now = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')
     const record = momentRecordSchema.parse({
@@ -130,10 +131,12 @@ try {
       return { action: 'reused', file: existing.file }
     }
 
-    const file = getMomentFile(record)
+    // Written in the second shape, an entry with its words and photos as parts.
+    const entry = entrySchema.parse(momentToEntry(record))
+    const file = getEntryFile(entry)
     const path = join(repositoryPath, 'data', file)
     await mkdir(dirname(path), { recursive: true })
-    await writeFile(path, `${JSON.stringify(record, null, 2)}\n`)
+    await writeFile(path, `${JSON.stringify(momentToEntry(record), null, 2)}\n`)
     return { action: 'created', file }
   }
 } finally {

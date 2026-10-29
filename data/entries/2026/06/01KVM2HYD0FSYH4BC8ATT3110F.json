@@ -1,0 +1,18 @@
+{
+  "uid": "01KVM2HYD0FSYH4BC8ATT3110F",
+  "at": "2026-06-21T11:11+08:00",
+  "end": "2026-06-21T03:47:00Z",
+  "parts": {
+    "charge": {
+      "v": 1,
+      "type": "DC",
+      "energyWh": 17400,
+      "durationMin": 36
+    }
+  },
+  "published": {
+    "at": "2026-06-21T11:11+08:00"
+  },
+  "createdAt": "2026-06-21T11:11+08:00",
+  "updatedAt": "2026-06-21T11:11+08:00"
+}

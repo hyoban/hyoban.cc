@@ -178,7 +178,7 @@ private fun MapContent(
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
-    val routes by container.routes.routes.collectAsStateWithLifecycle()
+    val routes by container.tripRoutes.collectAsStateWithLifecycle()
     val byPlace = remember(moments) {
         moments.flatMap { moment -> moment.places.distinct().map { it to moment } }.groupBy({ it.first }, { it.second })
     }
@@ -266,8 +266,8 @@ private fun MapContent(
         }
     }
 
-    // Whether the tabs stand down a rail, as from the medium breakpoint.
-    val railed = isMediumWidth()
+    // Whether the tabs stand down a rail, as from the expanded breakpoint.
+    val railed = cc.hyoban.moments.ui.components.isExpandedWidth() || cc.hyoban.moments.ui.components.isLandscapeWindow()
 
     Box(Modifier.fillMaxSize()) {
         PlacesMap(

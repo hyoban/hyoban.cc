@@ -106,7 +106,12 @@ a capture's statistical projection and register its hash:
 vp run zeekr:prepare .private/zeekr/captures/<capture>.json zeekr-007gt
 vp run zeekr:convert
 vp run zeekr:check
+vp run zeekr:entries --write
 ```
+
+`zeekr:entries` turns each charging session into an entry with a `charge` part under
+`data/entries` (no place, its uid made from when it started), adding only the new ones;
+send them with `vp run data:push <the new files>` after `vp run data:export`.
 
 Preparation only retains known statistical fields and screen text; unexpected text
 inside retained fields causes an error. Conversion and checking refuse unredacted

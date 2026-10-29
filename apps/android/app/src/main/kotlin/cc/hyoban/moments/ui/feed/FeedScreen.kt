@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import androidx.compose.foundation.layout.height
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.components.restingElevation
 import cc.hyoban.moments.ui.components.floatingElevation
@@ -439,12 +440,40 @@ fun DayScreen(
         // no pill heads them, and the trip goes unsaid when all of them were on it.
         val oneTrip = trip != null && moments.all { tripOf(it, trips)?.id == trip.id }
         val ledgerNav = LocalLedgerNav.current
+        // The day's own footprints, private and the phone's, read once for the page.
+        val track by androidx.compose.runtime.produceState<List<cc.hyoban.moments.footprints.TrackPoint>>(emptyList(), date) {
+            value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                container.footprints.points(cc.hyoban.moments.footprints.TrackSelection(day = date))
+            }
+        }
         MomentFeed(moments, places, trips, container.mediaUrls, onMoment, months = false, showTrip = !oneTrip, dayPills = false) {
+            if (track.size > 1) item("track") { DayTrack(track, moments, places) }
             // What the day cost, from the ledger kept on the phone.
             item("spending") {
                 SpendingCard(container, SpendingOf.Day(date), onOpen = { ledgerNav?.list(LedgerFilter(day = date)) }, Modifier.padding(top = Space.s, bottom = Space.s))
             }
         }
+    }
+}
+
+/**
+ * The day's track on a map, its Moments as dots on it, and under it how far it went and for how
+ * long it moved, in figures.
+ */
+@Composable
+private fun DayTrack(points: List<cc.hyoban.moments.footprints.TrackPoint>, moments: List<cc.hyoban.moments.data.spec.MomentRecord>, places: Map<String, cc.hyoban.moments.data.spec.Place>) {
+    val stretches = remember(points) {
+        cc.hyoban.moments.footprints.trackSegments(points, budget = 2000).filter { it.size > 1 }.map { stretch -> stretch.map { it.longitude to it.latitude } }
+    }
+    val stats = remember(points) { cc.hyoban.moments.footprints.trackStats(points) }
+    val dots = remember(moments, places) { moments.flatMap { it.places }.mapNotNull { places[it] }.map { org.maplibre.android.geometry.LatLng(it.latitude, it.longitude) } }
+    Column(Modifier.padding(horizontal = Space.gutter).padding(top = Space.s, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+        cc.hyoban.moments.ui.map.DayTrackMap(stretches, dots, Modifier.fillMaxWidth().height(220.dp).clip(AppTheme.shapes.large).testTag("day_track"))
+        Text(
+            stringResource(R.string.day_track_stats, stats.metres / 1000, stats.recordedMillis / 60_000),
+            style = AppTheme.typography.numCaption,
+            color = AppTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

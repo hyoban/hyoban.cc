@@ -143,6 +143,49 @@ object Entries {
         note?.takeIf { it.isNotBlank() }?.let { put("note", it) }
     }
 
+    /**
+     * A trip as its collection, as the spec's `tripToCollection` makes it (its waypoints, marks
+     * of their own, aside): [base] when the API already has it in the second shape.
+     */
+    fun collectionOf(trip: TripRecord, base: JsonObject? = null): JsonObject = base ?: buildJsonObject {
+        put("uid", collectionUid(trip))
+        put("slug", trip.id)
+        put("kind", "trip")
+        put("title", trip.title)
+        put("span", buildJsonObject { put("start", trip.start); put("end", trip.end) })
+        put("include", JsonArray(emptyList()))
+        put("exclude", JsonArray(emptyList()))
+        put("covers", JsonArray(trip.covers.map { buildJsonObject { put("entry", it.moment); put("media", it.media) } }))
+        if (trip.straightLegs.isNotEmpty() || trip.sameWayBack.isNotEmpty()) {
+            val record = Spec.json.encodeToJsonElement(TripRecord.serializer(), trip).jsonObject
+            put("route", buildJsonObject {
+                put("straightLegs", record.getValue("straightLegs"))
+                put("sameWayBack", record.getValue("sameWayBack"))
+            })
+        }
+        trip.music?.let { put("music", it) }
+        trip.note?.let { put("note", it) }
+        put("createdAt", trip.createdAt)
+        put("updatedAt", trip.updatedAt)
+    }
+
+    /** A collection with its name, its days and who sees it changed, stamped [now]. */
+    fun editCollection(collection: JsonObject, title: String, start: String, end: String, visibility: Visibility, now: String): JsonObject =
+        JsonObject(
+            collection + mapOf(
+                "title" to JsonPrimitive(title),
+                "span" to buildJsonObject { put("start", start); put("end", end) },
+                "updatedAt" to JsonPrimitive(now),
+            ) - "visibility" + (if (visibility == Visibility.PRIVATE) mapOf("visibility" to JsonPrimitive("private")) else emptyMap()),
+        )
+
+    /** Whether a collection is private by its own say. */
+    fun isPrivate(collection: JsonObject): Boolean = collection.visibility() == Visibility.PRIVATE
+
+    /** What a collection is known by: its slug, else its uid in lowercase, as the spec's `getCollectionKey`. */
+    fun collectionKey(collection: JsonObject): String =
+        (collection["slug"] as? JsonPrimitive)?.contentOrNull ?: collection.string("uid").lowercase()
+
     /** A trip's collection uid, as the spec's migration named it: stable from its creation and id. */
     fun collectionUid(trip: TripRecord): String = stableUlid(trip.createdAt, "trip:${trip.id}")
 

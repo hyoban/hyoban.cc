@@ -75,6 +75,12 @@ fun isCompactHeight(): Boolean = with(LocalDensity.current) { LocalWindowInfo.cu
 
 private val MEDIUM_WIDTH = 600.dp
 private val EXPANDED_WIDTH = 840.dp
+
+/** Whether the window is wider than it is tall, a phone on its side. */
+@Composable
+@ReadOnlyComposable
+fun isLandscapeWindow(): Boolean =
+    androidx.compose.ui.platform.LocalConfiguration.current.let { it.screenWidthDp > it.screenHeightDp }
 private val COMPACT_HEIGHT_BELOW = 480.dp
 
 /** Whether the page is wider than it is tall. */

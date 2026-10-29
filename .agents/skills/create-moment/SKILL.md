@@ -5,8 +5,9 @@ description: Create a hyoban.cc Moment from exact user text and media. Use when 
 
 # Create Moment
 
-Create one Moment as a record under `data/moments` (the shape is in
-`packages/data-spec`), then push it into the API, which holds the records;
+Create one Moment as an entry under `data/entries` (the shape is in
+`packages/data-spec/src/entry.ts`: its words in `parts.text.text`, its photos in
+`parts.media.items`, its place in `place`), then push it into the API, which holds the records;
 `data/` is their backup. Never deploy the site or publish the Moment to a social
 network. Uploading its media to the configured R2 bucket is part of preparing
 the local Moment.
@@ -14,7 +15,7 @@ the local Moment.
 1. Run `pnpm data:export` so `data/` has what the API has; it needs
    `MOMENTS_API_TOKEN` in `.env`, and stops if `data/` has uncommitted changes
    (ask the user about those). Then inspect `packages/data-spec`,
-   `data/places.json`, and a recent record under `data/moments`.
+   `data/places.json`, and a recent entry under `data/entries`.
 2. Preserve the user's text exactly, including errors, punctuation, paragraphs, and line breaks.
 3. Use one `occurredAt` value for when the Moment happened. Use an ISO timestamp
    with an explicit offset when the time is known, otherwise use `YYYY-MM-DD`.
@@ -33,14 +34,14 @@ node .agents/skills/create-moment/scripts/prepare-media.mjs --repo <repo> --occu
 The command optimizes images and responsive variants, transcodes videos to
 web-compatible MP4 with a poster, names each file by its media item's uid,
 uploads or safely reuses and verifies them under `moments/<uid>/` in R2, and
-then writes the Moment's record under `data/moments` with every media item
-published, its places set, and empty `text` and `alt`. It prints the record's
+then writes the Moment's entry under `data/entries` with every media item
+published, its place set, and empty words and `alt`. It prints the record's
 file and uid. To resume an interrupted run, rerun it with `--uid <uid>` from
 the record it wrote.
 
-5. Inspect each source media item and replace every empty `alt` in the record
-   with concise Chinese alt text. Visible new Moments must never use an empty alt.
-6. Set `text` in the record with `apply_patch`. Leave the other fields as the
+5. Inspect each source media item and replace every empty `alt` in
+   `parts.media.items` with concise Chinese alt text. Visible new Moments must never use an empty alt.
+6. Set `parts.text.text` in the entry with `apply_patch`. Leave the other fields as the
    command wrote them; never edit `uid`, `published` or a media item's
    `published` by hand.
 7. Compare the saved text with the user's text, then run `pnpm test`, `pnpm check`, and `pnpm build`.
@@ -48,10 +49,12 @@ the record it wrote.
    changed:
 
 ```bash
-pnpm data:push data/moments/<YYYY>/<MM>/<uid>.json [data/trips/<id>.json]...
+pnpm data:push data/entries/<YYYY>/<MM>/<uid>.json [data/collections/<slug>.json]...
 ```
 
-Add `--place <id>` for a place you moved that the record doesn't name. Until
+Add `--place <id>` for a place you moved that the entry doesn't name. A trip is a
+collection: its waypoints are entries with a `place` and no parts, its legs not driven in
+`route.straightLegs`; push a collection with the entries it changed. Until
 it is pushed the Moment isn't on the site, and the next backup would remove
 it from `data/`.
 
@@ -96,10 +99,10 @@ and regions keep an approximate centre.
 - Trip routes are kept by coordinates in the API, which fetches the missing ones
   after each write and after `pnpm data:push`. After moving a place or locating a
   Moment inside a trip, run `pnpm trips:weather`. If the new place now ends a
-  train, plane, or ferry leg, update that trip's `straightLegs` in
-  `data/trips/<id>.json`, or the leg turns into a drive; a new train endpoint
+  train, plane, or ferry leg, update that trip's `route.straightLegs` in
+  `data/collections/<slug>.json`, or the leg turns into a drive; a new train endpoint
   also needs its `station` in `data/places.json`.
-- Changing an existing Moment's record, even only its `places`, makes CI
+- Changing an existing Moment's entry, even only its `place`, makes CI
   require non-empty alt text on its visible media, so describe those images too.
 
 Only perform Git operations when requested. Commit directly on `main`; do not create a branch.

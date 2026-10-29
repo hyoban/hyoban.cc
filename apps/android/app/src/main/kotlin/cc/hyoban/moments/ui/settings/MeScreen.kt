@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.settings
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.height
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -61,9 +63,9 @@ fun MeScreen(
     onChanges: () -> Unit,
     /** Opens the ledger on its tab: 0 the bills, 1 the sums, 2 the accounts. */
     onLedger: (Int) -> Unit,
-    onSection: (SettingsSection) -> Unit,
-    onLedgerSettings: () -> Unit,
+    onFootprints: () -> Unit,
     onItems: () -> Unit,
+    onSettings: () -> Unit,
 ) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     TabPage(stringResource(R.string.tab_me), tab = Preferences) {
@@ -75,17 +77,43 @@ fun MeScreen(
                     .padding(horizontal = columns.margin)
                     .padding(bottom = LocalBottomClearance.current + Space.xl),
             ) {
-                PublishCard(pending.size, onChanges)
-                LedgerGroup(container, onLedger)
+                if (pending.size > 0) PublishCard(pending.size, onChanges)
+                MonthSpending(container) { onLedger(1) }
                 SegmentedGroup(
-                    stringResource(R.string.title_settings),
+                    null,
+                    null,
+                    listOf(
+                        { shapes -> SectionRow(AppIcons.Receipt, stringResource(R.string.me_ledger), "me_ledger", shapes) { onLedger(0) } },
+                        { shapes -> SectionRow(AppIcons.Footprints, stringResource(R.string.footprints_title), "me_footprints", shapes, onClick = onFootprints) },
+                        { shapes -> SectionRow(AppIcons.Eye, stringResource(R.string.me_items), "settings_items", shapes, onClick = onItems) },
+                        { shapes -> SectionRow(AppIcons.Settings, stringResource(R.string.title_settings), "me_settings", shapes, onClick = onSettings) },
+                    ),
+                )
+            }
+        }
+    }
+}
+
+/** The settings, a row for each section opening its page: what 我 held before its four rows. */
+@Composable
+fun SettingsHomeScreen(onBack: () -> Unit, onSection: (SettingsSection) -> Unit, onLedgerSettings: () -> Unit) {
+    cc.hyoban.moments.ui.components.SubPage(stringResource(R.string.title_settings), onBack) {
+        PageWidth(maxColumns = 1) { columns ->
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = columns.margin)
+                    .padding(bottom = Space.xl),
+            ) {
+                SegmentedGroup(
+                    null,
                     null,
                     listOf(
                         { shapes -> SectionRow(AppIcons.Palette, stringResource(R.string.section_theme_mode), "settings_appearance", shapes) { onSection(SettingsSection.APPEARANCE) } },
                         { shapes -> SectionRow(AppIcons.CloudSync, stringResource(R.string.settings_moments_data), "settings_moments", shapes) { onSection(SettingsSection.MOMENTS) } },
                         { shapes -> SectionRow(AppIcons.Map, stringResource(R.string.settings_map_footprints), "settings_map", shapes) { onSection(SettingsSection.MAP) } },
                         { shapes -> SectionRow(AppIcons.Receipt, stringResource(R.string.tab_ledger), "settings_ledger", shapes, onClick = onLedgerSettings) },
-                        { shapes -> SectionRow(AppIcons.Eye, stringResource(R.string.me_items), "settings_items", shapes, onClick = onItems) },
                         { shapes -> SectionRow(AppIcons.Info, stringResource(R.string.settings_about), "settings_about", shapes) { onSection(SettingsSection.ABOUT) } },
                     ),
                 )
@@ -95,8 +123,8 @@ fun MeScreen(
 }
 
 /**
- * The changes waiting on the phone, on the surface with its hairline: how many, and the
- * page's one ink button to look them over and publish; with none, a line saying so.
+ * The changes waiting on the phone, the page's one block on the accent's soft tint, only while
+ * there are any: how many, and the page's ink button to look them over and publish.
  */
 @Composable
 private fun PublishCard(count: Int, onChanges: () -> Unit) {
@@ -107,68 +135,68 @@ private fun PublishCard(count: Int, onChanges: () -> Unit) {
             .padding(top = Space.s)
             .fillMaxWidth()
             .clip(shape)
-            .background(SurfaceLevel.Card.fill())
-            .border(cardBorder(), shape)
+            .background(tokens.accentSoft)
             .clickable(onClick = onChanges)
             .padding(Space.l)
             .testTag("settings_changes"),
         verticalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
         Text(
-            if (count > 0) pluralStringResource(R.plurals.count_changes, count, count) else stringResource(R.string.me_pending_none),
+            pluralStringResource(R.plurals.count_changes, count, count),
             style = AppTheme.typography.titleSmall,
             modifier = Modifier.semantics { heading() },
         )
-        Text(
-            stringResource(if (count > 0) R.string.me_pending_note else R.string.me_synced_note),
-            style = AppTheme.typography.body,
-            color = AppTheme.colorScheme.onSurfaceVariant,
-        )
-        if (count > 0) {
-            Button(
-                onClick = onChanges,
-                modifier = Modifier.padding(top = Space.m).testTag("review_publish"),
-            ) { Text(stringResource(R.string.action_review_publish)) }
+        Text(stringResource(R.string.me_pending_note), style = AppTheme.typography.body, color = AppTheme.colorScheme.onSurfaceVariant)
+        Button(onClick = onChanges, modifier = Modifier.padding(top = Space.m).testTag("review_publish")) {
+            Text(stringResource(R.string.action_review_publish))
         }
     }
 }
 
 /**
- * The ledger's month at the head of its group, what the chosen book spent this month large and
- * what it earned under it, then the rows into its bills, sums and accounts; with no book yet,
- * one row to start it.
+ * This month's spending, straight on the page: the amount large in figures, and a thin bar for
+ * each day, the days still to come in grey. Tapped, the ledger's sums.
  */
 @Composable
-private fun LedgerGroup(container: AppContainer, onLedger: (Int) -> Unit) {
+private fun MonthSpending(container: AppContainer, onOpen: () -> Unit) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val book = ledger.book
-    val currency = book?.currency ?: "CNY"
+    val book = ledger.book ?: return
+    val currency = book.currency
+    val today = LocalDate.now()
+    val start = today.withDayOfMonth(1)
     val month = remember(ledger) {
-        val start = LocalDate.now().withDayOfMonth(1)
-        book?.let { summarize(ledger.entries.filter { it.txn.book in ledger.shownBooks }, ledger.rates, currency, start, start.plusMonths(1)) }
+        summarize(ledger.entries.filter { it.txn.book in ledger.shownBooks }, ledger.rates, currency, start, start.plusMonths(1))
     }
-    val rows = if (month == null) {
-        listOf<Segment>({ shapes -> SectionRow(AppIcons.Receipt, stringResource(R.string.me_start_ledger), "ledger_start", shapes, stringResource(R.string.me_start_ledger_note)) { onLedger(0) } })
-    } else {
-        listOf(
-            boxed {
-                Column(
-                    Modifier.fillMaxWidth().clickable { onLedger(1) }.padding(Space.l).testTag("ledger_month"),
-                    verticalArrangement = Arrangement.spacedBy(Space.xs),
-                ) {
-                    Text(stringResource(R.string.me_month_expense), style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant)
-                    Text(money(month.expense, currency), style = AppTheme.typography.numDisplay)
-                    Row(horizontalArrangement = Arrangement.spacedBy(Space.l)) {
-                        Text(stringResource(R.string.ledger_income_short, money(month.income, currency)), style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            },
-            { shapes -> SectionRow(AppIcons.Receipt, stringResource(R.string.ledger_tab_bills), "ledger_bills_row", shapes) { onLedger(0) } },
-            { shapes -> SectionRow(AppIcons.Chart, stringResource(R.string.ledger_tab_stats), "ledger_stats_row", shapes) { onLedger(1) } },
-            { shapes -> SectionRow(AppIcons.Bank, stringResource(R.string.me_assets), "ledger_assets_row", shapes) { onLedger(2) } },
-        )
+    val accent = tokens.accent
+    val future = tokens.border
+    Column(
+        Modifier
+            .padding(horizontal = Space.gutter)
+            .padding(top = Space.xl, bottom = Space.s)
+            .fillMaxWidth()
+            .clickable(onClickLabel = stringResource(R.string.ledger_tab_stats), onClick = onOpen)
+            .testTag("ledger_month"),
+        verticalArrangement = Arrangement.spacedBy(Space.xs),
+    ) {
+        Text(stringResource(R.string.me_month_expense), style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
+        Text(money(month.expense, currency), style = AppTheme.typography.numDisplay)
+        val days = start.lengthOfMonth()
+        val most = (month.expenseByDay.values.maxOrNull() ?: 0L).coerceAtLeast(1L)
+        androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(40.dp).padding(top = Space.s)) {
+            val slot = size.width / days
+            val bar = slot * 0.5f
+            for (day in 1..days) {
+                val date = start.withDayOfMonth(day)
+                val spent = month.expenseByDay[date] ?: 0L
+                val height = if (date > today) 2.dp.toPx() else maxOf(2.dp.toPx(), size.height * spent / most)
+                drawRect(
+                    if (date > today || spent == 0L) future else accent,
+                    topLeft = androidx.compose.ui.geometry.Offset(slot * (day - 1) + (slot - bar) / 2, size.height - height),
+                    size = androidx.compose.ui.geometry.Size(bar, height),
+                )
+            }
+        }
     }
-    SegmentedGroup(stringResource(R.string.tab_ledger), null, rows)
 }
 
 /** A row opening a page: its icon, its name, what it holds under it, an arrow. */

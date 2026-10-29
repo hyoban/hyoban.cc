@@ -386,6 +386,24 @@ it is offered when its page is next opened. It only reads: no tap, no text, noth
 page kept or sent. `ledger/Payments` reads the page's words, with fixtures in `PaymentsTest`
 taken from `uiautomator dump`; `ledger/AutoBill` keeps the switch and posts the notification.
 
+## Pages after the design system
+
+我 holds the changes waiting (a block on the accent's soft tint, only while there are any),
+this month's spending in figures with a bar for each day, and four rows: 账单与资产, 足迹,
+记录项与公开 and 设置 (`moments://settings-home`, a row for each section). The timeline and the
+ledger's bills keep each day in a rail down the left, its day of the month and weekday, the
+ledger's with what it spent; a month's heading says how many Moments it had and what it spent.
+A Moment's page lists its parts row by row, a charge among them, and ends with whether it is
+public and which parts would publish; a bill's page has its 公开 switch. Writing a Moment, the
+加一项 row opens 美食 and 账单. A day's page starts with that day's footprints on a map, the
+stretches solid and the gaps between them dotted, and how far it went. A trip's page has 回放旅程
+as its ink button, its distance, charging and spending in figures, and in its bar 编辑旅程
+(`moments://trip-edit/<id>`): its name, days and whether it is public, kept on the phone and
+published as a collection. A trip with a public span of footprints is drawn and played back
+along it. The app reads the Moments and trips from `/v1` and, beside them, what only the second
+shape has from `/v2/changes` (charges, public bills and marks, collections, public tracks).
+The tabs stand down a rail on a window 840dp wide or more and on a phone on its side.
+
 ## Local footprints
 
 The footprints are private. A trip's page has 公开这段旅程的轨迹: on, a span following the

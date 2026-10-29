@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -72,6 +73,32 @@ class AppContainer(context: Context) {
     val placeSearch = PlaceSearch(BuildConfig.PLACE_SEARCH_URL)
     /** The trips' routes along the roads, from the API. */
     val routes = TripRoutes({ settings.apiUrl.value }, File(context.filesDir, "routes.json"))
+
+    /**
+     * Each trip's route as the screens draw and play it: the footprints recorded on it where a
+     * span following the trip is public (each unbroken stretch solid, the gaps between dashed,
+     * never guessed), else the route along the roads.
+     */
+    val tripRoutes: kotlinx.coroutines.flow.StateFlow<Map<String, List<cc.hyoban.moments.data.trips.RouteSegment>>> =
+        kotlinx.coroutines.flow.combine(routes.routes, repository.second, repository.trips) { roads, second, trips ->
+            roads + trips.mapNotNull { trip ->
+                val uid = cc.hyoban.moments.data.spec.Entries.collectionUid(trip)
+                val track = second.tracks.values.firstOrNull { (it["collection"] as? kotlinx.serialization.json.JsonPrimitive)?.content == uid }
+                    ?: return@mapNotNull null
+                val stretches = (track["segments"] as? kotlinx.serialization.json.JsonArray).orEmpty().mapNotNull { segment ->
+                    (segment as? kotlinx.serialization.json.JsonObject)?.get("coordinates")?.let { it as? kotlinx.serialization.json.JsonArray }
+                        ?.mapNotNull { point ->
+                            val pair = point as? kotlinx.serialization.json.JsonArray ?: return@mapNotNull null
+                            val lng = (pair.getOrNull(0) as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()
+                            val lat = (pair.getOrNull(1) as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()
+                            if (lng != null && lat != null) lng to lat else null
+                        }?.takeIf { it.size > 1 }
+                }
+                if (stretches.isEmpty()) null
+                else trip.id to (stretches.map { cc.hyoban.moments.data.trips.RouteSegment(it, straight = false) } +
+                    stretches.zipWithNext { a, b -> cc.hyoban.moments.data.trips.RouteSegment(listOf(a.last(), b.first()), straight = true) })
+            }
+        }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
 
     /** Where shared photos wait for a Moment; copied again into its own store when it is saved. */
     private val sharedDirectory = File(context.cacheDir, "shared")
