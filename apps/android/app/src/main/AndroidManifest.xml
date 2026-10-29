@@ -70,6 +70,7 @@
              A playing video goes on in a picture-in-picture window when the app is left. -->
         <activity
             android:name=".MainActivity"
+            android:windowSoftInputMode="adjustResize"
             android:supportsPictureInPicture="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|density"
             android:launchMode="singleTop"
@@ -94,6 +95,7 @@
              icon closes it too and shows the app as it was rather than the page. -->
         <activity
             android:name=".LinkActivity"
+            android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|density"
             android:finishOnTaskLaunch="true"
             android:launchMode="singleTop"

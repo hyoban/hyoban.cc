@@ -108,6 +108,7 @@
     <string name="label_publish_all">Publish all</string>
     <string name="action_search">Search</string>
     <string name="action_clear">Clear</string>
+    <string name="action_backspace">Backspace</string>
     <string name="action_copy_text">Copy text</string>
     <string name="message_text_copied">Text copied</string>
     <string name="action_view_photo">View photo</string>
@@ -651,6 +652,8 @@
     <string name="ledger_link_trip">Trip</string>
     <string name="ledger_none">None</string>
     <string name="ledger_choose">Choose</string>
+    <string name="ledger_choose_account">Choose account</string>
+    <string name="ledger_note_hint">Add a note</string>
     <string name="ledger_split">Pay from several accounts</string>
     <string name="ledger_add_payer">Add account</string>
     <string name="ledger_split_sum">Total %1$s, should be %2$s</string>

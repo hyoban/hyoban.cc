@@ -156,6 +156,8 @@ import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.data.spec.showcase
 import cc.hyoban.moments.ui.components.LiveBadge
 import cc.hyoban.moments.ui.ledger.BillFields
+import cc.hyoban.moments.ui.ledger.BillKeypad
+import cc.hyoban.moments.ui.ledger.keypadFits
 import cc.hyoban.moments.ui.ledger.EnsureBook
 import cc.hyoban.moments.ui.ledger.LedgerEntryArgs
 import cc.hyoban.moments.ui.ledger.mealCategory
@@ -437,6 +439,8 @@ fun NewMomentScreen(
     LaunchedEffect(written) { if (written) emptyError = false }
     // A full-screen dialog, as Material 3 has a task with fields to fill: an X to leave, and
     // Save, never greyed out, telling what is missing rather than refusing to be tapped.
+    // A bill alone is typed on the keypad, pinned under its fields, as iCost has it.
+    val keypad = withBill && !withMoment && keypadFits()
     Box(Modifier.fillMaxSize()) {
         SubPage(
             stringResource(
@@ -450,6 +454,7 @@ fun NewMomentScreen(
             onBack = leave,
             modifier = Modifier.background(AppColors.page),
             close = true,
+            small = keypad,
             actions = {
                 TextButton(
                     shapes = ButtonDefaults.shapes(),
@@ -466,21 +471,19 @@ fun NewMomentScreen(
             },
         ) {
             PageWidth(maxColumns = 1) { columns ->
+                Column(Modifier.fillMaxSize().imePadding().navigationBarsPadding().padding(horizontal = columns.margin)) {
                 Column(
                     Modifier
-                        .fillMaxSize()
+                        .weight(1f)
                         .verticalScroll(rememberScrollState())
-                        .imePadding()
-                        .navigationBarsPadding()
-                        .padding(horizontal = columns.margin)
-                        .padding(bottom = Space.xl),
+                        .padding(bottom = if (keypad) Space.s else Space.xl),
                 ) {
                     val focus = remember { FocusRequester() }
                     // A new Moment starts at its words; one being changed waits to be told what to change.
                     LaunchedEffect(Unit) { if (original == null && withMoment) focus.requestFocus() }
                     if (original == null) {
                         // What is written: the Moment, a bill, or both.
-                        MultiChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s)) {
+                        MultiChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = if (keypad) Space.xs else Space.s)) {
                             SegmentedButton(
                                 checked = withMoment,
                                 onCheckedChange = { if (withBill) withMoment = it },
@@ -609,7 +612,7 @@ fun NewMomentScreen(
                     }
                     if (withBill) {
                         if (withMoment) Caption(stringResource(R.string.section_bill))
-                        BillFields(container, ledger, bill, billAt, null, null, withMoment = withMoment)
+                        BillFields(container, ledger, bill, billAt, null, null, withMoment = withMoment, keypad = keypad)
                     }
                     // Deleting is rare, so it waits down here rather than over the Moment; its snackbar can undo it.
                     if (original != null && publishing == null) {
@@ -635,6 +638,8 @@ fun NewMomentScreen(
                             },
                         )
                     }
+                }
+                if (keypad) BillKeypad(container, ledger, bill, billAt, null, onSave = { if (!saving) save() })
                 }
             }
         }

@@ -1,6 +1,36 @@
 package cc.hyoban.moments.ui.ledger
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.automirrored.rounded.Backspace
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.InputChipDefaults
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +50,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.CallSplit
 import androidx.compose.material.icons.automirrored.rounded.Label
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.automirrored.rounded.Notes
@@ -31,7 +60,7 @@ import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Block
-import androidx.compose.material.icons.rounded.RequestQuote
+import androidx.compose.material.icons.rounded.Sell
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ButtonDefaults
@@ -108,7 +137,6 @@ import cc.hyoban.moments.ui.compose.TimeDialog
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.settings.SegmentedGroup
-import cc.hyoban.moments.ui.settings.SwitchRow
 import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.Space
 import java.time.Instant
@@ -177,19 +205,24 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
         }
     }
 
+    val keypad = keypadFits()
     SubPage(
         title,
         nav.back,
         close = true,
+        small = keypad,
         actions = { TextButton(shapes = ButtonDefaults.shapes(), onClick = ::save, modifier = Modifier.testTag("save_bill")) { Text(stringResource(R.string.action_save)) } },
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).imePadding().navigationBarsPadding()
-                    .padding(start = columns.margin, end = columns.margin, bottom = Space.xl)
+                Modifier.fillMaxSize().imePadding().navigationBarsPadding()
+                    .padding(start = columns.margin, end = columns.margin)
                     .semantics { testTagsAsResourceId = true },
             ) {
-                BillFields(container, ledger, draft, at, fixedKind, related)
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = if (keypad) Space.s else Space.xl)) {
+                    BillFields(container, ledger, draft, at, fixedKind, related, keypad = keypad)
+                }
+                if (keypad) BillKeypad(container, ledger, draft, at, fixedKind, onSave = ::save)
             }
         }
     }
@@ -251,6 +284,11 @@ internal class BillDraft(
     /** The trip under way that day, unless one was chosen or taken away. */
     var tripChosen by mutableStateOf(tripChosen)
     var trip by mutableStateOf(trip)
+
+    /** What is open over the form, a sheet or a dialog, wherever it was opened from; not kept as the phone turns. */
+    var sheet by mutableStateOf<Sheet?>(null)
+    var timeOpen by mutableStateOf(false)
+    var discountOpen by mutableStateOf(false)
 
     val splitList: List<Pair<String, String>>
         get() = splits.lines().mapNotNull { line ->
@@ -399,7 +437,8 @@ internal fun mealCategory(ledger: Ledger): String? = ledger.txns.asSequence()
 
 /**
  * The bill's fields, at [at]: on a page of its own, or under a Moment being written
- * ([withMoment]), whose time, place and self the bill takes, leaving out their rows.
+ * ([withMoment]), whose time, place and self the bill takes, leaving out their chips. With
+ * [keypad] the amount, time and note are left to [BillKeypad], pinned under them.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
 @Composable
@@ -411,6 +450,7 @@ internal fun BillFields(
     fixedKind: TxnKind?,
     related: Txn?,
     withMoment: Boolean = false,
+    keypad: Boolean = false,
 ) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -426,13 +466,14 @@ internal fun BillFields(
     val splitList = draft.splitList
     val trip = draft.tripOn(at, trips)
 
-    var sheet by remember { mutableStateOf<Sheet?>(null) }
-    var timeOpen by remember { mutableStateOf(false) }
+    var sheet by draft::sheet
+    var timeOpen by draft::timeOpen
+    var discountOpen by draft::discountOpen
     var addingCategory by remember { mutableStateOf<String?>(null) }
 
     if (fixedKind == null) {
         val kinds = listOf(TxnKind.EXPENSE, TxnKind.INCOME, TxnKind.TRANSFER)
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s)) {
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = if (keypad) Space.xs else Space.s)) {
             kinds.forEachIndexed { index, entry ->
                 SegmentedButton(
                     selected = kind == entry,
@@ -462,8 +503,8 @@ internal fun BillFields(
             }
         }
     }
-    // The amount, large, in its currency, which a tap on its code changes.
-    Box(Modifier.padding(horizontal = Space.gutter, vertical = Space.s)) {
+    // The amount, large, in its currency, which a tap on its code changes; with the keypad it is over the keys instead.
+    if (!keypad) Box(Modifier.padding(horizontal = Space.gutter, vertical = Space.s)) {
         var currencies by remember { mutableStateOf(false) }
         OutlinedTextField(
             value = draft.amount,
@@ -487,7 +528,7 @@ internal fun BillFields(
         }
     }
     if (kind == TxnKind.EXPENSE || kind == TxnKind.INCOME) {
-        CategoryChips(
+        CategoryGrid(
             ledger,
             bookId,
             if (kind == TxnKind.INCOME) CategoryType.INCOME else CategoryType.EXPENSE,
@@ -497,29 +538,12 @@ internal fun BillFields(
         )
     }
 
-    val rows = buildList<@Composable (androidx.compose.material3.ListItemShapes) -> Unit> {
-        if (kind == TxnKind.TRANSFER) {
-            add { shapes -> PickRow(shapes, accountKindIconOf(ledger, account), stringResource(R.string.ledger_from_account), accountName(ledger, account), "from_account") { sheet = Sheet.From } }
-            add { shapes -> PickRow(shapes, accountKindIconOf(ledger, draft.toAccount), stringResource(R.string.ledger_to_account), accountName(ledger, draft.toAccount), "to_account") { sheet = Sheet.To } }
-        } else if (!draft.splitting) {
-            add { shapes -> PickRow(shapes, accountKindIconOf(ledger, account), stringResource(R.string.ledger_account), accountName(ledger, account), "account") { sheet = Sheet.Account } }
-        }
-        if (!withMoment) {
-            add { shapes ->
-                PickRow(shapes, Icons.Rounded.Event, stringResource(R.string.ledger_time), formatDay(at.toLocalDate().toString()) + " " + at.format(DateTimeFormatter.ofPattern("HH:mm")), "time") { timeOpen = true }
-            }
-        }
-        if (ledger.books.size > 1 && fixedKind == null) {
-            add { shapes -> PickRow(shapes, Icons.AutoMirrored.Rounded.MenuBook, stringResource(R.string.ledger_book), bookRecord?.name.orEmpty(), "book") { sheet = Sheet.Book } }
-        }
-    }
-    SegmentedGroup(null, null, rows)
-
-    if (draft.splitting && kind != TxnKind.TRANSFER) {
-        SplitEditor(ledger, splitList, shownCurrency, cents, onChange = { list -> draft.splits = list.joinToString("\n") { "${it.first}\t${it.second}" } }, onAdd = { sheet = Sheet.Split })
-    }
-
     if (kind == TxnKind.TRANSFER) {
+        val rows = listOf<@Composable (androidx.compose.material3.ListItemShapes) -> Unit>(
+            { shapes -> PickRow(shapes, accountKindIconOf(ledger, account), stringResource(R.string.ledger_from_account), accountName(ledger, account), "from_account") { sheet = Sheet.From } },
+            { shapes -> PickRow(shapes, accountKindIconOf(ledger, draft.toAccount), stringResource(R.string.ledger_to_account), accountName(ledger, draft.toAccount), "to_account") { sheet = Sheet.To } },
+        )
+        SegmentedGroup(null, null, rows)
         Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
             if (toRecord != null && toRecord.currency != shownCurrency) {
                 val suggested = cents?.let { ledger.rates.convert(it, shownCurrency, toRecord.currency, at.toLocalDate()) }
@@ -529,76 +553,39 @@ internal fun BillFields(
             AmountField(draft.discount, { draft.discount = it }, stringResource(R.string.ledger_discount), shownCurrency, stringResource(R.string.ledger_transfer_discount_note), "discount")
         }
     }
-    if (kind == TxnKind.EXPENSE) {
-        Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s)) {
-            AmountField(draft.discount, { draft.discount = it }, stringResource(R.string.ledger_discount), shownCurrency, stringResource(R.string.ledger_expense_discount_note), "discount")
+
+    if (!keypad) BillOptions(container, ledger, draft, at, fixedKind, withMoment, keypad = false)
+
+    if (draft.splitting && kind != TxnKind.TRANSFER) {
+        SplitEditor(ledger, splitList, shownCurrency, cents, onChange = { list -> draft.splits = list.joinToString("\n") { "${it.first}\t${it.second}" } }, onAdd = { sheet = Sheet.Split })
+    }
+
+    if (!keypad) {
+        Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+            OutlinedTextField(
+                value = draft.note,
+                onValueChange = { draft.note = it },
+                label = { Text(stringResource(R.string.ledger_note)) },
+                leadingIcon = { Icon(Icons.AutoMirrored.Rounded.Notes, contentDescription = null) },
+                modifier = Modifier.fillMaxWidth().testTag("note"),
+            )
         }
     }
 
-    Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-        OutlinedTextField(
-            value = draft.note,
-            onValueChange = { draft.note = it },
-            label = { Text(stringResource(R.string.ledger_note)) },
-            leadingIcon = { Icon(Icons.AutoMirrored.Rounded.Notes, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth().testTag("note"),
+    if (discountOpen) {
+        var value by remember { mutableStateOf(draft.discount) }
+        AlertDialog(
+            onDismissRequest = { discountOpen = false },
+            title = { Text(stringResource(R.string.ledger_discount)) },
+            text = { AmountField(value, { value = it }, stringResource(R.string.ledger_discount), shownCurrency, stringResource(R.string.ledger_expense_discount_note), "discount_field") },
+            confirmButton = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { draft.discount = value.trim(); discountOpen = false }, enabled = value.isBlank() || parseAmount(value) != null) {
+                    Text(stringResource(R.string.action_confirm))
+                }
+            },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { discountOpen = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
-
-    // What it belongs to among the Moments, kept on the phone with the bill alone.
-    val momentRecord = draft.moment?.let { uid -> moments.firstOrNull { it.uid == uid } }
-    val links = buildList<@Composable (androidx.compose.material3.ListItemShapes) -> Unit> {
-        if (!withMoment) {
-            add { shapes ->
-                PickRow(
-                    shapes, Icons.Rounded.PhotoLibrary, stringResource(R.string.ledger_link_moment),
-                    momentRecord?.let { it.text.lines().firstOrNull()?.take(40)?.ifBlank { null } ?: formatDay(it.dateKey) } ?: stringResource(R.string.ledger_none),
-                    "link_moment", onClear = draft.moment?.let { { draft.moment = null } },
-                ) { sheet = Sheet.Moment }
-            }
-            add { shapes ->
-                PickRow(
-                    shapes, Icons.Rounded.Place, stringResource(R.string.ledger_link_place),
-                    draft.place?.let { places[it]?.name ?: it } ?: stringResource(R.string.ledger_none),
-                    "link_place", onClear = draft.place?.let { { draft.place = null } },
-                ) { sheet = Sheet.Place }
-            }
-        }
-        add { shapes ->
-            PickRow(
-                shapes, Icons.Rounded.Luggage, stringResource(R.string.ledger_link_trip),
-                trip?.let { id -> trips.firstOrNull { it.id == id }?.title ?: id } ?: stringResource(R.string.ledger_none),
-                "link_trip", onClear = trip?.let { { draft.tripChosen = true; draft.trip = null } },
-            ) { sheet = Sheet.Trip }
-        }
-    }
-    SegmentedGroup(stringResource(R.string.ledger_links), null, links)
-
-    val switches = buildList<@Composable (androidx.compose.material3.ListItemShapes) -> Unit> {
-        if (kind != TxnKind.TRANSFER && fixedKind == null) {
-            add { shapes ->
-                SwitchRow(draft.splitting, Icons.AutoMirrored.Rounded.CallSplit, stringResource(R.string.ledger_split), "split", shapes) {
-                    draft.splitting = !draft.splitting
-                    if (draft.splitting && draft.splits.isBlank() && account != null) draft.splits = "$account\t${draft.amount}"
-                }
-            }
-        }
-        if (kind == TxnKind.EXPENSE) {
-            add { shapes ->
-                SwitchRow(draft.reimburse != Reimburse.NONE, Icons.Rounded.RequestQuote, stringResource(R.string.ledger_reimbursable), "reimbursable", shapes,
-                    supporting = stringResource(if (draft.reimburse == Reimburse.DONE) R.string.ledger_reimburse_done else R.string.ledger_reimbursable_note)) {
-                    draft.reimburse = if (draft.reimburse == Reimburse.NONE) Reimburse.PENDING else Reimburse.NONE
-                }
-            }
-        }
-        add { shapes ->
-            SwitchRow(draft.excluded, Icons.Rounded.Block, stringResource(R.string.ledger_excluded), "excluded", shapes, supporting = stringResource(R.string.ledger_excluded_note)) {
-                draft.excluded = !draft.excluded
-            }
-        }
-    }
-    SegmentedGroup(null, null, switches)
-
     if (timeOpen) {
         TimeDialog(at, onDismiss = { timeOpen = false }) { picked ->
             draft.time = picked.toString()
@@ -667,7 +654,7 @@ internal fun BillFields(
     }
 }
 
-private enum class Sheet { Account, From, To, Split, Book, Moment, Place, Trip }
+internal enum class Sheet { Account, From, To, Split, Book, Moment, Place, Trip }
 
 private fun accountName(ledger: Ledger, id: String?): String? = id?.let { ledger.accountsById[it]?.name }
 
@@ -717,41 +704,362 @@ private fun AmountField(value: String, onChange: (String) -> Unit, label: String
 }
 
 /**
- * The book's categories of the bill's kind as filter chips, the latest bills' most used first, the
- * chosen one's second-level ones under them, each row ending in a chip that adds one.
+ * The book's categories of the bill's kind as a grid of icons, as iCost lays them out, the latest
+ * bills' most used first, ending in one that adds a category; the chosen one's second-level
+ * ones as filter chips under its row, ending in a chip that adds one.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun CategoryChips(ledger: Ledger, book: String?, type: CategoryType, selected: String?, onPick: (String?) -> Unit, onAdd: (String?) -> Unit) {
+private fun CategoryGrid(ledger: Ledger, book: String?, type: CategoryType, selected: String?, onPick: (String?) -> Unit, onAdd: (String?) -> Unit) {
     val categories = ledger.categories.filter { it.book == book && it.type == type }.sortedByDescending { ledger.categoryUses[it.id] ?: 0 }
     val tops = categories.filter { it.parent == null }
+    val parents = categories.mapNotNullTo(mutableSetOf()) { it.parent }
     val chosen = selected?.let(ledger.categoriesById::get)
     val top = chosen?.parent ?: chosen?.id
-    Text(
-        stringResource(R.string.ledger_category),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = Space.gutter + Space.xs, top = Space.s).semantics { heading() },
-    )
-    FlowRow(Modifier.padding(horizontal = Space.gutter), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-        tops.forEach { category ->
-            FilterChip(
-                selected = category.id == top,
-                onClick = { onPick(if (category.id == selected) null else category.id) },
-                label = { Text(category.name) },
-                leadingIcon = { Icon(categoryIcon(category.name), contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) },
-                modifier = Modifier.testTag("category_${category.name}"),
-            )
-        }
-        FilterChip(selected = false, onClick = { onAdd(null) }, label = { Text(stringResource(R.string.ledger_add_category)) }, leadingIcon = { Icon(Icons.Rounded.Add, contentDescription = null) })
-    }
-    val subs = categories.filter { it.parent != null && it.parent == top }
-    if (top != null) {
-        FlowRow(Modifier.padding(horizontal = Space.gutter + Space.l), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-            subs.forEach { category ->
-                FilterChip(selected = category.id == selected, onClick = { onPick(if (category.id == selected) top else category.id) }, label = { Text(category.name) })
+    BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = Space.gutter - Space.xs, vertical = Space.xs)) {
+        val columns = (maxWidth / 72.dp).toInt().coerceIn(5, 8)
+        // The categories, then null for the tile that adds one.
+        Column {
+            (tops + null).chunked(columns).forEach { row ->
+                Row(Modifier.fillMaxWidth()) {
+                    row.forEach { category ->
+                        if (category == null) {
+                            CategoryTile(stringResource(R.string.ledger_add_category), Icons.Rounded.Add, selected = false, hasSubs = false, tag = "add_category") { onAdd(null) }
+                        } else {
+                            CategoryTile(
+                                category.name,
+                                categoryIcon(category.name),
+                                selected = category.id == top,
+                                hasSubs = category.id in parents,
+                                tag = "category_${category.name}",
+                            ) { onPick(if (category.id == selected) null else category.id) }
+                        }
+                    }
+                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+                // The chosen one's second-level ones open under its row, brought into view.
+                if (top != null && row.any { it?.id == top }) {
+                    val view = remember { BringIntoViewRequester() }
+                    LaunchedEffect(top) { view.bringIntoView() }
+                    FlowRow(
+                        Modifier.padding(horizontal = Space.xs).bringIntoViewRequester(view),
+                        horizontalArrangement = Arrangement.spacedBy(Space.s),
+                    ) {
+                        categories.filter { it.parent == top }.forEach { category ->
+                            FilterChip(selected = category.id == selected, onClick = { onPick(if (category.id == selected) top else category.id) }, label = { Text(category.name) })
+                        }
+                        FilterChip(selected = false, onClick = { onAdd(top) }, label = { Text(stringResource(R.string.ledger_add_subcategory)) }, leadingIcon = { Icon(Icons.Rounded.Add, contentDescription = null) })
+                    }
+                }
             }
-            FilterChip(selected = false, onClick = { onAdd(top) }, label = { Text(stringResource(R.string.ledger_add_subcategory)) }, leadingIcon = { Icon(Icons.Rounded.Add, contentDescription = null) })
+        }
+    }
+}
+
+/** One category in the grid: its icon in a circle, filled with the primary when chosen, a dot beside it when it has second-level ones, and its name. */
+@Composable
+private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, hasSubs: Boolean, tag: String, onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        Modifier.weight(1f)
+            .clip(MaterialTheme.shapes.medium)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+            .padding(vertical = Space.xs)
+            .testTag(tag),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box {
+            Box(
+                Modifier.size(48.dp).background(if (selected) colors.primary else colors.surfaceContainerHighest, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) { Icon(icon, contentDescription = null, tint = if (selected) colors.onPrimary else colors.onSurfaceVariant) }
+            if (hasSubs) {
+                Box(
+                    Modifier.align(Alignment.BottomEnd).size(14.dp).background(colors.surface, CircleShape).padding(Space.xxs)
+                        .background(if (selected) colors.primary else colors.outline, CircleShape),
+                )
+            }
+        }
+        Text(
+            name,
+            style = MaterialTheme.typography.labelMedium,
+            color = if (selected) colors.primary else colors.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = Space.xs, start = Space.xxs, end = Space.xxs),
+        )
+    }
+}
+
+/**
+ * The rest of the bill as chips, as iCost has them over its keys: assist chips open a choice,
+ * filter chips turn something on, and input chips hold what was chosen, with a cross to take it
+ * away. Over the [keypad] they are one row that scrolls sideways; else they wrap.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraft, at: OffsetDateTime, fixedKind: TxnKind?, withMoment: Boolean, keypad: Boolean) {
+    val moments by container.repository.moments.collectAsStateWithLifecycle()
+    val places by container.repository.places.collectAsStateWithLifecycle()
+    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val kind = draft.kind
+    val account = draft.account
+    val shownCurrency = draft.shownCurrency(ledger)
+    val bookRecord = ledger.books.firstOrNull { it.id == (draft.book ?: ledger.book?.id) }
+    val trip = draft.tripOn(at, trips)
+    val momentRecord = draft.moment?.let { uid -> moments.firstOrNull { it.uid == uid } }
+    val discount = parseAmount(draft.discount)?.takeIf { it > 0 }
+    val chips: @Composable () -> Unit = {
+        if (kind != TxnKind.TRANSFER && !draft.splitting) {
+            OptionChip(accountName(ledger, account) ?: stringResource(R.string.ledger_choose_account), accountKindIconOf(ledger, account), "account") { draft.sheet = Sheet.Account }
+        }
+        if (!withMoment && !keypad) {
+            OptionChip(formatDay(at.toLocalDate().toString()) + " " + at.format(DateTimeFormatter.ofPattern("HH:mm")), Icons.Rounded.Event, "time") { draft.timeOpen = true }
+        }
+        if (ledger.books.size > 1 && fixedKind == null) {
+            OptionChip(bookRecord?.name.orEmpty(), Icons.AutoMirrored.Rounded.MenuBook, "book") { draft.sheet = Sheet.Book }
+        }
+        if (kind == TxnKind.EXPENSE) {
+            LinkChip(
+                discount?.let { stringResource(R.string.ledger_discount) + " " + formatMoney(it, shownCurrency) },
+                stringResource(R.string.ledger_discount), Icons.Rounded.Sell, "discount",
+                onClear = { draft.discount = "" },
+            ) { draft.discountOpen = true }
+        }
+        if (kind != TxnKind.TRANSFER && fixedKind == null) {
+            ToggleChip(draft.splitting, stringResource(R.string.ledger_split), "split") {
+                draft.splitting = !draft.splitting
+                if (draft.splitting && draft.splits.isBlank() && account != null) draft.splits = "$account\t${draft.amount}"
+            }
+        }
+        if (kind == TxnKind.EXPENSE) {
+            ToggleChip(
+                draft.reimburse != Reimburse.NONE,
+                stringResource(if (draft.reimburse == Reimburse.DONE) R.string.ledger_reimburse_done else R.string.ledger_reimbursable),
+                "reimbursable",
+            ) { draft.reimburse = if (draft.reimburse == Reimburse.NONE) Reimburse.PENDING else Reimburse.NONE }
+        }
+        ToggleChip(draft.excluded, stringResource(R.string.ledger_excluded), "excluded") { draft.excluded = !draft.excluded }
+        // What it belongs to among the Moments, kept on the phone with the bill alone.
+        if (!withMoment) {
+            LinkChip(
+                momentRecord?.let { it.text.lines().firstOrNull()?.take(20)?.ifBlank { null } ?: formatDay(it.dateKey) },
+                stringResource(R.string.ledger_link_moment), Icons.Rounded.PhotoLibrary, "link_moment",
+                onClear = { draft.moment = null },
+            ) { draft.sheet = Sheet.Moment }
+            LinkChip(
+                draft.place?.let { places[it]?.name ?: it },
+                stringResource(R.string.ledger_link_place), Icons.Rounded.Place, "link_place",
+                onClear = { draft.place = null },
+            ) { draft.sheet = Sheet.Place }
+        }
+        LinkChip(
+            trip?.let { id -> trips.firstOrNull { it.id == id }?.title ?: id },
+            stringResource(R.string.ledger_link_trip), Icons.Rounded.Luggage, "link_trip",
+            onClear = { draft.tripChosen = true; draft.trip = null },
+        ) { draft.sheet = Sheet.Trip }
+    }
+
+    if (keypad) {
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = Space.gutter),
+            horizontalArrangement = Arrangement.spacedBy(Space.s),
+        ) { chips() }
+    } else {
+        FlowRow(
+            Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s),
+            horizontalArrangement = Arrangement.spacedBy(Space.s),
+        ) { chips() }
+    }
+}
+
+/** An assist chip that opens a choice, showing what is chosen. */
+@Composable
+private fun OptionChip(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, tag: String, onClick: () -> Unit) {
+    AssistChip(
+        onClick = onClick,
+        label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        leadingIcon = { Icon(icon, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
+        modifier = Modifier.testTag(tag),
+    )
+}
+
+/** A filter chip that turns something on, with a check while it is. */
+@Composable
+private fun ToggleChip(selected: Boolean, label: String, tag: String, onClick: () -> Unit) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(label) },
+        leadingIcon = if (selected) {
+            { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+        } else null,
+        modifier = Modifier.testTag(tag),
+    )
+}
+
+/** What the bill is linked to: an assist chip named [label] while nothing is, else an input chip with [value] and a cross. */
+@Composable
+private fun LinkChip(value: String?, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, tag: String, onClear: () -> Unit, onClick: () -> Unit) {
+    if (value == null) {
+        OptionChip(label, icon, tag, onClick)
+        return
+    }
+    InputChip(
+        selected = true,
+        onClick = onClick,
+        label = { Text(value, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 200.dp)) },
+        leadingIcon = { Icon(icon, contentDescription = null, modifier = Modifier.size(InputChipDefaults.IconSize)) },
+        trailingIcon = {
+            Icon(
+                Icons.Rounded.Close,
+                contentDescription = stringResource(R.string.action_clear),
+                modifier = Modifier.size(InputChipDefaults.IconSize).clickable(role = Role.Button, onClick = onClear),
+            )
+        },
+        modifier = Modifier.testTag(tag),
+    )
+}
+
+/** Whether the keypad fits: a bill page of its own on a window tall enough for the keys and what is above them. */
+@Composable
+internal fun keypadFits(): Boolean = LocalConfiguration.current.screenHeightDp >= 600
+
+/**
+ * The amount, its time and note, over keys that type it, pinned under the bill's other fields as
+ * iCost has them: digits, a point, plus and minus to add up a bill as it goes, and [onSave]. The
+ * keys step aside while the note is typed on the phone's keyboard.
+ */
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraft, at: OffsetDateTime, fixedKind: TxnKind?, onSave: () -> Unit, modifier: Modifier = Modifier) {
+    val currency = draft.shownCurrency(ledger)
+    val cents = parseAmount(draft.amount)
+    var currencies by remember { mutableStateOf(false) }
+    val colors = MaterialTheme.colorScheme
+    BillOptions(container, ledger, draft, at, fixedKind, withMoment = false, keypad = true)
+    Column(modifier.padding(horizontal = Space.gutter).padding(top = Space.s, bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+        Column(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(colors.surfaceContainer)) {
+            Row(Modifier.fillMaxWidth().padding(start = Space.xs, end = Space.l, top = Space.xs), verticalAlignment = Alignment.CenterVertically) {
+                Box {
+                    TextButton(shapes = ButtonDefaults.shapes(), onClick = { currencies = true }, modifier = Modifier.testTag("currency")) { Text(currency) }
+                    DropdownMenu(currencies, onDismissRequest = { currencies = false }) {
+                        ledger.currenciesByUse.forEach { code ->
+                            DropdownMenuItem(text = { Text("$code  ${currencySymbol(code).trim()}") }, onClick = { draft.currency = code; currencies = false })
+                        }
+                    }
+                }
+                // A sum being added up shows what it comes to beside it.
+                if (cents != null && draft.amount.drop(1).any { it == '+' || it == '-' }) {
+                    Text("= " + formatMoney(cents, currency), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
+                }
+                val shown = draft.amount.ifEmpty { "0" }.replace("+", " + ").replace("-", " − ")
+                Text(
+                    currencySymbol(currency).trim() + " " + shown,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = if (draft.amount.isNotEmpty() && cents == null) colors.error else if (draft.amount.isEmpty()) colors.onSurfaceVariant else colors.onSurface,
+                    textAlign = TextAlign.End,
+                    maxLines = 1,
+                    overflow = TextOverflow.StartEllipsis,
+                    modifier = Modifier.weight(1f).padding(start = Space.s).semantics { contentDescription = cents?.let { formatMoney(it, currency) } ?: shown }.testTag("amount"),
+                )
+            }
+            Row(Modifier.fillMaxWidth().padding(start = Space.m, end = Space.s, bottom = Space.xxs), verticalAlignment = Alignment.CenterVertically) {
+                AssistChip(
+                    onClick = { draft.timeOpen = true },
+                    label = { Text(formatDay(at.toLocalDate().toString()) + " " + at.format(DateTimeFormatter.ofPattern("HH:mm"))) },
+                    leadingIcon = { Icon(Icons.Rounded.Schedule, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
+                    modifier = Modifier.testTag("time"),
+                )
+                TextField(
+                    value = draft.note,
+                    onValueChange = { draft.note = it },
+                    placeholder = { Text(stringResource(R.string.ledger_note_hint)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                    ),
+                    modifier = Modifier.weight(1f).testTag("note"),
+                )
+            }
+        }
+        if (!WindowInsets.isImeVisible) {
+            val type = { key: Char -> draft.amount = typeKey(draft.amount, key) }
+            val keys = listOf(
+                listOf('1', '2', '3', BACKSPACE),
+                listOf('4', '5', '6', '+'),
+                listOf('7', '8', '9', '-'),
+            )
+            keys.forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                    row.forEach { key -> Key(key, Modifier.weight(1f)) { if (key == BACKSPACE) draft.amount = draft.amount.dropLast(1) else type(key) } }
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                Key('.', Modifier.weight(1f)) { type('.') }
+                Key('0', Modifier.weight(1f)) { type('0') }
+                Button(
+                    onClick = onSave,
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.weight(2f).height(KeyHeight).testTag("keypad_save"),
+                ) { Text(stringResource(R.string.action_save), style = MaterialTheme.typography.titleMedium) }
+            }
+        }
+    }
+}
+
+private const val BACKSPACE = '\b'
+private val KeyHeight = 48.dp
+
+/** A key of the keypad: a digit or the point in the surface's highest container, the rest tonal. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun Key(key: Char, modifier: Modifier, onClick: () -> Unit) {
+    val digit = key.isDigit() || key == '.'
+    val colors = if (digit) {
+        ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest, contentColor = MaterialTheme.colorScheme.onSurface)
+    } else ButtonDefaults.filledTonalButtonColors()
+    FilledTonalButton(
+        onClick = onClick,
+        shapes = ButtonDefaults.shapes(),
+        colors = colors,
+        contentPadding = PaddingValues(0.dp),
+        modifier = modifier.height(KeyHeight).testTag("key_${if (key == BACKSPACE) "back" else key.toString()}"),
+    ) {
+        when (key) {
+            BACKSPACE -> Icon(Icons.AutoMirrored.Rounded.Backspace, contentDescription = stringResource(R.string.action_backspace))
+            '-' -> Text("−", style = MaterialTheme.typography.titleLarge)
+            else -> Text(key.toString(), style = MaterialTheme.typography.titleLarge)
+        }
+    }
+}
+
+/**
+ * [text] with [key] typed after it on the keypad: an operator only after a number, taking the
+ * place of one just typed; one point to a number, and two places after it.
+ */
+internal fun typeKey(text: String, key: Char): String {
+    val number = text.takeLastWhile { it != '+' && it != '-' }
+    return when (key) {
+        '+', '-' -> when {
+            text.isEmpty() -> text
+            number.isEmpty() || number.endsWith('.') -> text.dropLast(1) + key
+            else -> text + key
+        }
+        '.' -> when {
+            '.' in number -> text
+            number.isEmpty() -> text + "0."
+            else -> text + key
+        }
+        else -> when {
+            '.' in number && number.substringAfter('.').length >= 2 -> text
+            number == "0" -> text.dropLast(1) + key
+            number.substringBefore('.').length >= 9 && '.' !in number -> text
+            else -> text + key
         }
     }
 }

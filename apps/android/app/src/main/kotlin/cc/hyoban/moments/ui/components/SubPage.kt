@@ -57,8 +57,9 @@ fun SubPage(
     subtitle: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
     close: Boolean = false,
+    small: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
-) = BarPage(title, subtitle, onBack, large = false, modifier, actions, content, close = close)
+) = BarPage(title, subtitle, onBack, large = false, modifier, actions, content, close = close, small = small)
 
 /**
  * A tab's page as Material 3 lays one out: a large flexible top app bar with no back
@@ -91,12 +92,13 @@ private fun BarPage(
     tab: Any? = null,
     close: Boolean = false,
     refresh: (() -> Unit)? = null,
+    small: Boolean = false,
 ) {
     // A dialog's bar, on a window too short to open it out, stays put rather than scrolling away,
     // so its X and its confirming action are always there, as Material 3 keeps a dialog's.
     val folding = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val pinned = TopAppBarDefaults.pinnedScrollBehavior()
-    val scroll = if (close && isCompactHeight()) pinned else folding
+    val scroll = if (close && (isCompactHeight() || small)) pinned else folding
     OnTabReselect(tab) {
         animate(scroll.state.heightOffset, 0f) { value, _ -> scroll.state.heightOffset = value }
     }
@@ -141,9 +143,10 @@ private fun BarPage(
     val margin = Space.gutter - BAR_TITLE_INSET
     val insets = TopAppBarDefaults.windowInsets.add(WindowInsets(left = rail.left + margin, right = rail.right + margin))
     Column(modifier.fillMaxSize().nestedScroll(scroll.nestedScrollConnection)) {
-        if (isCompactHeight()) {
+        if (isCompactHeight() || small) {
             // On a window too short for it, a phone on its side, the bar starts small, its title
-            // beside the back button, rather than taking half the screen until scrolled away.
+            // beside the back button, rather than taking half the screen until scrolled away; so
+            // does a page whose own bottom half is taken, the bill's keypad.
             if (subtitleText != null) {
                 TopAppBar(titleText, subtitleText, navigationIcon = back, actions = actions, colors = colors, windowInsets = insets, scrollBehavior = scroll)
             } else {

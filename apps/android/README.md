@@ -306,7 +306,10 @@ between currencies, what arrived (the day's rate suggests it), a note, whether
 it is to be reimbursed (left out of the sums until it is) or left out of the sums
 altogether, and the Moment, place and trip it belongs to: the trip under way that day
 unless another is picked. Its categories, accounts, currencies and places are listed with the
-ones the latest 200 bills used most first. A refund takes from its expense's category up to what was
+ones the latest 200 bills used most first. Laid out after iCost, its categories are a grid of
+icons, a chosen one's second-level ones opening under its row, and the rest are chips; a bill on its
+own (not under a Moment), on a window tall enough, is typed on a keypad pinned at the bottom, with
+plus and minus and 保存, under its amount, time and note. A refund takes from its expense's category up to what was
 spent, anything beyond it earned; a reimbursed expense counts only what wasn't paid back.
 A bill's page shows all of this, its refunds and reimbursements, and where it leads: its
 Moment, place, trip and day. An account's page has its bills and 校准余额, which sets the
