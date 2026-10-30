@@ -1,17 +1,12 @@
 package cc.hyoban.moments.ui.moment
 
 import cc.hyoban.moments.data.store.isPublic
-import cc.hyoban.moments.ui.design.emphasized
 
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.components.floatingElevation
 import cc.hyoban.moments.ui.design.FloatingActionButton
 import cc.hyoban.moments.ui.design.FloatingBar
 import androidx.compose.ui.graphics.Color
-import cc.hyoban.moments.ui.design.groupedShapes
-import cc.hyoban.moments.ui.design.groupedRow
-import cc.hyoban.moments.ui.theme.SurfaceLevel
-import cc.hyoban.moments.ui.theme.cardBorder
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.tokens
 import android.content.ClipData
@@ -68,9 +63,7 @@ import cc.hyoban.moments.ui.design.ListItemDefaults
 import cc.hyoban.moments.ui.design.ListItemShapes
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.SegmentedListItem
-import cc.hyoban.moments.ui.design.Surface
 import cc.hyoban.moments.ui.design.Text
-import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -93,10 +86,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
@@ -110,11 +100,10 @@ import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.ui.compose.label
-import cc.hyoban.moments.ui.format.VerdictBadge
+import cc.hyoban.moments.ui.format.verdictLabel
 import cc.hyoban.moments.ui.format.billLine
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.countOf
-import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.Day
 import cc.hyoban.moments.ui.LocalSnackbarLift
@@ -141,11 +130,9 @@ import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.openedFrom
 import cc.hyoban.moments.ui.rememberShowMessage
-import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.Space
-import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.trips.tripSummary
 import com.kyant.capsule.ContinuousRoundedRectangle
 import kotlinx.coroutines.launch
@@ -275,10 +262,9 @@ fun MomentScreen(
         // published.
         val editable = container.repository.isLocal(uid) || container.canPublish
         val publishing by container.publishing.collectAsStateWithLifecycle()
-        // The page's actions in Material 3's floating toolbar at the foot, as a page under the
-        // tabs has a toolbar where they have the navigation bar: sharing, copying the words and
-        // the photo shown at its full size; editing, when it can be, the FAB paired with it.
-        // Only back stays over the photo.
+        // The page's actions float at its foot, as the tabs do under the timeline: sharing and
+        // copying the words in a bar, editing, when it can be, the ink button beside it. The photo
+        // opens at its full size with a tap on it. Only back stays over the photo.
         val context = LocalContext.current
         val show = rememberShowMessage()
         val copied = stringResource(R.string.message_text_copied)
@@ -289,9 +275,6 @@ fun MomentScreen(
                     context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("", moment.text))
                     show(copied)
                 }
-            }
-            if (moment.media.isNotEmpty()) {
-                ToolbarButton(AppIcons.Fullscreen, stringResource(R.string.action_view_photo), "view_photo") { onMedia(uid, pager.currentPage) }
             }
         }
         // Under the words it acts on: in the middle of the page, or of their half beside the photos.
@@ -398,26 +381,15 @@ private fun MomentDetails(
 ) {
     val sameDay = remember(moments, moment.dateKey) { moments.count { it.dateKey == moment.dateKey } }
     Column(Modifier.padding(top = Space.xl, bottom = Space.xxl)) {
-        // The day emphasized, and its time beside it a shade lighter and plain: what the words are under.
-        Column(Modifier.padding(horizontal = Space.gutter + Space.l), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-            Text(
-                buildAnnotatedString {
-                    append(formatDay(moment.occurredAt))
-                    formatTime(moment.occurredAt)?.let {
-                        withStyle(SpanStyle(color = AppTheme.colorScheme.onSurfaceVariant, fontWeight = AppTheme.typography.title.fontWeight)) { append("  $it") }
-                    }
-                },
-                style = AppTheme.typography.title.emphasized,
-                modifier = Modifier.semantics { heading() },
-            )
-            if (moment.published == null) {
-                StateNotice(AppIcons.Phone, stringResource(R.string.label_on_phone), stringResource(R.string.explain_on_phone), onChanges)
-            } else if (changed) {
-                StateNotice(AppIcons.Pen, stringResource(R.string.label_unpublished_change), stringResource(R.string.explain_unpublished_change), onChanges)
-            }
-        }
+        // When, in the second grey over the words, as the timeline's line over a Moment has it.
+        Text(
+            listOfNotNull(formatDay(moment.occurredAt), formatTime(moment.occurredAt)).joinToString("\u2003"),
+            style = AppTheme.typography.body,
+            color = tokens.tx2,
+            modifier = Modifier.padding(horizontal = Space.gutter).semantics { heading() },
+        )
         if (moment.text.isNotBlank()) {
-            SelectionContainer(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter + Space.l, top = Space.l)) {
+            SelectionContainer(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.m)) {
                 Text(moment.text, style = AppTheme.typography.bodyReading)
             }
         }
@@ -425,43 +397,9 @@ private fun MomentDetails(
             Filmstrip(moment, urls, pager, Modifier.padding(top = Space.xl))
         }
 
-        // Where it was, its trip and its day as one grouped list: one surface, a hairline round it
-        // and between the rows.
+        // Where it was, then its parts, a row each, and where it leads, the rows on the page
+        // itself with space rather than lines between them.
         val rows = buildList<@Composable (ListItemShapes) -> Unit> {
-            // What was eaten heads them, as it is of the Moment itself: the dishes, what the
-            // meal cost and each one's share, and how it went as a badge at the end. Not a
-            // link, so a plain row on the group's fill rather than one that answers a tap.
-            moment.food?.let { food ->
-                val verdict = FoodVerdict.of(food.verdict)
-                add { shapes ->
-                    ListItem(
-                        headlineContent = {
-                            Text(
-                                food.dishes.joinToString(stringResource(R.string.separator_list)).ifEmpty { stringResource(R.string.section_food) },
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        },
-                        supportingContent = food.bill?.let { bill -> { Text(billLine(bill)) } },
-                        leadingContent = { RowIcon(AppIcons.Food) },
-                        trailingContent = verdict?.let { { VerdictBadge(it) } },
-                        colors = ListItemDefaults.colors(containerColor = LocalSurfaceLevel.current.raised.fill()),
-                        modifier = Modifier.clip(shapes.shape).testTag("food"),
-                    )
-                }
-            }
-            addAll(bills)
-            (parts?.get("charge") as? kotlinx.serialization.json.JsonObject)?.let { charge ->
-                add { shapes ->
-                    ListItem(
-                        headlineContent = { Text(chargeTitle(charge)) },
-                        supportingContent = chargeLine(charge)?.let { line -> { Text(line, style = AppTheme.typography.numCaption) } },
-                        leadingContent = { RowIcon(AppIcons.Ev) },
-                        colors = ListItemDefaults.colors(containerColor = LocalSurfaceLevel.current.raised.fill()),
-                        modifier = Modifier.clip(shapes.shape).testTag("charge"),
-                    )
-                }
-            }
             moment.places.forEach { id ->
                 val place = places[id]
                 add { shapes ->
@@ -469,7 +407,7 @@ private fun MomentDetails(
                         onClick = { onPlace(id) },
                         shapes = shapes,
                         colors = segmentColors(),
-                        leadingContent = { RowIcon(AppIcons.Pin) },
+                        leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
                         trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                         // Its kind, then a note if it has one.
                         supportingContent = listOfNotNull(
@@ -480,17 +418,46 @@ private fun MomentDetails(
                     ) { Text(place?.name ?: id, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
+            // What was eaten: the dishes, how it went, what the meal cost and each one's share.
+            // Not a link, so a row that doesn't answer a tap.
+            moment.food?.let { food ->
+                val verdict = FoodVerdict.of(food.verdict)
+                add {
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                food.dishes.joinToString(stringResource(R.string.separator_list)).ifEmpty { stringResource(R.string.section_food) },
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        },
+                        supportingContent = listOfNotNull(verdict?.let { stringResource(verdictLabel(it)) }, food.bill?.let { billLine(it) })
+                            .joinToString("\u2003").takeIf { it.isNotEmpty() }?.let { { Text(it) } },
+                        leadingContent = { Icon(AppIcons.Food, contentDescription = null) },
+                        modifier = Modifier.testTag("food"),
+                    )
+                }
+            }
+            addAll(bills)
+            (parts?.get("charge") as? kotlinx.serialization.json.JsonObject)?.let { charge ->
+                add {
+                    ListItem(
+                        headlineContent = { Text(chargeTitle(charge)) },
+                        supportingContent = chargeLine(charge)?.let { line -> { Text(line, style = AppTheme.typography.numCaption) } },
+                        leadingContent = { Icon(AppIcons.Ev, contentDescription = null) },
+                        modifier = Modifier.testTag("charge"),
+                    )
+                }
+            }
             trip?.let { trip ->
                 add { shapes ->
-                    val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
                     val count = remember(trip, moments) { countOf(trip, moments, trips) }
                     SegmentedListItem(
                         onClick = { onTrip(trip.id) },
                         shapes = shapes,
                         colors = segmentColors(),
-                        leadingContent = {
-                            if (cover != null) Thumbnail(cover, urls, size = ROW_LEAD) else RowIcon(AppIcons.Luggage)
-                        },
+                        // The route, as a trip's row on the timeline leads, so its words line up with the others'.
+                        leadingContent = { Icon(AppIcons.Route, contentDescription = null) },
                         trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                         supportingContent = { Text(tripSummary(trip, count), maxLines = 2) },
                         // Not shared with the trip's page when it is the page under this one,
@@ -499,8 +466,22 @@ private fun MomentDetails(
                     ) { Text(trip.title, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
-            // Last, who sees it: private, or public with the parts that would publish.
-            add { shapes ->
+            // Only when the day has more than this one, the row grows into the day's page.
+            if (sameDay > 1) {
+                add { shapes ->
+                    SegmentedListItem(
+                        onClick = { onDay(moment.dateKey) },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        leadingContent = { Icon(AppIcons.Calendar, contentDescription = null) },
+                        trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
+                        supportingContent = { Text(pluralStringResource(R.plurals.count_moments, sameDay, sameDay)) },
+                        modifier = (if (openedFrom(Day(moment.dateKey))) Modifier else Modifier.sharedCard(dayRowKey(moment.dateKey))).testTag("day_${moment.dateKey}"),
+                    ) { Text(stringResource(R.string.label_whole_day)) }
+                }
+            }
+            // Then who sees it: private, or public with the parts that would publish.
+            add {
                 val private = moment.hidden || moment.topic == "tech"
                 val published = listOfNotNull(
                     stringResource(R.string.part_text).takeIf { moment.text.isNotBlank() },
@@ -517,9 +498,8 @@ private fun MomentDetails(
                             else stringResource(R.string.moment_publishes, published.joinToString(stringResource(R.string.separator_list))),
                         )
                     },
-                    leadingContent = { RowIcon(if (private) AppIcons.EyeOff else AppIcons.Eye) },
-                    colors = ListItemDefaults.colors(containerColor = LocalSurfaceLevel.current.raised.fill()),
-                    modifier = Modifier.clip(shapes.shape).testTag("visibility"),
+                    leadingContent = { Icon(if (private) AppIcons.EyeOff else AppIcons.Eye, contentDescription = null) },
+                    modifier = Modifier.testTag("visibility"),
                 )
             }
             // Each part said private on its own, while the record itself is public.
@@ -541,24 +521,39 @@ private fun MomentDetails(
                     }
                 }
             }
-            // Only when the day has more than this one, the row grows into the day's page.
-            if (sameDay > 1) {
+            // Where it stands, only on the phone or changed there, and the way to the changes to publish.
+            val state = when {
+                moment.published == null -> Triple(AppIcons.Phone, R.string.label_on_phone, R.string.explain_on_phone)
+                changed -> Triple(AppIcons.Pen, R.string.label_unpublished_change, R.string.explain_unpublished_change)
+                else -> null
+            }
+            state?.let { (icon, label, explanation) ->
                 add { shapes ->
-                    SegmentedListItem(
-                        onClick = { onDay(moment.dateKey) },
-                        shapes = shapes,
-                        colors = segmentColors(),
-                        leadingContent = { RowIcon(AppIcons.Calendar) },
-                        trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
-                        supportingContent = { Text(pluralStringResource(R.plurals.count_moments, sameDay, sameDay)) },
-                        modifier = (if (openedFrom(Day(moment.dateKey))) Modifier else Modifier.sharedCard(dayRowKey(moment.dateKey))).testTag("day_${moment.dateKey}"),
-                    ) { Text(stringResource(R.string.label_whole_day)) }
+                    val headline: @Composable () -> Unit = { Text(stringResource(label)) }
+                    val supporting: @Composable () -> Unit = { Text(stringResource(explanation), maxLines = 3) }
+                    val leading: @Composable () -> Unit = { Icon(icon, contentDescription = null) }
+                    if (onChanges != null) {
+                        SegmentedListItem(
+                            onClick = onChanges,
+                            shapes = shapes,
+                            colors = segmentColors(),
+                            leadingContent = leading,
+                            trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
+                            supportingContent = supporting,
+                            modifier = Modifier.testTag("state_notice"),
+                            content = headline,
+                        )
+                    } else {
+                        ListItem(headlineContent = headline, supportingContent = supporting, leadingContent = leading, modifier = Modifier.testTag("state_notice"))
+                    }
                 }
             }
         }
         if (rows.isNotEmpty()) {
-            Column(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xl)) {
-                rows.forEachIndexed { index, row -> Box(Modifier.groupedRow(index, rows.size)) { row(groupedShapes(index, rows.size)) } }
+            // The rows' icons on the words' edge above, their own padding outside it, where a press shows.
+            val shapes = ListItemShapes(AppTheme.shapes.medium)
+            Column(Modifier.padding(start = Space.gutter - ROW_PADDING, end = Space.gutter - ROW_PADDING, top = Space.l)) {
+                rows.forEach { row -> row(shapes) }
             }
         }
         // Clear of the floating toolbar at the foot.
@@ -646,45 +641,9 @@ private fun Filmstrip(moment: MomentRecord, urls: MediaUrls, pager: PagerState, 
     }
 }
 
-/** A row of the grouped list: no fill of its own, on the group's surface. */
+/** A row that answers a tap: no fill of its own, on the page. */
 @Composable
 private fun segmentColors() = ListItemDefaults.segmentedColors(containerColor = Color.Transparent)
 
-/** How wide what leads a row is, a trip's cover or an icon centred in the same room, so the rows' words line up. */
-private const val ROW_LEAD = 40
-
-@Composable
-private fun RowIcon(icon: ImageVector) {
-    Box(Modifier.size(ROW_LEAD.dp), contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null) }
-}
-
-/**
- * Where a Moment stands, only on the phone or changed there, said in the open rather than
- * behind a chip, which Material 3 keeps for actions and never alone: a card in the secondary
- * container, as state takes colour here, its icon, what it is and what that means, and a way
- * to the changes to publish when [onChanges] is given, a card holding a button rather than
- * tapped as a whole.
- */
-@Composable
-private fun StateNotice(icon: ImageVector, label: String, explanation: String, onChanges: (() -> Unit)?) {
-    Surface(
-        shape = AppTheme.shapes.large,
-        color = SurfaceLevel.Card.fill(),
-        contentColor = AppTheme.colorScheme.onSurface,
-        border = cardBorder(),
-        modifier = Modifier.fillMaxWidth().padding(top = Space.xs).testTag("state_notice"),
-    ) {
-        Row(Modifier.padding(start = Space.l, end = Space.s, top = Space.m, bottom = if (onChanges != null) Space.xs else Space.m)) {
-            Icon(icon, contentDescription = null, modifier = Modifier.padding(top = Space.xxs).size(20.dp))
-            Column(Modifier.weight(1f).padding(start = Space.m, end = Space.s)) {
-                Text(label, style = AppTheme.typography.titleSmall)
-                Text(explanation, style = AppTheme.typography.body)
-                if (onChanges != null) {
-                    TextButton(onClick = onChanges, modifier = Modifier.offset(x = -Space.m).testTag("state_changes")) {
-                        Text(stringResource(R.string.title_changes))
-                    }
-                }
-            }
-        }
-    }
-}
+/** The side padding of a list row, outside the page's gutter so the rows line up with the words. */
+private val ROW_PADDING = 16.dp

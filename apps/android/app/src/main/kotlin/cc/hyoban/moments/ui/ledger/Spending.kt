@@ -12,7 +12,10 @@ import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.SegmentedListItem
 import cc.hyoban.moments.ui.design.Surface
 import cc.hyoban.moments.ui.design.Text
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -115,13 +118,18 @@ fun momentBillRows(
                     onClick = { onBill(txn.id) },
                     shapes = shapes,
                     colors = segmentColors(),
-                    leadingContent = { LeadingIcon(txnIcon(txn, ledger), tonal = false) },
+                    leadingContent = { Icon(txnIcon(txn, ledger), contentDescription = null) },
                     supportingContent = { Text(txnSupporting(txn, ledger), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    // Its amount in figures, as the timeline has it, before the arrow every link on the page ends in.
                     trailingContent = {
-                        Text(
-                            if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
-                            style = AppTheme.typography.titleSmall,
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                            Text(
+                                if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
+                                style = AppTheme.typography.numBody,
+                                color = amountColor(txn),
+                            )
+                            Icon(AppIcons.ChevronRight, contentDescription = null)
+                        }
                     },
                     modifier = Modifier.testTag("moment_bill_${txn.id}"),
                 ) { Text(txnTitle(txn, ledger), maxLines = 1, overflow = TextOverflow.Ellipsis) }
@@ -134,7 +142,8 @@ fun momentBillRows(
             onClick = { onNewBill(moment.uid) },
             shapes = shapes,
             colors = segmentColors(),
-            leadingContent = { LeadingIcon(AppIcons.Plus, tonal = false) },
+            leadingContent = { Icon(AppIcons.Plus, contentDescription = null) },
+            trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
             supportingContent = { Text(stringResource(R.string.ledger_from_moment_note)) },
             modifier = Modifier.testTag("moment_new_bill"),
         ) { Text(stringResource(R.string.ledger_from_moment, money(Math.round(bill.amount * 100), "CNY"))) }

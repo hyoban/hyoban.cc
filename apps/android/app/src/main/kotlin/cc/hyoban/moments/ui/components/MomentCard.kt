@@ -41,7 +41,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
@@ -146,23 +145,14 @@ fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRe
     }
 }
 
-/**
- * A back button that floats over a photo or a map, legible on either, narrow as M3 has a back
- * button beside other actions; its middle where a top app bar's back button has its own.
- */
+/** A back button that floats over a photo or a map, legible on either, round as every floating button is. */
 @Composable
 fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) =
-    FloatingButton(AppIcons.ArrowLeft, stringResource(R.string.action_back), onBack, modifier, tag = "back", width = FloatingWidth.Narrow)
-
-/**
- * How wide a floating button is, as Material 3's small icon button comes: narrow for back,
- * wide for the page's main action.
- */
-enum class FloatingWidth(val width: Dp) { Narrow(32.dp), Standard(40.dp), Wide(52.dp) }
+    FloatingButton(AppIcons.ArrowLeft, stringResource(R.string.action_back), onBack, modifier, tag = "back")
 
 /**
  * A button that floats over a photo or a map, legible on either, as the back button does.
- * The page's one main action may be [tonal], the ink, and [width] wide; the others stay on the
+ * A circle; the page's one main action may be [tonal], the ink, the others stay on the
  * floating surface with its hairline.
  */
 @Composable
@@ -174,10 +164,8 @@ fun FloatingButton(
     tag: String,
     busy: Boolean = false,
     tonal: Boolean = false,
-    width: FloatingWidth = FloatingWidth.Standard,
 ) {
-    // Floating over a photo, a map or a card: a shadow. Drawn at Material
-    // 3's small icon button size, its touch target still 48dp, as Compose widens a small one.
+    // Floating over a photo, a map or a card: a shadow. Drawn at 40, its touch target still 48dp.
     Tooltip(label, below = true, modifier = modifier) {
         Surface(
             onClick = onClick,
@@ -188,7 +176,7 @@ fun FloatingButton(
             border = if (tonal) null else cardBorder(),
             shadowElevation = Elevation.level2,
             modifier = Modifier.statusBarsPadding().sideInsetsPadding().padding(horizontal = Space.m, vertical = Space.s)
-                .size(width.width, FLOATING_HEIGHT).semantics { contentDescription = label }.testTag(tag),
+                .size(FLOATING_HEIGHT).semantics { contentDescription = label }.testTag(tag),
         ) {
             // Busy, a short wait, it turns a spinner and takes no taps until what it started is done.
             Box(contentAlignment = Alignment.Center) {

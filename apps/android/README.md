@@ -37,9 +37,8 @@ its place, its trip and its day, as does the viewer's date; and 我 leads to the
 waiting to be published. `moments://search` opens the search.
 
 What a Moment says it ate shows as the site has it: a line under its words on its card
-(the dishes, 好吃, 一般 or 踩雷, and the bill), and on its page a row heading its place, trip
-and day, with what the meal cost, how many it fed and each one's share, and the verdict as
-a badge on its own colour. A place's kind, 餐饮 or 景点, comes before its division on its page
+(the dishes, 好吃, 一般 or 踩雷, and the bill), and on its page a row after its place, with the
+verdict, what the meal cost, how many it fed and each one's share under the dishes. A place's kind, 餐饮 or 景点, comes before its division on its page
 and under its name in a Moment's place row.
 
 The round button at the map's top right, 迷雾地图, lays a light fog over the map, as the site's
@@ -399,8 +398,9 @@ ledger's bills keep each day in a rail down the left, its day of the month and w
 ledger's with what it spent; a month's heading says how many Moments it had and what it spent.
 A day with footprints ends with a 轨迹 row, the day's line drawn where a bill's icon goes, how
 long it moved and how far, and it opens the day; footprints alone don't put a day on the timeline.
-A Moment's page lists its parts row by row, a charge among them, and ends with whether it is
-public and which parts would publish; a bill's page has its 公开 switch. Writing a Moment, the
+A Moment's page lists its place, then its parts row by row, a charge among them, its trip and
+day, and ends with whether it is public and which parts would publish, and, while it is only on
+the phone or changed there, a row that says so and opens the changes; a bill's page has its 公开 switch. Writing a Moment, the
 加一项 row opens 美食 and 账单. A day's page starts with that day's footprints on a map, the
 stretches solid and the gaps between them dotted, and how far it went. A trip's page has 回放旅程
 as its ink button, its distance, charging and spending in figures, and in its bar 编辑旅程
