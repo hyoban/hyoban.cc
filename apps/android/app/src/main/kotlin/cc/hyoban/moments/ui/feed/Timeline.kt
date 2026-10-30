@@ -3,8 +3,6 @@ package cc.hyoban.moments.ui.feed
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.layout.layout
-import androidx.compose.foundation.border
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,9 +48,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.heightIn
 import cc.hyoban.moments.ui.ledger.money
 import cc.hyoban.moments.ui.theme.Space
-import cc.hyoban.moments.ui.theme.SurfaceLevel
-import cc.hyoban.moments.ui.theme.cardBorder
-import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.trips.tripSummary
 
 // The ledger on the timeline: the bills of the books shown, those written with a Moment in its

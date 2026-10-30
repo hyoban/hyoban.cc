@@ -13,15 +13,11 @@ import cc.hyoban.moments.ui.design.FloatingBar
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.width
 import cc.hyoban.moments.ui.design.AppSnackbar
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import cc.hyoban.moments.ui.theme.dividerColor
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.animation.animateColorAsState
-import cc.hyoban.moments.ui.design.ProvideTextStyle
 import cc.hyoban.moments.ui.design.LocalContentColor
-import cc.hyoban.moments.ui.design.HorizontalDivider
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.selectable
@@ -71,7 +67,6 @@ import androidx.compose.foundation.layout.padding
 import cc.hyoban.moments.ui.design.Badge
 import cc.hyoban.moments.ui.design.BadgedBox
 import cc.hyoban.moments.ui.design.Icon
-import cc.hyoban.moments.ui.design.LocalTextStyle
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.MotionScheme
 import cc.hyoban.moments.ui.design.SnackbarDuration
@@ -79,7 +74,6 @@ import cc.hyoban.moments.ui.design.SnackbarHost
 import cc.hyoban.moments.ui.design.SnackbarHostState
 import cc.hyoban.moments.ui.design.SnackbarResult
 import cc.hyoban.moments.ui.design.Surface
-import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -183,9 +177,7 @@ import cc.hyoban.moments.ui.ledger.LedgerSettingsScreen
 import cc.hyoban.moments.ui.ledger.LocalLedgerNav
 import cc.hyoban.moments.ui.ledger.RatesScreen
 import cc.hyoban.moments.ui.theme.Space
-import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.TransitionMotion
-import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.trips.TripPlayerScreen
 import cc.hyoban.moments.ui.trips.TripScreen
 import cc.hyoban.moments.ui.viewer.LocalInPictureInPicture
@@ -575,6 +567,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     // it, and a value changing every frame would lay out every list on the tab every frame; the
     // snackbar, which moves with it, eases on its own.
     val tabFab = if (!railed && accessorySlot.value != null) fabHeight else 0.dp
+    val tabsHidden = remember { mutableStateOf(false) }
 
     // A back swipe, from its start until a moment after the finger lifts, while the page
     // change it started plays out: shared photos stay with their pages meanwhile.
@@ -638,6 +631,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 LocalTabClearance provides TabClearance(tabClearance, tabFab),
                 LocalRailSpace provides rail,
                 LocalNavAccessory provides accessorySlot,
+                LocalTabsHidden provides tabsHidden,
                 LocalMessages provides messages,
                 LocalSnackbarLift provides snackbarLift,
                 LocalReducedMotion provides rememberReducedMotion(),
@@ -935,7 +929,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 }
             }
             AnimatedVisibility(
-                current != null && viewer == null && !railed,
+                current != null && viewer == null && !railed && !tabsHidden.value,
                 enter = slideInVertically(transitions.defaultSpatialSpec()) { it },
                 exit = slideOutVertically(transitions.defaultSpatialSpec()) { it },
                 modifier = navigation.align(Alignment.BottomCenter).fillMaxWidth(),
@@ -1136,6 +1130,9 @@ fun rememberShowMessage(): (String) -> Unit {
         }
     }
 }
+
+/** Whether a tab's page has folded the floating tabs away as it scrolls on; the app brings them back as the page is left. */
+val LocalTabsHidden = staticCompositionLocalOf { mutableStateOf(false) }
 
 /** A tab screen's floating action button, which that screen fills in and clears, and the app places. */
 val LocalNavAccessory = staticCompositionLocalOf<MutableState<(@Composable () -> Unit)?>> { mutableStateOf(null) }

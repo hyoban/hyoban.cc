@@ -400,15 +400,15 @@ taken from `uiautomator dump`; `ledger/AutoBill` keeps the switch and posts the 
 this month's spending in figures with a bar for each day, and four rows: 账单与资产, 足迹,
 记录项与公开 and 设置 (`moments://settings-home`, a row for each section). The timeline and a
 trip's days are a conversation with oneself: each day opens with its date in a capsule at the
-middle (今天, or the date and weekday, a trip's with 第 n 天 before it, and a trip's days from the
-first), then reads from its morning. A Moment is a bubble from the right, its photos across its
+middle (今天, or the date and weekday, the year when it isn't this one, a trip's with 第 n 天
+before it, and a trip's days from the first), then reads from its morning. A Moment is a bubble from the right, its photos across its
 top and a faint line of where and when at its foot; the bills, charges and footprints between
-Moments come from the left in one outlined bubble, a line each with its time and amount, two
-bills or more ending in their total, more than five showing four and how many more. One record's
+Moments come from the left in one outlined bubble, a line each with its time and amount, no
+total under them, more than five showing four and how many more. One record's
 bubble opens it; several, their day. A day with footprints ends with its 轨迹, the day's line for
 its icon and how far it went; footprints alone don't put a day on the timeline. The ledger's
 bills, a plain list, open each day with a header row, its day of the month and weekday and what
-the day came to. A month's heading says how many Moments it had and what it spent.
+the day came to. The conversation has no month headings, and the timeline's title has no counts under it.
 A Moment's page lists its place, then its parts row by row, a charge among them, its trip and
 day, and ends with whether it is public and which parts would publish, and, while it is only on
 the phone or changed there, a row that says so and opens the changes; a bill's page has its 公开 switch. Writing a Moment, the
@@ -426,8 +426,10 @@ The tabs stand down a rail on a window 840dp wide or more and on a phone on its 
 window the map's trips stand in a column at its start and a bottom panel opens as a dialog in
 the middle. No page has a bar: its way back and its actions are circles floating over it, its title large
 under them, which scrolls away and fades in small between the circles over a short fade of the
-page; the timeline's search floats so too, and its page runs under the status bar behind a short
-fade. An editor (writing a Moment or a bill) keeps its row of close, a switch and 保存. The car's
+page; the timeline's search floats so too, its title is small in the middle of the top from the start,
+as a folded bar has it, and goes up with the Moments, coming back as they are scrolled back, and its Moments run under the status bar behind a short fade
+of the page, its icons turning dark or light with what passes under; scrolling it on folds the floating
+tabs away, and scrolling back brings them again. An editor (writing a Moment or a bill) keeps its row of close, a switch and 保存. The car's
 charges (from `/v2`) are records on their days. The
 filters are the search page's: what kind (everything, Moments, bills or charges, each with how
 many) and when (a year, then a month); with nothing typed, a filter lists all it lets through, a

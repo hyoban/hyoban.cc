@@ -1,8 +1,7 @@
 package cc.hyoban.moments.ui.feed
 
-import androidx.compose.ui.semantics.clearAndSetSemantics
+import cc.hyoban.moments.ui.LocalTabsHidden
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.ui.graphics.graphicsLayer
 import cc.hyoban.moments.ui.components.FloatingButton
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.graphics.Brush
@@ -15,7 +14,6 @@ import cc.hyoban.moments.ui.components.restingElevation
 import cc.hyoban.moments.ui.components.floatingElevation
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.tokens
-import cc.hyoban.moments.ui.design.ExtendedFloatingActionButton
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.AnimatedContent
@@ -29,7 +27,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,9 +50,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
-import androidx.compose.foundation.selection.selectableGroup
-import cc.hyoban.moments.ui.design.IconButtonDefaults
-import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.FloatingActionButton
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
@@ -86,9 +80,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
@@ -106,7 +98,6 @@ import cc.hyoban.moments.ui.RailSpace
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.PageWidth
-import cc.hyoban.moments.ui.components.TabPage
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.isExpandedWidth
 import cc.hyoban.moments.ui.components.isMediumWidth
@@ -186,17 +177,14 @@ fun FeedScreen(
     ShowRefreshErrors(container)
     // Everything, unfiltered: narrowing by kind and time is the search page's.
     val shown = moments
-    val placeCount = remember(shown) { shown.flatMap { it.places }.toSet().size }
-    val subtitle = if (shown.isEmpty()) null else
-        pluralStringResource(R.plurals.count_moments, shown.size, shown.size) + "\u2003" + pluralStringResource(R.plurals.count_places, placeCount, placeCount)
     val bills = rememberTimelineBills(container, shown, TimeFilter())
     val tracks = rememberTimelineTracks(container)
     val ledgerNav = LocalLedgerNav.current
     val feedState = rememberLazyListState()
     val gridState = rememberLazyStaggeredGridState()
-    // The header over the views folds away as they scroll and opens again at their top, as the
-    // tab tapped again goes back to it. How far it is folded is kept, so a page made again (the
-    // theme switched) doesn't open it mid-list.
+    // The header over the views folds away as they scroll on and opens again as they scroll back,
+    // or as the tab tapped again takes them to their top. How far it is folded is kept, so a page
+    // made again (the theme switched) doesn't open it mid-list.
     val headerScroll = rememberSaveable(saver = HeaderScroll.Saver) { HeaderScroll() }
     // Opening out with the list as it goes back to its top, on the same spring.
     val headerSpec = AppTheme.motionScheme.defaultSpatialSpec<Float>()
@@ -206,12 +194,37 @@ fun FeedScreen(
     val rowMotion = AppTheme.motionScheme
     val rowIn = expandVertically(rowMotion.defaultSpatialSpec()) + fadeIn(rowMotion.defaultEffectsSpec())
     val rowOut = shrinkVertically(rowMotion.defaultSpatialSpec()) + fadeOut(rowMotion.defaultEffectsSpec())
+    // The tabs fold away down the screen as the timeline is scrolled on, and come back as it is
+    // scrolled back, or when it is left.
+    val tabsHidden = LocalTabsHidden.current
+    DisposableEffect(tabsHidden) { onDispose { tabsHidden.value = false } }
+    val tabsFold = remember(tabsHidden) {
+        object : NestedScrollConnection {
+            // Seen before the header and the list take any of it, so the tabs follow the finger
+            // whichever of them moves.
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (available.y < -TABS_FOLD_STEP) tabsHidden.value = true
+                else if (available.y > TABS_FOLD_STEP) tabsHidden.value = false
+                return Offset.Zero
+            }
+        }
+    }
     val header: FeedLeading.() -> Unit = {
         item(key = "title") {
-            // Under the search circle floating at the top end, as a page's title is under its circles.
-            Column(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(start = Space.gutter, end = Space.gutter, top = FLOATING_BAR, bottom = Space.s)) {
-                Text(stringResource(R.string.title_moments), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
-                subtitle?.let { Text(it, style = AppTheme.typography.body, color = tokens.tx2, maxLines = 1) }
+            // The title as a folded top bar has it from the start: small in the middle, search a
+            // circle at the end, the two going up with the Moments as they scroll on. Room is kept
+            // under the circle for its shadow, which the header's edge would otherwise cut.
+            Box(Modifier.fillMaxWidth().padding(bottom = Space.s)) {
+                Text(
+                    stringResource(R.string.title_moments),
+                    style = AppTheme.typography.titleSmall,
+                    maxLines = 1,
+                    modifier = Modifier.align(Alignment.TopCenter).windowInsetsPadding(WindowInsets.statusBars)
+                        .height(FLOATING_BAR).wrapContentHeight().semantics { heading() },
+                )
+                Box(Modifier.align(Alignment.TopEnd)) {
+                    FloatingButton(AppIcons.Search, stringResource(R.string.action_search), onSearch, tag = "search")
+                }
             }
         }
         item(key = "changes") {
@@ -241,8 +254,8 @@ fun FeedScreen(
                             // The rows over the Moments, the changes, list or calendar and the
                             // filter, stand once above both views rather than heading each, so
                             // switching cross-fades only what changes and leaves them still.
-                            // They scroll away with either and come back at its top.
-                            Column(Modifier.fillMaxSize().nestedScroll(headerScroll.connection)) {
+                            // They scroll away with either and come back as it is scrolled back.
+                            Column(Modifier.fillMaxSize().nestedScroll(tabsFold).nestedScroll(headerScroll.connection)) {
                                 // As wide as the Moments under them and as far in, clear of the rail
                                 // and the cutout as they are.
                                 CollapsingHeader(headerScroll) {
@@ -272,13 +285,9 @@ fun FeedScreen(
                             }
                         }
                     }
+                    // Immersive: the Moments run up under the status bar, a short fade of the page
+                    // there keeping its icons clear of what passes under.
                     StatusBarFade()
-                    // Searching the timeline, a circle floating at the top end; once the title has
-                    // folded away, the title small beside it over a short fade of the page.
-                    val folded = headerScroll.height > 0f && -headerScroll.offset > headerScroll.height / 2
-                    FloatingTitle(stringResource(R.string.title_moments), folded) {
-                        FloatingButton(AppIcons.Search, stringResource(R.string.action_search), onSearch, tag = "search")
-                    }
                 }
             }
         }
@@ -348,11 +357,10 @@ class HeaderScroll {
     var offset by mutableFloatStateOf(0f)
 
     val connection = object : NestedScrollConnection {
+        // Folding away as the list is scrolled on and coming back as soon as it is scrolled back,
+        // wherever it is, as the floating tabs do, rather than only at the list's top.
         override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset =
-            if (available.y < 0) Offset(0f, move(available.y)) else Offset.Zero
-
-        override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset =
-            if (available.y > 0) Offset(0f, move(available.y)) else Offset.Zero
+            Offset(0f, move(available.y))
     }
 
     /** Moves it by [delta] within its height, saying how much of that it took. */
@@ -368,30 +376,16 @@ class HeaderScroll {
     }
 }
 
-/**
- * The page's title small at the middle of the top, over a short fade of the page, while [shown],
- * with [end] floating at the top end, as a page's top bar has it once its title has folded away.
- */
+/** A fade of the page from behind the status bar to a little below it, which the Moments pass under. */
 @Composable
-private fun FloatingTitle(title: String, shown: Boolean, end: @Composable () -> Unit) {
-    val alpha by androidx.compose.animation.core.animateFloatAsState(if (shown) 1f else 0f, AppTheme.motionScheme.fastEffectsSpec(), label = "small title")
+private fun StatusBarFade() {
     val page = AppColors.page
-    Box(Modifier.fillMaxWidth()) {
-        Box(
-            Modifier.matchParentSize().padding(bottom = 0.dp).graphicsLayer { this.alpha = alpha }
-                .background(Brush.verticalGradient(0f to page, 0.75f to page, 1f to page.copy(alpha = 0f))),
-        )
-        Box(Modifier.fillMaxWidth().padding(bottom = Space.l)) {
-            Text(
-                title,
-                style = AppTheme.typography.titleSmall,
-                maxLines = 1,
-                modifier = Modifier.align(Alignment.Center).windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = FLOATING_BAR * 2)
-                    .height(FLOATING_BAR).wrapContentHeight().graphicsLayer { this.alpha = alpha }.clearAndSetSemantics {},
-            )
-            Box(Modifier.align(Alignment.TopEnd)) { end() }
-        }
-    }
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .windowInsetsTopHeight(WindowInsets.statusBars.add(WindowInsets(top = Space.l)))
+            .background(Brush.verticalGradient(0f to page.copy(alpha = 0.95f), 0.6f to page.copy(alpha = 0.7f), 1f to page.copy(alpha = 0f))),
+    )
 }
 
 /** [content] laid out at its own height, less as much as [scroll] has folded it away. */
@@ -407,20 +401,8 @@ private fun CollapsingHeader(scroll: HeaderScroll, content: @Composable () -> Un
     ) { content() }
 }
 
-/**
- * The page's colour fading out under the status bar, so what scrolls up beneath the system's
- * icons doesn't fight them.
- */
-@Composable
-private fun StatusBarFade() {
-    val page = AppColors.page
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .windowInsetsTopHeight(WindowInsets.statusBars.add(WindowInsets(top = Space.m)))
-            .background(Brush.verticalGradient(0f to page, 0.7f to page.copy(alpha = 0.85f), 1f to page.copy(alpha = 0f))),
-    )
-}
+/** How far a scroll has to move in one go, in pixels, to fold the tabs away or bring them back. */
+private const val TABS_FOLD_STEP = 4f
 
 // Material's fade-through timings, as switching tabs has.
 private const val VIEW_FADE_OUT_MS = 90

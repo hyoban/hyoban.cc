@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,14 +43,12 @@ import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.ledger.TIME
 import cc.hyoban.moments.ui.ledger.amountColor
 import cc.hyoban.moments.ui.ledger.incoming
-import cc.hyoban.moments.ui.ledger.money
 import cc.hyoban.moments.ui.ledger.signedMoney
 import cc.hyoban.moments.ui.ledger.txnIcon
 import cc.hyoban.moments.ui.ledger.txnTitle
 import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.cardBorder
-import cc.hyoban.moments.ui.theme.dividerColor
 import cc.hyoban.moments.ui.theme.isLargeFont
 import cc.hyoban.moments.ui.theme.tokens
 
@@ -157,7 +154,7 @@ fun DateCapsule(day: String, onClick: (() -> Unit)?, modifier: Modifier = Modifi
 
 /**
  * Records in a row as one bubble from the left: a line each, its icon, what it is and when,
- * and its amount or figure at the end; two bills or more add a hairline and their total. More
+ * and its amount or figure at the end, no total under them. More
  * than five show four and how many more. One record opens itself; several, their day.
  */
 @Composable
@@ -165,7 +162,6 @@ fun RecordsBubble(
     lines: List<RecordLine>,
     ledger: Ledger,
     tracks: TimelineTracks,
-    currency: String,
     onBill: (String) -> Unit,
     onDay: (() -> Unit)?,
     onTrackDay: (() -> Unit)?,
@@ -184,8 +180,6 @@ fun RecordsBubble(
         is RecordLine.ChargeLine -> onDay
         null -> onDay
     }
-    val bills = shown.filterIsInstance<RecordLine.Bill>().map { it.txn }
-    val out = bills.filter { !it.incoming }
     val large = isLargeFont()
     BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.TopStart) {
         // As wide as three quarters of the column, or the whole of it with the font set large;
@@ -237,17 +231,6 @@ fun RecordsBubble(
             if (shown.size > MAX_LINES) {
                 Row(Modifier.heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.timeline_more_records, shown.size - visible.size), style = AppTheme.typography.caption, color = tokens.tx3)
-                }
-            }
-            if (bills.size > 1) {
-                Box(Modifier.padding(top = Space.xxs).fillMaxWidth().height(1.dp).background(dividerColor()))
-                Row(Modifier.fillMaxWidth().padding(vertical = Space.xs), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(pluralStringResource(R.plurals.ledger_count_bills, bills.size, bills.size), style = AppTheme.typography.caption, color = tokens.tx3)
-                    // A total only of one currency; bills in several are left to their own lines.
-                    if (out.isNotEmpty() && out.all { it.currency == out.first().currency }) {
-                        val cents = out.sumOf { it.amount }
-                        Text(stringResource(R.string.ledger_expense_short, money(cents, out.first().currency)), style = AppTheme.typography.caption, color = tokens.tx3)
-                    }
                 }
             }
         }

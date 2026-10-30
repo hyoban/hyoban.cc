@@ -179,7 +179,7 @@ fun SectionHeader(icon: ImageVector, title: String, modifier: Modifier = Modifie
 
 /** A month's start in a long list: the month as a title, its year small beside it. */
 @Composable
-fun MonthHeader(month: String, year: String?, detail: String? = null) {
+fun MonthHeader(month: String, year: String?) {
     Row(
         // Read as one heading, the month and its year together.
         Modifier.fillMaxWidth().padding(start = Space.gutter, end = Space.gutter, top = Space.xl, bottom = Space.xs).semantics(mergeDescendants = true) { heading() },
@@ -189,10 +189,6 @@ fun MonthHeader(month: String, year: String?, detail: String? = null) {
         Text(month, style = AppTheme.typography.title)
         year?.let {
             Text(it, style = AppTheme.typography.bodySmall, color = tokens.tx2, modifier = Modifier.padding(bottom = Space.xxs))
-        }
-        // How many Moments and what the month spent, the faintest, at the end.
-        detail?.let {
-            Text(it, style = AppTheme.typography.caption, color = cc.hyoban.moments.ui.theme.tokens.tx3, modifier = Modifier.weight(1f).padding(bottom = Space.xxs), textAlign = androidx.compose.ui.text.style.TextAlign.End)
         }
     }
 }
