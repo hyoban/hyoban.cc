@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -153,7 +154,7 @@ fun DateCapsule(day: String, onClick: (() -> Unit)?, modifier: Modifier = Modifi
 }
 
 /**
- * Records in a row as one bubble from the left: a line each, its icon, what it is and when,
+ * Records in a row as one bubble from the left: a line each, when, its icon and what it is,
  * and its amount or figure at the end, no total under them. More
  * than five show four and how many more. One record opens itself; several, their day.
  */
@@ -195,6 +196,8 @@ fun RecordsBubble(
                 .testTag("records_${lines.first().key}"),
         ) {
             val visible = if (shown.size > MAX_LINES) shown.take(MAX_LINES - 1) else shown
+            // The footprints alone have no time, and no column for one.
+            val timed = shown.any { it !is RecordLine.Track }
             visible.forEach { line ->
                 when (line) {
                     is RecordLine.Bill -> RecordRow(
@@ -204,6 +207,7 @@ fun RecordsBubble(
                         end = signedMoney(line.txn.amount, line.txn.currency, line.txn.incoming),
                         endColor = amountColor(line.txn),
                         large = large,
+                        timed = timed,
                         tag = "bill_${line.txn.id}",
                     )
                     is RecordLine.ChargeLine -> RecordRow(
@@ -213,6 +217,7 @@ fun RecordsBubble(
                         end = line.charge.kwh?.let { "%.1f kWh".format(it) } ?: line.charge.minutes?.let { pluralStringResource(R.plurals.charge_minutes, it, it) }.orEmpty(),
                         endColor = tokens.tx,
                         large = large,
+                        timed = timed,
                         tag = "charge_${line.charge.uid}",
                     )
                     is RecordLine.Track -> track?.let { day ->
@@ -223,6 +228,7 @@ fun RecordsBubble(
                             end = stringResource(R.string.distance_kilometres, day.metres / 1000),
                             endColor = tokens.tx,
                             large = large,
+                            timed = timed,
                             tag = "track_${line.day}",
                         )
                     }
@@ -248,6 +254,7 @@ private fun RecordRow(
     end: String,
     endColor: androidx.compose.ui.graphics.Color,
     large: Boolean,
+    timed: Boolean,
     tag: String,
 ) {
     Row(
@@ -255,12 +262,16 @@ private fun RecordRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
+        // The time leads, a column of its own read down the bubble as the day goes, as wide as
+        // 00:00 since the system's monospace doesn't always keep its digits one width; a line with
+        // no time (the footprints) keeps the column empty, so the icons stay in line.
+        if (timed) Box {
+            Text("00:00", style = AppTheme.typography.numCaption, color = androidx.compose.ui.graphics.Color.Transparent, maxLines = 1, modifier = Modifier.clearAndSetSemantics {})
+            time?.let { Text(it, style = AppTheme.typography.numCaption, color = tokens.tx3, maxLines = 1) }
+        }
         icon()
         val words: @Composable (Modifier) -> Unit = { m ->
-            Row(m, verticalAlignment = Alignment.CenterVertically) {
-                Text(title, style = AppTheme.typography.body, maxLines = if (large) 2 else 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                time?.let { Text(it, style = AppTheme.typography.numCaption, color = tokens.tx3, maxLines = 1, modifier = Modifier.padding(start = Space.s)) }
-            }
+            Text(title, style = AppTheme.typography.body, maxLines = if (large) 2 else 1, overflow = TextOverflow.Ellipsis, modifier = m)
         }
         if (large) {
             Column(Modifier.weight(1f)) {
