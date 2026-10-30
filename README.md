@@ -19,7 +19,7 @@ and the pieces around it that record and serve them.
 ## How it fits together
 
 ```
-Android app ──POST /v1/changes──▶ API Worker (D1 + R2) ──deploy hook──▶ site build
+Android app ──POST /v2/changes──▶ API Worker (D1 + R2) ──deploy hook──▶ site build
                                        │   ▲                                 │
                          data:export   │   │ data:push / data:import         ▼
                                        ▼   │                          hyoban.cc (static)

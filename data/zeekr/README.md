@@ -37,8 +37,8 @@ data/zeekr/
 
 Each month contains `report`, `days`, `charging.reported`, `charging.sessions`,
 `assistedDriving` where available, and `sources`. The normalized model has no
-vehicle-state snapshot or collection/period status fields. October is identified
-by its month and capture timestamp.
+vehicle-state snapshot or collection/period status fields; the current month is
+identified by its month and capture timestamp.
 
 References contain a capture SHA-256, JSON Pointer and collection method.
 Each day and charging row has its own reference, so identical source rows remain
@@ -53,21 +53,10 @@ used for reconciliation. `reportedConsumption` records whether its basis is
 Missing data is omitted, never replaced with zero. Monthly report totals and
 daily/session sums stay separate.
 
-## Coverage on October 24, 2026
+## Known source discrepancies
 
-| Records | Coverage |
-| --- | --- |
-| Monthly usage | August 2025–October 2026: 15 records |
-| Daily usage | 264 rows: 253 historical, 11 for October |
-| Charging | January–October 2026: 94 rows |
-| Monthly assisted driving | July, August and September 2026 |
-| Cumulative assisted driving | One observation, captured October 24 |
-
-October covers the app's October 1–24 view and can change after later uploads.
-Its 3,516 km, 593.2 kWh and 14 charging rows (634.6 kWh) reconcile exactly.
-The app provided no 2025 charging details and only three monthly assistance periods.
-
-These source discrepancies remain unchanged:
+`model-validation.json` holds the current coverage and check counts. The app provided no
+2025 charging details. These differences are the app's own and are kept as they are:
 
 | Month | Daily energy sum | Monthly report total |
 | --- | ---: | ---: |
@@ -85,8 +74,7 @@ fields. The total is preserved without inventing a split.
 ## Expenses
 
 `expenses/zeekr-007gt.json` is the car's spending from the iCost bookkeeping
-app: 339 payments from the car's deposit on August 5, 2025 to October 9, 2026, converted once from
-its October 24 export. Each has its time (`+08:00`), `amount` in yuan, an
+app, from the car's deposit on, converted once from an export. Each has its time (`+08:00`), `amount` in yuan, an
 English `category` and optional `subcategory`, and a note of what was bought
 or serviced. `refunds` lists what later came back of it, a refund, subsidy or
 cashback, each with its time, so the refund lines themselves are not kept. Neither are the
@@ -123,7 +111,7 @@ not remove older daily or charging data. Reimporting never appends duplicate row
 Unexpected generated files are reported before writing, not silently removed.
 
 The read-only `zeekr:check` verifies privacy rules and hashes, Zod schemas,
-historical daily values against share arrays, October values against saved
+historical daily values against share arrays, the current month against saved
 tooltips, charging totals and monthly reconciliation. Every saved record and
 validation report is compared with a fresh conversion. Detailed passing checks
 are computed on each run; only counts and actionable differences are saved.

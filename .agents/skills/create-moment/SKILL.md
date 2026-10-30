@@ -12,7 +12,7 @@ Create one Moment as an entry under `data/entries` (the shape is in
 network. Uploading its media to the configured R2 bucket is part of preparing
 the local Moment.
 
-1. Run `pnpm data:export` so `data/` has what the API has; it needs
+1. Run `vp run data:export` so `data/` has what the API has; it needs
    `MOMENTS_API_TOKEN` in `.env`, and stops if `data/` has uncommitted changes
    (ask the user about those). Then inspect `packages/data-spec`,
    `data/places.json`, and a recent entry under `data/entries`.
@@ -44,12 +44,12 @@ the record it wrote.
 6. Set `parts.text.text` in the entry with `apply_patch`. Leave the other fields as the
    command wrote them; never edit `uid`, `published` or a media item's
    `published` by hand.
-7. Compare the saved text with the user's text, then run `pnpm test`, `pnpm check`, and `pnpm build`.
+7. Compare the saved text with the user's text, then run `vp test`, `vp check`, and `vp run build`.
 8. Push the record, with the places it names, into the API, and any trip you
    changed:
 
 ```bash
-pnpm data:push data/entries/<YYYY>/<MM>/<uid>.json [data/collections/<slug>.json]...
+vp run data:push data/entries/<YYYY>/<MM>/<uid>.json [data/collections/<slug>.json]...
 ```
 
 Add `--place <id>` for a place you moved that the entry doesn't name. A trip is a
@@ -97,8 +97,8 @@ and regions keep an approximate centre.
   point looks a few hundred metres off, compare it with AMap's raw and converted
   coordinates: if it sits near the raw one, convert it.
 - Trip routes are kept by coordinates in the API, which fetches the missing ones
-  after each write and after `pnpm data:push`. After moving a place or locating a
-  Moment inside a trip, run `pnpm trips:weather`. If the new place now ends a
+  after each write and after `vp run data:push`. After moving a place or locating a
+  Moment inside a trip, run `vp run trips:weather`. If the new place now ends a
   train, plane, or ferry leg, update that trip's `route.straightLegs` in
   `data/collections/<slug>.json`, or the leg turns into a drive; a new train endpoint
   also needs its `station` in `data/places.json`.
