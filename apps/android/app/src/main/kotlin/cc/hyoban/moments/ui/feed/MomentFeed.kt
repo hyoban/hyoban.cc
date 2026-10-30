@@ -297,8 +297,8 @@ fun MomentFeed(
                             val joinedAbove = index > 0 && (chats[index - 1] is ChatItem.Moment) == (item is ChatItem.Moment)
                             val joinedBelow = index < chats.lastIndex && (chats[index + 1] is ChatItem.Moment) == (item is ChatItem.Moment)
                             val itemModifier = Modifier.animateItem().padding(
-                                start = Space.gutter,
-                                end = Space.gutter,
+                                start = Space.xs,
+                                end = Space.xs,
                                 top = if (index == 0) 0.dp else if (joinedAbove) Space.xxs else Space.m,
                                 bottom = if (item.key == lastChat) Space.s else 0.dp,
                             )
