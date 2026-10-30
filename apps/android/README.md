@@ -50,9 +50,11 @@ coast the boundaries were simplified past, lights the nearest within 10 km; the 
 Moments light theirs too. The fog is the page's text colour, so on the dark map it's a light haze. Turned on, it closes in from the screen's edges to its middle; turned off, it clears from the middle outwards. A tap while it sweeps turns it around from where it is. Left on, it sweeps in the same way the first time the map opens after the app starts. Under the toggle, how many cities and provinces are lit.
 
 A new Moment can be written on the phone, from 记录 at the foot of the timeline or
-`moments://new`, on a page of its own, or, on a wider window, in a dialog over the page it was opened from. Its 时刻 and 记账 at the top choose what it
-writes: the Moment, a bill, or both, a bill written with the Moment taking its time and place
-and linked to it, and a meal's amount and food category until the bill's own are given. The
+`moments://new`, on a page of its own, or, on a wider window, in a dialog over the page it was opened from. Its bar holds
+the X, whether it is 公开 or 私有 (a tap on it chooses) and the ink 保存; its words, photos, time and
+place sit on the page itself, and under 加一项 a chip each opens 美食, 账单 and 类型, a bill
+written with the Moment taking its time and place and linked to it, and a meal's amount and
+food category until the bill's own are given. The
 Moment: its words, up to nine photos and videos from the system's documents picker (a tile beside it
 opens the phone's camera app, whose photos go to the gallery to be picked from there), and when and
 where, worked out as it is written. A video goes up as it is, so one over 100 MB, more than
@@ -62,7 +64,7 @@ for the record (a screenshot, a flat tyre): it stays in its Moment, but neither 
 trip covers and widget nor the site's covers, collages and share cards
 pick it. Under 类型 it can say what it is mostly about, one of 技术, 旅行, 美食, 用车,
 摄影 and 生活, a second tap leaving it unset; a 技术 one the site doesn't show. Under 美食 it can say what was eaten, as the site shows it under the Moment: the
-dishes, split at commas, 好吃, 一般 or 踩雷, and what the meal cost and how many it fed;
+dishes, split at commas, 好吃, 一般 or 踩雷, and what the meal cost and how many it fed, with each one's share;
 the review before publishing shows a change to it in a line. The time is the earliest photo's, from its EXIF and
 the offset the camera wrote, or a video's creation time in the phone's zone, else, for
 photos whose EXIF has none (saved from WeChat), the
@@ -306,8 +308,8 @@ category, account, amount). 记账设置 is under 我.
 
 A bill is an expense, an income or a transfer, the last also a repayment, a loan given or
 taken, or one collected; or a refund or reimbursement of an expense, written from that
-expense's page. `moments://new-bill`, or 记录 with 记账 chosen, opens the new Moment's page
-with only 记账 chosen, where a Moment can be written with the bill; changing a bill, or writing
+expense's page. `moments://new-bill`, or the ledger's +, opens a bill alone on its keypad; a
+Moment with a bill is written from 记录 with 账单 added; changing a bill, or writing
 one from a Moment, an account or a day, is a full-screen dialog of its own. Either has its amount
 (sums like `12+3.4` add up) in any currency, its category and second-level category,
 the account, or several accounts each with its share (one is needed to save it, and a
@@ -402,7 +404,7 @@ long it moved and how far, and it opens the day; footprints alone don't put a da
 A Moment's page lists its place, then its parts row by row, a charge among them, its trip and
 day, and ends with whether it is public and which parts would publish, and, while it is only on
 the phone or changed there, a row that says so and opens the changes; a bill's page has its 公开 switch. Writing a Moment, the
-加一项 row opens 美食 and 账单. A day's page starts with that day's footprints on a map across its
+加一项 row opens 美食, 账单 and 类型. A day's page starts with that day's footprints on a map across its
 top, the stretches solid and the gaps between them dotted, its Moments as dots and its bills as
 rings where the footprints were when they were paid; under the day, how far it went, how long it
 moved and what it spent, then the trip it was on and its Moments, bills and charges from the

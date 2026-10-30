@@ -252,7 +252,11 @@ typealias InputChipDefaults = ChipDefaults
 typealias AssistChipDefaults = ChipDefaults
 typealias SuggestionChipDefaults = ChipDefaults
 
-/** A chip: a capsule [container], 36dp tall, its icons and label inside. */
+/**
+ * A chip: a capsule [container], 36dp tall, its icons and label inside. It is laid out at the
+ * height it is drawn, so rows of chips stand as far apart as the design has them; its 48dp target
+ * still takes a tap round it, as Compose widens a target smaller than that.
+ */
 @Composable
 private fun Chip(
     modifier: Modifier,
@@ -289,7 +293,7 @@ fun FilterChip(
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
 ) = Chip(
-    modifier.minimumInteractiveComponentSize().selectable(selected, enabled = enabled, role = Role.Checkbox, onClick = onClick),
+    modifier.selectable(selected, enabled = enabled, role = Role.Checkbox, onClick = onClick),
     if (selected) tokens.accentSoft else tokens.pressed,
     if (selected) tokens.tx else tokens.tx2,
     if (selected) tokens.accent else tokens.tx2,
@@ -320,7 +324,7 @@ fun AssistChip(
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
 ) = Chip(
-    modifier.minimumInteractiveComponentSize().clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+    modifier.clickable(enabled = enabled, role = Role.Button, onClick = onClick),
     tokens.pressed,
     tokens.tx,
     tokens.tx2,

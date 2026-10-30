@@ -36,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.geometry.Offset
@@ -159,8 +160,20 @@ fun Icon(painter: Painter, contentDescription: String?, modifier: Modifier = Mod
 
 // ---------------------------------------------------------------- surfaces
 
-/** What is tapped is at least 48dp each way, however small it is drawn. */
-fun Modifier.minimumInteractiveComponentSize(): Modifier = sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+/**
+ * What is tapped is at least 48dp each way, however small it is drawn: the 48dp is kept in the
+ * layout, what follows is drawn at its own size in its middle, and a tap anywhere in it reaches
+ * it, as Compose widens a smaller target to the touch-target size.
+ */
+fun Modifier.minimumInteractiveComponentSize(): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val target = MinimumTarget.roundToPx()
+    val width = maxOf(placeable.width, target)
+    val height = maxOf(placeable.height, target)
+    layout(width, height) { placeable.place((width - placeable.width) / 2, (height - placeable.height) / 2) }
+}
+
+private val MinimumTarget = 48.dp
 
 /**
  * A surface: [color] in [shape], with an edge and a shadow if given, its content in

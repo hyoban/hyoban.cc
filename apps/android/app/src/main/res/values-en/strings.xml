@@ -124,7 +124,6 @@
     <string name="action_unmute">Unmute</string>
     <string name="section_places">Places</string>
     <string name="section_photo">Photo</string>
-    <string name="section_media">Photos and videos</string>
     <string name="section_route">Route</string>
     <string name="title_settings">Settings</string>
     <string name="section_sources">Sources</string>
@@ -239,9 +238,6 @@
         <item quantity="other">Leaving in %1$d days</item>
     </plurals>
     <string name="title_new_moment">New Moment</string>
-    <string name="title_new_moment_and_bill">New Moment and bill</string>
-    <string name="write_moment">Moment</string>
-    <string name="write_bill">Bill</string>
     <string name="section_bill">Bill</string>
     <string name="action_new_moment">Record a Moment or a bill</string>
     <string name="action_save">Save</string>
@@ -255,9 +251,7 @@
     <string name="action_photo_still">Use the still only</string>
     <string name="action_move_earlier">Move earlier</string>
     <string name="action_move_later">Move later</string>
-    <string name="section_when_where">When and where</string>
     <string name="section_topic">Topic</string>
-    <string name="note_topic">Tech Moments don’t appear on the site. Tap a topic again to clear it</string>
     <string name="topic_tech">Tech</string>
     <string name="topic_travel">Travel</string>
     <string name="topic_food">Food</string>
@@ -268,13 +262,13 @@
     <string name="change_topic">Topic</string>
     <string name="section_food">Food</string>
     <string name="hint_food_dishes">What you had</string>
-    <string name="note_food">Separate dishes with commas. Tap a rating again to clear it</string>
     <string name="food_good">Good</string>
     <string name="food_ok">OK</string>
     <string name="food_bad">Bad</string>
     <string name="label_food_amount">Cost</string>
     <string name="label_food_people">People</string>
     <string name="unit_food_people">people</string>
+    <string name="food_share">¥%1$s each</string>
     <string name="source_photo">From the photo</string>
     <string name="source_now">Now</string>
     <string name="source_location">Where you are</string>
@@ -286,7 +280,6 @@
     <string name="place_name">Place name</string>
     <string name="distance_metres">%1$d m</string>
     <string name="distance_kilometres">%1$.1f km</string>
-    <string name="note_local_only">New Moments stay on this phone and aren’t sent to the site</string>
     <string name="confirm_discard">Discard this Moment?</string>
     <string name="action_discard">Discard</string>
     <string name="confirm_motion">Add as photos?</string>
@@ -346,8 +339,6 @@
     <string name="settings_token_note">With a token, you can edit and delete the site’s Moments. Your edits and the Moments you write here stay on this phone until you review and publish them together. The token stays on this phone and isn’t backed up.</string>
     <string name="message_published">Published</string>
     <string name="error_publish">Couldn’t publish: %1$s</string>
-    <string name="note_published">Saved changes stay on this phone until you publish them to the site</string>
-    <string name="note_local_then_publish">Saved Moments stay on this phone until you publish them to the site</string>
     <string name="label_unpublished_change">Unpublished change</string>
     <string name="title_changes">Publish changes</string>
     <plurals name="count_changes">

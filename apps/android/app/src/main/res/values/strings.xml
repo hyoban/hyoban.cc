@@ -123,7 +123,6 @@
     <string name="action_unmute">打开声音</string>
     <string name="section_places">地点</string>
     <string name="section_photo">照片</string>
-    <string name="section_media">照片和视频</string>
     <string name="section_route">路线</string>
     <string name="title_settings">设置</string>
     <string name="section_sources">数据来源</string>
@@ -225,9 +224,6 @@
     <string name="action_system_language">在系统设置中更改</string>
     <string name="settings_language_note">时刻里的文字保持原样</string>
     <string name="title_new_moment">新时刻</string>
-    <string name="title_new_moment_and_bill">新时刻和账单</string>
-    <string name="write_moment">时刻</string>
-    <string name="write_bill">记账</string>
     <string name="section_bill">账单</string>
     <string name="action_new_moment">记录时刻或账单</string>
     <string name="action_save">保存</string>
@@ -241,9 +237,7 @@
     <string name="action_photo_still">只用静态画面</string>
     <string name="action_move_earlier">往前移</string>
     <string name="action_move_later">往后移</string>
-    <string name="section_when_where">时间和地点</string>
     <string name="section_topic">类型</string>
-    <string name="note_topic">技术类的时刻不会在网站上显示；再点一次可以取消</string>
     <string name="topic_tech">技术</string>
     <string name="topic_travel">旅行</string>
     <string name="topic_food">美食</string>
@@ -254,13 +248,13 @@
     <string name="change_topic">类型</string>
     <string name="section_food">美食</string>
     <string name="hint_food_dishes">吃了什么</string>
-    <string name="note_food">几样菜用逗号或顿号分开；评价再点一次可以取消</string>
     <string name="food_good">好吃</string>
     <string name="food_ok">一般</string>
     <string name="food_bad">踩雷</string>
     <string name="label_food_amount">花费</string>
     <string name="label_food_people">人数</string>
     <string name="unit_food_people">人</string>
+    <string name="food_share">每人 ¥%1$s</string>
     <string name="source_photo">来自照片</string>
     <string name="source_now">现在</string>
     <string name="source_location">当前位置</string>
@@ -272,7 +266,6 @@
     <string name="place_name">地点名称</string>
     <string name="distance_metres">%1$d 米</string>
     <string name="distance_kilometres">%1$.1f 公里</string>
-    <string name="note_local_only">新时刻只存在这台手机上，不会同步到网站</string>
     <string name="confirm_discard">放弃这个时刻？</string>
     <string name="action_discard">放弃</string>
     <string name="confirm_motion">按照片添加？</string>
@@ -331,8 +324,6 @@
     <string name="settings_token_note">有了令牌，就能编辑和删除网站上的时刻。手机上写的时刻和这些改动会先留在手机上，在「发布更改」里检查后一起发布。令牌只存在这台手机上，不会进入备份。</string>
     <string name="message_published">已发布</string>
     <string name="error_publish">没能发布：%1$s</string>
-    <string name="note_published">保存后先留在这台手机上，在「发布更改」里检查后再一起发布到网站</string>
-    <string name="note_local_then_publish">保存后只留在这台手机上，在「发布更改」里检查后再一起发布到网站</string>
     <string name="label_unpublished_change">改动未发布</string>
     <string name="title_changes">发布更改</string>
     <plurals name="count_changes">

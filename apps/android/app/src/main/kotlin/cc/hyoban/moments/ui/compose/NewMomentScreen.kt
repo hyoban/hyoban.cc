@@ -1,6 +1,22 @@
 package cc.hyoban.moments.ui.compose
 
 import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.AssistChip
+import cc.hyoban.moments.ui.design.Button
+import cc.hyoban.moments.ui.design.ChipDefaults
+import cc.hyoban.moments.ui.design.ListItem
+import cc.hyoban.moments.ui.design.ListItemShapes
+import cc.hyoban.moments.ui.design.LocalContentColor
+import cc.hyoban.moments.ui.design.LocalTextStyle
+import cc.hyoban.moments.ui.theme.tokens
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.text.TextStyle
 import cc.hyoban.moments.ui.design.PressIndication
 import cc.hyoban.moments.ui.design.DateTimeDialog
 import android.Manifest
@@ -149,11 +165,6 @@ import cc.hyoban.moments.ui.format.formatAmount
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.format.verdictLabel
-import cc.hyoban.moments.ui.settings.Caption
-import cc.hyoban.moments.ui.settings.Group
-import cc.hyoban.moments.ui.settings.boxed
-import cc.hyoban.moments.ui.settings.SegmentedGroup
-import cc.hyoban.moments.ui.settings.Segment
 import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.Elevation
 import cc.hyoban.moments.ui.theme.MediaOverlay
@@ -226,6 +237,8 @@ fun NewMomentScreen(
     var withFood by rememberSaveable { mutableStateOf(originalFood != null) }
     val food = foodOf(dishes, verdict, amount, people, originalFood)
     var topic by rememberSaveable { mutableStateOf(original?.topic) }
+    /** Whether 类型 was added from the 加一项 row: open for a Moment that has one. */
+    var withTopic by rememberSaveable { mutableStateOf(original?.topic != null) }
     /** Private: kept on the phone and in the API for its owner, never on the site. */
     var private by rememberSaveable { mutableStateOf(original?.hidden ?: false) }
     val openedAt = remember { OffsetDateTime.now() }
@@ -248,7 +261,7 @@ fun NewMomentScreen(
     val publishing by container.publishing.collectAsStateWithLifecycle()
 
     // What a new one writes: the Moment, a bill, or both, never neither.
-    var withMoment by rememberSaveable { mutableStateOf(original != null || !startWithBill) }
+    val withMoment = original != null || !startWithBill
     var withBill by rememberSaveable { mutableStateOf(original == null && startWithBill) }
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
@@ -414,8 +427,8 @@ fun NewMomentScreen(
     }
 
     LaunchedEffect(written) { if (written) emptyError = false }
-    // A full-screen dialog, as Material 3 has a task with fields to fill: an X to leave, and
-    // Save, never greyed out, telling what is missing rather than refusing to be tapped.
+    // A full-screen dialog: an X to leave, whether it is public in the middle of the bar, and
+    // the ink 保存, never greyed out, telling what is missing rather than refusing to be tapped.
     // A bill alone is typed on the keypad, pinned under its fields, as iCost has it.
     val keypad = withBill && !withMoment && keypadFits()
     Box(Modifier.fillMaxSize()) {
@@ -424,7 +437,6 @@ fun NewMomentScreen(
                 when {
                     original != null -> R.string.title_edit_moment
                     !withMoment -> R.string.ledger_new_bill
-                    withBill -> R.string.title_new_moment_and_bill
                     else -> R.string.title_new_moment
                 },
             ),
@@ -432,9 +444,14 @@ fun NewMomentScreen(
             modifier = Modifier.background(AppColors.page),
             close = true,
             small = keypad,
+            centre = if (withMoment) {
+                { Visibility(private) { private = it } }
+            } else {
+                null
+            },
             // A bill on the keypad has its 保存 at the keypad's foot, the page's one main action: none up here.
             actions = {
-                if (!keypad) TextButton(
+                if (!keypad) Button(
                     onClick = {
                         when {
                             withMoment && !written -> emptyError = true
@@ -443,7 +460,8 @@ fun NewMomentScreen(
                         }
                     },
                     enabled = !saving,
-                    modifier = Modifier.padding(end = Space.s).testTag("save"),
+                    contentPadding = PaddingValues(horizontal = Space.l, vertical = Space.s),
+                    modifier = Modifier.padding(end = Space.xs).testTag("save"),
                 ) { Text(stringResource(R.string.action_save)) }
             },
         ) {
@@ -458,76 +476,53 @@ fun NewMomentScreen(
                     val focus = remember { FocusRequester() }
                     // A new Moment starts at its words; one being changed waits to be told what to change.
                     LaunchedEffect(Unit) { if (original == null && withMoment) focus.requestFocus() }
-                    if (original == null) {
-                        // What is written: the Moment, a bill, or both.
-                        MultiChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = if (keypad) Space.xs else Space.s)) {
-                            SegmentedButton(
-                                checked = withMoment,
-                                onCheckedChange = { if (withBill) withMoment = it },
-                                modifier = Modifier.testTag("write_moment"),
-                            ) { Text(stringResource(R.string.write_moment)) }
-                            SegmentedButton(
-                                checked = withBill,
-                                onCheckedChange = { if (withMoment) withBill = it },
-                                modifier = Modifier.testTag("write_bill"),
-                            ) { Text(stringResource(R.string.write_bill)) }
-                        }
-                    }
                     if (withMoment) {
-                    Group(null, null) {
-                        TextField(
-                            value = text,
-                            onValueChange = { text = it },
-                            placeholder = { Text(stringResource(R.string.hint_moment_text)) },
-                            textStyle = AppTheme.typography.bodyReading,
-                            minLines = 5,
-                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Default),
-                            isError = emptyError,
-                            // The error marked by an icon as well as the colour, as Material 3 asks of a field in error.
-                            trailingIcon = if (emptyError) {
-                                { Icon(AppIcons.Alert, contentDescription = null, tint = AppTheme.colorScheme.error) }
-                            } else {
-                                null
-                            },
-                            supportingText = if (emptyError) {
-                                { Text(stringResource(R.string.error_empty_moment)) }
-                            } else {
-                                null
-                            },
-                            modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("moment_text"),
-                        )
-                    }
-                    Group(stringResource(R.string.section_media), null) {
-                        PhotoStrip(
-                            photos,
-                            onAdd = addPhotos,
-                            onOpenCamera = openCamera,
-                            utility = utility,
-                            onToggleUtility = { uri -> utility = if (uri in utility) utility - uri else utility + uri },
-                            motion = photos.filter { infos[it]?.motion == true }.toSet(),
-                            videos = photos.filter { infos[it]?.video == true || originalMedia[it]?.type == MediaType.VIDEO }.toSet(),
-                            stills = stills,
-                            onToggleStill = { uri -> stills = if (uri in stills) stills - uri else stills + uri },
-                            onRemove = { removed -> photos = photos - removed },
-                            onMove = { from, to -> photos = photos.toMutableList().apply { add(to, removeAt(from)) } },
-                        )
-                    }
-                    val note = when {
-                        published -> R.string.note_published
-                        canPublish -> R.string.note_local_then_publish
-                        else -> R.string.note_local_only
-                    }
-                    val whenRow: Segment = { shapes ->
+                    // The words on the page itself, on the gutter, the field's own padding outside it.
+                    TextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        placeholder = { Text(stringResource(R.string.hint_moment_text)) },
+                        textStyle = AppTheme.typography.bodyReading,
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Default),
+                        isError = emptyError,
+                        // The error marked by an icon as well as the colour.
+                        trailingIcon = if (emptyError) {
+                            { Icon(AppIcons.Alert, contentDescription = null, tint = AppTheme.colorScheme.error) }
+                        } else {
+                            null
+                        },
+                        supportingText = if (emptyError) {
+                            { Text(stringResource(R.string.error_empty_moment)) }
+                        } else {
+                            null
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = Space.gutter - ROW_PADDING).focusRequester(focus).testTag("moment_text"),
+                    )
+                    PhotoStrip(
+                        photos,
+                        onAdd = addPhotos,
+                        onOpenCamera = openCamera,
+                        utility = utility,
+                        onToggleUtility = { uri -> utility = if (uri in utility) utility - uri else utility + uri },
+                        motion = photos.filter { infos[it]?.motion == true }.toSet(),
+                        videos = photos.filter { infos[it]?.video == true || originalMedia[it]?.type == MediaType.VIDEO }.toSet(),
+                        stills = stills,
+                        onToggleStill = { uri -> stills = if (uri in stills) stills - uri else stills + uri },
+                        onRemove = { removed -> photos = photos - removed },
+                        onMove = { from, to -> photos = photos.toMutableList().apply { add(to, removeAt(from)) } },
+                        modifier = Modifier.padding(top = Space.xs),
+                    )
+                    // When and where, rows on the page, their icons on the words' edge above.
+                    PageRows(Modifier.padding(top = Space.l + Space.xs)) { shapes ->
                         SegmentedListItem(
                             onClick = { editingTime = true },
                             shapes = shapes,
                             colors = segmentColors(),
                             supportingContent = { Text(stringResource(timeSource)) },
                             leadingContent = { Icon(AppIcons.Clock, contentDescription = null) },
+                            trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                             modifier = Modifier.testTag("moment_time"),
-                        ) { Text(listOfNotNull(formatDay(stamp(time)), formatTime(stamp(time))).joinToString(" ")) }
-                    }
-                    val whereRow: Segment = { shapes ->
+                        ) { Text(listOfNotNull(formatDay(stamp(time)), formatTime(stamp(time))).joinToString("\u2003")) }
                         SegmentedListItem(
                             onClick = { editingPlace = true },
                             shapes = shapes,
@@ -555,6 +550,7 @@ fun NewMomentScreen(
                                 )
                             },
                             leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
+                            trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                             modifier = Modifier.testTag("moment_place"),
                         ) {
                             Text(
@@ -566,40 +562,24 @@ fun NewMomentScreen(
                             )
                         }
                     }
-                    SegmentedGroup(stringResource(R.string.section_when_where), stringResource(note), listOf(whenRow, whereRow))
-                    TopicGroup(topic) { topic = it }
-                    SegmentedGroup(
-                        null,
-                        stringResource(R.string.moment_private_note),
-                        listOf { shapes ->
-                            cc.hyoban.moments.ui.settings.SwitchRow(private, AppIcons.EyeOff, stringResource(R.string.visibility_private), "moment_private", shapes) { private = !private }
-                        },
-                    )
-                    // 加一项: the plugins in a row, each opening its fields when chosen.
-                    Caption(stringResource(R.string.section_add_item))
-                    androidx.compose.foundation.layout.FlowRow(
+                    // 加一项: the plugins in a row, each opening its fields when chosen, a tick in place of its icon.
+                    PageCaption(stringResource(R.string.section_add_item))
+                    FlowRow(
                         Modifier.fillMaxWidth().padding(horizontal = Space.gutter),
                         horizontalArrangement = Arrangement.spacedBy(Space.s),
+                        verticalArrangement = Arrangement.spacedBy(Space.s),
                     ) {
-                        FilterChip(
-                            selected = withFood,
-                            onClick = {
-                                withFood = !withFood
-                                if (!withFood) {
-                                    dishes = ""; verdict = null; amount = ""; people = ""
-                                }
-                            },
-                            label = { Text(stringResource(R.string.section_food)) },
-                            leadingIcon = { Icon(AppIcons.Food, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
-                            modifier = Modifier.testTag("add_food"),
-                        )
-                        FilterChip(
-                            selected = withBill,
-                            onClick = { withBill = !withBill },
-                            label = { Text(stringResource(R.string.section_bill)) },
-                            leadingIcon = { Icon(AppIcons.Receipt, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
-                            modifier = Modifier.testTag("add_bill"),
-                        )
+                        AddChip(withFood, AppIcons.Food, stringResource(R.string.section_food), "add_food") {
+                            withFood = !withFood
+                            if (!withFood) {
+                                dishes = ""; verdict = null; amount = ""; people = ""
+                            }
+                        }
+                        AddChip(withBill, AppIcons.Receipt, stringResource(R.string.section_bill), "add_bill") { withBill = !withBill }
+                        AddChip(withTopic, AppIcons.Category, stringResource(R.string.section_topic), "add_topic") {
+                            withTopic = !withTopic
+                            if (!withTopic) topic = null
+                        }
                     }
                     if (withFood) FoodGroup(
                         dishes = dishes,
@@ -613,32 +593,28 @@ fun NewMomentScreen(
                     )
                     }
                     if (withBill) {
-                        if (withMoment) Caption(stringResource(R.string.section_bill))
+                        if (withMoment) PageCaption(stringResource(R.string.section_bill))
                         BillFields(container, ledger, bill, billAt, null, null, withMoment = withMoment, keypad = keypad)
                     }
+                    if (withMoment && withTopic) TopicGroup(topic) { topic = it }
                     // Deleting is rare, so it waits down here rather than over the Moment; its snackbar can undo it.
                     if (original != null && publishing == null) {
-                        SegmentedGroup(
-                            null,
-                            null,
-                            listOf { shapes ->
-                                SegmentedListItem(
-                                    onClick = {
-                                        container.delete(original.uid)
-                                        onDeleted()
-                                    },
-                                    shapes = shapes,
-                                    enabled = !saving,
-                                    colors = ListItemDefaults.segmentedColors(
-                                        containerColor = LocalSurfaceLevel.current.raised.fill(),
-                                        contentColor = AppTheme.colorScheme.error,
-                                        leadingContentColor = AppTheme.colorScheme.error,
-                                    ),
-                                    leadingContent = { Icon(AppIcons.Trash, contentDescription = null) },
-                                    modifier = Modifier.testTag("delete"),
-                                ) { Text(stringResource(R.string.action_delete_moment)) }
-                            },
-                        )
+                        PageRows(Modifier.padding(top = Space.xxl)) { shapes ->
+                            SegmentedListItem(
+                                onClick = {
+                                    container.delete(original.uid)
+                                    onDeleted()
+                                },
+                                shapes = shapes,
+                                enabled = !saving,
+                                colors = ListItemDefaults.segmentedColors(
+                                    contentColor = AppTheme.colorScheme.error,
+                                    leadingContentColor = AppTheme.colorScheme.error,
+                                ),
+                                leadingContent = { Icon(AppIcons.Trash, contentDescription = null) },
+                                modifier = Modifier.testTag("delete"),
+                            ) { Text(stringResource(R.string.action_delete_moment)) }
+                        }
                     }
                 }
                 if (keypad) BillKeypad(container, ledger, bill, billAt, null, onSave = { if (!saving) save() })
@@ -739,6 +715,7 @@ private fun PhotoStrip(
     onToggleStill: (Uri) -> Unit,
     onRemove: (Uri) -> Unit,
     onMove: (Int, Int) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val list = rememberLazyListState()
     val haptics = LocalHapticFeedback.current
@@ -784,9 +761,9 @@ private fun PhotoStrip(
     // The photo whose menu is open, from a tap on it.
     var menuFor by remember { mutableStateOf<Uri?>(null) }
     LazyRow(
-        Modifier.fillMaxWidth(),
+        modifier.fillMaxWidth(),
         state = list,
-        contentPadding = PaddingValues(Space.m),
+        contentPadding = PaddingValues(horizontal = Space.gutter),
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
         itemsIndexed(photos, key = { _, uri -> uri.toString() }) { index, uri ->
@@ -918,37 +895,98 @@ private fun PhotoStrip(
     }
 }
 
-/** What the Moment is mostly about, one of Material 3's filter chips; the chosen one tapped again leaves it unset. */
+/** Rows on the page itself, with space rather than lines between them, their icons on the gutter. */
 @Composable
-private fun TopicGroup(topic: String?, onTopic: (String?) -> Unit) {
-    val label = stringResource(R.string.section_topic)
-    val chips = boxed {
-        FlowRow(
-            Modifier.fillMaxWidth().padding(Space.l).semantics { contentDescription = label },
-            horizontalArrangement = Arrangement.spacedBy(Space.s),
-        ) {
-            MomentTopic.entries.forEach { entry ->
-                val selected = entry.value == topic
-                FilterChip(
-                    selected = selected,
-                    onClick = { onTopic(if (selected) null else entry.value) },
-                    label = { Text(stringResource(topicLabel(entry))) },
-                    leadingIcon = if (selected) {
-                        { Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+private fun PageRows(modifier: Modifier = Modifier, rows: @Composable (ListItemShapes) -> Unit) {
+    val shapes = ListItemShapes(AppTheme.shapes.medium)
+    Column(modifier.padding(horizontal = Space.gutter - ROW_PADDING)) { rows(shapes) }
+}
+
+/** What heads a part of the page, in the third grey on the gutter, well clear of what is over it. */
+@Composable
+private fun PageCaption(title: String) {
+    Text(
+        title,
+        style = AppTheme.typography.caption,
+        color = tokens.tx3,
+        modifier = Modifier.fillMaxWidth().padding(start = Space.gutter, end = Space.gutter, top = Space.xxl, bottom = Space.xs).semantics { heading() },
+    )
+}
+
+/** One of 加一项's plugins: its icon, a tick once added. */
+@Composable
+private fun AddChip(added: Boolean, icon: ImageVector, label: String, tag: String, onClick: () -> Unit) {
+    FilterChip(
+        selected = added,
+        onClick = onClick,
+        label = { Text(label) },
+        leadingIcon = { Icon(if (added) AppIcons.Check else icon, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
+        modifier = Modifier.testTag(tag),
+    )
+}
+
+/** Whether the Moment is public, in the middle of the bar, a tap opening the two to choose from. */
+@Composable
+private fun Visibility(private: Boolean, onPrivate: (Boolean) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        AssistChip(
+            onClick = { open = true },
+            label = { Text(stringResource(if (private) R.string.visibility_private else R.string.visibility_public)) },
+            leadingIcon = { Icon(if (private) AppIcons.EyeOff else AppIcons.Eye, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
+            trailingIcon = { Icon(AppIcons.CaretDown, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
+            modifier = Modifier.semantics { role = Role.DropdownList }.testTag("moment_private"),
+        )
+        DropdownMenu(open, onDismissRequest = { open = false }) {
+            listOf(false to AppIcons.Eye, true to AppIcons.EyeOff).forEach { (choice, icon) ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(if (choice) R.string.visibility_private else R.string.visibility_public)) },
+                    leadingIcon = { Icon(icon, contentDescription = null) },
+                    trailingIcon = if (choice == private) {
+                        { Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent) }
                     } else {
                         null
                     },
-                    modifier = Modifier.testTag("topic_${entry.value}"),
+                    onClick = {
+                        open = false
+                        onPrivate(choice)
+                    },
                 )
             }
         }
     }
-    SegmentedGroup(label, stringResource(R.string.note_topic), listOf(chips))
+}
+
+/** What the Moment is mostly about, one of the chips; the chosen one tapped again leaves it unset. */
+@Composable
+private fun TopicGroup(topic: String?, onTopic: (String?) -> Unit) {
+    val label = stringResource(R.string.section_topic)
+    PageCaption(label)
+    FlowRow(
+        Modifier.fillMaxWidth().padding(horizontal = Space.gutter).semantics { contentDescription = label },
+        horizontalArrangement = Arrangement.spacedBy(Space.s),
+        verticalArrangement = Arrangement.spacedBy(Space.s),
+    ) {
+        MomentTopic.entries.forEach { entry ->
+            val selected = entry.value == topic
+            FilterChip(
+                selected = selected,
+                onClick = { onTopic(if (selected) null else entry.value) },
+                label = { Text(stringResource(topicLabel(entry))) },
+                leadingIcon = if (selected) {
+                    { Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                } else {
+                    null
+                },
+                modifier = Modifier.testTag("topic_${entry.value}"),
+            )
+        }
+    }
 }
 
 /**
- * What was eaten: the dishes, how they were, one of three in a segmented control that a second
- * tap clears, and what the meal cost and how many it fed.
+ * What was eaten, rows on the page: the dishes, how they were, one of three in a segmented control
+ * that a second tap clears, and what the meal cost and how many it fed, with each one's share.
  */
 @Composable
 private fun FoodGroup(
@@ -961,51 +999,89 @@ private fun FoodGroup(
     people: String,
     onPeople: (String) -> Unit,
 ) {
-    val dishesField = boxed {
-        TextField(
-            value = dishes,
-            onValueChange = onDishes,
-            placeholder = { Text(stringResource(R.string.hint_food_dishes)) },
-            leadingIcon = { Icon(AppIcons.Food, contentDescription = null) },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            modifier = Modifier.fillMaxWidth().testTag("food_dishes"),
+    PageCaption(stringResource(R.string.section_food))
+    PageRows { _ ->
+        ListItem(
+            leadingContent = { Icon(AppIcons.Food, contentDescription = null) },
+            headlineContent = {
+                RowField(dishes, onDishes, stringResource(R.string.hint_food_dishes), AppTheme.typography.body, KeyboardOptions(imeAction = ImeAction.Next), Modifier.fillMaxWidth().testTag("food_dishes"))
+            },
+        )
+        ListItem(
+            leadingContent = { Icon(AppIcons.FaceGood, contentDescription = null) },
+            headlineContent = {
+                // One verdict or none: a second tap on the chosen one takes it back.
+                MultiChoiceSegmentedButtonRow(Modifier.fillMaxWidth().height(ChipDefaults.Height)) {
+                    FoodVerdict.entries.forEach { choice ->
+                        SegmentedButton(
+                            checked = choice.value == verdict,
+                            onCheckedChange = { onVerdict(if (it) choice.value else null) },
+                            modifier = Modifier.testTag("food_${choice.value}"),
+                        ) { Text(stringResource(verdictLabel(choice)), maxLines = 1) }
+                    }
+                }
+            },
+        )
+        // Each one's share once both are known, after how many.
+        val share = amount.toDoubleOrNull()?.let { yuan -> people.toIntOrNull()?.takeIf { it > 1 }?.let { yuan / it } }
+        ListItem(
+            leadingContent = { Icon(AppIcons.Receipt, contentDescription = null) },
+            headlineContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("¥", style = AppTheme.typography.numBody)
+                    RowField(
+                        amount,
+                        { typed -> onAmount(typed.filter { it.isDigit() || it == '.' }) },
+                        stringResource(R.string.label_food_amount),
+                        AppTheme.typography.numBody,
+                        KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
+                        Modifier.weight(1f).testTag("food_amount"),
+                    )
+                }
+            },
+            supportingContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RowField(
+                        people,
+                        { typed -> onPeople(typed.filter { it.isDigit() }.take(3)) },
+                        stringResource(R.string.label_food_people),
+                        LocalTextStyle.current.copy(fontFamily = AppTheme.typography.numBody.fontFamily),
+                        KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                        Modifier.testTag("food_people"),
+                        fit = true,
+                    )
+                    if (people.isNotEmpty()) Text(" " + stringResource(R.string.unit_food_people))
+                    if (share != null) Text("\u2003" + stringResource(R.string.food_share, formatAmount(share)))
+                }
+            },
         )
     }
-    val verdicts = boxed {
-        // One verdict or none: a second tap on the chosen one takes it back.
-        MultiChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(Space.l)) {
-            FoodVerdict.entries.forEach { choice ->
-                SegmentedButton(
-                    checked = choice.value == verdict,
-                    onCheckedChange = { onVerdict(if (it) choice.value else null) },
-                    modifier = Modifier.testTag("food_${choice.value}"),
-                ) { Text(stringResource(verdictLabel(choice)), maxLines = 1) }
+}
+
+/**
+ * A field that is a row's words alone, its hint in the third grey while empty; one that [fit]s
+ * is as wide as what it holds, with room for the cursor, so words can follow it on its line.
+ */
+@Composable
+private fun RowField(value: String, onValueChange: (String) -> Unit, hint: String, style: TextStyle, keyboardOptions: KeyboardOptions, modifier: Modifier, fit: Boolean = false) {
+    val color = LocalContentColor.current
+    val measurer = rememberTextMeasurer()
+    val width = if (fit) with(LocalDensity.current) { measurer.measure(value.ifEmpty { hint }, style).size.width.toDp() + CURSOR_ROOM } else null
+    BasicTextField(
+        value,
+        onValueChange,
+        if (width != null) modifier.width(width) else modifier,
+        textStyle = style.merge(TextStyle(color = color)),
+        singleLine = true,
+        keyboardOptions = keyboardOptions,
+        cursorBrush = SolidColor(tokens.tx),
+        decorationBox = { inner ->
+            Box {
+                if (value.isEmpty()) Text(hint, style = style, color = tokens.tx3, maxLines = 1)
+                inner()
             }
-        }
-    }
-    val bill = boxed {
-        Row(Modifier.fillMaxWidth()) {
-            TextField(
-                value = amount,
-                onValueChange = { typed -> onAmount(typed.filter { it.isDigit() || it == '.' }) },
-                label = { Text(stringResource(R.string.label_food_amount)) },
-                prefix = { Text("¥") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
-                modifier = Modifier.weight(1f).testTag("food_amount"),
-            )
-            TextField(
-                value = people,
-                onValueChange = { typed -> onPeople(typed.filter { it.isDigit() }.take(3)) },
-                label = { Text(stringResource(R.string.label_food_people)) },
-                suffix = { Text(stringResource(R.string.unit_food_people)) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                modifier = Modifier.weight(1f).testTag("food_people"),
-            )
-        }
-    }
-    SegmentedGroup(stringResource(R.string.section_food), stringResource(R.string.note_food), listOf(dishesField, verdicts, bill))
+        },
+    )
 }
 
 /**
@@ -1029,7 +1105,7 @@ private val DISH_SEPARATORS = Regex("[,，、;；\\n]")
 private fun AddTile(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier) {
     Box(
         modifier.size(PHOTO_SIZE).clip(AppTheme.shapes.medium)
-            .background(AppTheme.colorScheme.surfaceContainerHighest)
+            .background(tokens.pressed)
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -1132,10 +1208,13 @@ private fun refusalText(refusal: Refusal): Int = when (refusal) {
     Refusal.VIDEO_TOO_BIG -> R.string.error_video_too_big
 }
 
+/** The side padding of a row, outside the page's gutter so its icon and words line up with the words above. */
+private val ROW_PADDING = 16.dp
 private const val MAX_PHOTOS = 9
+private val CURSOR_ROOM = 2.dp
 /** How wide the site's photos are fetched for the strip: its tiles, at a phone's density. */
 private const val PHOTO_WIDTH = 480
-private val PHOTO_SIZE = 96.dp
+private val PHOTO_SIZE = 88.dp
 private val REMOVE_TARGET = 48.dp
 private val REMOVE_DOT = 28.dp
 private val UTILITY_DOT = 28.dp

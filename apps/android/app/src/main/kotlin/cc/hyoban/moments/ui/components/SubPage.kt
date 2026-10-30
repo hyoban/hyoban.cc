@@ -25,6 +25,8 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.semantics.paneTitle
 import cc.hyoban.moments.ui.design.IconButtonDefaults
 import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.Icon
@@ -67,8 +69,10 @@ fun SubPage(
     small: Boolean = false,
     titleMenu: TitleMenu? = null,
     subtitleAction: (@Composable () -> Unit)? = null,
+    /** What the small bar holds in the middle in place of [title], which then names the page to a screen reader alone. */
+    centre: (@Composable () -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
-) = BarPage(title, subtitle, onBack, large = false, modifier, actions, content, close = close, small = small, titleMenu = titleMenu, subtitleAction = subtitleAction)
+) = BarPage(title, subtitle, onBack, large = false, modifier, actions, content, close = close, small = small, titleMenu = titleMenu, subtitleAction = subtitleAction, centre = centre)
 
 /**
  * A tab's page: the top bar, its title large, with no back
@@ -111,10 +115,11 @@ private fun BarPage(
     small: Boolean = false,
     titleMenu: TitleMenu? = null,
     subtitleAction: (@Composable () -> Unit)? = null,
+    centre: (@Composable () -> Unit)? = null,
 ) {
     // A dialog's bar, on a window too short to open it out, stays put rather than scrolling away,
     // so its X and its confirming action are always there.
-    val scroll = rememberTopBarScroll(pinned = close && (isCompactHeight() || small))
+    val scroll = rememberTopBarScroll(pinned = close && (isCompactHeight() || small || centre != null))
     OnTabReselect(tab) {
         animate(scroll.state.heightOffset, 0f) { value, _ -> scroll.state.heightOffset = value }
     }
@@ -137,7 +142,9 @@ private fun BarPage(
                 ),
             )
         }
-        if (titleMenu == null) {
+        if (centre != null) {
+            Box(Modifier.fillMaxWidth().semantics { paneTitle = title }, contentAlignment = Alignment.Center) { centre() }
+        } else if (titleMenu == null) {
             text(Modifier)
         } else {
             var open by remember { mutableStateOf(false) }
@@ -193,7 +200,7 @@ private fun BarPage(
         // beside the back button, rather than taking half the screen until scrolled away; so
         // does a page whose own bottom half is taken, the bill's keypad. Its subtitle too small
         // to act on beside, what it would there joins the bar's actions.
-        val startsSmall = isCompactHeight() || small
+        val startsSmall = isCompactHeight() || small || centre != null
         TopBar(
             titleText,
             scroll,
