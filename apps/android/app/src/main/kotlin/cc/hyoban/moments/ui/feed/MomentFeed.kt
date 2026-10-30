@@ -469,20 +469,33 @@ fun <T> CardRow(cards: List<T>, columns: Int, modifier: Modifier = Modifier, car
 @Composable
 fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, content: @Composable () -> Unit) {
     val fade = AppTheme.motionScheme.fastEffectsSpec<Float>()
+    // Three faces, the skeleton, the message and the content, each kept as it was while it
+    // fades out: the skeleton leaving as the content comes doesn't turn into the message on its way.
+    val face = when {
+        !empty -> LoadedFace.Content
+        loading -> LoadedFace.Loading
+        else -> LoadedFace.Empty
+    }
     AnimatedContent(
-        empty,
+        face,
         // Emptied, the list fades out before the message fades in, rather than the two showing at once.
         transitionSpec = {
-            if (targetState && !initialState) fadeIn(tween(EMPTY_FADE_IN_MS, delayMillis = EMPTY_FADE_OUT_MS)) togetherWith fadeOut(tween(EMPTY_FADE_OUT_MS))
+            if (targetState != LoadedFace.Content && initialState == LoadedFace.Content) fadeIn(tween(EMPTY_FADE_IN_MS, delayMillis = EMPTY_FADE_OUT_MS)) togetherWith fadeOut(tween(EMPTY_FADE_OUT_MS))
             else fadeIn(fade) togetherWith ExitTransition.KeepUntilTransitionsFinished
         },
         label = "loaded",
-    ) { nothing ->
+    ) { shown ->
         // On the page's own colour, so as it fades in it covers the skeleton under it whole,
         // rather than the skeleton's cards showing through until they are taken away at once.
-        if (nothing) EmptyState(loading, message) else Box(Modifier.fillMaxSize().background(LocalSurfaceLevel.current.fill())) { content() }
+        when (shown) {
+            LoadedFace.Content -> Box(Modifier.fillMaxSize().background(LocalSurfaceLevel.current.fill())) { content() }
+            LoadedFace.Loading -> EmptyState(loading = true, message)
+            LoadedFace.Empty -> EmptyState(loading = false, message)
+        }
     }
 }
+
+private enum class LoadedFace { Loading, Empty, Content }
 
 /**
  * A tab with nothing to show yet: while it loads, cards drawn as their shapes, pulsing
