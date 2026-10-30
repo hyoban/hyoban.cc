@@ -155,14 +155,18 @@ fun MomentFeed(
     onBill: (String) -> Unit = {},
     /** Opens a trip's page from the banner where it begins; without it, no banners. */
     onTrip: ((String) -> Unit)? = null,
+    /** The footprints, a row at the foot of each day that has any; they open the day. */
+    tracks: TimelineTracks = TimelineTracks.EMPTY,
     leading: FeedLeading.() -> Unit = {},
 ) {
     val days = remember(moments) { moments.groupBy { it.dateKey }.toList() }
     // The single column's days: those with Moments and those with bills alone, newest first.
-    val timeline = remember(days, bills) {
+    // Footprints join a day that is there, never make one of their own.
+    val timeline = remember(days, bills, tracks.days) {
         val byDay = days.toMap()
         (byDay.keys + bills.loose.keys + bills.charges.keys).sortedDescending().map { day ->
-            Triple(day, byDay[day].orEmpty(), dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty()))
+            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty())
+            Triple(day, byDay[day].orEmpty(), if (day in tracks.days) items + DayItem.Track(day) else items)
         }
     }
     val bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl
@@ -272,6 +276,7 @@ fun MomentFeed(
                                 is DayItem.Moment -> card(item.moment, modifier, false)
                                 is DayItem.Bills -> BillGroup(item.txns, bills.ledger, onBill, modifier)
                                 is DayItem.ChargeItem -> ChargeRow(item.charge, modifier)
+                                is DayItem.Track -> TrackRow(item.day, tracks, onClick = { onDay?.invoke(item.day) }, modifier)
                             }
                         }
                         if (dayPills) {
