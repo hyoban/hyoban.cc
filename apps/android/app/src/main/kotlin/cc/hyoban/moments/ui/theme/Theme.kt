@@ -104,6 +104,9 @@ private fun style(size: Int, line: Int, weight: FontWeight, mono: Boolean = fals
     fontWeight = weight,
     letterSpacing = 0.em,
     fontFamily = if (mono) FontFamily.Monospace else null,
+    // Where the system's monospace isn't one (some phones map it to the sans), figures still
+    // keep one width, so times and amounts line up.
+    fontFeatureSettings = if (mono) "tnum" else null,
 )
 
 // The design system's type scale: the system's sans for words, its monospace for figures. No

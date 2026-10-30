@@ -97,15 +97,18 @@ data class LedgerFilter(
 
 val LocalLedgerNav = staticCompositionLocalOf<LedgerNav?> { null }
 
-/** An amount as [formatMoney] writes it, or only its sign and currency while the ledger's amounts are hidden. */
+/**
+ * An amount as [formatMoney] writes it, or only its sign and currency while the ledger's amounts
+ * are hidden; shown, with the minus sign (−) the design sets rather than a hyphen.
+ */
 @Composable
 fun money(cents: Long, currency: String): String =
-    if (LocalSettings.current.ledgerHidden) (if (cents < 0) "-" else "") + currencySymbol(currency) + "****" else formatMoney(cents, currency)
+    if (LocalSettings.current.ledgerHidden) (if (cents < 0) "−" else "") + currencySymbol(currency) + "****" else formatMoney(cents, currency).replaceFirst('-', '−')
 
 /** An amount as a bill shows it: what was spent plain, what came in marked with a plus. */
 @Composable
 fun signedMoney(cents: Long, currency: String, incoming: Boolean): String =
-    (if (incoming) "+" else "-") + money(cents, currency)
+    (if (incoming) "+" else "−") + money(cents, currency)
 
 /** Whether a bill brings money in, as its amount is coloured and signed. */
 val Txn.incoming: Boolean get() = kind == TxnKind.INCOME || kind == TxnKind.REFUND || kind == TxnKind.REIMBURSEMENT

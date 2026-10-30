@@ -54,6 +54,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -935,20 +936,22 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 exit = slideOutVertically(transitions.defaultSpatialSpec()) { it },
                 modifier = navigation.align(Alignment.BottomCenter).fillMaxWidth(),
             ) {
-                // The tabs floating over the page in the middle, the tab's button beside them at the end,
-                // over a fade of the page from clear to whole, which the page passes under and which
-                // comes and goes with them.
+                // The tabs and the tab's button beside them, floating over the page together in the
+                // middle, over a fade of the page from clear to whole, which the page passes under and
+                // which comes and goes with them.
                 val page = AppColors.page
                 Box(
                     Modifier.fillMaxWidth()
                         .background(Brush.verticalGradient(0f to page.copy(alpha = 0f), 0.7f to page))
                         .onSizeChanged { barHeight = with(density) { it.height.toDp() } }
                         .navigationBarsPadding()
-                        .padding(start = Space.gutter, end = Space.gutter, bottom = Space.m, top = Space.s),
+                        .padding(start = Space.gutter, end = Space.gutter, bottom = Space.s, top = Space.s),
                 ) {
-                    TabBar(selectedTab, pending.size, onTab, Modifier.align(Alignment.Center))
-                    AnimatedContent(accessorySlot.value, transitionSpec = fabTransition, contentAlignment = Alignment.CenterEnd, label = "tab button", modifier = Modifier.align(Alignment.CenterEnd)) { button ->
-                        button?.invoke()
+                    Row(Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
+                        TabBar(selectedTab, pending.size, onTab)
+                        AnimatedContent(accessorySlot.value, transitionSpec = fabTransition, contentAlignment = Alignment.CenterStart, label = "tab button") { button ->
+                            if (button != null) Box(Modifier.padding(start = Space.m)) { button() }
+                        }
                     }
                 }
             }

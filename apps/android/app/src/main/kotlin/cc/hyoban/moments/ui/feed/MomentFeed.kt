@@ -274,13 +274,13 @@ fun MomentFeed(
                         bannered += trip.id
                         item(key = "trip-${trip.id}", contentType = "trip") {
                             val count = remember(trip, allMoments, trips) { countOf(trip, allMoments, trips) }
-                            TripBanner(trip, count, onClick = { onTrip(trip.id) }, modifier = Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.s))
+                            TripBanner(trip, count, onClick = { onTrip(trip.id) }, modifier = Modifier.animateItem().padding(horizontal = Space.gutter).padding(top = if (chat && day != timeline.first().first) Space.section else Space.s, bottom = Space.s))
                         }
                     }
                     if (chat) {
                         // The day's date in a capsule at the middle, a section's gap above it; then
-                        // its Moments and records, a small gap between bubbles from the same side
-                        // and a wider one where the side changes.
+                        // its Moments and records, a run of bubbles from the same side drawn
+                        // together, barely apart, and a wider gap where the side changes.
                         if (dayPills) item(key = "dayhead-$day", contentType = "datecap") {
                             DateCapsule(
                                 day,
@@ -294,11 +294,12 @@ fun MomentFeed(
                         val lastChat = chats.lastOrNull()?.key
                         items(chats, key = { it.key }, contentType = { it::class }) { item ->
                             val index = chats.indexOf(item)
-                            val switched = index > 0 && (chats[index - 1] is ChatItem.Moment) != (item is ChatItem.Moment)
+                            val joinedAbove = index > 0 && (chats[index - 1] is ChatItem.Moment) == (item is ChatItem.Moment)
+                            val joinedBelow = index < chats.lastIndex && (chats[index + 1] is ChatItem.Moment) == (item is ChatItem.Moment)
                             val itemModifier = Modifier.animateItem().padding(
                                 start = Space.gutter,
                                 end = Space.gutter,
-                                top = if (index == 0) 0.dp else if (switched) Space.m else Space.s,
+                                top = if (index == 0) 0.dp else if (joinedAbove) Space.xxs else Space.m,
                                 bottom = if (item.key == lastChat) Space.s else 0.dp,
                             )
                             when (item) {
@@ -312,6 +313,8 @@ fun MomentFeed(
                                     selected = item.moment.uid == selected,
                                     hidePlace = hidePlace,
                                     bubble = true,
+                                    joinedAbove = joinedAbove,
+                                    joinedBelow = joinedBelow,
                                 )
                                 is ChatItem.Records -> RecordsBubble(
                                     item.lines, bills.ledger, tracks, onBill,

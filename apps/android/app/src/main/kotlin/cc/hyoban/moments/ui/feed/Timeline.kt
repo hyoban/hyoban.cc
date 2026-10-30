@@ -298,7 +298,7 @@ fun TripBanner(trip: TripRecord, count: Int, onClick: () -> Unit, modifier: Modi
             Text(trip.title, style = AppTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(tripSummary(trip, count), style = AppTheme.typography.bodySmall, color = tokens.tx2, maxLines = 1)
         }
-        Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.borderStrong, modifier = Modifier.size(20.dp))
+        Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(20.dp))
     }
 }
 
