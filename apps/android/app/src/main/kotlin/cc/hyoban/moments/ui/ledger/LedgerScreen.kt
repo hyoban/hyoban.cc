@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.strong
+import cc.hyoban.moments.ui.design.TextButton
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.feed.dayHeaderSpacing
 import androidx.compose.foundation.layout.width
@@ -33,7 +35,6 @@ import cc.hyoban.moments.ui.design.DropdownMenu
 import cc.hyoban.moments.ui.design.IconButtonDefaults
 import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.DropdownMenuItem
-import cc.hyoban.moments.ui.design.FilledTonalButton
 import cc.hyoban.moments.ui.design.FloatingActionButton
 import cc.hyoban.moments.ui.design.HorizontalDivider
 import cc.hyoban.moments.ui.design.Icon
@@ -216,7 +217,7 @@ private fun HideAmountsButton() {
 @Composable
 private fun EmptyLedger(onImport: () -> Unit, onNew: () -> Unit) {
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Space.gutter, vertical = Space.xxl),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Space.gutter, vertical = Space.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Space.l),
     ) {
@@ -227,7 +228,7 @@ private fun EmptyLedger(onImport: () -> Unit, onNew: () -> Unit) {
             color = tokens.tx2,
             textAlign = TextAlign.Center,
         )
-        FilledTonalButton(onClick = onImport, modifier = Modifier.testTag("ledger_import_empty")) {
+        TextButton(onClick = onImport, modifier = Modifier.testTag("ledger_import_empty")) {
             Icon(AppIcons.FileOpen, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.size(Space.s))
             Text(stringResource(R.string.ledger_import_icost))
@@ -311,7 +312,7 @@ fun BillList(
                         line.date,
                         "",
                         onClick = { nav.day(line.date) },
-                        modifier = Modifier.padding(horizontal = Space.gutter).dayHeaderSpacing(Space.section, below = 0.dp),
+                        modifier = Modifier.padding(horizontal = Space.gutter).dayHeaderSpacing(Space.xl, below = 0.dp),
                         note = dayTotal(line.expense, line.income, currency),
                         noteFigures = true,
                     )
@@ -337,7 +338,7 @@ private fun MonthTotals(month: String, expense: Long, income: Long, currency: St
     Column(Modifier.fillMaxWidth().padding(start = Space.l + Space.xs, end = Space.l + Space.xs, top = Space.xl).semantics(mergeDescendants = true) { heading() }) {
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
             Text(name, style = AppTheme.typography.titlePage)
-            Text(year, style = AppTheme.typography.titleSmall, color = tokens.tx2, modifier = Modifier.padding(bottom = Space.xxs))
+            Text(year, style = AppTheme.typography.body.strong, color = tokens.tx2, modifier = Modifier.padding(bottom = Space.xs))
         }
         Text(
             listOf(
@@ -365,7 +366,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
         ) {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.xl).semantics(mergeDescendants = true) {}) {
                 Text(stringResource(R.string.ledger_net_assets), style = AppTheme.typography.label, color = tokens.tx2)
-                Text(money(assets.net, currency), style = AppTheme.typography.numDisplay, modifier = Modifier.testTag("net_assets"))
+                Text(money(assets.net, currency), style = AppTheme.typography.titlePage, modifier = Modifier.testTag("net_assets"))
                 Text(
                     stringResource(R.string.ledger_assets_line, money(assets.held, currency), money(assets.owed, currency)),
                     style = AppTheme.typography.body,
@@ -391,7 +392,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                                 supportingContent = if (!account.counted || account.note.isNotBlank()) {
                                     { Text(listOfNotNull(stringResource(R.string.ledger_not_counted).takeIf { !account.counted }, account.note.takeIf { it.isNotBlank() }).joinToString(" "), maxLines = 2) }
                                 } else null,
-                                trailingContent = { Text(money(balance, account.currency), style = AppTheme.typography.titleSmall) },
+                                trailingContent = { Text(money(balance, account.currency), style = AppTheme.typography.body.strong) },
                                 modifier = Modifier.testTag("account_${account.id}"),
                             ) { Text(account.name, maxLines = 1) }
                         }
@@ -417,7 +418,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                 )
             }
             Spacer(Modifier.height(Space.l))
-            FilledTonalButton(onClick = { nav.editAccount(null) }, modifier = Modifier.padding(horizontal = Space.gutter).fillMaxWidth().testTag("add_account")) {
+            TextButton(onClick = { nav.editAccount(null) }, modifier = Modifier.padding(horizontal = Space.gutter).fillMaxWidth().testTag("add_account")) {
                 Icon(AppIcons.Plus, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.size(Space.s))
                 Text(stringResource(R.string.ledger_add_account))

@@ -146,7 +146,7 @@ import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.map.PlaybackMap
-import cc.hyoban.moments.ui.theme.Elevation
+import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
@@ -344,7 +344,7 @@ private fun PlayerCard(
         val drag = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
         var dragging by remember { mutableStateOf(false) }
         val settle = AppTheme.motionScheme.fastSpatialSpec<Offset>()
-        val lift by animateDpAsState(if (dragging) Elevation.level4 else Elevation.level2, AppTheme.motionScheme.fastSpatialSpec(), label = "lift")
+        val lift by animateDpAsState(if (dragging) ShadowElevation else ShadowElevation, AppTheme.motionScheme.fastSpatialSpec(), label = "lift")
         // Dragged, Material 3's low-emphasis state layer over it too, the content's colour at 16%.
         val layer by animateFloatAsState(if (dragging) DRAGGED_LAYER else 0f, AppTheme.motionScheme.fastEffectsSpec(), label = "dragged")
         val layerColor = tokens.tx
@@ -462,10 +462,10 @@ private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<Mom
         // A mosaic of the covers, the first larger, as the site's intro has.
         if (covers.isNotEmpty() && expanded) {
             // Decorative: the same photos show, described, on their Moments' cards.
-            Row(Modifier.fillMaxWidth().height(photoHeight).clip(AppTheme.shapes.large).clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(Space.xxs)) {
+            Row(Modifier.fillMaxWidth().height(photoHeight).clip(AppTheme.shapes.large).clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                 MediaStill(covers[0], urls, Modifier.weight(2f).fillMaxHeight())
                 if (covers.size > 1) {
-                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
+                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                         covers.drop(1).forEach { MediaStill(it, urls, Modifier.weight(1f).fillMaxWidth()) }
                     }
                 }
@@ -630,12 +630,12 @@ private fun SummaryCard(trip: TripRecord, playback: TripPlayback, covers: List<M
 private fun Tile(value: Int, unit: String) {
     val reduced = LocalReducedMotion.current
     val shown = remember { Animatable(if (reduced) value.toFloat() else 0f) }
-    val spec = AppTheme.motionScheme.slowEffectsSpec<Float>()
+    val spec = AppTheme.motionScheme.defaultEffectsSpec<Float>()
     LaunchedEffect(value) { if (reduced) shown.snapTo(value.toFloat()) else shown.animateTo(value.toFloat(), spec) }
     Column(Modifier.clearAndSetSemantics { contentDescription = "$value $unit" }) {
         Text(
             shown.value.roundToInt().toString(),
-            style = AppTheme.typography.numDisplay.emphasized.copy(fontFeatureSettings = "tnum"),
+            style = AppTheme.typography.titlePage.emphasized.copy(fontFeatureSettings = "tnum"),
         )
         Text(unit, style = AppTheme.typography.caption, color = tokens.tx2)
     }
@@ -672,7 +672,7 @@ private fun PlayerToolbar(
                 FilledIconButton(
                     onClick = onPlay,
                     shape = Corners.full,
-                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = tokens.ink, contentColor = tokens.onInk),
+                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = tokens.tx, contentColor = tokens.bg),
                     // Its 48dp target kept round the wide container, so the button sits on the toolbar's
                     // middle rather than its target overflowing the container upward.
                     modifier = Modifier.minimumInteractiveComponentSize()

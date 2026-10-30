@@ -40,39 +40,29 @@ import kotlinx.coroutines.launch
 // style what is drawn inside something takes from it. The app's own, with no Material under it.
 
 /**
- * The design system's 13 text styles, as it names them: hierarchy by weight and colour more
- * than size. Figures (amounts, times, numeric dates) take the `num` styles, in the system's
- * monospace; [emphasized] is any style a weight heavier, never a size larger.
+ * The design system's six text styles, as it names them: hierarchy by weight and colour more
+ * than size, every one with tabular figures so numbers line up. [strong] sets a style at 600
+ * for a heading; [emphasized] is any style a weight heavier, never a size larger.
  */
 @Immutable
 class Typography(
-    /** A page's large title, a tab's and a sub-page's alike. */
+    /** A page's large title, a tab's and a sub-page's alike, and big amounts. */
     val titlePage: TextStyle,
-    /** A collapsed bar's title, a sheet's and a dialog's. */
+    /** A sheet's and a dialog's title, a card's, a day in its header row. */
     val title: TextStyle,
-    /** A group's or a section's heading. */
-    val titleSmall: TextStyle,
     /** A Moment's words, and the default. */
     val bodyReading: TextStyle,
-    /** The interface's words: rows, fields, menus, dialogs. */
+    /** The interface's words: rows, fields, menus, dialogs, amounts at a row's end. */
     val body: TextStyle,
-    /** Supporting lines and notes. */
-    val bodySmall: TextStyle,
     /** Buttons, chips, the segmented control. */
     val label: TextStyle,
-    /** What tells about something: a place, a weekday, a field's name. */
+    /** Supporting lines, notes and what tells about something: a place, a time, a badge. */
     val caption: TextStyle,
-    /** Badges and legends. */
-    val micro: TextStyle,
-    /** Amounts and big figures. */
-    val numDisplay: TextStyle,
-    /** A day in its header row, a figure in a stat. */
-    val numTitle: TextStyle,
-    /** An amount at a row's end. */
-    val numBody: TextStyle,
-    /** Times, counts and numeric dates. */
-    val numCaption: TextStyle,
 )
+
+/** The same style at 600: a group's or a section's heading, the small title of a top bar. */
+val TextStyle.strong: TextStyle
+    get() = copy(fontWeight = FontWeight.SemiBold)
 
 /** The same style a weight heavier, for emphasis. */
 val TextStyle.emphasized: TextStyle
@@ -81,7 +71,6 @@ val TextStyle.emphasized: TextStyle
 /** The corner sizes: small for marks, medium for fields and groups, large for photos, cards and sheets. */
 @Immutable
 class Shapes(
-    val small: CornerBasedShape,
     val medium: CornerBasedShape,
     val large: CornerBasedShape,
 )
@@ -94,10 +83,8 @@ class Shapes(
 class MotionScheme {
     fun <T> fastSpatialSpec(): FiniteAnimationSpec<T> = Springs.spatialFast.spec()
     fun <T> defaultSpatialSpec(): FiniteAnimationSpec<T> = Springs.spatialDefault.spec()
-    fun <T> slowSpatialSpec(): FiniteAnimationSpec<T> = Springs.spatialSlow.spec()
     fun <T> fastEffectsSpec(): FiniteAnimationSpec<T> = Springs.effectsFast.spec()
     fun <T> defaultEffectsSpec(): FiniteAnimationSpec<T> = Springs.effectsDefault.spec()
-    fun <T> slowEffectsSpec(): FiniteAnimationSpec<T> = Springs.effectsSlow.spec()
 
     companion object {
         fun standard(): MotionScheme = MotionScheme()

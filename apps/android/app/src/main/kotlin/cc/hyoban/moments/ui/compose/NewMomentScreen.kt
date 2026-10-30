@@ -166,7 +166,7 @@ import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.format.verdictLabel
 import cc.hyoban.moments.ui.settings.segmentColors
-import cc.hyoban.moments.ui.theme.Elevation
+import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
@@ -599,7 +599,7 @@ fun NewMomentScreen(
                     if (withMoment && withTopic) TopicGroup(topic) { topic = it }
                     // Deleting is rare, so it waits down here rather than over the Moment; its snackbar can undo it.
                     if (original != null && publishing == null) {
-                        PageRows(Modifier.padding(top = Space.xxl)) { shapes ->
+                        PageRows(Modifier.padding(top = Space.xl)) { shapes ->
                             SegmentedListItem(
                                 onClick = {
                                     container.delete(original.uid)
@@ -777,7 +777,7 @@ private fun PhotoStrip(
                 val scale = 1f + (LIFTED_SCALE - 1f) * lift
                 scaleX = scale
                 scaleY = scale
-                shadowElevation = Elevation.level4.toPx() * lift
+                shadowElevation = ShadowElevation.toPx() * lift
                 shape = photoShape
                 clip = true
             }
@@ -909,7 +909,7 @@ private fun PageCaption(title: String) {
         title,
         style = AppTheme.typography.caption,
         color = tokens.tx3,
-        modifier = Modifier.fillMaxWidth().padding(start = Space.gutter, end = Space.gutter, top = Space.xxl, bottom = Space.xs).semantics { heading() },
+        modifier = Modifier.fillMaxWidth().padding(start = Space.gutter, end = Space.gutter, top = Space.xl, bottom = Space.xs).semantics { heading() },
     )
 }
 
@@ -1028,12 +1028,12 @@ private fun FoodGroup(
             leadingContent = { Icon(AppIcons.Receipt, contentDescription = null) },
             headlineContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("¥", style = AppTheme.typography.numBody)
+                    Text("¥", style = AppTheme.typography.body)
                     RowField(
                         amount,
                         { typed -> onAmount(typed.filter { it.isDigit() || it == '.' }) },
                         stringResource(R.string.label_food_amount),
-                        AppTheme.typography.numBody,
+                        AppTheme.typography.body,
                         KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
                         Modifier.weight(1f).testTag("food_amount"),
                     )
@@ -1045,7 +1045,7 @@ private fun FoodGroup(
                         people,
                         { typed -> onPeople(typed.filter { it.isDigit() }.take(3)) },
                         stringResource(R.string.label_food_people),
-                        LocalTextStyle.current.copy(fontFamily = AppTheme.typography.numBody.fontFamily),
+                        LocalTextStyle.current.copy(fontFamily = AppTheme.typography.body.fontFamily),
                         KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
                         Modifier.testTag("food_people"),
                         fit = true,

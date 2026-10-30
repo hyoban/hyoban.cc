@@ -1312,7 +1312,7 @@ fun DayTrackMap(stretches: List<List<Pair<Double, Double>>>, points: List<LatLng
         stretches.map { RouteSegment(it, straight = false) } +
             stretches.zipWithNext { a, b -> RouteSegment(listOf(a.last(), b.first()), straight = true) }
     }
-    PointsMap(points, lines, dot = 4f, padding = 32.dp, modifier = modifier, interactive = false, color = cc.hyoban.moments.ui.theme.tokens.track, gapColor = cc.hyoban.moments.ui.theme.tokens.trackGap, width = 4f, rings = rings, topInset = topInset, closest = TRACK_CLOSEST)
+    PointsMap(points, lines, dot = 4f, padding = 32.dp, modifier = modifier, interactive = false, color = cc.hyoban.moments.ui.theme.tokens.tx, gapColor = cc.hyoban.moments.ui.theme.tokens.tx3, width = 4f, rings = rings, topInset = topInset, closest = TRACK_CLOSEST)
 }
 
 private const val PICK_PLACES = "pick-places"

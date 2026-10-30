@@ -208,7 +208,7 @@ fun ConnectionAutomationSettings(container: AppContainer) {
                                 Checkbox(id in selected, onCheckedChange = null)
                                 Column(Modifier.padding(start = 8.dp)) {
                                     Text(name)
-                                    if (kind == "bluetooth" && name != id) Text(id, style = AppTheme.typography.bodySmall)
+                                    if (kind == "bluetooth" && name != id) Text(id, style = AppTheme.typography.caption)
                                 }
                             }
                         }

@@ -46,7 +46,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import cc.hyoban.moments.ui.theme.Elevation
+import cc.hyoban.moments.ui.theme.ShadowElevation
 import androidx.compose.ui.window.DialogProperties
 import cc.hyoban.moments.R
 
@@ -118,7 +118,7 @@ fun DialogPane(content: @Composable () -> Unit) {
         Surface(
             shape = AppTheme.shapes.large,
             color = AppColors.page,
-            shadowElevation = Elevation.level3,
+            shadowElevation = ShadowElevation,
             modifier = Modifier.widthIn(max = DIALOG_MAX_WIDTH).fillMaxWidth().fillMaxHeight()
                 .consumeWindowInsets(WindowInsets.safeDrawing),
         ) { content() }

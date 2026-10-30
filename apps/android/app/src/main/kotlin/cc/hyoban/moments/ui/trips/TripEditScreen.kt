@@ -149,12 +149,12 @@ fun TripEditScreen(container: AppContainer, id: String, onBack: () -> Unit) {
                                 if (order >= 0) {
                                     Text(
                                         (order + 1).toString(),
-                                        style = AppTheme.typography.micro,
+                                        style = AppTheme.typography.caption,
                                         color = cc.hyoban.moments.ui.theme.tokens.onAccent,
                                         modifier = Modifier
                                             .padding(Space.xs)
                                             .background(cc.hyoban.moments.ui.theme.tokens.accent, cc.hyoban.moments.ui.theme.Corners.full)
-                                            .padding(horizontal = Space.s, vertical = Space.xxs),
+                                            .padding(horizontal = Space.s, vertical = Space.xs),
                                     )
                                 }
                             }

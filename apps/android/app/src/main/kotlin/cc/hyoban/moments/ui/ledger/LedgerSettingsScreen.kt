@@ -397,7 +397,7 @@ private fun ImportDialog(found: Found, hasData: Boolean, onDismiss: () -> Unit, 
                 if (report.skipped.isNotEmpty()) {
                     Text(stringResource(R.string.ledger_import_skipped, report.skipped.size, report.skipped.take(5).joinToString { "#${it.first} ${it.second}" }), color = tokens.danger)
                 }
-                Text(stringResource(R.string.ledger_import_accounts_note), style = AppTheme.typography.bodySmall, color = tokens.tx2)
+                Text(stringResource(R.string.ledger_import_accounts_note), style = AppTheme.typography.caption, color = tokens.tx2)
                 if (hasData) {
                     listOf(false to R.string.ledger_merge, true to R.string.ledger_replace).forEach { (value, label) ->
                         Row(

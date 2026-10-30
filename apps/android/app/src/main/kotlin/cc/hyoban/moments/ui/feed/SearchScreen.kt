@@ -190,7 +190,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                                 FeedKind.CHARGES -> R.string.part_charge
                             },
                         )
-                        val figures = AppTheme.typography.numCaption.fontFamily
+                        val figures = AppTheme.typography.caption.fontFamily
                         Text(
                             buildAnnotatedString {
                                 append(name)
@@ -370,7 +370,7 @@ private fun SearchRow(
     ) {
         // As wide as a photo, but only as tall as what is in it, so a row of an icon stays a line's height.
         Box(Modifier.width(LEAD), contentAlignment = Alignment.Center) { lead() }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xxs), content = lines)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs), content = lines)
         Column(horizontalAlignment = Alignment.End, content = trailing)
     }
 }
@@ -383,7 +383,7 @@ private fun SearchBill(txn: cc.hyoban.moments.ledger.Txn, ledger: cc.hyoban.mome
         onClick = onClick,
         modifier = modifier.testTag("bill_${txn.id}"),
         trailing = {
-            Text(cc.hyoban.moments.ui.ledger.signedMoney(txn.amount, txn.currency, txn.incoming), style = AppTheme.typography.numBody, color = cc.hyoban.moments.ui.ledger.amountColor(txn))
+            Text(cc.hyoban.moments.ui.ledger.signedMoney(txn.amount, txn.currency, txn.incoming), style = AppTheme.typography.body, color = cc.hyoban.moments.ui.ledger.amountColor(txn))
             Text(txn.local.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")), style = AppTheme.typography.caption, color = tokens.tx3)
         },
     ) {

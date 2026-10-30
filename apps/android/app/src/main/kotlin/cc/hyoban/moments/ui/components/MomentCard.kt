@@ -56,7 +56,7 @@ import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.moment.MomentMenu
 import cc.hyoban.moments.ui.theme.Corners
-import cc.hyoban.moments.ui.theme.Elevation
+import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
@@ -170,13 +170,13 @@ private fun MomentBubble(
             if (moment.media.isNotEmpty()) MediaMosaic(moment.uid, moment.media, urls, onOpen = null)
             Column(
                 (if (moment.media.isNotEmpty()) Modifier.fillMaxWidth() else Modifier).padding(start = Space.m, end = Space.m, top = Space.s, bottom = Space.s),
-                verticalArrangement = Arrangement.spacedBy(Space.xxs),
+                verticalArrangement = Arrangement.spacedBy(Space.xs),
             ) {
                 val private = (moment.hidden || moment.topic == "tech").takeIf { it }?.let { stringResource(R.string.visibility_private) }
                 val parts = moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
                 // The time in the figures' monospace, as the records bubbles beside it have theirs.
                 val time = formatTime(moment.occurredAt)
-                val numFont = AppTheme.typography.numCaption.fontFamily
+                val numFont = AppTheme.typography.caption.fontFamily
                 val meta = androidx.compose.ui.text.buildAnnotatedString {
                     append(parts.joinToString("\u2003"))
                     if (time != null) {
@@ -298,10 +298,10 @@ fun FloatingButton(
             onClick = onClick,
             enabled = !busy,
             shape = Corners.full,
-            color = if (tonal) tokens.ink else SurfaceLevel.Floating.fill(),
-            contentColor = if (tonal) tokens.onInk else tokens.tx,
+            color = if (tonal) tokens.tx else SurfaceLevel.Floating.fill(),
+            contentColor = if (tonal) tokens.bg else tokens.tx,
             border = if (tonal) null else cardBorder(),
-            shadowElevation = Elevation.level2,
+            shadowElevation = ShadowElevation,
             modifier = Modifier.statusBarsPadding().sideInsetsPadding().padding(horizontal = Space.m, vertical = Space.s)
                 .size(FLOATING_HEIGHT).semantics { contentDescription = label }.testTag(tag),
         ) {

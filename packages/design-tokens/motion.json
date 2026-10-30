@@ -11,13 +11,7 @@
       "name": "spatial-default",
       "dampingRatio": 0.9,
       "stiffness": 700,
-      "usage": "Position and size by default: sheets, menus, pages. About 0.24s."
-    },
-    {
-      "name": "spatial-slow",
-      "dampingRatio": 0.9,
-      "stiffness": 300,
-      "usage": "Large moves: a card growing into its page, shared elements. About 0.36s."
+      "usage": "Position and size by default: sheets, menus, pages, a card growing into its page."
     },
     {
       "name": "effects-fast",
@@ -29,13 +23,7 @@
       "name": "effects-default",
       "dampingRatio": 1,
       "stiffness": 1600,
-      "usage": "Colour and fades by default. About 0.16s."
-    },
-    {
-      "name": "effects-slow",
-      "dampingRatio": 1,
-      "stiffness": 800,
-      "usage": "Slow fades: content replacing a skeleton. About 0.22s."
+      "usage": "Colour and fades by default, content replacing a skeleton."
     }
   ]
 }

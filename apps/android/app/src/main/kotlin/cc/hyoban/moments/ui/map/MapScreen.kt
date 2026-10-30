@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.map
 
+import cc.hyoban.moments.ui.design.strong
+import cc.hyoban.moments.ui.design.TextButton
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.groupedShapes
@@ -58,7 +60,6 @@ import cc.hyoban.moments.ui.design.BottomSheetScaffold
 import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.Card
 import cc.hyoban.moments.ui.design.CardDefaults
-import cc.hyoban.moments.ui.design.FilledTonalButton
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.ListItemDefaults
 import cc.hyoban.moments.ui.design.LocalContentColor
@@ -126,7 +127,7 @@ import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.Corners
-import cc.hyoban.moments.ui.theme.Elevation
+import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
@@ -478,9 +479,8 @@ private fun PlaceSheet(
             }
             // The way there beside the name, named as well as drawn, as Material 3 keeps an
             // icon alone for what everyone knows; all of the place waits at the list's foot.
-            FilledTonalButton(
+            TextButton(
                 onClick = onNavigate,
-                contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
                 modifier = Modifier.testTag("navigate"),
             ) {
                 Icon(AppIcons.Directions, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
@@ -543,7 +543,7 @@ private fun TripsSheet(trips: List<TripRecord>, moments: List<MomentRecord>, url
             Text(stringResource(R.string.title_trips), style = AppTheme.typography.title, modifier = Modifier.weight(1f).semantics { heading() })
             Text(
                 pluralStringResource(R.plurals.count_trips, trips.size, trips.size) + "\u2003" + pluralStringResource(R.plurals.count_days_total, days, days),
-                style = AppTheme.typography.bodySmall,
+                style = AppTheme.typography.caption,
                 color = tokens.tx2,
             )
         }
@@ -580,7 +580,7 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
                 shape = Corners.full,
                 color = SurfaceLevel.Floating.fill(),
                 contentColor = tokens.accent,
-                shadowElevation = Elevation.level2,
+                shadowElevation = ShadowElevation,
                 modifier = Modifier.padding(bottom = Space.m).size(48.dp).testTag("north"),
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -607,7 +607,7 @@ private fun LocateButton(locating: Boolean, onClick: () -> Unit) {
             shape = Corners.full,
             color = SurfaceLevel.Floating.fill(),
             contentColor = tokens.tx,
-            shadowElevation = Elevation.level2,
+            shadowElevation = ShadowElevation,
             modifier = Modifier.size(48.dp).semantics { contentDescription = label }.testTag("locate"),
         ) {
             Crossfade(locating, animationSpec = AppTheme.motionScheme.fastEffectsSpec(), label = "locating") { busy ->
@@ -631,7 +631,7 @@ private fun FootprintsButton(onClick: () -> Unit) {
         shape = Corners.full,
         color = SurfaceLevel.Floating.fill(),
         contentColor = tokens.tx,
-        shadowElevation = Elevation.level2,
+        shadowElevation = ShadowElevation,
         modifier = Modifier.heightIn(min = 48.dp).testTag("footprints"),
     ) {
         Row(
@@ -660,7 +660,7 @@ private fun FogButton(on: Boolean, onClick: () -> Unit) {
             shape = Corners.full,
             color = container,
             contentColor = content,
-            shadowElevation = Elevation.level2,
+            shadowElevation = ShadowElevation,
             modifier = Modifier.size(48.dp).semantics { contentDescription = label }.testTag("fog"),
         ) {
             Box(contentAlignment = Alignment.Center) { Icon(AppIcons.Fog, contentDescription = null) }
@@ -688,7 +688,7 @@ private fun FloatingPill(content: @Composable () -> Unit) {
         shape = Corners.full,
         color = SurfaceLevel.Floating.fill(),
         contentColor = tokens.tx,
-        shadowElevation = Elevation.level2,
+        shadowElevation = ShadowElevation,
         content = content,
     )
 }
@@ -727,16 +727,16 @@ private fun RouteCard(trip: TripRecord, onOpen: () -> Unit) {
         onClick = onOpen,
         shape = AppTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = SurfaceLevel.Floating.fill()),
-        elevation = CardDefaults.cardElevation(defaultElevation = Elevation.level2),
+        elevation = CardDefaults.cardElevation(defaultElevation = ShadowElevation),
         modifier = Modifier.fillMaxWidth().padding(bottom = Space.s).sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}"),
     ) {
         Row(Modifier.padding(start = Space.l, end = Space.s, top = Space.m, bottom = Space.m), verticalAlignment = Alignment.CenterVertically) {
             Icon(AppIcons.Luggage, contentDescription = null, tint = tokens.tx2)
-            Column(Modifier.weight(1f).padding(horizontal = Space.m), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
-                Text(trip.title, style = AppTheme.typography.titleSmall)
+            Column(Modifier.weight(1f).padding(horizontal = Space.m), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+                Text(trip.title, style = AppTheme.typography.body.strong)
                 Text(
                     tripSummary(trip),
-                    style = AppTheme.typography.bodySmall,
+                    style = AppTheme.typography.caption,
                     color = tokens.tx2,
                 )
             }

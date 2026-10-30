@@ -308,7 +308,7 @@ fun IconButton(
         Box(modifier.minimumInteractiveComponentSize().size(48.dp), contentAlignment = Alignment.Center) {
             Box(
                 Modifier.size(40.dp)
-                    .surface(CircleShape, cc.hyoban.moments.ui.theme.SurfaceLevel.Floating.color(tokens), cc.hyoban.moments.ui.theme.cardBorder(), cc.hyoban.moments.ui.theme.Elevation.level2)
+                    .surface(CircleShape, cc.hyoban.moments.ui.theme.SurfaceLevel.Floating.color(tokens), cc.hyoban.moments.ui.theme.cardBorder(), cc.hyoban.moments.ui.theme.ShadowElevation)
                     .clickable(interactionSource = interactionSource, indication = PressIndication, enabled = enabled, role = Role.Button, onClick = onClick),
                 contentAlignment = Alignment.Center,
             ) { CompositionLocalProvider(LocalContentColor provides if (enabled) tokens.tx else tokens.tx.copy(alpha = DISABLED)) { content() } }
@@ -333,7 +333,7 @@ class IconButtonColors(val containerColor: Color, val contentColor: Color)
 
 object IconButtonDefaults {
     @Composable
-    fun filledIconButtonColors(containerColor: Color = tokens.ink, contentColor: Color = tokens.onInk) = IconButtonColors(containerColor, contentColor)
+    fun filledIconButtonColors(containerColor: Color = tokens.tx, contentColor: Color = tokens.bg) = IconButtonColors(containerColor, contentColor)
 
     enum class IconButtonWidthOption { Narrow, Uniform, Wide }
 
@@ -384,7 +384,7 @@ fun Badge(modifier: Modifier = Modifier, containerColor: Color = tokens.accent, 
         Box(modifier.size(8.dp).clip(CircleShape).background(containerColor))
     } else {
         Box(modifier.sizeIn(minWidth = 16.dp, minHeight = 16.dp).clip(CircleShape).background(containerColor), contentAlignment = Alignment.Center) {
-            CompositionLocalProvider(LocalContentColor provides contentColor) { ProvideTextStyle(AppTheme.typography.micro) { content() } }
+            CompositionLocalProvider(LocalContentColor provides contentColor) { ProvideTextStyle(AppTheme.typography.caption) { content() } }
         }
     }
 }

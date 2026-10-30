@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.theme.cardBorder
@@ -246,7 +247,7 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
                                     )
                                 }
                             },
-                            trailingContent = { Text(money(cents, currency), style = AppTheme.typography.titleSmall) },
+                            trailingContent = { Text(money(cents, currency), style = AppTheme.typography.body.strong) },
                         ) { Text(name, maxLines = 1) }
                     }
                 },
@@ -275,7 +276,7 @@ private fun PeriodRow(label: String, mode: Span, onMode: (Span) -> Unit, onPrevi
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Space.xs),
             ) {
-                Text(label, style = AppTheme.typography.titleSmall)
+                Text(label, style = AppTheme.typography.body.strong)
                 Icon(AppIcons.CaretDown, contentDescription = null, modifier = Modifier.size(20.dp), tint = tokens.tx2)
             }
             DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
@@ -309,13 +310,13 @@ private fun Totals(summary: Summary, currency: String, average: Long?, compared:
                 R.string.ledger_balance to summary.balance,
             )
             val figure: @Composable (Pair<Int, Long>, Modifier) -> Unit = { (label, cents), modifier ->
-                Column(modifier.semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
+                Column(modifier.semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                     // A six-figure sum shrinks to fit its third rather than losing its cents.
                     Text(
                         money(cents, currency),
-                        style = AppTheme.typography.numTitle,
+                        style = AppTheme.typography.title,
                         maxLines = 1,
-                        autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = AppTheme.typography.numTitle.fontSize),
+                        autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = AppTheme.typography.title.fontSize),
                     )
                     Text(stringResource(label), style = AppTheme.typography.caption, color = tokens.tx2)
                 }
@@ -558,7 +559,7 @@ private fun Categories(
                     color = tokens.tx2,
                     maxLines = 1,
                 )
-                Text(money(picked?.let { slices[it].first } ?: sum, currency), style = AppTheme.typography.titleSmall, maxLines = 1)
+                Text(money(picked?.let { slices[it].first } ?: sum, currency), style = AppTheme.typography.body.strong, maxLines = 1)
             }
         }
     }

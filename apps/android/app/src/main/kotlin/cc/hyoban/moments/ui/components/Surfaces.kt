@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.theme.cardBorder
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -58,7 +59,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.theme.Corners
-import cc.hyoban.moments.ui.theme.Elevation
+import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
@@ -174,7 +175,7 @@ fun NeutralChip(label: String, icon: ImageVector, onClick: () -> Unit, modifier:
 fun SectionHeader(icon: ImageVector, title: String, modifier: Modifier = Modifier, action: (@Composable () -> Unit)? = null) {
     Row(modifier.fillMaxWidth().heightIn(min = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         Icon(icon, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
-        Text(title, style = AppTheme.typography.titleSmall, color = tokens.tx2, modifier = Modifier.weight(1f).semantics { heading() })
+        Text(title, style = AppTheme.typography.body.strong, color = tokens.tx2, modifier = Modifier.weight(1f).semantics { heading() })
         action?.invoke()
     }
 }
@@ -190,7 +191,7 @@ fun MonthHeader(month: String, year: String?) {
     ) {
         Text(month, style = AppTheme.typography.title)
         year?.let {
-            Text(it, style = AppTheme.typography.bodySmall, color = tokens.tx2, modifier = Modifier.padding(bottom = Space.xxs))
+            Text(it, style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.padding(bottom = Space.xs))
         }
     }
 }
@@ -214,7 +215,7 @@ fun DayPill(text: String, date: String? = null, onClick: (() -> Unit)? = null) {
             color = SurfaceLevel.Floating.fill(),
             contentColor = tokens.tx,
             border = cardBorder(),
-            shadowElevation = Elevation.level1,
+            shadowElevation = 0.dp,
             modifier = open,
         ) {
             Text(

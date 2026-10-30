@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.layout.layout
@@ -227,7 +228,7 @@ fun BillRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = 
         onClick = onClick,
         modifier = modifier.testTag("bill_${txn.id}"),
     ) {
-        Text(signedMoney(txn.amount, txn.currency, txn.incoming), style = AppTheme.typography.numBody, color = amountColor(txn))
+        Text(signedMoney(txn.amount, txn.currency, txn.incoming), style = AppTheme.typography.body, color = amountColor(txn))
         Text(txn.local.format(TIME), style = AppTheme.typography.caption, color = tokens.tx3)
     }
 }
@@ -295,8 +296,8 @@ fun TripBanner(trip: TripRecord, count: Int, onClick: () -> Unit, modifier: Modi
     ) {
         Icon(AppIcons.Route, contentDescription = null, tint = tokens.tx2)
         Column(Modifier.weight(1f)) {
-            Text(trip.title, style = AppTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(tripSummary(trip, count), style = AppTheme.typography.bodySmall, color = tokens.tx2, maxLines = 1)
+            Text(trip.title, style = AppTheme.typography.body.strong, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(tripSummary(trip, count), style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1)
         }
         Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(20.dp))
     }
@@ -421,7 +422,7 @@ fun TrackRow(day: String, tracks: TimelineTracks, onClick: () -> Unit, modifier:
     ) {
         Text(
             androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.distance_kilometres, shown.metres / 1000),
-            style = AppTheme.typography.numBody,
+            style = AppTheme.typography.body,
             color = tokens.tx2,
         )
     }

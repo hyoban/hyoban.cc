@@ -41,18 +41,14 @@ test('text and controls keep their contrast in every theme', () => {
       for (const text of ['tx', 'tx2', 'tx3', 'accent', 'danger', 'income']) pair(text, ground, 4.5)
       pair('border-strong', ground, 3)
     }
-    for (const ground of ['fill', 'fill-strong'])
-      for (const text of ['tx', 'tx2']) pair(text, ground, 4.5)
-    pair('on-ink', 'ink', 4.5)
+    for (const text of ['tx', 'tx2']) pair(text, 'fill', 4.5)
+    // The main action is the text colour with the page's colour on it.
+    pair('bg', 'tx', 4.5)
     pair('on-accent', 'accent', 4.5)
-    // The fills are steps the eye can tell apart, and fill-strong isn't the hairline's colour.
+    // A block on a surface is a step the eye can tell apart.
     assert.ok(
       contrast(color.get('fill'), color.get('surface')) >= 1.05,
       `fill on surface in ${theme}`,
-    )
-    assert.ok(
-      contrast(color.get('fill-strong'), color.get('fill')) >= 1.1,
-      `fill-strong on fill in ${theme}`,
     )
   }
 })

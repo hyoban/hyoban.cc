@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.layout.width
@@ -131,7 +132,7 @@ fun TripScreen(
             Row(Modifier.padding(start = Space.gutter, end = Space.xs), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     stringResource(R.string.section_photo) + "\u2003" + photos.size,
-                    style = AppTheme.typography.titleSmall,
+                    style = AppTheme.typography.body.strong,
                     modifier = Modifier.weight(1f).semantics { heading() },
                 )
                 val see = stringResource(R.string.action_see_moments)
@@ -178,7 +179,7 @@ fun TripScreen(
             Column(Modifier.padding(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 SectionHeader(AppIcons.Route, stringResource(R.string.section_route))
                 // The map's corners the card's less its padding, so the two look as round.
-                TripMap(stops, routes[trip.id].orEmpty(), mapModifier.fillMaxWidth().clip(AppTheme.shapes.small))
+                TripMap(stops, routes[trip.id].orEmpty(), mapModifier.fillMaxWidth().clip(AppTheme.shapes.medium))
             }
         }
     }
@@ -303,9 +304,9 @@ private fun TrackShareRow(container: AppContainer, trip: cc.hyoban.moments.data.
             .testTag("trip_track_public"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
             Text(stringResource(R.string.trip_track_public), style = AppTheme.typography.body)
-            Text(stringResource(R.string.trip_track_public_note), style = AppTheme.typography.bodySmall, color = tokens.tx2)
+            Text(stringResource(R.string.trip_track_public_note), style = AppTheme.typography.caption, color = tokens.tx2)
         }
         Spacer(Modifier.width(Space.m))
         AppSwitch(share != null)
@@ -360,9 +361,9 @@ private fun TripFacets(
             Column(
                 Modifier.weight(1f).then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
                     .semantics(mergeDescendants = true) {},
-                verticalArrangement = Arrangement.spacedBy(Space.xxs),
+                verticalArrangement = Arrangement.spacedBy(Space.xs),
             ) {
-                Text(figure.first, style = AppTheme.typography.numTitle, maxLines = 1)
+                Text(figure.first, style = AppTheme.typography.title, maxLines = 1)
                 Text(figure.second, style = AppTheme.typography.caption, color = tokens.tx2)
             }
         }

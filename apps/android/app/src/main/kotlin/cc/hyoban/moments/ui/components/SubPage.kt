@@ -149,7 +149,7 @@ private fun BarPage(
             var open by remember { mutableStateOf(false) }
             Box {
                 Row(
-                    Modifier.clip(AppTheme.shapes.small)
+                    Modifier.clip(AppTheme.shapes.medium)
                         .clickable(onClickLabel = titleMenu.label, role = Role.DropdownList) { open = true }
                         .testTag("title_menu"),
                     verticalAlignment = Alignment.CenterVertically,

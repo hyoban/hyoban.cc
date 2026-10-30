@@ -1,6 +1,6 @@
 // Renders the design tokens as the Android app's ui/theme/Tokens.kt: the colours in light and
-// dark, the 4dp steps and the gaps, the corners, the shadows, the opacities, the 13 text styles
-// and the springs. The app reads these by the tokens' own names, in camel case.
+// dark, the 4dp steps, the corners, the shadow, the opacities, the six text styles and the
+// springs. The app reads these by the tokens' own names, in camel case.
 
 const FILE_NOTE =
   '// Generated from packages/design-tokens by `vp run design:tokens`. Do not edit by hand.'
@@ -56,7 +56,6 @@ export function renderKotlin(tokens, motion) {
     'import androidx.compose.runtime.ReadOnlyComposable',
     'import androidx.compose.ui.graphics.Color',
     'import androidx.compose.ui.text.TextStyle',
-    'import androidx.compose.ui.text.font.FontFamily',
     'import androidx.compose.ui.text.font.FontWeight',
     'import androidx.compose.ui.unit.Dp',
     'import androidx.compose.ui.unit.dp',
@@ -97,14 +96,14 @@ export function renderKotlin(tokens, motion) {
   )
   out.push('object Space {')
   for (const token of tokens.spacing.tokens) {
-    if (token.name.startsWith('gutter')) continue
-    const name = token.name.replace(/^space-/, '').replace(/^gap-/, '')
+    if (token.name === 'gutter') continue
+    const name = token.name.replace(/^space-/, '')
     out.push(`    val ${camel(name)} = ${px(token.value)}.dp`)
   }
   const gutter = spacing.get('gutter')
-  const wide = spacing.get('gutter-wide')
+  // A window of medium width and up takes a wider margin, the one rule a size can't carry.
   out.push(
-    `    val gutter: Dp\n        @Composable @ReadOnlyComposable get() = if (isMediumWidth()) ${px(wide.value)}.dp else ${px(gutter.value)}.dp`,
+    `    val gutter: Dp\n        @Composable @ReadOnlyComposable get() = if (isMediumWidth()) 32.dp else ${px(gutter.value)}.dp`,
   )
   out.push('}', '')
 
@@ -116,23 +115,16 @@ export function renderKotlin(tokens, motion) {
   }
   out.push('}', '')
 
-  // Shadows: softShadow draws a level as a blur of 6× and an offset of 1.5× it, at 10% black.
-  out.push(
-    '/** The shadows as levels, which softShadow draws: a blur of 6× the level, 1.5× it down, 10% black. */',
-  )
-  out.push('object Elevation {')
-  for (const token of tokens.shadow.tokens) {
-    const value = typeof token.value === 'string' ? token.value : Object.values(token.value)[0]
-    let level = 0
-    if (value !== 'none') {
-      const match = /^0 (\d+)px (\d+)px rgba\(0, 0, 0, 0\.1\)$/.exec(value)
-      if (!match || Number(match[1]) * 4 !== Number(match[2]))
-        throw new Error(`softShadow can't draw ${token.name}: ${value}`)
-      level = Number(match[2]) / 6
-    }
-    out.push(`    val level${token.name.replace(/^elevation-/, '')} = ${level}.dp`)
+  // The one shadow: softShadow draws a level as a blur of 6× and an offset of 1.5× it, at 10% black.
+  const [shadow] = tokens.shadow.tokens
+  const match = /^0 (\d+)px (\d+)px rgba\(0, 0, 0, 0\.1\)$/.exec(shadow.value)
+  if (tokens.shadow.tokens.length !== 1 || !match || Number(match[1]) * 4 !== Number(match[2])) {
+    throw new Error(`softShadow can't draw the shadow tokens`)
   }
-  out.push('}', '')
+  out.push(
+    '/** The one shadow, as the level softShadow draws: a blur of 6× it, 1.5× it down, 10% black. */',
+  )
+  out.push(`val ShadowElevation = ${Number(match[2]) / 6}.dp`, '')
 
   out.push('/** How strong a wash or a fade is. */', 'object Opacity {')
   for (const token of tokens.opacity.tokens) {
@@ -142,30 +134,27 @@ export function renderKotlin(tokens, motion) {
   }
   out.push('}', '')
 
-  // Type: the system's sans for words, its monospace for figures, with tabular figures where
-  // a phone maps the monospace to the sans.
+  // Type: the system sans, with tabular figures in every style so numbers line up.
   out.push(
-    'private fun style(size: Int, line: Int, weight: FontWeight, mono: Boolean) = TextStyle(',
+    'private fun style(size: Int, line: Int, weight: FontWeight) = TextStyle(',
     '    fontSize = size.sp,',
     '    lineHeight = line.sp,',
     '    fontWeight = weight,',
     '    letterSpacing = 0.em,',
-    '    fontFamily = if (mono) FontFamily.Monospace else null,',
-    '    fontFeatureSettings = if (mono) "tnum" else null,',
+    '    fontFeatureSettings = "tnum",',
     ')',
     '',
-    '/** The 13 text styles. */',
+    '/** The six text styles. */',
     'val TokenTypography = Typography(',
   )
   for (const group of tokens.type.groups) {
     for (const style of group.styles) {
-      const family = style.family ?? group.family
       const weight = WEIGHTS[style.fontWeight]
       if (!weight) throw new Error(`No FontWeight for ${style.fontWeight}`)
       if (px(style.letterSpacing === '0' ? '0px' : style.letterSpacing) !== 0)
         throw new Error(`${style.name} has letter spacing`)
       out.push(
-        `    ${camel(style.name)} = style(${px(style.fontSize)}, ${px(style.lineHeight)}, FontWeight.${weight}, mono = ${family === 'mono'}),`,
+        `    ${camel(style.name)} = style(${px(style.fontSize)}, ${px(style.lineHeight)}, FontWeight.${weight}),`,
       )
     }
   }

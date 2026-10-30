@@ -112,7 +112,7 @@ private fun Decoration(
         if (supportingText != null) {
             Box(Modifier.padding(start = if (boxed) 4.dp else 16.dp)) {
                 CompositionLocalProvider(LocalContentColor provides if (isError) tokens.danger else tokens.tx2) {
-                    ProvideTextStyle(AppTheme.typography.bodySmall) { supportingText() }
+                    ProvideTextStyle(AppTheme.typography.caption) { supportingText() }
                 }
             }
         }

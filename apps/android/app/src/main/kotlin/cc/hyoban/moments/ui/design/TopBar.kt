@@ -121,7 +121,7 @@ fun TopBar(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        CompositionLocalProvider(LocalContentColor provides tokens.tx) { ProvideTextStyle(typography.titleSmall) { title() } }
+                        CompositionLocalProvider(LocalContentColor provides tokens.tx) { ProvideTextStyle(typography.body.strong) { title() } }
                         if (subtitle != null && small) {
                             CompositionLocalProvider(LocalContentColor provides tokens.tx2) { ProvideTextStyle(typography.caption) { subtitle() } }
                         }

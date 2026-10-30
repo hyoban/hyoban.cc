@@ -125,7 +125,7 @@ fun momentBillRows(
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                             Text(
                                 if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
-                                style = AppTheme.typography.numBody,
+                                style = AppTheme.typography.body,
                                 color = amountColor(txn),
                             )
                             Icon(AppIcons.ChevronRight, contentDescription = null)

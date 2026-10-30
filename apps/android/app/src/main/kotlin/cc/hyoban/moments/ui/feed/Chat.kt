@@ -125,8 +125,8 @@ val TAIL = 8.dp
 /** The corners of a sent bubble's body, inside its tail's strip: what its photos and its press are clipped to. */
 fun sentBodyShape(joinedAbove: Boolean, joinedBelow: Boolean) = androidx.compose.foundation.shape.RoundedCornerShape(
     topStart = Radius.large,
-    topEnd = if (joinedAbove) Radius.small else Radius.large,
-    bottomEnd = if (joinedBelow) Radius.small else 0.dp,
+    topEnd = if (joinedAbove) Radius.medium else Radius.large,
+    bottomEnd = if (joinedBelow) Radius.medium else 0.dp,
     bottomStart = Radius.large,
 )
 
@@ -142,7 +142,7 @@ class BubbleShape(private val sent: Boolean, private val joinedAbove: Boolean, p
         val h = size.height
         val t = TAIL.toPx()
         val large = Radius.large.toPx()
-        val small = Radius.small.toPx()
+        val small = Radius.medium.toPx()
         val right = w - t
         // Drawn as the right side's; the left side's is its mirror.
         fun x(v: Float) = if (sent) v else w - v
@@ -202,7 +202,7 @@ fun DateCapsule(day: String, onClick: (() -> Unit)?, modifier: Modifier = Modifi
                 text,
                 style = AppTheme.typography.caption,
                 color = tokens.tx2,
-                modifier = Modifier.clip(cc.hyoban.moments.ui.theme.Corners.full).background(tokens.fill).padding(horizontal = Space.m, vertical = Space.xxs),
+                modifier = Modifier.clip(cc.hyoban.moments.ui.theme.Corners.full).background(tokens.fill).padding(horizontal = Space.m, vertical = Space.xs),
             )
         }
     }
@@ -324,8 +324,8 @@ private fun RecordRow(
         // 00:00 since the system's monospace doesn't always keep its digits one width; a line with
         // no time (the footprints) keeps the column empty, so the icons stay in line.
         if (timed) Box {
-            Text("00:00", style = AppTheme.typography.numCaption, color = androidx.compose.ui.graphics.Color.Transparent, maxLines = 1, modifier = Modifier.clearAndSetSemantics {})
-            time?.let { Text(it, style = AppTheme.typography.numCaption, color = tokens.tx3, maxLines = 1) }
+            Text("00:00", style = AppTheme.typography.caption, color = androidx.compose.ui.graphics.Color.Transparent, maxLines = 1, modifier = Modifier.clearAndSetSemantics {})
+            time?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 1) }
         }
         icon()
         val words: @Composable (Modifier) -> Unit = { m ->
@@ -334,11 +334,11 @@ private fun RecordRow(
         if (large) {
             Column(Modifier.weight(1f)) {
                 words(Modifier)
-                Text(end, style = AppTheme.typography.numBody, color = endColor)
+                Text(end, style = AppTheme.typography.body, color = endColor)
             }
         } else {
             words(Modifier.weight(1f))
-            Text(end, style = AppTheme.typography.numBody, color = endColor, maxLines = 1)
+            Text(end, style = AppTheme.typography.body, color = endColor, maxLines = 1)
         }
     }
 }

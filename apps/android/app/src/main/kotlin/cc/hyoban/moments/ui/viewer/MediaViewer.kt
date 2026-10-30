@@ -256,7 +256,7 @@ fun MediaViewer(
                     Text(
                         "${pager.currentPage + 1} / ${media.size}",
                         color = MediaOverlay.content,
-                        style = AppTheme.typography.numBody,
+                        style = AppTheme.typography.body,
                         modifier = Modifier.align(Alignment.Center),
                     )
                 }

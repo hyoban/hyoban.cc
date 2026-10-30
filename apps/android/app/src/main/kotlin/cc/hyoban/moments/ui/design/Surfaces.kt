@@ -36,7 +36,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.ui.theme.Corners
-import cc.hyoban.moments.ui.theme.Elevation
+import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.cardBorder
 import cc.hyoban.moments.ui.theme.tokens
 
@@ -115,7 +115,7 @@ fun Scrubber(
 /** Actions floating over a page: a capsule on the surface, with its hairline and a shadow. */
 @Composable
 fun FloatingBar(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
-    Surface(modifier, shape = Corners.full, color = tokens.surface, contentColor = tokens.tx, border = cardBorder(), shadowElevation = Elevation.level2) {
+    Surface(modifier, shape = Corners.full, color = tokens.surface, contentColor = tokens.tx, border = cardBorder(), shadowElevation = ShadowElevation) {
         Row(Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically, content = content)
     }
 }

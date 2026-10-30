@@ -99,7 +99,7 @@ private fun MonthGrid(month: YearMonth, chosen: LocalDate, onMonth: (YearMonth) 
     val title = month.format(DateTimeFormatter.ofPattern(if (locale.language == "zh") "yyyy年M月" else "MMMM yyyy", locale))
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(title, style = AppTheme.typography.titleSmall, modifier = Modifier.weight(1f).padding(start = 4.dp))
+            Text(title, style = AppTheme.typography.body.strong, modifier = Modifier.weight(1f).padding(start = 4.dp))
             IconButton(onClick = { onMonth(month.minusMonths(1)) }) {
                 Icon(AppIcons.ChevronLeft, contentDescription = stringResource(R.string.action_previous_month), tint = tokens.tx2)
             }
@@ -130,7 +130,7 @@ private fun MonthGrid(month: YearMonth, chosen: LocalDate, onMonth: (YearMonth) 
                             val label = date.toString()
                             Box(
                                 Modifier.fillMaxWidth().aspectRatio(1f).clip(CircleShape)
-                                    .then(if (on) Modifier.background(tokens.ink) else Modifier)
+                                    .then(if (on) Modifier.background(tokens.tx) else Modifier)
                                     .clickable(role = Role.RadioButton) { onDay(date) }
                                     .semantics { selected = on; contentDescription = label },
                                 contentAlignment = Alignment.Center,
@@ -139,7 +139,7 @@ private fun MonthGrid(month: YearMonth, chosen: LocalDate, onMonth: (YearMonth) 
                                     date.dayOfMonth.toString(),
                                     style = AppTheme.typography.label,
                                     color = when {
-                                        on -> tokens.onInk
+                                        on -> tokens.bg
                                         date == today -> tokens.accent
                                         else -> tokens.tx
                                     },
