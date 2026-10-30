@@ -302,23 +302,29 @@ private fun PeriodRow(label: String, mode: Span, onMode: (Span) -> Unit, onPrevi
 private fun Totals(summary: Summary, currency: String, average: Long?, compared: Long?, yearly: Boolean) {
     run {
         Column(Modifier.fillMaxWidth().padding(horizontal = Space.gutter + Space.xs, vertical = Space.m), verticalArrangement = Arrangement.spacedBy(Space.m)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(Space.l)) {
-                listOf(
-                    R.string.ledger_kind_expense to summary.expense,
-                    R.string.ledger_kind_income to summary.income,
-                    R.string.ledger_balance to summary.balance,
-                ).forEach { (label, cents) ->
-                    Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
-                        // A six-figure sum shrinks to fit its third rather than losing its cents.
-                        Text(
-                            money(cents, currency),
-                            style = AppTheme.typography.numTitle,
-                            maxLines = 1,
-                            autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = AppTheme.typography.numTitle.fontSize),
-                        )
-                        Text(stringResource(label), style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
-                    }
+            val figures = listOf(
+                R.string.ledger_kind_expense to summary.expense,
+                R.string.ledger_kind_income to summary.income,
+                R.string.ledger_balance to summary.balance,
+            )
+            val figure: @Composable (Pair<Int, Long>, Modifier) -> Unit = { (label, cents), modifier ->
+                Column(modifier.semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
+                    // A six-figure sum shrinks to fit its third rather than losing its cents.
+                    Text(
+                        money(cents, currency),
+                        style = AppTheme.typography.numTitle,
+                        maxLines = 1,
+                        autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = AppTheme.typography.numTitle.fontSize),
+                    )
+                    Text(stringResource(label), style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
                 }
+            }
+            // Three in a row, or one under another with the system's font set large, where a third
+            // of the width would cut a sum short.
+            if (cc.hyoban.moments.ui.theme.isLargeFont()) {
+                figures.forEach { figure(it, Modifier) }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(Space.l)) { figures.forEach { figure(it, Modifier.weight(1f)) } }
             }
             // Only between two spends: refunds outweighing a stretch's spending would read as more than all of it less.
     val change = compared?.takeIf { it > 0 && summary.expense >= 0 && summary.expense != it }?.let { before ->

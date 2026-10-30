@@ -204,13 +204,18 @@ fun PageRow(
         Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
             CompositionLocalProvider(LocalContentColor provides tokens.tx2) { leading() }
         }
+        // With the system's font set large the figures go under the words, which take the row's
+        // width and two lines each, rather than a column at the end leaving them a word or two.
+        val large = cc.hyoban.moments.ui.theme.isLargeFont()
+        val lines = if (large) 2 else 1
         Column(Modifier.weight(1f)) {
-            Text(title, style = AppTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(title, style = AppTheme.typography.body, maxLines = lines, overflow = TextOverflow.Ellipsis)
             supporting?.takeIf { it.isNotEmpty() }?.let {
-                Text(it, style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(it, style = AppTheme.typography.caption, color = tokens.tx2, maxLines = lines, overflow = TextOverflow.Ellipsis)
             }
+            if (large) trailing()
         }
-        Column(horizontalAlignment = Alignment.End, content = trailing)
+        if (!large) Column(horizontalAlignment = Alignment.End, content = trailing)
     }
 }
 

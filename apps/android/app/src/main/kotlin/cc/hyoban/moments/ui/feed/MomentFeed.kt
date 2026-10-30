@@ -283,14 +283,14 @@ fun MomentFeed(
                     val last = dayItems.lastOrNull()?.key
                     val tops = dayItems.mapIndexed { index, item ->
                         item.key to when {
-                            index == 0 -> if (!dayPills) Space.s else if (headed) Space.l else Space.xxl
-                            item is DayItem.Moment || dayItems[index - 1] is DayItem.Moment -> Space.l
+                            index == 0 -> if (!dayPills) Space.s else if (headed) Space.item else Space.day
+                            item is DayItem.Moment || dayItems[index - 1] is DayItem.Moment -> Space.item
                             else -> 0.dp
                         }
                     }.toMap()
                     // The day's figures level with the first line beside them: a row's text is
                     // inside its padding, a Moment without photos starts a little down.
-                    val railTop = (if (headed) Space.l else Space.xxl) + when (val head = dayItems.firstOrNull()) {
+                    val railTop = (if (headed) Space.item else Space.day) + when (val head = dayItems.firstOrNull()) {
                         is DayItem.Moment -> if (head.moment.media.isEmpty()) Space.xs else 0.dp
                         null -> 0.dp
                         else -> Space.s

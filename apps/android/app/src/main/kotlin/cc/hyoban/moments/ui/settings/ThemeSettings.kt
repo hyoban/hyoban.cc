@@ -207,7 +207,7 @@ private fun MiniScreen(scheme: ColorScheme, modifier: Modifier) {
 @Composable
 fun Caption(title: String, action: (@Composable () -> Unit)? = null) {
     Row(
-        Modifier.fillMaxWidth().padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.xl, bottom = if (action == null) Space.s else 0.dp),
+        Modifier.fillMaxWidth().padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.section, bottom = if (action == null) Space.s else 0.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -248,7 +248,7 @@ fun SegmentedGroup(
     action: (@Composable () -> Unit)? = null,
     header: (@Composable () -> Unit)? = null,
 ) {
-    if (title != null) Caption(title, action) else Spacer(Modifier.height(Space.xl))
+    if (title != null) Caption(title, action) else Spacer(Modifier.height(Space.section))
     // What chooses what the rows show, filter chips say, between the caption and the rows, edge to edge.
     header?.invoke()
     Column(Modifier.padding(horizontal = Space.gutter)) {

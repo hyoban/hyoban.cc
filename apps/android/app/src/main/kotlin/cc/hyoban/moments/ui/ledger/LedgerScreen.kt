@@ -302,8 +302,9 @@ fun BillList(
             items(lines, key = { it.key }, contentType = { it::class }) { line ->
                 when (line) {
                     is BillLine.Month -> MonthTotals(line.month, line.expense, line.income, currency)
-                    // Days set apart by space alone, each in the rail beside its first bill.
-                    is BillLine.Day -> Spacer(Modifier.height(Space.l))
+                    // Days set apart by space alone, each in the rail beside its first bill: a list of
+                    // rows alone, so the item gap rather than the day's.
+                    is BillLine.Day -> Spacer(Modifier.height(Space.item))
                     is BillLine.Bill -> Row {
                         Box(Modifier.padding(start = Space.gutter).width(Rail)) {
                             if (line.first) {
