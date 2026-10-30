@@ -9,10 +9,15 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 
 ## Check every change on the phone
 
-- After each runtime or UI change, build the release and install it over what is there:
-  `./gradlew :app:assembleRelease`, then `adb install -r app/build/outputs/apk/release/app-release.apk`.
-  It is signed with the debug key unless `local.properties` has a release key, so the
-  app's data stays. Launch it and look at logcat's crash buffer.
+- Iterate as fast as possible: after each runtime or UI change, build the debug build and
+  install it over what is there, a few seconds each: `./gradlew :app:assembleDebug`, then
+  `adb install -r app/build/outputs/apk/debug/app-debug.apk`. Launch it and look at
+  logcat's crash buffer. Build only what the step needs, not the CI set each time.
+- The debug build runs slower, so judge motion and dropped frames on the release, and
+  install the release once the change is done: `./gradlew :app:assembleRelease` (half a
+  minute, R8's), then `app/build/outputs/apk/release/app-release.apk`. Both are signed
+  with the debug key unless `local.properties` has a release key, so either installs over
+  the other and the app's data stays.
 - The phone is usually on wireless adb. Take its serial from `adb devices`, leaving out
   `emulator-*`, and never start the emulator while the phone is there. If the phone is
   locked or adb has dropped, say so instead of working around it.
