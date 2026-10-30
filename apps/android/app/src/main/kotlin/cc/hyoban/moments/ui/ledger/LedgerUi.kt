@@ -252,11 +252,8 @@ internal val TIME = DateTimeFormatter.ofPattern("HH:mm")
  */
 @Composable
 fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false, withTime: Boolean = true, place: String? = null): String {
-    val account = when {
-        txn.kind == TxnKind.TRANSFER -> transferLabel(txn.transfer).takeIf { txn.transfer != TransferType.TRANSFER }
-        txn.splits.isNotEmpty() -> txn.splits.mapNotNull { ledger.accountsById[it.account]?.name }.joinToString(" + ")
-        else -> txn.account?.let(ledger.accountsById::get)?.name
-    }
+    // The account stays on the bill's own page: a list says what the bill was, not what paid it.
+    val transfer = transferLabel(txn.transfer).takeIf { txn.kind == TxnKind.TRANSFER && txn.transfer != TransferType.TRANSFER }
     val state = when {
         txn.reimburse == Reimburse.PENDING -> stringResource(R.string.ledger_reimburse_pending)
         txn.reimburse == Reimburse.DONE -> stringResource(R.string.ledger_reimburse_done)
@@ -268,7 +265,7 @@ fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false, withTime:
     // The day first, so a long note doesn't cut it off; the time only where the row's end lacks it.
     val day = if (showDate) formatDay(txn.dateKey) else null
     val time = if (withTime) txn.local.format(TIME) else null
-    return listOfNotNull(day, txn.note.takeIf { it.isNotBlank() }, state, account, time).joinToString(" ")
+    return listOfNotNull(day, txn.note.takeIf { it.isNotBlank() }, place, state, transfer, time).joinToString(" ")
 }
 
 /**

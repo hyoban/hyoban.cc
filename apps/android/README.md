@@ -329,7 +329,7 @@ Moment, place, trip and day. A bill with no place of its own nor its Moment's is
 footprints: the sample nearest its time, within a quarter of an hour and good to 100 m, named
 by Photon as a new Moment's place is (the point alone goes out, nothing of the bill, and each
 spot's name is kept in `footprints.sqlite` so it is asked once). Its page shows it as 足迹位置,
-leading to its day, and its row in any list of bills after its note. An account's page has its bills and 校准余额, which sets the
+leading to its day, and its row in any list of bills after its note. A row in a list of bills never names its account, which only its page shows. An account's page has its bills and 校准余额, which sets the
 balance to what it really is by moving its opening balance, adding no bill.
 
 It meets the Moments where it should: a Moment's page lists its bills, and a meal's
@@ -396,9 +396,10 @@ taken from `uiautomator dump`; `ledger/AutoBill` keeps the switch and posts the 
 
 我 holds the changes waiting (a block on the accent's soft tint, only while there are any),
 this month's spending in figures with a bar for each day, and four rows: 账单与资产, 足迹,
-记录项与公开 and 设置 (`moments://settings-home`, a row for each section). The timeline and the
-ledger's bills keep each day in a rail down the left, its day of the month and weekday, the
-ledger's with what it spent; a month's heading says how many Moments it had and what it spent.
+记录项与公开 and 设置 (`moments://settings-home`, a row for each section). The timeline, the
+ledger's bills and a trip's days open each day with a header row, its day of the month and
+weekday, the ledger's ending with what the day came to and a trip's with 第 n 天, and the day's
+Moments and bills run across the column under it; a month's heading says how many Moments it had and what it spent.
 A day with footprints ends with a 轨迹 row, the day's line drawn where a bill's icon goes, how
 long it moved and how far, and it opens the day; footprints alone don't put a day on the timeline.
 A Moment's page lists its place, then its parts row by row, a charge among them, its trip and

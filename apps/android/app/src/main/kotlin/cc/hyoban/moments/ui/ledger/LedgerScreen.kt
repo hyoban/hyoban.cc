@@ -1,8 +1,8 @@
 package cc.hyoban.moments.ui.ledger
 
 import cc.hyoban.moments.ui.format.formatDay
+import cc.hyoban.moments.ui.feed.dayHeaderSpacing
 import androidx.compose.foundation.layout.width
-import cc.hyoban.moments.ui.theme.Rail
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.SegmentedButton
 import cc.hyoban.moments.ui.design.SingleChoiceSegmentedButtonRow
@@ -247,8 +247,8 @@ private sealed interface BillLine {
         override val key get() = "d$date"
     }
 
-    /** A bill, [first] of its day's beside the day in the rail. */
-    data class Bill(val txn: Txn, val first: Boolean = false, val dayExpense: Long = 0) : BillLine {
+    /** A bill, under its day's header. */
+    data class Bill(val txn: Txn) : BillLine {
         override val key get() = txn.id
     }
 }
@@ -267,16 +267,20 @@ private fun linesOf(ledger: Ledger, bills: List<Txn>, currency: String): List<Bi
             val days = { map: Map<java.time.LocalDate, Long> -> map.filterKeys { it.toString().startsWith(month!!) }.values.sum() }
             out += BillLine.Month(month!!, days(sums.expenseByDay), days(sums.incomeByDay))
         }
-        val first = key != day
-        if (first) {
+        if (key != day) {
             day = key
             val date = txn.date
             out += BillLine.Day(key, sums.expenseByDay[date] ?: 0, sums.incomeByDay[date] ?: 0)
         }
-        out += BillLine.Bill(txn, first, sums.expenseByDay[txn.date] ?: 0)
+        out += BillLine.Bill(txn)
     }
     return out
 }
+
+/** What a day came to, signed: earned less spent, or nothing when it had neither. */
+@Composable
+private fun dayTotal(expense: Long, income: Long, currency: String): String? =
+    if (expense == 0L && income == 0L) null else (income - expense).let { signedMoney(kotlin.math.abs(it), currency, it > 0) }
 
 /** Bills newest first, under months and days with their sums. */
 @Composable
@@ -301,23 +305,19 @@ fun BillList(
             items(lines, key = { it.key }, contentType = { it::class }) { line ->
                 when (line) {
                     is BillLine.Month -> MonthTotals(line.month, line.expense, line.income, currency)
-                    // Days set apart by space alone, each in the rail beside its first bill: a list of
-                    // rows alone, so the item gap rather than the day's.
-                    is BillLine.Day -> Spacer(Modifier.height(Space.item))
-                    is BillLine.Bill -> Row {
-                        Box(Modifier.padding(start = Space.gutter).width(Rail)) {
-                            if (line.first) {
-                                cc.hyoban.moments.ui.feed.DayRail(
-                                    line.txn.dateKey,
-                                    formatDay(line.txn.dateKey),
-                                    onClick = { nav.day(line.txn.dateKey) },
-                                    modifier = Modifier.padding(top = Space.s),
-                                    note = line.dayExpense.takeIf { it > 0 }?.let { money(it, currency) },
-                                )
-                            }
-                        }
-                        TxnRow(line.txn, ledger, onClick = { nav.bill(line.txn.id) }, modifier = Modifier.weight(1f).padding(end = Space.xs), showBook = showBook)
-                    }
+                    // Days set apart by space alone under their header rows, the day's total at
+                    // the end: a list of rows alone, so the section gap rather than the day's.
+                    is BillLine.Day -> cc.hyoban.moments.ui.feed.DayHeader(
+                        line.date,
+                        "",
+                        onClick = { nav.day(line.date) },
+                        modifier = Modifier.padding(horizontal = Space.gutter).dayHeaderSpacing(Space.section, below = 0.dp),
+                        note = dayTotal(line.expense, line.income, currency),
+                        noteFigures = true,
+                    )
+                    // A row pads itself 16dp each side; the rest of the margin goes outside it, so its
+                    // icon and amount sit on the margin, the header's figures above the icon.
+                    is BillLine.Bill -> TxnRow(line.txn, ledger, onClick = { nav.bill(line.txn.id) }, modifier = Modifier.padding(horizontal = Space.gutter - 16.dp), showBook = showBook)
                 }
             }
         }

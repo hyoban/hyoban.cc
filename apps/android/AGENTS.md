@@ -64,7 +64,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   what they are, not by Compose or Material), and record only where Android implements it. Its tokens live in `ui/theme` (`Colors.kt`'s `Tokens`, the
   type scale and corners in `Theme.kt`); change the artifact and the code together. Text takes
   the design's 13 styles by their names (`titlePage` … `numCaption`), figures in the `num`
-  ones, which are the system monospace; a day on a timeline sits in the left rail (`Rail`). The app
+  ones, which are the system monospace; a day on a timeline, a ledger or a trip opens with its header row (`DayHeader`). The app
   doesn't depend on Material 3 (`androidx.compose.material3`, `glance-material3`): its
   components are its own, in `ui/design`, on Compose foundation, and it has no Material
   dependency at all. Don't add Material components or icon packs back.
@@ -92,8 +92,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - A 40dp button keeps its 48dp target in the layout (`minimumInteractiveComponentSize`); a 36dp
   chip is laid out at its own size, so rows of chips stand 8dp apart, Compose widening its target.
 - The design's gaps are `Space.item`, `Space.section` and `Space.day`; take them rather than a size
-  where a gap means one. Large system fonts are `isLargeFont()` (130% and up), and `Rail` widens
-  with the font, so read it in composition.
+  where a gap means one. Large system fonts are `isLargeFont()` (130% and up), so read it in composition.
 - Words are in `values` (Chinese) and `values-en`, with TalkBack descriptions for what is shown.
 - The map's year colours are `ui/map/Years.kt`, from `packages/trip-map/src/theme.ts`: change both
   sides together. The ledger's charts are drawn on a Compose `Canvas` (`ui/ledger/Charts.kt`), not
