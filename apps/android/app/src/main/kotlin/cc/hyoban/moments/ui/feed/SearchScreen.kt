@@ -198,6 +198,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                             },
                         )
                     },
+                    leadingIcon = if (option == kind) ({ SelectedCheck() }) else null,
                     modifier = Modifier.testTag("kind_${option.name.lowercase()}"),
                 )
             }

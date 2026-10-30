@@ -81,7 +81,7 @@ export const foodPartSchema = z.looseObject({
   people: count.optional(),
 })
 
-/** A bill from the ledger. Only `amount`, `currency`, `category` and `note` are ever public. */
+/** A bill from the ledger. Only `kind`, `amount`, `currency`, `category` and `note` are ever public. */
 export const billPartSchema = z.looseObject({
   ...partBase,
   kind: z.enum(['expense', 'income', 'transfer']).default('expense'),
