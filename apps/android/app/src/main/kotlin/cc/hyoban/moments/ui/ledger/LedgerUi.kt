@@ -244,7 +244,7 @@ fun txnTitle(txn: Txn, ledger: Ledger): String = when (txn.kind) {
     else -> ledger.categoryPath(txn.category) ?: kindLabel(txn.kind)
 }
 
-private val TIME = DateTimeFormatter.ofPattern("HH:mm")
+internal val TIME = DateTimeFormatter.ofPattern("HH:mm")
 
 /**
  * What is said under a bill's name: its note, its account and its time, what sets it apart;

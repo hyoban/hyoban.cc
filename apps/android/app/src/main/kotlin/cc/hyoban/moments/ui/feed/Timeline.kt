@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import cc.hyoban.moments.ui.design.HorizontalDivider
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Text
@@ -36,12 +35,22 @@ import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ledger.summarize
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.tripCardKey
-import cc.hyoban.moments.ui.ledger.TxnRow
+import cc.hyoban.moments.ui.ledger.TIME
+import cc.hyoban.moments.ui.ledger.amountColor
+import cc.hyoban.moments.ui.ledger.incoming
+import cc.hyoban.moments.ui.ledger.signedMoney
+import cc.hyoban.moments.ui.ledger.txnIcon
+import cc.hyoban.moments.ui.ledger.txnSupporting
+import cc.hyoban.moments.ui.ledger.txnTitle
+import cc.hyoban.moments.ui.theme.tokens
+import cc.hyoban.moments.ui.design.LocalContentColor
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.heightIn
 import cc.hyoban.moments.ui.ledger.money
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.cardBorder
-import cc.hyoban.moments.ui.theme.dividerColor
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.trips.tripSummary
 
@@ -149,25 +158,73 @@ sealed interface DayItem {
     }
 }
 
-/** A charge as a row on the page: its icon, AC or DC and how much, and when and how long in figures. */
+/** A charge as a row on the page, as a bill is: AC or DC with how much and how long under it, and its time at the end. */
 @Composable
 fun ChargeRow(charge: Charge, modifier: Modifier = Modifier) {
-    Row(modifier.fillMaxWidth().testTag("charge_${charge.uid}"), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
-        Icon(AppIcons.Ev, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant)
-        Column(Modifier.weight(1f)) {
-            Text(
-                listOfNotNull(
-                    androidx.compose.ui.res.stringResource(if (charge.dc) cc.hyoban.moments.R.string.charge_dc else cc.hyoban.moments.R.string.charge_ac),
-                    charge.kwh?.let { "%.1f kWh".format(it) },
-                ).joinToString("\u2003"),
-                style = AppTheme.typography.body,
-            )
-            Text(
-                listOfNotNull(charge.at.drop(11).take(5).ifEmpty { null }, charge.minutes?.let { "$it min" }).joinToString("\u2003"),
-                style = AppTheme.typography.numCaption,
-                color = AppTheme.colorScheme.onSurfaceVariant,
-            )
+    PageRow(
+        leading = { Icon(AppIcons.Ev, contentDescription = null) },
+        title = androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.timeline_charge),
+        supporting = listOfNotNull(
+            androidx.compose.ui.res.stringResource(if (charge.dc) cc.hyoban.moments.R.string.charge_dc else cc.hyoban.moments.R.string.charge_ac),
+            charge.kwh?.let { "%.1f kWh".format(it) },
+            charge.minutes?.let { androidx.compose.ui.res.pluralStringResource(cc.hyoban.moments.R.plurals.charge_minutes, it, it) },
+        ).joinToString("\u2003"),
+        onClick = null,
+        modifier = modifier.testTag("charge_${charge.uid}"),
+    ) {
+        charge.at.drop(11).take(5).ifEmpty { null }?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx3) }
+    }
+}
+
+/**
+ * A row on the timeline's page, for what has no words of its own: an icon at the Moments' edge,
+ * a title and a line under it, and figures at the end; pressed, its wash reaches a little past
+ * its edges. It stands as tall as a touch target, so rows one after another sit evenly.
+ */
+@Composable
+fun PageRow(
+    leading: @Composable () -> Unit,
+    title: String,
+    supporting: String?,
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    trailing: @Composable ColumnScope.() -> Unit = {},
+) {
+    Row(
+        modifier
+            .bleed(Space.s)
+            .clip(AppTheme.shapes.medium)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .heightIn(min = 48.dp)
+            .padding(horizontal = Space.s, vertical = Space.s),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.m),
+    ) {
+        Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
+            CompositionLocalProvider(LocalContentColor provides tokens.tx2) { leading() }
         }
+        Column(Modifier.weight(1f)) {
+            Text(title, style = AppTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            supporting?.takeIf { it.isNotEmpty() }?.let {
+                Text(it, style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        Column(horizontalAlignment = Alignment.End, content = trailing)
+    }
+}
+
+/** A bill as a row on the timeline's page: its category's icon, its name and what sets it apart, and its amount over its time. */
+@Composable
+fun BillRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    PageRow(
+        leading = { Icon(txnIcon(txn, ledger), contentDescription = null) },
+        title = txnTitle(txn, ledger),
+        supporting = txnSupporting(txn, ledger, withTime = false, place = cc.hyoban.moments.footprints.footprintPlace(txn)),
+        onClick = onClick,
+        modifier = modifier.testTag("bill_${txn.id}"),
+    ) {
+        Text(signedMoney(txn.amount, txn.currency, txn.incoming), style = AppTheme.typography.numBody, color = amountColor(txn))
+        Text(txn.local.format(TIME), style = AppTheme.typography.caption, color = tokens.tx3)
     }
 }
 
@@ -191,22 +248,20 @@ fun dayItems(moments: List<MomentRecord>, bills: List<Txn>, charges: List<Charge
     return out
 }
 
-/** Bills next to each other on the timeline: rows on the page, hairlines between them, lined up with the Moments' words. */
+/** Bills next to each other on the timeline: rows on the page, one under another, lined up with the Moments' words. */
 @Composable
 fun BillGroup(txns: List<Txn>, ledger: Ledger, onBill: (String) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth()) {
-        txns.forEachIndexed { index, txn ->
-            if (index > 0) HorizontalDivider(Modifier.padding(start = 56.dp), color = dividerColor())
-            TxnRow(txn, ledger, onClick = { onBill(txn.id) }, modifier = Modifier.bleed(Space.l))
-        }
+        txns.forEach { txn -> BillRow(txn, ledger, onClick = { onBill(txn.id) }) }
     }
 }
 
-/** The bills written with a Moment, at its foot under a hairline. */
+/** The bills written with a Moment, at its foot. */
 @Composable
 fun LinkedBills(txns: List<Txn>, ledger: Ledger, onBill: (String) -> Unit) {
-    HorizontalDivider(Modifier.padding(top = Space.s), color = dividerColor())
-    txns.forEach { txn -> TxnRow(txn, ledger, onClick = { onBill(txn.id) }, modifier = Modifier.bleed(Space.l)) }
+    Column(Modifier.padding(top = Space.s)) {
+        txns.forEach { txn -> BillRow(txn, ledger, onClick = { onBill(txn.id) }) }
+    }
 }
 
 /** Out past its edges by [by] each side, so a list row's own inset lines its content up with what is around it. */
@@ -288,55 +343,50 @@ fun TrackRow(day: String, tracks: TimelineTracks, onClick: () -> Unit, modifier:
     val track by androidx.compose.runtime.produceState(tracks.cached(day), day, tracks) { value = tracks.load(day) }
     val shown = track ?: return
     val minutes = (shown.movingMillis / 60_000).toInt()
-    cc.hyoban.moments.ui.design.ListItem(
-        headlineContent = { Text(androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.timeline_track), maxLines = 1) },
-        supportingContent = { Text(androidx.compose.ui.res.pluralStringResource(cc.hyoban.moments.R.plurals.timeline_track_moving, minutes, minutes), maxLines = 1) },
-        leadingContent = { TrackGlyph(shown.stretches) },
-        trailingContent = {
-            Text(
-                androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.distance_kilometres, shown.metres / 1000),
-                style = AppTheme.typography.titleSmall,
-            )
-        },
-        colors = cc.hyoban.moments.ui.design.ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
-        modifier = modifier.bleed(Space.l).clickable(onClick = onClick).testTag("track_$day"),
-    )
+    PageRow(
+        leading = { TrackGlyph(shown.stretches) },
+        title = androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.timeline_track),
+        supporting = androidx.compose.ui.res.pluralStringResource(cc.hyoban.moments.R.plurals.timeline_track_moving, minutes, minutes),
+        onClick = onClick,
+        modifier = modifier.testTag("track_$day"),
+    ) {
+        Text(
+            androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.distance_kilometres, shown.metres / 1000),
+            style = AppTheme.typography.numBody,
+            color = tokens.tx2,
+        )
+    }
 }
 
-/** The day's line, fitted into a bill icon's round, drawn in an icon's stroke. */
+/** The day's line, where a bill's icon goes, drawn in an icon's stroke. */
 @Composable
 private fun TrackGlyph(stretches: List<List<Pair<Double, Double>>>) {
-    val color = cc.hyoban.moments.ui.theme.tokens.tx2
-    Box(
-        Modifier.size(40.dp).background(cc.hyoban.moments.ui.theme.tokens.pressed, androidx.compose.foundation.shape.CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        androidx.compose.foundation.Canvas(Modifier.size(24.dp)) {
-            val all = stretches.flatten()
-            // Longitude shrunk by the latitude, so the line keeps the shape it has on a map.
-            val scaleX = kotlin.math.cos(Math.toRadians(all.sumOf { it.second } / all.size))
-            val minX = all.minOf { it.first } * scaleX
-            val maxX = all.maxOf { it.first } * scaleX
-            val minY = all.minOf { it.second }
-            val maxY = all.maxOf { it.second }
-            val stroke = 2.dp.toPx()
-            val box = size.minDimension - stroke
-            val span = maxOf(maxX - minX, maxY - minY).takeIf { it > 0 } ?: 1.0
-            val offsetX = (size.width - (maxX - minX) / span * box) / 2
-            val offsetY = (size.height - (maxY - minY) / span * box) / 2
-            stretches.forEach { stretch ->
-                val path = androidx.compose.ui.graphics.Path()
-                stretch.forEachIndexed { index, (lon, lat) ->
-                    val x = (offsetX + (lon * scaleX - minX) / span * box).toFloat()
-                    val y = (offsetY + (maxY - lat) / span * box).toFloat()
-                    if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
-                }
-                drawPath(
-                    path,
-                    color,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round),
-                )
+    val color = tokens.tx2
+    androidx.compose.foundation.Canvas(Modifier.size(24.dp)) {
+        val all = stretches.flatten()
+        // Longitude shrunk by the latitude, so the line keeps the shape it has on a map.
+        val scaleX = kotlin.math.cos(Math.toRadians(all.sumOf { it.second } / all.size))
+        val minX = all.minOf { it.first } * scaleX
+        val maxX = all.maxOf { it.first } * scaleX
+        val minY = all.minOf { it.second }
+        val maxY = all.maxOf { it.second }
+        val stroke = 2.dp.toPx()
+        val box = size.minDimension - stroke
+        val span = maxOf(maxX - minX, maxY - minY).takeIf { it > 0 } ?: 1.0
+        val offsetX = (size.width - (maxX - minX) / span * box) / 2
+        val offsetY = (size.height - (maxY - minY) / span * box) / 2
+        stretches.forEach { stretch ->
+            val path = androidx.compose.ui.graphics.Path()
+            stretch.forEachIndexed { index, (lon, lat) ->
+                val x = (offsetX + (lon * scaleX - minX) / span * box).toFloat()
+                val y = (offsetY + (maxY - lat) / span * box).toFloat()
+                if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
             }
+            drawPath(
+                path,
+                color,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round),
+            )
         }
     }
 }
