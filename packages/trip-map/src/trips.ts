@@ -15,7 +15,7 @@ export type TripDefinition = Readonly<{
   covers?: readonly string[]
   end: string
   id: string
-  /** Default background music, an id from src/data/music.ts. */
+  /** Default background music, an id from apps/web/src/data/music.ts. */
   music?: string
   /**
    * Places driven back the way they came, as `[from, to]` location ids: the drive back
