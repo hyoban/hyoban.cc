@@ -148,6 +148,39 @@ object AppIcons {
     val Clothes: ImageVector by lazy { icon("clothes", false, listOf("M12 7.5V6.6a1.6 1.6 0 1 0-1.6-1.6", "M12 7.5 3.4 14.6a1 1 0 0 0 .6 1.9h16a1 1 0 0 0 .6-1.9z")) }
     val Party: ImageVector by lazy { icon("party", false, listOf("M4 20 8.5 7.5l8 8z", "M13 4.5c.5 1.5 0 3-1 3.5", "M19.5 11c-1.5-.5-3 0-3.5 1", "M9.5 13L11 14.5"), listOf("M15.4 5a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0z", "M17.9 8a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0z")) }
     val Key: ImageVector by lazy { icon("key", false, listOf("M4 15a4 4 0 1 0 8 0a4 4 0 1 0 -8 0z", "M10.8 12.2L19 4", "M15.5 7.5L18 10", "M17.5 5.5L20 8")) }
+    val TrendDown: ImageVector by lazy { icon("trend-down", false, listOf("M3.5 7 9.5 13l4-4 7 7", "M15 16h5.5v-5.5")) }
+    val RedPacket: ImageVector by lazy { icon("red-packet", false, listOf("M8.5 3.5H15.5A3.5 3.5 0 0 1 19 7V17A3.5 3.5 0 0 1 15.5 20.5H8.5A3.5 3.5 0 0 1 5 17V7A3.5 3.5 0 0 1 8.5 3.5z", "M5 8.5c2 1.8 4.3 2.7 7 2.7s5-.9 7-2.7", "M10 14a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z")) }
+    val Briefcase: ImageVector by lazy { icon("briefcase", false, listOf("M7 7H17A3.5 3.5 0 0 1 20.5 10.5V16A3.5 3.5 0 0 1 17 19.5H7A3.5 3.5 0 0 1 3.5 16V10.5A3.5 3.5 0 0 1 7 7z", "M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7", "M3.5 12.5L20.5 12.5")) }
+
+    // 分类
+    val BubbleTea: ImageVector by lazy { icon("bubble-tea", false, listOf("M6.5 8.5h11l-1.4 10.7a1.5 1.5 0 0 1-1.5 1.3H9.4a1.5 1.5 0 0 1-1.5-1.3z", "M7.5 8.5a4.5 3.5 0 0 1 9 0", "M13.5 5.2L15.2 2.5"), listOf("M8.9 16.5a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0z", "M11.4 17.5a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0z", "M13.4 15.5a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0z")) }
+    val Bottle: ImageVector by lazy { icon("bottle", false, listOf("M10 3.5h4v2.5l1.5 2a3 3 0 0 1 .5 1.7V19a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 8 19V9.7a3 3 0 0 1 .5-1.7L10 6z", "M8 12.5L16 12.5", "M8 16L16 16")) }
+    val Snack: ImageVector by lazy { icon("snack", false, listOf("M6.5 4h11l-1 3v10l1 3h-11l1-3V7z", "M7.5 7L16.5 7", "M7.5 17L16.5 17", "M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z")) }
+    val Fruit: ImageVector by lazy { icon("fruit", false, listOf("M12 8c-1.6-1-5.4-1.1-6.7 2.2-1.2 3.2.6 7.4 3 9.4 1.3 1 2.4.6 3.7.1 1.3.5 2.4.9 3.7-.1 2.4-2 4.2-6.2 3-9.4C17.4 6.9 13.6 7 12 8z", "M12 8c0-1.9.7-3.3 2.3-4.2")) }
+    val Vegetable: ImageVector by lazy { icon("vegetable", false, listOf("M15.6 8.4c-1.5-1.5-3.9-1.3-5.2.3L4.2 18.4a1 1 0 0 0 1.4 1.4l9.7-6.2c1.6-1.3 1.8-3.7.3-5.2z", "M16 8l3.5-3.5", "M15.2 6.5 16.5 3.5", "M17.5 8.8 20.5 7.5", "M9.5 12.5L10.8 13.8", "M7.4 15.6L8.4 16.6")) }
+    val Cutlery: ImageVector by lazy { icon("cutlery", false, listOf("M7 3.5L7 20.5", "M4.5 3.5v4a2.5 2.5 0 0 0 5 0v-4", "M17 20.5V3.5c-2 1.3-3 3.8-3 7.5h3")) }
+    val HomeCharge: ImageVector by lazy { icon("home-charge", false, listOf("M4.5 11 11 5.4a1.5 1.5 0 0 1 2 0l6.5 5.6V18a2.5 2.5 0 0 1-2.5 2.5H7A2.5 2.5 0 0 1 4.5 18z", "M12.8 10 10.6 13.8h2.8l-2.2 3.7")) }
+    val Bolt: ImageVector by lazy { icon("bolt", false, listOf("M13 3 5.5 13.5H12L11 21l7.5-10.5H12z")) }
+    val Drop: ImageVector by lazy { icon("drop", false, listOf("M12 3.5s6 6.4 6 10.9a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z", "M9.5 15a2.6 2.6 0 0 0 2.5 2.5")) }
+    val Family: ImageVector by lazy { icon("family", false, listOf("M5.5 6.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0z", "M13.5 6.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0z", "M10 13a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z", "M3.5 17c.4-2.8 2.2-4.8 4.5-4.8 1 0 1.9.3 2.6.9", "M20.5 17c-.4-2.8-2.2-4.8-4.5-4.8-1 0-1.9.3-2.6.9", "M8.5 20.5c.4-2 1.8-3.5 3.5-3.5s3.1 1.5 3.5 3.5")) }
+    val Heart: ImageVector by lazy { icon("heart", false, listOf("M12 20s-8-4.6-8-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 8 2.4C20 15.4 12 20 12 20z")) }
+    val Cart: ImageVector by lazy { icon("cart", false, listOf("M3 4.5h2.2l2.3 10.5h10l2-7.5H6.2", "M7.5 19a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0z", "M15 19a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0z")) }
+    val Package: ImageVector by lazy { icon("package", false, listOf("M12 3.5 20 7.5v9l-8 4-8-4v-9z", "M4 7.5l8 4 8-4", "M12 11.5L12 20.5", "M8 5.5L16 9.5")) }
+    val Washer: ImageVector by lazy { icon("washer", false, listOf("M8 3.5H16A3.5 3.5 0 0 1 19.5 7V17A3.5 3.5 0 0 1 16 20.5H8A3.5 3.5 0 0 1 4.5 17V7A3.5 3.5 0 0 1 8 3.5z", "M4.5 7.5L19.5 7.5", "M8.2 14a3.8 3.8 0 1 0 7.6 0a3.8 3.8 0 1 0 -7.6 0z"), listOf("M6.8 5.5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0z")) }
+    val Lotion: ImageVector by lazy { icon("lotion", false, listOf("M8.5 10.5h7V19a1.5 1.5 0 0 1-1.5 1.5h-4A1.5 1.5 0 0 1 8.5 19z", "M10.5 10.5V8h3v2.5", "M12 8V4.5h3", "M10.5 14.5L13.5 14.5")) }
+    val Shower: ImageVector by lazy { icon("shower", false, listOf("M5 20.5V8a4.5 4.5 0 0 1 9 0v.5", "M10 12.5a4 4 0 0 1 8 0z"), listOf("M10.5 16a1 1 0 1 0 2 0a1 1 0 1 0 -2 0z", "M13 17.8a1 1 0 1 0 2 0a1 1 0 1 0 -2 0z", "M15.5 16a1 1 0 1 0 2 0a1 1 0 1 0 -2 0z")) }
+    val Pill: ImageVector by lazy { icon("pill", false, listOf("M5.5 9H10.5A3 3 0 0 1 13.5 12V12A3 3 0 0 1 10.5 15H5.5A3 3 0 0 1 2.5 12V12A3 3 0 0 1 5.5 9z", "M8 9L8 15", "M14.5 12a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0z", "M15.8 9.8L20.2 14.2")) }
+    val Stethoscope: ImageVector by lazy { icon("stethoscope", false, listOf("M6 3.5v5a4 4 0 0 0 8 0v-5", "M10 12.5v2a4.5 4.5 0 0 0 9 0V13", "M17 11a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z")) }
+    val Shield: ImageVector by lazy { icon("shield", false, listOf("M12 3.5 19.5 6v5.5c0 4.6-3.1 7.8-7.5 9-4.4-1.2-7.5-4.4-7.5-9V6z", "M8.8 12.2l2.2 2.2 4.2-4.4")) }
+    val Bucket: ImageVector by lazy { icon("bucket", false, listOf("M5 9.5h14l-1.5 9.7a1.5 1.5 0 0 1-1.5 1.3H8a1.5 1.5 0 0 1-1.5-1.3z", "M6 9.5C6 6.2 8.7 3.5 12 3.5s6 2.7 6 6", "M7 13.5L17 13.5")) }
+    val Wrench: ImageVector by lazy { icon("wrench", false, listOf("M14.5 4a4.5 4.5 0 0 0-4.2 6.1L4 16.4a2.1 2.1 0 0 0 3 3l6.3-6.3A4.5 4.5 0 0 0 19.8 8l-2.8 2.8-2.6-.6-.6-2.6L16.6 4.2A4.5 4.5 0 0 0 14.5 4z")) }
+    val Steering: ImageVector by lazy { icon("steering", false, listOf("M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0z", "M9.5 12a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0z", "M3.6 11L9.5 11", "M14.5 11L20.4 11", "M12 14.5L12 20.5")) }
+    val Road: ImageVector by lazy { icon("road", false, listOf("M8 3.5L4 20.5", "M16 3.5L20 20.5", "M12 4L12 6.5", "M12 10L12 13", "M12 16.5L12 20")) }
+    val Hotel: ImageVector by lazy { icon("hotel", false, listOf("M8 3.5H16A3 3 0 0 1 19 6.5V17.5A3 3 0 0 1 16 20.5H8A3 3 0 0 1 5 17.5V6.5A3 3 0 0 1 8 3.5z", "M10 20.5V17a2 2 0 0 1 4 0v3.5"), listOf("M8.3 8a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0 -2.4 0z", "M13.3 8a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0 -2.4 0z", "M8.3 12.5a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0 -2.4 0z", "M13.3 12.5a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0 -2.4 0z")) }
+    val Tent: ImageVector by lazy { icon("tent", false, listOf("M3 19.5 12 4.5l9 15z", "M12 11.5l-3 8M12 11.5l3 8", "M12 4.5L10.5 2.5", "M12 4.5L13.5 2.5")) }
+    val Mic: ImageVector by lazy { icon("mic", false, listOf("M12 3.5H12A3 3 0 0 1 15 6.5V11A3 3 0 0 1 12 14H12A3 3 0 0 1 9 11V6.5A3 3 0 0 1 12 3.5z", "M6 11a6 6 0 0 0 12 0", "M12 17L12 20.5", "M9 20.5L15 20.5")) }
+    val Film: ImageVector by lazy { icon("film", false, listOf("M8 3.5H16A3.5 3.5 0 0 1 19.5 7V17A3.5 3.5 0 0 1 16 20.5H8A3.5 3.5 0 0 1 4.5 17V7A3.5 3.5 0 0 1 8 3.5z", "M8.5 3.5L8.5 20.5", "M15.5 3.5L15.5 20.5", "M4.5 9L8.5 9", "M4.5 15L8.5 15", "M15.5 9L19.5 9", "M15.5 15L19.5 15")) }
+    val Mahjong: ImageVector by lazy { icon("mahjong", false, listOf("M9.5 3H14.5A3.5 3.5 0 0 1 18 6.5V17.5A3.5 3.5 0 0 1 14.5 21H9.5A3.5 3.5 0 0 1 6 17.5V6.5A3.5 3.5 0 0 1 9.5 3z", "M10 8.8a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z", "M10 15.2a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z")) }
 
     // 时间与状态
     val Clock: ImageVector by lazy { icon("clock", false, listOf("M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0z", "M12 7.5V12l3 2")) }
