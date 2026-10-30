@@ -21,7 +21,7 @@ suspend fun saveShareAlbum(context: Context, photos: List<MomentMedia>, urls: Me
     val files = Share.files(context, photos, urls)
     return withContext(Dispatchers.IO) {
         val now = System.currentTimeMillis()
-        val name = "这里分享-${now.toString(36)}"
+        val name = "Here Share-${now.toString(36)}"
         val resolver = context.contentResolver
         val saved = mutableListOf<Uri>()
         try {
