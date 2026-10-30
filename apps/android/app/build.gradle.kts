@@ -29,6 +29,9 @@ android {
         // Where places are searched for by name and found around a pin: Photon, over the
         // same OpenStreetMap data the map draws.
         buildConfigField("String", "PLACE_SEARCH_URL", "\"https://photon.komoot.io\"")
+        // Phones are all arm64; the map's native library for the other ABIs would triple the
+        // APK, and a debug build's install on the phone with it.
+        ndk { abiFilters += "arm64-v8a" }
     }
 
     // A release keystore from local.properties (`release.storeFile`, `release.storePassword`,
@@ -52,8 +55,6 @@ android {
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
-            // Phones are all arm64; the map's native library for the other ABIs would triple the APK.
-            ndk { abiFilters += "arm64-v8a" }
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -63,6 +64,11 @@ android {
     packaging {
         jniLibs.useLegacyPackaging = true
         dex.useLegacyPackaging = true
+    }
+
+    // Lint's release check adds about ten seconds to every release build; CI doesn't run it either.
+    lint {
+        checkReleaseBuilds = false
     }
 
     compileOptions {
