@@ -140,6 +140,7 @@ fun FeedScreen(
     onEdit: (String) -> Unit = {},
     /** A day opened from the row for it on the Moment beside the feed. */
     onDayRow: (String) -> Unit = onDay,
+    onTrackDay: (String) -> Unit = onDay,
 ) {
     // From Material 3's expanded breakpoint, its list and detail: a Moment chosen opens in a
     // pane beside the Moments rather than as a page over them. Turned upright with one chosen,
@@ -271,6 +272,7 @@ fun FeedScreen(
                                     onBill = { ledgerNav?.bill?.invoke(it) },
                                     onTrip = onTrip,
                                     tracks = tracks,
+                                    onTrackDay = onTrackDay,
                                 )
                             }
                         }
@@ -440,8 +442,7 @@ fun DayScreen(
     val moments = remember(all, date) { all.filter { it.occurredAt.startsWith(date) } }
     val trip = remember(moments, trips, date) { moments.firstNotNullOfOrNull { tripOf(it, trips) } ?: trips.firstOrNull { date >= it.start && date <= it.end } }
     val ledgerNav = LocalLedgerNav.current
-    // The day's own footprints, private and the phone's, read once for the page; null until read,
-    // when the page waits rather than laying itself out again with the map pushing it down.
+    // The day's own footprints, private and the phone's, read once for the page; null until read.
     val track by androidx.compose.runtime.produceState<List<cc.hyoban.moments.footprints.TrackPoint>?>(null, date) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             container.footprints.points(cc.hyoban.moments.footprints.TrackSelection(day = date))
@@ -465,8 +466,7 @@ fun DayScreen(
 
     // The page is the calendar's day, its pill or a Moment's row for it grown to the screen.
     Box(Modifier.fillMaxSize().then(if (card != null) Modifier.sharedCard(card, page = true) else Modifier).background(AppColors.page)) {
-        val points = track
-        if (points != null) MomentFeed(
+        MomentFeed(
             moments, places, trips, container.mediaUrls, onMoment,
             months = false,
             showTrip = !oneTrip,
@@ -477,7 +477,7 @@ fun DayScreen(
             oldestFirst = true,
             allMoments = all,
         ) {
-            item("head") { DayHead(date, points, moments, places, bills) }
+            item("head") { DayHead(date, track, moments, places, bills) }
         }
         FloatingBack(onBack, Modifier.align(Alignment.TopStart))
     }
@@ -491,14 +491,23 @@ fun DayScreen(
 @Composable
 private fun DayHead(
     date: String,
-    points: List<cc.hyoban.moments.footprints.TrackPoint>,
+    /** The day's footprints; null while they are read. */
+    track: List<cc.hyoban.moments.footprints.TrackPoint>?,
     moments: List<cc.hyoban.moments.data.spec.MomentRecord>,
     places: Map<String, cc.hyoban.moments.data.spec.Place>,
     bills: TimelineBills,
 ) {
-    val moving = points.size > 1
+    val points = track.orEmpty()
+    // While they are read, the timeline's word on them keeps room for the map and gives the
+    // figures, so the page grows out of its card whole and nothing moves when they come.
+    val known = remember(date) { knownDayTrack(date) }
+    val moving = if (track == null) known != null || knownFootprints(date) else points.size > 1
+    // No more than half the screen, so a phone on its side still shows the day under it.
+    val height = minOf(DAY_MAP, androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp / 2)
     Column(Modifier.fillMaxWidth()) {
-        if (moving) {
+        if (moving && track == null) {
+            Spacer(Modifier.fillMaxWidth().height(height))
+        } else if (moving) {
             val stretches = remember(points) {
                 cc.hyoban.moments.footprints.trackSegments(points, budget = 2000).filter { it.size > 1 }.map { stretch -> stretch.map { it.longitude to it.latitude } }
             }
@@ -511,8 +520,6 @@ private fun DayHead(
                         ?.let { org.maplibre.android.geometry.LatLng(it.latitude, it.longitude) }
                 }
             }
-            // No more than half the screen, so a phone on its side still shows the day under it.
-            val height = minOf(DAY_MAP, androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp / 2)
             cc.hyoban.moments.ui.map.DayTrackMap(
                 stretches,
                 dots,
@@ -527,8 +534,10 @@ private fun DayHead(
         Column(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.l, bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
             Text(formatDay(date), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
             val stats = remember(points) { cc.hyoban.moments.footprints.trackStats(points) }
+            val metres = if (track == null) known?.metres else stats.metres
+            val millis = if (track == null) known?.movingMillis else stats.recordedMillis
             val line = listOfNotNull(
-                stringResource(R.string.day_track_stats, stats.metres / 1000, stats.recordedMillis / 60_000).takeIf { moving },
+                if (moving && metres != null && millis != null) stringResource(R.string.day_track_stats, metres / 1000, millis / 60_000) else null,
                 daySpent(bills, date)?.let { stringResource(R.string.ledger_expense_short, it) },
             ).joinToString("\u2003")
             if (line.isNotEmpty()) Text(line, style = AppTheme.typography.numCaption, color = AppTheme.colorScheme.onSurfaceVariant)

@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.components.sharedCard
+import cc.hyoban.moments.ui.components.dayCardKey
 import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.ui.ledger.money
 import cc.hyoban.moments.ui.format.formatDay
@@ -158,6 +160,8 @@ fun MomentFeed(
     onTrip: ((String) -> Unit)? = null,
     /** The footprints, a row at the foot of each day that has any; they open the day. */
     tracks: TimelineTracks = TimelineTracks.EMPTY,
+    /** Opens a day's page from its footprints row, which it grows out of; else as its rail does. */
+    onTrackDay: ((String) -> Unit)? = null,
     /** Each day read from its morning, as a day's own page reads it, rather than newest first. */
     oldestFirst: Boolean = false,
     /** Every Moment, for a trip's banner to count all of its own, on a page that shows only some. */
@@ -303,7 +307,7 @@ fun MomentFeed(
                                 is DayItem.Moment -> card(item.moment, modifier, false)
                                 is DayItem.Bills -> BillGroup(item.txns, bills.ledger, onBill, modifier)
                                 is DayItem.ChargeItem -> ChargeRow(item.charge, modifier)
-                                is DayItem.Track -> TrackRow(item.day, tracks, onClick = { onDay?.invoke(item.day) }, modifier)
+                                is DayItem.Track -> TrackRow(item.day, tracks, onClick = { (onTrackDay ?: onDay)?.invoke(item.day) }, modifier)
                             }
                         }
                         if (dayPills) {
@@ -325,7 +329,8 @@ fun MomentFeed(
 
 /**
  * A day in the rail down a timeline's left: the day of the month in figures, its weekday under
- * it, tapped for the whole day, today's figures in the accent. No line or dot joins one day to the next.
+ * it, tapped for the whole day, which grows out of it, today's figures in the accent. No line or
+ * dot joins one day to the next.
  */
 @Composable
 fun DayRail(day: String, description: String, onClick: (() -> Unit)?, modifier: Modifier = Modifier, note: String? = null) {
@@ -333,7 +338,7 @@ fun DayRail(day: String, description: String, onClick: (() -> Unit)?, modifier: 
     val weekday = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())
     Column(
         modifier
-            .then(if (onClick != null) Modifier.clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick) else Modifier)
+            .then(if (onClick != null) Modifier.sharedCard(dayCardKey(day)).clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick) else Modifier)
             .semantics(mergeDescendants = true) { heading(); contentDescription = "${formatDay(day)}\u2003$weekday\u2003$description" }
             .testTag("day_rail_$day"),
     ) {
