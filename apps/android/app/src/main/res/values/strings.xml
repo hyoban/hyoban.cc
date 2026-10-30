@@ -7,7 +7,6 @@
     <string name="action_play">播放</string>
     <string name="action_navigate">导航到这里</string>
     <string name="no_map_app">没有可以导航的地图应用</string>
-    <string name="action_info">详情</string>
     <string name="action_share">分享</string>
     <string name="error_share">分享失败</string>
     <string name="action_share_x">发布到 X</string>
@@ -68,8 +67,6 @@
     <string name="share_x_open">打开 X 编辑器</string>
     <string name="share_x_unavailable">无法打开 X 的发帖编辑器，确认 X 已安装并更新到最新版</string>
     <string name="action_open_moment">打开这个时刻</string>
-    <string name="label_alt">画面描述</string>
-    <string name="label_media_size">%1$s\u2003%2$d × %3$d</string>
     <string name="media_photo">照片</string>
     <string name="media_live">实况照片</string>
     <string name="media_video">视频</string>

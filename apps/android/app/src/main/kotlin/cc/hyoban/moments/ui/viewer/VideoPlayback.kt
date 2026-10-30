@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -157,10 +156,10 @@ fun VideoWaiting(state: VideoState, modifier: Modifier = Modifier) {
     }
 }
 
-/** Play or pause, where it is in the video, and its sound, along the bottom while the viewer's chrome shows. */
+/** Play or pause, where it is in the video, and its sound, a row of the viewer's bar along the bottom. */
 @OptIn(UnstableApi::class)
 @Composable
-fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modifier) {
+fun VideoControls(state: VideoState, modifier: Modifier = Modifier) {
     val player = state.player
     val playPause = rememberPlayPauseButtonState(player)
     val progress = rememberProgressStateWithTickInterval(player, tickIntervalMs = 250)
@@ -176,12 +175,9 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
     val ended = playPause.showPlay && progress.durationMs > 0 && progress.currentPositionMs >= progress.durationMs - 100
 
     val motion = AppTheme.motionScheme
-    AnimatedVisibility(visible && player != null, modifier = modifier, enter = fadeIn(motion.fastEffectsSpec()), exit = fadeOut(motion.fastEffectsSpec())) {
+    AnimatedVisibility(player != null, modifier = modifier, enter = fadeIn(motion.fastEffectsSpec()), exit = fadeOut(motion.fastEffectsSpec())) {
         Row(
-            Modifier.fillMaxWidth()
-                .background(MediaOverlay.bar)
-                .navigationBarsPadding()
-                .padding(horizontal = Space.xs, vertical = Space.xxs),
+            Modifier.fillMaxWidth().padding(vertical = Space.xxs),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.xs),
         ) {
@@ -201,7 +197,7 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
             }
             Text(
                 formatClock(if (dragging) (dragged * duration).toLong() else progress.currentPositionMs),
-                style = AppTheme.typography.caption,
+                style = AppTheme.typography.numCaption,
                 color = MediaOverlay.content,
             )
             Scrubber(
@@ -218,7 +214,7 @@ fun VideoControls(state: VideoState, visible: Boolean, modifier: Modifier = Modi
                 trackColor = MediaOverlay.contentDisabled,
                 modifier = Modifier.weight(1f).onSizeChanged { if (it.width > 0) bar.updateTotalTickCount(it.width) },
             )
-            Text(formatClock(progress.durationMs.coerceAtLeast(0L)), style = AppTheme.typography.caption, color = MediaOverlay.contentVariant)
+            Text(formatClock(progress.durationMs.coerceAtLeast(0L)), style = AppTheme.typography.numCaption, color = MediaOverlay.contentVariant)
             Tooltip(stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute)) {
                 IconButton(onClick = mute::onClick, enabled = mute.isEnabled) {
                     Icon(

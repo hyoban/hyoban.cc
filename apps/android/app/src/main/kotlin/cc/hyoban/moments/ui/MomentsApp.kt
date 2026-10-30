@@ -872,9 +872,6 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     container,
                                     route.uid,
                                     route.index,
-                                    onMoment = { closeViewer(); openMoment(it) },
-                                    onPlace = { closeViewer(); openPlace(it) },
-                                    onTrip = { closeViewer(); openTrip(it) },
                                     onDay = { closeViewer(); navController.goTo(Day(it)) },
                                     onBack = closeViewer,
                                     onShown = {

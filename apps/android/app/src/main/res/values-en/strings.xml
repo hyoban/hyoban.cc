@@ -8,7 +8,6 @@
     <string name="action_play">Play</string>
     <string name="action_navigate">Directions</string>
     <string name="no_map_app">No map app to give directions</string>
-    <string name="action_info">Details</string>
     <string name="action_share">Share</string>
     <string name="error_share">Couldn’t share</string>
     <string name="action_share_x">Post to X</string>
@@ -69,8 +68,6 @@
     <string name="share_x_open">Open X composer</string>
     <string name="share_x_unavailable">Couldn’t open the X composer. Make sure X is installed and up to date.</string>
     <string name="action_open_moment">Open this Moment</string>
-    <string name="label_alt">Image description</string>
-    <string name="label_media_size">%1$s\u2003%2$d × %3$d</string>
     <string name="media_photo">Photo</string>
     <string name="media_live">Live Photo</string>
     <string name="media_video">Video</string>
