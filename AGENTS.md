@@ -103,7 +103,7 @@ even when starting from the repository root.
 
 Read `apps/web/DESIGN.md` before changing UI. Use Astro components, scoped plain CSS and the
 existing tokens in `apps/web/src/styles/index.css`; preserve the site's text-first design,
-system dark mode and reduced-motion behavior. The app 「这里」 follows its own
+system dark mode and reduced-motion behavior. The app Here follows its own
 platform-neutral design system instead (see its guide). Shared working agreements apply
 equally to both platforms.
 

@@ -1,6 +1,5 @@
 <resources>
     <!-- The app in English, for a phone or the app set to it; the Moments' own words stay as written. -->
-    <string name="app_name">Here</string>
     <string name="tab_moments">Timeline</string>
     <string name="tab_map">Map</string>
     <string name="tab_trips">Trips</string>
