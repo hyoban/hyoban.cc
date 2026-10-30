@@ -34,6 +34,7 @@ import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ledger.summarize
 import cc.hyoban.moments.ui.components.sharedCard
+import cc.hyoban.moments.ui.components.dayTrackKey
 import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.ledger.TIME
 import cc.hyoban.moments.ui.ledger.amountColor
@@ -305,28 +306,66 @@ class DayTrack(val stretches: List<List<Pair<Double, Double>>>, val metres: Doub
  * The footprints on the timeline: the days that have any, and each day's line and figures, read
  * from the phone when its row comes into view and kept; today's again as it is recorded.
  */
-class TimelineTracks(val days: Set<String>, private val cache: MutableMap<String, DayTrack?>, private val read: (String) -> DayTrack?) {
+class TimelineTracks(
+    val days: Set<String>,
+    private val cache: MutableMap<String, DayTrack?>,
+    /** Days whose footprints have grown since they were read, read again while the old ones still show. */
+    private val stale: MutableSet<String> = mutableSetOf(),
+    private val read: (String) -> DayTrack?,
+) {
     fun cached(day: String): DayTrack? = cache[day]
 
-    suspend fun load(day: String): DayTrack? = cache[day] ?: kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { read(day) }.also { cache[day] = it }
+    suspend fun load(day: String): DayTrack? {
+        if (day !in stale && cache.containsKey(day)) return cache[day]
+        return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { read(day) }.also {
+            cache[day] = it
+            stale -= day
+        }
+    }
 
     companion object {
         val EMPTY = TimelineTracks(emptySet(), mutableMapOf()) { null }
     }
 }
 
+/**
+ * The timeline's footprints, kept for as long as the app runs, so the timeline, shown again after
+ * another tab or a page, comes back with its rows as it left them rather than reading them again
+ * and moving its rows as they arrive.
+ */
+private object TrackMemory {
+    val cache = java.util.concurrent.ConcurrentHashMap<String, DayTrack?>()
+    val stale: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet()
+
+    @Volatile
+    var days: Set<String> = emptySet()
+
+    /** The store's revision the days and today's line were last read at. */
+    @Volatile
+    var revision = -1L
+}
+
+/** Whether the timeline has seen footprints on [day], for a day's page to keep room for its map while they are read. */
+fun knownFootprints(day: String): Boolean = day in TrackMemory.days
+
+/** The timeline's figures for [day], how far and how long it moved, if it has read them. */
+fun knownDayTrack(day: String): DayTrack? = TrackMemory.cache[day]
+
 @Composable
 fun rememberTimelineTracks(container: AppContainer): TimelineTracks {
     val store = container.footprints
     val revision by store.revision.collectAsStateWithLifecycle()
-    val cache = remember { java.util.concurrent.ConcurrentHashMap<String, DayTrack?>() }
-    val days by androidx.compose.runtime.produceState(emptySet<String>(), revision) {
-        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { store.days().toSet() }
+    val days by androidx.compose.runtime.produceState(TrackMemory.days, revision) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { store.days().toSet() }.also { TrackMemory.days = it }
     }
     return remember(days, revision) {
-        // Only today's footprints grow; every other day's are as they were read.
-        cache.remove(java.time.LocalDate.now().toString())
-        TimelineTracks(days, cache) { day ->
+        // Only today's footprints grow, and only when something was recorded since they were read;
+        // every other day's are as they were read.
+        if (revision != TrackMemory.revision) {
+            TrackMemory.revision = revision
+            TrackMemory.stale += java.time.LocalDate.now().toString()
+        }
+        TimelineTracks(days, TrackMemory.cache, TrackMemory.stale) { day ->
             val points = store.points(cc.hyoban.moments.footprints.TrackSelection(day = day))
             val stretches = cc.hyoban.moments.footprints.trackSegments(points, budget = 400).filter { it.size > 1 }
             val stats = cc.hyoban.moments.footprints.trackStats(points)
@@ -348,7 +387,8 @@ fun TrackRow(day: String, tracks: TimelineTracks, onClick: () -> Unit, modifier:
         title = androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.timeline_track),
         supporting = androidx.compose.ui.res.pluralStringResource(cc.hyoban.moments.R.plurals.timeline_track_moving, minutes, minutes),
         onClick = onClick,
-        modifier = modifier.testTag("track_$day"),
+        // The day's page grows out of the row and shrinks back into it.
+        modifier = modifier.sharedCard(dayTrackKey(day)).testTag("track_$day"),
     ) {
         Text(
             androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.distance_kilometres, shown.metres / 1000),

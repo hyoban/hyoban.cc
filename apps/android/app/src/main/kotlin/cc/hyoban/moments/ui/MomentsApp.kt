@@ -152,6 +152,7 @@ import cc.hyoban.moments.ui.components.LocalViewerShowing
 import cc.hyoban.moments.ui.components.LocalViewerShownKey
 import cc.hyoban.moments.ui.components.dayCardKey
 import cc.hyoban.moments.ui.components.dayRowKey
+import cc.hyoban.moments.ui.components.dayTrackKey
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.components.isExpandedWidth
@@ -463,6 +464,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     // A day out of its calendar day or its pill, or out of a Moment's row for it.
     val openDay: (String) -> Unit = { navController.goTo(Day(it, dayCardKey(it))) }
     val openDayRow: (String) -> Unit = { navController.goTo(Day(it, dayRowKey(it))) }
+    val openDayTrack: (String) -> Unit = { navController.goTo(Day(it, dayTrackKey(it))) }
 
     // Where the ledger's pages lead, to each other and to the Moments' own.
     val ledgerNav = remember(navController) {
@@ -674,6 +676,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onMoment = openMoment,
                                     onDay = openDay,
                                     onDayRow = openDayRow,
+                                    onTrackDay = openDayTrack,
                                     onNew = { openEditor(null, false) },
                                     onChanges = { navController.navigate(Changes) },
                                     onSearch = { navController.navigate(Search) },

@@ -181,6 +181,9 @@ fun dayCardKey(date: String) = "day-$date"
  */
 fun dayRowKey(date: String) = "day-row-$date"
 
+/** The key a day's footprints row on the timeline and the day's page share, apart from its rail's beside it. */
+fun dayTrackKey(date: String) = "day-track-$date"
+
 /**
  * Keeps what lies over a photo, a sheet or a button, over it as the photo comes onto its
  * screen, fading in with the screen; without this the photo would pass over it and drop
