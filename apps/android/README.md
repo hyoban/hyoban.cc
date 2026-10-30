@@ -286,7 +286,8 @@ Moments' own words stay as they were written.
 ## Ledger
 
 记账 is a ledger kept on this phone alone, in place of iCost: books of bills over accounts in
-their own currencies, summed per book in its currency. Its bills are on the timeline; its
+their own currencies, summed per book in its currency. Its bills are on the timeline, those of every book but the
+archived whichever book its page has chosen; its
 page, opened from 我 (or `moments://ledger`, on its sums), has three tabs: 账单, every bill of the book shown under its months and days with what
 they spent and earned; 统计, the month, the year or all of it, picked from a menu on the period's name and stepped through with the arrows beside it:
 what was spent, earned and left, the day's average and how it compares with the last

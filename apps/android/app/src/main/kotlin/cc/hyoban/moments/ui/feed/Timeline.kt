@@ -83,7 +83,10 @@ data class Charge(val uid: String, val at: String, val dc: Boolean, val kwh: Dou
 /** What the timeline shows, as its filter row chooses: everything, or one plugin's records. */
 enum class FeedKind { ALL, MOMENTS, BILLS, CHARGES }
 
-/** The bills to show beside [moments], of the books the ledger shows, on the days [filter] keeps. */
+/**
+ * The bills to show beside [moments], of every book the ledger keeps open (all but the archived),
+ * whichever the ledger's pages have chosen, on the days [filter] keeps.
+ */
 @Composable
 fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, filter: TimeFilter, kind: FeedKind = FeedKind.ALL): TimelineBills {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
@@ -109,7 +112,7 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
         if (book == null || (kind != FeedKind.ALL && kind != FeedKind.BILLS)) {
             return@remember TimelineBills(ledger, emptyMap(), emptyMap(), emptyMap(), book?.currency ?: "CNY", charges)
         }
-        val shown = ledger.shownBooks
+        val shown = ledger.books.filterNot { it.archived }.mapTo(HashSet()) { it.id }
         val uids = moments.mapTo(HashSet()) { it.uid }
         val bills = ledger.txns.filter { txn ->
             txn.book in shown && txn.kind in SHOWN_KINDS &&
