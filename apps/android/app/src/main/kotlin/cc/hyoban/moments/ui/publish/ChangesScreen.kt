@@ -160,7 +160,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         Text(
                             stringResource(R.string.changes_private_note),
                             style = AppTheme.typography.bodySmall,
-                            color = AppTheme.colorScheme.onSurfaceVariant,
+                            color = tokens.tx2,
                             modifier = Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.xs),
                         )
                     }
@@ -247,7 +247,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                             Text(
                                 stringResource(if (container.canPublish) R.string.note_publish_all else R.string.note_publish_needs_token),
                                 style = AppTheme.typography.bodySmall,
-                                color = AppTheme.colorScheme.onSurfaceVariant,
+                                color = tokens.tx2,
                                 modifier = Modifier.padding(horizontal = Space.l),
                             )
                         }
@@ -357,7 +357,7 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
         onClick = onClick,
         shape = AppTheme.shapes.large,
         color = SurfaceLevel.Card.fill(),
-        contentColor = AppTheme.colorScheme.onSurface,
+        contentColor = tokens.tx,
         border = cardBorder(),
         modifier = modifier.fillMaxWidth().testTag("changes"),
     ) {
@@ -375,7 +375,7 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
                     )
                     // The same linear indicator as the changes' page, as Material 3 has one
                     // process shown one way throughout.
-                    PublishingIndicator(progress, Modifier.fillMaxWidth(), color = AppTheme.colorScheme.onSecondaryContainer)
+                    PublishingIndicator(progress, Modifier.fillMaxWidth(), color = tokens.tx)
                 }
             },
             leadingContent = {
@@ -386,10 +386,10 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
             trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
             colors = ListItemDefaults.colors(
                 containerColor = Color.Transparent,
-                headlineColor = AppTheme.colorScheme.onSecondaryContainer,
-                supportingColor = AppTheme.colorScheme.onSecondaryContainer,
-                leadingIconColor = AppTheme.colorScheme.onSecondaryContainer,
-                trailingIconColor = AppTheme.colorScheme.onSecondaryContainer,
+                headlineColor = tokens.tx,
+                supportingColor = tokens.tx,
+                leadingIconColor = tokens.tx,
+                trailingIconColor = tokens.tx,
             ),
         )
     }
@@ -409,12 +409,12 @@ private fun SwipeToRevert(onRevert: (() -> Unit)?, content: @Composable () -> Un
         onDismiss = { onRevert() },
         backgroundContent = {
             Row(
-                Modifier.fillMaxSize().background(AppTheme.colorScheme.secondaryContainer).padding(horizontal = Space.xl),
+                Modifier.fillMaxSize().background(tokens.accentSoft).padding(horizontal = Space.xl),
                 horizontalArrangement = Arrangement.spacedBy(Space.s, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(stringResource(R.string.action_revert), style = AppTheme.typography.label, color = AppTheme.colorScheme.onSecondaryContainer)
-                Icon(AppIcons.Undo, contentDescription = null, tint = AppTheme.colorScheme.onSecondaryContainer)
+                Text(stringResource(R.string.action_revert), style = AppTheme.typography.label, color = tokens.tx)
+                Icon(AppIcons.Undo, contentDescription = null, tint = tokens.tx)
             }
         },
     ) {
@@ -460,7 +460,7 @@ private fun ChangeCard(
             Text(
                 listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "),
                 style = AppTheme.typography.label,
-                color = AppTheme.colorScheme.onSurfaceVariant,
+                color = tokens.tx2,
             )
         }
         Column(verticalArrangement = Arrangement.spacedBy(Space.m)) { content() }
@@ -511,7 +511,7 @@ private fun OutsideCard(title: String, date: String?, figure: String?, note: Str
         Text(
             listOfNotNull(date, note).joinToString("\u2003"),
             style = AppTheme.typography.bodySmall,
-            color = AppTheme.colorScheme.onSurfaceVariant,
+            color = tokens.tx2,
         )
         CardActions(onRevert?.let { revert -> { RevertButton(revert) } })
     }
@@ -553,7 +553,7 @@ private fun MomentIdentity(identity: Identity, modifier: Modifier = Modifier) {
                 listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt), where.takeIf { moment.text.isNotBlank() && it.isNotEmpty() })
                     .joinToString("\u2003"),
                 style = AppTheme.typography.bodySmall,
-                color = AppTheme.colorScheme.onSurfaceVariant,
+                color = tokens.tx2,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -583,7 +583,7 @@ private fun MomentWhole(moment: MomentRecord, places: Map<String, Place>, urls: 
             Text(
                 moment.places.joinToString("\u2003") { places[it]?.name ?: it },
                 style = AppTheme.typography.body,
-                color = AppTheme.colorScheme.onSurfaceVariant,
+                color = tokens.tx2,
             )
         }
     }
@@ -595,7 +595,7 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
     val after = change.after
     val before = change.before
     if (before == null) {
-        Text(stringResource(R.string.note_change_recreates), style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.note_change_recreates), style = AppTheme.typography.bodySmall, color = tokens.tx2)
         MomentWhole(after, places, urls)
         return
     }
@@ -662,7 +662,7 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
         }
     }
     if (!any) {
-        Text(stringResource(R.string.note_change_nothing), style = AppTheme.typography.body, color = AppTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.note_change_nothing), style = AppTheme.typography.body, color = tokens.tx2)
     }
 }
 
@@ -671,7 +671,7 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
 private fun CoverChange(icon: androidx.compose.ui.graphics.vector.ImageVector, label: Int, photos: List<MomentMedia>, urls: MediaUrls) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-            Icon(icon, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+            Icon(icon, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
             Text(stringResource(label), style = AppTheme.typography.body)
         }
         PhotoRow(photos.map { it to null }, urls, badges = false)
@@ -682,7 +682,7 @@ private fun CoverChange(icon: androidx.compose.ui.graphics.vector.ImageVector, l
 @Composable
 private fun Field(name: Int, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
-        Text(stringResource(name), style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(name), style = AppTheme.typography.caption, color = tokens.tx2)
         content()
     }
 }
@@ -691,11 +691,11 @@ private fun Field(name: Int, content: @Composable () -> Unit) {
 @Composable
 private fun TextChange(before: String, after: String) {
     val removed = SpanStyle(
-        color = AppTheme.colorScheme.onErrorContainer,
-        background = AppTheme.colorScheme.errorContainer,
+        color = tokens.tx,
+        background = tokens.dangerSoft,
         textDecoration = TextDecoration.LineThrough,
     )
-    val added = SpanStyle(color = AppTheme.colorScheme.onPrimaryContainer, background = AppTheme.colorScheme.primaryContainer)
+    val added = SpanStyle(color = tokens.tx, background = tokens.accentSoft)
     val parts = remember(before, after) { diffText(before, after) }
     Text(
         buildAnnotatedString {
@@ -715,17 +715,17 @@ private fun TextChange(before: String, after: String) {
 @Composable
 private fun FromTo(from: String?, to: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-        Icon(icon, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+        Icon(icon, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
         // Something that wasn't said before is just what it is now, rather than from nothing.
         if (from != null) {
             Text(
                 from,
                 style = AppTheme.typography.body,
-                color = AppTheme.colorScheme.onSurfaceVariant,
+                color = tokens.tx2,
                 textDecoration = TextDecoration.LineThrough,
                 modifier = Modifier.weight(1f, fill = false),
             )
-            Icon(AppIcons.ArrowRight, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+            Icon(AppIcons.ArrowRight, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(16.dp))
         }
         Text(to, style = AppTheme.typography.body, modifier = Modifier.weight(1f, fill = false))
     }
@@ -741,8 +741,8 @@ private fun PhotoRow(photos: List<Pair<MomentMedia, Boolean?>>, urls: MediaUrls,
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         for ((media, added) in photos) {
             val ring = when (added) {
-                true -> AppTheme.colorScheme.primary
-                false -> AppTheme.colorScheme.error
+                true -> tokens.accent
+                false -> tokens.danger
                 null -> Color.Transparent
             }
             Box(Modifier.testTag("change_photo_${media.uid}")) {
@@ -767,7 +767,7 @@ private fun PhotoRow(photos: List<Pair<MomentMedia, Boolean?>>, urls: MediaUrls,
                     Icon(
                         if (added) AppIcons.Plus else AppIcons.Minus,
                         contentDescription = stringResource(if (added) R.string.label_photo_added else R.string.label_photo_removed),
-                        tint = if (added) AppTheme.colorScheme.onPrimary else AppTheme.colorScheme.onError,
+                        tint = if (added) tokens.onAccent else tokens.onDanger,
                         modifier = Modifier.align(Alignment.TopEnd).padding(Space.xs).size(20.dp).clip(CircleShape).background(ring).padding(Space.xxs),
                     )
                 }

@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.moment
 
 import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.Spinner
 import android.Manifest
 import android.content.ActivityNotFoundException
@@ -434,7 +435,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                             Modifier
                                 // The ripple kept to the ring's rounded shape.
                                 .clip(AppTheme.shapes.large)
-                                .border(2.dp, if (checked) AppTheme.colorScheme.primary else Color.Transparent, AppTheme.shapes.large)
+                                .border(2.dp, if (checked) tokens.accent else Color.Transparent, AppTheme.shapes.large)
                                 .toggleable(
                                     value = checked,
                                     enabled = choosable,
@@ -452,7 +453,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                             Thumbnail(photo, urls, size = tile, modifier = Modifier.alpha(if (choosable) 1f else DISABLED_ALPHA))
                             if (checked) {
                                 Surface(
-                                    color = AppTheme.colorScheme.primary,
+                                    color = tokens.accent,
                                     shape = AppTheme.shapes.small,
                                     modifier = Modifier.align(Alignment.BottomEnd),
                                 ) {
@@ -468,7 +469,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 Text(stringResource(R.string.share_stills_only), style = AppTheme.typography.bodySmall)
             }
             error?.let {
-                Text(stringResource(it), color = AppTheme.colorScheme.error)
+                Text(stringResource(it), color = tokens.danger)
             }
             if (target != ShareTarget.PREPARE && (error != null || needsPhoto || target == ShareTarget.WECHAT || target == ShareTarget.BILIBILI)) {
                 TextButton(

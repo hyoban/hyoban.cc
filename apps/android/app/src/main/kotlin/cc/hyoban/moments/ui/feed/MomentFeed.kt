@@ -344,8 +344,8 @@ fun DayRail(day: String, description: String, onClick: (() -> Unit)?, modifier: 
     ) {
         // Today's in the accent, the one day the timeline marks.
         Text(date.dayOfMonth.toString(), style = AppTheme.typography.numTitle, color = if (date == java.time.LocalDate.now()) tokens.accent else androidx.compose.ui.graphics.Color.Unspecified)
-        Text(weekday, style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
-        note?.let { Text(it, style = AppTheme.typography.numCaption, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false) }
+        Text(weekday, style = AppTheme.typography.caption, color = tokens.tx2)
+        note?.let { Text(it, style = AppTheme.typography.numCaption, color = tokens.tx2, maxLines = 1, softWrap = false) }
     }
 }
 
@@ -429,7 +429,7 @@ fun EmptyState(loading: Boolean, message: Int) {
             Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     stringResource(message),
-                    color = AppTheme.colorScheme.onSurfaceVariant,
+                    color = tokens.tx2,
                     style = AppTheme.typography.bodyReading,
                 )
             }
@@ -456,7 +456,7 @@ private fun SkeletonCards() {
         )
     }
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    val bone = AppTheme.colorScheme.surfaceContainerHighest
+    val bone = tokens.sunken
     val loading = stringResource(R.string.empty_loading)
     PageWidth { columns ->
         Column(

@@ -99,9 +99,6 @@ object ButtonDefaults {
     fun textButtonColors(contentColor: Color = tokens.tx) = ButtonColors(Color.Transparent, contentColor)
 
     @Composable
-    fun outlinedButtonColors(contentColor: Color = tokens.tx) = ButtonColors(Color.Transparent, contentColor)
-
-    @Composable
     fun filledTonalButtonColors(containerColor: Color = tokens.pressed, contentColor: Color = tokens.tx) = ButtonColors(containerColor, contentColor)
 }
 
@@ -146,11 +143,6 @@ fun Button(
     content: @Composable RowScope.() -> Unit,
 ) = ButtonBase(onClick, modifier, enabled, Corners.full, colors, null, contentPadding, content)
 
-/** A secondary action: the text colour inside a capsule outlined at 3:1. */
-@Composable
-fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) =
-    ButtonBase(onClick, modifier, enabled, Corners.full, ButtonDefaults.outlinedButtonColors(), BorderStroke(1.dp, if (enabled) tokens.borderStrong else tokens.border), ButtonDefaults.ContentPadding, content)
-
 /** A light action: the text colour alone, a capsule showing only when pressed; a dialog's buttons. */
 @Composable
 fun TextButton(
@@ -161,7 +153,7 @@ fun TextButton(
     content: @Composable RowScope.() -> Unit,
 ) = ButtonBase(onClick, modifier, enabled, Corners.full, colors, null, ButtonDefaults.TextButtonContentPadding, content)
 
-/** An action set on the pressed grey: the way there, 新建, a key. */
+/** A secondary action set on the pressed grey: the way there, 新建, 校准, a key. */
 @Composable
 fun FilledTonalButton(
     onClick: () -> Unit,
@@ -250,7 +242,6 @@ object ChipDefaults {
 typealias FilterChipDefaults = ChipDefaults
 typealias InputChipDefaults = ChipDefaults
 typealias AssistChipDefaults = ChipDefaults
-typealias SuggestionChipDefaults = ChipDefaults
 
 /**
  * A chip: a capsule [container], 36dp tall, its icons and label inside. It is laid out at the
@@ -302,18 +293,6 @@ fun FilterChip(
     label,
 )
 
-/** A chip standing for something chosen, with a way to take it out: as [FilterChip]. */
-@Composable
-fun InputChip(
-    selected: Boolean,
-    onClick: () -> Unit,
-    label: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    leadingIcon: (@Composable () -> Unit)? = null,
-    trailingIcon: (@Composable () -> Unit)? = null,
-) = FilterChip(selected, onClick, label, modifier, enabled, leadingIcon, trailingIcon)
-
 /** A chip tapped for what it does: the pressed grey. */
 @Composable
 fun AssistChip(
@@ -332,11 +311,6 @@ fun AssistChip(
     trailingIcon,
     label,
 )
-
-/** A chip offering something to take, a name: as [AssistChip]. */
-@Composable
-fun SuggestionChip(onClick: () -> Unit, label: @Composable () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, icon: (@Composable () -> Unit)? = null) =
-    AssistChip(onClick, label, modifier, enabled, icon)
 
 // ---------------------------------------------------------------- segmented control
 

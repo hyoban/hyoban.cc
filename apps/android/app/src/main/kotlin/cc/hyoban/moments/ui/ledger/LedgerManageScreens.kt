@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.ledger
 
 import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,7 +17,7 @@ import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.ui.design.AppTheme
-import cc.hyoban.moments.ui.design.OutlinedButton
+import cc.hyoban.moments.ui.design.FilledTonalButton
 import cc.hyoban.moments.ui.design.OutlinedTextField
 import cc.hyoban.moments.ui.design.SegmentedButton
 import cc.hyoban.moments.ui.design.SegmentedListItem
@@ -104,7 +105,7 @@ fun CategoriesScreen(container: AppContainer, book: String, nav: LedgerNav) {
                         },
                     )
                 }
-                OutlinedButton(onClick = { adding = "" }, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).fillMaxWidth()) {
+                FilledTonalButton(onClick = { adding = "" }, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).fillMaxWidth()) {
                     Icon(AppIcons.Plus, contentDescription = null)
                     Text(stringResource(R.string.ledger_add_category), modifier = Modifier.padding(start = Space.s))
                 }
@@ -157,7 +158,7 @@ private fun CategoryDialog(
                 TextButton(onClick = onDelete, enabled = used == 0) {
                     Text(
                         if (used == 0) stringResource(R.string.action_delete) else pluralStringResource(R.plurals.ledger_category_in_use, used, used),
-                        color = if (used == 0) AppTheme.colorScheme.error else AppTheme.colorScheme.onSurfaceVariant,
+                        color = if (used == 0) tokens.danger else tokens.tx2,
                     )
                 }
             }

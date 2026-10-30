@@ -29,45 +29,12 @@ import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import cc.hyoban.moments.ui.theme.tokens
 import kotlinx.coroutines.launch
 
 // The design system's theme: the colour roles, the type scale, the corners and the springs the
 // app is drawn with, read through [AppTheme] as a page reads them, and the colour and text
 // style what is drawn inside something takes from it. The app's own, with no Material under it.
-
-/** The colours by the part they play; the design's tokens fill them (`ui/theme/Colors.kt`). */
-@Immutable
-class ColorScheme(
-    /** The accent: what is chosen, on, in progress. */
-    val primary: Color,
-    val onPrimary: Color,
-    /** The accent's soft tint, under what is chosen. */
-    val primaryContainer: Color,
-    val onPrimaryContainer: Color,
-    val secondaryContainer: Color,
-    val onSecondaryContainer: Color,
-    /** Money coming in. */
-    val tertiary: Color,
-    val background: Color,
-    /** The page. */
-    val surface: Color,
-    val onSurface: Color,
-    /** Secondary text and icons. */
-    val onSurfaceVariant: Color,
-    val surfaceContainerLow: Color,
-    val surfaceContainer: Color,
-    val surfaceContainerHigh: Color,
-    val surfaceContainerHighest: Color,
-    /** A control's edge, at 3:1. */
-    val outline: Color,
-    /** The hairline. */
-    val outlineVariant: Color,
-    val scrim: Color,
-    val error: Color,
-    val onError: Color,
-    val errorContainer: Color,
-    val onErrorContainer: Color,
-)
 
 /**
  * The design system's 13 text styles, as it names them: hierarchy by weight and colour more
@@ -111,11 +78,9 @@ val TextStyle.emphasized: TextStyle
 /** The corner sizes: small for marks, medium for fields and groups, large for photos, cards and sheets. */
 @Immutable
 class Shapes(
-    val extraSmall: CornerBasedShape,
     val small: CornerBasedShape,
     val medium: CornerBasedShape,
     val large: CornerBasedShape,
-    val extraLarge: CornerBasedShape,
 )
 
 /**
@@ -136,7 +101,6 @@ class MotionScheme {
     }
 }
 
-private val LocalColorScheme = staticCompositionLocalOf<ColorScheme> { error("No AppTheme") }
 private val LocalTypography = staticCompositionLocalOf<Typography> { error("No AppTheme") }
 private val LocalShapes = staticCompositionLocalOf<Shapes> { error("No AppTheme") }
 private val LocalMotionScheme = staticCompositionLocalOf { MotionScheme() }
@@ -156,8 +120,6 @@ fun ProvideTextStyle(value: TextStyle, content: @Composable () -> Unit) {
 
 /** The theme as a page reads it. */
 object AppTheme {
-    val colorScheme: ColorScheme
-        @Composable @ReadOnlyComposable get() = LocalColorScheme.current
     val typography: Typography
         @Composable @ReadOnlyComposable get() = LocalTypography.current
     val shapes: Shapes
@@ -168,13 +130,12 @@ object AppTheme {
 
 /** [content] drawn in the theme: its roles, type, corners and springs, its text in the body style, and a press drawn as a faint wash. */
 @Composable
-fun AppTheme(colorScheme: ColorScheme, typography: Typography, shapes: Shapes, motionScheme: MotionScheme, content: @Composable () -> Unit) {
+fun AppTheme(typography: Typography, shapes: Shapes, motionScheme: MotionScheme, content: @Composable () -> Unit) {
     CompositionLocalProvider(
-        LocalColorScheme provides colorScheme,
         LocalTypography provides typography,
         LocalShapes provides shapes,
         LocalMotionScheme provides motionScheme,
-        LocalContentColor provides colorScheme.onSurface,
+        LocalContentColor provides tokens.tx,
         LocalTextStyle provides typography.bodyReading,
         LocalIndication provides PressIndication,
         content = content,

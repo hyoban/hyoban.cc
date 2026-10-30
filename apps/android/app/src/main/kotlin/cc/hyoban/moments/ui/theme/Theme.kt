@@ -58,18 +58,12 @@ object Space {
 /**
  * The corner sizes, for a shape that animates between them; anything else takes
  * [AppTheme.shapes]. Three in all: small (8dp) for thumbnails and small marks, medium
- * (12dp) for fields and grouped lists, large (18dp) for cards and sheets; the larger
- * names, kept for their callers, are large too.
+ * (12dp) for fields and grouped lists, large (18dp) for photos, cards and sheets.
  */
 object Radius {
-    val extraSmall = 8.dp
     val small = 8.dp
     val medium = 12.dp
     val large = 18.dp
-    val largeIncreased = 18.dp
-    val extraLarge = 18.dp
-    val extraLargeIncreased = 18.dp
-    val extraExtraLarge = 18.dp
 }
 
 /** The fully rounded shape: buttons, chips, labels and what floats. A capsule with continuous ends. */
@@ -107,11 +101,9 @@ fun isLargeFont(): Boolean = LocalDensity.current.fontScale >= 1.3f
 
 // The corner sizes as continuous curves rather than arcs, so a corner eases into its sides.
 private val AppShapes = Shapes(
-    extraSmall = ContinuousRoundedRectangle(Radius.extraSmall),
     small = ContinuousRoundedRectangle(Radius.small),
     medium = ContinuousRoundedRectangle(Radius.medium),
     large = ContinuousRoundedRectangle(Radius.large),
-    extraLarge = ContinuousRoundedRectangle(Radius.extraLarge),
 )
 
 private fun style(size: Int, line: Int, weight: FontWeight, mono: Boolean = false) = TextStyle(
@@ -151,9 +143,8 @@ fun MomentsTheme(settings: Settings, content: @Composable () -> Unit) {
         ThemeMode.DARK -> true
     }
     val shown = appTokens(dark)
-    val colorScheme = remember(dark) { shown.scheme() }
 
     CompositionLocalProvider(LocalDarkTheme provides dark, LocalTokens provides shown) {
-        AppTheme(colorScheme = colorScheme, typography = AppTypography, shapes = AppShapes, motionScheme = TransitionMotion, content = content)
+        AppTheme(typography = AppTypography, shapes = AppShapes, motionScheme = TransitionMotion, content = content)
     }
 }

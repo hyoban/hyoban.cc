@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.ledger
 
 import cc.hyoban.moments.ui.theme.cardBorder
+import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -88,11 +89,11 @@ const val SERIES_COUNT = 6
 
 @Composable
 fun seriesColors(): List<Color> =
-    (if (AppTheme.colorScheme.surface.luminance() < 0.5f) SERIES_DARK else SERIES_LIGHT).map { Color(it) }
+    (if (tokens.bg.luminance() < 0.5f) SERIES_DARK else SERIES_LIGHT).map { Color(it) }
 
 /** The colour of 其他 and of a period compared with: recessive, beside the series. */
 @Composable
-fun otherColor(): Color = AppTheme.colorScheme.outline
+fun otherColor(): Color = tokens.borderStrong
 
 /** A chart's marks growing in from nothing whenever [key] changes, read only while drawing. */
 @Composable
@@ -129,7 +130,7 @@ fun ChartCard(
                     Text(
                         readout,
                         style = AppTheme.typography.body,
-                        color = AppTheme.colorScheme.onSurfaceVariant,
+                        color = tokens.tx2,
                         maxLines = 2,
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                     )
@@ -154,7 +155,7 @@ private fun LegendKey(label: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(8.dp).clip(CircleShape).background(color))
         Spacer(Modifier.width(Space.xs))
-        Text(label, style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        Text(label, style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1)
     }
 }
 
@@ -166,7 +167,7 @@ private fun Axis(labels: List<String>, count: Int) {
             Text(
                 it,
                 style = AppTheme.typography.micro,
-                color = AppTheme.colorScheme.onSurfaceVariant,
+                color = tokens.tx2,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 modifier = if (labels.size == count) Modifier.weight(1f) else Modifier,
@@ -207,7 +208,7 @@ fun BarChart(
     val count = series.firstOrNull()?.size ?: 0
     if (count == 0) return
     val reveal = rememberReveal(series)
-    val base = AppTheme.colorScheme.outlineVariant
+    val base = tokens.border
     val select by rememberUpdatedState(onSelect)
     val picked by rememberUpdatedState(selected)
     val max = (if (stacked) (0 until count).maxOf { i -> series.sumOf { it[i].coerceAtLeast(0) } } else series.maxOf { s -> s.maxOf { it } }).coerceAtLeast(1)
@@ -278,7 +279,7 @@ fun LineChart(
 ) {
     if (length < 2 || lines.all { it.isEmpty() }) return
     val reveal = rememberReveal(lines)
-    val base = AppTheme.colorScheme.outlineVariant
+    val base = tokens.border
     val surface = LocalSurfaceLevel.current.raised.fill()
     val select by rememberUpdatedState(onSelect)
     val picked by rememberUpdatedState(selected)
@@ -418,7 +419,7 @@ private val LEVEL_ALPHA = listOf(0f, 0.2f, 0.4f, 0.65f, 0.9f)
  */
 @Composable
 fun MonthHeatmap(month: LocalDate, byDay: Map<LocalDate, Long>, currency: String, onDay: (LocalDate) -> Unit) {
-    val primary = AppTheme.colorScheme.primary
+    val primary = tokens.accent
     val level = remember(byDay) { levelsOf(byDay.values) }
     val lead = month.dayOfWeek.value - 1
     val days = month.lengthOfMonth()
@@ -426,7 +427,7 @@ fun MonthHeatmap(month: LocalDate, byDay: Map<LocalDate, Long>, currency: String
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             weekdayLetters().forEach {
-                Text(it, style = AppTheme.typography.micro, color = AppTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+                Text(it, style = AppTheme.typography.micro, color = tokens.tx2, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
             }
         }
         for (week in 0 until weeks) {
@@ -459,9 +460,9 @@ fun MonthHeatmap(month: LocalDate, byDay: Map<LocalDate, Long>, currency: String
                                     "$day",
                                     style = AppTheme.typography.caption,
                                     color = when {
-                                        step >= 3 -> AppTheme.colorScheme.onPrimary
-                                        step > 0 -> AppTheme.colorScheme.onSurface
-                                        else -> AppTheme.colorScheme.onSurfaceVariant
+                                        step >= 3 -> tokens.onAccent
+                                        step > 0 -> tokens.tx
+                                        else -> tokens.tx2
                                     },
                                 )
                             }
@@ -482,10 +483,10 @@ private fun moneyOrNull(cents: Long, currency: String) = if (cents == 0L) null e
  */
 @Composable
 fun YearHeatmap(year: Int, byDay: Map<LocalDate, Long>, selected: LocalDate?, onSelect: (LocalDate?) -> Unit, description: String) {
-    val primary = AppTheme.colorScheme.primary
-    val empty = AppTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-    val ink = AppTheme.colorScheme.onSurface
-    val labelColor = AppTheme.colorScheme.onSurfaceVariant
+    val primary = tokens.accent
+    val empty = tokens.border.copy(alpha = 0.5f)
+    val ink = tokens.tx
+    val labelColor = tokens.tx2
     val measurer = rememberTextMeasurer()
     val labelStyle = AppTheme.typography.micro
     val level = remember(byDay) { levelsOf(byDay.filterKeys { it.year == year }.values) }

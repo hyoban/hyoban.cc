@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.trips
 
 import androidx.compose.foundation.layout.Arrangement
+import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -68,7 +69,7 @@ fun TripSubhead(trip: TripRecord, count: Int, places: Int? = null) {
     Text(
         (listOf(tripSummary(trip, count)) + listOfNotNull(places?.let { pluralStringResource(R.plurals.count_places, it, it) })).joinToString("\u2003"),
         style = AppTheme.typography.body,
-        color = AppTheme.colorScheme.onSurfaceVariant,
+        color = tokens.tx2,
     )
 }
 

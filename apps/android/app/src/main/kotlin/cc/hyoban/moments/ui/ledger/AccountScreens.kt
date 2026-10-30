@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.ledger
 
 import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,7 +26,6 @@ import cc.hyoban.moments.ui.design.FilterChip
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.ui.design.AppTheme
-import cc.hyoban.moments.ui.design.OutlinedButton
 import cc.hyoban.moments.ui.design.OutlinedTextField
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.TextButton
@@ -88,14 +88,14 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
     ) {
         BillList(ledger, bills, account.currency, nav, header = {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.s, bottom = Space.s)) {
-                Text(stringResource(R.string.ledger_balance_label), style = AppTheme.typography.label, color = AppTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.ledger_balance_label), style = AppTheme.typography.label, color = tokens.tx2)
                 Text(money(balance, account.currency), style = AppTheme.typography.numDisplay, modifier = Modifier.testTag("account_balance"))
                 Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                     FilledTonalButton(onClick = { nav.entry(LedgerEntryArgs(account = id)) }) {
                         Icon(AppIcons.Plus, contentDescription = null)
                         Text(stringResource(R.string.ledger_new_bill), modifier = Modifier.padding(start = Space.s))
                     }
-                    OutlinedButton(onClick = { calibrating = true }, modifier = Modifier.testTag("calibrate")) {
+                    FilledTonalButton(onClick = { calibrating = true }, modifier = Modifier.testTag("calibrate")) {
                         Icon(AppIcons.Sliders, contentDescription = null)
                         Text(stringResource(R.string.ledger_calibrate), modifier = Modifier.padding(start = Space.s))
                     }
@@ -187,7 +187,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
             ) {
                 Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), verticalArrangement = Arrangement.spacedBy(Space.m)) {
                     OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_account_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("account_name"))
-                    Text(stringResource(R.string.ledger_account_kind), style = AppTheme.typography.label, color = AppTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.ledger_account_kind), style = AppTheme.typography.label, color = tokens.tx2)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                         AccountKind.entries.forEach { entry ->
                             FilterChip(
@@ -200,7 +200,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                     }
                     Box {
                         var open by remember { mutableStateOf(false) }
-                        OutlinedButton(onClick = { open = true }, modifier = Modifier.testTag("account_currency")) {
+                        FilledTonalButton(onClick = { open = true }, modifier = Modifier.testTag("account_currency")) {
                             Text(stringResource(R.string.ledger_currency) + " " + currency)
                         }
                         DropdownMenu(open, onDismissRequest = { open = false }) {
@@ -234,7 +234,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                         onClick = { deleting = true },
                         enabled = !used,
                         modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l),
-                    ) { Text(stringResource(if (used) R.string.ledger_account_in_use else R.string.ledger_delete_account), color = if (used) AppTheme.colorScheme.onSurfaceVariant else AppTheme.colorScheme.error) }
+                    ) { Text(stringResource(if (used) R.string.ledger_account_in_use else R.string.ledger_delete_account), color = if (used) tokens.tx2 else tokens.danger) }
                 }
             }
         }

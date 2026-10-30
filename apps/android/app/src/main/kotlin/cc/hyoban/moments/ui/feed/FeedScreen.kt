@@ -210,7 +210,7 @@ fun FeedScreen(
             ) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.title_moments), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
-                    subtitle?.let { Text(it, style = AppTheme.typography.body, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1) }
+                    subtitle?.let { Text(it, style = AppTheme.typography.body, color = tokens.tx2, maxLines = 1) }
                 }
                 // Searching the timeline; the settings are under 我.
                 Tooltip(stringResource(R.string.action_search), below = true) {
@@ -287,7 +287,7 @@ fun FeedScreen(
                 Modifier.weight(1f).fillMaxHeight()
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom))
                     .padding(top = Space.s, end = Space.gutter, bottom = Space.s)
-                    .clip(AppTheme.shapes.extraLarge),
+                    .clip(AppTheme.shapes.large),
             ) {
                 // One Moment giving way to another, or to the placeholder, as a fade through: the
                 // pane's content changes while the pane itself stays.
@@ -322,7 +322,7 @@ fun FeedScreen(
                             Modifier.fillMaxSize().background(LocalSurfaceLevel.current.raised.fill()).testTag("detail_placeholder"),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(stringResource(R.string.label_pick_moment), color = AppTheme.colorScheme.onSurfaceVariant, style = AppTheme.typography.bodyReading)
+                            Text(stringResource(R.string.label_pick_moment), color = tokens.tx2, style = AppTheme.typography.bodyReading)
                         }
                     }
                 }
@@ -540,7 +540,7 @@ private fun DayHead(
                 if (moving && metres != null && millis != null) stringResource(R.string.day_track_stats, metres / 1000, millis / 60_000) else null,
                 daySpent(bills, date)?.let { stringResource(R.string.ledger_expense_short, it) },
             ).joinToString("\u2003")
-            if (line.isNotEmpty()) Text(line, style = AppTheme.typography.numCaption, color = AppTheme.colorScheme.onSurfaceVariant)
+            if (line.isNotEmpty()) Text(line, style = AppTheme.typography.numCaption, color = tokens.tx2)
         }
     }
 }

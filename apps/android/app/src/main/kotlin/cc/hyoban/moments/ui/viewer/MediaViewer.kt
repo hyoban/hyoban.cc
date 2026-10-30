@@ -201,7 +201,7 @@ fun MediaViewer(
             }
         }
 
-        val backdrop = AppTheme.colorScheme.scrim
+        val backdrop = Color.Black
         Box(Modifier.fillMaxSize().drawBehind { drawRect(backdrop.copy(alpha = 1f - progress())) })
         HorizontalPager(
             pager,

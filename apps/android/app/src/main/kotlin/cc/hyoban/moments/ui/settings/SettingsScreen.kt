@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.settings
 
 import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.Spinner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -352,7 +353,7 @@ private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) ->
                 if (token.isSet) {
                     TextButton(
                         onClick = { onSave("") },
-                        colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.colorScheme.error),
+                        colors = ButtonDefaults.textButtonColors(contentColor = tokens.danger),
                         modifier = Modifier.testTag("api_token_forget"),
                     ) { Text(stringResource(R.string.action_forget_token)) }
                 }

@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.compose
 
 import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.Spinner
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.fill
@@ -38,7 +39,7 @@ import cc.hyoban.moments.ui.design.FloatingActionButton
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.OutlinedTextField
-import cc.hyoban.moments.ui.design.SuggestionChip
+import cc.hyoban.moments.ui.design.AssistChip
 import androidx.compose.animation.AnimatedVisibility
 import cc.hyoban.moments.ui.components.predictiveBackScale
 import cc.hyoban.moments.ui.components.rememberPredictiveBack
@@ -48,7 +49,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.heightIn
-import cc.hyoban.moments.ui.design.SuggestionChipDefaults
+import cc.hyoban.moments.ui.design.AssistChipDefaults
 import androidx.compose.ui.graphics.TransformOrigin
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.TextButton
@@ -243,7 +244,7 @@ internal fun PlacePicker(
                 exit = scaleOut(motion.fastSpatialSpec(), transformOrigin = TransformOrigin(0.5f, 1f)) + fadeOut(motion.fastEffectsSpec()),
                 modifier = Modifier.align(Alignment.Center).offset(y = -(PIN_SIZE / 2)),
             ) {
-                Icon(AppIcons.Pin, contentDescription = null, tint = AppTheme.colorScheme.primary, modifier = Modifier.size(PIN_SIZE))
+                Icon(AppIcons.Pin, contentDescription = null, tint = tokens.accent, modifier = Modifier.size(PIN_SIZE))
             }
             FloatingBack(onDismiss, Modifier.align(Alignment.TopStart))
             val granted = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
@@ -274,7 +275,7 @@ internal fun PlacePicker(
                             // Round on the floating surface, as the map's own controls are, quieter
                             // than the sheet's one action.
                             containerColor = SurfaceLevel.Floating.fill(),
-                            contentColor = AppTheme.colorScheme.onSurface,
+                            contentColor = tokens.tx,
                             shape = Corners.full,
                             // Named on the button, so it keeps its name while the indicator stands in for the icon.
                             modifier = Modifier.semantics { contentDescription = locateLabel }.testTag("locate"),
@@ -318,7 +319,7 @@ private fun ChoiceCard(
         ) {
             when (pick) {
                 is PlaceChoice.Known -> {
-                    Text(stringResource(R.string.label_known_place), style = AppTheme.typography.label, color = AppTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.label_known_place), style = AppTheme.typography.label, color = tokens.tx2)
                     Text(places[pick.id]?.name ?: pick.id, style = AppTheme.typography.titlePage, modifier = Modifier.testTag("chosen_place"))
                     places[pick.id]?.let { known ->
                         KindChips(pick.kind ?: PlaceKind.of(known.kind), onKind)
@@ -326,7 +327,7 @@ private fun ChoiceCard(
                     }
                 }
                 is PlaceChoice.New -> {
-                    Text(stringResource(R.string.place_new_here), style = AppTheme.typography.label, color = AppTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.place_new_here), style = AppTheme.typography.label, color = tokens.tx2)
                     OutlinedTextField(
                         value = name,
                         onValueChange = onName,
@@ -342,7 +343,7 @@ private fun ChoiceCard(
                     NearbyChips(pick.fix, null, places, landmarks, onKnown, onLandmark)
                 }
                 PlaceChoice.None -> {
-                    Text(stringResource(R.string.place_drag_hint), style = AppTheme.typography.bodyReading, color = AppTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.place_drag_hint), style = AppTheme.typography.bodyReading, color = tokens.tx2)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -379,17 +380,17 @@ private fun NearbyChips(
     val known = nearestPlaces(places, at, limit = KNOWN_NEARBY + 1).filter { it.first != chosen && it.second <= NEARBY_METRES }.take(KNOWN_NEARBY)
     // The row keeps its height while what is around is looked up again, so the sheet, and the
     // pin at the middle of the map above it, stay put as the pin moves; the chips fade in and out.
-    LazyRow(Modifier.heightIn(min = SuggestionChipDefaults.Height), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+    LazyRow(Modifier.heightIn(min = AssistChipDefaults.Height), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
             itemsIndexed(known, key = { _, it -> "known:${it.first}" }) { _, (id, metres) ->
-                SuggestionChip(
+                AssistChip(
                     onClick = { onKnown(id) },
                     label = { Text("${places.getValue(id).name}\u2003${formatDistance(metres)}", maxLines = 1) },
-                    icon = { Icon(AppIcons.Pin, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    leadingIcon = { Icon(AppIcons.Pin, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.animateItem().testTag("nearby_$id"),
                 )
             }
             itemsIndexed(landmarks, key = { _, it -> "${it.name}@${it.fix}" }) { index, landmark ->
-                SuggestionChip(
+                AssistChip(
                     onClick = { onLandmark(landmark) },
                     label = { Text(landmark.name, maxLines = 1) },
                     modifier = Modifier.animateItem().testTag("landmark_$index"),
@@ -450,4 +451,4 @@ private const val LANDMARKS = 8
 private const val KNOWN_NEARBY = 3
 private val PIN_SIZE = 44.dp
 /** How far the map reaches under the sheet: its corners' radius, Material 3's extra large. */
-private val SHEET_CORNER = Radius.extraLarge
+private val SHEET_CORNER = Radius.large

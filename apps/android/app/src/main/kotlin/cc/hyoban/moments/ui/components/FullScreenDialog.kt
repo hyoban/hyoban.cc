@@ -116,7 +116,7 @@ fun DialogPane(content: @Composable () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Surface(
-            shape = AppTheme.shapes.extraLarge,
+            shape = AppTheme.shapes.large,
             color = AppColors.page,
             shadowElevation = Elevation.level3,
             modifier = Modifier.widthIn(max = DIALOG_MAX_WIDTH).fillMaxWidth().fillMaxHeight()

@@ -1,7 +1,7 @@
 package cc.hyoban.moments.ui.settings
 
 import cc.hyoban.moments.ui.design.AppSwitch
-import cc.hyoban.moments.ui.theme.scheme
+import cc.hyoban.moments.ui.theme.Tokens
 import cc.hyoban.moments.ui.theme.appTokens
 import cc.hyoban.moments.ui.theme.dividerColor
 import cc.hyoban.moments.ui.theme.cardBorder
@@ -37,7 +37,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.ButtonDefaults
-import cc.hyoban.moments.ui.design.ColorScheme
 import cc.hyoban.moments.ui.design.DropdownMenu
 import cc.hyoban.moments.ui.design.DropdownMenuItem
 import cc.hyoban.moments.ui.design.Icon
@@ -124,8 +123,8 @@ fun SwitchRow(
 
 @Composable
 private fun ThemeModeGroup(settings: Settings) {
-    val light = remember { appTokens(false).scheme() }
-    val dark = remember { appTokens(true).scheme() }
+    val light = remember { appTokens(false) }
+    val dark = remember { appTokens(true) }
 
     Caption(stringResource(R.string.section_theme_mode))
     Row(Modifier.padding(horizontal = Space.gutter).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(Space.m)) {
@@ -153,7 +152,7 @@ private fun ThemeModeGroup(settings: Settings) {
                     .fillMaxWidth()
                     .aspectRatio(0.75f)
                     .clip(AppTheme.shapes.medium)
-                    .border(if (selected) 2.5.dp else 1.dp, if (selected) AppTheme.colorScheme.primary else AppTheme.colorScheme.outlineVariant, AppTheme.shapes.medium)
+                    .border(if (selected) 2.5.dp else 1.dp, if (selected) tokens.accent else tokens.border, AppTheme.shapes.medium)
                 when (mode) {
                     ThemeMode.SYSTEM -> Row(frame) {
                         MiniScreen(light, Modifier.weight(1f))
@@ -165,30 +164,30 @@ private fun ThemeModeGroup(settings: Settings) {
                 Text(
                     stringResource(label),
                     style = AppTheme.typography.label,
-                    color = if (selected) AppTheme.colorScheme.primary else AppTheme.colorScheme.onSurfaceVariant,
+                    color = if (selected) tokens.accent else tokens.tx2,
                 )
             }
         }
     }
 }
 
-/** A page in [scheme]'s colours, small: a title, two cards with a line of text and a chip in primary, the tabs at the foot. */
+/** A page in [scheme]'s colours, small: a title, two cards with a line of text and a chip in the accent, the tabs at the foot. */
 @Composable
-private fun MiniScreen(scheme: ColorScheme, modifier: Modifier) {
+private fun MiniScreen(scheme: Tokens, modifier: Modifier) {
     val page = SurfaceLevel.Page.color(scheme)
     val card = SurfaceLevel.Card.color(scheme)
     val floating = SurfaceLevel.Floating.color(scheme)
-    val line = scheme.onSurface.copy(alpha = 0.18f)
+    val line = scheme.tx.copy(alpha = 0.18f)
     Column(modifier.fillMaxSize().background(page).padding(6.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        Box(Modifier.padding(top = 4.dp).width(28.dp).height(5.dp).clip(CircleShape).background(scheme.onSurface.copy(alpha = 0.6f)))
+        Box(Modifier.padding(top = 4.dp).width(28.dp).height(5.dp).clip(CircleShape).background(scheme.tx.copy(alpha = 0.6f)))
         repeat(2) {
             Column(
-                Modifier.fillMaxWidth().clip(AppTheme.shapes.extraSmall).background(card).padding(5.dp),
+                Modifier.fillMaxWidth().clip(AppTheme.shapes.small).background(card).padding(5.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(line))
                 Box(Modifier.fillMaxWidth(0.6f).height(3.dp).clip(CircleShape).background(line))
-                Box(Modifier.width(16.dp).height(5.dp).clip(CircleShape).background(scheme.primary))
+                Box(Modifier.width(16.dp).height(5.dp).clip(CircleShape).background(scheme.accent))
             }
         }
         Spacer(Modifier.weight(1f))
@@ -196,7 +195,7 @@ private fun MiniScreen(scheme: ColorScheme, modifier: Modifier) {
             Modifier.align(Alignment.CenterHorizontally).clip(CircleShape).background(floating).padding(horizontal = 6.dp, vertical = 3.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Box(Modifier.size(6.dp).clip(CircleShape).background(scheme.primary))
+            Box(Modifier.size(6.dp).clip(CircleShape).background(scheme.accent))
             Box(Modifier.size(6.dp).clip(CircleShape).background(line))
             Box(Modifier.size(6.dp).clip(CircleShape).background(line))
         }
@@ -213,7 +212,7 @@ fun Caption(title: String, action: (@Composable () -> Unit)? = null) {
         Text(
             title,
             style = AppTheme.typography.caption,
-            color = AppTheme.colorScheme.onSurfaceVariant,
+            color = tokens.tx2,
             modifier = Modifier.weight(1f).semantics { heading() },
         )
         action?.invoke()
@@ -271,7 +270,7 @@ fun SegmentedGroup(
             Text(
                 it,
                 style = AppTheme.typography.bodySmall,
-                color = AppTheme.colorScheme.onSurfaceVariant,
+                color = tokens.tx2,
                 modifier = Modifier.padding(start = Space.l, end = Space.l, top = Space.s),
             )
         }
@@ -285,16 +284,16 @@ private val SquareRow = ListItemShapes(RectangleShape, RectangleShape, Rectangle
 @Composable
 fun segmentColors() = ListItemDefaults.segmentedColors(
     containerColor = Color.Transparent,
-    leadingContentColor = AppTheme.colorScheme.onSurfaceVariant,
-    trailingContentColor = AppTheme.colorScheme.onSurfaceVariant,
-    supportingContentColor = AppTheme.colorScheme.onSurfaceVariant,
+    leadingContentColor = tokens.tx2,
+    trailingContentColor = tokens.tx2,
+    supportingContentColor = tokens.tx2,
 )
 
 /** A row on a group's card: no fill of its own, its icon and secondary text in the secondary colour. */
 @Composable
 fun rowColors() = ListItemDefaults.colors(
     containerColor = Color.Transparent,
-    leadingIconColor = AppTheme.colorScheme.onSurfaceVariant,
-    supportingColor = AppTheme.colorScheme.onSurfaceVariant,
-    trailingIconColor = AppTheme.colorScheme.onSurfaceVariant,
+    leadingIconColor = tokens.tx2,
+    supportingColor = tokens.tx2,
+    trailingIconColor = tokens.tx2,
 )

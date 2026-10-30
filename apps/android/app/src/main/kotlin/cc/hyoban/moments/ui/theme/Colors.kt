@@ -1,7 +1,5 @@
 package cc.hyoban.moments.ui.theme
 
-import cc.hyoban.moments.ui.design.ColorScheme
-import cc.hyoban.moments.ui.design.AppTheme
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -101,32 +99,6 @@ val DarkTokens = Tokens(
 /** The tokens in light or [dark]. */
 fun appTokens(dark: Boolean): Tokens = if (dark) DarkTokens else LightTokens
 
-/** The colour roles, each the token that plays its part. */
-fun Tokens.scheme(): ColorScheme = ColorScheme(
-    primary = accent,
-    onPrimary = onAccent,
-    primaryContainer = accentSoft,
-    onPrimaryContainer = tx,
-    secondaryContainer = accentSoft,
-    onSecondaryContainer = tx,
-    tertiary = income,
-    background = bg,
-    surface = bg,
-    onSurface = tx,
-    onSurfaceVariant = tx2,
-    surfaceContainerLow = surface,
-    surfaceContainer = surface,
-    surfaceContainerHigh = pressed,
-    surfaceContainerHighest = sunken,
-    outline = borderStrong,
-    outlineVariant = border,
-    scrim = Color.Black,
-    error = danger,
-    onError = onDanger,
-    errorContainer = dangerSoft,
-    onErrorContainer = tx,
-)
-
 /** The current tokens. */
 val LocalTokens = staticCompositionLocalOf { LightTokens }
 
@@ -154,11 +126,11 @@ enum class SurfaceLevel {
     /** The level a surface on this one takes. */
     val raised: SurfaceLevel get() = entries[min(ordinal + 1, Inset.ordinal)]
 
-    fun color(scheme: ColorScheme): Color = when (this) {
-        Page -> scheme.surface
-        Card -> scheme.surfaceContainer
-        Block -> scheme.surfaceContainerHigh
-        Inset -> scheme.surfaceContainerHighest
+    fun color(tokens: Tokens): Color = when (this) {
+        Page -> tokens.bg
+        Card -> tokens.surface
+        Block -> tokens.pressed
+        Inset -> tokens.sunken
     }
 
     companion object {
@@ -173,15 +145,15 @@ enum class SurfaceLevel {
 /** The level of the surface a composable sits on. */
 val LocalSurfaceLevel = staticCompositionLocalOf { SurfaceLevel.Page }
 
-/** The fill of [level] in the current scheme. */
+/** The fill of [level] in the current tokens. */
 @Composable
 @ReadOnlyComposable
-fun SurfaceLevel.fill(): Color = color(AppTheme.colorScheme)
+fun SurfaceLevel.fill(): Color = color(tokens)
 
 /** A divider: the 1px border. */
 @Composable
 @ReadOnlyComposable
-fun dividerColor(): Color = AppTheme.colorScheme.outlineVariant
+fun dividerColor(): Color = tokens.border
 
 /** How faint what is disabled is drawn. */
 const val DISABLED_ALPHA = 0.38f
@@ -193,11 +165,11 @@ const val DISABLED_ALPHA = 0.38f
 object MediaOverlay {
     /** Under a bar across the media, and over media set back. */
     val bar: Color
-        @Composable @ReadOnlyComposable get() = AppTheme.colorScheme.scrim.copy(alpha = 0.32f)
+        @Composable @ReadOnlyComposable get() = Color.Black.copy(alpha = 0.32f)
 
     /** Under a control or a label on the media, and over media dimmed behind one chosen. */
     val control: Color
-        @Composable @ReadOnlyComposable get() = AppTheme.colorScheme.scrim.copy(alpha = CONTROL_ALPHA)
+        @Composable @ReadOnlyComposable get() = Color.Black.copy(alpha = CONTROL_ALPHA)
 
     const val CONTROL_ALPHA = 0.45f
 

@@ -221,7 +221,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
             Text(
                 status,
                 style = AppTheme.typography.body,
-                color = AppTheme.colorScheme.onSurfaceVariant,
+                color = tokens.tx2,
                 modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).then(announce),
             )
         } else {
@@ -244,7 +244,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                             Text(
                                 stringResource(R.string.filter_year, year.toInt()),
                                 style = AppTheme.typography.caption,
-                                color = AppTheme.colorScheme.onSurfaceVariant,
+                                color = tokens.tx2,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                                 softWrap = false,
                                 modifier = Modifier.width(LEAD).semantics { heading() },
@@ -335,7 +335,7 @@ private fun SearchResult(
         Text(
             marked((listOfNotNull(formatDate(moment.occurredAt, ownYear(moment.occurredAt)), formatTime(moment.occurredAt)) + where).joinToString("\u2003"), text, mark),
             style = AppTheme.typography.caption,
-            color = AppTheme.colorScheme.onSurfaceVariant,
+            color = tokens.tx2,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

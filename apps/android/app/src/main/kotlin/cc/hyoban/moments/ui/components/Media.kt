@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.components
 
 import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -84,7 +85,7 @@ fun MediaStill(
     urls: MediaUrls,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
-    placeholder: Color = AppTheme.colorScheme.surfaceContainerHighest,
+    placeholder: Color = tokens.sunken,
     placeholderUrl: String? = null,
     /** How many times wider than it is laid out to fetch it: more than 1 while zoomed in. */
     detail: Float = 1f,

@@ -59,7 +59,6 @@ import cc.hyoban.moments.ui.design.FilterChip
 import cc.hyoban.moments.ui.design.FilterChipDefaults
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
-import cc.hyoban.moments.ui.design.InputChip
 import cc.hyoban.moments.ui.design.ListItem
 import cc.hyoban.moments.ui.design.ListItemDefaults
 import cc.hyoban.moments.ui.design.AppTheme
@@ -748,7 +747,7 @@ private fun CategoryGrid(ledger: Ledger, book: String?, type: CategoryType, sele
 /** One category in the grid: its icon in a circle, filled with the primary when chosen, a dot beside it when it has second-level ones, and its name. */
 @Composable
 private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, hasSubs: Boolean, tag: String, onClick: () -> Unit) {
-    val colors = AppTheme.colorScheme
+    val colors = tokens
     Column(
         Modifier.weight(1f)
             .clip(AppTheme.shapes.medium)
@@ -759,20 +758,20 @@ private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphi
     ) {
         Box {
             Box(
-                Modifier.size(48.dp).background(if (selected) colors.primary else colors.surfaceContainerHighest, CircleShape),
+                Modifier.size(48.dp).background(if (selected) colors.accent else colors.sunken, CircleShape),
                 contentAlignment = Alignment.Center,
-            ) { Icon(icon, contentDescription = null, tint = if (selected) colors.onPrimary else colors.onSurfaceVariant) }
+            ) { Icon(icon, contentDescription = null, tint = if (selected) colors.onAccent else colors.tx2) }
             if (hasSubs) {
                 Box(
-                    Modifier.align(Alignment.BottomEnd).size(14.dp).background(colors.surface, CircleShape).padding(Space.xxs)
-                        .background(if (selected) colors.primary else colors.outline, CircleShape),
+                    Modifier.align(Alignment.BottomEnd).size(14.dp).background(colors.bg, CircleShape).padding(Space.xxs)
+                        .background(if (selected) colors.accent else colors.borderStrong, CircleShape),
                 )
             }
         }
         Text(
             name,
             style = AppTheme.typography.caption,
-            color = if (selected) colors.primary else colors.onSurfaceVariant,
+            color = if (selected) colors.accent else colors.tx2,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = Space.xs, start = Space.xxs, end = Space.xxs),
@@ -901,7 +900,7 @@ private fun LinkChip(value: String?, label: String, icon: androidx.compose.ui.gr
         OptionChip(label, icon, tag, onClick)
         return
     }
-    InputChip(
+    FilterChip(
         selected = true,
         onClick = onClick,
         label = { Text(value, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 200.dp)) },
@@ -932,10 +931,10 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
     val currency = draft.shownCurrency(ledger)
     val cents = parseAmount(draft.amount)
     var currencies by remember { mutableStateOf(false) }
-    val colors = AppTheme.colorScheme
+    val colors = tokens
     BillOptions(container, ledger, draft, at, fixedKind, withMoment = false, keypad = true)
     Column(modifier.padding(horizontal = Space.gutter).padding(top = Space.s, bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-        Column(Modifier.fillMaxWidth().clip(AppTheme.shapes.large).background(colors.surfaceContainer).border(cardBorder(), AppTheme.shapes.large)) {
+        Column(Modifier.fillMaxWidth().clip(AppTheme.shapes.large).background(colors.surface).border(cardBorder(), AppTheme.shapes.large)) {
             Row(Modifier.fillMaxWidth().padding(start = Space.xs, end = Space.l, top = Space.xs), verticalAlignment = Alignment.CenterVertically) {
                 Box {
                     TextButton(onClick = { currencies = true }, modifier = Modifier.testTag("currency")) { Text(currency) }
@@ -947,13 +946,13 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
                 }
                 // A sum being added up shows what it comes to beside it.
                 if (cents != null && draft.amount.drop(1).any { it == '+' || it == '-' }) {
-                    Text("= " + formatMoney(cents, currency), style = AppTheme.typography.body, color = colors.onSurfaceVariant, maxLines = 1)
+                    Text("= " + formatMoney(cents, currency), style = AppTheme.typography.body, color = colors.tx2, maxLines = 1)
                 }
                 val shown = draft.amount.ifEmpty { "0" }.replace("+", " + ").replace("-", " − ")
                 Text(
                     currencySymbol(currency).trim() + " " + shown,
                     style = AppTheme.typography.titlePage,
-                    color = if (draft.amount.isNotEmpty() && cents == null) colors.error else if (draft.amount.isEmpty()) colors.onSurfaceVariant else colors.onSurface,
+                    color = if (draft.amount.isNotEmpty() && cents == null) colors.danger else if (draft.amount.isEmpty()) colors.tx2 else colors.tx,
                     textAlign = TextAlign.End,
                     maxLines = 1,
                     overflow = TextOverflow.StartEllipsis,
@@ -1079,7 +1078,7 @@ private fun SplitEditor(ledger: Ledger, splits: List<Pair<String, String>>, curr
             Text(
                 stringResource(R.string.ledger_split_sum, formatMoney(sum, currency), formatMoney(total ?: 0, currency)),
                 style = AppTheme.typography.bodySmall,
-                color = if (total != null && sum != total) AppTheme.colorScheme.error else AppTheme.colorScheme.onSurfaceVariant,
+                color = if (total != null && sum != total) tokens.danger else tokens.tx2,
             )
         }
     }
@@ -1173,7 +1172,7 @@ fun ChoiceSheet(options: List<Pair<String, String>>, onDismiss: () -> Unit, empt
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet) {
         LazyColumn(Modifier.padding(bottom = Space.l)) {
             if (options.isEmpty() && empty != null) {
-                item { Text(empty, color = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.l)) }
+                item { Text(empty, color = tokens.tx2, modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.l)) }
             }
             items(options, key = { it.first }) { (id, label) ->
                 ListItem(
