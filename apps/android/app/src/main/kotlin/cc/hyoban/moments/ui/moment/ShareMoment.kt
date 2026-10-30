@@ -95,11 +95,24 @@ enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val lim
     PREPARE("prepare", R.string.action_prepare_share),
 }
 
+/** The app's outline in the design's own icons; an album for the one made ready by hand. */
+private val ShareTarget.icon: ImageVector
+    get() = when (this) {
+        ShareTarget.X -> AppIcons.X
+        ShareTarget.BILIBILI -> AppIcons.Bilibili
+        ShareTarget.TELEGRAM -> AppIcons.Telegram
+        ShareTarget.THREADS -> AppIcons.Threads
+        ShareTarget.XIAOHONGSHU -> AppIcons.Xiaohongshu
+        ShareTarget.DOUYIN -> AppIcons.Douyin
+        ShareTarget.WECHAT -> AppIcons.Wechat
+        ShareTarget.PREPARE -> AppIcons.Photos
+    }
+
 /**
  * Where to share a Moment, in a bottom sheet: the apps it is sent to straight away, then
  * those it is made ready for by hand, a space between, each a row on the sheet's gutter
- * leading on to its copy to edit. Drawn in the design's own line icons rather than the apps'
- * logos: a public post, a chat, or a destination that names itself. The scrim or a swipe
+ * leading on to its copy to edit. Each app in an outline after its own mark, drawn in the
+ * design's hand and the text's grey rather than with the app's logo. The scrim or a swipe
  * down closes it.
  */
 @Composable
@@ -131,15 +144,10 @@ fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
             // The rows' icons on the title's edge, their own padding outside it.
             Column(Modifier.padding(horizontal = Space.gutter - ROW_PADDING)) {
                 ShareTarget.entries.filter { it != ShareTarget.PREPARE }.forEach { target ->
-                    val icon = when (target) {
-                        ShareTarget.TELEGRAM -> AppIcons.Share
-                        ShareTarget.WECHAT -> AppIcons.Image
-                        else -> AppIcons.Send
-                    }
-                    choice(stringResource(target.title), target.tag, icon, null, target)
+                    choice(stringResource(target.title), target.tag, target.icon, null, target)
                 }
                 Spacer(Modifier.height(Space.l))
-                choice(stringResource(R.string.action_share_feishu_manual), "feishu", AppIcons.Photos, stringResource(R.string.share_manual_note), ShareTarget.PREPARE)
+                choice(stringResource(R.string.action_share_feishu_manual), "feishu", AppIcons.Feishu, stringResource(R.string.share_manual_note), ShareTarget.PREPARE)
                 choice(stringResource(ShareTarget.PREPARE.title), "prepare", AppIcons.Photos, null, ShareTarget.PREPARE)
             }
         }

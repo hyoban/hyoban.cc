@@ -183,4 +183,14 @@ object AppIcons {
     val Bluetooth: ImageVector by lazy { icon("bluetooth", false, listOf("M7 7.5 17 16.5 12 21V3l5 4.5L7 16.5")) }
     val BluetoothOn: ImageVector by lazy { icon("bluetooth-on", false, listOf("M7 7.5 17 16.5 12 21V3l5 4.5L7 16.5"), listOf("M2.9 12a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0z", "M18.9 12a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0z")) }
     val Stream: ImageVector by lazy { icon("stream", false, listOf("M3.5 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z", "M16.5 7a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z", "M16.5 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z", "M7.5 12h3.5l5.5-5M11 12l5.5 5")) }
+
+    // 分享去处
+    val X: ImageVector by lazy { icon("x", false, listOf("M4.5 4h4l11 16h-4z", "M19.5 4L13.7 10.6", "M10.3 13.4L4.5 20")) }
+    val Bilibili: ImageVector by lazy { icon("bilibili", false, listOf("M7 7H17A4 4 0 0 1 21 11V16A4 4 0 0 1 17 20H7A4 4 0 0 1 3 16V11A4 4 0 0 1 7 7z", "M7.5 3.5L10 7", "M16.5 3.5L14 7", "M7.5 13.4L10 12.2", "M16.5 13.4L14 12.2")) }
+    val Telegram: ImageVector by lazy { icon("telegram", false, listOf("M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0z", "M7 11.9 16.6 8l-1.7 8.3-3.6-2.6z", "M11.3 13.7L13.9 11.4")) }
+    val Threads: ImageVector by lazy { icon("threads", false, listOf("M16.6 8.8C15.9 6.2 14.1 4.8 11.8 4.8 8.2 4.8 6 7.6 6 12s2.2 7.2 5.9 7.2c2.9 0 5.2-1.7 5.2-4.3 0-2.4-1.9-3.7-4.5-3.7-2 0-3.3 1-3.3 2.4 0 1.3 1 2.1 2.4 2.1 2.3 0 3.4-1.9 3.4-4.8")) }
+    val Xiaohongshu: ImageVector by lazy { icon("xiaohongshu", false, listOf("M8.5 3.5H15.5A5 5 0 0 1 20.5 8.5V15.5A5 5 0 0 1 15.5 20.5H8.5A5 5 0 0 1 3.5 15.5V8.5A5 5 0 0 1 8.5 3.5z", "M12 8.6c-1.3-.9-2.9-1.3-4.8-1.1v8.2c1.9-.2 3.5.2 4.8 1.1 1.3-.9 2.9-1.3 4.8-1.1V7.5c-1.9-.2-3.5.2-4.8 1.1z", "M12 8.6L12 16.8")) }
+    val Douyin: ImageVector by lazy { icon("douyin", false, listOf("M12.5 4v10.8a3.3 3.3 0 1 1-3.3-3.3", "M12.5 4c.4 2.4 2.2 4.1 5 4.4")) }
+    val Wechat: ImageVector by lazy { icon("wechat", false, listOf("M15.6 9.6C15.1 6.8 12.5 4.8 9.3 4.8 5.8 4.8 3 7.2 3 10.2c0 1.7.9 3.2 2.3 4.2l-.5 1.9 2.3-1.2c.7.2 1.4.3 2.2.3", "M15.2 20c-3 0-5.4-2.1-5.4-4.7s2.4-4.7 5.4-4.7 5.4 2.1 5.4 4.7c0 1.3-.6 2.4-1.6 3.2l.4 1.6-1.9-1c-.7.2-1.5.3-2.3.3z"), listOf("M6 8.7a1 1 0 1 0 2 0a1 1 0 1 0 -2 0z", "M10.2 8.7a1 1 0 1 0 2 0a1 1 0 1 0 -2 0z", "M12.4 14.8a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0z", "M16.2 14.8a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0z")) }
+    val Feishu: ImageVector by lazy { icon("feishu", false, listOf("M6.5 4.5h7.2a1.5 1.5 0 0 1 1.3.8l2.5 4.9", "M3.5 9.8c3.2 1 6.2 3 8.8 5.9 2.6-2.3 5.4-3.9 8.2-4.6-2.2 5.1-6.4 8.4-11.6 8.4-2.2 0-4.1-.6-5.4-1.6z")) }
 }

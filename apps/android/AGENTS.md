@@ -116,7 +116,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   never by " · ": the site does the same.
 - Share targets are named by what happens at the other end: 发布到 for one that ends in
   a public post (X, B 站, Threads, 小红书, 抖音), 分享到 for one sent to a chat
-  (Telegram), and a destination that names itself (微信朋友圈, 飞书) alone.
+  (Telegram), and a destination that names itself (微信朋友圈, 飞书) alone. Each is drawn as an
+  outline after the app's own mark, in the icon set's hand (the 分享去处 group), never with the
+  app's logo or colours.
 - Follow what the app should be rather than the web version, except where it is asked
   to match: the map's features and the trip playback follow the site's player in
   `packages/trip-map/src/player`, with the route always moving while it plays.

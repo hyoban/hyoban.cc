@@ -122,8 +122,8 @@ site's.
 
 A Moment's share button orders destinations by verified text/photo support:
 发布到 X, 发布到 B 站, 分享到 Telegram, 发布到 Threads, 发布到小红书,
-发布到抖音, 微信朋友圈, 飞书 (marked as posted by hand) and 准备图文, each in the
-app's own line icons (a post, a chat, an album) rather than the other app's logo.
+发布到抖音, 微信朋友圈, 飞书 (marked as posted by hand) and 准备图文, each app in an
+outline after its own mark, drawn in the app's icon set rather than with its logo.
 Complete text/photo composers come first, followed by assisted sharing, manual
 caption entry, and destinations that require manually preparing photo albums.
 The X option opens a separate editable copy of its words and a choice of up to four
