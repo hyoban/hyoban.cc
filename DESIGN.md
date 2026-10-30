@@ -45,7 +45,3 @@ They use the full width: a rounded grid with photo thumbnails, a side drawer swi
 - **Light framing on code, tables and images.** A 1px border, a `0.625rem` radius and the `inline` background. A horizontal rule is drawn as `· · ·`.
 - **Small, quick motion.** Page changes fade over 200ms, colors change over 140ms, thumbnails scale up 2.5% on hover. What a page change carries along moves instead of fading: a year's label grows into its review's huge year ([year-transition.ts](src/year-transition.ts)), a day's tile on the wall opens into that day in the calendar, and a calendar month slides in the way time goes ([calendar-month-transition.ts](src/calendar-month-transition.ts)). All of it respects reduced motion.
 - **Chinese-first.** Copy, ARIA labels and date formats are written for Chinese readers.
-
-## Summary
-
-The design is held together by restraint: one column, one font size, gray text in three levels, and underlines instead of color. That keeps the writing in front; only the year review, calendar and map get a richer interface.
