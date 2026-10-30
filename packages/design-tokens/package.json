@@ -1,0 +1,12 @@
+{
+  "name": "@hyoban/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The design system's tokens, colours, spacing, corners, shadows, type and springs, for every platform the app is built on, and what generates each platform's code from them.",
+  "type": "module",
+  "exports": {
+    "./tokens.json": "./tokens.json",
+    "./motion.json": "./motion.json",
+    "./package.json": "./package.json"
+  }
+}

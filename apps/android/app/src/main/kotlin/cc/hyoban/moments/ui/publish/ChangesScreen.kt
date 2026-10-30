@@ -341,7 +341,7 @@ private fun PublishingIndicator(progress: PublishProgress?, modifier: Modifier =
         enter = expandVertically(motion.fastSpatialSpec()) + fadeIn(motion.fastEffectsSpec()),
         exit = shrinkVertically(motion.fastSpatialSpec()) + fadeOut(motion.fastEffectsSpec()),
     ) {
-        LinearProgressIndicator(progress = { fraction }, modifier = modifier, color = color, trackColor = tokens.pressed, strokeCap = StrokeCap.Round, gapSize = 0.dp, drawStopIndicator = {})
+        LinearProgressIndicator(progress = { fraction }, modifier = modifier, color = color, trackColor = tokens.fill, strokeCap = StrokeCap.Round, gapSize = 0.dp, drawStopIndicator = {})
     }
 }
 

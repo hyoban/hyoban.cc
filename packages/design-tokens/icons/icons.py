@@ -1,6 +1,6 @@
-# The 这里 icon set, second hand: 24 grid, drawing within 2..22, a 2 stroke with round caps and
+# The app's icon set, second hand: 24 grid, drawing within 2..22, a 2 stroke with round caps and
 # joins, corners a step softer than the first hand's. The everyday ones are drawn warmer and a
-# little cuter (a cat for 我, paw prints for footprints, a bowl of rice for food); the rest only
+# little cuter (a cat for the Me tab, paw prints for footprints, a bowl of rice for food); the rest only
 # rounder. Each icon is a list of SVG elements drawn with stroke="currentColor"; an element
 # carrying class "f" is filled instead. Grouped as the design system shows them.
 
@@ -20,7 +20,7 @@ def group(name, icons):
     GROUPS[name] = icons
 
 
-group('导航', {
+group('Navigation', {
     'timeline': [R(5, 3.5, 14, 17, 3.5), L(9, 3.5, 9, 20.5), L(12, 9, 16, 9), L(12, 13, 16, 13), L(3.5, 7.5, 6.5, 7.5), L(3.5, 12, 6.5, 12), L(3.5, 16.5, 6.5, 16.5)],
     'timeline-fill': [P('M8.5 3.5A3.5 3.5 0 0 0 5 7v10a3.5 3.5 0 0 0 3.5 3.5z', True), P('M10 3.5h5.5A3.5 3.5 0 0 1 19 7v10a3.5 3.5 0 0 1-3.5 3.5H10z', True), L(3.5, 7.5, 6.5, 7.5), L(3.5, 12, 6.5, 12), L(3.5, 16.5, 6.5, 16.5)],
     'map': [P('M3.5 7.2a1 1 0 0 1 .6-.9L9 4l6 2.5 4.4-2a1 1 0 0 1 1.1.9v11.4a1 1 0 0 1-.6.9L15 20l-6-2.5-4.4 2a1 1 0 0 1-1.1-.9z'), P('M12 14.2s-2.6-1.6-2.6-3.3a1.4 1.4 0 0 1 2.6-.7 1.4 1.4 0 0 1 2.6.7c0 1.7-2.6 3.3-2.6 3.3z')],
@@ -40,7 +40,7 @@ group('导航', {
 })
 
 
-group('操作', {
+group('Actions', {
     'plus': [L(12, 5.5, 12, 18.5), L(5.5, 12, 18.5, 12)],
     'minus': [L(5, 12, 19, 12)],
     'close': [L(6, 6, 18, 18), L(18, 6, 6, 18)],
@@ -69,7 +69,7 @@ group('操作', {
 })
 
 
-group('媒体', {
+group('Media', {
     'play': [P('M7.5 5.2v13.6a.8.8 0 0 0 1.2.7l10.6-6.8a.8.8 0 0 0 0-1.4L8.7 4.5a.8.8 0 0 0-1.2.7z')],
     'pause': [L(8.5, 5.5, 8.5, 18.5), L(15.5, 5.5, 15.5, 18.5)],
     'skip-back': [P('M18 5.5v13L9 12z'), L(6, 5.5, 6, 18.5)],
@@ -88,7 +88,7 @@ group('媒体', {
 })
 
 
-group('地点与出行', {
+group('Places and travel', {
     'pin': [P('M12 21s-6.5-5.6-6.5-10.8a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z'), P('M12 12.4s-2.2-1.4-2.2-2.8a1.2 1.2 0 0 1 2.2-.6 1.2 1.2 0 0 1 2.2.6c0 1.4-2.2 2.8-2.2 2.8z', True)],
     'locate': [C(12, 12, 7), C(12, 12, 2.5, True), L(12, 2.5, 12, 5), L(12, 19, 12, 21.5), L(2.5, 12, 5, 12), L(19, 12, 21.5, 12)],
     'navigation': [P('M12 3.5 19 20l-7-3.5L5 20z')],
@@ -119,7 +119,7 @@ group('地点与出行', {
 })
 
 
-group('记账', {
+group('Ledger', {
     'receipt': [P('M6 4.5A1 1 0 0 1 7 3.5h10a1 1 0 0 1 1 1v16l-2-1.3-2 1.3-2-1.3-2 1.3-2-1.3-2 1.3z'), L(9, 8.5, 15, 8.5), L(9, 12, 15, 12), L(9, 15.5, 12, 15.5)],
     'bill': [P('M6 3.5h8.5l3.5 3.5V19a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 5 19V5a1.5 1.5 0 0 1 1-1.5z'), P('M9 9l3 3 3-3'), L(12, 12, 12, 17), L(9.5, 13.5, 14.5, 13.5)],
     'wallet': [R(3.5, 6.5, 17, 13, 4), P('M3.5 10.5h17'), P('M7 6.5 14.5 3.8a1.5 1.5 0 0 1 2 1.4v1.3'), DOT(16.5, 15, 1.4)],
@@ -156,7 +156,7 @@ group('记账', {
 # What the ledger's categories are spent on, beyond the places, rides and money above: food and
 # drink, home and family, health, cars and leisure. Picked by a category's name, its own before
 # its parent's.
-group('分类', {
+group('Categories', {
     'bubble-tea': [P('M6.5 8.5h11l-1.4 10.7a1.5 1.5 0 0 1-1.5 1.3H9.4a1.5 1.5 0 0 1-1.5-1.3z'), P('M7.5 8.5a4.5 3.5 0 0 1 9 0'), L(13.5, 5.2, 15.2, 2.5), DOT(10, 16.5, 1.1), DOT(12.5, 17.5, 1.1), DOT(14.5, 15.5, 1.1)],
     'bottle': [P('M10 3.5h4v2.5l1.5 2a3 3 0 0 1 .5 1.7V19a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 8 19V9.7a3 3 0 0 1 .5-1.7L10 6z'), L(8, 12.5, 16, 12.5), L(8, 16, 16, 16)],
     'snack': [P('M6.5 4h11l-1 3v10l1 3h-11l1-3V7z'), L(7.5, 7, 16.5, 7), L(7.5, 17, 16.5, 17), C(12, 12, 2)],
@@ -188,7 +188,7 @@ group('分类', {
 })
 
 
-group('时间与状态', {
+group('Time and status', {
     'clock': [C(12, 12, 8.5), P('M12 7.5V12l3 2')],
     'calendar': [R(3.5, 5, 17, 15.5, 4), L(3.5, 10, 20.5, 10), L(8, 3, 8, 6.5), L(16, 3, 16, 6.5), P('M12 17.4s-2-1.3-2-2.6a1 1 0 0 1 2-.5 1 1 0 0 1 2 .5c0 1.3-2 2.6-2 2.6z', True)],
     'info': [C(12, 12, 8.5), L(12, 11, 12, 16.5), DOT(12, 7.75, 1.1)],
@@ -206,7 +206,7 @@ group('时间与状态', {
 })
 
 
-group('设备与数据', {
+group('Devices and data', {
     'phone': [R(6.5, 3, 11, 18, 4.5), L(10.5, 18, 13.5, 18)],
     'laptop': [R(4.5, 5, 15, 10.5, 3.5), P('M2.5 18.5h19')],
     'cloud': [P('M7 18.5a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a4.75 4.75 0 0 1-.5 9.5z')],
@@ -221,7 +221,7 @@ group('设备与数据', {
 
 # Where a Moment is shared to, each after the other app's own mark but in this set's hand:
 # outlines only, in the text's grey, never the brand's colours.
-group('分享去处', {
+group('Share targets', {
     'x': [P('M4.5 4h4l11 16h-4z'), L(19.5, 4, 13.7, 10.6), L(10.3, 13.4, 4.5, 20)],
     'bilibili': [R(3, 7, 18, 13, 4), L(7.5, 3.5, 10, 7), L(16.5, 3.5, 14, 7), L(7.5, 13.4, 10, 12.2), L(16.5, 13.4, 14, 12.2)],
     'telegram': [C(12, 12, 8.5), P('M7 11.9 16.6 8l-1.7 8.3-3.6-2.6z'), L(11.3, 13.7, 13.9, 11.4)],

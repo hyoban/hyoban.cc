@@ -162,7 +162,7 @@ private fun MomentBubble(
             onClick = onOpen,
             onLongClick = { at -> menu = with(density) { DpOffset(at.x.toDp(), at.y.toDp()) } },
             onLongClickLabel = stringResource(R.string.action_more),
-            modifier = width.sharedCard(moment.uid).clip(shape).background(tokens.pressed).border(2.dp, ring, shape).padding(end = tail)
+            modifier = width.sharedCard(moment.uid).clip(shape).background(tokens.fill).border(2.dp, ring, shape).padding(end = tail)
                 .semantics { this.selected = selected }.testTag("moment_${moment.uid}"),
             flat = true,
             shape = remember(joinedAbove, joinedBelow) { cc.hyoban.moments.ui.feed.sentBodyShape(joinedAbove, joinedBelow) },

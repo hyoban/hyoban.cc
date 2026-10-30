@@ -742,7 +742,7 @@ private fun CategoryGrid(ledger: Ledger, book: String?, type: CategoryType, sele
                             Row(Modifier.fillMaxWidth()) {
                                 subRow.forEach { category ->
                                     if (category == null) {
-                                        CategoryTile(stringResource(R.string.ledger_add_category), AppIcons.Plus, selected = false, hasSubs = false, tag = "add_subcategory", fill = tokens.pressed) { onAdd(top) }
+                                        CategoryTile(stringResource(R.string.ledger_add_category), AppIcons.Plus, selected = false, hasSubs = false, tag = "add_subcategory", fill = tokens.fill) { onAdd(top) }
                                     } else {
                                         CategoryTile(
                                             category.name,
@@ -750,7 +750,7 @@ private fun CategoryGrid(ledger: Ledger, book: String?, type: CategoryType, sele
                                             selected = category.id == selected,
                                             hasSubs = false,
                                             tag = "subcategory_${category.name}",
-                                            fill = tokens.pressed,
+                                            fill = tokens.fill,
                                         ) { onPick(if (category.id == selected) top else category.id) }
                                     }
                                 }
@@ -766,7 +766,7 @@ private fun CategoryGrid(ledger: Ledger, book: String?, type: CategoryType, sele
 
 /** One category in the grid: its icon in a circle of [fill], the accent when chosen, a dot beside it when it has second-level ones, and its name. */
 @Composable
-private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, hasSubs: Boolean, tag: String, fill: Color = tokens.sunken, onClick: () -> Unit) {
+private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, hasSubs: Boolean, tag: String, fill: Color = tokens.fillStrong, onClick: () -> Unit) {
     val colors = tokens
     Column(
         Modifier.weight(1f)
@@ -1027,7 +1027,7 @@ private val KeyHeight = 48.dp
 @Composable
 private fun Key(key: Char, modifier: Modifier, onClick: () -> Unit) {
     val digit = key.isDigit() || key == '.'
-    val colors = ButtonDefaults.filledTonalButtonColors(containerColor = if (digit) tokens.pressed else tokens.sunken, contentColor = tokens.tx)
+    val colors = ButtonDefaults.filledTonalButtonColors(containerColor = if (digit) tokens.fill else tokens.fillStrong, contentColor = tokens.tx)
     FilledTonalButton(
         onClick = onClick,
         shape = AppTheme.shapes.medium,

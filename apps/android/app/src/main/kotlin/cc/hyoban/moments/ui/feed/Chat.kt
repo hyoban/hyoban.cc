@@ -202,7 +202,7 @@ fun DateCapsule(day: String, onClick: (() -> Unit)?, modifier: Modifier = Modifi
                 text,
                 style = AppTheme.typography.caption,
                 color = tokens.tx2,
-                modifier = Modifier.clip(cc.hyoban.moments.ui.theme.Corners.full).background(tokens.pressed).padding(horizontal = Space.m, vertical = Space.xxs),
+                modifier = Modifier.clip(cc.hyoban.moments.ui.theme.Corners.full).background(tokens.fill).padding(horizontal = Space.m, vertical = Space.xxs),
             )
         }
     }

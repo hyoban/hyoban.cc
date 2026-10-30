@@ -13,6 +13,7 @@
     "data:migrate": "node scripts/migrate-entries.mjs",
     "data:push": "node scripts/push-data.mjs",
     "data:schema": "node scripts/generate-data-schema.mjs",
+    "design:tokens": "node packages/design-tokens/generate.mjs",
     "zeekr:entries": "node scripts/zeekr-entries.mjs",
     "zeekr:convert": "node scripts/convert-zeekr-data.mjs",
     "zeekr:prepare": "node scripts/prepare-zeekr-data.mjs",

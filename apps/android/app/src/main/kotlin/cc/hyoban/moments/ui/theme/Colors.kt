@@ -2,99 +2,15 @@ package cc.hyoban.moments.ui.theme
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlin.math.min
 
-// The app's colours, the design system's tokens as they are (the site's warm greys, one blue
-// for state): a page, one surface above it and a hairline between them, text in three greys,
-// and colour kept for what is chosen, on or in progress. The components read the colour roles,
-// each set to the token that plays its part.
-
-/** The design system's tokens, in light or dark; [scheme] maps them onto the colour roles. */
-@Immutable
-class Tokens(
-    /** The page. */
-    val bg: Color,
-    /** Cards, fields and sheets: the one surface above the page. */
-    val surface: Color,
-    /** What is pressed, and a chip not chosen. */
-    val pressed: Color,
-    /** A step under [pressed], for a mark inside one. */
-    val sunken: Color,
-    /** The 1px line between things. */
-    val border: Color,
-    /** A control's edge, at 3:1 on the page. */
-    val borderStrong: Color,
-    val tx: Color,
-    val tx2: Color,
-    /** The faintest text and icons: hints, what isn't chosen. Never on [pressed]. */
-    val tx3: Color,
-    /** The fill of the page's one main button. */
-    val ink: Color,
-    val onInk: Color,
-    /** The one colour for state: chosen, on, in progress, a link. */
-    val accent: Color,
-    val onAccent: Color,
-    /** Under what is chosen, its text staying [tx]. */
-    val accentSoft: Color,
-    val danger: Color,
-    val onDanger: Color,
-    val dangerSoft: Color,
-    /** Money coming in. */
-    val income: Color,
-) {
-    /** A recorded track's line. */
-    val track: Color get() = tx
-
-    /** Where the track broke off (no signal, not recorded): drawn dotted, never guessed. */
-    val trackGap: Color get() = tx3
-}
-
-val LightTokens = Tokens(
-    bg = Color(0xFFFDFDFC),
-    surface = Color(0xFFF9F9F8),
-    pressed = Color(0xFFF3F2F0),
-    sunken = Color(0xFFEBEAE7),
-    border = Color(0xFFE9E9E7),
-    borderStrong = Color(0xFF8F8E88),
-    tx = Color(0xFF21201C),
-    tx2 = Color(0xFF4C4C47),
-    tx3 = Color(0xFF73736C),
-    ink = Color(0xFF21201C),
-    onInk = Color(0xFFFDFDFC),
-    accent = Color(0xFF3F63A6),
-    onAccent = Color(0xFFFFFFFF),
-    accentSoft = Color(0xFFEDF1F8),
-    danger = Color(0xFFB3361F),
-    onDanger = Color(0xFFFFFFFF),
-    dangerSoft = Color(0xFFFBECE8),
-    income = Color(0xFF2F6F8F),
-)
-
-val DarkTokens = Tokens(
-    bg = Color(0xFF111110),
-    surface = Color(0xFF191918),
-    pressed = Color(0xFF1D1D1B),
-    sunken = Color(0xFF252523),
-    border = Color(0xFF2A2A28),
-    borderStrong = Color(0xFF6E6D67),
-    tx = Color(0xFFEEEEEC),
-    tx2 = Color(0xFFB5B3AD),
-    tx3 = Color(0xFF85837C),
-    ink = Color(0xFFEEEEEC),
-    onInk = Color(0xFF111110),
-    accent = Color(0xFF9DB6E6),
-    onAccent = Color(0xFF10213F),
-    accentSoft = Color(0xFF1B2232),
-    danger = Color(0xFFF0927C),
-    onDanger = Color(0xFF2A0D06),
-    dangerSoft = Color(0xFF33201B),
-    income = Color(0xFF86C3DF),
-)
+// The app's colours, the design system's tokens as they are (Tokens.kt, generated from
+// packages/design-tokens): a page, one surface above it and a hairline between them, text in
+// three greys, and colour kept for what is chosen, on or in progress.
 
 /** The tokens in light or [dark]. */
 fun appTokens(dark: Boolean): Tokens = if (dark) DarkTokens else LightTokens
@@ -117,7 +33,7 @@ val LocalDarkTheme = staticCompositionLocalOf { false }
 /**
  * How deep a surface sits. Each surface takes the level one deeper than the one it sits
  * on: a card on the page, a block (a label, a tile) in a card, an inset (a small mark)
- * in a block: the page, the surface, pressed and sunken. A card carries a hairline too
+ * in a block: the page, the surface, fill and fill-strong. A card carries a hairline too
  * ([cardBorder]), as the page and the surface are close.
  */
 enum class SurfaceLevel {
@@ -129,8 +45,8 @@ enum class SurfaceLevel {
     fun color(tokens: Tokens): Color = when (this) {
         Page -> tokens.bg
         Card -> tokens.surface
-        Block -> tokens.pressed
-        Inset -> tokens.sunken
+        Block -> tokens.fill
+        Inset -> tokens.fillStrong
     }
 
     companion object {
@@ -156,7 +72,7 @@ fun SurfaceLevel.fill(): Color = color(tokens)
 fun dividerColor(): Color = tokens.border
 
 /** How faint what is disabled is drawn. */
-const val DISABLED_ALPHA = 0.38f
+const val DISABLED_ALPHA = Opacity.disabled
 
 /**
  * What is drawn over a photo or a video, which stays dark in either mode: the scrim, at
@@ -165,20 +81,20 @@ const val DISABLED_ALPHA = 0.38f
 object MediaOverlay {
     /** Under a bar across the media, and over media set back. */
     val bar: Color
-        @Composable @ReadOnlyComposable get() = Color.Black.copy(alpha = 0.32f)
+        @Composable @ReadOnlyComposable get() = tokens.scrimBar
 
     /** Under a control or a label on the media, and over media dimmed behind one chosen. */
     val control: Color
-        @Composable @ReadOnlyComposable get() = Color.Black.copy(alpha = CONTROL_ALPHA)
+        @Composable @ReadOnlyComposable get() = tokens.scrim
 
-    const val CONTROL_ALPHA = 0.45f
+    val CONTROL_ALPHA = LightTokens.scrim.alpha
 
     /** Text and icons on either. */
-    val content = Color.White
+    val content = LightTokens.onMedia
 
     /** Secondary text on either. */
-    val contentVariant = Color.White.copy(alpha = 0.8f)
+    val contentVariant = LightTokens.onMediaVariant
 
     /** What is there but not yet reached or not on: a slider's track ahead of it. */
-    val contentDisabled = Color.White.copy(alpha = DISABLED_ALPHA)
+    val contentDisabled = LightTokens.onMedia.copy(alpha = DISABLED_ALPHA)
 }

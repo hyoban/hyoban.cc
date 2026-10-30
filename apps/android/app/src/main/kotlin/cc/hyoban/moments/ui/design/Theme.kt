@@ -29,6 +29,9 @@ import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import cc.hyoban.moments.ui.theme.Opacity
+import cc.hyoban.moments.ui.theme.SpringToken
+import cc.hyoban.moments.ui.theme.Springs
 import cc.hyoban.moments.ui.theme.tokens
 import kotlinx.coroutines.launch
 
@@ -89,17 +92,19 @@ class Shapes(
  */
 @Immutable
 class MotionScheme {
-    fun <T> fastSpatialSpec(): FiniteAnimationSpec<T> = spring(0.9f, 1400f)
-    fun <T> defaultSpatialSpec(): FiniteAnimationSpec<T> = spring(0.9f, 700f)
-    fun <T> slowSpatialSpec(): FiniteAnimationSpec<T> = spring(0.9f, 300f)
-    fun <T> fastEffectsSpec(): FiniteAnimationSpec<T> = spring(1f, 3800f)
-    fun <T> defaultEffectsSpec(): FiniteAnimationSpec<T> = spring(1f, 1600f)
-    fun <T> slowEffectsSpec(): FiniteAnimationSpec<T> = spring(1f, 800f)
+    fun <T> fastSpatialSpec(): FiniteAnimationSpec<T> = Springs.spatialFast.spec()
+    fun <T> defaultSpatialSpec(): FiniteAnimationSpec<T> = Springs.spatialDefault.spec()
+    fun <T> slowSpatialSpec(): FiniteAnimationSpec<T> = Springs.spatialSlow.spec()
+    fun <T> fastEffectsSpec(): FiniteAnimationSpec<T> = Springs.effectsFast.spec()
+    fun <T> defaultEffectsSpec(): FiniteAnimationSpec<T> = Springs.effectsDefault.spec()
+    fun <T> slowEffectsSpec(): FiniteAnimationSpec<T> = Springs.effectsSlow.spec()
 
     companion object {
         fun standard(): MotionScheme = MotionScheme()
     }
 }
+
+private fun <T> SpringToken.spec(): FiniteAnimationSpec<T> = spring(dampingRatio, stiffness)
 
 private val LocalTypography = staticCompositionLocalOf<Typography> { error("No AppTheme") }
 private val LocalShapes = staticCompositionLocalOf<Shapes> { error("No AppTheme") }
@@ -187,5 +192,5 @@ private class PressNode(private val source: InteractionSource) : Modifier.Node()
     }
 }
 
-private const val PRESSED = 0.1f
-private const val HOVERED = 0.06f
+private const val PRESSED = Opacity.press
+private const val HOVERED = Opacity.hover
