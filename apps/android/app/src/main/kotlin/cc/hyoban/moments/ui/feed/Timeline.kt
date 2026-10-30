@@ -315,6 +315,11 @@ class TimelineTracks(
     /** Days whose footprints have grown since they were read, read again while the old ones still show. */
     private val stale: MutableSet<String> = mutableSetOf(),
     private val read: (String) -> DayTrack?,
+    /**
+     * Whether the days with footprints, and the newest days' lines, have been read: until then
+     * the timeline waits, as its records bubbles would grow a line each as they came.
+     */
+    val ready: Boolean = true,
 ) {
     fun cached(day: String): DayTrack? = cache[day]
 
@@ -327,7 +332,7 @@ class TimelineTracks(
     }
 
     companion object {
-        val EMPTY = TimelineTracks(emptySet(), mutableMapOf()) { null }
+        val EMPTY = TimelineTracks(emptySet(), mutableMapOf(), read = { null })
     }
 }
 
@@ -342,6 +347,10 @@ private object TrackMemory {
 
     @Volatile
     var days: Set<String> = emptySet()
+
+    /** Whether [days] and the newest days' lines have been read once. */
+    @Volatile
+    var ready = false
 
     /** The store's revision the days and today's line were last read at. */
     @Volatile
@@ -358,17 +367,8 @@ fun knownDayTrack(day: String): DayTrack? = TrackMemory.cache[day]
 fun rememberTimelineTracks(container: AppContainer): TimelineTracks {
     val store = container.footprints
     val revision by store.revision.collectAsStateWithLifecycle()
-    val days by androidx.compose.runtime.produceState(TrackMemory.days, revision) {
-        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { store.days().toSet() }.also { TrackMemory.days = it }
-    }
-    return remember(days, revision) {
-        // Only today's footprints grow, and only when something was recorded since they were read;
-        // every other day's are as they were read.
-        if (revision != TrackMemory.revision) {
-            TrackMemory.revision = revision
-            TrackMemory.stale += java.time.LocalDate.now().toString()
-        }
-        TimelineTracks(days, TrackMemory.cache, TrackMemory.stale) { day ->
+    val read: (String) -> DayTrack? = remember(store) {
+        { day ->
             val points = store.points(cc.hyoban.moments.footprints.TrackSelection(day = day))
             val stretches = cc.hyoban.moments.footprints.trackSegments(points, budget = 400).filter { it.size > 1 }
             val stats = cc.hyoban.moments.footprints.trackStats(points)
@@ -377,7 +377,33 @@ fun rememberTimelineTracks(container: AppContainer): TimelineTracks {
             else DayTrack(stretches.map { stretch -> stretch.map { it.longitude to it.latitude } }, stats.metres, stats.recordedMillis)
         }
     }
+    val days by androidx.compose.runtime.produceState(TrackMemory.days.takeIf { TrackMemory.ready }, revision) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            val days = store.days().toSet()
+            // The first time, the newest days' lines too, which the first screen shows, so the
+            // timeline opens with them in their bubbles rather than the bubbles growing after.
+            if (!TrackMemory.ready) {
+                days.sortedDescending().take(PRELOADED_DAYS).filter { !TrackMemory.cache.containsKey(it) }.forEach { TrackMemory.cache[it] = read(it) }
+            }
+            days
+        }.also {
+            TrackMemory.days = it
+            TrackMemory.ready = true
+        }
+    }
+    return remember(days, revision) {
+        // Only today's footprints grow, and only when something was recorded since they were read;
+        // every other day's are as they were read.
+        if (revision != TrackMemory.revision) {
+            TrackMemory.revision = revision
+            TrackMemory.stale += java.time.LocalDate.now().toString()
+        }
+        TimelineTracks(days.orEmpty(), TrackMemory.cache, TrackMemory.stale, read, ready = days != null)
+    }
 }
+
+/** How many of the newest days with footprints are read before the timeline first shows. */
+private const val PRELOADED_DAYS = 7
 
 /** A day's footprints as a row after its bills: the line itself where a bill's icon goes, how far it went and for how long it moved; tapped for the day. */
 @Composable

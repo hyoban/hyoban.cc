@@ -168,16 +168,16 @@ fun FeedScreen(
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val loaded by container.repository.loaded.collectAsStateWithLifecycle()
+    val tracks = rememberTimelineTracks(container)
     // The app counts as started once the Moments on the phone are read, as the system measures
     // a start to the screen people came for, not the first frame of its skeleton.
-    ReportDrawnWhen { loaded }
+    ReportDrawnWhen { loaded && tracks.ready }
     val syncing by container.repository.syncing.collectAsStateWithLifecycle()
     val pull = rememberPulledRefresh(container)
     ShowRefreshErrors(container)
     // Everything, unfiltered: narrowing by kind and time is the search page's.
     val shown = moments
     val bills = rememberTimelineBills(container, shown, TimeFilter())
-    val tracks = rememberTimelineTracks(container)
     val ledgerNav = LocalLedgerNav.current
     val feedState = rememberLazyListState()
     val gridState = rememberLazyStaggeredGridState()
@@ -248,7 +248,7 @@ fun FeedScreen(
                 // keeps the system's icons clear on.
                 Box(Modifier.fillMaxSize().background(AppColors.page)) {
                     TabRefreshBox(pull) {
-                        LoadedContent(moments.isEmpty(), loading = !loaded || syncing, message = R.string.empty_moments) {
+                        LoadedContent(moments.isEmpty() || !tracks.ready, loading = !loaded || syncing || !tracks.ready, message = R.string.empty_moments) {
                             // The rows over the Moments, the changes, list or calendar and the
                             // filter, stand once above both views rather than heading each, so
                             // switching cross-fades only what changes and leaves them still.
