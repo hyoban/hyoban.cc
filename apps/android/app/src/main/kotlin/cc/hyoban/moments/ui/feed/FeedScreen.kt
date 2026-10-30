@@ -70,7 +70,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -212,9 +211,8 @@ fun FeedScreen(
     val header: FeedLeading.() -> Unit = {
         item(key = "title") {
             // The title as a folded top bar has it from the start: small in the middle, search a
-            // circle at the end, the two going up with the Moments as they scroll on. Room is kept
-            // under the circle for its shadow, which the header's edge would otherwise cut.
-            Box(Modifier.fillMaxWidth().padding(bottom = Space.s)) {
+            // circle at the end, the two going up with the Moments as they scroll on.
+            Box(Modifier.fillMaxWidth()) {
                 Text(
                     stringResource(R.string.title_moments),
                     style = AppTheme.typography.titleSmall,
@@ -392,7 +390,9 @@ private fun StatusBarFade() {
 @Composable
 private fun CollapsingHeader(scroll: HeaderScroll, content: @Composable () -> Unit) {
     Box(
-        Modifier.clipToBounds().layout { measurable, constraints ->
+        // Not clipped: what it has folded away goes up off the top of the screen, and the search
+        // circle's shadow may fall over the Moments under it.
+        Modifier.layout { measurable, constraints ->
             val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity))
             scroll.height = placeable.height.toFloat()
             val shown = (placeable.height + scroll.offset.roundToInt()).coerceIn(0, placeable.height)

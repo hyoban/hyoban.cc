@@ -254,8 +254,9 @@ fun MomentFeed(
                 var month: String? = null
                 val bannered = mutableSetOf<String>()
                 timeline.forEach { (day, dayMoments, dayItems) ->
-                    // Right under a month's header or a trip's banner, a day needs less room above it.
-                    var headed = false
+                    // Right under a month's header or a trip's banner, a day needs less room above it; so
+                    // does the conversation's first day, right under the page's own top.
+                    var headed = chat && day == timeline.first().first
                     // The conversation has no month headings: its capsules carry the date, and the year when it isn't this one.
                     if (months && !chat && day.take(7) != month) {
                         headed = true
@@ -284,7 +285,7 @@ fun MomentFeed(
                             DateCapsule(
                                 day,
                                 onDay?.let { { it(day) } },
-                                Modifier.animateItem().padding(horizontal = Space.gutter).padding(top = if (headed) 0.dp else (Space.section - CAPSULE_SLACK).coerceAtLeast(0.dp), bottom = (Space.m - CAPSULE_SLACK).coerceAtLeast(0.dp)),
+                                Modifier.animateItem().then(if (day == timeline.first().first) Modifier.pullUp(CAPSULE_SLACK - Space.xxs) else Modifier).padding(horizontal = Space.gutter).padding(top = if (headed) 0.dp else (Space.section - CAPSULE_SLACK).coerceAtLeast(0.dp), bottom = (Space.m - CAPSULE_SLACK).coerceAtLeast(0.dp)),
                                 note = dayNote(day),
                                 description = pluralStringResource(R.plurals.count_moments, dayMoments.size, dayMoments.size),
                             )
@@ -424,6 +425,16 @@ fun Modifier.dayHeaderSpacing(gap: Dp, below: Dp = Space.m): Modifier {
 @Composable
 private fun dayPillText(label: String, count: Int, spent: String? = null): String =
     listOfNotNull(label, if (count > 1) pluralStringResource(R.plurals.count_moments, count, count) else null, spent).joinToString("\u2003")
+
+/**
+ * Up by [by], taking that much off its height: the first day's capsule, its touch target's room
+ * above its words laid over the page's top rather than adding to the gap under it.
+ */
+private fun Modifier.pullUp(by: Dp): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val cut = by.roundToPx().coerceAtMost(placeable.height)
+    layout(placeable.width, placeable.height - cut) { placeable.place(0, -cut) }
+}
 
 /** The Moments month by month, as `YYYY-MM` and that month's, in the order given. */
 private fun byMonth(moments: List<MomentRecord>): List<Pair<String, List<MomentRecord>>> =
