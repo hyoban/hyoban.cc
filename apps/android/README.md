@@ -404,7 +404,7 @@ middle (今天, or the date and weekday, the year when it isn't this one, a trip
 before it, and a trip's days from the first), then reads from its morning. A Moment is a bubble from the right, its photos across its
 top (past three, the third counts the rest) and a faint where and when after the last line of
 its words, as Telegram sets a message's time, or under them when they don't fit (a trip's
-banner marks its days, so they don't name it). Moments one after another are a run, barely
+banner marks its days, so they don't name it); what was eaten shows only on its page. Moments one after another are a run, barely
 apart, and only the last of a run curls a tail out of its foot; the bills, charges and footprints between
 Moments come from the left in one outlined bubble with its tail, a line each led by its time, and its amount, no
 total under them, more than five showing four and how many more. One record's

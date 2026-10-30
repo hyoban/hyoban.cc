@@ -132,8 +132,8 @@ fun MomentCard(
 
 /**
  * A Moment as the conversation has it: a bubble from the right on the pressed fill, its photos
- * across its top, its words, and a faint line at its foot, to the right, of where, which trip
- * and when, and whether it is private or not yet published.
+ * across its top, its words (what was eaten left to its page), and after them, faint, where,
+ * which trip and when, and whether it is private or not yet published.
  */
 @Composable
 private fun MomentBubble(
@@ -192,23 +192,14 @@ private fun MomentBubble(
                         if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = AppIcons.Phone)
                     }
                 }
-                val food = foodLine(moment.food)
-                if (moment.text.isNotBlank() && food == null) {
+                // What was eaten stays on the Moment's page: the conversation shows the words alone.
+                if (moment.text.isNotBlank()) {
                     // As Telegram has it, where and when follow the last line of the words, on
                     // a line of their own only when they don't fit there.
                     TrailingFoot(if (moment.media.isNotEmpty()) Modifier.fillMaxWidth() else Modifier, foot) {
                         Text(moment.text, style = AppTheme.typography.body, maxLines = 8, overflow = TextOverflow.Ellipsis, onTextLayout = it)
                     }
                 } else {
-                    if (moment.text.isNotBlank()) {
-                        Text(moment.text, style = AppTheme.typography.body, maxLines = 8, overflow = TextOverflow.Ellipsis)
-                    }
-                    food?.let { line ->
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
-                            Icon(AppIcons.Food, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(16.dp))
-                            Text(line, style = AppTheme.typography.bodySmall, color = tokens.tx2, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                    }
                     Box(Modifier.align(Alignment.End)) { foot() }
                 }
             }
