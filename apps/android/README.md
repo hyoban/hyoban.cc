@@ -430,7 +430,8 @@ under them, which scrolls away and fades in small between the circles over a sho
 page; the timeline's search floats so too, its title is small in the middle of the top from the start,
 as a folded bar has it, and goes up with the Moments, coming back as they are scrolled back, and its Moments run under the status bar behind a short fade
 of the page, its icons turning dark or light with what passes under; scrolling it on folds the floating
-tabs away, and scrolling back brings them again. An editor (writing a Moment or a bill) keeps its row of close, a switch and 保存. The car's
+tabs away, and scrolling back brings them again. The tabs float over a fade of the page from
+clear to whole, which comes and goes with them. An editor (writing a Moment or a bill) keeps its row of close, a switch and 保存. The car's
 charges (from `/v2`) are records on their days. The
 filters are the search page's: what kind (everything, Moments, bills or charges, each with how
 many) and when (a year, then a month); with nothing typed, a filter lists all it lets through, a

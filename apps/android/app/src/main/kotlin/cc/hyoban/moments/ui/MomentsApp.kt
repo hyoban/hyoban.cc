@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui
 
+import androidx.compose.ui.graphics.Brush
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
@@ -934,9 +935,13 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 exit = slideOutVertically(transitions.defaultSpatialSpec()) { it },
                 modifier = navigation.align(Alignment.BottomCenter).fillMaxWidth(),
             ) {
-                // The tabs floating over the page in the middle, the tab's button beside them at the end.
+                // The tabs floating over the page in the middle, the tab's button beside them at the end,
+                // over a fade of the page from clear to whole, which the page passes under and which
+                // comes and goes with them.
+                val page = AppColors.page
                 Box(
                     Modifier.fillMaxWidth()
+                        .background(Brush.verticalGradient(0f to page.copy(alpha = 0f), 0.7f to page))
                         .onSizeChanged { barHeight = with(density) { it.height.toDp() } }
                         .navigationBarsPadding()
                         .padding(start = Space.gutter, end = Space.gutter, bottom = Space.m, top = Space.s),
