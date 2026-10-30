@@ -1,8 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
-import cc.hyoban.moments.ui.design.emphasized
 
-import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.animation.AnimatedVisibility
@@ -17,8 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import cc.hyoban.moments.ui.design.FilterChip
-import cc.hyoban.moments.ui.design.FilterChipDefaults
-import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
@@ -105,19 +101,13 @@ private fun ChipRow(tag: String, options: List<Int?>, selected: Int?, label: @Co
     }
 }
 
-/** One year or month, checked on the accent's soft tint when chosen. */
+/** One year or month, on the accent's soft tint when chosen, as the kinds above are: no check, so a chip keeps its width. */
 @Composable
 private fun OptionChip(tag: String, option: Int?, selected: Int?, label: @Composable (Int?) -> String, onSelect: (Int?) -> Unit) {
     FilterChip(
         selected = option == selected,
         onClick = { onSelect(option) },
-        label = { Text(label(option), style = if (option == selected) AppTheme.typography.label.emphasized else AppTheme.typography.label) },
-        // The chosen one checked, as Material 3 has a selected filter chip.
-        leadingIcon = if (option == selected) {
-            { Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
-        } else {
-            null
-        },
+        label = { Text(label(option), style = AppTheme.typography.label) },
         modifier = Modifier.testTag("$tag${option ?: "all"}"),
     )
 }

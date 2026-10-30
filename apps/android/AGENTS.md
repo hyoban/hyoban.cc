@@ -100,6 +100,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   holds the changes to publish, the ledger's month and pages, and the settings, a page per
   section with no switches on 我 itself. The calendar view is gone; a tab never has tabs of
   its own, except the ledger's page under 我.
+- What stands above and below lines up on shared lines down the page, as type sits on a baseline.
 - Keep the smooth (continuous) corners; that has been decided twice.
 - A top bar has at most two actions and no overflow menu: switching between what the page
   is one of (the ledger's books) is the title's dropdown (`TitleMenu`), and a control over
