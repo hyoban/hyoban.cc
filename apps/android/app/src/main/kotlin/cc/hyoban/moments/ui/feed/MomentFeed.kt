@@ -301,9 +301,10 @@ fun MomentFeed(
                                 bottom = if (item.key == lastChat) Space.s else 0.dp,
                             )
                             when (item) {
+                                // Where a trip's banner marks its days, the bubbles within them needn't name it.
                                 is ChatItem.Moment -> MomentCard(
                                     item.moment, places,
-                                    trip = if (showTrip) tripOf(item.moment, trips) else null,
+                                    trip = if (showTrip && onTrip == null) tripOf(item.moment, trips) else null,
                                     urls = urls,
                                     onOpen = { onMoment(item.moment.uid) },
                                     modifier = itemModifier,

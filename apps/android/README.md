@@ -402,7 +402,8 @@ this month's spending in figures with a bar for each day, and four rows: 账单�
 trip's days are a conversation with oneself: each day opens with its date in a capsule at the
 middle (今天, or the date and weekday, the year when it isn't this one, a trip's with 第 n 天
 before it, and a trip's days from the first), then reads from its morning. A Moment is a bubble from the right, its photos across its
-top and a faint line of where and when at its foot; the bills, charges and footprints between
+top and a faint line of where and when at its foot (a trip's banner marks its days, so they
+don't name it); the bills, charges and footprints between
 Moments come from the left in one outlined bubble, a line each with its time and amount, no
 total under them, more than five showing four and how many more. One record's
 bubble opens it; several, their day. A day with footprints ends with its 轨迹, the day's line for
