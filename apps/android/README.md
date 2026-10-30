@@ -368,7 +368,7 @@ ledger as JSON, which 从备份恢复 reads back; 导出 CSV writes the bills wi
 and Android's backup, read whole after each change. Bills are private: 我 → 记录项与公开
 (`moments://items`) makes a book's new bills public, and 记一笔's 公开 chip says so for one
 bill. A public expense or income publishes with 全部发布到网站 as what is public of it alone,
-its amount, kind, category and note (`data/store/Outside.kt`): a bill of a Moment as a part of
+its kind, amount, currency, category and note (`data/store/Outside.kt`): a bill of a Moment as a part of
 that Moment, any other as an entry of its own; one made private again is taken off the site.
 发布更改 lists them under 账单; `ledger/ICostImport`,
 `ledger/Accounting` (balances, sums, refunds) and `ledger/Links` are plain Kotlin with tests

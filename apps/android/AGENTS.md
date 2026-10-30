@@ -77,74 +77,29 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   segmented control, fields, list rows, menus, dialogs, sheets, the top bar, messages,
   pull-to-refresh and swipe-to-revert. Some keep Material's names so call sites read as before.
   A list laid out row by row (a lazy list) draws its group with `groupedRow`.
-- A page and one surface above it, set apart by a 1px hairline (`cardBorder`, `dividerColor`),
-  never by stacked greys. Shadows are few and faint (`Elevation`): none where a hairline does,
-  a soft one only on what floats over the page or the map (the tab bar, the floating
-  buttons), deeper only while something is dragged. Text in three greys; the one accent
-  (`tokens.accent`) only for state: chosen, on, in progress, a link. The page's one main
-  action is in the ink (`tokens.ink`), at most one a page.
-- Few cards: the timeline's Moments, bills and trip banners sit on the page itself, spaced
-  apart, a Moment's photos in rounded corners of their own; surfaces with hairlines are for
-  groups of settings, sheets, dialogs and what floats.
-- Don't crowd a page: a screen carries what the page is for, and space rather than lines sets
-  things apart. No guide lines (a rail or axis drawn down a list, dividers between rows on the
-  page) and no boxes round figures; rows sit on the page, and inside a sheet or dialog no card
-  is nested.
-- The tabs float: a capsule of icons alone (named for TalkBack) at the page's foot, the tab's
-  ink button beside it.
-- The timeline is immersive, with no top bar to fold: its title, counts and search head the
-  list and scroll away with it, the page running up under the status bar behind a short fade
-  of the page's colour.
-- Three tabs: 时间线, 地图, 我. Everything that happened goes on the timeline (Moments, the
-  ledger's bills, a banner where a trip begins); the map lists the trips in its sheet; 我
-  holds the changes to publish, the ledger's month and pages, and the settings, a page per
-  section with no switches on 我 itself. The calendar view is gone; a tab never has tabs of
-  its own, except the ledger's page under 我.
-- What stands above and below lines up on shared lines down the page, as type sits on a baseline.
-- Keep the smooth (continuous) corners; that has been decided twice.
-- A top bar has at most two actions and no overflow menu: switching between what the page
-  is one of (the ledger's books) is the title's dropdown (`TitleMenu`), and a control over
-  the subtitle's figures sits beside it (`subtitleAction`).
-- Settings are grouped lists (`SegmentedGroup` with `SwitchRow` and `ActionRow`): one surface
-  with hairlines between rows, switches trailing (`AppSwitch`), supporting text at most three
-  lines; a longer explanation goes behind an info row's dialog, not on the page.
-- What floats over a photo or the map (back and the like, `FloatingButton`) is a true circle,
-  40dp drawn in a 48dp target, never a narrow pill.
-- Touch targets are at least 48dp, with what is tapped drawn at its own size inside: a button 40dp,
-  its 48dp kept in the layout (`minimumInteractiveComponentSize`), a chip 36dp, laid out at that so
-  rows of chips stand 8dp apart, Compose widening its target. Scrims over media, with white on them.
-- Words are Chinese first, with English beside them in `values-en`, plain and short, with
-  TalkBack descriptions for what is shown. The Moments' own words are never changed.
-- Pieces of a line (counts, a date and a place) are set apart by an em space, ` `,
-  never by " · ": the site does the same.
-- Share targets are named by what happens at the other end: 发布到 for one that ends in
-  a public post (X, B 站, Threads, 小红书, 抖音), 分享到 for one sent to a chat
-  (Telegram), and a destination that names itself (微信朋友圈, 飞书) alone. Each is drawn as an
-  outline after the app's own mark, in the icon set's hand (the 分享去处 group), never with the
-  app's logo or colours.
+- The design rules themselves (layers and hairlines, the accent and the ink, few cards, the
+  tabs, the timeline, top bars, settings groups, touch sizes, words, share targets, the two
+  palette exceptions, motion and back) are the artifact's README and component cards; read
+  them there rather than here. What follows is only where Android carries them out.
+- Layers: the hairline is `cardBorder` and `dividerColor`, shadows `Elevation` drawn by
+  `softShadow`, the colours `tokens.accent` and `tokens.ink`, a surface's level `SurfaceLevel`.
+- Top bars switch between what the page is one of with `TitleMenu` and put a control over the
+  subtitle's figures in `subtitleAction`. Settings are `SegmentedGroup` with `SwitchRow` and
+  `ActionRow`, switches `AppSwitch`. What floats over a photo or the map is `FloatingButton`.
+- A 40dp button keeps its 48dp target in the layout (`minimumInteractiveComponentSize`); a 36dp
+  chip is laid out at its own size, so rows of chips stand 8dp apart, Compose widening its target.
+- Words are in `values` (Chinese) and `values-en`, with TalkBack descriptions for what is shown.
+- The map's year colours are `ui/map/Years.kt`, from `packages/trip-map/src/theme.ts`: change both
+  sides together. The ledger's charts are drawn on a Compose `Canvas` (`ui/ledger/Charts.kt`), not
+  with a chart library.
 - Follow what the app should be rather than the web version, except where it is asked
   to match: the map's features and the trip playback follow the site's player in
   `packages/trip-map/src/player`, with the route always moving while it plays.
-- An exception to the palette, asked for: the map's year colours are the site's palette as it is
-  (`ui/map/Years.kt`, from `packages/trip-map/src/theme.ts`), in both modes and with white
-  numbers on the dots, not harmonized with the accent.
-  Change them on both sides together.
-- The ledger's charts are drawn on a Compose `Canvas` (`ui/ledger/Charts.kt`), not with
-  a chart library. One series takes the primary; categories take the data-viz palette's
-  six colour-blind-safe hues in fixed order, the period's biggest first, and the rest are
-  grey 其他, another exception to the palette.
 
 ## Motion and navigation
 
-- A page goes out the way it came in. A card grows into its page as an App Store card
-  does, and the page shrinks back into it.
 - Shared elements must not fight predictive back, drag-to-dismiss or paging in the
   viewer; check entering and leaving, and the in-between frames, on the phone.
-- System back works everywhere a close button does, and back from any of the three
-  tabs leaves the app.
-- Pages lead to each other wherever they can, and a link to a page already under the
-  current one goes back to it rather than opening it again.
-- Show a refresh indicator only for a refresh the user pulled for.
 - Animate map layers a frame at a time with constant paint values, each layer's
   transition set to 0: MapLibre lays a source out again for a data-driven value, a
   frame or more late and drawing the default meanwhile, and eases every change over
@@ -170,7 +125,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   shape to `/v1` on an API without it). Don't add writes that bypass it.
 - The ledger (its bills on the timeline, its pages under 我) and the footprints are the
   phone's, out of Android's backup, and private by default: a bill goes out only when its book
-  or itself says public, as its amount, kind, category and note, never its account or
+  or itself says public, as its kind, amount, currency, category and note, never its account or
   balance; a span of the footprints only when made public, as its simplified line. Both go
   with 全部发布到网站 like everything else (`data/store/Outside.kt`); the ledger's only other
   request is for public exchange rates, when asked, besides naming where the footprints put a

@@ -15,7 +15,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.FilterChip
+import cc.hyoban.moments.ui.design.FilterChipDefaults
+import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
@@ -105,13 +108,18 @@ private fun ChipRow(tag: String, options: List<Int?>, selected: Int?, label: @Co
     }
 }
 
-/** One year or month, on the accent's soft tint when chosen, as the kinds above are: no check, so a chip keeps its width. */
+/** One year or month, on the accent's soft tint with a check when chosen, as the kinds above are. */
 @Composable
 private fun OptionChip(tag: String, option: Int?, selected: Int?, label: @Composable (Int?) -> String, onSelect: (Int?) -> Unit) {
     FilterChip(
         selected = option == selected,
         onClick = { onSelect(option) },
         label = { Text(label(option), style = AppTheme.typography.label) },
+        leadingIcon = if (option == selected) ({ SelectedCheck() }) else null,
         modifier = Modifier.testTag("$tag${option ?: "all"}"),
     )
 }
+
+/** The check before a chosen chip's words: a second sign of the choice besides its tint. */
+@Composable
+fun SelectedCheck() = Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize))
