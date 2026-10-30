@@ -37,8 +37,8 @@ it byte for byte; the store reads either layout.
 ## Building from the API
 
 With `MOMENTS_API_TOKEN` set, in the environment or `.env`, the site is built from the API
-instead: `src/data/api-data.ts` fetches `/v2/export` once, writes it under
-`.artifacts/api-data/` in this layout, and points the store there. `MOMENTS_API_URL`
+instead: `apps/web/src/data/api-data.ts` fetches `/v2/export` once, writes it under
+`apps/web/.artifacts/api-data/` in this layout, and points the store there. `MOMENTS_API_URL`
 overrides the address. Without a token the build reads `data/`; a token that fails to fetch
 fails the build. The scripts always read `data/`.
 

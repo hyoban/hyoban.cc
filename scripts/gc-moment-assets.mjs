@@ -12,7 +12,7 @@ import { getReferencedR2Objects, readMomentRecords } from './lib/moment-assets.m
 
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../', import.meta.url))
-const config = JSON.parse(await readFile(join(root, 'src/data/asset-config.json'), 'utf8'))
+const config = JSON.parse(await readFile(join(root, 'apps/web/src/data/asset-config.json'), 'utf8'))
 const options = parseArguments(process.argv.slice(2))
 
 if (options.mode === 'dry-run') {

@@ -2,11 +2,11 @@ import { parseArgs } from 'node:util'
 
 import { getDayOffset, getDistanceKm, getLocation } from '@hyoban/trip-map'
 
-import { locations } from '../src/data/locations.ts'
-import { trips } from '../src/data/trips.ts'
+import { locations } from '../apps/web/src/data/locations.ts'
+import { trips } from '../apps/web/src/data/trips.ts'
 import { readTripMoments } from './lib/trip-moments.mjs'
 
-// Lists runs of days with Moments far from home that no trip in src/data/trips.ts
+// Lists runs of days with Moments far from home that no trip in apps/web/src/data/trips.ts
 // covers yet, as candidates to add there. It only reports; nothing is written.
 //
 //   pnpm trips:candidates [--home wuwei] [--radius 100] [--min-days 2]

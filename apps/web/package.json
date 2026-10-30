@@ -1,0 +1,35 @@
+{
+  "name": "@hyoban/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The site at hyoban.cc: posts, Moments, the calendar, the map and the trips, built by Astro from the API or data/.",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --force",
+    "build": "astro build --force",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@hyoban/data-spec": "workspace:*",
+    "@hyoban/drawer": "workspace:*",
+    "@hyoban/trip-map": "workspace:*",
+    "fflate": "0.8.3",
+    "modern-screenshot": "4.7.0",
+    "three": "0.186.1",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@astrojs/markdown-remark": "7.3.5",
+    "@astrojs/rss": "4.0.19",
+    "@astrojs/sitemap": "^3.7.4",
+    "@types/three": "0.186.0",
+    "astro": "^7.4.4",
+    "satori": "^0.63.2",
+    "sharp": "^0.35.5",
+    "typescript": "^6.0.3",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "wrangler": "^4.155.0"
+  }
+}

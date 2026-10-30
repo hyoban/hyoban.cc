@@ -1,6 +1,6 @@
 import { compareMoments, getLocation } from '@hyoban/trip-map'
 
-import { locations } from '../../src/data/locations.ts'
+import { locations } from '../../apps/web/src/data/locations.ts'
 import { readMomentRecords } from './moment-assets.mjs'
 
 export const resolveLocation = (id) => ({ id, ...getLocation(locations, id) })

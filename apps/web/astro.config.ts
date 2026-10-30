@@ -1,5 +1,6 @@
 import { unified } from '@astrojs/markdown-remark'
 import Sitemap from '@astrojs/sitemap'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'astro/config'
 import { SITE_URL } from './src/consts'
 import { apiData } from './src/data/api-data.ts'
@@ -27,6 +28,8 @@ export default defineConfig({
     }),
   ],
   vite: {
+    // One .env at the repository's root, shared with the scripts.
+    envDir: fileURLToPath(new URL('../..', import.meta.url)),
     plugins: [devRewrites()],
     // The car loads three.js on demand; bundling its pieces up front saves the dev server
     // finding them mid-page and throwing the page's modules away to rebundle.

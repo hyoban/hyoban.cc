@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
-import { getCoverThumbnailUrl, getFrameSources, getResizedSources } from '../../src/asset-url.ts'
+import {
+  getCoverThumbnailUrl,
+  getFrameSources,
+  getResizedSources,
+} from '../../apps/web/src/asset-url.ts'
 
 // An original the API kept is resized by Cloudflare Images to the widths the pipeline
 // gives its own images, never wider than the original or 1920; a kept video's poster is

@@ -24,9 +24,9 @@ const { momentRecordSchema } = await fromRepository('packages/data-spec/src/inde
 const { entrySchema, getEntryFile, momentToEntry } = await fromRepository(
   'packages/data-spec/src/entry.ts',
 )
-const { readMomentRecords } = await fromRepository('src/data/store.ts')
+const { readMomentRecords } = await fromRepository('apps/web/src/data/store.ts')
 const config = JSON.parse(
-  await readFile(join(repositoryPath, 'src/data/asset-config.json'), 'utf8'),
+  await readFile(join(repositoryPath, 'apps/web/src/data/asset-config.json'), 'utf8'),
 )
 const inputs = await Promise.all(
   options.media.map(async (mediaPath) => {

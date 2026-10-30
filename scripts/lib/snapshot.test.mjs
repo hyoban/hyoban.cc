@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'vite-plus/test'
 
-import { writeSnapshot } from '../../src/data/snapshot.ts'
-import { listJsonFiles, readJson } from '../../src/data/store.ts'
+import { writeSnapshot } from '../../apps/web/src/data/snapshot.ts'
+import { listJsonFiles, readJson } from '../../apps/web/src/data/store.ts'
 
 // The backup writes the API's export over data/: what is already there stays byte for
 // byte, what the API no longer has goes, and what isn't the API's stays.

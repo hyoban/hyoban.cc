@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
-import { getDeviceEvents, getDeviceLanes, getDeviceSpans } from '../../src/data/devices.ts'
+import { getDeviceEvents, getDeviceLanes, getDeviceSpans } from '../../apps/web/src/data/devices.ts'
 import { devicesSchema } from '@hyoban/data-spec'
 
 const devices = devicesSchema.parse({

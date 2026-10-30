@@ -1,15 +1,15 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
 
-import { compareMediaItems, getMediaItemKey } from '../src/media.ts'
+import { compareMediaItems, getMediaItemKey } from '../apps/web/src/media.ts'
 
 const TMDB_API_BASE_URL = 'https://api.themoviedb.org/3'
 const LANGUAGE = 'zh-CN'
 
 const rootUrl = new URL('../', import.meta.url)
 const envUrl = new URL('.env', rootUrl)
-const recommendationsUrl = new URL('src/data/media-recommendations.json', rootUrl)
-const generatedUrl = new URL('src/data/media.generated.json', rootUrl)
+const recommendationsUrl = new URL('apps/web/src/data/media-recommendations.json', rootUrl)
+const generatedUrl = new URL('apps/web/src/data/media.generated.json', rootUrl)
 const force = process.argv.includes('--force')
 
 loadDotEnv(envUrl)
@@ -17,7 +17,7 @@ loadDotEnv(envUrl)
 const recommendations = JSON.parse(await readFile(recommendationsUrl, 'utf8'))
 
 if (!Array.isArray(recommendations)) {
-  throw new TypeError('src/data/media-recommendations.json must contain an array.')
+  throw new TypeError('apps/web/src/data/media-recommendations.json must contain an array.')
 }
 
 const cachedItemsByKey = force ? new Map() : await readCachedItemsByKey()
@@ -44,7 +44,7 @@ await writeFile(
 )
 
 console.log(
-  `Generated ${items.length} media item(s) at src/data/media.generated.json (${stats.reused} reused, ${stats.fetched} fetched${force ? ', forced' : ''}).`,
+  `Generated ${items.length} media item(s) at apps/web/src/data/media.generated.json (${stats.reused} reused, ${stats.fetched} fetched${force ? ', forced' : ''}).`,
 )
 
 async function resolveRecommendation(recommendation) {

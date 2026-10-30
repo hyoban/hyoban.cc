@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { trips } from '../src/data/trips.ts'
+import { trips } from '../apps/web/src/data/trips.ts'
 import { buildTrip, getDayPlaces, getWeatherKey } from '@hyoban/trip-map'
 import { readTripMoments, resolveLocation } from './lib/trip-moments.mjs'
 
@@ -11,7 +11,7 @@ import { readTripMoments, resolveLocation } from './lib/trip-moments.mjs'
 // the archive hasn't caught up with yet (the last few days) are tried again next run.
 
 const root = fileURLToPath(new URL('../', import.meta.url))
-const weatherFile = join(root, 'src/data/trip-weather.json')
+const weatherFile = join(root, 'apps/web/src/data/trip-weather.json')
 const moments = await readTripMoments()
 const cached = JSON.parse(await readFile(weatherFile, 'utf8').catch(() => '{}'))
 const weather = {}

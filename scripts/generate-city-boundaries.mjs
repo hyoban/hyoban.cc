@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url'
 // /map/cities.json and the Android app ships it as an asset.
 
 const root = fileURLToPath(new URL('../', import.meta.url))
-const output = join(root, 'src/data/boundaries/cities.json')
+const output = join(root, 'apps/web/src/data/boundaries/cities.json')
 const source = 'https://geo.datav.aliyun.com/areas_v3/bound'
 // Provinces taken whole: their own features are districts.
 const WHOLE = new Set(['11', '12', '31', '50', '71', '81', '82'])
@@ -112,7 +112,7 @@ try {
     properties: { ...feature.properties, ...getCentre(feature.geometry) },
   }))
 
-  await mkdir(join(root, 'src/data/boundaries'), { recursive: true })
+  await mkdir(join(root, 'apps/web/src/data/boundaries'), { recursive: true })
   await writeFile(output, `${JSON.stringify({ features: centred, type: 'FeatureCollection' })}\n`)
   console.log(`${features.length} cities written to ${output}`)
 } finally {

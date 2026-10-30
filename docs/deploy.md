@@ -6,17 +6,18 @@ the API's inputs.
 
 ## The site
 
-A Worker with static assets (`wrangler.jsonc`: `hyoban-cc`, serving `./dist`),
-deployed by **Workers Builds** from the repository root:
+`apps/web`, a Worker with static assets (`apps/web/wrangler.jsonc`: `hyoban-cc`,
+serving `./dist`), deployed by **Workers Builds**:
 
-- build command `pnpm build`, deploy command `npx wrangler deploy`;
+- root directory `apps/web`, installing from the repository root, build command
+  `pnpm build`, deploy command `npx wrangler deploy`;
 - build variables: `MOMENTS_API_TOKEN`, so the build reads the API rather than
   `data/`, `VITE_MAPBOX_TOKEN`, and `MAPBOX_STATIC_TOKEN`, a token without URL
   restrictions that draws the map pages' placeholders (without it they're left out);
   Workers Builds sets `CI`, which turns on the Moments' share cards;
-- share cards are cached between builds under `node_modules/.astro/share-cards`, which
-  Cloudflare's build cache keeps, and redrawn only when what they show or
-  `src/og-image.ts` changes.
+- share cards are cached between builds under `apps/web/node_modules/.astro/share-cards`,
+  which Cloudflare's build cache keeps, and redrawn only when what they show or
+  `apps/web/src/og-image.ts` changes.
 
 It builds on every push to `main`, and again whenever the API takes a write the site
 shows: the API calls the build's **deploy hook**, kept in the API's `DEPLOY_HOOK_URL`
@@ -87,7 +88,7 @@ the deployed database ([data.md](data.md)).
 The API comes first: the site's build reads it, and the API needs the site's deploy
 hook, which exists only once the site's build does.
 
-1. In the account `src/data/asset-config.json` names, create the R2 bucket
+1. In the account `apps/web/src/data/asset-config.json` names, create the R2 bucket
    `blog-images` and connect `image.hyoban.cc` to it.
 2. `wrangler d1 create hyoban-cc --location apac`, and put the new id in
    `apps/api/wrangler.jsonc`.
@@ -95,7 +96,7 @@ hook, which exists only once the site's build does.
 4. Set the API's secrets, all but `DEPLOY_HOOK_URL`, connect `apps/api` to Workers
    Builds as above and push to `main`.
 5. Restore the records with `vp run data:import --remote` ([data.md](data.md)).
-6. Connect the repository root to Workers Builds as the `hyoban-cc` Worker, with
+6. Connect `apps/web` to Workers Builds as the `hyoban-cc` Worker, with
    `MOMENTS_API_TOKEN` set to one of the API's tokens and the Mapbox variables, add
    the custom domain `hyoban.cc`, and enable Images transformations on its zone.
 7. Create the site build's deploy hook and set it as the API's `DEPLOY_HOOK_URL`.

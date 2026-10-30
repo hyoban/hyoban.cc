@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
-import { getCalendarAnniversaries } from '../../src/anniversaries.ts'
+import { getCalendarAnniversaries } from '../../apps/web/src/anniversaries.ts'
 
 test('marks the lunar birthday on its Gregorian date each year', () => {
   assert.deepEqual(getCalendarAnniversaries('2024-09-18'), [

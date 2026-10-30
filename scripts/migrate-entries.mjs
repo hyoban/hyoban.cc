@@ -16,7 +16,7 @@ import {
   tripToCollection,
 } from '@hyoban/data-spec/entry'
 import { getMomentFile, momentRecordSchema, tripRecordSchema } from '@hyoban/data-spec'
-import { getDataRoot, listJsonFiles, readJson } from '../src/data/store.ts'
+import { getDataRoot, listJsonFiles, readJson } from '../apps/web/src/data/store.ts'
 
 // vp run data:migrate [--write] [--rollback] [--force]
 //

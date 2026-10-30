@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { test } from 'vite-plus/test'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
-const postsRoot = join(root, 'src/content/posts')
+const postsRoot = join(root, 'apps/web/src/content/posts')
 const assetPattern = /https:\/\/image\.hyoban\.cc\/posts\/([^)"'\s]+)/g
 const semanticFilenamePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*\.(?:avif|gif|jpe?g|png|webp)$/
 

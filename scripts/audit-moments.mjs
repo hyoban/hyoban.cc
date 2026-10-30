@@ -13,7 +13,7 @@ import {
 
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../', import.meta.url))
-const config = JSON.parse(await readFile(join(root, 'src/data/asset-config.json'), 'utf8'))
+const config = JSON.parse(await readFile(join(root, 'apps/web/src/data/asset-config.json'), 'utf8'))
 const options = parseArguments(process.argv.slice(2))
 const records = await readMomentRecords()
 const objects = getReferencedR2Objects(records)

@@ -18,7 +18,7 @@ import {
   tripToCollection,
 } from '../src/entry.ts'
 import { momentRecordSchema, tripRecordSchema } from '../src/index.ts'
-import { readMomentRecords, readTripRecords } from '../../../src/data/store.ts'
+import { readMomentRecords, readTripRecords } from '../../../apps/web/src/data/store.ts'
 
 // The repository's data/ in the first shape, whichever layout it is in.
 const moments = readMomentRecords().map(({ record }) => record)

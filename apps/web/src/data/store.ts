@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { dirname, join } from 'node:path'
 import {
   collectionSchema,
   collectionToTrip,
@@ -38,8 +38,14 @@ import {
 // migration or written since by a script that still writes them, are read as entries too.
 // What still works on Moments and trips reads them back in that shape.
 
-/** The repository's `data/`, the committed copy. */
-export const dataRoot = resolve(process.cwd(), 'data')
+/** The repository's `data/`, the committed copy, found from the site or the repository's root. */
+export const dataRoot = join(findRepositoryRoot(process.cwd()), 'data')
+
+function findRepositoryRoot(directory: string): string {
+  if (existsSync(join(directory, 'pnpm-workspace.yaml'))) return directory
+  const parent = dirname(directory)
+  return parent === directory ? process.cwd() : findRepositoryRoot(parent)
+}
 
 /** Set by the build to the directory it wrote the API's snapshot to. */
 export const DATA_ROOT_VARIABLE = 'HYOBAN_DATA_ROOT'
