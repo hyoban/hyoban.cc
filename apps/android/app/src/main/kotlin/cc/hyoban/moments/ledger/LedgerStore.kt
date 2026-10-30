@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import androidx.core.database.sqlite.transaction
 import java.io.File
 import java.time.LocalDate
 import java.util.TreeMap
@@ -114,12 +115,8 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
     private suspend fun write(block: (SQLiteDatabase) -> Unit) = withContext(Dispatchers.IO) {
         synchronized(this@LedgerStore) {
             val db = writableDatabase
-            db.beginTransaction()
-            try {
+            db.transaction {
                 block(db)
-                db.setTransactionSuccessful()
-            } finally {
-                db.endTransaction()
             }
             publish()
         }
@@ -178,12 +175,8 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
 
     private fun writeRates(rates: Map<String, Map<LocalDate, Double>>) {
         val db = writableDatabase
-        db.beginTransaction()
-        try {
+        db.transaction {
             writeRatesIn(db, rates)
-            db.setTransactionSuccessful()
-        } finally {
-            db.endTransaction()
         }
     }
 

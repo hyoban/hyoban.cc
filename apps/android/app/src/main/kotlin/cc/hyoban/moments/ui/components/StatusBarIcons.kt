@@ -1,7 +1,6 @@
 package cc.hyoban.moments.ui.components
 
 import android.app.Activity
-import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Rect
 import android.os.Handler
@@ -11,6 +10,7 @@ import android.view.ViewTreeObserver
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalView
+import androidx.core.graphics.createBitmap
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -41,7 +41,7 @@ fun AdaptiveStatusBarIcons() {
         val controller = WindowCompat.getInsetsController(window, view)
         val handler = Handler(Looper.getMainLooper())
         // Copied down to a few pixels, which PixelCopy scales to as it copies.
-        val strip = Bitmap.createBitmap(48, 2, Bitmap.Config.ARGB_8888)
+        val strip = createBitmap(48, 2)
         val pixels = IntArray(strip.width * strip.height)
         var scheduled = false
         var copying = false

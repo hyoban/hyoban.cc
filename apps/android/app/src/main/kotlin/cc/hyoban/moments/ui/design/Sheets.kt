@@ -85,7 +85,7 @@ fun ModalBottomSheet(
         }
     }
     // On a window 840 wide or more the panel is a dialog in the middle, rounded all round (L01).
-    val wide = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= 840
+    val wide = cc.hyoban.moments.ui.components.isExpandedWidth()
     Dialog(onDismissRequest = leave, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Box(Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = leave), contentAlignment = if (wide) Alignment.Center else Alignment.BottomCenter) {
             val shape = if (wide) AppTheme.shapes.large else AppTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)

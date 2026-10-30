@@ -66,6 +66,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
@@ -300,6 +301,7 @@ fun MediaViewer(
 @Composable
 private fun ShareShown(container: AppContainer, shown: MomentMedia) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val show = rememberShowMessage()
     val scope = rememberCoroutineScope()
     var sharing by remember { mutableStateOf(false) }
@@ -313,7 +315,7 @@ private fun ShareShown(container: AppContainer, shown: MomentMedia) {
                     } catch (e: CancellationException) {
                         throw e
                     } catch (_: Exception) {
-                        show(context.getString(R.string.error_share))
+                        show(resources.getString(R.string.error_share))
                     } finally {
                         sharing = false
                     }

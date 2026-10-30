@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import androidx.core.database.sqlite.transaction
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
@@ -99,8 +100,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
 
     @Synchronized fun command(action: String, now: Long = System.currentTimeMillis()) {
         val db = writableDatabase
-        db.beginTransaction()
-        try {
+        db.transaction {
             val before = state()
             var after = before
             when (action) {
@@ -121,8 +121,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
             if (!after.requested) after = after.copy(paused = false)
             db.execSQL("UPDATE recording SET daily=?, session=?, paused=?, segment=? WHERE id=1",
                 arrayOf<Any?>(if (after.daily) 1 else 0, after.session, if (after.paused) 1 else 0, UUID.randomUUID().toString()))
-            db.setTransactionSuccessful()
-        } finally { db.endTransaction() }
+        }
         _revision.value++
     }
 
@@ -148,8 +147,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         if (!state.recording) return points.map { FixDecision.NOT_RECORDING }
         val db = writableDatabase
         val decisions = mutableListOf<FixDecision>()
-        db.beginTransaction()
-        try {
+        db.transaction {
             val segment = db.rawQuery("SELECT segment FROM recording WHERE id=1", null).use { it.moveToFirst(); it.getString(0) }
             if (expectedSegment != null && expectedSegment != segment) return points.map { FixDecision.NOT_RECORDING }
             var previous = db.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment,speed,speed_accuracy FROM points ORDER BY id DESC LIMIT 1", null).use {
@@ -169,8 +167,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
                 })
                 previous = point.copy(segment = segment)
             }
-            db.setTransactionSuccessful()
-        } finally { db.endTransaction() }
+        }
         if (FixDecision.ACCEPT in decisions) _revision.value++
         return decisions
     }
@@ -259,13 +256,11 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         check(!state().requested) { "Stop recording before deleting tracks" }
         val (where, args) = where(selection)
         val db = writableDatabase
-        db.beginTransaction()
-        try {
+        db.transaction {
             db.delete("points", where, args)
             if (selection.session != null) db.delete("sessions", "id=?", arrayOf(selection.session))
             db.execSQL("DELETE FROM sessions WHERE id NOT IN (SELECT session FROM points WHERE session IS NOT NULL)")
-            db.setTransactionSuccessful()
-        } finally { db.endTransaction() }
+        }
         _revision.value++
     }
 }

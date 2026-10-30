@@ -1,8 +1,8 @@
 package cc.hyoban.moments.ui.map
 
 import android.annotation.SuppressLint
+import androidx.core.graphics.createBitmap
 import cc.hyoban.moments.ui.theme.tokens
-import android.graphics.Bitmap
 import android.graphics.PointF
 import android.graphics.RectF
 import android.util.DisplayMetrics
@@ -646,6 +646,7 @@ internal fun MapLibreView(
  * The map tab's map, kept across switching tabs rather than built again with its style,
  * its labels and its tiles each time the tab comes back. Only stopped while away.
  */
+@SuppressLint("StaticFieldLeak")
 private object MainMap {
     var view: MapView? = null
     var styleUri: String? = null
@@ -901,7 +902,7 @@ fun PlacesMap(
         )
         // Every dot, crowds too, as a box the names keep clear of, unseen: above the names, so
         // placed before them, as the map places the top of its labels first.
-        style.addImage(DOT_BLOCK, Bitmap.createBitmap(DOT_BLOCK_SIZE, DOT_BLOCK_SIZE, Bitmap.Config.ARGB_8888).apply { setDensity(DisplayMetrics.DENSITY_DEFAULT) })
+        style.addImage(DOT_BLOCK, createBitmap(DOT_BLOCK_SIZE, DOT_BLOCK_SIZE).apply { setDensity(DisplayMetrics.DENSITY_DEFAULT) })
         style.addLayer(
             SymbolLayer(PLACES_BLOCK, PLACES).withProperties(
                 iconImage(DOT_BLOCK),

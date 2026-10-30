@@ -55,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -216,7 +217,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
             title = { Text(stringResource(R.string.share_prepared)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.m)) {
-                    album?.let { Text(stringResource(R.string.share_album_saved, it.count, it.name)) }
+                    album?.let { Text(pluralStringResource(R.plurals.share_album_saved, it.count, it.count, it.name)) }
                     if (text.isNotBlank()) Text(stringResource(R.string.share_text_copied))
                     Text(stringResource(R.string.share_manual_steps), style = AppTheme.typography.caption)
                 }
@@ -418,8 +419,8 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
             if (photos.isNotEmpty()) {
                 Text(
                     if (target == ShareTarget.X) stringResource(R.string.share_photos, chosen.size, target.limit)
-                    else if (!prepareByHand) stringResource(R.string.share_selected_photos, chosen.size)
-                    else stringResource(R.string.share_prepare_photos, chosen.size),
+                    else if (!prepareByHand) pluralStringResource(R.plurals.share_selected_photos, chosen.size, chosen.size)
+                    else pluralStringResource(R.plurals.share_prepare_photos, chosen.size, chosen.size),
                     style = AppTheme.typography.label,
                 )
                 // Four to a row, filling the width, so the grid ends on the gutter as the words do.

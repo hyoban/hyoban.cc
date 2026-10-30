@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import androidx.compose.ui.platform.LocalConfiguration
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.dayCardKey
 import cc.hyoban.moments.data.trips.countOf
@@ -68,6 +69,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
@@ -378,7 +380,7 @@ fun MomentFeed(
 @Composable
 fun DayHeader(day: String, description: String, onClick: (() -> Unit)?, modifier: Modifier = Modifier, note: String? = null, noteFigures: Boolean = false) {
     val date = java.time.LocalDate.parse(day)
-    val weekday = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())
+    val weekday = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, LocalConfiguration.current.locales[0])
     // At least a touch target high, the row's words at its foot, so the target's extra height
     // falls in the gap above the day rather than between the header and what it heads.
     Box(
@@ -598,9 +600,10 @@ fun ShowRefreshErrors(container: AppContainer) {
     val show = rememberShowMessage()
     val error by container.repository.error.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val resources = LocalResources.current
 
     LaunchedEffect(error) {
-        error?.let { show(context.getString(R.string.message_refresh_failed, failureReason(context, it))) }
+        error?.let { show(resources.getString(R.string.message_refresh_failed, failureReason(context, it))) }
     }
 }
 

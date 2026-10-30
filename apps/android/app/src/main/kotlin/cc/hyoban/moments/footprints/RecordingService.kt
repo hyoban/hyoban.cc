@@ -1,6 +1,7 @@
 package cc.hyoban.moments.footprints
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.*
 import android.content.*
 import android.content.pm.PackageManager
@@ -14,6 +15,7 @@ import android.hardware.SensorManager
 import android.hardware.TriggerEvent
 import android.hardware.TriggerEventListener
 import android.os.*
+import androidx.core.content.edit
 import androidx.core.location.LocationManagerCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -80,7 +82,7 @@ class RecordingService : Service() {
             "rest_interval_ms" to DailyRecordingPolicy.REST_INTERVAL, "max_retry_ms" to DailyRecordingPolicy.MAX_RETRY)
         if (Build.VERSION.SDK_INT >= 34) diagnostic("gnss_capabilities", "scheduling" to manager.gnssCapabilities.hasScheduling())
         // Older builds permanently disabled batching after one failure. The new cooldown is reversible.
-        getSharedPreferences("footprint-location", MODE_PRIVATE).edit().remove("disabled_build").apply()
+        getSharedPreferences("footprint-location", MODE_PRIVATE).edit { remove("disabled_build") }
         RecordingNotifications.createChannels(this)
         ContextCompat.registerReceiver(this, providers, IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION), ContextCompat.RECEIVER_NOT_EXPORTED)
         scope.launch {
@@ -223,7 +225,7 @@ class RecordingService : Service() {
             if (provider == LocationManager.GPS_PROVIDER && !gnssRegistered) {
                 gnss.reset()
                 // Status arrives only while GPS already runs for this request; it never starts a fix.
-                gnssRegistered = manager.registerGnssStatusCallback(mainExecutor, gnss.callback)
+                gnssRegistered = manager.registerGnssStatusCallback(gnss.callback, Handler(Looper.getMainLooper()))
             }
             diagnostic("location_request_start", "provider" to provider, "interval_ms" to interval,
                 "distance_m" to distance, "trip" to trip, "activity_moving" to daily?.activityMoving, "segment_break" to newSegment,
@@ -590,6 +592,8 @@ class RecordingService : Service() {
             app.container.scope.launch { ActivityTransitions.sync(app) }
         }
 
+        // Lint takes [ActivityTransitions.permitted] for proof the phone is under Android 10; it isn't.
+        @SuppressLint("ObsoleteSdkInt")
         private fun activityRecoveryAllowed(context: Context) = ActivityTransitions.enabled(context) &&
             ActivityTransitions.permitted(context) && hasPreciseLocation(context) &&
             (Build.VERSION.SDK_INT < 29 || context.granted(Manifest.permission.ACCESS_BACKGROUND_LOCATION))

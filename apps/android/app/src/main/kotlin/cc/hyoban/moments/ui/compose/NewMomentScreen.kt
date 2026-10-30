@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.compose
 
+import androidx.core.net.toUri
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AssistChip
 import cc.hyoban.moments.ui.design.Button
@@ -98,6 +99,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -202,6 +204,7 @@ fun NewMomentScreen(
     startWithBill: Boolean = false,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val places by container.repository.places.collectAsStateWithLifecycle()
 
@@ -212,7 +215,7 @@ fun NewMomentScreen(
     // Each photo it had by where it is shown from: the phone's copy, or the site's still.
     val originalMedia = remember(original) {
         original?.media.orEmpty().associateBy { media ->
-            Uri.parse(media.local?.uri ?: container.mediaUrls.still(media, PHOTO_WIDTH) ?: "media:${media.uid}")
+            (media.local?.uri ?: container.mediaUrls.still(media, PHOTO_WIDTH) ?: "media:${media.uid}").toUri()
         }
     }
     val originalTime = remember(original) { original?.let { parseStamp(it.occurredAt) } }
@@ -275,7 +278,7 @@ fun NewMomentScreen(
         val refused = photos.mapNotNull { uri -> infos[uri]?.let(Photos::refusal)?.let { uri to it } }
         if (refused.isNotEmpty()) {
             photos = photos - refused.map { it.first }.toSet()
-            saveError = refused.map { it.second }.distinct().joinToString("\n") { context.getString(refusalText(it)) }
+            saveError = refused.map { it.second }.distinct().joinToString("\n") { resources.getString(refusalText(it)) }
         }
     }
     // Motion photos just added, to be asked whether they go in as photos.
@@ -366,7 +369,7 @@ fun NewMomentScreen(
     // the gallery, to be added from there.
     val openCamera: () -> Unit = {
         runCatching { context.startActivity(Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)) }
-            .onFailure { saveError = context.getString(R.string.error_no_camera) }
+            .onFailure { saveError = resources.getString(R.string.error_no_camera) }
     }
 
     val written = text.isNotBlank() || photos.isNotEmpty()
@@ -401,7 +404,7 @@ fun NewMomentScreen(
     val save: () -> Unit = save@{
         if (saving) return@save
         // The bill is checked first, so that nothing is kept while it can't be.
-        val txn = if (withBill) bill.toTxn(ledger, billAt, trips, null, null, null) { saveError = context.getString(it) } ?: return@save else null
+        val txn = if (withBill) bill.toTxn(ledger, billAt, trips, null, null, null) { saveError = resources.getString(it) } ?: return@save else null
         saving = true
         scope.launch {
             try {
@@ -421,7 +424,7 @@ fun NewMomentScreen(
                 onSaved()
             } catch (error: Exception) {
                 saving = false
-                saveError = context.getString(R.string.error_save, failureReason(context, error))
+                saveError = resources.getString(R.string.error_save, failureReason(context, error))
             }
         }
     }

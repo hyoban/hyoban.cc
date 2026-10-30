@@ -62,7 +62,7 @@ internal object MotionCache {
  * subtitle and metadata decoders stay out of the APK.
  */
 @OptIn(UnstableApi::class)
-private val MP4_ONLY = ExtractorsFactory { arrayOf(Mp4Extractor(SubtitleParser.Factory.UNSUPPORTED)) }
+private fun mp4Only() = ExtractorsFactory { arrayOf(Mp4Extractor(SubtitleParser.Factory.UNSUPPORTED)) }
 
 @OptIn(UnstableApi::class)
 private fun mp4Renderers(context: Context) = RenderersFactory { handler, video, audio, _, _ ->
@@ -93,7 +93,7 @@ fun rememberCachedPlayer(url: String, active: Boolean, configure: ExoPlayer.() -
                 .setCache(MotionCache.of(context))
                 .setUpstreamDataSourceFactory(OkHttpDataSource.Factory(Http.client))
         }
-        val made = ExoPlayer.Builder(context, mp4Renderers(context), ProgressiveMediaSource.Factory(source, MP4_ONLY))
+        val made = ExoPlayer.Builder(context, mp4Renderers(context), ProgressiveMediaSource.Factory(source, mp4Only()))
             // Headphones pulled out stop it, rather than letting it go on aloud.
             .setHandleAudioBecomingNoisy(true)
             .build()

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import androidx.compose.ui.platform.LocalConfiguration
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
@@ -44,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -203,7 +205,7 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
             when (mode) {
                 Span.MONTH -> ChartCard(
                     stringResource(R.string.ledger_chart_calendar),
-                    stringResource(if (income) R.string.ledger_days_with_income else R.string.ledger_days_with_expense, byDay.count { it.value > 0 }),
+                    byDay.count { it.value > 0 }.let { days -> pluralStringResource(if (income) R.plurals.ledger_days_with_income else R.plurals.ledger_days_with_expense, days, days) },
                 ) { MonthHeatmap(start!!, byDay, currency) { listBills(null, it, null) } }
                 Span.YEAR -> YearCalendar(anchor.year, byDay, income, currency, flowKey) { listBills(null, it, null) }
                 Span.ALL -> Unit
@@ -500,7 +502,7 @@ private fun YearCalendar(year: Int, byDay: Map<LocalDate, Long>, income: Boolean
     var picked by remember(key) { mutableStateOf<LocalDate?>(null) }
     val count = byDay.count { it.key.year == year && it.value > 0 }
     val readout = picked?.let { line(formatDate(it.toString(), today = it), money(byDay[it] ?: 0, currency)) }
-        ?: stringResource(if (income) R.string.ledger_days_with_income else R.string.ledger_days_with_expense, count)
+        ?: pluralStringResource(if (income) R.plurals.ledger_days_with_income else R.plurals.ledger_days_with_expense, count, count)
     ChartCard(
         stringResource(R.string.ledger_chart_calendar),
         readout,
@@ -515,7 +517,7 @@ private fun YearCalendar(year: Int, byDay: Map<LocalDate, Long>, income: Boolean
 private fun Weekdays(byDay: Map<LocalDate, Long>, start: LocalDate, end: LocalDate, today: LocalDate, currency: String, key: Any) {
     var picked by remember(key) { mutableStateOf<Int?>(null) }
     val values = remember(byDay, start, end, today) { weekdayAverages(byDay, start, end, today) }
-    val locale = Locale.getDefault()
+    val locale = LocalConfiguration.current.locales[0]
     val weekday = { i: Int -> java.time.DayOfWeek.of(i + 1).getDisplayName(TextStyle.FULL, if (locale.language == "zh") Locale.CHINESE else Locale.ENGLISH) }
     val at = picked ?: values.indices.maxBy { values[it] }
     val readout = stringResource(R.string.ledger_weekday_average, weekday(at), money(values[at], currency))

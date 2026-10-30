@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.design
 
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +16,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -49,7 +51,7 @@ import java.util.Locale
  */
 @Composable
 fun DateTimeDialog(day: LocalDate, hour: Int, minute: Int, onDismiss: () -> Unit, onPick: (LocalDate, Int, Int) -> Unit) {
-    var chosen by rememberSaveable { mutableStateOf(day.toEpochDay()) }
+    var chosen by rememberSaveable { mutableLongStateOf(day.toEpochDay()) }
     var month by rememberSaveable { mutableStateOf(YearMonth.from(day).toString()) }
     var hours by rememberSaveable { mutableStateOf("%02d".format(hour)) }
     var minutes by rememberSaveable { mutableStateOf("%02d".format(minute)) }
@@ -94,7 +96,7 @@ private fun TimePart(value: String, onChange: (String) -> Unit, tag: String) {
 /** A month's days under its name and the weekdays, Monday first, [chosen] in the ink. */
 @Composable
 private fun MonthGrid(month: YearMonth, chosen: LocalDate, onMonth: (YearMonth) -> Unit, onDay: (LocalDate) -> Unit) {
-    val locale = Locale.getDefault()
+    val locale = LocalConfiguration.current.locales[0]
     val today = remember { LocalDate.now() }
     val title = month.format(DateTimeFormatter.ofPattern(if (locale.language == "zh") "yyyy年M月" else "MMMM yyyy", locale))
     Column {

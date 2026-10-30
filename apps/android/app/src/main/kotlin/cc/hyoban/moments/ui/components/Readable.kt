@@ -50,6 +50,11 @@ fun isLandscape(): Boolean = LocalWindowInfo.current.containerSize.let { it.widt
 @ReadOnlyComposable
 fun windowWidth(): Dp = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
 
+/** The window's height. */
+@Composable
+@ReadOnlyComposable
+fun windowHeight(): Dp = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
+
 /**
  * Whether the window is at least Material 3's medium breakpoint wide, 600dp: a phone on its
  * side, a tablet upright, an unfolded foldable, where the tabs stand down a rail and the
@@ -71,16 +76,11 @@ fun isExpandedWidth(): Boolean = windowWidth() >= EXPANDED_WIDTH
  * a tall app bar would take half the screen, so a page's bar starts small.
  */
 @Composable
-fun isCompactHeight(): Boolean = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() < COMPACT_HEIGHT_BELOW }
+fun isCompactHeight(): Boolean = windowHeight() < COMPACT_HEIGHT_BELOW
 
 private val MEDIUM_WIDTH = 600.dp
 private val EXPANDED_WIDTH = 840.dp
 
-/** Whether the window is wider than it is tall, a phone on its side. */
-@Composable
-@ReadOnlyComposable
-fun isLandscapeWindow(): Boolean =
-    androidx.compose.ui.platform.LocalConfiguration.current.let { it.screenWidthDp > it.screenHeightDp }
 private val COMPACT_HEIGHT_BELOW = 480.dp
 
 /** Whether the page is wider than it is tall. */

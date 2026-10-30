@@ -9,6 +9,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.edit
 import cc.hyoban.moments.MainActivity
 import cc.hyoban.moments.MomentsApplication
 import cc.hyoban.moments.R
@@ -40,7 +41,7 @@ object AutoBill {
     }
 
     fun setEnabled(context: Context, enabled: Boolean) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean("enabled", enabled).apply()
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("enabled", enabled) }
         enabledState.value = enabled
         ShareAccessibilityService.listenIdle()
     }

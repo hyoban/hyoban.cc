@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
@@ -202,7 +203,7 @@ object Share {
             return file to type
         }
         val local = media.local ?: throw IOException("${media.uid} is neither published nor on the phone")
-        val uri = Uri.parse(if (video) local.videoUri ?: local.uri else local.uri)
+        val uri = (if (video) local.videoUri ?: local.uri else local.uri).toUri()
         val type = context.contentResolver.getType(uri)
             ?: MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(uri.toString()))
             ?: if (video) "video/mp4" else "image/jpeg"

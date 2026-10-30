@@ -1,8 +1,7 @@
-<resources>
-    <!-- The app in English, for a phone or the app set to it; the Moments' own words stay as written. -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- The app in English, for a phone set to it; the Moments' own words stay as written. -->
     <string name="tab_moments">Timeline</string>
     <string name="tab_map">Map</string>
-    <string name="tab_trips">Trips</string>
     <string name="action_back">Back</string>
     <string name="action_play">Play</string>
     <string name="action_navigate">Directions</string>
@@ -45,19 +44,28 @@
     <string name="share_telegram_copy_open">Copy text and open Telegram</string>
     <string name="share_telegram_open">Open Telegram</string>
     <string name="share_telegram_unavailable">Couldn’t open Telegram. Make sure it’s installed.</string>
-    <string name="share_selected_photos">%1$d photos selected, shared in their original order. Tap a photo to select it.</string>
+    <plurals name="share_selected_photos">
+        <item quantity="one">%1$d photo selected. Tap a photo to select it.</item>
+        <item quantity="other">%1$d photos selected, shared in their original order. Tap a photo to select it.</item>
+    </plurals>
     <string name="share_x_hint">Review and post in X. Edits here apply only to this share. X sets its own text limit.</string>
     <string name="share_text">Text</string>
-    <string name="share_photos">%1$d of %2$d photos selected, shared in their original order. Tap a photo to select it.</string>
+    <string name="share_photos" tools:ignore="PluralsCandidate">%1$d of %2$d photos selected, shared in their original order. Tap a photo to select it.</string>
     <string name="action_prepare_share">Prepare text and photos</string>
     <string name="share_prepare_hint">“Prepare text and photos” saves the selected photos to a separate album and copies the text. Then select, paste, and post in the other app yourself. It works for WeChat Moments, Bilibili, Feishu, and any other app; choose photos within that app’s limits.</string>
-    <string name="share_prepare_photos">%1$d photos selected, saved in their original order. Tap a photo to select it.</string>
+    <plurals name="share_prepare_photos">
+        <item quantity="one">%1$d photo selected, to be saved. Tap a photo to select it.</item>
+        <item quantity="other">%1$d photos selected, saved in their original order. Tap a photo to select it.</item>
+    </plurals>
     <string name="share_save_and_copy">Save photos and copy text</string>
     <string name="share_save_photos">Save photos</string>
     <string name="share_copy_text">Copy text</string>
     <string name="share_storage_permission">Storage permission is needed to save photos to an album</string>
     <string name="share_prepared">Ready</string>
-    <string name="share_album_saved">%1$d photos saved to “%2$s,” numbered in their original order. The album is kept.</string>
+    <plurals name="share_album_saved">
+        <item quantity="one">%1$d photo saved to “%2$s.” The album is kept.</item>
+        <item quantity="other">%1$d photos saved to “%2$s,” numbered in their original order. The album is kept.</item>
+    </plurals>
     <string name="share_text_copied">Text copied</string>
     <string name="share_manual_steps">Open the other app to select the photos, paste the text, and post</string>
     <string name="share_done">Done</string>
@@ -98,9 +106,6 @@
     <string name="fog_lit">Cities lit: %1$d\u2003Provinces: %2$d</string>
     <string name="error_location">Couldn’t find your location. Check that location is on.</string>
     <string name="error_location_permission">Location permission is needed to show where you are</string>
-    <string name="label_view_list">List</string>
-    <string name="label_view_calendar">Calendar</string>
-    <string name="label_write_moment">Record</string>
     <string name="label_publish_all">Publish all</string>
     <string name="action_search">Search</string>
     <string name="action_clear">Clear</string>
@@ -121,7 +126,6 @@
     <string name="action_pause">Pause</string>
     <string name="action_mute">Mute</string>
     <string name="action_unmute">Unmute</string>
-    <string name="section_places">Places</string>
     <string name="section_photo">Photo</string>
     <string name="section_route">Route</string>
     <string name="title_settings">Settings</string>
@@ -142,16 +146,7 @@
     <string name="action_cancel">Cancel</string>
     <string name="error_address">The address must start with http or https</string>
     <string name="action_restore_default">Reset</string>
-    <string name="theme_color_system">Wallpaper colors</string>
-    <string name="action_add_color">Custom color</string>
     <string name="action_delete">Delete</string>
-    <string name="setting_color_style">Color style</string>
-    <string name="color_style_vivid">Vivid</string>
-    <string name="color_style_tinted">Tinted</string>
-    <string name="color_style_soft">Soft</string>
-    <string name="color_style_monochrome">Monochrome</string>
-    <string name="setting_pure_black">Pure black</string>
-    <string name="settings_pure_black_note">Pages are pure black in dark mode, which saves power on OLED screens</string>
     <string name="section_credits">Thanks</string>
     <string name="credit_mantou">Mantou</string>
     <string name="credit_mantou_note">The cat the app’s icon is drawn from</string>
@@ -301,8 +296,6 @@
     <string name="share_save_place">Save as a place</string>
     <string name="message_place_saved">Saved the place %1$s</string>
     <string name="message_place_known">%1$s is already a place</string>
-    <string name="action_next">Next</string>
-    <string name="action_previous">Back</string>
     <string name="title_edit_moment">Edit Moment</string>
     <string name="action_edit_moment">Edit this Moment</string>
     <string name="action_more">More</string>
@@ -357,7 +350,7 @@
     <string name="change_cover_on">Used as covers again</string>
     <string name="change_time">time</string>
     <string name="change_place">place</string>
-    <string name="food_each">¥%1$d each</string>
+    <string name="food_each" tools:ignore="PluralsCandidate">¥%1$d each</string>
     <string name="food_none">None</string>
     <string name="change_place_kind">kind</string>
     <string name="change_food">food</string>
@@ -369,7 +362,6 @@
     <string name="label_no_words">No text</string>
     <string name="action_show_token">Show token</string>
     <string name="action_hide_token">Hide token</string>
-    <string name="action_delete_color">Delete color</string>
     <string name="message_change_reverted">Change discarded</string>
     <string name="action_navigate_short">Directions</string>
     <string name="action_refresh">Refresh</string>
@@ -596,8 +588,14 @@
     <string name="ledger_day_of_month">Day %1$d</string>
     <string name="ledger_running_total_description">Line chart, %1$s total %2$s, %3$s total %4$s</string>
     <string name="ledger_chart_calendar">Calendar</string>
-    <string name="ledger_days_with_expense">Spent on %1$d days</string>
-    <string name="ledger_days_with_income">Earned on %1$d days</string>
+    <plurals name="ledger_days_with_expense">
+        <item quantity="one">Spent on %1$d day</item>
+        <item quantity="other">Spent on %1$d days</item>
+    </plurals>
+    <plurals name="ledger_days_with_income">
+        <item quantity="one">Earned on %1$d day</item>
+        <item quantity="other">Earned on %1$d days</item>
+    </plurals>
     <string name="ledger_chart_weekdays">By weekday</string>
     <string name="ledger_weekday_average">%2$s on an average %1$s</string>
     <string name="ledger_category_other">Other</string>
@@ -607,7 +605,6 @@
     <string name="ledger_month_end">End of %1$s %2$s</string>
     <string name="ledger_net_assets_change">%2$s since the end of %1$s</string>
     <string name="ledger_amount">Amount</string>
-    <string name="ledger_category">Category</string>
     <string name="ledger_add_category">Add category</string>
     <string name="ledger_add_subcategory">Add subcategory</string>
     <string name="ledger_account">Account</string>
@@ -626,7 +623,6 @@
     <string name="ledger_link_place">Place</string>
     <string name="ledger_footprint_place">Where, by footprints</string>
     <string name="ledger_link_trip">Trip</string>
-    <string name="ledger_none">None</string>
     <string name="ledger_choose">Choose</string>
     <string name="ledger_choose_account">Choose account</string>
     <string name="ledger_note_hint">Add a note</string>
@@ -634,7 +630,6 @@
     <string name="ledger_add_payer">Add account</string>
     <string name="ledger_split_sum">Total %1$s, should be %2$s</string>
     <string name="ledger_reimbursable">Reimbursement</string>
-    <string name="ledger_reimbursable_note">Not counted as spending while pending</string>
     <string name="ledger_excluded">Leave out of totals</string>
     <string name="ledger_excluded_note">Still changes account balances</string>
     <string name="ledger_record_reimbursement">Record reimbursement</string>
@@ -695,7 +690,7 @@
     <string name="ledger_backup">Back up to a file</string>
     <string name="ledger_backup_done">Backed up</string>
     <string name="ledger_restore">Restore from backup</string>
-    <string name="ledger_restore_note">The backup has %1$d bills in %2$d books. It replaces all ledger data.</string>
+    <string name="ledger_restore_note" tools:ignore="PluralsCandidate">The backup has %1$d bills in %2$d books. It replaces all ledger data.</string>
     <string name="ledger_restore_done">Restored</string>
     <string name="ledger_export_csv">Export CSV</string>
     <string name="ledger_csv_done">Exported</string>
@@ -704,16 +699,31 @@
     <string name="ledger_error_import">Couldn\'t read this file. Choose an .xlsx exported from iCost.</string>
     <string name="ledger_importing">Reading…</string>
     <string name="ledger_import">Import</string>
-    <string name="ledger_import_summary">%1$d rows: %2$d bills, %3$d new books, %4$d new accounts.</string>
-    <string name="ledger_import_matched">%2$d of %1$d refunds and %4$d of %3$d reimbursements matched to their bills.</string>
-    <string name="ledger_import_folded">%1$d rows iCost derived for discounts and refund surplus folded back into their bills.</string>
-    <string name="ledger_import_converted">%1$d amounts in another currency converted at that day\'s rate.</string>
-    <string name="ledger_import_duplicates">%1$d bills already in the ledger, skipped.</string>
-    <string name="ledger_import_skipped">%1$d rows not recognized: %2$s</string>
+    <string name="ledger_import_summary" tools:ignore="PluralsCandidate">%1$d rows: %2$d bills, %3$d new books, %4$d new accounts.</string>
+    <string name="ledger_import_matched" tools:ignore="PluralsCandidate">%2$d of %1$d refunds and %4$d of %3$d reimbursements matched to their bills.</string>
+    <plurals name="ledger_import_folded">
+        <item quantity="one">%1$d row iCost derived for discounts and refund surplus folded back into its bill.</item>
+        <item quantity="other">%1$d rows iCost derived for discounts and refund surplus folded back into their bills.</item>
+    </plurals>
+    <plurals name="ledger_import_converted">
+        <item quantity="one">%1$d amount in another currency converted at that day\'s rate.</item>
+        <item quantity="other">%1$d amounts in another currency converted at that day\'s rate.</item>
+    </plurals>
+    <plurals name="ledger_import_duplicates">
+        <item quantity="one">%1$d bill already in the ledger, skipped.</item>
+        <item quantity="other">%1$d bills already in the ledger, skipped.</item>
+    </plurals>
+    <plurals name="ledger_import_skipped">
+        <item quantity="one">%1$d row not recognized: %2$s</item>
+        <item quantity="other">%1$d rows not recognized: %2$s</item>
+    </plurals>
     <string name="ledger_import_accounts_note">The export has no balances; use Set balance on each account. Account types are guessed from their names and can be changed.</string>
     <string name="ledger_merge">Add to existing bills</string>
     <string name="ledger_replace">Replace existing data</string>
-    <string name="ledger_import_done">Imported %1$d bills, %2$d linked</string>
+    <plurals name="ledger_import_done">
+        <item quantity="one">Imported %1$d bill, %2$d linked</item>
+        <item quantity="other">Imported %1$d bills, %2$d linked</item>
+    </plurals>
     <plurals name="ledger_count_bills">
         <item quantity="one">%1$d bill</item>
         <item quantity="other">%1$d bills</item>
@@ -741,23 +751,17 @@
     <string name="auto_bill_wechat">WeChat Pay</string>
     <string name="auto_bill_alipay">Alipay</string>
     <string name="tab_me">Me</string>
-    <string name="me_pending_none">Nothing waiting to publish</string>
     <string name="me_pending_note">Look over the changes, then publish them to the site together.</string>
-    <string name="me_synced_note">New Moments and edits stay on the phone first.</string>
     <string name="action_review_publish">Review and publish</string>
     <string name="settings_moments_data">Moments and data</string>
     <string name="settings_map_footprints">Map and footprints</string>
     <string name="settings_about">About</string>
     <string name="me_month_expense">Spent this month</string>
-    <string name="me_assets">Assets and accounts</string>
-    <string name="me_start_ledger">Start a ledger</string>
-    <string name="me_start_ledger_note">Write a bill, or import from iCost.</string>
     <string name="label_time">Time</string>
     <string name="action_previous_month">Previous month</string>
     <string name="action_next_month">Next month</string>
     <string name="visibility_public">Public</string>
     <string name="visibility_private">Private</string>
-    <string name="changes_bills">Bills</string>
     <string name="changes_bill_public_note">Only the amount, category and note</string>
     <string name="changes_bill_private">Made private: taken off the site</string>
     <string name="changes_tracks">Tracks</string>
@@ -771,7 +775,7 @@
     <string name="items_book_note">A public bill publishes its amount, category and note alone; accounts and balances stay private. Each bill can still say otherwise.</string>
     <string name="items_tracks">Tracks</string>
     <string name="items_tracks_note">Tracks are private; a trip’s page can make its span public.</string>
-    <string name="items_track_shares">%1$d public</string>
+    <string name="items_track_shares" tools:ignore="PluralsCandidate">%1$d public</string>
     <string name="moment_private_note">Private ones aren’t published</string>
     <string name="me_items">Items and visibility</string>
     <string name="part_text">Words</string>
@@ -790,14 +794,17 @@
     <string name="section_visibility">Visibility</string>
     <string name="changes_private_note">What is private stays yours and never shows on the site.</string>
     <string name="facet_km">km</string>
-    <string name="facet_charging">kWh in %1$d charges</string>
+    <plurals name="facet_charging">
+        <item quantity="one">kWh in %1$d charge</item>
+        <item quantity="other">kWh in %1$d charges</item>
+    </plurals>
     <string name="facet_spent">spent</string>
     <string name="footprints_public_spans">Public spans</string>
     <string name="footprints_span_trip">Follows its trip’s days</string>
     <string name="footprints_span_manual">Made public by hand</string>
     <string name="footprints_make_public">Make this span public</string>
     <string name="day_track_stats">%1$.1f km moving %2$d min</string>
-    <string name="timeline_more_records">%1$d more</string>
+    <string name="timeline_more_records" tools:ignore="PluralsCandidate">%1$d more</string>
     <string name="timeline_track">Track</string>
     <plurals name="timeline_track_moving">
         <item quantity="one">Moving %d min</item>

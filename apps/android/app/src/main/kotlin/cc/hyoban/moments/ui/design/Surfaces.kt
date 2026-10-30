@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.ShadowElevation
@@ -50,7 +51,7 @@ import cc.hyoban.moments.ui.theme.tokens
  * row it sits in is.
  */
 @Composable
-fun AppSwitch(checked: Boolean, enabled: Boolean = true, onCheckedChange: ((Boolean) -> Unit)? = null, modifier: Modifier = Modifier) {
+fun AppSwitch(checked: Boolean, modifier: Modifier = Modifier, enabled: Boolean = true, onCheckedChange: ((Boolean) -> Unit)? = null) {
     val track by animateColorAsState(if (checked) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "switch")
     val edge by animateColorAsState(if (checked) tokens.accent else tokens.borderStrong, AppTheme.motionScheme.fastEffectsSpec(), label = "switch edge")
     val thumb by animateColorAsState(if (checked) tokens.onAccent else tokens.borderStrong, AppTheme.motionScheme.fastEffectsSpec(), label = "switch thumb")
@@ -67,7 +68,7 @@ fun AppSwitch(checked: Boolean, enabled: Boolean = true, onCheckedChange: ((Bool
             .then(if (enabled) Modifier else Modifier.background(tokens.bg.copy(alpha = 0.5f))),
         contentAlignment = Alignment.CenterStart,
     ) {
-        Box(Modifier.offset(x = x).size(20.dp).clip(CircleShape).background(thumb))
+        Box(Modifier.offset { IntOffset(x.roundToPx(), 0) }.size(20.dp).clip(CircleShape).background(thumb))
     }
 }
 

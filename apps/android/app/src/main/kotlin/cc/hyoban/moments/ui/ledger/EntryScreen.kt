@@ -83,7 +83,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -118,6 +118,7 @@ import cc.hyoban.moments.ledger.tripOnDay
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
+import cc.hyoban.moments.ui.components.windowHeight
 import cc.hyoban.moments.ui.compose.TimeDialog
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.rememberShowMessage
@@ -158,7 +159,7 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val show = rememberShowMessage()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     EnsureBook(container)
 
     val original = remember(args.edit) { args.edit?.let { ledger.txnsById[it] } }
@@ -178,7 +179,7 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
     )
 
     fun save() {
-        val txn = draft.toTxn(ledger, at, trips, original, related, fixedKind) { show(context.getString(it)) } ?: return
+        val txn = draft.toTxn(ledger, at, trips, original, related, fixedKind) { show(resources.getString(it)) } ?: return
         scope.launch {
             container.ledger.saveTxn(txn)
             // Reimbursed, an expense waiting for it is done.
@@ -938,7 +939,7 @@ private fun LinkChip(value: String?, label: String, icon: androidx.compose.ui.gr
 
 /** Whether the keypad fits: a bill page of its own on a window tall enough for the keys and what is above them. */
 @Composable
-internal fun keypadFits(): Boolean = LocalConfiguration.current.screenHeightDp >= 600
+internal fun keypadFits(): Boolean = windowHeight() >= 600.dp
 
 /**
  * The amount, its time and note, over keys that type it, pinned under the bill's other fields as
