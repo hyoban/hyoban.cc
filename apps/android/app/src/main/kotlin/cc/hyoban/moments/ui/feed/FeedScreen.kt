@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.LocalTabsHidden
 import androidx.compose.foundation.layout.wrapContentHeight
 import cc.hyoban.moments.ui.components.FloatingButton
@@ -215,7 +216,7 @@ fun FeedScreen(
             Box(Modifier.fillMaxWidth()) {
                 Text(
                     stringResource(R.string.title_moments),
-                    style = AppTheme.typography.titleSmall,
+                    style = AppTheme.typography.body.strong,
                     maxLines = 1,
                     modifier = Modifier.align(Alignment.TopCenter).windowInsetsPadding(WindowInsets.statusBars)
                         .height(FLOATING_BAR).wrapContentHeight().semantics { heading() },
@@ -420,8 +421,8 @@ private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false) {
             onClick = onClick,
             elevation = if (inRail) restingElevation() else floatingElevation(),
             shape = Corners.full,
-            containerColor = tokens.ink,
-            contentColor = tokens.onInk,
+            containerColor = tokens.tx,
+            contentColor = tokens.bg,
             modifier = Modifier.testTag("new_moment"),
         ) {
             // A plus, as the design's every new thing is; the pen is for changing what's there.
@@ -541,7 +542,7 @@ private fun DayHead(
         } else {
             Spacer(Modifier.statusBarsPadding().height(FLOATING_BAR))
         }
-        Column(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.l, bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
+        Column(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.l, bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
             Text(formatDay(date), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
             val stats = remember(points) { cc.hyoban.moments.footprints.trackStats(points) }
             val metres = if (track == null) known?.metres else stats.metres
@@ -550,7 +551,7 @@ private fun DayHead(
                 if (moving && metres != null && millis != null) stringResource(R.string.day_track_stats, metres / 1000, millis / 60_000) else null,
                 daySpent(bills, date)?.let { stringResource(R.string.ledger_expense_short, it) },
             ).joinToString("\u2003")
-            if (line.isNotEmpty()) Text(line, style = AppTheme.typography.numCaption, color = tokens.tx2)
+            if (line.isNotEmpty()) Text(line, style = AppTheme.typography.caption, color = tokens.tx2)
         }
     }
 }

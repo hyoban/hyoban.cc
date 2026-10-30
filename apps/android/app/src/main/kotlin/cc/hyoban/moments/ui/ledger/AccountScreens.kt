@@ -21,7 +21,6 @@ import cc.hyoban.moments.ui.design.IconButtonDefaults
 import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.DropdownMenu
 import cc.hyoban.moments.ui.design.DropdownMenuItem
-import cc.hyoban.moments.ui.design.FilledTonalButton
 import cc.hyoban.moments.ui.design.FilterChip
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
@@ -89,13 +88,13 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
         BillList(ledger, bills, account.currency, nav, header = {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.s, bottom = Space.s)) {
                 Text(stringResource(R.string.ledger_balance_label), style = AppTheme.typography.label, color = tokens.tx2)
-                Text(money(balance, account.currency), style = AppTheme.typography.numDisplay, modifier = Modifier.testTag("account_balance"))
+                Text(money(balance, account.currency), style = AppTheme.typography.titlePage, modifier = Modifier.testTag("account_balance"))
                 Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                    FilledTonalButton(onClick = { nav.entry(LedgerEntryArgs(account = id)) }) {
+                    TextButton(onClick = { nav.entry(LedgerEntryArgs(account = id)) }) {
                         Icon(AppIcons.Plus, contentDescription = null)
                         Text(stringResource(R.string.ledger_new_bill), modifier = Modifier.padding(start = Space.s))
                     }
-                    FilledTonalButton(onClick = { calibrating = true }, modifier = Modifier.testTag("calibrate")) {
+                    TextButton(onClick = { calibrating = true }, modifier = Modifier.testTag("calibrate")) {
                         Icon(AppIcons.Sliders, contentDescription = null)
                         Text(stringResource(R.string.ledger_calibrate), modifier = Modifier.padding(start = Space.s))
                     }
@@ -200,7 +199,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                     }
                     Box {
                         var open by remember { mutableStateOf(false) }
-                        FilledTonalButton(onClick = { open = true }, modifier = Modifier.testTag("account_currency")) {
+                        TextButton(onClick = { open = true }, modifier = Modifier.testTag("account_currency")) {
                             Text(stringResource(R.string.ledger_currency) + " " + currency)
                         }
                         DropdownMenu(open, onDismissRequest = { open = false }) {

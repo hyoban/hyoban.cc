@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.ListItemShapes
 import androidx.compose.foundation.border
@@ -23,7 +24,6 @@ import androidx.compose.foundation.shape.CircleShape
 import cc.hyoban.moments.ui.design.AssistChip
 import cc.hyoban.moments.ui.design.AssistChipDefaults
 import cc.hyoban.moments.ui.design.Button
-import cc.hyoban.moments.ui.design.FilledTonalButton
 import cc.hyoban.moments.ui.design.InputChipDefaults
 import cc.hyoban.moments.ui.design.TextField
 import androidx.compose.ui.Alignment
@@ -766,7 +766,7 @@ private fun CategoryGrid(ledger: Ledger, book: String?, type: CategoryType, sele
 
 /** One category in the grid: its icon in a circle of [fill], the accent when chosen, a dot beside it when it has second-level ones, and its name. */
 @Composable
-private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, hasSubs: Boolean, tag: String, fill: Color = tokens.fillStrong, onClick: () -> Unit) {
+private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, hasSubs: Boolean, tag: String, fill: Color = tokens.fill, onClick: () -> Unit) {
     val colors = tokens
     Column(
         Modifier.weight(1f)
@@ -783,7 +783,7 @@ private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphi
             ) { Icon(icon, contentDescription = null, tint = if (selected) colors.onAccent else colors.tx2) }
             if (hasSubs) {
                 Box(
-                    Modifier.align(Alignment.BottomEnd).size(14.dp).background(colors.bg, CircleShape).padding(Space.xxs)
+                    Modifier.align(Alignment.BottomEnd).size(14.dp).background(colors.bg, CircleShape).padding(Space.xs)
                         .background(if (selected) colors.accent else colors.borderStrong, CircleShape),
                 )
             }
@@ -794,7 +794,7 @@ private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphi
             color = if (selected) colors.accent else colors.tx2,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = Space.xs, start = Space.xxs, end = Space.xxs),
+            modifier = Modifier.padding(top = Space.xs, start = Space.xs, end = Space.xs),
         )
     }
 }
@@ -979,7 +979,7 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
                     modifier = Modifier.weight(1f).padding(start = Space.s).semantics { contentDescription = cents?.let { formatMoney(it, currency) } ?: shown }.testTag("amount"),
                 )
             }
-            Row(Modifier.fillMaxWidth().padding(start = Space.m, end = Space.s, bottom = Space.xxs), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(start = Space.m, end = Space.s, bottom = Space.xs), verticalAlignment = Alignment.CenterVertically) {
                 AssistChip(
                     onClick = { draft.timeOpen = true },
                     label = { Text(formatDay(at.toLocalDate().toString()) + " " + at.format(DateTimeFormatter.ofPattern("HH:mm"))) },
@@ -1014,7 +1014,7 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
                 Button(
                     onClick = onSave,
                     modifier = Modifier.weight(2f).height(KeyHeight).testTag("keypad_save"),
-                ) { Text(stringResource(R.string.action_save), style = AppTheme.typography.titleSmall) }
+                ) { Text(stringResource(R.string.action_save), style = AppTheme.typography.body.strong) }
             }
         }
     }
@@ -1023,15 +1023,13 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
 private const val BACKSPACE = '\b'
 private val KeyHeight = 48.dp
 
-/** A key of the keypad: a digit or the point on the pressed grey, the rest a step deeper. */
+/** A key of the keypad, on the fill. */
 @Composable
 private fun Key(key: Char, modifier: Modifier, onClick: () -> Unit) {
-    val digit = key.isDigit() || key == '.'
-    val colors = ButtonDefaults.filledTonalButtonColors(containerColor = if (digit) tokens.fill else tokens.fillStrong, contentColor = tokens.tx)
-    FilledTonalButton(
+    Button(
         onClick = onClick,
         shape = AppTheme.shapes.medium,
-        colors = colors,
+        colors = ButtonDefaults.buttonColors(containerColor = tokens.fill, contentColor = tokens.tx),
         contentPadding = PaddingValues(0.dp),
         modifier = modifier.height(KeyHeight).testTag("key_${if (key == BACKSPACE) "back" else key.toString()}"),
     ) {
@@ -1097,7 +1095,7 @@ private fun SplitEditor(ledger: Ledger, splits: List<Pair<String, String>>, curr
             }
             Text(
                 stringResource(R.string.ledger_split_sum, formatMoney(sum, currency), formatMoney(total ?: 0, currency)),
-                style = AppTheme.typography.bodySmall,
+                style = AppTheme.typography.caption,
                 color = if (total != null && sum != total) tokens.danger else tokens.tx2,
             )
         }

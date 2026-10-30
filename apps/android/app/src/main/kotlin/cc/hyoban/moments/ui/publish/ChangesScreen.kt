@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.publish
 
+import cc.hyoban.moments.ui.design.strong
 import kotlinx.coroutines.launch
 
 import cc.hyoban.moments.ui.design.AppIcons
@@ -159,7 +160,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                     item(key = "private-note") {
                         Text(
                             stringResource(R.string.changes_private_note),
-                            style = AppTheme.typography.bodySmall,
+                            style = AppTheme.typography.caption,
                             color = tokens.tx2,
                             modifier = Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.xs),
                         )
@@ -246,7 +247,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                             PublishingIndicator(publishing, Modifier.fillMaxWidth().padding(vertical = Space.xs).testTag("publish_progress"))
                             Text(
                                 stringResource(if (container.canPublish) R.string.note_publish_all else R.string.note_publish_needs_token),
-                                style = AppTheme.typography.bodySmall,
+                                style = AppTheme.typography.caption,
                                 color = tokens.tx2,
                                 modifier = Modifier.padding(horizontal = Space.l),
                             )
@@ -291,8 +292,8 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                     }
                 },
                 shape = Corners.full,
-                containerColor = tokens.ink,
-                contentColor = tokens.onInk,
+                containerColor = tokens.tx,
+                contentColor = tokens.bg,
                 elevation = floatingElevation(),
                 icon = { Icon(AppIcons.CloudUpload, contentDescription = null) },
                 text = {
@@ -506,11 +507,11 @@ private fun OutsideCard(title: String, date: String?, figure: String?, note: Str
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(title, style = AppTheme.typography.body, modifier = Modifier.weight(1f))
-            figure?.let { Text(it, style = AppTheme.typography.numBody) }
+            figure?.let { Text(it, style = AppTheme.typography.body) }
         }
         Text(
             listOfNotNull(date, note).joinToString("\u2003"),
-            style = AppTheme.typography.bodySmall,
+            style = AppTheme.typography.caption,
             color = tokens.tx2,
         )
         CardActions(onRevert?.let { revert -> { RevertButton(revert) } })
@@ -527,7 +528,7 @@ private fun PlaceChangeCard(change: PlaceChange, onRevert: (() -> Unit)?) {
             .testTag("place_change_${change.id}"),
         verticalArrangement = Arrangement.spacedBy(Space.m),
     ) {
-        Text(change.after.name, style = AppTheme.typography.titleSmall)
+        Text(change.after.name, style = AppTheme.typography.body.strong)
         HorizontalDivider(color = dividerColor())
         val kindOf = @Composable { place: Place -> PlaceKind.of(place.kind)?.let { stringResource(it.label) } ?: place.kind }
         Field(R.string.change_place_kind) { FromTo(kindOf(change.before), kindOf(change.after).orEmpty(), AppIcons.Category) }
@@ -542,17 +543,17 @@ private fun MomentIdentity(identity: Identity, modifier: Modifier = Modifier) {
     val where = moment.places.joinToString(stringResource(R.string.separator_list)) { identity.places[it]?.name ?: it }
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
         moment.media.firstOrNull()?.let { Thumbnail(it, identity.urls, size = 48) }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
             Text(
                 moment.text.lineSequence().firstOrNull { it.isNotBlank() } ?: where.ifEmpty { stringResource(R.string.label_no_words) },
-                style = AppTheme.typography.titleSmall,
+                style = AppTheme.typography.body.strong,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt), where.takeIf { moment.text.isNotBlank() && it.isNotEmpty() })
                     .joinToString("\u2003"),
-                style = AppTheme.typography.bodySmall,
+                style = AppTheme.typography.caption,
                 color = tokens.tx2,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -595,7 +596,7 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
     val after = change.after
     val before = change.before
     if (before == null) {
-        Text(stringResource(R.string.note_change_recreates), style = AppTheme.typography.bodySmall, color = tokens.tx2)
+        Text(stringResource(R.string.note_change_recreates), style = AppTheme.typography.caption, color = tokens.tx2)
         MomentWhole(after, places, urls)
         return
     }
@@ -692,7 +693,7 @@ private fun Field(name: Int, content: @Composable () -> Unit) {
 private fun TextChange(before: String, after: String) {
     val removed = SpanStyle(
         color = tokens.tx,
-        background = tokens.dangerSoft,
+        background = tokens.fill,
         textDecoration = TextDecoration.LineThrough,
     )
     val added = SpanStyle(color = tokens.tx, background = tokens.accentSoft)
@@ -760,15 +761,15 @@ private fun PhotoRow(photos: List<Pair<MomentMedia, Boolean?>>, urls: MediaUrls,
                         contentDescription = stringResource(R.string.label_photo_utility),
                         tint = MediaOverlay.content,
                         modifier = Modifier.align(Alignment.BottomStart).padding(Space.xs).size(20.dp).clip(CircleShape)
-                            .background(MediaOverlay.control).padding(Space.xxs),
+                            .background(MediaOverlay.control).padding(Space.xs),
                     )
                 }
                 if (added != null) {
                     Icon(
                         if (added) AppIcons.Plus else AppIcons.Minus,
                         contentDescription = stringResource(if (added) R.string.label_photo_added else R.string.label_photo_removed),
-                        tint = if (added) tokens.onAccent else tokens.onDanger,
-                        modifier = Modifier.align(Alignment.TopEnd).padding(Space.xs).size(20.dp).clip(CircleShape).background(ring).padding(Space.xxs),
+                        tint = if (added) tokens.onAccent else tokens.bg,
+                        modifier = Modifier.align(Alignment.TopEnd).padding(Space.xs).size(20.dp).clip(CircleShape).background(ring).padding(Space.xs),
                     )
                 }
             }

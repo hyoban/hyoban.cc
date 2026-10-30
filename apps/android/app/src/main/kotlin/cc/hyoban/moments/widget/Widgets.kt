@@ -290,12 +290,12 @@ private fun Words(
     Text(card.eyebrow, style = eyebrowType.style(soft), maxLines = 1)
     Text(
         title,
-        modifier = GlanceModifier.fillMaxWidth().padding(top = Space.xxs),
+        modifier = GlanceModifier.fillMaxWidth().padding(top = Space.xs),
         style = titleType.style(strong),
         maxLines = titleLines,
     )
     card.subtitle?.let {
-        Text(it, modifier = GlanceModifier.padding(top = Space.xxs), style = subtitleType.style(soft), maxLines = 1)
+        Text(it, modifier = GlanceModifier.padding(top = Space.xs), style = subtitleType.style(soft), maxLines = 1)
     }
 }
 
@@ -317,8 +317,8 @@ private fun WidgetTheme(context: Context, content: @Composable () -> Unit) {
         onPrimary = role { it.onAccent },
         primaryContainer = role { it.accentSoft },
         onPrimaryContainer = role { it.tx },
-        secondary = role { it.ink },
-        onSecondary = role { it.onInk },
+        secondary = role { it.tx },
+        onSecondary = role { it.bg },
         secondaryContainer = role { it.fill },
         onSecondaryContainer = role { it.tx },
         tertiary = role { it.income },
@@ -326,8 +326,8 @@ private fun WidgetTheme(context: Context, content: @Composable () -> Unit) {
         tertiaryContainer = role { it.fill },
         onTertiaryContainer = role { it.tx },
         error = role { it.danger },
-        errorContainer = role { it.dangerSoft },
-        onError = role { it.onDanger },
+        errorContainer = role { it.fill },
+        onError = role { it.bg },
         onErrorContainer = role { it.tx },
         background = role { it.bg },
         onBackground = role { it.tx },

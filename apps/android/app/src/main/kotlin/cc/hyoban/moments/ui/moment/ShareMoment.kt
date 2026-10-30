@@ -218,7 +218,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 Column(verticalArrangement = Arrangement.spacedBy(Space.m)) {
                     album?.let { Text(stringResource(R.string.share_album_saved, it.count, it.name)) }
                     if (text.isNotBlank()) Text(stringResource(R.string.share_text_copied))
-                    Text(stringResource(R.string.share_manual_steps), style = AppTheme.typography.bodySmall)
+                    Text(stringResource(R.string.share_manual_steps), style = AppTheme.typography.caption)
                 }
             },
             confirmButton = {
@@ -367,7 +367,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 ShareTarget.WECHAT -> if (prepareByHand) R.string.share_wechat_multiple_hint else R.string.share_wechat_hint
                 ShareTarget.BILIBILI -> R.string.share_bilibili_hint
                 ShareTarget.PREPARE -> R.string.share_prepare_hint
-            }), style = AppTheme.typography.bodySmall)
+            }), style = AppTheme.typography.caption)
             if (target == ShareTarget.TELEGRAM) {
                 TelegramAssistOptions(
                     enabled = telegramAssist,
@@ -400,7 +400,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     },
                     busy = busy || assistRunning,
                 ) {
-                    if (chosen.isEmpty()) Text(stringResource(R.string.share_assist_photos_only), style = AppTheme.typography.bodySmall)
+                    if (chosen.isEmpty()) Text(stringResource(R.string.share_assist_photos_only), style = AppTheme.typography.caption)
                 }
             }
             OutlinedTextField(
@@ -454,10 +454,10 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                             if (checked) {
                                 Surface(
                                     color = tokens.accent,
-                                    shape = AppTheme.shapes.small,
+                                    shape = AppTheme.shapes.medium,
                                     modifier = Modifier.align(Alignment.BottomEnd),
                                 ) {
-                                    Text("${chosen.indexOf(photo) + 1}", Modifier.padding(horizontal = Space.xs), style = AppTheme.typography.micro)
+                                    Text("${chosen.indexOf(photo) + 1}", Modifier.padding(horizontal = Space.xs), style = AppTheme.typography.caption)
                                 }
                             }
                         }
@@ -466,7 +466,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 }
             }
             if (moment.media.any { it.type == MediaType.VIDEO || it.type == MediaType.LIVE_PHOTO }) {
-                Text(stringResource(R.string.share_stills_only), style = AppTheme.typography.bodySmall)
+                Text(stringResource(R.string.share_stills_only), style = AppTheme.typography.caption)
             }
             error?.let {
                 Text(stringResource(it), color = tokens.danger)

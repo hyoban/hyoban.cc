@@ -90,7 +90,7 @@ import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.map.MapTarget
 import cc.hyoban.moments.ui.map.PICK_ZOOM
 import cc.hyoban.moments.ui.map.PickerMap
-import cc.hyoban.moments.ui.theme.Elevation
+import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.Space
 import kotlinx.coroutines.delay
@@ -182,7 +182,7 @@ internal fun PlacePicker(
         sheetSwipeEnabled = false,
         sheetDragHandle = null,
         sheetContainerColor = AppColors.sheet,
-        sheetShadowElevation = Elevation.level1,
+        sheetShadowElevation = 0.dp,
         containerColor = AppColors.page,
         sheetContent = {
             ChoiceCard(

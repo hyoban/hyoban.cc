@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.theme.cardBorder
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.animation.core.Animatable
@@ -96,7 +97,7 @@ fun otherColor(): Color = tokens.borderStrong
 @Composable
 private fun rememberReveal(key: Any?): Animatable<Float, *> {
     val progress = remember(key) { Animatable(0f) }
-    val spec = AppTheme.motionScheme.slowEffectsSpec<Float>()
+    val spec = AppTheme.motionScheme.defaultEffectsSpec<Float>()
     LaunchedEffect(progress) { progress.animateTo(1f, spec) }
     return progress
 }
@@ -123,7 +124,7 @@ fun ChartCard(
         Column(Modifier.padding(start = Space.l, end = Space.s, top = Space.m, bottom = Space.l)) {
             Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(title, style = AppTheme.typography.titleSmall)
+                    Text(title, style = AppTheme.typography.body.strong)
                     Text(
                         readout,
                         style = AppTheme.typography.body,
@@ -163,7 +164,7 @@ private fun Axis(labels: List<String>, count: Int) {
         labels.forEach {
             Text(
                 it,
-                style = AppTheme.typography.micro,
+                style = AppTheme.typography.caption,
                 color = tokens.tx2,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
@@ -424,7 +425,7 @@ fun MonthHeatmap(month: LocalDate, byDay: Map<LocalDate, Long>, currency: String
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             weekdayLetters().forEach {
-                Text(it, style = AppTheme.typography.micro, color = tokens.tx2, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+                Text(it, style = AppTheme.typography.caption, color = tokens.tx2, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
             }
         }
         for (week in 0 until weeks) {
@@ -437,7 +438,7 @@ fun MonthHeatmap(month: LocalDate, byDay: Map<LocalDate, Long>, currency: String
                             val cents = byDay[date] ?: 0
                             val step = level(cents)
                             val description = listOfNotNull(formatDate(date.toString(), today = date), moneyOrNull(cents, currency)).joinToString(" ")
-                            val cell = Modifier.fillMaxSize().clip(AppTheme.shapes.small)
+                            val cell = Modifier.fillMaxSize().clip(AppTheme.shapes.medium)
                             Box(
                                 if (step == 0) {
                                     cell.clearAndSetSemantics { contentDescription = description }
@@ -485,7 +486,7 @@ fun YearHeatmap(year: Int, byDay: Map<LocalDate, Long>, selected: LocalDate?, on
     val ink = tokens.tx
     val labelColor = tokens.tx2
     val measurer = rememberTextMeasurer()
-    val labelStyle = AppTheme.typography.micro
+    val labelStyle = AppTheme.typography.caption
     val level = remember(byDay) { levelsOf(byDay.filterKeys { it.year == year }.values) }
     val select by rememberUpdatedState(onSelect)
     val picked by rememberUpdatedState(selected)

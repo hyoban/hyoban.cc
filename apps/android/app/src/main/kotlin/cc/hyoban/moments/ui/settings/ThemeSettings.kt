@@ -182,7 +182,7 @@ private fun MiniScreen(scheme: Tokens, modifier: Modifier) {
         Box(Modifier.padding(top = 4.dp).width(28.dp).height(5.dp).clip(CircleShape).background(scheme.tx.copy(alpha = 0.6f)))
         repeat(2) {
             Column(
-                Modifier.fillMaxWidth().clip(AppTheme.shapes.small).background(card).padding(5.dp),
+                Modifier.fillMaxWidth().clip(AppTheme.shapes.medium).background(card).padding(5.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(line))
@@ -206,7 +206,7 @@ private fun MiniScreen(scheme: Tokens, modifier: Modifier) {
 @Composable
 fun Caption(title: String, action: (@Composable () -> Unit)? = null) {
     Row(
-        Modifier.fillMaxWidth().padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.section, bottom = if (action == null) Space.s else 0.dp),
+        Modifier.fillMaxWidth().padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.xl, bottom = if (action == null) Space.s else 0.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -247,7 +247,7 @@ fun SegmentedGroup(
     action: (@Composable () -> Unit)? = null,
     header: (@Composable () -> Unit)? = null,
 ) {
-    if (title != null) Caption(title, action) else Spacer(Modifier.height(Space.section))
+    if (title != null) Caption(title, action) else Spacer(Modifier.height(Space.xl))
     // What chooses what the rows show, filter chips say, between the caption and the rows, edge to edge.
     header?.invoke()
     Column(Modifier.padding(horizontal = Space.gutter)) {
@@ -269,7 +269,7 @@ fun SegmentedGroup(
         note?.let {
             Text(
                 it,
-                style = AppTheme.typography.bodySmall,
+                style = AppTheme.typography.caption,
                 color = tokens.tx2,
                 modifier = Modifier.padding(start = Space.l, end = Space.l, top = Space.s),
             )

@@ -60,7 +60,7 @@ import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.trips.CameraShot
 import cc.hyoban.moments.ui.trips.PlaybackController
 import cc.hyoban.moments.ui.trips.StopState
-import cc.hyoban.moments.ui.theme.Elevation
+import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
@@ -342,13 +342,13 @@ private fun Color.toHex() = "#%06X".format(toArgb() and 0xFFFFFF)
 private fun HeadClock(clock: PlaybackClock, modifier: Modifier) {
     // Floating over the map in its container colour, solid so its words keep their contrast over any map.
     Surface(
-        shape = AppTheme.shapes.small,
+        shape = AppTheme.shapes.medium,
         color = SurfaceLevel.Floating.fill(),
-        shadowElevation = Elevation.level2,
+        shadowElevation = ShadowElevation,
         modifier = modifier,
     ) {
-        Column(Modifier.padding(horizontal = Space.s + Space.xxs, vertical = Space.xs)) {
-            Text(formatDay(clock.dateKey), style = AppTheme.typography.micro, color = tokens.tx2)
+        Column(Modifier.padding(horizontal = Space.s + Space.xs, vertical = Space.xs)) {
+            Text(formatDay(clock.dateKey), style = AppTheme.typography.caption, color = tokens.tx2)
             Text(
                 listOfNotNull(stringResource(R.string.trip_day, clock.day), clock.time).joinToString("\u2003"),
                 style = AppTheme.typography.label.copy(fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum", fontSize = 13.sp),

@@ -37,6 +37,6 @@ internal fun TelegramAssistOptions(
             label = { Text(stringResource(R.string.telegram_assist_target)) },
             modifier = Modifier.fillMaxWidth().testTag("telegram_assist_target"),
         )
-        if (!hasPhotos) Text(stringResource(R.string.share_assist_photos_only), style = AppTheme.typography.bodySmall)
+        if (!hasPhotos) Text(stringResource(R.string.share_assist_photos_only), style = AppTheme.typography.caption)
     }
 }

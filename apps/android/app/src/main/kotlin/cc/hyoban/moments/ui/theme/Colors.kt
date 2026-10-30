@@ -32,21 +32,20 @@ val LocalDarkTheme = staticCompositionLocalOf { false }
 
 /**
  * How deep a surface sits. Each surface takes the level one deeper than the one it sits
- * on: a card on the page, a block (a label, a tile) in a card, an inset (a small mark)
- * in a block: the page, the surface, fill and fill-strong. A card carries a hairline too
+ * on: a card on the page, a block (a label, a tile) in a card: the page, the surface and
+ * fill. A card carries a hairline too
  * ([cardBorder]), as the page and the surface are close.
  */
 enum class SurfaceLevel {
-    Page, Card, Block, Inset;
+    Page, Card, Block;
 
     /** The level a surface on this one takes. */
-    val raised: SurfaceLevel get() = entries[min(ordinal + 1, Inset.ordinal)]
+    val raised: SurfaceLevel get() = entries[min(ordinal + 1, Block.ordinal)]
 
     fun color(tokens: Tokens): Color = when (this) {
         Page -> tokens.bg
         Card -> tokens.surface
         Block -> tokens.fill
-        Inset -> tokens.fillStrong
     }
 
     companion object {
@@ -81,7 +80,7 @@ const val DISABLED_ALPHA = Opacity.disabled
 object MediaOverlay {
     /** Under a bar across the media, and over media set back. */
     val bar: Color
-        @Composable @ReadOnlyComposable get() = tokens.scrimBar
+        @Composable @ReadOnlyComposable get() = tokens.scrim
 
     /** Under a control or a label on the media, and over media dimmed behind one chosen. */
     val control: Color
@@ -93,7 +92,7 @@ object MediaOverlay {
     val content = LightTokens.onMedia
 
     /** Secondary text on either. */
-    val contentVariant = LightTokens.onMediaVariant
+    val contentVariant = LightTokens.onMedia
 
     /** What is there but not yet reached or not on: a slider's track ahead of it. */
     val contentDisabled = LightTokens.onMedia.copy(alpha = DISABLED_ALPHA)

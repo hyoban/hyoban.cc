@@ -35,7 +35,6 @@ fun isLargeFont(): Boolean = LocalDensity.current.fontScale >= 1.3f
 
 // The corner sizes as continuous curves rather than arcs, so a corner eases into its sides.
 private val AppShapes = Shapes(
-    small = ContinuousRoundedRectangle(Radius.small),
     medium = ContinuousRoundedRectangle(Radius.medium),
     large = ContinuousRoundedRectangle(Radius.large),
 )

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.background
@@ -324,7 +325,7 @@ fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = M
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
-                    style = AppTheme.typography.titleSmall,
+                    style = AppTheme.typography.body.strong,
                     color = amountColor(txn),
                 )
                 val book = if (showBook) ledger.books.firstOrNull { it.id == txn.book }?.name else null
@@ -349,7 +350,7 @@ fun DayTotals(dateKey: String, expense: Long, income: Long, currency: String, mo
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.m),
     ) {
-        Text(formatDay(dateKey), style = AppTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+        Text(formatDay(dateKey), style = AppTheme.typography.body.strong, modifier = Modifier.weight(1f))
         Text(
             listOfNotNull(
                 if (expense != 0L) stringResource(R.string.ledger_expense_short, money(expense, currency)) else null,

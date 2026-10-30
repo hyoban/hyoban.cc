@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -95,7 +96,7 @@ fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerN
                         stringResource(R.string.ledger_expense_short, money(sums.expense, currency)),
                         stringResource(R.string.ledger_income_short, money(sums.income, currency)),
                     ).joinToString(" "),
-                    style = AppTheme.typography.titleSmall,
+                    style = AppTheme.typography.body.strong,
                     modifier = Modifier.padding(start = Space.l, top = Space.s),
                 )
             }

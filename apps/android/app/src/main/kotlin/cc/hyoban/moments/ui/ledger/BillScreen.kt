@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.data.store.isPublic
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.AppIcons
@@ -17,7 +18,6 @@ import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.IconButtonDefaults
 import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.AssistChip
-import cc.hyoban.moments.ui.design.FilledTonalButton
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.ui.design.ListItem
@@ -110,7 +110,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                     )
                     Text(
                         if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
-                        style = AppTheme.typography.numDisplay,
+                        style = AppTheme.typography.titlePage,
                         color = amountColor(txn),
                         modifier = Modifier.testTag("bill_amount"),
                     )
@@ -217,12 +217,12 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                         )
                     }
                     Row(Modifier.padding(horizontal = Space.gutter, vertical = Space.l), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                        FilledTonalButton(onClick = { nav.entry(LedgerEntryArgs(kind = TxnKind.REFUND, related = txn.id)) }, modifier = Modifier.testTag("refund")) {
+                        TextButton(onClick = { nav.entry(LedgerEntryArgs(kind = TxnKind.REFUND, related = txn.id)) }, modifier = Modifier.testTag("refund")) {
                             Icon(AppIcons.Undo, contentDescription = null)
                             Text(stringResource(R.string.ledger_action_refund), modifier = Modifier.padding(start = Space.s))
                         }
                         if (txn.reimburse != Reimburse.NONE) {
-                            FilledTonalButton(onClick = { nav.entry(LedgerEntryArgs(kind = TxnKind.REIMBURSEMENT, related = txn.id)) }, modifier = Modifier.testTag("reimburse")) {
+                            TextButton(onClick = { nav.entry(LedgerEntryArgs(kind = TxnKind.REIMBURSEMENT, related = txn.id)) }, modifier = Modifier.testTag("reimburse")) {
                                 Icon(AppIcons.Bill, contentDescription = null)
                                 Text(stringResource(R.string.ledger_record_reimbursement), modifier = Modifier.padding(start = Space.s))
                             }
@@ -265,7 +265,7 @@ fun InfoRow(
     onClick: (() -> Unit)? = null,
 ) {
     val trailingContent: (@Composable () -> Unit)? = when {
-        trailing != null -> { { Text(trailing, style = AppTheme.typography.titleSmall) } }
+        trailing != null -> { { Text(trailing, style = AppTheme.typography.body.strong) } }
         onClick != null -> { { Icon(AppIcons.ChevronRight, contentDescription = null) } }
         else -> null
     }

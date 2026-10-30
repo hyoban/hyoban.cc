@@ -72,7 +72,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import cc.hyoban.moments.ui.theme.Corners
-import cc.hyoban.moments.ui.theme.Elevation
+import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.cardBorder
 import cc.hyoban.moments.ui.theme.tokens
 
@@ -93,13 +93,10 @@ object ButtonDefaults {
     val IconSpacing = 8.dp
 
     @Composable
-    fun buttonColors(containerColor: Color = tokens.ink, contentColor: Color = tokens.onInk) = ButtonColors(containerColor, contentColor)
+    fun buttonColors(containerColor: Color = tokens.tx, contentColor: Color = tokens.bg) = ButtonColors(containerColor, contentColor)
 
     @Composable
     fun textButtonColors(contentColor: Color = tokens.tx) = ButtonColors(Color.Transparent, contentColor)
-
-    @Composable
-    fun filledTonalButtonColors(containerColor: Color = tokens.fill, contentColor: Color = tokens.tx) = ButtonColors(containerColor, contentColor)
 }
 
 /** What every button is: [colors] in [shape], at least 40dp tall and 48dp to tap, its words in the label style. */
@@ -139,9 +136,10 @@ fun Button(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
+    shape: Shape = Corners.full,
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     content: @Composable RowScope.() -> Unit,
-) = ButtonBase(onClick, modifier, enabled, Corners.full, colors, null, contentPadding, content)
+) = ButtonBase(onClick, modifier, enabled, shape, colors, null, contentPadding, content)
 
 /** A light action: the text colour alone, a capsule showing only when pressed; a dialog's buttons. */
 @Composable
@@ -153,18 +151,6 @@ fun TextButton(
     content: @Composable RowScope.() -> Unit,
 ) = ButtonBase(onClick, modifier, enabled, Corners.full, colors, null, ButtonDefaults.TextButtonContentPadding, content)
 
-/** A secondary action set on the pressed grey: the way there, 新建, 校准, a key. */
-@Composable
-fun FilledTonalButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    shape: Shape = Corners.full,
-    colors: ButtonColors = ButtonDefaults.filledTonalButtonColors(),
-    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
-    content: @Composable RowScope.() -> Unit,
-) = ButtonBase(onClick, modifier, enabled, shape, colors, null, contentPadding, content)
-
 // ---------------------------------------------------------------- floating buttons
 
 /** A round floating button, 56dp, [containerColor] with [elevation]'s soft shadow. */
@@ -173,9 +159,9 @@ fun FloatingActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     shape: Shape = Corners.full,
-    containerColor: Color = tokens.ink,
-    contentColor: Color = tokens.onInk,
-    elevation: Dp = Elevation.level2,
+    containerColor: Color = tokens.tx,
+    contentColor: Color = tokens.bg,
+    elevation: Dp = ShadowElevation,
     interactionSource: MutableInteractionSource? = null,
     content: @Composable () -> Unit,
 ) {
@@ -199,9 +185,9 @@ fun ExtendedFloatingActionButton(
     modifier: Modifier = Modifier,
     expanded: Boolean = true,
     shape: Shape = Corners.full,
-    containerColor: Color = tokens.ink,
-    contentColor: Color = tokens.onInk,
-    elevation: Dp = Elevation.level2,
+    containerColor: Color = tokens.tx,
+    contentColor: Color = tokens.bg,
+    elevation: Dp = ShadowElevation,
 ) {
     Row(
         modifier
@@ -305,7 +291,7 @@ fun AssistChip(
 ) = Chip(
     modifier.clickable(enabled = enabled, role = Role.Button, onClick = onClick),
     tokens.fill,
-    tokens.tx,
+    tokens.tx2,
     tokens.tx2,
     leadingIcon,
     trailingIcon,
@@ -434,7 +420,7 @@ fun AlertDialog(
 /** What a menu shows: the surface with its hairline, in the medium corners, its items as wide as the widest. */
 @Composable
 fun MenuSurface(content: @Composable ColumnScope.() -> Unit) {
-    Surface(shape = AppTheme.shapes.medium, color = tokens.surface, contentColor = tokens.tx, border = cardBorder(), shadowElevation = Elevation.level2) {
+    Surface(shape = AppTheme.shapes.medium, color = tokens.surface, contentColor = tokens.tx, border = cardBorder(), shadowElevation = ShadowElevation) {
         Column(Modifier.width(IntrinsicSize.Max).widthIn(min = 112.dp, max = 280.dp).verticalScroll(rememberScrollState()).padding(vertical = 8.dp), content = content)
     }
 }

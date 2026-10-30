@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.ui.design.strong
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.height
 import cc.hyoban.moments.ui.design.AppIcons
@@ -143,7 +144,7 @@ private fun PublishCard(count: Int, onChanges: () -> Unit) {
     ) {
         Text(
             pluralStringResource(R.plurals.count_changes, count, count),
-            style = AppTheme.typography.titleSmall,
+            style = AppTheme.typography.body.strong,
             modifier = Modifier.semantics { heading() },
         )
         Text(stringResource(R.string.me_pending_note), style = AppTheme.typography.body, color = tokens.tx2)
@@ -179,7 +180,7 @@ private fun MonthSpending(container: AppContainer, onOpen: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
         Text(stringResource(R.string.me_month_expense), style = AppTheme.typography.caption, color = tokens.tx2)
-        Text(money(month.expense, currency), style = AppTheme.typography.numDisplay)
+        Text(money(month.expense, currency), style = AppTheme.typography.titlePage)
         val days = start.lengthOfMonth()
         val most = (month.expenseByDay.values.maxOrNull() ?: 0L).coerceAtLeast(1L)
         androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(40.dp).padding(top = Space.s)) {

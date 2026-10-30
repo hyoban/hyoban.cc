@@ -55,8 +55,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   source for every platform: `vp run design:tokens` at the root generates `ui/theme/Tokens.kt`
   (colours, spacing, corners, shadows, opacities, type, springs), which is never edited by
   hand; change `tokens.json` there, regenerate, and publish it to the artifact. Text takes
-  the design's 13 styles by their names (`titlePage` … `numCaption`), figures in the `num`
-  ones, which are the system monospace; the timeline and a trip are a conversation (`MomentFeed(chat = true)`: `DateCapsule`, Moments as `MomentCard(bubble = true)`, records in `RecordsBubble`), and a ledger's day opens with its header row (`DayHeader`). The app
+  the design's six styles by their names (`titlePage`, `title`, `bodyReading`, `body`,
+  `label`, `caption`), all in the system sans with tabular figures; a heading is a style
+  `.strong` (600), never a size larger; the timeline and a trip are a conversation (`MomentFeed(chat = true)`: `DateCapsule`, Moments as `MomentCard(bubble = true)`, records in `RecordsBubble`), and a ledger's day opens with its header row (`DayHeader`). The app
   has no Material dependency (`androidx.compose.material3`, `glance-material3`): its
   components are its own, in `ui/design`, on Compose foundation. Don't add Material
   components or icon packs back.
@@ -75,17 +76,18 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   palette exceptions, motion and back) are the artifact's README and component cards; read
   them there rather than here. What follows is only where Android carries them out.
 - Colours are `tokens.*` by the design's names alone; there is no layer of roles over them.
-  Layers: the hairline is `cardBorder` and `dividerColor`, shadows `Elevation` drawn by
+  Layers: the hairline is `cardBorder` and `dividerColor`, the one shadow `ShadowElevation` drawn by
   `softShadow`, a surface's level `SurfaceLevel`.
-- Keep only what is used: three buttons (`Button`, `FilledTonalButton`, `TextButton`), two chips
-  (`FilterChip` to choose, `AssistChip` to act), and no icon that nothing draws.
+- Keep only what is used: two buttons (`Button` for the page's one main action, `TextButton`
+  for everything else), one chip look (`FilterChip` to choose, `AssistChip` to act, drawn the
+  same), and no icon that nothing draws.
 - Top bars switch between what the page is one of with `TitleMenu` and put a control over the
   subtitle's figures in `subtitleAction`. Settings are `SegmentedGroup` with `SwitchRow` and
   `ActionRow`, switches `AppSwitch`. What floats over a photo or the map is `FloatingButton`.
 - A 40dp button keeps its 48dp target in the layout (`minimumInteractiveComponentSize`); a 36dp
   chip is laid out at its own size, so rows of chips stand 8dp apart, Compose widening its target.
-- The design's gaps are `Space.item`, `Space.section` and `Space.day`; take them rather than a size
-  where a gap means one. Large system fonts are `isLargeFont()` (130% and up), so read it in composition.
+- Spacing is five steps (`Space.xs` … `Space.xl`): things within a section are `Space.l` apart,
+  groups and days `Space.xl`. Large system fonts are `isLargeFont()` (130% and up), so read it in composition.
 - Words are in `values` (Chinese) and `values-en`, with TalkBack descriptions for what is shown.
 - The map's year colours are the tokens' `YearColors`, the same as `packages/trip-map/src/theme.ts`, and the
   fog is the site's `packages/trip-map/src/map/fog-layer.ts`. The ledger's charts are drawn on a

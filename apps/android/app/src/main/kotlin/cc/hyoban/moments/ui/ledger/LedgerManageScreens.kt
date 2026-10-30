@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +18,6 @@ import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.ui.design.AppTheme
-import cc.hyoban.moments.ui.design.FilledTonalButton
 import cc.hyoban.moments.ui.design.OutlinedTextField
 import cc.hyoban.moments.ui.design.SegmentedButton
 import cc.hyoban.moments.ui.design.SegmentedListItem
@@ -105,7 +105,7 @@ fun CategoriesScreen(container: AppContainer, book: String, nav: LedgerNav) {
                         },
                     )
                 }
-                FilledTonalButton(onClick = { adding = "" }, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).fillMaxWidth()) {
+                TextButton(onClick = { adding = "" }, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).fillMaxWidth()) {
                     Icon(AppIcons.Plus, contentDescription = null)
                     Text(stringResource(R.string.ledger_add_category), modifier = Modifier.padding(start = Space.s))
                 }
@@ -244,7 +244,7 @@ fun RatesScreen(container: AppContainer, nav: LedgerNav) {
                                 shapes = shapes,
                                 colors = segmentColors(),
                                 supportingContent = { Text(latest?.first?.toString() ?: stringResource(R.string.ledger_rate_missing)) },
-                                trailingContent = latest?.let { { Text("%.4f".format(1 / it.second) + " CNY", style = AppTheme.typography.titleSmall) } },
+                                trailingContent = latest?.let { { Text("%.4f".format(1 / it.second) + " CNY", style = AppTheme.typography.body.strong) } },
                                 modifier = Modifier.testTag("rate_$code"),
                             ) { Text("1 $code") }
                         }

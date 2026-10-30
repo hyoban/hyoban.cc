@@ -274,7 +274,7 @@ fun MomentFeed(
                         bannered += trip.id
                         item(key = "trip-${trip.id}", contentType = "trip") {
                             val count = remember(trip, allMoments, trips) { countOf(trip, allMoments, trips) }
-                            TripBanner(trip, count, onClick = { onTrip(trip.id) }, modifier = Modifier.animateItem().padding(horizontal = Space.gutter).padding(top = if (chat && day != timeline.first().first) Space.section else Space.s, bottom = Space.s))
+                            TripBanner(trip, count, onClick = { onTrip(trip.id) }, modifier = Modifier.animateItem().padding(horizontal = Space.gutter).padding(top = if (chat && day != timeline.first().first) Space.xl else Space.s, bottom = Space.s))
                         }
                     }
                     if (chat) {
@@ -285,7 +285,7 @@ fun MomentFeed(
                             DateCapsule(
                                 day,
                                 onDay?.let { { it(day) } },
-                                Modifier.animateItem().then(if (day == timeline.first().first) Modifier.pullUp(CAPSULE_SLACK - Space.xxs) else Modifier).padding(horizontal = Space.gutter).padding(top = if (headed) 0.dp else (Space.section - CAPSULE_SLACK).coerceAtLeast(0.dp), bottom = (Space.m - CAPSULE_SLACK).coerceAtLeast(0.dp)),
+                                Modifier.animateItem().then(if (day == timeline.first().first) Modifier.pullUp(CAPSULE_SLACK - Space.xs) else Modifier).padding(horizontal = Space.gutter).padding(top = if (headed) 0.dp else (Space.xl - CAPSULE_SLACK).coerceAtLeast(0.dp), bottom = (Space.m - CAPSULE_SLACK).coerceAtLeast(0.dp)),
                                 note = dayNote(day),
                                 description = pluralStringResource(R.plurals.count_moments, dayMoments.size, dayMoments.size),
                             )
@@ -299,7 +299,7 @@ fun MomentFeed(
                             val itemModifier = Modifier.animateItem().padding(
                                 start = Space.xs,
                                 end = Space.xs,
-                                top = if (index == 0) 0.dp else if (joinedAbove) Space.xxs else Space.m,
+                                top = if (index == 0) 0.dp else if (joinedAbove) Space.xs else Space.m,
                                 bottom = if (item.key == lastChat) Space.s else 0.dp,
                             )
                             when (item) {
@@ -334,7 +334,7 @@ fun MomentFeed(
                             day,
                             pluralStringResource(R.plurals.count_moments, dayMoments.size, dayMoments.size),
                             onDay?.let { { it(day) } },
-                            Modifier.animateItem().padding(horizontal = Space.gutter).dayHeaderSpacing(if (headed) Space.item else Space.day, below = if (dayItems.firstOrNull() is DayItem.Moment) Space.m else 0.dp),
+                            Modifier.animateItem().padding(horizontal = Space.gutter).dayHeaderSpacing(if (headed) Space.l else Space.xl, below = if (dayItems.firstOrNull() is DayItem.Moment) Space.m else 0.dp),
                             note = dayNote(day),
                         )
                     }
@@ -344,7 +344,7 @@ fun MomentFeed(
                     val tops = dayItems.mapIndexed { index, item ->
                         item.key to when {
                             index == 0 -> if (!dayPills) Space.s else 0.dp
-                            item is DayItem.Moment || dayItems[index - 1] is DayItem.Moment -> Space.item
+                            item is DayItem.Moment || dayItems[index - 1] is DayItem.Moment -> Space.l
                             else -> 0.dp
                         }
                     }.toMap()
@@ -397,12 +397,12 @@ fun DayHeader(day: String, description: String, onClick: (() -> Unit)?, modifier
         ) {
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                 // Today's in the accent, the one day the timeline marks.
-                Text(date.dayOfMonth.toString(), style = AppTheme.typography.numTitle, color = if (date == java.time.LocalDate.now()) tokens.accent else tokens.tx, modifier = Modifier.alignByBaseline())
+                Text(date.dayOfMonth.toString(), style = AppTheme.typography.title, color = if (date == java.time.LocalDate.now()) tokens.accent else tokens.tx, modifier = Modifier.alignByBaseline())
                 Text(weekday, style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.alignByBaseline())
             }
             note?.let {
                 Spacer(Modifier.weight(1f))
-                Text(it, style = if (noteFigures) AppTheme.typography.numCaption else AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, modifier = Modifier.padding(bottom = Space.xxs))
+                Text(it, style = if (noteFigures) AppTheme.typography.caption else AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, modifier = Modifier.padding(bottom = Space.xs))
             }
         }
     }
@@ -419,7 +419,7 @@ private val CAPSULE_SLACK = 14.dp
  */
 @Composable
 fun Modifier.dayHeaderSpacing(gap: Dp, below: Dp = Space.m): Modifier {
-    val line = with(LocalDensity.current) { AppTheme.typography.numTitle.lineHeight.toDp() }
+    val line = with(LocalDensity.current) { AppTheme.typography.title.lineHeight.toDp() }
     val slack = (DAY_HEADER_TARGET - line).coerceAtLeast(0.dp)
     return padding(top = (gap - slack).coerceAtLeast(0.dp), bottom = below)
 }
@@ -540,7 +540,7 @@ private fun SkeletonCards() {
         )
     }
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    val bone = tokens.fillStrong
+    val bone = tokens.fill
     val loading = stringResource(R.string.empty_loading)
     PageWidth { columns ->
         Column(

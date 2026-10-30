@@ -306,8 +306,8 @@ fun MomentScreen(
                             FloatingActionButton(
                                 onClick = { onEdit(uid) },
                                 shape = Corners.full,
-                                containerColor = tokens.ink,
-                                contentColor = tokens.onInk,
+                                containerColor = tokens.tx,
+                                contentColor = tokens.bg,
                                 elevation = floatingElevation(),
                                 modifier = Modifier.testTag("edit"),
                             ) {
@@ -380,7 +380,7 @@ private fun MomentDetails(
     onPartPrivate: ((String, Boolean) -> Unit)? = null,
 ) {
     val sameDay = remember(moments, moment.dateKey) { moments.count { it.dateKey == moment.dateKey } }
-    Column(Modifier.padding(top = Space.xl, bottom = Space.xxl)) {
+    Column(Modifier.padding(top = Space.xl, bottom = Space.xl)) {
         // When, in the second grey over the words, as the timeline's line over a Moment has it.
         Text(
             listOfNotNull(formatDay(moment.occurredAt), formatTime(moment.occurredAt)).joinToString("\u2003"),
@@ -443,7 +443,7 @@ private fun MomentDetails(
                 add {
                     ListItem(
                         headlineContent = { Text(chargeTitle(charge)) },
-                        supportingContent = chargeLine(charge)?.let { line -> { Text(line, style = AppTheme.typography.numCaption) } },
+                        supportingContent = chargeLine(charge)?.let { line -> { Text(line, style = AppTheme.typography.caption) } },
                         leadingContent = { Icon(AppIcons.Ev, contentDescription = null) },
                         modifier = Modifier.testTag("charge"),
                     )
