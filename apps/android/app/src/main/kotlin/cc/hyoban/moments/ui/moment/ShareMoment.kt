@@ -12,9 +12,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,9 +25,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.ButtonDefaults
-import cc.hyoban.moments.ui.design.HorizontalDivider
 import cc.hyoban.moments.ui.design.Icon
-import cc.hyoban.moments.ui.design.ListItem
 import cc.hyoban.moments.ui.design.ListItemDefaults
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.ModalBottomSheet
@@ -38,10 +34,14 @@ import cc.hyoban.moments.ui.design.Surface
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.design.ListItemShapes
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -51,8 +51,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -65,7 +63,6 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
-import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
@@ -84,9 +81,7 @@ import cc.hyoban.moments.ui.components.FullScreenDialog
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.theme.Space
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /** Menu order: complete text/photo composers, assisted sharing, manual captions, then manual albums. */
 enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val limit: Int = Int.MAX_VALUE, val app: String? = null) {
@@ -101,25 +96,25 @@ enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val lim
 }
 
 /**
- * Where to share a Moment, in a modal bottom sheet, as Material 3 has a long list of
- * actions on a phone: the apps it is sent to straight away, then those it is made ready
- * for by hand, one tap choosing; the scrim or a swipe down closes it.
+ * Where to share a Moment, in a bottom sheet: the apps it is sent to straight away, then
+ * those it is made ready for by hand, a space between, each a row on the sheet's gutter
+ * leading on to its copy to edit. Drawn in the design's own line icons rather than the apps'
+ * logos: a public post, a chat, or a destination that names itself. The scrim or a swipe
+ * down closes it.
  */
 @Composable
 fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
-    // A choice made ready by hand says so under its name, rather than in brackets after it.
-    val choice: @Composable (String, String, String?, ImageVector, ShareTarget) -> Unit = { label, tag, app, icon, target ->
-        ListItem(
-            headlineContent = { Text(label) },
-            supportingContent = if (app != null && target == ShareTarget.PREPARE) {
-                { Text(stringResource(R.string.share_manual_note)) }
-            } else {
-                null
-            },
-            leadingContent = { AppIcon(app, icon) },
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent, leadingIconColor = AppTheme.colorScheme.onSurfaceVariant),
-            modifier = Modifier.clickable { onSelect(target) }.testTag("share_$tag"),
-        )
+    val shapes = ListItemShapes(AppTheme.shapes.medium)
+    val choice: @Composable (String, String, ImageVector, String?, ShareTarget) -> Unit = { label, tag, icon, note, target ->
+        SegmentedListItem(
+            onClick = { onSelect(target) },
+            shapes = shapes,
+            colors = ListItemDefaults.segmentedColors(containerColor = Color.Transparent),
+            leadingContent = { Icon(icon, contentDescription = null) },
+            trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
+            supportingContent = note?.let { { Text(it) } },
+            modifier = Modifier.testTag("share_$tag"),
+        ) { Text(label) }
     }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -131,46 +126,28 @@ fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
             Text(
                 stringResource(R.string.action_share),
                 style = AppTheme.typography.title,
-                modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.s).semantics { heading() },
+                modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s).semantics { heading() },
             )
-            ShareTarget.entries.filter { it != ShareTarget.PREPARE }.forEach { target ->
-                choice(stringResource(target.title), target.tag, target.app, AppIcons.Send, target)
+            // The rows' icons on the title's edge, their own padding outside it.
+            Column(Modifier.padding(horizontal = Space.gutter - ROW_PADDING)) {
+                ShareTarget.entries.filter { it != ShareTarget.PREPARE }.forEach { target ->
+                    val icon = when (target) {
+                        ShareTarget.TELEGRAM -> AppIcons.Share
+                        ShareTarget.WECHAT -> AppIcons.Image
+                        else -> AppIcons.Send
+                    }
+                    choice(stringResource(target.title), target.tag, icon, null, target)
+                }
+                Spacer(Modifier.height(Space.l))
+                choice(stringResource(R.string.action_share_feishu_manual), "feishu", AppIcons.Photos, stringResource(R.string.share_manual_note), ShareTarget.PREPARE)
+                choice(stringResource(ShareTarget.PREPARE.title), "prepare", AppIcons.Photos, null, ShareTarget.PREPARE)
             }
-            HorizontalDivider(Modifier.padding(vertical = Space.s), color = AppTheme.colorScheme.outlineVariant)
-            choice(stringResource(R.string.action_share_feishu_manual), "feishu", FEISHU, AppIcons.Photos, ShareTarget.PREPARE)
-            choice(stringResource(ShareTarget.PREPARE.title), "prepare", null, AppIcons.Photos, ShareTarget.PREPARE)
         }
     }
 }
 
-// Feishu sends each shared photo and the text as separate messages, so its post is put together by hand.
-private const val FEISHU = "com.ss.android.lark"
-
-/**
- * The icon of the app a choice goes to, as the phone has it, so the menu reads like the
- * system's share sheet; [fallback] while it loads, and for an app that isn't installed.
- */
-@Composable
-private fun AppIcon(app: String?, fallback: ImageVector) {
-    val context = LocalContext.current
-    val icon by produceState<ImageBitmap?>(null, app) {
-        value = app?.let {
-            withContext(Dispatchers.IO) {
-                runCatching { context.packageManager.getApplicationIcon(it).toBitmap().asImageBitmap() }.getOrNull()
-            }
-        }
-    }
-    Box(Modifier.size(APP_ICON), contentAlignment = Alignment.Center) {
-        val bitmap = icon
-        if (bitmap != null) {
-            Image(bitmap, contentDescription = null, modifier = Modifier.size(APP_ICON))
-        } else {
-            Icon(fallback, contentDescription = null)
-        }
-    }
-}
-
-private val APP_ICON = 40.dp
+/** The side padding of a list row, outside the sheet's gutter so the rows line up with its title. */
+private val ROW_PADDING = 16.dp
 
 /** A separate copy for another platform; the original Moment stays as written. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -364,7 +341,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
         },
     ) {
         Column(
-            Modifier.verticalScroll(rememberScrollState()).padding(start = Space.xl, end = Space.xl, bottom = Space.xl),
+            Modifier.verticalScroll(rememberScrollState()).padding(start = Space.gutter, end = Space.gutter, bottom = Space.xl),
             verticalArrangement = Arrangement.spacedBy(Space.m),
         ) {
             Text(stringResource(target.title), style = AppTheme.typography.titlePage)
@@ -436,7 +413,10 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     else stringResource(R.string.share_prepare_photos, chosen.size),
                     style = AppTheme.typography.label,
                 )
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                // Four to a row, filling the width, so the grid ends on the gutter as the words do.
+                BoxWithConstraints {
+                val tile = ((maxWidth - Space.s * (PHOTO_COLUMNS - 1)) / PHOTO_COLUMNS - Space.xs * 2).value.toInt()
+                FlowRow(maxItemsInEachRow = PHOTO_COLUMNS, horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     photos.forEachIndexed { index, photo ->
                         val checked = photo.uid in selected
                         // Once as many are chosen as the app takes, the rest can't be, and look it.
@@ -461,7 +441,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                                 // The ring a step out from the photo, its corner the photo's and that step together.
                                 .padding(Space.xs),
                         ) {
-                            Thumbnail(photo, urls, size = 72, modifier = Modifier.alpha(if (choosable) 1f else DISABLED_ALPHA))
+                            Thumbnail(photo, urls, size = tile, modifier = Modifier.alpha(if (choosable) 1f else DISABLED_ALPHA))
                             if (checked) {
                                 Surface(
                                     color = AppTheme.colorScheme.primary,
@@ -473,6 +453,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                             }
                         }
                     }
+                }
                 }
             }
             if (moment.media.any { it.type == MediaType.VIDEO || it.type == MediaType.LIVE_PHOTO }) {
@@ -491,6 +472,9 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
         }
     }
 }
+
+/** How many photos to a row of the ones to choose from. */
+private const val PHOTO_COLUMNS = 4
 
 /** Material 3's disabled content opacity, for a photo that can't be chosen. */
 private const val DISABLED_ALPHA = 0.38f
