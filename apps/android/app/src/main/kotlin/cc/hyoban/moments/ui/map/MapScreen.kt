@@ -89,6 +89,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -200,6 +201,7 @@ private fun MapContent(
     // those a Moment was written in, the phone's own among them, lit.
     val settings = LocalSettings.current
     val context = LocalContext.current
+    val resources = LocalResources.current
     var fogRegions by remember { mutableStateOf<List<FogRegion>?>(null) }
     // Each toggle, swept on the map rather than set; a toggle while one sweeps turns it around.
     var fogSweep by remember { mutableIntStateOf(0) }
@@ -255,7 +257,7 @@ private fun MapContent(
         if (granted.values.any { it }) {
             startLocating()
         } else {
-            show(context.getString(R.string.error_location_permission))
+            show(resources.getString(R.string.error_location_permission))
         }
     }
     val requestLocate: () -> Unit = {
@@ -268,7 +270,7 @@ private fun MapContent(
     }
 
     // Whether the tabs stand down a rail, as from the expanded breakpoint.
-    val railed = cc.hyoban.moments.ui.components.isExpandedWidth() || cc.hyoban.moments.ui.components.isLandscapeWindow()
+    val railed = cc.hyoban.moments.ui.components.isExpandedWidth() || cc.hyoban.moments.ui.components.isLandscape()
 
     Box(Modifier.fillMaxSize()) {
         PlacesMap(
@@ -298,7 +300,7 @@ private fun MapContent(
             fogRegions = fogRegions.orEmpty(),
             onLocated = { found ->
                 locating = false
-                if (!found) show(context.getString(R.string.error_location))
+                if (!found) show(resources.getString(R.string.error_location))
             },
         )
         // On a phone on its side, at the top of the side away from the tabs and their buttons.
@@ -412,7 +414,7 @@ private fun MapContent(
             PlaceSheet(
                 place, id, here, years, colors, places, container.mediaUrls,
                 bottom = clearance,
-                onNavigate = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) },
+                onNavigate = { if (!navigateTo(context, place)) show(resources.getString(R.string.no_map_app)) },
                 onAll = { selected = null; onPlace(id) },
                 onMoment = onMoment,
             )
@@ -463,14 +465,14 @@ private fun PlaceSheet(
     onAll: () -> Unit,
     onMoment: (String) -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     Column(Modifier.fillMaxHeight()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Space.gutter), verticalAlignment = Alignment.CenterVertically) {
             Icon(AppIcons.Pin, contentDescription = null, tint = colors[years.minOrNull()] ?: tokens.accent)
             Column(Modifier.weight(1f).padding(horizontal = Space.m)) {
                 Text(place.name, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
                 Text(
-                    (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(context.getString(R.string.separator_list)) { context.getString(R.string.year_item, it) }).joinToString("\u2003"),
+                    (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(resources.getString(R.string.separator_list)) { resources.getString(R.string.year_item, it) }).joinToString("\u2003"),
                     style = AppTheme.typography.body,
                     color = tokens.tx2,
                     maxLines = 1,

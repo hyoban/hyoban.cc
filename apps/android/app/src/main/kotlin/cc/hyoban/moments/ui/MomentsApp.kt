@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.ui.graphics.Brush
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -115,6 +116,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import kotlinx.coroutines.flow.StateFlow
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -403,7 +405,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val navController = rememberNavController()
     // The page shown, under a dialog over it, as the editor is on a wide window: the tabs stay
     // with that page rather than going as the dialog opens.
-    val stack by navController.currentBackStack.collectAsStateWithLifecycle()
+    val stack by navController.backStack.collectAsStateWithLifecycle()
     val entry = stack.lastOrNull { it.destination !is NavGraph && it.destination.navigatorName != DIALOG_NAVIGATOR }
     val current = Tab.entries.firstOrNull { tab -> entry?.destination?.hasRoute(tab.type) == true }
     // Writing or changing a Moment: a page on a compact window, a dialog from the medium breakpoint on.
@@ -488,7 +490,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
         navController.navigate(Tab.entries[index].route) {
             // The tab takes the place of the one before rather than going on top of it, so
             // back on any tab leaves the app, as the system's back to home; each keeps its state.
-            val bottom = navController.currentBackStack.value.firstOrNull { it.destination !is NavGraph }?.destination
+            val bottom = navController.backStack.value.firstOrNull { it.destination !is NavGraph }?.destination
             popUpTo((bottom ?: navController.graph.findStartDestination()).id) {
                 inclusive = true
                 saveState = true
@@ -501,7 +503,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
         mapFocus = focus
         // From a page pushed on the map tab itself, back down to the map: switching to the tab
         // would only bring its pages back as they were, this one on top.
-        val bottom = navController.currentBackStack.value.firstOrNull { it.destination !is NavGraph }
+        val bottom = navController.backStack.value.firstOrNull { it.destination !is NavGraph }
         if (bottom?.destination?.hasRoute(Atlas::class) == true) {
             navController.popBackStack<Atlas>(inclusive = false)
         } else {
@@ -520,7 +522,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val landscape = isLandscape()
     // The tabs stand down a rail from the expanded breakpoint on, as the design has it (L01), and
     // on a phone on its side, too short for the floating bar; otherwise they float at the foot.
-    val railed = isExpandedWidth() || cc.hyoban.moments.ui.components.isLandscapeWindow()
+    val railed = isExpandedWidth() || cc.hyoban.moments.ui.components.isLandscape()
     val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     // What a tab's page keeps clear of: the system's navigation beside a rail, else the
     // navigation bar, the system's navigation under it included. A page keeps its own while it
@@ -1229,6 +1231,10 @@ fun routeOf(link: Uri): Any? {
 /** The app's navigation, for a page to tell what it was opened from. */
 private val LocalNavController = staticCompositionLocalOf<NavController?> { null }
 
+/** The whole back stack, which navigation keeps to itself: no public API lists the entries under the one shown. */
+private val NavController.backStack: StateFlow<List<NavBackStackEntry>>
+    @SuppressLint("RestrictedApi") get() = currentBackStack
+
 /** The page's own entry on the back stack. */
 private val LocalPageEntry = staticCompositionLocalOf<NavBackStackEntry?> { null }
 
@@ -1243,7 +1249,7 @@ fun openedFrom(route: Any): Boolean {
     val navController = LocalNavController.current ?: return false
     val entry = LocalPageEntry.current ?: return false
     val below = remember(entry) {
-        val stack = navController.currentBackStack.value.filter { it.destination !is NavGraph }
+        val stack = navController.backStack.value.filter { it.destination !is NavGraph }
         stack.getOrNull(stack.indexOfFirst { it.id == entry.id } - 1)
     }
     return below?.isOf(route) == true

@@ -11,6 +11,7 @@ import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Toast
+import androidx.core.os.HandlerCompat
 import cc.hyoban.moments.ledger.AutoBill
 import cc.hyoban.moments.ledger.PaymentApp
 import cc.hyoban.moments.ledger.PaymentPage
@@ -40,11 +41,11 @@ open class ShareAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (session != null && !handler.hasCallbacks(tick)) handler.postDelayed(tick, POLL_MS)
+        if (session != null && !HandlerCompat.hasCallbacks(handler, tick)) handler.postDelayed(tick, POLL_MS)
         // A payment app's page read a moment after it changes, at most once in that time: its
         // pages never stop changing for long, with their animations, for a read waiting on quiet.
         if (session == null && PaymentApp.of(event?.packageName?.toString()) != null && AutoBill.enabled(this) &&
-            !handler.hasCallbacks(payment)) {
+            !HandlerCompat.hasCallbacks(handler, payment)) {
             handler.postDelayed(payment, PAYMENT_SETTLE_MS)
         }
     }
@@ -128,7 +129,7 @@ open class ShareAccessibilityService : AccessibilityService() {
             raw.filter { it !== root }.forEach { it.recycle() }
             @Suppress("DEPRECATION")
             root?.recycle()
-            if (session != null && !handler.hasCallbacks(tick)) handler.postDelayed(tick, POLL_MS)
+            if (session != null && !HandlerCompat.hasCallbacks(handler, tick)) handler.postDelayed(tick, POLL_MS)
         }
     }
 

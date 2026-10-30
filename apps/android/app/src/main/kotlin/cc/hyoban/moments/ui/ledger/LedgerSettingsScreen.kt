@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -84,6 +85,7 @@ import kotlinx.coroutines.withContext
 fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: Boolean = false) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val show = rememberShowMessage()
     val chinese = LocalConfiguration.current.locales[0].language == "zh"
@@ -99,21 +101,21 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                 withContext(Dispatchers.IO) {
                     context.contentResolver.openOutputStream(uri, "wt")!!.bufferedWriter().use { it.write(LedgerBackup.encode(LedgerBackup.of(container.ledger.ledger.value))) }
                 }
-            }.onSuccess { show(context.getString(R.string.ledger_backup_done)) }.onFailure { show(context.getString(R.string.ledger_error_file)) }
+            }.onSuccess { show(resources.getString(R.string.ledger_backup_done)) }.onFailure { show(resources.getString(R.string.ledger_error_file)) }
         }
     }
     val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) scope.launch {
             runCatching { withContext(Dispatchers.IO) { LedgerBackup.decode(context.contentResolver.openInputStream(uri)!!.bufferedReader().use { it.readText() }) } }
                 .onSuccess { restoring = it }
-                .onFailure { show(context.getString(R.string.ledger_error_backup)) }
+                .onFailure { show(resources.getString(R.string.ledger_error_backup)) }
         }
     }
     val csv = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
         if (uri != null) scope.launch {
             runCatching {
                 withContext(Dispatchers.IO) { context.contentResolver.openOutputStream(uri, "wt")!!.bufferedWriter().use { writeCsv(container.ledger.ledger.value, it) } }
-            }.onSuccess { show(context.getString(R.string.ledger_csv_done)) }.onFailure { show(context.getString(R.string.ledger_error_file)) }
+            }.onSuccess { show(resources.getString(R.string.ledger_csv_done)) }.onFailure { show(resources.getString(R.string.ledger_error_file)) }
         }
     }
     LaunchedEffect(startImport) { if (startImport) importer.pick() }
@@ -189,7 +191,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                                     scope.launch {
                                         val changed = autoLink(container.ledger.ledger.value, container.repository.moments.value, container.repository.trips.value)
                                         container.ledger.saveTxns(changed)
-                                        show(context.resources.getQuantityString(R.plurals.ledger_linked, changed.size, changed.size))
+                                        show(resources.getQuantityString(R.plurals.ledger_linked, changed.size, changed.size))
                                     }
                                 },
                                 shapes = shapes, colors = segmentColors(),
@@ -253,7 +255,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                     scope.launch {
                         container.ledger.putAll(found.books, found.accounts, found.categories, found.txns, replace = true)
                         busy = false
-                        show(context.getString(R.string.ledger_restore_done))
+                        show(resources.getString(R.string.ledger_restore_done))
                     }
                 }) { Text(stringResource(R.string.ledger_replace)) }
             },
@@ -314,10 +316,12 @@ private class Found(val table: List<List<String>>, val merged: ICostImport.Resul
 @Composable
 fun rememberICostImport(container: AppContainer): ICostImporter {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val show = rememberShowMessage()
     var found by remember { mutableStateOf<Found?>(null) }
     var reading by remember { mutableStateOf(false) }
+    val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val read: (Uri) -> Unit = { uri ->
         scope.launch {
             reading = true
@@ -329,7 +333,7 @@ fun rememberICostImport(container: AppContainer): ICostImporter {
                 throw e
             } catch (e: Exception) {
                 Log.w("Ledger", "iCost import failed", e)
-                show(context.getString(R.string.ledger_error_import))
+                show(resources.getString(R.string.ledger_error_import))
             } finally {
                 reading = false
             }
@@ -340,7 +344,7 @@ fun rememberICostImport(container: AppContainer): ICostImporter {
         found?.let { result ->
             ImportDialog(
                 result,
-                hasData = container.ledger.ledger.value.txns.isNotEmpty(),
+                hasData = ledger.txns.isNotEmpty(),
                 onDismiss = { found = null },
             ) { replace ->
                 found = null
@@ -351,7 +355,7 @@ fun rememberICostImport(container: AppContainer): ICostImporter {
                     chosen.txns.groupingBy { it.book }.eachCount().maxByOrNull { it.value }?.key?.let { container.ledger.setCurrentBook(it) }
                     val linked = autoLink(container.ledger.ledger.value, container.repository.moments.value, container.repository.trips.value)
                     container.ledger.saveTxns(linked)
-                    show(context.getString(R.string.ledger_import_done, chosen.txns.size, linked.size))
+                    show(resources.getQuantityString(R.plurals.ledger_import_done, chosen.txns.size, chosen.txns.size, linked.size))
                 }
             }
         }
@@ -391,11 +395,11 @@ private fun ImportDialog(found: Found, hasData: Boolean, onDismiss: () -> Unit, 
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 Text(stringResource(R.string.ledger_import_summary, report.rows, report.txns, report.books, report.accounts))
                 Text(stringResource(R.string.ledger_import_matched, report.refundsMatched + report.refundsLoose, report.refundsMatched, report.reimbursementsMatched + report.reimbursementsLoose, report.reimbursementsMatched))
-                if (report.folded > 0) Text(stringResource(R.string.ledger_import_folded, report.folded))
-                if (report.converted > 0) Text(stringResource(R.string.ledger_import_converted, report.converted))
-                if (report.duplicates > 0) Text(stringResource(R.string.ledger_import_duplicates, report.duplicates))
+                if (report.folded > 0) Text(pluralStringResource(R.plurals.ledger_import_folded, report.folded, report.folded))
+                if (report.converted > 0) Text(pluralStringResource(R.plurals.ledger_import_converted, report.converted, report.converted))
+                if (report.duplicates > 0) Text(pluralStringResource(R.plurals.ledger_import_duplicates, report.duplicates, report.duplicates))
                 if (report.skipped.isNotEmpty()) {
-                    Text(stringResource(R.string.ledger_import_skipped, report.skipped.size, report.skipped.take(5).joinToString { "#${it.first} ${it.second}" }), color = tokens.danger)
+                    Text(pluralStringResource(R.plurals.ledger_import_skipped, report.skipped.size, report.skipped.size, report.skipped.take(5).joinToString { "#${it.first} ${it.second}" }), color = tokens.danger)
                 }
                 Text(stringResource(R.string.ledger_import_accounts_note), style = AppTheme.typography.caption, color = tokens.tx2)
                 if (hasData) {

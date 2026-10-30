@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!-- The app logs with android.util.Log; it has no Timber. -->
+    <issue id="LogNotTimber" severity="ignore" />
+    <!-- Libraries move to a newer version only for a reason (gradle/libs.versions.toml). -->
+    <issue id="NewerVersionAvailable" severity="ignore" />
+    <issue id="GradleDependency" severity="ignore" />
+    <!-- Phones are all arm64, so the APK leaves the other ABIs out. -->
+    <issue id="ChromeOsAbiSupport" severity="ignore" />
+    <!-- Attributes newer than minSdk are read where the system has them and skipped before. -->
+    <issue id="UnusedAttribute" severity="ignore" />
+    <!-- The launcher icon is left out of the build if its folder loses -v26. -->
+    <issue id="ObsoleteSdkInt">
+        <ignore path="src/main/res/mipmap-anydpi-v26" />
+    </issue>
+    <!-- Pip.kt sets auto-enter; the source rect hint is not set yet. -->
+    <issue id="PictureInPictureIssue" severity="ignore" />
+</lint>

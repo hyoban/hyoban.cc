@@ -35,8 +35,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -97,11 +98,11 @@ fun TripScreen(
     val trip = remember(trips, id) { trips.firstOrNull { it.id == id } } ?: return
     val moments = remember(trip, all) { momentsOf(trip, all, trips) }
     val stops = remember(trip, all, places) { stopsOf(trip, all, trips, places) }
-    val context = LocalContext.current
+    val resources = LocalResources.current
 
-    val dayLabel = { day: String -> context.getString(R.string.trip_day, daysBetween(trip.start, day)) + "\u2003" + formatDay(day) }
+    val dayLabel = { day: String -> resources.getString(R.string.trip_day, daysBetween(trip.start, day)) + "\u2003" + formatDay(day) }
     // 第 n 天 at the end of each day's header.
-    val dayNote = { day: String -> context.getString(R.string.trip_day, daysBetween(trip.start, day)) }
+    val dayNote = { day: String -> resources.getString(R.string.trip_day, daysBetween(trip.start, day)) }
     // The title is the bar's; under it, what the trip covered.
     val summary: @Composable () -> Unit = {
         Column(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xs, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.m)) {
@@ -349,7 +350,7 @@ private fun TripFacets(
     }
     val figures = listOfNotNull(
         (km.takeIf { it >= 1 }?.let { "%,d".format(it.roundToInt()) to stringResource(R.string.facet_km) })?.let { it to null },
-        (charges.takeIf { it.isNotEmpty() }?.let { "%.0f".format(it.sum() / 1000) to stringResource(R.string.facet_charging, it.size) })?.let { it to null },
+        (charges.takeIf { it.isNotEmpty() }?.let { "%.0f".format(it.sum() / 1000) to pluralStringResource(R.plurals.facet_charging, it.size, it.size) })?.let { it to null },
         (spent?.let { cc.hyoban.moments.ui.ledger.money(it, currency) to stringResource(R.string.facet_spent) })?.let { it to onBills },
     )
     if (figures.isEmpty()) return

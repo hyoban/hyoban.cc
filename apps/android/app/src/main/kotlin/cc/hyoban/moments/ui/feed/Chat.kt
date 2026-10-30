@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -182,7 +183,7 @@ class BubbleShape(private val sent: Boolean, private val joinedAbove: Boolean, p
 @Composable
 fun DateCapsule(day: String, onClick: (() -> Unit)?, modifier: Modifier = Modifier, note: String? = null, description: String = "") {
     val date = java.time.LocalDate.parse(day)
-    val weekday = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())
+    val weekday = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, LocalConfiguration.current.locales[0])
     val label = if (date == java.time.LocalDate.now()) stringResource(R.string.label_today) + " " + weekday else formatDay(day)
     val text = listOfNotNull(note, label).joinToString(" ")
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {

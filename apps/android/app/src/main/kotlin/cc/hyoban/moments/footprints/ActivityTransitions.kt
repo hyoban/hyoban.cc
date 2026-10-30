@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.SystemClock
+import androidx.core.content.edit
 import cc.hyoban.moments.MomentsApplication
 import cc.hyoban.moments.R
 import com.google.android.gms.common.ConnectionResult
@@ -37,7 +38,7 @@ internal object ActivityTransitions {
     private fun preferences(context: Context) = context.getSharedPreferences("footprint-activity", Context.MODE_PRIVATE)
     fun enabled(context: Context) = preferences(context).getBoolean("enabled", false)
     fun setEnabled(context: Context, enabled: Boolean) {
-        preferences(context).edit().putBoolean("enabled", enabled).apply()
+        preferences(context).edit { putBoolean("enabled", enabled) }
         RecordingService.refreshActivityRecognition(context)
     }
     fun available(context: Context) = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS

@@ -77,6 +77,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -514,7 +515,7 @@ private fun DayHead(
     val known = remember(date) { knownDayTrack(date) }
     val moving = if (track == null) known != null || knownFootprints(date) else points.size > 1
     // No more than half the screen, so a phone on its side still shows the day under it.
-    val height = minOf(DAY_MAP, androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp / 2)
+    val height = minOf(DAY_MAP, cc.hyoban.moments.ui.components.windowHeight() / 2)
     Column(Modifier.fillMaxWidth()) {
         if (moving && track == null) {
             Spacer(Modifier.fillMaxWidth().height(height))
@@ -588,6 +589,7 @@ fun PlaceScreen(
             // On the map tab, its panel up, and the way there, as from that panel.
             if (place != null) {
                 val context = LocalContext.current
+                val resources = LocalResources.current
                 val show = rememberShowMessage()
                 val onMapLabel = stringResource(R.string.action_show_on_map)
                 Tooltip(onMapLabel, below = true) {
@@ -596,7 +598,7 @@ fun PlaceScreen(
                     }
                 }
                 Tooltip(stringResource(R.string.action_navigate), below = true) {
-                    IconButton(onClick = { if (!navigateTo(context, place)) show(context.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
+                    IconButton(onClick = { if (!navigateTo(context, place)) show(resources.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
                         Icon(AppIcons.Directions, contentDescription = stringResource(R.string.action_navigate))
                     }
                 }

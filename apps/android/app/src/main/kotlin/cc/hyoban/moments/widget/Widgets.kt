@@ -1,12 +1,12 @@
 package cc.hyoban.moments.widget
 
+import androidx.core.net.toUri
 import cc.hyoban.moments.ui.theme.Tokens
 import androidx.glance.color.colorProviders
 import androidx.glance.color.ColorProvider
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -171,10 +171,10 @@ object Widgets {
             previewsSet = true
             val manager = GlanceAppWidgetManager(context)
             // The system allows only a few a day; one turned down is tried next run.
-            runCatching {
-                manager.setWidgetPreviews(MemoryWidgetReceiver::class)
-                manager.setWidgetPreviews(TripWidgetReceiver::class)
+            val results = runCatching {
+                listOf(manager.setWidgetPreviews(MemoryWidgetReceiver::class), manager.setWidgetPreviews(TripWidgetReceiver::class))
             }
+            previewsSet = results.getOrNull()?.all { it == GlanceAppWidgetManager.SET_WIDGET_PREVIEWS_RESULT_SUCCESS } == true
         }
     }
 }
@@ -338,7 +338,7 @@ private fun WidgetTheme(context: Context, content: @Composable () -> Unit) {
 
 /** Opens a page of the app by its link, as `moments://moment/{uid}`. */
 private fun open(link: String) = actionStartActivity(
-    Intent(Intent.ACTION_VIEW, Uri.parse("$DEEP_LINK_SCHEME://$link")).setClassName("cc.hyoban.moments", LinkActivity::class.java.name),
+    Intent(Intent.ACTION_VIEW, "$DEEP_LINK_SCHEME://$link".toUri()).setClassName("cc.hyoban.moments", LinkActivity::class.java.name),
 )
 
 /** The app's container, its copy of the records read before anything is picked from it. */

@@ -59,7 +59,7 @@ fun writeCsv(ledger: Ledger, writer: Writer) {
     fun cell(text: String) = if (text.any { it == ',' || it == '"' || it == '\n' }) "\"" + text.replace("\"", "\"\"") + "\"" else text
     fun amount(cents: Long) = formatCents(cents, always = true).replace(",", "")
     val books = ledger.books.associate { it.id to it.name }
-    writer.write("﻿")
+    writer.write("\uFEFF")
     writer.write(listOf("日期", "类型", "金额", "一级分类", "二级分类", "账户1", "账户2", "备注", "货币", "标签", "账本", "退款", "优惠", "手续费").joinToString(",") + "\r\n")
     for (txn in ledger.txns.asReversed()) {
         val category = ledger.categoriesById[txn.category]

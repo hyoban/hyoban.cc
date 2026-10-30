@@ -1,8 +1,7 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="zh">
     <string name="app_name" translatable="false">Here</string>
     <string name="tab_moments">时间线</string>
     <string name="tab_map">地图</string>
-    <string name="tab_trips">旅程</string>
     <string name="action_back">返回</string>
     <string name="action_play">播放</string>
     <string name="action_navigate">导航到这里</string>
@@ -45,19 +44,25 @@
     <string name="share_telegram_copy_open">复制文字并打开 Telegram</string>
     <string name="share_telegram_open">打开 Telegram</string>
     <string name="share_telegram_unavailable">无法打开 Telegram，确认已安装</string>
-    <string name="share_selected_photos">已选 %1$d 张，按原顺序分享。点按照片来选择。</string>
+    <plurals name="share_selected_photos">
+        <item quantity="other">已选 %1$d 张，按原顺序分享。点按照片来选择。</item>
+    </plurals>
     <string name="share_x_hint">在 X 中检查后发布。这里的修改只用于这次分享，字数限制以 X 编辑器为准。</string>
     <string name="share_text">文字</string>
     <string name="share_photos">已选 %1$d / %2$d 张，按原顺序分享。点按照片来选择。</string>
     <string name="action_prepare_share">准备图文</string>
     <string name="share_prepare_hint">「准备图文」会把所选照片存到一个单独的相册，并复制文字，之后到目标 App 里手动选照片、粘贴并发布。微信朋友圈、B 站、飞书和其他平台都可以用，照片数量按目标平台的限制来选。</string>
-    <string name="share_prepare_photos">已选 %1$d 张，按原顺序保存。点按照片来选择。</string>
+    <plurals name="share_prepare_photos">
+        <item quantity="other">已选 %1$d 张，按原顺序保存。点按照片来选择。</item>
+    </plurals>
     <string name="share_save_and_copy">保存照片并复制文字</string>
     <string name="share_save_photos">保存照片</string>
     <string name="share_copy_text">复制文字</string>
     <string name="share_storage_permission">需要存储权限才能把照片保存到相册</string>
     <string name="share_prepared">已准备好</string>
-    <string name="share_album_saved">%1$d 张照片已保存到相册「%2$s」，按原顺序编号。相册会保留。</string>
+    <plurals name="share_album_saved">
+        <item quantity="other">%1$d 张照片已保存到相册「%2$s」，按原顺序编号。相册会保留。</item>
+    </plurals>
     <string name="share_text_copied">已复制文字</string>
     <string name="share_manual_steps">现在可以打开目标 App，手动选照片、粘贴文字并发布</string>
     <string name="share_done">完成</string>
@@ -98,9 +103,6 @@
     <string name="fog_lit">点亮 %1$d 座城市\u2003%2$d 个省份</string>
     <string name="error_location">没能定位，确认定位已打开</string>
     <string name="error_location_permission">需要定位权限才能显示所在位置</string>
-    <string name="label_view_list">列表</string>
-    <string name="label_view_calendar">日历</string>
-    <string name="label_write_moment">记录</string>
     <string name="label_publish_all">全部发布</string>
     <string name="action_search">搜索</string>
     <string name="action_clear">清除</string>
@@ -121,7 +123,6 @@
     <string name="action_pause">暂停</string>
     <string name="action_mute">静音</string>
     <string name="action_unmute">打开声音</string>
-    <string name="section_places">地点</string>
     <string name="section_photo">照片</string>
     <string name="section_route">路线</string>
     <string name="title_settings">设置</string>
@@ -142,16 +143,7 @@
     <string name="action_cancel">取消</string>
     <string name="error_address">需要 http 或 https 开头的地址</string>
     <string name="action_restore_default">重置</string>
-    <string name="theme_color_system">跟随系统取色</string>
-    <string name="action_add_color">自定义颜色</string>
     <string name="action_delete">删除</string>
-    <string name="setting_color_style">配色风格</string>
-    <string name="color_style_vivid">鲜艳</string>
-    <string name="color_style_tinted">着色</string>
-    <string name="color_style_soft">柔和</string>
-    <string name="color_style_monochrome">单色</string>
-    <string name="setting_pure_black">纯黑</string>
-    <string name="settings_pure_black_note">深色模式下页面用纯黑，OLED 屏幕更省电</string>
     <string name="section_credits">致谢</string>
     <string name="credit_mantou">馒头</string>
     <string name="credit_mantou_note">App 的图标画的就是这只猫</string>
@@ -287,8 +279,6 @@
     <string name="share_save_place">保存为地点</string>
     <string name="message_place_saved">已保存地点「%1$s」</string>
     <string name="message_place_known">已经有地点「%1$s」了</string>
-    <string name="action_next">下一步</string>
-    <string name="action_previous">上一步</string>
     <string name="title_edit_moment">编辑时刻</string>
     <string name="action_edit_moment">编辑这个时刻</string>
     <string name="action_more">更多</string>
@@ -354,7 +344,6 @@
     <string name="label_no_words">没有文字</string>
     <string name="action_show_token">显示令牌</string>
     <string name="action_hide_token">隐藏令牌</string>
-    <string name="action_delete_color">删除这个颜色</string>
     <string name="message_change_reverted">已放弃更改</string>
     <string name="action_navigate_short">导航</string>
     <string name="action_refresh">刷新</string>
@@ -581,8 +570,12 @@
     <string name="ledger_day_of_month">%1$d日</string>
     <string name="ledger_running_total_description">折线图，%1$s累计 %2$s，%3$s累计 %4$s</string>
     <string name="ledger_chart_calendar">日历</string>
-    <string name="ledger_days_with_expense">%1$d 天有支出</string>
-    <string name="ledger_days_with_income">%1$d 天有收入</string>
+    <plurals name="ledger_days_with_expense">
+        <item quantity="other">%1$d 天有支出</item>
+    </plurals>
+    <plurals name="ledger_days_with_income">
+        <item quantity="other">%1$d 天有收入</item>
+    </plurals>
     <string name="ledger_chart_weekdays">星期分布</string>
     <string name="ledger_weekday_average">平均每个%1$s %2$s</string>
     <string name="ledger_category_other">其他</string>
@@ -592,7 +585,6 @@
     <string name="ledger_month_end">%1$s末 %2$s</string>
     <string name="ledger_net_assets_change">比 %1$s末 %2$s</string>
     <string name="ledger_amount">金额</string>
-    <string name="ledger_category">分类</string>
     <string name="ledger_add_category">添加分类</string>
     <string name="ledger_add_subcategory">添加二级分类</string>
     <string name="ledger_account">账户</string>
@@ -611,7 +603,6 @@
     <string name="ledger_link_place">地点</string>
     <string name="ledger_footprint_place">足迹位置</string>
     <string name="ledger_link_trip">旅程</string>
-    <string name="ledger_none">无</string>
     <string name="ledger_choose">选择</string>
     <string name="ledger_choose_account">选择账户</string>
     <string name="ledger_note_hint">添加备注</string>
@@ -619,7 +610,6 @@
     <string name="ledger_add_payer">添加账户</string>
     <string name="ledger_split_sum">合计 %1$s，应为 %2$s</string>
     <string name="ledger_reimbursable">报销</string>
-    <string name="ledger_reimbursable_note">待报销期间不计入支出</string>
     <string name="ledger_excluded">不计入收支</string>
     <string name="ledger_excluded_note">仍会改变账户余额</string>
     <string name="ledger_record_reimbursement">记报销入账</string>
@@ -691,14 +681,24 @@
     <string name="ledger_import">导入</string>
     <string name="ledger_import_summary">%1$d 行，导入 %2$d 笔账单，新增 %3$d 个账本、%4$d 个账户。</string>
     <string name="ledger_import_matched">%1$d 笔退款中 %2$d 笔、%3$d 笔报销中 %4$d 笔已对应到原账单。</string>
-    <string name="ledger_import_folded">%1$d 行 iCost 派生的优惠和退款收入已并回原账单。</string>
-    <string name="ledger_import_converted">%1$d 笔跨币种金额按当天汇率换算。</string>
-    <string name="ledger_import_duplicates">%1$d 笔已经在账本里，跳过。</string>
-    <string name="ledger_import_skipped">%1$d 行无法识别：%2$s</string>
+    <plurals name="ledger_import_folded">
+        <item quantity="other">%1$d 行 iCost 派生的优惠和退款收入已并回原账单。</item>
+    </plurals>
+    <plurals name="ledger_import_converted">
+        <item quantity="other">%1$d 笔跨币种金额按当天汇率换算。</item>
+    </plurals>
+    <plurals name="ledger_import_duplicates">
+        <item quantity="other">%1$d 笔已经在账本里，跳过。</item>
+    </plurals>
+    <plurals name="ledger_import_skipped">
+        <item quantity="other">%1$d 行无法识别：%2$s</item>
+    </plurals>
     <string name="ledger_import_accounts_note">导出里没有账户余额，导入后可在账户页「校准余额」。账户类型按名称推断，可以修改。</string>
     <string name="ledger_merge">和现有账单合并</string>
     <string name="ledger_replace">替换现有数据</string>
-    <string name="ledger_import_done">已导入 %1$d 笔账单，关联了 %2$d 笔</string>
+    <plurals name="ledger_import_done">
+        <item quantity="other">已导入 %1$d 笔账单，关联了 %2$d 笔</item>
+    </plurals>
     <plurals name="ledger_count_bills">
         <item quantity="other">%1$d 笔账单</item>
     </plurals>
@@ -722,23 +722,17 @@
     <string name="auto_bill_wechat">微信支付</string>
     <string name="auto_bill_alipay">支付宝</string>
     <string name="tab_me">我</string>
-    <string name="me_pending_none">没有待发布的更改</string>
     <string name="me_pending_note">发布前先看一遍改动，再一起发到网站。</string>
-    <string name="me_synced_note">新写的时刻和改动会先留在手机上。</string>
     <string name="action_review_publish">查看并发布</string>
     <string name="settings_moments_data">时刻与数据</string>
     <string name="settings_map_footprints">地图与足迹</string>
     <string name="settings_about">关于</string>
     <string name="me_month_expense">本月支出</string>
-    <string name="me_assets">资产与账户</string>
-    <string name="me_start_ledger">开始记账</string>
-    <string name="me_start_ledger_note">记一笔，或从 iCost 导入。</string>
     <string name="label_time">时间</string>
     <string name="action_previous_month">上个月</string>
     <string name="action_next_month">下个月</string>
     <string name="visibility_public">公开</string>
     <string name="visibility_private">私有</string>
-    <string name="changes_bills">账单</string>
     <string name="changes_bill_public_note">只发布金额、分类和备注</string>
     <string name="changes_bill_private">改为私有，会从网站删除</string>
     <string name="changes_tracks">轨迹</string>
@@ -770,7 +764,9 @@
     <string name="section_visibility">公开状态</string>
     <string name="changes_private_note">私有的只留给自己，不会出现在网站上。</string>
     <string name="facet_km">公里</string>
-    <string name="facet_charging">千瓦时 %1$d 次充电</string>
+    <plurals name="facet_charging">
+        <item quantity="other">千瓦时 %1$d 次充电</item>
+    </plurals>
     <string name="facet_spent">花费</string>
     <string name="footprints_public_spans">公开的时间段</string>
     <string name="footprints_span_trip">跟着旅程，旅程改了时间也跟着改</string>
@@ -798,7 +794,6 @@
     <string name="trip_edit_members_note">这几天的记录自动算进来，可以排除；前后两天的可以加进来。</string>
     <string name="trip_edit_covers">封面</string>
     <plurals name="count_results">
-        <item quantity="one">%d 条</item>
         <item quantity="other">%d 条</item>
     </plurals>
 </resources>

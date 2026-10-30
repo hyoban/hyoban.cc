@@ -61,7 +61,7 @@ fun SwitchRow(
         colors = segmentColors(),
         leadingContent = { Icon(icon, contentDescription = null) },
         supportingContent = supporting?.let { { Text(it) } },
-        trailingContent = { AppSwitch(checked, enabled) },
+        trailingContent = { AppSwitch(checked, enabled = enabled) },
         modifier = Modifier.semantics {
             role = Role.Switch
             toggleableState = ToggleableState(checked)

@@ -32,7 +32,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -193,7 +193,7 @@ fun RatesScreen(container: AppContainer, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val show = rememberShowMessage()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     var editing by remember { mutableStateOf<String?>(null) }
     var refreshing by remember { mutableStateOf(false) }
     val used = remember(ledger) { (ledger.accounts.map { it.currency } + ledger.txns.map { it.currency } + ledger.books.map { it.currency }).toSet() }
@@ -213,11 +213,11 @@ fun RatesScreen(container: AppContainer, nav: LedgerNav) {
                                 val from = currencies.mapNotNull { ledger.rates.latest(it)?.first }.minOrNull()?.minusDays(7) ?: LocalDate.now().minusYears(2)
                                 val fetched = Rates.fetch(from, currencies.filter { it in ECB })
                                 container.ledger.putRates(fetched)
-                                show(context.getString(R.string.ledger_rates_refreshed))
+                                show(resources.getString(R.string.ledger_rates_refreshed))
                             } catch (e: CancellationException) {
                                 throw e
                             } catch (_: Exception) {
-                                show(context.getString(R.string.ledger_rates_failed))
+                                show(resources.getString(R.string.ledger_rates_failed))
                             } finally {
                                 refreshing = false
                             }

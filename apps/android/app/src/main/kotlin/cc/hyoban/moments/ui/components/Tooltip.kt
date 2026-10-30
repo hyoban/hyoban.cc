@@ -11,6 +11,6 @@ import androidx.compose.ui.Modifier
  */
 @Suppress("UNUSED_PARAMETER")
 @Composable
-fun Tooltip(label: String, below: Boolean = false, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable () -> Unit) {
+fun Tooltip(label: String, modifier: Modifier = Modifier, below: Boolean = false, enabled: Boolean = true, content: @Composable () -> Unit) {
     Box(modifier) { content() }
 }
