@@ -8,8 +8,8 @@ import cc.hyoban.moments.ui.format.formatDay
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.width
-import cc.hyoban.moments.ui.theme.Rail
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.LocalDensity
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExitTransition
@@ -150,6 +150,8 @@ fun MomentFeed(
     onDay: ((String) -> Unit)? = null,
     /** Whether a pill heads each day's Moments; not on a page that is one day already. */
     dayPills: Boolean = true,
+    /** What a day's header says at its end, as a trip's 第 n 天. */
+    dayNote: (String) -> String? = { null },
     /** The place the page is of, which its cards needn't name. */
     hidePlace: String? = null,
     /** The ledger's bills on these days, in the Moments' cards and between them, and each day's spending. */
@@ -160,7 +162,7 @@ fun MomentFeed(
     onTrip: ((String) -> Unit)? = null,
     /** The footprints, a row at the foot of each day that has any; they open the day. */
     tracks: TimelineTracks = TimelineTracks.EMPTY,
-    /** Opens a day's page from its footprints row, which it grows out of; else as its rail does. */
+    /** Opens a day's page from its footprints row, which it grows out of; else as its header does. */
     onTrackDay: ((String) -> Unit)? = null,
     /** Each day read from its morning, as a day's own page reads it, rather than newest first. */
     oldestFirst: Boolean = false,
@@ -274,51 +276,40 @@ fun MomentFeed(
                             TripBanner(trip, count, onClick = { onTrip(trip.id) }, modifier = Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.s))
                         }
                     }
-                    // The day in the rail down the left, beside its first item; the rest of the
-                    // day to the right of the rail, days set apart by space alone.
+                    // The day's header row above it, then the day across the column, days set
+                    // apart by space alone, further than anything within a day; right under a
+                    // month's header or a trip's banner, only the item gap.
+                    if (dayPills) item(key = "dayhead-$day", contentType = "dayhead") {
+                        DayHeader(
+                            day,
+                            pluralStringResource(R.plurals.count_moments, dayMoments.size, dayMoments.size),
+                            onDay?.let { { it(day) } },
+                            Modifier.animateItem().padding(horizontal = Space.gutter).dayHeaderSpacing(if (headed) Space.item else Space.day, below = if (dayItems.firstOrNull() is DayItem.Moment) Space.m else 0.dp),
+                            note = dayNote(day),
+                        )
+                    }
                     // Rows one after another sit together, their own height spacing them; a
-                    // Moment has room above and below it; a day starts further apart from the last
-                    // than anything within a day.
-                    val first = dayItems.firstOrNull()?.key
+                    // Moment has room above and below it.
                     val last = dayItems.lastOrNull()?.key
                     val tops = dayItems.mapIndexed { index, item ->
                         item.key to when {
-                            index == 0 -> if (!dayPills) Space.s else if (headed) Space.item else Space.day
+                            index == 0 -> if (!dayPills) Space.s else 0.dp
                             item is DayItem.Moment || dayItems[index - 1] is DayItem.Moment -> Space.item
                             else -> 0.dp
                         }
                     }.toMap()
-                    // The day's figures level with the first line beside them: a row's text is
-                    // inside its padding, a Moment without photos starts a little down.
-                    val railTop = (if (headed) Space.item else Space.day) + when (val head = dayItems.firstOrNull()) {
-                        is DayItem.Moment -> if (head.moment.media.isEmpty()) Space.xs else 0.dp
-                        null -> 0.dp
-                        else -> Space.s
-                    }
                     items(dayItems, key = { it.key }, contentType = { it::class }) { item ->
-                        val itemModifier = Modifier.padding(
-                            start = if (dayPills) 0.dp else Space.gutter,
+                        val itemModifier = Modifier.animateItem().padding(
+                            start = Space.gutter,
                             end = Space.gutter,
                             top = tops[item.key] ?: 0.dp,
                             bottom = if (item.key == last) Space.s else 0.dp,
                         )
-                        val content: @Composable (Modifier) -> Unit = { modifier ->
-                            when (item) {
-                                is DayItem.Moment -> card(item.moment, modifier, false)
-                                is DayItem.Bills -> BillGroup(item.txns, bills.ledger, onBill, modifier)
-                                is DayItem.ChargeItem -> ChargeRow(item.charge, modifier)
-                                is DayItem.Track -> TrackRow(item.day, tracks, onClick = { (onTrackDay ?: onDay)?.invoke(item.day) }, modifier)
-                            }
-                        }
-                        if (dayPills) {
-                            Row(Modifier.animateItem()) {
-                                Box(Modifier.padding(start = Space.gutter).width(Rail)) {
-                                    if (item.key == first) DayRail(day, pluralStringResource(R.plurals.count_moments, dayMoments.size, dayMoments.size), onDay?.let { { it(day) } }, Modifier.padding(top = railTop))
-                                }
-                                content(itemModifier.weight(1f))
-                            }
-                        } else {
-                            content(Modifier.animateItem().then(itemModifier))
+                        when (item) {
+                            is DayItem.Moment -> card(item.moment, itemModifier, false)
+                            is DayItem.Bills -> BillGroup(item.txns, bills.ledger, onBill, itemModifier)
+                            is DayItem.ChargeItem -> ChargeRow(item.charge, itemModifier)
+                            is DayItem.Track -> TrackRow(item.day, tracks, onClick = { (onTrackDay ?: onDay)?.invoke(item.day) }, itemModifier)
                         }
                     }
                 }
@@ -328,25 +319,56 @@ fun MomentFeed(
 }
 
 /**
- * A day in the rail down a timeline's left: the day of the month in figures, its weekday under
- * it, tapped for the whole day, which grows out of it, today's figures in the accent. No line or
- * dot joins one day to the next.
+ * A day's header row on a timeline, a ledger or a trip: the day of the month in figures and its
+ * weekday on one baseline, today's figures in the accent, and at the end what the day came to
+ * ([note]), which drops under them when it doesn't fit. Tapped for the whole day, which grows
+ * out of it. No line or dot joins one day to the next.
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun DayRail(day: String, description: String, onClick: (() -> Unit)?, modifier: Modifier = Modifier, note: String? = null) {
+fun DayHeader(day: String, description: String, onClick: (() -> Unit)?, modifier: Modifier = Modifier, note: String? = null, noteFigures: Boolean = false) {
     val date = java.time.LocalDate.parse(day)
     val weekday = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())
-    Column(
+    // At least a touch target high, the row's words at its foot, so the target's extra height
+    // falls in the gap above the day rather than between the header and what it heads.
+    Box(
         modifier
+            .fillMaxWidth()
+            .heightIn(min = DAY_HEADER_TARGET)
             .then(if (onClick != null) Modifier.sharedCard(dayCardKey(day)).clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick) else Modifier)
-            .semantics(mergeDescendants = true) { heading(); contentDescription = "${formatDay(day)}\u2003$weekday\u2003$description" }
-            .testTag("day_rail_$day"),
+            .semantics(mergeDescendants = true) { heading(); contentDescription = listOfNotNull(formatDay(day), note, description.takeIf { it.isNotBlank() }).joinToString("\u2003") }
+            .testTag("day_header_$day"),
+        contentAlignment = Alignment.BottomStart,
     ) {
-        // Today's in the accent, the one day the timeline marks.
-        Text(date.dayOfMonth.toString(), style = AppTheme.typography.numTitle, color = if (date == java.time.LocalDate.now()) tokens.accent else androidx.compose.ui.graphics.Color.Unspecified)
-        Text(weekday, style = AppTheme.typography.caption, color = tokens.tx2)
-        note?.let { Text(it, style = AppTheme.typography.numCaption, color = tokens.tx2, maxLines = 1, softWrap = false) }
+        androidx.compose.foundation.layout.FlowRow(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Space.s),
+            itemVerticalAlignment = Alignment.Bottom,
+        ) {
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                // Today's in the accent, the one day the timeline marks.
+                Text(date.dayOfMonth.toString(), style = AppTheme.typography.numTitle, color = if (date == java.time.LocalDate.now()) tokens.accent else tokens.tx, modifier = Modifier.alignByBaseline())
+                Text(weekday, style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.alignByBaseline())
+            }
+            note?.let {
+                Spacer(Modifier.weight(1f))
+                Text(it, style = if (noteFigures) AppTheme.typography.numCaption else AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, modifier = Modifier.padding(bottom = Space.xxs))
+            }
+        }
     }
+}
+
+private val DAY_HEADER_TARGET = 48.dp
+
+/**
+ * [gap] above a day's header, less the room its touch target already leaves over its words, and
+ * [below] under it: `space-m` over a Moment, nothing over a row, which spaces itself.
+ */
+@Composable
+fun Modifier.dayHeaderSpacing(gap: Dp, below: Dp = Space.m): Modifier {
+    val line = with(LocalDensity.current) { AppTheme.typography.numTitle.lineHeight.toDp() }
+    val slack = (DAY_HEADER_TARGET - line).coerceAtLeast(0.dp)
+    return padding(top = (gap - slack).coerceAtLeast(0.dp), bottom = below)
 }
 
 /** A day's pill: its label, how many Moments it has when more than one, and what it spent. */

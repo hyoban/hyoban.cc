@@ -103,6 +103,8 @@ fun TripScreen(
     val context = LocalContext.current
 
     val dayLabel = { day: String -> context.getString(R.string.trip_day, daysBetween(trip.start, day)) + "\u2003" + formatDay(day) }
+    // 第 n 天 at the end of each day's header.
+    val dayNote = { day: String -> context.getString(R.string.trip_day, daysBetween(trip.start, day)) }
     // The title is the bar's; under it, what the trip covered.
     val summary: @Composable () -> Unit = {
         Column(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xs, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.m)) {
@@ -224,6 +226,7 @@ fun TripScreen(
                         state = feedState,
                         months = false,
                         dayLabel = dayLabel,
+                        dayNote = dayNote,
                         showTrip = false,
                         onDay = onDay,
                     ) {
@@ -243,6 +246,7 @@ fun TripScreen(
                     state = feedState,
                     months = false,
                     dayLabel = dayLabel,
+                    dayNote = dayNote,
                     showTrip = false,
                     onDay = onDay,
                 ) {

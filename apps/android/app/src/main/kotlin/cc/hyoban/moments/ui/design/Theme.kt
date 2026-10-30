@@ -63,7 +63,7 @@ class Typography(
     val micro: TextStyle,
     /** Amounts and big figures. */
     val numDisplay: TextStyle,
-    /** A day in the date rail, a figure in a stat. */
+    /** A day in its header row, a figure in a stat. */
     val numTitle: TextStyle,
     /** An amount at a row's end. */
     val numBody: TextStyle,

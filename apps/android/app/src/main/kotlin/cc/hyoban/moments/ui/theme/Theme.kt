@@ -85,14 +85,6 @@ object Elevation {
 }
 
 /**
- * The date rail down the left of a timeline, a ledger and a trip's days: the day sits in it, the
- * rest to its right. 56dp, widening with the system's font up to a quarter more, so a day's two
- * figures still fit at the largest size.
- */
-val Rail: Dp
-    @Composable @ReadOnlyComposable get() = 56.dp * LocalDensity.current.fontScale.coerceIn(1f, 1.25f)
-
-/**
  * Whether the system's font is set large (130% or more): what stands side by side at the usual
  * size then stacks, and a row's words take two lines, rather than any figure being cut.
  */
