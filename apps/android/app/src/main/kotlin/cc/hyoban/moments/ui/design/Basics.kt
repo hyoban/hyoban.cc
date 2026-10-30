@@ -449,7 +449,7 @@ fun LinearProgressIndicator(
     progress: () -> Float,
     modifier: Modifier = Modifier,
     color: Color = tokens.accent,
-    trackColor: Color = tokens.pressed,
+    trackColor: Color = tokens.fill,
     strokeCap: StrokeCap = StrokeCap.Round,
     gapSize: Dp = 0.dp,
     drawStopIndicator: () -> Unit = {},

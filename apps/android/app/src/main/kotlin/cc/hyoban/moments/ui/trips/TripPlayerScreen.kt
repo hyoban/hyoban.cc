@@ -428,7 +428,7 @@ private fun PlayerCard(
                     LinearProgressIndicator(
                         progress = progress,
                         color = tokens.tx,
-                        trackColor = tokens.pressed,
+                        trackColor = tokens.fill,
                         strokeCap = StrokeCap.Round,
                         gapSize = 0.dp,
                         drawStopIndicator = {},

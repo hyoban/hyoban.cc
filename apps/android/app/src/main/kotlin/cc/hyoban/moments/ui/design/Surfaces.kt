@@ -82,7 +82,7 @@ fun Scrubber(
     modifier: Modifier = Modifier,
     onValueChangeFinished: (() -> Unit)? = null,
     color: Color = tokens.tx,
-    trackColor: Color = tokens.pressed,
+    trackColor: Color = tokens.fill,
 ) {
     val change by rememberUpdatedState(onValueChange)
     val finish by rememberUpdatedState(onValueChangeFinished)

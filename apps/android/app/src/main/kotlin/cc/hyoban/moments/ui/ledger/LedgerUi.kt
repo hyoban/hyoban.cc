@@ -266,7 +266,7 @@ fun txnIcon(txn: Txn, ledger: Ledger): ImageVector = when {
 @Composable
 fun LeadingIcon(icon: ImageVector, modifier: Modifier = Modifier, tonal: Boolean = true) {
     Box(
-        modifier.size(40.dp).background(if (tonal) tokens.pressed else Color.Transparent, CircleShape),
+        modifier.size(40.dp).background(if (tonal) tokens.fill else Color.Transparent, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Icon(icon, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(22.dp))

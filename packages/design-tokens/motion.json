@@ -1,0 +1,41 @@
+{
+  "note": "The springs everything moves on, which tokens.json's format can't hold. None overshoots: position and size at a damping ratio of 0.9, colour and fades at 1. Each platform converts them to its own spring parameters, keeping the damping ratio and stiffness.",
+  "springs": [
+    {
+      "name": "spatial-fast",
+      "dampingRatio": 0.9,
+      "stiffness": 1400,
+      "usage": "Small things moving or resizing: a switch thumb, a segment. About 0.17s."
+    },
+    {
+      "name": "spatial-default",
+      "dampingRatio": 0.9,
+      "stiffness": 700,
+      "usage": "Position and size by default: sheets, menus, pages. About 0.24s."
+    },
+    {
+      "name": "spatial-slow",
+      "dampingRatio": 0.9,
+      "stiffness": 300,
+      "usage": "Large moves: a card growing into its page, shared elements. About 0.36s."
+    },
+    {
+      "name": "effects-fast",
+      "dampingRatio": 1,
+      "stiffness": 3800,
+      "usage": "Quick colour and opacity changes: the press wash fading. About 0.10s."
+    },
+    {
+      "name": "effects-default",
+      "dampingRatio": 1,
+      "stiffness": 1600,
+      "usage": "Colour and fades by default. About 0.16s."
+    },
+    {
+      "name": "effects-slow",
+      "dampingRatio": 1,
+      "stiffness": 800,
+      "usage": "Slow fades: content replacing a skeleton. About 0.22s."
+    }
+  ]
+}

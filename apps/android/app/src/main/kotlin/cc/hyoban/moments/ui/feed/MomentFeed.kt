@@ -540,7 +540,7 @@ private fun SkeletonCards() {
         )
     }
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    val bone = tokens.sunken
+    val bone = tokens.fillStrong
     val loading = stringResource(R.string.empty_loading)
     PageWidth { columns ->
         Column(

@@ -86,7 +86,7 @@ fun MediaStill(
     urls: MediaUrls,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
-    placeholder: Color = tokens.sunken,
+    placeholder: Color = tokens.fillStrong,
     placeholderUrl: String? = null,
     /** How many times wider than it is laid out to fetch it: more than 1 while zoomed in. */
     detail: Float = 1f,

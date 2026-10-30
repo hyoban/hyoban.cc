@@ -77,7 +77,7 @@ private fun Decoration(
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = if (boxed) 48.dp else 56.dp)
-                .then(if (boxed) Modifier.background(if (enabled) tokens.surface else tokens.pressed, shape).border(1.dp, edge, shape) else Modifier)
+                .then(if (boxed) Modifier.background(if (enabled) tokens.surface else tokens.fill, shape).border(1.dp, edge, shape) else Modifier)
                 .padding(horizontal = if (boxed) 14.dp else 16.dp, vertical = 12.dp),
             verticalAlignment = if (singleLine) Alignment.CenterVertically else Alignment.Top,
         ) {

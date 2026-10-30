@@ -87,7 +87,7 @@ private fun TimePart(value: String, onChange: (String) -> Unit, tag: String) {
         textStyle = AppTheme.typography.title.copy(color = tokens.tx, textAlign = TextAlign.Center),
         cursorBrush = SolidColor(tokens.tx),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        modifier = Modifier.width(64.dp).clip(Corners.full).background(tokens.pressed).padding(vertical = 8.dp).testTag(tag),
+        modifier = Modifier.width(64.dp).clip(Corners.full).background(tokens.fill).padding(vertical = 8.dp).testTag(tag),
     )
 }
 

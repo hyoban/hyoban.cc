@@ -1105,7 +1105,7 @@ private val DISH_SEPARATORS = Regex("[,，、;；\\n]")
 private fun AddTile(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier) {
     Box(
         modifier.size(PHOTO_SIZE).clip(AppTheme.shapes.medium)
-            .background(tokens.pressed)
+            .background(tokens.fill)
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {

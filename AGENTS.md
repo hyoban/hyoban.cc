@@ -32,6 +32,9 @@ even when starting from the repository root.
 - Keep what is seen on the user's devices while debugging (their bills, shops, accounts,
   card digits, order numbers, times) out of code, comments, tests and docs; fixtures take a
   page's structure with made-up values.
+- Write code in English: identifiers, comments, generated files and the design tokens
+  (`packages/design-tokens`, icon names included) carry no Chinese. Chinese copy belongs in
+  string resources and message tables, not inline in code.
 - Preserve the user's Moment text exactly. Write media alt text in Chinese. UI copy
   and accessibility labels are Chinese first; Android also keeps English strings in
   `values-en`.
@@ -51,16 +54,17 @@ even when starting from the repository root.
 
 ## Workspace
 
-| Area                | Source and reference                                                                                                                           |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Website             | Astro and plain CSS in `apps/web` (`@hyoban/web`); [its DESIGN.md](apps/web/DESIGN.md) defines its visual language.                            |
-| Map and trip player | `packages/trip-map` (`@hyoban/trip-map`); its [README](packages/trip-map/README.md) describes the markup and data contract.                    |
-| Drawers             | `packages/drawer` (`@hyoban/drawer`), a plain DOM port of Base UI's Drawer with shadcn/ui CSS; used by the calendar and bundled into trip-map. |
-| Shared data model   | Plain Zod schemas in `packages/data-spec`, used by the site, scripts and API; `vp run data:schema` generates `data/schema`.                    |
-| API                 | Cloudflare Worker with D1 and R2 in `apps/api`; see its [README](apps/api/README.md) for endpoints and local setup.                            |
-| Android             | Kotlin, Compose and Gradle in `apps/android`; read its [AGENTS.md](apps/android/AGENTS.md) and [README](apps/android/README.md).               |
-| Data and media      | `data/`, `scripts/`, [docs/data.md](docs/data.md) and [docs/assets.md](docs/assets.md).                                                        |
-| Deployment          | Cloudflare Workers Builds and GitHub Actions; [docs/deploy.md](docs/deploy.md).                                                                |
+| Area                | Source and reference                                                                                                                                      |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Website             | Astro and plain CSS in `apps/web` (`@hyoban/web`); [its DESIGN.md](apps/web/DESIGN.md) defines its visual language.                                       |
+| Map and trip player | `packages/trip-map` (`@hyoban/trip-map`); its [README](packages/trip-map/README.md) describes the markup and data contract.                               |
+| Drawers             | `packages/drawer` (`@hyoban/drawer`), a plain DOM port of Base UI's Drawer with shadcn/ui CSS; used by the calendar and bundled into trip-map.            |
+| Design tokens       | `packages/design-tokens`: the design system's tokens, springs and icon source for every platform; `vp run design:tokens` generates Android's `Tokens.kt`. |
+| Shared data model   | Plain Zod schemas in `packages/data-spec`, used by the site, scripts and API; `vp run data:schema` generates `data/schema`.                               |
+| API                 | Cloudflare Worker with D1 and R2 in `apps/api`; see its [README](apps/api/README.md) for endpoints and local setup.                                       |
+| Android             | Kotlin, Compose and Gradle in `apps/android`; read its [AGENTS.md](apps/android/AGENTS.md) and [README](apps/android/README.md).                          |
+| Data and media      | `data/`, `scripts/`, [docs/data.md](docs/data.md) and [docs/assets.md](docs/assets.md).                                                                   |
+| Deployment          | Cloudflare Workers Builds and GitHub Actions; [docs/deploy.md](docs/deploy.md).                                                                           |
 
 ## Data shared by Web and App
 

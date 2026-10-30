@@ -46,7 +46,6 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -79,17 +78,15 @@ import kotlin.math.roundToInt
 // between touching marks, a single series in the primary and categories in a fixed order of
 // colour-blind-safe hues, each chart readable by tapping a mark and by TalkBack.
 
-// The validated order of the data-viz palette's categorical hues, stepped for each mode. No
-// Material 3 role says "the fourth series", so these stay as they are, like the map's years.
-private val SERIES_LIGHT = listOf(0xFF2A78D6, 0xFFEB6834, 0xFF1BAF7A, 0xFFEDA100, 0xFFE87BA4, 0xFF008300)
-private val SERIES_DARK = listOf(0xFF3987E5, 0xFFD95926, 0xFF199E70, 0xFFC98500, 0xFFD55181, 0xFF008300)
+// The data-viz palette's categorical hues in their validated order, the tokens' series-1 …
+// series-6 in each mode.
 
 /** How many categories get a hue of their own; the rest are summed as 其他, in grey. */
 const val SERIES_COUNT = 6
 
 @Composable
 fun seriesColors(): List<Color> =
-    (if (tokens.bg.luminance() < 0.5f) SERIES_DARK else SERIES_LIGHT).map { Color(it) }
+    tokens.run { listOf(series1, series2, series3, series4, series5, series6) }
 
 /** The colour of 其他 and of a period compared with: recessive, beside the series. */
 @Composable

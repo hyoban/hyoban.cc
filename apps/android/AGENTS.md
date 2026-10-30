@@ -51,16 +51,18 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - The app follows its own design system, the 「这里 App 设计系统」 artifact, not Material 3:
   the site's restraint on a phone. The design is platform-neutral, one design for the iOS,
   Android and web versions to come: keep Android-only conventions out of it (name things by
-  what they are, not by Compose or Material), and record only where Android implements it. Its tokens live in `ui/theme` (`Colors.kt`'s `Tokens`, the
-  type scale and corners in `Theme.kt`); change the artifact and the code together. Text takes
+  what they are, not by Compose or Material), and record only where Android implements it. Its tokens come from `packages/design-tokens`, the one
+  source for every platform: `vp run design:tokens` at the root generates `ui/theme/Tokens.kt`
+  (colours, spacing, corners, shadows, opacities, type, springs), which is never edited by
+  hand; change `tokens.json` there, regenerate, and publish it to the artifact. Text takes
   the design's 13 styles by their names (`titlePage` … `numCaption`), figures in the `num`
   ones, which are the system monospace; the timeline and a trip are a conversation (`MomentFeed(chat = true)`: `DateCapsule`, Moments as `MomentCard(bubble = true)`, records in `RecordsBubble`), and a ledger's day opens with its header row (`DayHeader`). The app
   has no Material dependency (`androidx.compose.material3`, `glance-material3`): its
   components are its own, in `ui/design`, on Compose foundation. Don't add Material
   components or icon packs back.
 - Icons are the design system's own set (`AppIcons`, 24 grid, 2 stroke, round ends and softened corners),
-  generated into `ui/design/AppIcons.kt` by `python3 scripts/icons/kotlin.py` from
-  `scripts/icons/icons.py`. A new icon is drawn there first, in the same hand, then
+  generated into `ui/design/AppIcons.kt` by `python3 packages/design-tokens/icons/kotlin.py`
+  (from the repository root) from `packages/design-tokens/icons/icons.py`. A new icon is drawn there first, in the same hand, then
   generated; never edit `AppIcons.kt` by hand or reach for another icon library.
 - `ui/design` holds the theme (`AppTheme`: colour roles, type, shapes, springs, the press
   wash in place of a ripple) and every component: text and icons, surfaces, buttons, chips, the
@@ -85,7 +87,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - The design's gaps are `Space.item`, `Space.section` and `Space.day`; take them rather than a size
   where a gap means one. Large system fonts are `isLargeFont()` (130% and up), so read it in composition.
 - Words are in `values` (Chinese) and `values-en`, with TalkBack descriptions for what is shown.
-- The map's year colours are `ui/map/Years.kt`, from `packages/trip-map/src/theme.ts`, and the
+- The map's year colours are the tokens' `YearColors`, the same as `packages/trip-map/src/theme.ts`, and the
   fog is the site's `packages/trip-map/src/map/fog-layer.ts`. The ledger's charts are drawn on a
   Compose `Canvas` (`ui/ledger/Charts.kt`), not with a chart library.
 - Follow what the app should be rather than the web version, except where the shared guide
