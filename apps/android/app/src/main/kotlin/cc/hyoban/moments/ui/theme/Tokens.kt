@@ -159,7 +159,6 @@ object Space {
 
 /** The corner sizes, each a continuous curve where it is drawn. */
 object Radius {
-    val check = 3.dp
     val small = 8.dp
     val medium = 12.dp
     val large = 18.dp
