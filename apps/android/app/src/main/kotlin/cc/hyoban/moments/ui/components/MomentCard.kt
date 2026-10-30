@@ -156,7 +156,7 @@ private fun MomentBubble(
     androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
         // Most of the column, never wider than 420 on a wide screen; with photos always that
         // wide, words alone only as wide as they need. The tail's strip comes on top, at the right.
-        val max = minOf(maxWidth * 0.82f, 420.dp) + tail
+        val max = minOf(maxWidth * 0.88f, 420.dp) + tail
         val width = if (moment.media.isNotEmpty()) Modifier.width(max) else Modifier.widthIn(max = max)
         PressableCard(
             onClick = onOpen,

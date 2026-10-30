@@ -241,7 +241,7 @@ fun RecordsBubble(
         // As wide as three quarters of the column, or the whole of it with the font set large;
         // a single record only as wide as it needs. Never wider than 420 on a wide screen. The
         // tail's strip comes on top, at the left.
-        val max = minOf(if (large) maxWidth - TAIL else maxWidth * 0.78f, 420.dp) + TAIL
+        val max = minOf(if (large) maxWidth - TAIL else maxWidth * 0.86f, 420.dp) + TAIL
         val shape = BubbleShape(sent = false, joinedAbove = false, joinedBelow = false)
         Column(
             Modifier
