@@ -321,7 +321,9 @@ it is to be reimbursed (left out of the sums until it is) or left out of the sum
 altogether, and the Moment, place and trip it belongs to: the trip under way that day
 unless another is picked. Its categories, accounts, currencies and places are listed with the
 ones the latest 200 bills used most first. Laid out after iCost, its categories are a grid of
-icons, a chosen one's second-level ones opening under its row, and the rest are chips; a bill on its
+icons, a chosen one's second-level ones opening under its row, and the rest are chips. A category's
+icon is guessed from its name; a bill in a list takes its second-level category's when one fits, else
+its first-level one's. A bill on its
 own (not under a Moment), on a window tall enough, is typed on a keypad pinned at the bottom, with
 plus and minus and 保存, under its amount, time and note. A refund takes from its expense's category up to what was
 spent, anything beyond it earned; a reimbursed expense counts only what wasn't paid back.

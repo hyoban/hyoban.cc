@@ -168,58 +168,95 @@ fun accountKindIcon(kind: AccountKind): ImageVector = when (kind) {
 }
 
 /** A category's icon, guessed from its name, the categories being the user's own words. */
-fun categoryIcon(name: String?): ImageVector {
+fun categoryIcon(name: String?): ImageVector = categoryIconOrNull(name) ?: AppIcons.Category
+
+/** A category's icon when its name says what it is spent on, else null. More particular words come first. */
+fun categoryIconOrNull(name: String?): ImageVector? {
     val text = name.orEmpty()
     fun has(vararg words: String) = words.any { text.contains(it, ignoreCase = true) }
     return when {
         text == FEE_CATEGORY -> AppIcons.Receipt
         text == DISCOUNT_CATEGORY -> AppIcons.Discount
-        has("饮料", "奶茶", "咖啡", "茶", "瑞幸", "星巴克", "drink", "coffee") -> AppIcons.Cafe
-        has("餐", "饭", "食", "菜", "外卖", "零食", "水果", "food", "meal") -> AppIcons.Food
+        has("酸奶", "奶茶", "茶饮", "果茶", "bubble tea") -> AppIcons.BubbleTea
+        has("瓶装水", "矿泉水", "饮用水", "bottled") -> AppIcons.Bottle
+        has("咖啡", "瑞幸", "星巴克", "coffee") -> AppIcons.Cafe
+        has("饮料", "茶", "drink") -> AppIcons.BubbleTea
+        has("零食", "snack") -> AppIcons.Snack
+        has("水果", "fruit") -> AppIcons.Fruit
+        has("买菜", "蔬菜", "菜场", "grocer") -> AppIcons.Vegetable
+        has("聚餐", "请客", "餐厅", "dining") -> AppIcons.Cutlery
+        has("餐", "饭", "食", "菜", "外卖", "food", "meal") -> AppIcons.Food
+        has("快充") -> AppIcons.Bolt
+        has("家充") -> AppIcons.HomeCharge
+        has("充电宝") -> AppIcons.BatteryCharging
         has("充电") -> AppIcons.Ev
         has("加油") -> AppIcons.Fuel
         has("停车") -> AppIcons.Parking
-        has("过路", "高速") -> AppIcons.Coins
+        has("过路", "高速", "toll") -> AppIcons.Road
+        has("洗车用具") -> AppIcons.Bucket
         has("洗车") -> AppIcons.CarWash
+        has("修车", "保养", "车检", "维修", "repair") -> AppIcons.Wrench
+        has("保险", "车险", "医保", "insurance") -> AppIcons.Shield
+        has("罚单", "罚款") -> AppIcons.Alert
+        has("车品") -> AppIcons.Steering
         has("打车", "顺风车", "taxi") -> AppIcons.Taxi
-        has("火车", "高铁", "地铁", "train") -> AppIcons.Train
+        has("火车", "高铁", "地铁", "train", "metro") -> AppIcons.Train
         has("飞机", "机票", "机场", "flight") -> AppIcons.Plane
         has("骑行", "单车", "bike") -> AppIcons.Bike
-        has("车", "保养", "修车", "罚单", "car") -> AppIcons.Car
+        has("车", "car") -> AppIcons.Car
         has("交通", "公交", "bus") -> AppIcons.Bus
-        has("住宿", "酒店", "民宿", "hotel") -> AppIcons.Bed
-        has("住房", "房租", "水费", "电费", "home", "rent") -> AppIcons.Home
-        has("话费", "手机", "phone") -> AppIcons.Phone
-        has("网络", "宽带") -> AppIcons.Wifi
+        has("酒店", "宾馆", "hotel") -> AppIcons.Hotel
+        has("住院", "门诊", "看病", "clinic") -> AppIcons.Stethoscope
+        has("住宿", "民宿", "青旅", "stay") -> AppIcons.Bed
+        has("露营", "camp") -> AppIcons.Tent
+        has("寄存", "行李", "旅行", "travel") -> AppIcons.Luggage
+        has("电费", "electric") -> AppIcons.Bolt
+        has("水费") -> AppIcons.Drop
+        has("住房", "房租", "home", "rent") -> AppIcons.Home
+        has("话费", "手机", "phone", "mobile") -> AppIcons.Phone
+        has("网络", "宽带", "internet") -> AppIcons.Wifi
         has("云", "存储") -> AppIcons.Cloud
         has("相机", "摄影") -> AppIcons.Camera
-        has("数码", "电脑", "computer") -> AppIcons.Laptop
+        has("数码", "电脑", "computer", "gadget") -> AppIcons.Laptop
         has("游戏", "game") -> AppIcons.Game
+        has("麻将", "mahjong") -> AppIcons.Mahjong
         has("订阅", "会员", "买断", "subscription") -> AppIcons.Subscription
-        has("医", "药", "health") -> AppIcons.Hospital
-        has("礼", "红包", "人情", "赞助", "gift") -> AppIcons.Gift
+        has("药", "pharmacy") -> AppIcons.Pill
+        has("医", "health") -> AppIcons.Hospital
+        has("红包", "礼金", "压岁", "red packet") -> AppIcons.RedPacket
+        has("家人", "家庭", "family") -> AppIcons.Family
+        has("赞助", "捐", "donat") -> AppIcons.Heart
+        has("礼", "人情", "福利", "gift", "present") -> AppIcons.Gift
+        has("洗衣", "laundry") -> AppIcons.Washer
         has("服饰", "衣", "clothes") -> AppIcons.Clothes
-        has("购物", "超市", "shopping") -> AppIcons.Bag
-        has("日常", "日用") -> AppIcons.Basket
-        has("快递") -> AppIcons.Truck
-        has("理发") -> AppIcons.Cut
-        has("门票", "演唱会", "电影", "ticket") -> AppIcons.Ticket
-        has("娱乐", "唱歌", "fun") -> AppIcons.Party
-        has("露营") -> AppIcons.Cabin
-        has("纪念品", "二手", "sell") -> AppIcons.Tag
-        has("工资", "奖金", "年终", "salary") -> AppIcons.Cash
+        has("超市", "supermarket") -> AppIcons.Cart
+        has("快递", "parcel") -> AppIcons.Package
+        has("购物", "shopping") -> AppIcons.Bag
+        has("日常", "日用", "daily") -> AppIcons.Basket
+        has("理发", "haircut") -> AppIcons.Cut
+        has("护肤", "化妆", "skincare") -> AppIcons.Lotion
+        has("洗澡", "澡", "shower") -> AppIcons.Shower
+        has("唱歌", "KTV", "karaoke") -> AppIcons.Mic
+        has("电影", "movie") -> AppIcons.Film
+        has("门票", "演唱会", "ticket") -> AppIcons.Ticket
+        has("娱乐", "按摩", "fun") -> AppIcons.Party
+        has("纪念品", "二手", "sell", "sold") -> AppIcons.Tag
+        has("入职", "工作", "报销", "job") -> AppIcons.Briefcase
+        has("坏账", "损失", "loss") -> AppIcons.TrendDown
+        has("工资", "奖金", "年终", "salary", "bonus") -> AppIcons.Cash
         has("利息", "投资", "理财", "interest") -> AppIcons.TrendUp
-        has("公积金", "退税", "医保") -> AppIcons.Bank
+        has("公积金", "退税") -> AppIcons.Bank
         has("AA", "借") -> AppIcons.People
-        else -> AppIcons.Category
+        else -> null
     }
 }
 
-/** A bill's icon: its category's, or what it is when it has none. */
+/** A bill's icon: its second-level category's when that names what it was, else its first-level one's, or what the bill is when it has none. */
 fun txnIcon(txn: Txn, ledger: Ledger): ImageVector = when {
     txn.kind == TxnKind.TRANSFER -> if (txn.transfer == TransferType.TRANSFER) AppIcons.Swap else AppIcons.People
     txn.kind == TxnKind.REFUND -> AppIcons.Undo
-    else -> categoryIcon(ledger.categoriesById[ledger.topCategory(txn.category)]?.name ?: ledger.categoriesById[txn.category]?.name)
+    else -> ledger.categoriesById[txn.category]?.takeIf { it.parent != null }?.let { categoryIconOrNull(it.name) }
+        ?: categoryIcon(ledger.categoriesById[ledger.topCategory(txn.category)]?.name ?: ledger.categoriesById[txn.category]?.name)
 }
 
 /** An icon in a circle of the pressed grey, as a list item's leading avatar. */
