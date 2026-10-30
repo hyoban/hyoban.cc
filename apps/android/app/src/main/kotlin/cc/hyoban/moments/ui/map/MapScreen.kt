@@ -465,13 +465,13 @@ private fun PlaceSheet(
     val context = LocalContext.current
     Column(Modifier.fillMaxHeight()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Space.gutter), verticalAlignment = Alignment.CenterVertically) {
-            Icon(AppIcons.Pin, contentDescription = null, tint = colors[years.minOrNull()] ?: AppTheme.colorScheme.primary)
+            Icon(AppIcons.Pin, contentDescription = null, tint = colors[years.minOrNull()] ?: tokens.accent)
             Column(Modifier.weight(1f).padding(horizontal = Space.m)) {
                 Text(place.name, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
                 Text(
                     (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(context.getString(R.string.separator_list)) { context.getString(R.string.year_item, it) }).joinToString("\u2003"),
                     style = AppTheme.typography.body,
-                    color = AppTheme.colorScheme.onSurfaceVariant,
+                    color = tokens.tx2,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -544,7 +544,7 @@ private fun TripsSheet(trips: List<TripRecord>, moments: List<MomentRecord>, url
             Text(
                 pluralStringResource(R.plurals.count_trips, trips.size, trips.size) + "\u2003" + pluralStringResource(R.plurals.count_days_total, days, days),
                 style = AppTheme.typography.bodySmall,
-                color = AppTheme.colorScheme.onSurfaceVariant,
+                color = tokens.tx2,
             )
         }
         LazyColumn(
@@ -579,7 +579,7 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
                 onClick = onClick,
                 shape = Corners.full,
                 color = SurfaceLevel.Floating.fill(),
-                contentColor = AppTheme.colorScheme.primary,
+                contentColor = tokens.accent,
                 shadowElevation = Elevation.level2,
                 modifier = Modifier.padding(bottom = Space.m).size(48.dp).testTag("north"),
             ) {
@@ -606,7 +606,7 @@ private fun LocateButton(locating: Boolean, onClick: () -> Unit) {
             onClick = { if (!locating) onClick() },
             shape = Corners.full,
             color = SurfaceLevel.Floating.fill(),
-            contentColor = AppTheme.colorScheme.onSurface,
+            contentColor = tokens.tx,
             shadowElevation = Elevation.level2,
             modifier = Modifier.size(48.dp).semantics { contentDescription = label }.testTag("locate"),
         ) {
@@ -630,7 +630,7 @@ private fun FootprintsButton(onClick: () -> Unit) {
         onClick = onClick,
         shape = Corners.full,
         color = SurfaceLevel.Floating.fill(),
-        contentColor = AppTheme.colorScheme.onSurface,
+        contentColor = tokens.tx,
         shadowElevation = Elevation.level2,
         modifier = Modifier.heightIn(min = 48.dp).testTag("footprints"),
     ) {
@@ -651,8 +651,8 @@ private fun FogButton(on: Boolean, onClick: () -> Unit) {
     val label = stringResource(R.string.action_fog)
     // Filling and emptying as the fog comes and goes, on the motion scheme's effects spring.
     val spec = AppTheme.motionScheme.defaultEffectsSpec<Color>()
-    val container by animateColorAsState(if (on) AppTheme.colorScheme.primary else SurfaceLevel.Floating.fill(), spec, label = "fog button")
-    val content by animateColorAsState(if (on) AppTheme.colorScheme.onPrimary else AppTheme.colorScheme.onSurface, spec, label = "fog icon")
+    val container by animateColorAsState(if (on) tokens.accent else SurfaceLevel.Floating.fill(), spec, label = "fog button")
+    val content by animateColorAsState(if (on) tokens.onAccent else tokens.tx, spec, label = "fog icon")
     Tooltip(label) {
         Surface(
             checked = on,
@@ -675,7 +675,7 @@ private fun FogCount(fog: FogOfWar) {
         Text(
             stringResource(R.string.fog_lit, fog.cities, fog.provinces),
             style = AppTheme.typography.caption,
-            color = AppTheme.colorScheme.onSurfaceVariant,
+            color = tokens.tx2,
             modifier = Modifier.height(32.dp).padding(horizontal = Space.l).wrapContentHeight(),
         )
     }
@@ -687,7 +687,7 @@ private fun FloatingPill(content: @Composable () -> Unit) {
     Surface(
         shape = Corners.full,
         color = SurfaceLevel.Floating.fill(),
-        contentColor = AppTheme.colorScheme.onSurface,
+        contentColor = tokens.tx,
         shadowElevation = Elevation.level2,
         content = content,
     )
@@ -705,15 +705,15 @@ private fun Legend(colors: Map<Int, Color>, trips: Boolean) {
             colors.forEach { (year, color) ->
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                     // A dot as the map draws one, ringed in the surface.
-                    Box(Modifier.size(10.dp).border(1.5.dp, AppTheme.colorScheme.surface, CircleShape).padding(1.dp).background(color, CircleShape))
-                    Text("$year", style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
+                    Box(Modifier.size(10.dp).border(1.5.dp, tokens.bg, CircleShape).padding(1.dp).background(color, CircleShape))
+                    Text("$year", style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, softWrap = false)
                 }
             }
             if (trips) {
                 VerticalDivider(Modifier.height(14.dp), color = dividerColor())
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
-                    Box(Modifier.width(14.dp).height(2.dp).background(AppTheme.colorScheme.onSurface.copy(alpha = ROUTE_OPACITY), CircleShape))
-                    Text(stringResource(R.string.legend_trips), style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
+                    Box(Modifier.width(14.dp).height(2.dp).background(tokens.tx.copy(alpha = ROUTE_OPACITY), CircleShape))
+                    Text(stringResource(R.string.legend_trips), style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, softWrap = false)
                 }
             }
         }
@@ -731,16 +731,16 @@ private fun RouteCard(trip: TripRecord, onOpen: () -> Unit) {
         modifier = Modifier.fillMaxWidth().padding(bottom = Space.s).sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}"),
     ) {
         Row(Modifier.padding(start = Space.l, end = Space.s, top = Space.m, bottom = Space.m), verticalAlignment = Alignment.CenterVertically) {
-            Icon(AppIcons.Luggage, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant)
+            Icon(AppIcons.Luggage, contentDescription = null, tint = tokens.tx2)
             Column(Modifier.weight(1f).padding(horizontal = Space.m), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
                 Text(trip.title, style = AppTheme.typography.titleSmall)
                 Text(
                     tripSummary(trip),
                     style = AppTheme.typography.bodySmall,
-                    color = AppTheme.colorScheme.onSurfaceVariant,
+                    color = tokens.tx2,
                 )
             }
-            Icon(AppIcons.ChevronRight, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant)
+            Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx2)
         }
     }
 }

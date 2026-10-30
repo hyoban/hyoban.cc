@@ -622,7 +622,7 @@ private fun Filmstrip(moment: MomentRecord, urls: MediaUrls, pager: PagerState, 
             // The one shown rounder than the others, easing there on the motion scheme's spatial
             // spring; the others under a scrim rather than faded, so they don't turn the
             // page's grey.
-            val corner by animateDpAsState(if (selected) Radius.extraLarge else Radius.medium, AppTheme.motionScheme.fastSpatialSpec(), label = "thumb shape")
+            val corner by animateDpAsState(if (selected) Radius.large else Radius.medium, AppTheme.motionScheme.fastSpatialSpec(), label = "thumb shape")
             val dim by animateFloatAsState(if (selected) 0f else MediaOverlay.CONTROL_ALPHA, AppTheme.motionScheme.fastEffectsSpec(), label = "thumb dim")
             Box(
                 Modifier.size(56.dp).clip(ContinuousRoundedRectangle(corner))
@@ -635,7 +635,7 @@ private fun Filmstrip(moment: MomentRecord, urls: MediaUrls, pager: PagerState, 
                     .testTag("thumb_$index"),
             ) {
                 Thumbnail(media, urls, size = 56)
-                Box(Modifier.matchParentSize().graphicsLayer { alpha = dim }.background(AppTheme.colorScheme.scrim))
+                Box(Modifier.matchParentSize().graphicsLayer { alpha = dim }.background(Color.Black))
             }
         }
     }

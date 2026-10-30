@@ -83,7 +83,7 @@ fun MomentCard(
 ) {
     // The card grows into the Moment's page when opened; shown in the detail pane beside the
     // list, it is [selected], outlined in the accent, the one colour for state.
-    val ring by animateColorAsState(if (selected) AppTheme.colorScheme.primary else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
+    val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
     val outline = Modifier.border(2.dp, ring, AppTheme.shapes.large)
     // Held, or right clicked, its menu opens where it was pressed.
     var menu by remember { mutableStateOf<DpOffset?>(null) }
@@ -111,8 +111,8 @@ fun MomentCard(
             // What was eaten, under the words as the site has it: one line of secondary text.
             foodLine(moment.food)?.let { line ->
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                    Icon(AppIcons.Food, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                    Text(line, style = AppTheme.typography.body, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Icon(AppIcons.Food, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
+                    Text(line, style = AppTheme.typography.body, color = tokens.tx2, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -136,7 +136,7 @@ fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRe
         Text(
             parts.joinToString("\u2003"),
             style = AppTheme.typography.body,
-            color = AppTheme.colorScheme.onSurfaceVariant,
+            color = tokens.tx2,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false),
@@ -172,7 +172,7 @@ fun FloatingButton(
             enabled = !busy,
             shape = Corners.full,
             color = if (tonal) tokens.ink else SurfaceLevel.Floating.fill(),
-            contentColor = if (tonal) tokens.onInk else AppTheme.colorScheme.onSurface,
+            contentColor = if (tonal) tokens.onInk else tokens.tx,
             border = if (tonal) null else cardBorder(),
             shadowElevation = Elevation.level2,
             modifier = Modifier.statusBarsPadding().sideInsetsPadding().padding(horizontal = Space.m, vertical = Space.s)
@@ -195,7 +195,7 @@ val FLOATING_BAR = FLOATING_HEIGHT + Space.s * 2
 @Composable
 fun RisingSheet(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Surface(
-        shape = AppTheme.shapes.extraLarge.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize),
+        shape = AppTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize),
         color = AppColors.page,
         modifier = modifier.fillMaxWidth(),
         content = content,

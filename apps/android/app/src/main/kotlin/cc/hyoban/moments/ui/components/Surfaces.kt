@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.components
 
 import cc.hyoban.moments.ui.theme.cardBorder
+import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -73,7 +74,7 @@ object AppColors {
 
     /** A sheet's own fill, bottom or side: the surface. */
     val sheet: Color
-        @Composable get() = AppTheme.colorScheme.surfaceContainerLow
+        @Composable get() = tokens.surface
 }
 
 /**
@@ -102,7 +103,7 @@ fun PressableCard(
 
     Card(
         shape = AppTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = if (flat) Color.Transparent else level.fill(), contentColor = AppTheme.colorScheme.onSurface),
+        colors = CardDefaults.cardColors(containerColor = if (flat) Color.Transparent else level.fill(), contentColor = tokens.tx),
         border = if (flat) null else cardBorder(),
         modifier = modifier,
     ) {
@@ -147,8 +148,8 @@ fun Pill(text: String, modifier: Modifier = Modifier, icon: ImageVector? = null)
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
-        icon?.let { Icon(it, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp)) }
-        Text(text, style = AppTheme.typography.label, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        icon?.let { Icon(it, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(16.dp)) }
+        Text(text, style = AppTheme.typography.label, color = tokens.tx2, maxLines = 1)
     }
 }
 
@@ -170,8 +171,8 @@ fun NeutralChip(label: String, icon: ImageVector, onClick: () -> Unit, modifier:
 @Composable
 fun SectionHeader(icon: ImageVector, title: String, modifier: Modifier = Modifier, action: (@Composable () -> Unit)? = null) {
     Row(modifier.fillMaxWidth().heightIn(min = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-        Icon(icon, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-        Text(title, style = AppTheme.typography.titleSmall, color = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f).semantics { heading() })
+        Icon(icon, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
+        Text(title, style = AppTheme.typography.titleSmall, color = tokens.tx2, modifier = Modifier.weight(1f).semantics { heading() })
         action?.invoke()
     }
 }
@@ -187,7 +188,7 @@ fun MonthHeader(month: String, year: String?, detail: String? = null) {
     ) {
         Text(month, style = AppTheme.typography.title)
         year?.let {
-            Text(it, style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = Space.xxs))
+            Text(it, style = AppTheme.typography.bodySmall, color = tokens.tx2, modifier = Modifier.padding(bottom = Space.xxs))
         }
         // How many Moments and what the month spent, the faintest, at the end.
         detail?.let {
@@ -213,7 +214,7 @@ fun DayPill(text: String, date: String? = null, onClick: (() -> Unit)? = null) {
         Surface(
             shape = PillShape,
             color = SurfaceLevel.Floating.fill(),
-            contentColor = AppTheme.colorScheme.onSurface,
+            contentColor = tokens.tx,
             border = cardBorder(),
             shadowElevation = Elevation.level1,
             modifier = open,

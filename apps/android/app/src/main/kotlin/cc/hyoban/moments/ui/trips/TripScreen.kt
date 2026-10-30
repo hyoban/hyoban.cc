@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.trips
 
 import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.lazy.LazyRow
@@ -179,7 +180,7 @@ fun TripScreen(
             Column(Modifier.padding(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 SectionHeader(AppIcons.Route, stringResource(R.string.section_route))
                 // The map's corners the card's less its padding, so the two look as round.
-                TripMap(stops, routes[trip.id].orEmpty(), mapModifier.fillMaxWidth().clip(AppTheme.shapes.extraSmall))
+                TripMap(stops, routes[trip.id].orEmpty(), mapModifier.fillMaxWidth().clip(AppTheme.shapes.small))
             }
         }
     }
@@ -300,7 +301,7 @@ private fun TrackShareRow(container: AppContainer, trip: cc.hyoban.moments.data.
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
             Text(stringResource(R.string.trip_track_public), style = AppTheme.typography.body)
-            Text(stringResource(R.string.trip_track_public_note), style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.trip_track_public_note), style = AppTheme.typography.bodySmall, color = tokens.tx2)
         }
         Spacer(Modifier.width(Space.m))
         AppSwitch(share != null)
@@ -358,7 +359,7 @@ private fun TripFacets(
                 verticalArrangement = Arrangement.spacedBy(Space.xxs),
             ) {
                 Text(figure.first, style = AppTheme.typography.numTitle, maxLines = 1)
-                Text(figure.second, style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
+                Text(figure.second, style = AppTheme.typography.caption, color = tokens.tx2)
             }
         }
     }

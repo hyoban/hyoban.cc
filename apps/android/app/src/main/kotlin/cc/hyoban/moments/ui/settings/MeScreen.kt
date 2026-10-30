@@ -146,7 +146,7 @@ private fun PublishCard(count: Int, onChanges: () -> Unit) {
             style = AppTheme.typography.titleSmall,
             modifier = Modifier.semantics { heading() },
         )
-        Text(stringResource(R.string.me_pending_note), style = AppTheme.typography.body, color = AppTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.me_pending_note), style = AppTheme.typography.body, color = tokens.tx2)
         Button(onClick = onChanges, modifier = Modifier.padding(top = Space.m).testTag("review_publish")) {
             Text(stringResource(R.string.action_review_publish))
         }
@@ -178,7 +178,7 @@ private fun MonthSpending(container: AppContainer, onOpen: () -> Unit) {
             .testTag("ledger_month"),
         verticalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
-        Text(stringResource(R.string.me_month_expense), style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.me_month_expense), style = AppTheme.typography.caption, color = tokens.tx2)
         Text(money(month.expense, currency), style = AppTheme.typography.numDisplay)
         val days = start.lengthOfMonth()
         val most = (month.expenseByDay.values.maxOrNull() ?: 0L).coerceAtLeast(1L)

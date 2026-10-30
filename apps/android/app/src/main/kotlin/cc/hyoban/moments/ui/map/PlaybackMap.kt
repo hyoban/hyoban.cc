@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.map
 
 import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.ContainedSpinner
 import android.graphics.Bitmap
 import android.util.DisplayMetrics
@@ -142,8 +143,8 @@ private fun lineOf(line: List<Pair<Double, Double>>) =
 @Composable
 fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modifier = Modifier) {
     var ready by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
-    val ink = AppTheme.colorScheme.onSurface
-    val paper = AppTheme.colorScheme.surface
+    val ink = tokens.tx
+    val paper = tokens.bg
     val density = LocalDensity.current
     val padding = edges(clear[0], clear[1], clear[2], clear[3])
     val heads = mapOf(
@@ -347,7 +348,7 @@ private fun HeadClock(clock: PlaybackClock, modifier: Modifier) {
         modifier = modifier,
     ) {
         Column(Modifier.padding(horizontal = Space.s + Space.xxs, vertical = Space.xs)) {
-            Text(formatDay(clock.dateKey), style = AppTheme.typography.micro, color = AppTheme.colorScheme.onSurfaceVariant)
+            Text(formatDay(clock.dateKey), style = AppTheme.typography.micro, color = tokens.tx2)
             Text(
                 listOfNotNull(stringResource(R.string.trip_day, clock.day), clock.time).joinToString("\u2003"),
                 style = AppTheme.typography.label.copy(fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum", fontSize = 13.sp),

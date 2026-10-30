@@ -81,8 +81,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   tabs, the timeline, top bars, settings groups, touch sizes, words, share targets, the two
   palette exceptions, motion and back) are the artifact's README and component cards; read
   them there rather than here. What follows is only where Android carries them out.
-- Layers: the hairline is `cardBorder` and `dividerColor`, shadows `Elevation` drawn by
-  `softShadow`, the colours `tokens.accent` and `tokens.ink`, a surface's level `SurfaceLevel`.
+- Colours are `tokens.*` by the design's names alone; there is no layer of roles over them.
+  Layers: the hairline is `cardBorder` and `dividerColor`, shadows `Elevation` drawn by
+  `softShadow`, a surface's level `SurfaceLevel`.
+- Keep only what is used: three buttons (`Button`, `FilledTonalButton`, `TextButton`), two chips
+  (`FilterChip` to choose, `AssistChip` to act), and no icon that nothing draws.
 - Top bars switch between what the page is one of with `TitleMenu` and put a control over the
   subtitle's figures in `subtitleAction`. Settings are `SegmentedGroup` with `SwitchRow` and
   `ActionRow`, switches `AppSwitch`. What floats over a photo or the map is `FloatingButton`.

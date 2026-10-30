@@ -487,7 +487,7 @@ fun NewMomentScreen(
                         isError = emptyError,
                         // The error marked by an icon as well as the colour.
                         trailingIcon = if (emptyError) {
-                            { Icon(AppIcons.Alert, contentDescription = null, tint = AppTheme.colorScheme.error) }
+                            { Icon(AppIcons.Alert, contentDescription = null, tint = tokens.danger) }
                         } else {
                             null
                         },
@@ -608,8 +608,8 @@ fun NewMomentScreen(
                                 shapes = shapes,
                                 enabled = !saving,
                                 colors = ListItemDefaults.segmentedColors(
-                                    contentColor = AppTheme.colorScheme.error,
-                                    leadingContentColor = AppTheme.colorScheme.error,
+                                    contentColor = tokens.danger,
+                                    leadingContentColor = tokens.danger,
                                 ),
                                 leadingContent = { Icon(AppIcons.Trash, contentDescription = null) },
                                 modifier = Modifier.testTag("delete"),
@@ -813,7 +813,7 @@ private fun PhotoStrip(
             ) {
                 // The site's photos by their URL, the phone's by their Uri.
                 AsyncImage(model = if (uri.scheme == "https" || uri.scheme == "http") uri.toString() else uri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                if (lift > 0f) Box(Modifier.fillMaxSize().background(AppTheme.colorScheme.onSurface.copy(alpha = DRAGGED_LAYER * lift)))
+                if (lift > 0f) Box(Modifier.fillMaxSize().background(tokens.tx.copy(alpha = DRAGGED_LAYER * lift)))
                 if (uri in motion && uri !in stills) LiveBadge(Modifier.align(Alignment.TopStart).padding(Space.s))
                 if (uri in videos) {
                     Box(
@@ -1109,7 +1109,7 @@ private fun AddTile(icon: ImageVector, label: String, onClick: () -> Unit, modif
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, contentDescription = label, tint = AppTheme.colorScheme.onSurfaceVariant)
+        Icon(icon, contentDescription = label, tint = tokens.tx2)
     }
 }
 

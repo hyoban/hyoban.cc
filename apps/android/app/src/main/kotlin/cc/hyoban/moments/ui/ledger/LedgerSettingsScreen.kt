@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.ledger
 
 import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.OutlinedTextField
 import cc.hyoban.moments.ui.design.ListItemShapes
 import android.content.Context
@@ -287,7 +288,7 @@ private fun BookDialog(book: Book, canDelete: Boolean, onDismiss: () -> Unit, on
                     Text(stringResource(R.string.ledger_categories), modifier = Modifier.padding(start = Space.s))
                 }
                 if (canDelete) {
-                    TextButton(onClick = { confirming = true }) { Text(stringResource(R.string.ledger_delete_book), color = AppTheme.colorScheme.error) }
+                    TextButton(onClick = { confirming = true }) { Text(stringResource(R.string.ledger_delete_book), color = tokens.danger) }
                 }
             }
         },
@@ -299,7 +300,7 @@ private fun BookDialog(book: Book, canDelete: Boolean, onDismiss: () -> Unit, on
             onDismissRequest = { confirming = false },
             title = { Text(stringResource(R.string.ledger_delete_book)) },
             text = { Text(stringResource(R.string.ledger_delete_book_note, book.name)) },
-            confirmButton = { TextButton(onClick = { confirming = false; onDelete() }) { Text(stringResource(R.string.action_delete), color = AppTheme.colorScheme.error) } },
+            confirmButton = { TextButton(onClick = { confirming = false; onDelete() }) { Text(stringResource(R.string.action_delete), color = tokens.danger) } },
             dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
@@ -394,9 +395,9 @@ private fun ImportDialog(found: Found, hasData: Boolean, onDismiss: () -> Unit, 
                 if (report.converted > 0) Text(stringResource(R.string.ledger_import_converted, report.converted))
                 if (report.duplicates > 0) Text(stringResource(R.string.ledger_import_duplicates, report.duplicates))
                 if (report.skipped.isNotEmpty()) {
-                    Text(stringResource(R.string.ledger_import_skipped, report.skipped.size, report.skipped.take(5).joinToString { "#${it.first} ${it.second}" }), color = AppTheme.colorScheme.error)
+                    Text(stringResource(R.string.ledger_import_skipped, report.skipped.size, report.skipped.take(5).joinToString { "#${it.first} ${it.second}" }), color = tokens.danger)
                 }
-                Text(stringResource(R.string.ledger_import_accounts_note), style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.ledger_import_accounts_note), style = AppTheme.typography.bodySmall, color = tokens.tx2)
                 if (hasData) {
                     listOf(false to R.string.ledger_merge, true to R.string.ledger_replace).forEach { (value, label) ->
                         Row(

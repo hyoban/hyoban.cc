@@ -361,7 +361,7 @@ private suspend fun photo(context: Context, container: AppContainer, media: Mome
 }
 
 private const val PHOTO_WIDTH = 720
-private val CORNER = Radius.extraLarge
+private val CORNER = Radius.large
 private val PADDING = Space.l
 private val PADDING_LARGE = Space.xl
 

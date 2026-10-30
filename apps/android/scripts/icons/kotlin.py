@@ -7,7 +7,7 @@ spec = importlib.util.spec_from_file_location('icons', os.path.join(HERE, 'icons
 m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
 
-MIRROR = {'arrow-left', 'arrow-right', 'chevron-left', 'chevron-right', 'sub-arrow', 'external', 'undo', 'send', 'backspace', 'volume', 'volume-off'}
+MIRROR = {'arrow-left', 'arrow-right', 'chevron-left', 'chevron-right', 'sub-arrow', 'external', 'undo', 'backspace', 'volume', 'volume-off'}
 
 
 def num(v):

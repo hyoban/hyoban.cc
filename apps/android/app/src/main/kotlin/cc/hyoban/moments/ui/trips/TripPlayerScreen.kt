@@ -347,8 +347,8 @@ private fun PlayerCard(
         val lift by animateDpAsState(if (dragging) Elevation.level4 else Elevation.level2, AppTheme.motionScheme.fastSpatialSpec(), label = "lift")
         // Dragged, Material 3's low-emphasis state layer over it too, the content's colour at 16%.
         val layer by animateFloatAsState(if (dragging) DRAGGED_LAYER else 0f, AppTheme.motionScheme.fastEffectsSpec(), label = "dragged")
-        val layerColor = AppTheme.colorScheme.onSurface
-        val cardShape = AppTheme.shapes.extraLarge
+        val layerColor = tokens.tx
+        val cardShape = AppTheme.shapes.large
         val letGo = {
             dragging = false
             scope.launch { if (reduced) drag.snapTo(Offset.Zero) else drag.animateTo(Offset.Zero, settle) }
@@ -363,7 +363,7 @@ private fun PlayerCard(
                     translationX = drag.value.x
                     translationY = drag.value.y
                 }
-                .then(if (stop != null) Modifier.sharedCard(stop.stop.moment.uid, cardCorner = Radius.extraLarge) else Modifier)
+                .then(if (stop != null) Modifier.sharedCard(stop.stop.moment.uid, cardCorner = Radius.large) else Modifier)
                 .pointerInput(swipe, forward) {
                     var dragged = Offset.Zero
                     detectDragGestures(
@@ -440,7 +440,7 @@ private fun PlayerCard(
                     Text(
                         "${index + 1} / $count",
                         style = AppTheme.typography.caption.copy(fontFeatureSettings = "tnum"),
-                        color = AppTheme.colorScheme.onSurfaceVariant,
+                        color = tokens.tx2,
                         modifier = Modifier.clearAndSetSemantics { },
                     )
                 } }
@@ -478,10 +478,10 @@ private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<Mom
 @Composable
 private fun DayCard(slide: PlaybackSlide.Day) {
     Column(Modifier.padding(horizontal = Space.xs, vertical = Space.xs)) {
-        Text(stringResource(R.string.trip_day, slide.day), style = AppTheme.typography.label, color = AppTheme.colorScheme.primary)
+        Text(stringResource(R.string.trip_day, slide.day), style = AppTheme.typography.label, color = tokens.accent)
         Text(formatDay(slide.dateKey), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
         if (slide.places.isNotEmpty()) {
-            Text(slide.places.joinToString(" → "), style = AppTheme.typography.body, color = AppTheme.colorScheme.onSurfaceVariant)
+            Text(slide.places.joinToString(" → "), style = AppTheme.typography.body, color = tokens.tx2)
         }
     }
 }
@@ -598,7 +598,7 @@ private val PEEK = 56.dp
 private fun SummaryCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, expanded: Boolean) {
     Column(Modifier.padding(horizontal = Space.xs), verticalArrangement = Arrangement.spacedBy(Space.m)) {
         Column {
-            Text(stringResource(R.string.playback_look_back), style = AppTheme.typography.label, color = AppTheme.colorScheme.primary)
+            Text(stringResource(R.string.playback_look_back), style = AppTheme.typography.label, color = tokens.accent)
             Text(trip.title, style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
         }
         val days = cc.hyoban.moments.ui.format.daysBetween(trip.start, trip.end)
@@ -637,7 +637,7 @@ private fun Tile(value: Int, unit: String) {
             shown.value.roundToInt().toString(),
             style = AppTheme.typography.numDisplay.emphasized.copy(fontFeatureSettings = "tnum"),
         )
-        Text(unit, style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
+        Text(unit, style = AppTheme.typography.caption, color = tokens.tx2)
     }
 }
 
@@ -709,7 +709,7 @@ private fun DragHandle(expanded: Boolean, onExpanded: (Boolean) -> Unit) {
             .testTag("player_handle"),
         contentAlignment = Alignment.Center,
     ) {
-        Surface(shape = CircleShape, color = AppTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), modifier = Modifier.size(32.dp, 4.dp)) {}
+        Surface(shape = CircleShape, color = tokens.tx2.copy(alpha = 0.4f), modifier = Modifier.size(32.dp, 4.dp)) {}
     }
 }
 

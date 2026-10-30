@@ -295,12 +295,12 @@ fun TripBanner(trip: TripRecord, count: Int, onClick: () -> Unit, modifier: Modi
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.m),
     ) {
-        Icon(AppIcons.Route, contentDescription = null, tint = AppTheme.colorScheme.onSurfaceVariant)
+        Icon(AppIcons.Route, contentDescription = null, tint = tokens.tx2)
         Column(Modifier.weight(1f)) {
             Text(trip.title, style = AppTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(tripSummary(trip, count), style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            Text(tripSummary(trip, count), style = AppTheme.typography.bodySmall, color = tokens.tx2, maxLines = 1)
         }
-        Icon(AppIcons.ChevronRight, contentDescription = null, tint = AppTheme.colorScheme.outline, modifier = Modifier.size(20.dp))
+        Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.borderStrong, modifier = Modifier.size(20.dp))
     }
 }
 

@@ -113,9 +113,9 @@ val Txn.incoming: Boolean get() = kind == TxnKind.INCOME || kind == TxnKind.REFU
 /** The colour of a bill's amount: income in its own colour, a transfer in the secondary text's, the rest plain. */
 @Composable
 fun amountColor(txn: Txn): Color = when {
-    txn.kind == TxnKind.TRANSFER -> AppTheme.colorScheme.onSurfaceVariant
+    txn.kind == TxnKind.TRANSFER -> tokens.tx2
     txn.incoming -> tokens.income
-    else -> AppTheme.colorScheme.onSurface
+    else -> tokens.tx
 }
 
 @Composable
@@ -294,7 +294,7 @@ fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = M
                 Text(
                     listOfNotNull(book, txn.local.format(TIME)).joinToString("\u2003"),
                     style = AppTheme.typography.caption,
-                    color = AppTheme.colorScheme.onSurfaceVariant,
+                    color = tokens.tx2,
                     maxLines = 1,
                 )
             }
@@ -319,7 +319,7 @@ fun DayTotals(dateKey: String, expense: Long, income: Long, currency: String, mo
                 if (income != 0L) stringResource(R.string.ledger_income_short, money(income, currency)) else null,
             ).joinToString(" "),
             style = AppTheme.typography.caption,
-            color = AppTheme.colorScheme.onSurfaceVariant,
+            color = tokens.tx2,
         )
     }
 }

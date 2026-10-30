@@ -39,7 +39,6 @@ import cc.hyoban.moments.ui.design.HorizontalDivider
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.ui.design.AppTheme
-import cc.hyoban.moments.ui.design.OutlinedButton
 import cc.hyoban.moments.ui.design.SegmentedListItem
 import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
@@ -206,7 +205,7 @@ private fun HideAmountsButton() {
             Icon(
                 if (settings.ledgerHidden) AppIcons.EyeOff else AppIcons.Eye,
                 contentDescription = label,
-                tint = AppTheme.colorScheme.onSurfaceVariant,
+                tint = tokens.tx2,
                 modifier = Modifier.size(20.dp),
             )
         }
@@ -225,7 +224,7 @@ private fun EmptyLedger(onImport: () -> Unit, onNew: () -> Unit) {
         Text(
             stringResource(R.string.ledger_empty_body),
             style = AppTheme.typography.body,
-            color = AppTheme.colorScheme.onSurfaceVariant,
+            color = tokens.tx2,
             textAlign = TextAlign.Center,
         )
         FilledTonalButton(onClick = onImport, modifier = Modifier.testTag("ledger_import_empty")) {
@@ -338,7 +337,7 @@ private fun MonthTotals(month: String, expense: Long, income: Long, currency: St
     Column(Modifier.fillMaxWidth().padding(start = Space.l + Space.xs, end = Space.l + Space.xs, top = Space.xl).semantics(mergeDescendants = true) { heading() }) {
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
             Text(name, style = AppTheme.typography.titlePage)
-            Text(year, style = AppTheme.typography.titleSmall, color = AppTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = Space.xxs))
+            Text(year, style = AppTheme.typography.titleSmall, color = tokens.tx2, modifier = Modifier.padding(bottom = Space.xxs))
         }
         Text(
             listOf(
@@ -347,7 +346,7 @@ private fun MonthTotals(month: String, expense: Long, income: Long, currency: St
                 stringResource(R.string.ledger_balance_short, money(income - expense, currency)),
             ).joinToString(" "),
             style = AppTheme.typography.body,
-            color = AppTheme.colorScheme.onSurfaceVariant,
+            color = tokens.tx2,
         )
     }
 }
@@ -365,12 +364,12 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                 .padding(start = columns.margin, end = columns.margin, bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl),
         ) {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.xl).semantics(mergeDescendants = true) {}) {
-                Text(stringResource(R.string.ledger_net_assets), style = AppTheme.typography.label, color = AppTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.ledger_net_assets), style = AppTheme.typography.label, color = tokens.tx2)
                 Text(money(assets.net, currency), style = AppTheme.typography.numDisplay, modifier = Modifier.testTag("net_assets"))
                 Text(
                     stringResource(R.string.ledger_assets_line, money(assets.held, currency), money(assets.owed, currency)),
                     style = AppTheme.typography.body,
-                    color = AppTheme.colorScheme.onSurfaceVariant,
+                    color = tokens.tx2,
                 )
             }
             NetAssetsTrend(ledger, currency)
@@ -418,7 +417,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                 )
             }
             Spacer(Modifier.height(Space.l))
-            OutlinedButton(onClick = { nav.editAccount(null) }, modifier = Modifier.padding(horizontal = Space.gutter).fillMaxWidth().testTag("add_account")) {
+            FilledTonalButton(onClick = { nav.editAccount(null) }, modifier = Modifier.padding(horizontal = Space.gutter).fillMaxWidth().testTag("add_account")) {
                 Icon(AppIcons.Plus, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.size(Space.s))
                 Text(stringResource(R.string.ledger_add_account))
@@ -446,7 +445,7 @@ private fun NetAssetsTrend(ledger: Ledger, currency: String) {
     ChartCard(stringResource(R.string.ledger_chart_net_assets), readout, modifier = Modifier.testTag("chart_net_assets")) {
         LineChart(
             listOf(months.map { it.second }),
-            listOf(AppTheme.colorScheme.primary),
+            listOf(tokens.accent),
             months.size,
             listOf(name(0), name(months.lastIndex)),
             picked,

@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.ledger
 
 import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.theme.cardBorder
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.clickable
@@ -186,7 +187,7 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
                 Text(
                     stringResource(if (income) R.string.ledger_no_income else R.string.ledger_no_expense),
                     style = AppTheme.typography.body,
-                    color = AppTheme.colorScheme.onSurfaceVariant,
+                    color = tokens.tx2,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(Space.xl),
                 )
@@ -275,14 +276,14 @@ private fun PeriodRow(label: String, mode: Span, onMode: (Span) -> Unit, onPrevi
                 horizontalArrangement = Arrangement.spacedBy(Space.xs),
             ) {
                 Text(label, style = AppTheme.typography.titleSmall)
-                Icon(AppIcons.CaretDown, contentDescription = null, modifier = Modifier.size(20.dp), tint = AppTheme.colorScheme.onSurfaceVariant)
+                Icon(AppIcons.CaretDown, contentDescription = null, modifier = Modifier.size(20.dp), tint = tokens.tx2)
             }
             DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
                 Span.entries.forEach { entry ->
                     DropdownMenuItem(
                         text = { Text(stringResource(entry.label)) },
                         onClick = { onMode(entry); open = false },
-                        trailingIcon = if (entry == mode) ({ Icon(AppIcons.Check, contentDescription = null, tint = AppTheme.colorScheme.primary) }) else null,
+                        trailingIcon = if (entry == mode) ({ Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent) }) else null,
                         modifier = Modifier.testTag("span_${entry.name.lowercase()}"),
                     )
                 }
@@ -316,7 +317,7 @@ private fun Totals(summary: Summary, currency: String, average: Long?, compared:
                         maxLines = 1,
                         autoSize = TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = AppTheme.typography.numTitle.fontSize),
                     )
-                    Text(stringResource(label), style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(label), style = AppTheme.typography.caption, color = tokens.tx2)
                 }
             }
             // Three in a row, or one under another with the system's font set large, where a third
@@ -341,7 +342,7 @@ private fun Totals(summary: Summary, currency: String, average: Long?, compared:
             }
             val average = average?.takeIf { summary.expense > 0 }?.let { stringResource(R.string.ledger_daily_average, money(it, currency)) }
             if (average != null || change != null) {
-                Text(line(average, change), style = AppTheme.typography.body, color = AppTheme.colorScheme.onSurfaceVariant)
+                Text(line(average, change), style = AppTheme.typography.body, color = tokens.tx2)
             }
         }
     }
@@ -356,7 +357,7 @@ private fun IncomeAgainstExpense(summary: Summary, yearly: Boolean, year: Int, f
     var picked by remember(yearly, year, summary) { mutableStateOf<Int?>(null) }
     val expense = if (yearly) byMonth(summary.expenseByDay, year) else byYear(summary.expenseByDay, first, last)
     val income = if (yearly) byMonth(summary.incomeByDay, year) else byYear(summary.incomeByDay, first, last)
-    val colors = listOf(AppTheme.colorScheme.primary, AppTheme.colorScheme.tertiary)
+    val colors = listOf(tokens.accent, tokens.income)
     val expenseLabel = stringResource(R.string.ledger_kind_expense)
     val incomeLabel = stringResource(R.string.ledger_kind_income)
     val readout = picked?.let { i ->
@@ -436,7 +437,7 @@ private fun Trend(
     ) {
         BarChart(
             listOf(values),
-            listOf(AppTheme.colorScheme.primary),
+            listOf(tokens.accent),
             axis,
             picked,
             { picked = it },
@@ -474,7 +475,7 @@ private fun RunningTotal(
         current.getOrNull(at)?.let { "$thisName ${money(it, currency)}" },
         last.getOrNull(at)?.let { "$lastName ${money(it, currency)}" },
     )
-    val colors = listOf(AppTheme.colorScheme.primary, otherColor())
+    val colors = listOf(tokens.accent, otherColor())
     ChartCard(
         stringResource(R.string.ledger_chart_running_total),
         readout,
@@ -518,7 +519,7 @@ private fun Weekdays(byDay: Map<LocalDate, Long>, start: LocalDate, end: LocalDa
     val at = picked ?: values.indices.maxBy { values[it] }
     val readout = stringResource(R.string.ledger_weekday_average, weekday(at), money(values[at], currency))
     ChartCard(stringResource(R.string.ledger_chart_weekdays), readout) {
-        BarChart(listOf(values), listOf(AppTheme.colorScheme.primary), weekdayLetters(), picked, { picked = it }, readout, height = 88.dp)
+        BarChart(listOf(values), listOf(tokens.accent), weekdayLetters(), picked, { picked = it }, readout, height = 88.dp)
     }
 }
 
@@ -554,7 +555,7 @@ private fun Categories(
                 Text(
                     picked?.let { names[it] } ?: stringResource(if (income) R.string.ledger_kind_income else R.string.ledger_kind_expense),
                     style = AppTheme.typography.caption,
-                    color = AppTheme.colorScheme.onSurfaceVariant,
+                    color = tokens.tx2,
                     maxLines = 1,
                 )
                 Text(money(picked?.let { slices[it].first } ?: sum, currency), style = AppTheme.typography.titleSmall, maxLines = 1)

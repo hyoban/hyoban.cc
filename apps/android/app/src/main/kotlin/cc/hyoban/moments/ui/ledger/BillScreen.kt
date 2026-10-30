@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.ledger
 
 import cc.hyoban.moments.data.store.isPublic
+import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -105,7 +106,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                     Text(
                         if (txn.kind == TxnKind.TRANSFER) transferLabel(txn.transfer) else kindLabel(txn.kind),
                         style = AppTheme.typography.label,
-                        color = AppTheme.colorScheme.onSurfaceVariant,
+                        color = tokens.tx2,
                     )
                     Text(
                         if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
@@ -117,7 +118,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                         Text(
                             stringResource(R.string.ledger_saved, money(txn.discount, txn.currency), money(txn.amount + txn.discount, txn.currency)),
                             style = AppTheme.typography.body,
-                            color = AppTheme.colorScheme.onSurfaceVariant,
+                            color = tokens.tx2,
                         )
                     }
                 }
@@ -275,7 +276,7 @@ fun InfoRow(
             overlineContent = { Text(label) },
             leadingContent = { Icon(icon, contentDescription = null) },
             trailingContent = trailingContent,
-            colors = ListItemDefaults.colors(containerColor = LocalSurfaceLevel.current.raised.fill(), leadingIconColor = AppTheme.colorScheme.onSurfaceVariant),
+            colors = ListItemDefaults.colors(containerColor = LocalSurfaceLevel.current.raised.fill(), leadingIconColor = tokens.tx2),
             modifier = Modifier.clip(shapes.shape),
         )
         return
