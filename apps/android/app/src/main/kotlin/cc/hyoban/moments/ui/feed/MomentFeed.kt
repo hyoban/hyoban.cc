@@ -3,7 +3,6 @@ package cc.hyoban.moments.ui.feed
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.dayCardKey
 import cc.hyoban.moments.data.trips.countOf
-import cc.hyoban.moments.ui.ledger.money
 import cc.hyoban.moments.ui.format.formatDay
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.heading
@@ -78,7 +77,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
@@ -258,19 +256,14 @@ fun MomentFeed(
                 timeline.forEach { (day, dayMoments, dayItems) ->
                     // Right under a month's header or a trip's banner, a day needs less room above it.
                     var headed = false
-                    if (months && day.take(7) != month) {
+                    // The conversation has no month headings: its capsules carry the date, and the year when it isn't this one.
+                    if (months && !chat && day.take(7) != month) {
                         headed = true
                         month = day.take(7)
                         val (name, year) = formatMonth(day)
                         val monthKey = day.take(7)
                         item(key = "month-$monthKey", contentType = "month") {
-                            val count = remember(moments, monthKey) { moments.count { it.dateKey.startsWith(monthKey) } }
-                            val spent = remember(bills, monthKey) { bills.spent.filterKeys { it.startsWith(monthKey) }.values.sum() }
-                            val detail = listOfNotNull(
-                                pluralStringResource(R.plurals.count_moments, count, count).takeIf { count > 0 },
-                                stringResource(R.string.ledger_expense_short, money(spent, bills.currency)).takeIf { spent > 0 },
-                            ).joinToString("\u2003").ifEmpty { null }
-                            Box(Modifier.animateItem()) { MonthHeader(name, year, detail) }
+                            Box(Modifier.animateItem()) { MonthHeader(name, year) }
                         }
                     }
                     // Where a trip begins, reading down: above its last day on the timeline.
@@ -319,7 +312,7 @@ fun MomentFeed(
                                     bubble = true,
                                 )
                                 is ChatItem.Records -> RecordsBubble(
-                                    item.lines, bills.ledger, tracks, bills.currency, onBill,
+                                    item.lines, bills.ledger, tracks, onBill,
                                     onDay = onDay?.let { { it(day) } },
                                     onTrackDay = (onTrackDay ?: onDay)?.let { { it(day) } },
                                     modifier = itemModifier,
@@ -430,20 +423,6 @@ fun Modifier.dayHeaderSpacing(gap: Dp, below: Dp = Space.m): Modifier {
 @Composable
 private fun dayPillText(label: String, count: Int, spent: String? = null): String =
     listOfNotNull(label, if (count > 1) pluralStringResource(R.plurals.count_moments, count, count) else null, spent).joinToString("\u2003")
-
-/**
- * A sticky header held below the list's top padding while it is stuck, rather than at the
- * very top under the status bar, and pushed up from there by the next one coming.
- */
-private fun Modifier.belowListTop(state: LazyListState, key: String): Modifier = graphicsLayer {
-    val items = state.layoutInfo.visibleItemsInfo
-    val index = items.indexOfFirst { it.key == key }
-    val item = items.getOrNull(index) ?: return@graphicsLayer
-    // Offsets count from below the top padding: a stuck header is above that, at the list's very top.
-    if (item.offset >= 0) return@graphicsLayer
-    val next = items.drop(index + 1).firstOrNull { (it.key as? String)?.startsWith("day-") == true }?.offset ?: Int.MAX_VALUE
-    translationY = (minOf(0, next - item.size) - item.offset).toFloat()
-}
 
 /** The Moments month by month, as `YYYY-MM` and that month's, in the order given. */
 private fun byMonth(moments: List<MomentRecord>): List<Pair<String, List<MomentRecord>>> =

@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,8 +23,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import cc.hyoban.moments.ui.design.Icon
-import cc.hyoban.moments.ui.design.IconButtonDefaults
-import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Surface
@@ -51,7 +48,6 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.data.trips.stopsOf
-import cc.hyoban.moments.ui.components.LocalReducedMotion
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.SectionHeader
