@@ -803,6 +803,11 @@
     <string name="moment_publishes">Publishes: %1$s</string>
     <string name="charge_ac">AC charge</string>
     <string name="charge_dc">DC fast charge</string>
+    <string name="timeline_charge">Charge</string>
+    <plurals name="charge_minutes">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
     <string name="me_ledger">Bills and assets</string>
     <string name="section_visibility">Visibility</string>
     <string name="changes_private_note">What is private stays yours and never shows on the site.</string>

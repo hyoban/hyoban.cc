@@ -238,7 +238,10 @@ fun MomentFeed(
                 var month: String? = null
                 val bannered = mutableSetOf<String>()
                 timeline.forEach { (day, dayMoments, dayItems) ->
+                    // Right under a month's header or a trip's banner, a day needs less room above it.
+                    var headed = false
                     if (months && day.take(7) != month) {
+                        headed = true
                         month = day.take(7)
                         val (name, year) = formatMonth(day)
                         val monthKey = day.take(7)
@@ -247,7 +250,7 @@ fun MomentFeed(
                             val spent = remember(bills, monthKey) { bills.spent.filterKeys { it.startsWith(monthKey) }.values.sum() }
                             val detail = listOfNotNull(
                                 pluralStringResource(R.plurals.count_moments, count, count).takeIf { count > 0 },
-                                money(spent, bills.currency).takeIf { spent > 0 },
+                                stringResource(R.string.ledger_expense_short, money(spent, bills.currency)).takeIf { spent > 0 },
                             ).joinToString("\u2003").ifEmpty { null }
                             Box(Modifier.animateItem()) { MonthHeader(name, year, detail) }
                         }
@@ -255,6 +258,7 @@ fun MomentFeed(
                     // Where a trip begins, reading down: above its last day on the timeline.
                     val trip = if (onTrip != null) trips.firstOrNull { day >= it.start && day <= it.end && it.id !in bannered } else null
                     if (trip != null && onTrip != null) {
+                        headed = true
                         bannered += trip.id
                         item(key = "trip-${trip.id}", contentType = "trip") {
                             val count = remember(trip, moments) { moments.count { it.dateKey >= trip.start && it.dateKey <= trip.end } }
@@ -263,13 +267,31 @@ fun MomentFeed(
                     }
                     // The day in the rail down the left, beside its first item; the rest of the
                     // day to the right of the rail, days set apart by space alone.
+                    // Rows one after another sit together, their own height spacing them; a
+                    // Moment has room above and below it; a day starts further apart from the last
+                    // than anything within a day.
                     val first = dayItems.firstOrNull()?.key
+                    val last = dayItems.lastOrNull()?.key
+                    val tops = dayItems.mapIndexed { index, item ->
+                        item.key to when {
+                            index == 0 -> if (!dayPills) Space.s else if (headed) Space.l else Space.xxl
+                            item is DayItem.Moment || dayItems[index - 1] is DayItem.Moment -> Space.l
+                            else -> 0.dp
+                        }
+                    }.toMap()
+                    // The day's figures level with the first line beside them: a row's text is
+                    // inside its padding, a Moment without photos starts a little down.
+                    val railTop = (if (headed) Space.l else Space.xxl) + when (val head = dayItems.firstOrNull()) {
+                        is DayItem.Moment -> if (head.moment.media.isEmpty()) Space.xs else 0.dp
+                        null -> 0.dp
+                        else -> Space.s
+                    }
                     items(dayItems, key = { it.key }, contentType = { it::class }) { item ->
                         val itemModifier = Modifier.padding(
                             start = if (dayPills) 0.dp else Space.gutter,
                             end = Space.gutter,
-                            top = if (dayPills && item.key == first) Space.xl else Space.s,
-                            bottom = Space.s,
+                            top = tops[item.key] ?: 0.dp,
+                            bottom = if (item.key == last) Space.s else 0.dp,
                         )
                         val content: @Composable (Modifier) -> Unit = { modifier ->
                             when (item) {
@@ -282,7 +304,7 @@ fun MomentFeed(
                         if (dayPills) {
                             Row(Modifier.animateItem()) {
                                 Box(Modifier.padding(start = Space.gutter).width(Rail)) {
-                                    if (item.key == first) DayRail(day, pluralStringResource(R.plurals.count_moments, dayMoments.size, dayMoments.size), onDay?.let { { it(day) } }, Modifier.padding(top = Space.xl))
+                                    if (item.key == first) DayRail(day, pluralStringResource(R.plurals.count_moments, dayMoments.size, dayMoments.size), onDay?.let { { it(day) } }, Modifier.padding(top = railTop))
                                 }
                                 content(itemModifier.weight(1f))
                             }
@@ -298,7 +320,7 @@ fun MomentFeed(
 
 /**
  * A day in the rail down a timeline's left: the day of the month in figures, its weekday under
- * it, tapped for the whole day. No line or dot joins one day to the next.
+ * it, tapped for the whole day, today's figures in the accent. No line or dot joins one day to the next.
  */
 @Composable
 fun DayRail(day: String, description: String, onClick: (() -> Unit)?, modifier: Modifier = Modifier, note: String? = null) {
@@ -310,7 +332,8 @@ fun DayRail(day: String, description: String, onClick: (() -> Unit)?, modifier: 
             .semantics(mergeDescendants = true) { heading(); contentDescription = "${formatDay(day)}\u2003$weekday\u2003$description" }
             .testTag("day_rail_$day"),
     ) {
-        Text(date.dayOfMonth.toString(), style = AppTheme.typography.numTitle)
+        // Today's in the accent, the one day the timeline marks.
+        Text(date.dayOfMonth.toString(), style = AppTheme.typography.numTitle, color = if (date == java.time.LocalDate.now()) tokens.accent else androidx.compose.ui.graphics.Color.Unspecified)
         Text(weekday, style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant)
         note?.let { Text(it, style = AppTheme.typography.numCaption, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false) }
     }

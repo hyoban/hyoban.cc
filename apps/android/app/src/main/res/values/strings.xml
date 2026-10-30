@@ -783,6 +783,10 @@
     <string name="moment_publishes">会发布：%1$s</string>
     <string name="charge_ac">交流充电</string>
     <string name="charge_dc">直流快充</string>
+    <string name="timeline_charge">充电</string>
+    <plurals name="charge_minutes">
+        <item quantity="other">%d 分钟</item>
+    </plurals>
     <string name="me_ledger">账单与资产</string>
     <string name="section_visibility">公开状态</string>
     <string name="changes_private_note">私有的只留给自己，不会出现在网站上。</string>
