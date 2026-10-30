@@ -9,8 +9,6 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
@@ -20,18 +18,11 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -41,23 +32,13 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.ZeroCornerSize
-import androidx.compose.foundation.verticalScroll
-import cc.hyoban.moments.ui.design.Button
 import cc.hyoban.moments.ui.design.IconButtonDefaults
 import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
-import cc.hyoban.moments.ui.design.ListItem
-import cc.hyoban.moments.ui.design.ListItemDefaults
 import cc.hyoban.moments.ui.design.AppTheme
-import cc.hyoban.moments.ui.design.ModalBottomSheet
-import cc.hyoban.moments.ui.design.Surface
 import cc.hyoban.moments.ui.design.Text
-import cc.hyoban.moments.ui.design.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -77,8 +58,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -92,10 +71,13 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.wrapContentHeight
+import kotlin.math.abs
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -107,36 +89,18 @@ import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.media.Share
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
-import cc.hyoban.moments.data.spec.MomentRecord
-import cc.hyoban.moments.data.spec.Place
-import cc.hyoban.moments.data.trips.countOf
-import cc.hyoban.moments.data.trips.coversOf
-import cc.hyoban.moments.data.trips.tripOf
-import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.DrawnStills
 import cc.hyoban.moments.ui.components.MediaStill
-import cc.hyoban.moments.ui.components.NeutralChip
-import cc.hyoban.moments.ui.components.PressableCard
-import cc.hyoban.moments.ui.components.SectionHeader
-import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.components.Tooltip
-import cc.hyoban.moments.ui.components.kindLabel
-import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.mediaKey
-import cc.hyoban.moments.ui.components.rememberPredictiveBack
 import cc.hyoban.moments.ui.components.shapeOf
 import cc.hyoban.moments.ui.components.sharedMedia
 import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
-import cc.hyoban.moments.ui.map.PlacesStill
 import cc.hyoban.moments.ui.rememberShowMessage
-import cc.hyoban.moments.ui.theme.Corners
-import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
-import cc.hyoban.moments.ui.theme.fill
-import cc.hyoban.moments.ui.trips.tripSummary
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -149,20 +113,18 @@ import me.saket.telephoto.zoomable.rememberZoomableState
 import me.saket.telephoto.zoomable.zoomable
 
 /**
- * A Moment's media full screen on black. Swipe sideways between them, down to close and
- * up for the details; tap to hide everything but the photo; pinch or double-tap to zoom.
- * A video or a live photo plays from its own button. With a keyboard, as Material 3 has one
- * work alongside touch: the arrows go from one to the next, Space plays and pauses, and
- * Escape closes the details, then the viewer.
+ * A Moment's media full screen on black. Swipe sideways between them, up or down to close;
+ * tap to hide everything but the photo; pinch or double-tap to zoom. Over it a bar with
+ * close, which of how many and a live photo's motion, and under it a video's controls,
+ * when and where, which opens the day, and sharing. What else there is about it is on the
+ * Moment's page under the viewer. With a keyboard, as Material 3 has one work alongside
+ * touch: the arrows go from one to the next, Space plays and pauses, and Escape closes.
  */
 @Composable
 fun MediaViewer(
     container: AppContainer,
     uid: String,
     index: Int,
-    onMoment: (String) -> Unit,
-    onPlace: (String) -> Unit,
-    onTrip: (String) -> Unit,
     onBack: () -> Unit,
     onShown: (String) -> Unit = {},
     onDay: (String) -> Unit = {},
@@ -176,20 +138,21 @@ fun MediaViewer(
     val pager = rememberPagerState(initialPage = index.coerceIn(0, media.lastIndex)) { media.size }
     var zoomed by remember { mutableStateOf(false) }
     var chrome by rememberSaveable { mutableStateOf(true) }
-    var info by rememberSaveable { mutableStateOf(false) }
-    // How far the photo has been dragged down, read only where it is drawn, so a drag
+    // How far the photo has been dragged up or down, read only where it is drawn, so a drag
     // moves pixels rather than rebuilding the screen every frame.
     var drag by remember { mutableFloatStateOf(0f) }
     val dragging by remember { derivedStateOf { drag != 0f } }
     val density = LocalDensity.current
     val closeAt = with(density) { 120.dp.toPx() }
-    val infoAt = with(density) { 64.dp.toPx() }
-    // In a window of its own only the video shows: no bars, no controls, no details.
+    // In a window of its own only the video shows: no bars, no controls.
     val inPip = LocalInPictureInPicture.current
-    LaunchedEffect(inPip) { if (inPip) info = false }
     ViewerSystemBars(hidden = !chrome || inPip)
     // The photo shown, for its tile to step aside while it is.
     LaunchedEffect(pager.currentPage, media) { onShown(mediaKey(moment.uid, media[pager.currentPage.coerceIn(0, media.lastIndex)].uid)) }
+    // Each one's motion and video, held here so the bars over the pages work the one shown.
+    val lives = remember(media) { media.associate { it.uid to LiveMotionState() } }
+    val videos = remember(media) { media.associate { it.uid to VideoState() } }
+    val shown = media[pager.currentPage.coerceIn(0, media.lastIndex)]
 
     // Space pressed, for the page shown to play or pause what it holds.
     val playKeys = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
@@ -212,7 +175,7 @@ fun MediaViewer(
                     }
                     Key.Spacebar -> playKeys.tryEmit(Unit)
                     Key.Escape -> {
-                        if (info) info = false else onBack()
+                        onBack()
                         true
                     }
                     else -> false
@@ -222,13 +185,13 @@ fun MediaViewer(
             .focusable(),
     ) {
         val fadeOver = constraints.maxHeight / 3f
-        // How far a downward drag has gone toward closing: the photo shrinks a little and
-        // the black thins out to the page under the viewer.
-        fun progress() = (drag / fadeOver).coerceIn(0f, 1f)
+        // How far a drag has gone toward closing: the photo shrinks a little and the black
+        // thins out to the page under the viewer.
+        fun progress() = (abs(drag) / fadeOver).coerceIn(0f, 1f)
         // The system's back gesture previews closing as a drag down does, the photo following
         // the finger; let go, the photo flies back to its tile from there, and called off it settles.
         val settleSpec = AppTheme.motionScheme.fastSpatialSpec<Float>()
-        PredictiveBackHandler(enabled = !(info && landscape)) { events ->
+        PredictiveBackHandler { events ->
             try {
                 events.collect { drag = it.progress * fadeOver }
                 onBack()
@@ -251,11 +214,7 @@ fun MediaViewer(
                     val height = (constraints.maxHeight * scale).roundToInt()
                     val placeable = measurable.measure(Constraints.fixed(width, height))
                     layout(constraints.maxWidth, constraints.maxHeight) {
-                        placeable.place(
-                            (constraints.maxWidth - width) / 2,
-                            // Up, toward the details, it follows the finger only a little, giving way.
-                            (constraints.maxHeight - height) / 2 + (if (drag > 0f) drag else drag * UP_GIVE).roundToInt(),
-                        )
+                        placeable.place((constraints.maxWidth - width) / 2, (constraints.maxHeight - height) / 2 + drag.roundToInt())
                     }
                 }
                 .draggable(
@@ -263,14 +222,8 @@ fun MediaViewer(
                     enabled = !zoomed,
                     state = rememberDraggableState { delta -> drag += delta },
                     onDragStopped = { velocity ->
-                        when {
-                            drag > closeAt || velocity > 2000f -> onBack()
-                            drag < -infoAt -> {
-                                info = true
-                                animate(drag, 0f) { value, _ -> drag = value }
-                            }
-                            else -> animate(drag, 0f, initialVelocity = velocity) { value, _ -> drag = value }
-                        }
+                        if (abs(drag) > closeAt || abs(velocity) > 2000f) onBack()
+                        else animate(drag, 0f, initialVelocity = velocity) { value, _ -> drag = value }
                     },
                 ),
             userScrollEnabled = !zoomed,
@@ -281,7 +234,8 @@ fun MediaViewer(
                 media = media[page],
                 urls = container.mediaUrls,
                 active = pager.currentPage == page,
-                chrome = chrome && !dragging && !inPip,
+                live = lives.getValue(media[page].uid),
+                video = videos.getValue(media[page].uid),
                 onZoom = { zoomed = it },
                 onTap = { chrome = !chrome },
                 playKeys = playKeys,
@@ -289,124 +243,95 @@ fun MediaViewer(
         }
 
         val motion = AppTheme.motionScheme
-        AnimatedVisibility(chrome && !dragging && !inPip, enter = fadeIn(motion.fastEffectsSpec()), exit = fadeOut(motion.fastEffectsSpec())) {
-            Row(
-                Modifier.fillMaxWidth().background(MediaOverlay.bar).statusBarsPadding().sideInsetsPadding().padding(Space.xs),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Tooltip(stringResource(R.string.action_back), below = true) {
+        val bars = chrome && !dragging && !inPip
+        AnimatedVisibility(bars, enter = fadeIn(motion.fastEffectsSpec()), exit = fadeOut(motion.fastEffectsSpec())) {
+            // Close at the start, which of how many in the middle, and a live photo's motion at the end.
+            Box(Modifier.fillMaxWidth().background(MediaOverlay.bar).statusBarsPadding().sideInsetsPadding().padding(Space.xs)) {
+                Tooltip(stringResource(R.string.action_close), below = true, modifier = Modifier.align(Alignment.CenterStart)) {
                     IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
-                        Icon(AppIcons.ArrowLeft, contentDescription = stringResource(R.string.action_back), tint = MediaOverlay.content)
+                        Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_close), tint = MediaOverlay.content)
                     }
                 }
                 if (media.size > 1) {
-                    Text("${pager.currentPage + 1} / ${media.size}", color = MediaOverlay.content, style = AppTheme.typography.titleSmall)
+                    Text(
+                        "${pager.currentPage + 1} / ${media.size}",
+                        color = MediaOverlay.content,
+                        style = AppTheme.typography.numBody,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
                 }
-                Spacer(Modifier.weight(1f))
-                // The one shown, fetched first when it's the site's, the spinner in its place meanwhile.
-                val context = LocalContext.current
-                val show = rememberShowMessage()
-                val scope = rememberCoroutineScope()
-                var sharing by remember { mutableStateOf(false) }
-                Tooltip(stringResource(R.string.action_share), below = true) {
-                    IconButton(
-                        onClick = {
-                            val shown = media[pager.currentPage]
-                            sharing = true
-                            scope.launch {
-                                try {
-                                    Share.media(context, shown, container.mediaUrls)
-                                } catch (e: CancellationException) {
-                                    throw e
-                                } catch (_: Exception) {
-                                    show(context.getString(R.string.error_share))
-                                } finally {
-                                    sharing = false
-                                }
-                            }
-                        },
-                        enabled = !sharing,
-                        modifier = Modifier.testTag("share"),
-                    ) {
-                        Crossfade(sharing, animationSpec = motion.fastEffectsSpec(), label = "sharing") { busy ->
-                            if (busy) {
-                                Spinner(Modifier.size(24.dp), color = MediaOverlay.content)
-                            } else {
-                                Icon(AppIcons.Share, contentDescription = stringResource(R.string.action_share), tint = MediaOverlay.content)
-                            }
-                        }
-                    }
-                }
-                Tooltip(stringResource(R.string.action_info), below = true) {
-                    IconButton(onClick = { info = true }, modifier = Modifier.testTag("info")) {
-                        Icon(AppIcons.Info, contentDescription = stringResource(R.string.action_info), tint = MediaOverlay.content)
-                    }
+                if (shown.type == MediaType.LIVE_PHOTO && container.mediaUrls.motion(shown) != null) {
+                    ViewerLiveButton(lives.getValue(shown.uid), Modifier.align(Alignment.CenterEnd))
                 }
             }
-        }
-
-        val details: @Composable (Modifier) -> Unit = { modifier ->
-            InfoContent(
-                container = container,
-                moment = moment,
-                media = media[pager.currentPage],
-                places = places,
-                onMoment = { info = false; onMoment(moment.uid) },
-                onPlace = { info = false; onPlace(it) },
-                onTrip = { info = false; onTrip(it) },
-                onDay = { info = false; onDay(it) },
-                modifier = modifier,
-            )
-        }
-        // On a phone on its side, the details are a panel down the end side, the photo
-        // still showing beside it, rather than a sheet with no height to rise into.
-        val side = landscape
-        // Back, by the gesture, draws the panel toward its edge under the finger.
-        val panelBack = rememberPredictiveBack(enabled = info && side) { info = false }
-        AnimatedVisibility(info && side, enter = fadeIn(motion.defaultEffectsSpec()), exit = fadeOut(motion.defaultEffectsSpec())) {
-            Box(
-                Modifier.fillMaxSize().background(MediaOverlay.bar)
-                    .clickable(interactionSource = null, indication = null) { info = false },
-            )
         }
         AnimatedVisibility(
-            info && side,
-            // From the end side it stands down, the right or, right to left, the left.
-            enter = slideInHorizontally(motion.defaultSpatialSpec()) { if (rtl) -it else it } + fadeIn(motion.defaultEffectsSpec()),
-            exit = slideOutHorizontally(motion.defaultSpatialSpec()) { if (rtl) -it else it } + fadeOut(motion.defaultEffectsSpec()),
-            modifier = Modifier.align(Alignment.CenterEnd),
+            bars,
+            enter = fadeIn(motion.fastEffectsSpec()),
+            exit = fadeOut(motion.fastEffectsSpec()),
+            modifier = Modifier.align(Alignment.BottomCenter),
         ) {
-            val level = AppColors.sheetLevel
-            Surface(
-                shape = AppTheme.shapes.extraLarge.copy(topEnd = ZeroCornerSize, bottomEnd = ZeroCornerSize),
-                // A modal side sheet's fill, as Material 3 colours one.
-                color = AppColors.sheet,
-                contentColor = AppTheme.colorScheme.onSurface,
-                // Below the status bar, whose icons are white over the viewer's black.
-                modifier = Modifier.statusBarsPadding().fillMaxHeight().width(INFO_PANEL_WIDTH)
-                    .graphicsLayer { translationX = panelBack.progress * size.width * PANEL_BACK_SHIFT * if (rtl) -1f else 1f },
-            ) {
-                CompositionLocalProvider(LocalSurfaceLevel provides level) {
-                    details(Modifier.sideInsetsPadding(WindowInsetsSides.End).padding(top = Space.l).navigationBarsPadding())
+            Column(Modifier.fillMaxWidth().background(MediaOverlay.bar).navigationBarsPadding().sideInsetsPadding()) {
+                if (shown.type == MediaType.VIDEO && container.mediaUrls.motion(shown) != null) {
+                    VideoControls(videos.getValue(shown.uid), Modifier.padding(horizontal = Space.xs))
+                }
+                Row(Modifier.padding(start = Space.gutter - Space.s, end = Space.xs, bottom = Space.xs), verticalAlignment = Alignment.CenterVertically) {
+                    // When and where, tapped for the rest of its day.
+                    val words = listOfNotNull(formatDay(moment.occurredAt), formatTime(moment.occurredAt)) + moment.places.map { places[it]?.name ?: it }
+                    Text(
+                        words.joinToString("\u2003"),
+                        style = AppTheme.typography.caption,
+                        color = MediaOverlay.contentVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f).clip(AppTheme.shapes.medium)
+                            .clickable(onClickLabel = stringResource(R.string.label_whole_day)) { onDay(moment.dateKey) }
+                            .heightIn(min = 48.dp).wrapContentHeight(Alignment.CenterVertically)
+                            .padding(horizontal = Space.s).testTag("info_day"),
+                    )
+                    ShareShown(container, shown)
                 }
             }
-        }
-        if (info && !side) {
-            InfoSheet(onDismiss = { info = false }) { details(Modifier) }
         }
     }
 }
 
-/** How far toward its edge the details' panel goes, of its width, as back is swiped. */
-private const val PANEL_BACK_SHIFT = 0.25f
-
-/** How far a photo follows a drag up, toward the details, for each pixel dragged. */
-private const val UP_GIVE = 0.3f
-
-/** How wide the details' panel is down the side of a phone on its side. */
-private val INFO_PANEL_WIDTH = 400.dp
-/** How high a live photo's badge sits over the photo's bottom, clear of the system's gesture area where a thumb rests. */
-private val LIVE_BADGE_LIFT = 88.dp
+/** The one shown, fetched first when it's the site's, the spinner in its place meanwhile. */
+@Composable
+private fun ShareShown(container: AppContainer, shown: MomentMedia) {
+    val context = LocalContext.current
+    val show = rememberShowMessage()
+    val scope = rememberCoroutineScope()
+    var sharing by remember { mutableStateOf(false) }
+    Tooltip(stringResource(R.string.action_share)) {
+        IconButton(
+            onClick = {
+                sharing = true
+                scope.launch {
+                    try {
+                        Share.media(context, shown, container.mediaUrls)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        show(context.getString(R.string.error_share))
+                    } finally {
+                        sharing = false
+                    }
+                }
+            },
+            enabled = !sharing,
+            modifier = Modifier.testTag("share"),
+        ) {
+            Crossfade(sharing, animationSpec = AppTheme.motionScheme.fastEffectsSpec(), label = "sharing") { busy ->
+                if (busy) {
+                    Spinner(Modifier.size(24.dp), color = MediaOverlay.content)
+                } else {
+                    Icon(AppIcons.Share, contentDescription = stringResource(R.string.action_share), tint = MediaOverlay.content)
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun ViewerPage(
@@ -414,15 +339,14 @@ private fun ViewerPage(
     media: MomentMedia,
     urls: MediaUrls,
     active: Boolean,
-    chrome: Boolean,
+    live: LiveMotionState,
+    video: VideoState,
     onZoom: (Boolean) -> Unit,
     onTap: () -> Unit,
     playKeys: SharedFlow<Unit>,
 ) {
     val motion = urls.motion(media)
-    val live = rememberLiveMotionState(media.uid)
     val liveMotion = motion?.takeIf { media.type == MediaType.LIVE_PHOTO }
-    val video = rememberVideoState(media.uid)
     val videoUrl = motion?.takeIf { media.type == MediaType.VIDEO }
     // Space, while this page is the one shown: a video plays or pauses, a live photo plays or stops.
     LaunchedEffect(active, playKeys) {
@@ -454,75 +378,22 @@ private fun ViewerPage(
             if (liveMotion != null) LiveMotion(liveMotion, active, live, Modifier.fillMaxSize())
             if (videoUrl != null) VideoPlayback(videoUrl, active, video, Modifier.fillMaxSize())
         }
-        when (media.type) {
-            MediaType.VIDEO -> if (videoUrl != null) {
-                VideoWaiting(video)
-                VideoControls(video, visible = chrome && active, modifier = Modifier.align(Alignment.BottomCenter))
-            }
-            MediaType.LIVE_PHOTO -> if (liveMotion != null) {
-                ViewerLiveBadge(
-                    live,
-                    Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = LIVE_BADGE_LIFT),
-                )
-            }
-            MediaType.IMAGE -> Unit
-        }
+        if (videoUrl != null) VideoWaiting(video)
     }
 }
 
-/** A section of the panel: a card headed by its icon and name. */
+/** A live photo's motion in the bar over it: a ring while it loads, then a tap plays it again or stops it. */
 @Composable
-private fun InfoCard(icon: ImageVector, title: String, content: @Composable ColumnScope.() -> Unit) {
-    val level = LocalSurfaceLevel.current.raised
-    Surface(shape = AppTheme.shapes.large, color = level.fill(), modifier = Modifier.fillMaxWidth()) {
-        CompositionLocalProvider(LocalSurfaceLevel provides level) {
-            Column(Modifier.padding(Space.m), verticalArrangement = Arrangement.spacedBy(Space.m)) {
-                SectionHeader(icon, title)
-                content()
+private fun ViewerLiveButton(state: LiveMotionState, modifier: Modifier = Modifier) {
+    val label = stringResource(if (state.playing) R.string.action_pause else R.string.action_play)
+    Tooltip(stringResource(R.string.label_live), below = true, modifier = modifier) {
+        IconButton(onClick = { if (state.playing) state.stop() else state.play() }, enabled = state.ready, modifier = Modifier.testTag("live")) {
+            if (state.ready) {
+                Icon(AppIcons.Live, contentDescription = label, tint = MediaOverlay.content)
+            } else {
+                Spinner(Modifier.size(20.dp), color = MediaOverlay.content)
             }
         }
-    }
-}
-
-/**
- * A tile inside a card, a level into it: some text, with its [label] over it when it has one.
- * Its corners the card's less the card's padding, 16dp less 12dp, so the two look as round.
- */
-@Composable
-private fun InfoTile(text: String, label: String? = null) {
-    Column(
-        Modifier.fillMaxWidth().clip(AppTheme.shapes.extraSmall).background(LocalSurfaceLevel.current.raised.fill()).padding(Space.m),
-        verticalArrangement = Arrangement.spacedBy(Space.xxs),
-    ) {
-        label?.let { Text(it, style = AppTheme.typography.caption, color = AppTheme.colorScheme.onSurfaceVariant) }
-        Text(text, style = AppTheme.typography.body)
-    }
-}
-
-/** The LIVE badge under a live photo: a ring while its motion loads, then a tap plays it again. */
-@Composable
-private fun ViewerLiveBadge(state: LiveMotionState, modifier: Modifier = Modifier) {
-    Row(
-        // A tap target of 48dp around the badge, as Material asks of anything tapped.
-        modifier.minimumInteractiveComponentSize()
-            .clip(Corners.full)
-            .background(MediaOverlay.control)
-            .clickable(
-                enabled = state.ready,
-                onClickLabel = stringResource(if (state.playing) R.string.action_pause else R.string.action_play),
-                role = Role.Button,
-            ) { if (state.playing) state.stop() else state.play() }
-            .testTag("live")
-            .padding(horizontal = Space.m, vertical = Space.xs),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.s),
-    ) {
-        if (state.ready) {
-            Icon(AppIcons.Live, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
-        } else {
-            Spinner(Modifier.size(16.dp), color = MediaOverlay.content)
-        }
-        Text(stringResource(R.string.label_live), color = MediaOverlay.content, style = AppTheme.typography.caption)
     }
 }
 
@@ -615,99 +486,6 @@ private fun ZoomableStill(
 /** As far as a photo zooms, and how far a double tap takes it. */
 private const val MAX_ZOOM = 6f
 private const val DOUBLE_TAP_ZOOM = 2.5f
-
-/** What there is to know about the photo: when, where on a small map, the Moment's words, what it shows, the trip. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun InfoContent(
-    container: AppContainer,
-    moment: MomentRecord,
-    media: MomentMedia,
-    places: Map<String, Place>,
-    onMoment: () -> Unit,
-    onPlace: (String) -> Unit,
-    onTrip: (String) -> Unit,
-    onDay: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
-    val trip = remember(moment, trips) { tripOf(moment, trips) }
-    val located = remember(moment, places) { moment.places.mapNotNull { places[it] } }
-
-    Column(
-        modifier.verticalScroll(rememberScrollState()).padding(start = Space.gutter, end = Space.gutter, bottom = Space.xl),
-        verticalArrangement = Arrangement.spacedBy(Space.m),
-    ) {
-        // When it was, tapped for the rest of its day.
-        Column(
-            Modifier.clip(AppTheme.shapes.medium)
-                .clickable(onClickLabel = stringResource(R.string.label_whole_day)) { onDay(moment.dateKey) }
-                .padding(horizontal = Space.xs).testTag("info_day"),
-            verticalArrangement = Arrangement.spacedBy(Space.xxs),
-        ) {
-            Text(formatDay(moment.occurredAt), style = AppTheme.typography.titlePage)
-            formatTime(moment.occurredAt)?.let {
-                Text(it, style = AppTheme.typography.titleSmall, color = AppTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-        if (moment.places.isNotEmpty()) {
-            InfoCard(AppIcons.Pin, stringResource(R.string.section_places)) {
-                if (located.isNotEmpty()) {
-                    PlacesStill(located, Modifier.fillMaxWidth().aspectRatio(2f).clip(AppTheme.shapes.extraSmall))
-                }
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                    moment.places.forEach { id -> NeutralChip(places[id]?.name ?: id, AppIcons.Pin, onClick = { onPlace(id) }, modifier = Modifier.testTag("place_$id")) }
-                }
-            }
-        }
-        if (moment.text.isNotBlank()) {
-            Text(moment.text, style = AppTheme.typography.bodyReading, modifier = Modifier.padding(horizontal = Space.xs))
-        }
-        if (media.alt.isNotBlank() || (media.width != null && media.height != null)) {
-            InfoCard(AppIcons.Image, stringResource(R.string.section_photo)) {
-                // What the photo is and its description, each a tile a level into the card.
-                if (media.width != null && media.height != null) {
-                    InfoTile(
-                        stringResource(
-                            R.string.label_media_size,
-                            stringResource(media.kindLabel()),
-                            media.width,
-                            media.height,
-                        ),
-                    )
-                }
-                if (media.alt.isNotBlank()) InfoTile(media.alt, label = stringResource(R.string.label_alt))
-            }
-        }
-        trip?.let { trip ->
-            val cover = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1).firstOrNull() }
-            val count = remember(trip, moments) { countOf(trip, moments, trips) }
-            PressableCard(onClick = { onTrip(trip.id) }, modifier = Modifier.fillMaxWidth().testTag("trip_${trip.id}")) {
-                ListItem(
-                    headlineContent = { Text(trip.title) },
-                    supportingContent = { Text(tripSummary(trip, count)) },
-                    leadingContent = cover?.let { { Thumbnail(it, container.mediaUrls, size = 48) } },
-                    trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                )
-            }
-        }
-        // The panel's one action, so the one thing in colour.
-        Button(onClick = onMoment, modifier = Modifier.fillMaxWidth().padding(top = Space.xs).testTag("open_moment")) {
-            Text(stringResource(R.string.action_open_moment))
-        }
-    }
-}
-
-/** The details in a sheet risen from the bottom. */
-@Composable
-private fun InfoSheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
-    val level = AppColors.sheetLevel
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet) {
-        CompositionLocalProvider(LocalSurfaceLevel provides level) { content() }
-    }
-}
 
 /**
  * White navigation icons over the black while the viewer is open, and the
