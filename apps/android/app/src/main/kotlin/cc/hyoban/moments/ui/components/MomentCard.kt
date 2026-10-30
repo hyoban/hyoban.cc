@@ -175,13 +175,25 @@ private fun MomentBubble(
                     }
                 }
                 val private = (moment.hidden || moment.topic == "tech").takeIf { it }?.let { stringResource(R.string.visibility_private) }
-                val parts = moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private, formatTime(moment.occurredAt))
+                val parts = moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
+                // The time in the figures' monospace, as the records bubbles beside it have theirs.
+                val time = formatTime(moment.occurredAt)
+                val numFont = AppTheme.typography.numCaption.fontFamily
+                val meta = androidx.compose.ui.text.buildAnnotatedString {
+                    append(parts.joinToString("\u2003"))
+                    if (time != null) {
+                        if (length > 0) append("\u2003")
+                        pushStyle(androidx.compose.ui.text.SpanStyle(fontFamily = numFont))
+                        append(time)
+                        pop()
+                    }
+                }
                 Row(
                     Modifier.align(Alignment.End),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Space.s),
                 ) {
-                    Text(parts.joinToString("\u2003"), style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                    Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                     if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = AppIcons.Phone)
                 }
             }
