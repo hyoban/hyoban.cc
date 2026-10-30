@@ -402,8 +402,11 @@ long it moved and how far, and it opens the day; footprints alone don't put a da
 A Moment's page lists its place, then its parts row by row, a charge among them, its trip and
 day, and ends with whether it is public and which parts would publish, and, while it is only on
 the phone or changed there, a row that says so and opens the changes; a bill's page has its 公开 switch. Writing a Moment, the
-加一项 row opens 美食 and 账单. A day's page starts with that day's footprints on a map, the
-stretches solid and the gaps between them dotted, and how far it went. A trip's page has 回放旅程
+加一项 row opens 美食 and 账单. A day's page starts with that day's footprints on a map across its
+top, the stretches solid and the gaps between them dotted, its Moments as dots and its bills as
+rings where the footprints were when they were paid; under the day, how far it went, how long it
+moved and what it spent, then the trip it was on and its Moments, bills and charges from the
+morning on. A trip's page has 回放旅程
 as its ink button, its distance, charging and spending in figures, and in its bar 编辑旅程
 (`moments://trip-edit/<id>`): its name, days and whether it is public, kept on the phone and
 published as a collection. A trip with a public span of footprints is drawn and played back

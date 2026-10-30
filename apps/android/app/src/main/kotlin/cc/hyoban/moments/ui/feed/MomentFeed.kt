@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.ui.ledger.money
 import cc.hyoban.moments.ui.format.formatDay
 import androidx.compose.ui.semantics.semantics
@@ -157,15 +158,19 @@ fun MomentFeed(
     onTrip: ((String) -> Unit)? = null,
     /** The footprints, a row at the foot of each day that has any; they open the day. */
     tracks: TimelineTracks = TimelineTracks.EMPTY,
+    /** Each day read from its morning, as a day's own page reads it, rather than newest first. */
+    oldestFirst: Boolean = false,
+    /** Every Moment, for a trip's banner to count all of its own, on a page that shows only some. */
+    allMoments: List<MomentRecord> = moments,
     leading: FeedLeading.() -> Unit = {},
 ) {
     val days = remember(moments) { moments.groupBy { it.dateKey }.toList() }
     // The single column's days: those with Moments and those with bills alone, newest first.
     // Footprints join a day that is there, never make one of their own.
-    val timeline = remember(days, bills, tracks.days) {
+    val timeline = remember(days, bills, tracks.days, oldestFirst) {
         val byDay = days.toMap()
         (byDay.keys + bills.loose.keys + bills.charges.keys).sortedDescending().map { day ->
-            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty())
+            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty()).let { if (oldestFirst) it.reversed() else it }
             Triple(day, byDay[day].orEmpty(), if (day in tracks.days) items + DayItem.Track(day) else items)
         }
     }
@@ -261,7 +266,7 @@ fun MomentFeed(
                         headed = true
                         bannered += trip.id
                         item(key = "trip-${trip.id}", contentType = "trip") {
-                            val count = remember(trip, moments) { moments.count { it.dateKey >= trip.start && it.dateKey <= trip.end } }
+                            val count = remember(trip, allMoments, trips) { countOf(trip, allMoments, trips) }
                             TripBanner(trip, count, onClick = { onTrip(trip.id) }, modifier = Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.s))
                         }
                     }

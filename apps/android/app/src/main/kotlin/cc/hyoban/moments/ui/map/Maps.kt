@@ -152,6 +152,9 @@ private val CHINA = CameraPosition.Builder().target(LatLng(32.0, 110.0)).zoom(3.
 /** No closer than a town's streets when framing a place or a short trip. */
 private const val CLOSEST = 12.0
 
+/** As close as a day's track is framed: its streets. */
+private const val TRACK_CLOSEST = 16.0
+
 private const val PLACES = "places"
 private const val PLACES_SHADOW = "places-shadow"
 private const val PLACES_COUNT = "places-count"
@@ -167,6 +170,7 @@ private const val FOOTPRINT_LINES = "footprint-lines"
 private const val FOOTPRINT_DOTS = "footprint-dots"
 private const val ROUTES_DASHED = "routes-dashed"
 private const val STOPS = "stops"
+private const val RINGS = "rings"
 private const val FOG = "fog"
 private const val FOG_MAX_ZOOM = 10
 private const val FOG_WATER = "fog-water"
@@ -448,14 +452,14 @@ private val Place.latLng get() = LatLng(latitude, longitude)
 private val LatLng.point get() = Point.fromLngLat(longitude, latitude)
 
 /** Frames [points] inside [padding] pixels (left, top, right, bottom), no closer than [CLOSEST]. */
-private fun MapLibreMap.frame(points: List<LatLng>, padding: IntArray) {
+private fun MapLibreMap.frame(points: List<LatLng>, padding: IntArray, closest: Double = CLOSEST) {
     if (points.size == 1) {
-        moveCamera(CameraUpdateFactory.newLatLngZoom(points.single(), CLOSEST))
+        moveCamera(CameraUpdateFactory.newLatLngZoom(points.single(), closest))
         return
     }
     val bounds = LatLngBounds.Builder().includes(points).build()
     moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding[0], padding[1], padding[2], padding[3]))
-    if (cameraPosition.zoom > CLOSEST) moveCamera(CameraUpdateFactory.zoomTo(CLOSEST))
+    if (cameraPosition.zoom > closest) moveCamera(CameraUpdateFactory.zoomTo(closest))
 }
 
 /** Flies to [points] framed as [frame] frames them, turned back to north. */
@@ -1231,11 +1235,17 @@ private fun PointsMap(
     color: androidx.compose.ui.graphics.Color = AppTheme.colorScheme.primary,
     gapColor: androidx.compose.ui.graphics.Color = color,
     width: Float = 3f,
+    /** Points drawn as rings rather than dots, a bill's place beside a Moment's. */
+    rings: List<LatLng> = emptyList(),
+    /** More room at the top, for what stands over the map there. */
+    topInset: Dp = 0.dp,
+    /** As close as it frames them. */
+    closest: Double = CLOSEST,
 ) {
     val line = color.toArgb()
     val gap = gapColor.toArgb()
     val ring = AppTheme.colorScheme.surface.toArgb()
-    val inset = edges(padding, padding, padding, padding)
+    val inset = edges(padding, padding + topInset, padding, padding)
 
     MapLibreView(modifier, interactive) { map, style, _ ->
         if (lines.isNotEmpty()) {
@@ -1274,22 +1284,34 @@ private fun PointsMap(
                 circleStrokeColor(ring),
             ),
         )
-        val framed = points + lines.flatMap { segment -> segment.line.map { (longitude, latitude) -> LatLng(latitude, longitude) } }
-        if (framed.isNotEmpty()) map.frame(framed, inset)
+        if (rings.isNotEmpty()) {
+            style.addSource(GeoJsonSource(RINGS, FeatureCollection.fromFeatures(rings.map { Feature.fromGeometry(it.point) })))
+            style.addLayer(
+                CircleLayer(RINGS, RINGS).withProperties(
+                    circleRadius(dot),
+                    circleColor(ring),
+                    circleStrokeWidth(2f),
+                    circleStrokeColor(line),
+                ),
+            )
+        }
+        val framed = points + rings + lines.flatMap { segment -> segment.line.map { (longitude, latitude) -> LatLng(latitude, longitude) } }
+        if (framed.isNotEmpty()) map.frame(framed, inset, closest)
     }
 }
 
 /**
  * A day's recorded track: each unbroken stretch a solid line in the track's colour, the gaps
- * between them (no signal, not recorded) dotted, never guessed; [points] the day's Moments.
+ * between them (no signal, not recorded) dotted, never guessed; [points] the day's Moments, as
+ * dots, and [rings] its bills.
  */
 @Composable
-fun DayTrackMap(stretches: List<List<Pair<Double, Double>>>, points: List<LatLng>, modifier: Modifier = Modifier) {
+fun DayTrackMap(stretches: List<List<Pair<Double, Double>>>, points: List<LatLng>, modifier: Modifier = Modifier, rings: List<LatLng> = emptyList(), topInset: Dp = 0.dp) {
     val lines = remember(stretches) {
         stretches.map { RouteSegment(it, straight = false) } +
             stretches.zipWithNext { a, b -> RouteSegment(listOf(a.last(), b.first()), straight = true) }
     }
-    PointsMap(points, lines, dot = 4f, padding = 32.dp, modifier = modifier, interactive = false, color = cc.hyoban.moments.ui.theme.tokens.track, gapColor = cc.hyoban.moments.ui.theme.tokens.trackGap, width = 4f)
+    PointsMap(points, lines, dot = 4f, padding = 32.dp, modifier = modifier, interactive = false, color = cc.hyoban.moments.ui.theme.tokens.track, gapColor = cc.hyoban.moments.ui.theme.tokens.trackGap, width = 4f, rings = rings, topInset = topInset, closest = TRACK_CLOSEST)
 }
 
 private const val PICK_PLACES = "pick-places"
