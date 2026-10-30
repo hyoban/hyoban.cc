@@ -1,4 +1,4 @@
-# 这里, Moments for Android
+# Here, Moments for Android
 
 The app that keeps the site's Moments, places and trips on the phone, lets new ones be
 written there, and adds what stays the phone's own: a ledger and GPS footprints. Its look
@@ -53,7 +53,7 @@ kind (类型: 技术, 旅行, 美食, 用车, 摄影 or 生活; the site doesn't
 私有; a private one is published for its owner but never shown on the site.
 
 - **Media.** Picked with the system's documents picker, which keeps a photo's location,
-  or shared in from the gallery (这里 (写一个时刻)). They are copied in whole; a motion
+  or shared in from the gallery (Here (写一个时刻)). They are copied in whole; a motion
   photo is split into a live photo's still and video. A video over 100 MB, or other than
   MP4, MOV or WebM, is refused, since the Worker and the site's poster can't take it. A
   photo marked 不用作封面 never becomes a cover, widget or share card.
@@ -63,7 +63,7 @@ kind (类型: 技术, 旅行, 美食, 用车, 摄影 or 生活; the site doesn't
   within 2 km, else a new place named through Photon (`BuildConfig.PLACE_SEARCH_URL`)
   after the nearest park, sight, shop or street, with the system's geocoder as fallback.
   It can be moved on a map with a pin. Its kind follows OpenStreetMap and can be changed,
-  for a known place too. A place shared from Amap (这里 (作为时刻的地点), or 保存为地点 to
+  for a known place too. A place shared from Amap (Here (作为时刻的地点), or 保存为地点 to
   only keep it) is followed from its short link and shifted from GCJ-02 back to WGS 84.
 
 New Moments and places live under the app's `local/` directory in the spec's layout, the
@@ -218,8 +218,8 @@ are `noBackupFilesDir/connection-reminders.json` and `companion-connections.json
   it, and light or dark as the system is. The API, the media origin and the map's styles
   default to `BuildConfig` and can be changed in the settings.
 - **Maps.** OpenFreeMap's vector tiles drawn by MapLibre, needing no key.
-- **Icon.** 这里: a white cat with a grey cap peeking in from the lower left on blue, an
-  adaptive icon with a monochrome layer.
+- **Name and icon.** Here, in English whatever the phone speaks: a white cat with a grey cap
+  peeking in from the lower left on blue, an adaptive icon with a monochrome layer.
 
 ## Building
 
