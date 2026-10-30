@@ -725,18 +725,38 @@ private fun CategoryGrid(ledger: Ledger, book: String?, type: CategoryType, sele
                     }
                     repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                 }
-                // The chosen one's second-level ones open under its row, brought into view.
+                // The chosen one's second-level ones open under its row, brought into view, as tiles
+                // like the first-level ones on a panel a layer up: each its own icon when its name
+                // gives one, else its parent's, and a last tile to add one.
                 if (top != null && row.any { it?.id == top }) {
                     val view = remember { BringIntoViewRequester() }
                     LaunchedEffect(top) { view.bringIntoView() }
-                    FlowRow(
-                        Modifier.padding(horizontal = Space.xs).bringIntoViewRequester(view),
-                        horizontalArrangement = Arrangement.spacedBy(Space.s),
+                    val parentIcon = categoryIcon(ledger.categoriesById[top]?.name)
+                    val subs = categories.filter { it.parent == top }
+                    Column(
+                        Modifier.padding(horizontal = Space.xs, vertical = Space.xs).fillMaxWidth()
+                            .clip(AppTheme.shapes.large).background(tokens.surface).border(cardBorder(), AppTheme.shapes.large)
+                            .padding(vertical = Space.xs).bringIntoViewRequester(view),
                     ) {
-                        categories.filter { it.parent == top }.forEach { category ->
-                            FilterChip(selected = category.id == selected, onClick = { onPick(if (category.id == selected) top else category.id) }, label = { Text(category.name) })
+                        (subs + null).chunked(columns).forEach { subRow ->
+                            Row(Modifier.fillMaxWidth()) {
+                                subRow.forEach { category ->
+                                    if (category == null) {
+                                        CategoryTile(stringResource(R.string.ledger_add_category), AppIcons.Plus, selected = false, hasSubs = false, tag = "add_subcategory", fill = tokens.pressed) { onAdd(top) }
+                                    } else {
+                                        CategoryTile(
+                                            category.name,
+                                            categoryIconOrNull(category.name) ?: parentIcon,
+                                            selected = category.id == selected,
+                                            hasSubs = false,
+                                            tag = "subcategory_${category.name}",
+                                            fill = tokens.pressed,
+                                        ) { onPick(if (category.id == selected) top else category.id) }
+                                    }
+                                }
+                                repeat(columns - subRow.size) { Spacer(Modifier.weight(1f)) }
+                            }
                         }
-                        FilterChip(selected = false, onClick = { onAdd(top) }, label = { Text(stringResource(R.string.ledger_add_subcategory)) }, leadingIcon = { Icon(AppIcons.Plus, contentDescription = null) })
                     }
                 }
             }
@@ -744,9 +764,9 @@ private fun CategoryGrid(ledger: Ledger, book: String?, type: CategoryType, sele
     }
 }
 
-/** One category in the grid: its icon in a circle, filled with the primary when chosen, a dot beside it when it has second-level ones, and its name. */
+/** One category in the grid: its icon in a circle of [fill], the accent when chosen, a dot beside it when it has second-level ones, and its name. */
 @Composable
-private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, hasSubs: Boolean, tag: String, onClick: () -> Unit) {
+private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, hasSubs: Boolean, tag: String, fill: Color = tokens.sunken, onClick: () -> Unit) {
     val colors = tokens
     Column(
         Modifier.weight(1f)
@@ -758,7 +778,7 @@ private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphi
     ) {
         Box {
             Box(
-                Modifier.size(48.dp).background(if (selected) colors.accent else colors.sunken, CircleShape),
+                Modifier.size(48.dp).background(if (selected) colors.accent else fill, CircleShape),
                 contentAlignment = Alignment.Center,
             ) { Icon(icon, contentDescription = null, tint = if (selected) colors.onAccent else colors.tx2) }
             if (hasSubs) {
