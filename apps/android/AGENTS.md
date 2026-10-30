@@ -107,6 +107,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Settings are grouped lists (`SegmentedGroup` with `SwitchRow` and `ActionRow`): one surface
   with hairlines between rows, switches trailing (`AppSwitch`), supporting text at most three
   lines; a longer explanation goes behind an info row's dialog, not on the page.
+- What floats over a photo or the map (back and the like, `FloatingButton`) is a true circle,
+  40dp drawn in a 48dp target, never a narrow pill.
 - Touch targets are at least 48dp; scrims over media, with white on them.
 - Words are Chinese first, with English beside them in `values-en`, plain and short, with
   TalkBack descriptions for what is shown. The Moments' own words are never changed.
