@@ -229,6 +229,8 @@ fun TripScreen(
                         dayNote = dayNote,
                         showTrip = false,
                         onDay = onDay,
+                        chat = true,
+                        chronological = true,
                     ) {
                         item(key = "summary") { summary() }
                         item(key = "spending") { spending() }
@@ -249,6 +251,8 @@ fun TripScreen(
                     dayNote = dayNote,
                     showTrip = false,
                     onDay = onDay,
+                    chat = true,
+                    chronological = true,
                 ) {
                     item(key = "summary") { summary() }
                     item(key = "spending") { spending() }

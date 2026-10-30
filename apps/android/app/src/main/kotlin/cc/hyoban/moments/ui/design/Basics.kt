@@ -302,6 +302,19 @@ fun IconButton(
     content: @Composable () -> Unit,
 ) {
     val color = LocalContentColor.current
+    if (LocalFloatingIconButtons.current) {
+        // Floating over the page, as a page's buttons do now it has no bar: a 40 circle on the
+        // floating surface, its hairline and soft shadow, its touch target still 48.
+        Box(modifier.minimumInteractiveComponentSize().size(48.dp), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier.size(40.dp)
+                    .surface(CircleShape, cc.hyoban.moments.ui.theme.SurfaceLevel.Floating.color(tokens), cc.hyoban.moments.ui.theme.cardBorder(), cc.hyoban.moments.ui.theme.Elevation.level2)
+                    .clickable(interactionSource = interactionSource, indication = PressIndication, enabled = enabled, role = Role.Button, onClick = onClick),
+                contentAlignment = Alignment.Center,
+            ) { CompositionLocalProvider(LocalContentColor provides if (enabled) tokens.tx else tokens.tx.copy(alpha = DISABLED)) { content() } }
+        }
+        return
+    }
     Box(
         modifier
             .minimumInteractiveComponentSize()
@@ -311,6 +324,9 @@ fun IconButton(
         contentAlignment = Alignment.Center,
     ) { CompositionLocalProvider(LocalContentColor provides if (enabled) color else color.copy(alpha = DISABLED)) { content() } }
 }
+
+/** Whether the icon buttons inside float as circles over the page, as the top bar's do. */
+val LocalFloatingIconButtons = androidx.compose.runtime.staticCompositionLocalOf { false }
 
 @Immutable
 class IconButtonColors(val containerColor: Color, val contentColor: Color)

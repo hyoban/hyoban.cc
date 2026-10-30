@@ -64,7 +64,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   what they are, not by Compose or Material), and record only where Android implements it. Its tokens live in `ui/theme` (`Colors.kt`'s `Tokens`, the
   type scale and corners in `Theme.kt`); change the artifact and the code together. Text takes
   the design's 13 styles by their names (`titlePage` … `numCaption`), figures in the `num`
-  ones, which are the system monospace; a day on a timeline, a ledger or a trip opens with its header row (`DayHeader`). The app
+  ones, which are the system monospace; the timeline and a trip are a conversation (`MomentFeed(chat = true)`: `DateCapsule`, Moments as `MomentCard(bubble = true)`, records in `RecordsBubble`), and a ledger's day opens with its header row (`DayHeader`). The app
   doesn't depend on Material 3 (`androidx.compose.material3`, `glance-material3`): its
   components are its own, in `ui/design`, on Compose foundation, and it has no Material
   dependency at all. Don't add Material components or icon packs back.
@@ -74,7 +74,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   generated; never edit `AppIcons.kt` by hand or reach for another icon library.
 - `ui/design` holds the theme (`AppTheme`: colour roles, type, shapes, springs, the press
   wash in place of a ripple) and every component: text and icons, surfaces, buttons, chips, the
-  segmented control, fields, list rows, menus, dialogs, sheets, the top bar, messages,
+  segmented control, fields, list rows, menus, dialogs, sheets, the top bar (no bar: `TopBar` floats its
+  `IconButton`s as circles through `LocalFloatingIconButtons`), messages,
   pull-to-refresh and swipe-to-revert. Some keep Material's names so call sites read as before.
   A list laid out row by row (a lazy list) draws its group with `groupedRow`.
 - The design rules themselves (layers and hairlines, the accent and the ink, few cards, the

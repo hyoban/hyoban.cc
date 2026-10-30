@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.design
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -32,9 +33,10 @@ import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.ui.theme.tokens
 import kotlin.math.roundToInt
 
-// The design system's top bar: a 64dp row with the way back and the page's actions, over the
-// page's title set large, which folds away as the page scrolls up and opens again at its top,
-// leaving the title small in the row. On the page itself; its hairline is the page's to draw.
+// The design system's top bar, which is no bar: the way back and the page's actions float over
+// the page as circles, the page's title large under them, which folds away as the page scrolls
+// up and opens again at its top; folded, the title fades in small between the circles. On the
+// page itself; the fade under it, once something has scrolled there, is the page's to draw.
 
 /** How far the bar has folded: [heightOffset] from 0 (open) down to [heightOffsetLimit] (folded); [contentOffset], how far the page under it has scrolled. */
 @Stable
@@ -89,9 +91,9 @@ val TopBarWindowInsets: WindowInsets
     @Composable get() = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
 
 /**
- * The top bar: [navigationIcon], then, as it folds or while [small], [title] small in the row;
- * [actions] at the end. Unless [small], [title] large under the row, [large] for a tab's page and
- * a page's own smaller, with [subtitle] under it.
+ * The top bar: [navigationIcon] and [actions] as circles floating over the page, and between
+ * them, as it folds or while [small], [title] small and centred. Unless [small], [title] large
+ * under them, with [subtitle] under it; [large] for a tab's page, as large as a page's own.
  */
 @Composable
 fun TopBar(
@@ -109,19 +111,38 @@ fun TopBar(
     val state = scroll.state
     val folded = if (small) 1f else state.collapsedFraction
     Column(modifier.fillMaxWidth().windowInsetsPadding(windowInsets)) {
-        Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            CompositionLocalProvider(LocalContentColor provides tokens.tx) { navigationIcon() }
-            Column(
-                Modifier.weight(1f).padding(horizontal = 12.dp).graphicsLayer { alpha = ((folded - 0.5f) * 2f).coerceIn(0f, 1f) },
-                verticalArrangement = Arrangement.Center,
-            ) {
-                CompositionLocalProvider(LocalContentColor provides tokens.tx) { ProvideTextStyle(typography.title) { title() } }
-                if (subtitle != null) {
-                    CompositionLocalProvider(LocalContentColor provides tokens.tx2) { ProvideTextStyle(typography.caption) { subtitle() } }
+        CompositionLocalProvider(LocalFloatingIconButtons provides true) {
+            Layout(
+                content = {
+                    Box { navigationIcon() }
+                    Row(verticalAlignment = Alignment.CenterVertically, content = actions)
+                    Column(
+                        Modifier.graphicsLayer { alpha = ((folded - 0.5f) * 2f).coerceIn(0f, 1f) },
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        CompositionLocalProvider(LocalContentColor provides tokens.tx) { ProvideTextStyle(typography.titleSmall) { title() } }
+                        if (subtitle != null && small) {
+                            CompositionLocalProvider(LocalContentColor provides tokens.tx2) { ProvideTextStyle(typography.caption) { subtitle() } }
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(BAR_HEIGHT).padding(horizontal = 4.dp),
+            ) { measurables, constraints ->
+                // The small title centred on the page, as wide as is left between the wider side
+                // and its mirror, so it stays in the middle whichever side has more buttons.
+                val loose = constraints.copy(minWidth = 0, minHeight = 0)
+                val start = measurables[0].measure(loose)
+                val end = measurables[1].measure(loose)
+                val side = maxOf(start.width, end.width)
+                val titleWidth = (constraints.maxWidth - side * 2).coerceAtLeast(0)
+                val middle = measurables[2].measure(loose.copy(maxWidth = titleWidth))
+                val height = constraints.maxHeight
+                layout(constraints.maxWidth, height) {
+                    start.place(0, (height - start.height) / 2)
+                    end.place(constraints.maxWidth - end.width, (height - end.height) / 2)
+                    middle.place((constraints.maxWidth - middle.width) / 2, (height - middle.height) / 2)
                 }
-            }
-            CompositionLocalProvider(LocalContentColor provides tokens.tx2) {
-                Row(verticalAlignment = Alignment.CenterVertically, content = actions)
             }
         }
         if (!small) {
@@ -133,7 +154,7 @@ fun TopBar(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         CompositionLocalProvider(LocalContentColor provides tokens.tx) {
-                            ProvideTextStyle(if (large) typography.titlePage else typography.titlePage) { title() }
+                            ProvideTextStyle(typography.titlePage) { title() }
                         }
                         if (subtitle != null) {
                             CompositionLocalProvider(LocalContentColor provides tokens.tx2) { ProvideTextStyle(typography.body) { subtitle() } }
@@ -154,3 +175,6 @@ fun TopBar(
         }
     }
 }
+
+/** How tall the row of floating circles stands, 40dp circles with 8dp above and below. */
+private val BAR_HEIGHT = 56.dp

@@ -1,5 +1,9 @@
 package cc.hyoban.moments.ui.feed
 
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.ui.graphics.graphicsLayer
+import cc.hyoban.moments.ui.components.FloatingButton
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.add
@@ -204,20 +208,10 @@ fun FeedScreen(
     val rowOut = shrinkVertically(rowMotion.defaultSpatialSpec()) + fadeOut(rowMotion.defaultEffectsSpec())
     val header: FeedLeading.() -> Unit = {
         item(key = "title") {
-            Row(
-                Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(start = Space.gutter, end = Space.xs, top = Space.xl, bottom = Space.s),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.title_moments), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
-                    subtitle?.let { Text(it, style = AppTheme.typography.body, color = tokens.tx2, maxLines = 1) }
-                }
-                // Searching the timeline; the settings are under 我.
-                Tooltip(stringResource(R.string.action_search), below = true) {
-                    IconButton(onClick = onSearch, modifier = Modifier.testTag("search")) {
-                        Icon(AppIcons.Search, contentDescription = stringResource(R.string.action_search))
-                    }
-                }
+            // Under the search circle floating at the top end, as a page's title is under its circles.
+            Column(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(start = Space.gutter, end = Space.gutter, top = FLOATING_BAR, bottom = Space.s)) {
+                Text(stringResource(R.string.title_moments), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
+                subtitle?.let { Text(it, style = AppTheme.typography.body, color = tokens.tx2, maxLines = 1) }
             }
         }
         item(key = "changes") {
@@ -273,11 +267,18 @@ fun FeedScreen(
                                     onTrip = onTrip,
                                     tracks = tracks,
                                     onTrackDay = onTrackDay,
+                                    chat = true,
                                 )
                             }
                         }
                     }
                     StatusBarFade()
+                    // Searching the timeline, a circle floating at the top end; once the title has
+                    // folded away, the title small beside it over a short fade of the page.
+                    val folded = headerScroll.height > 0f && -headerScroll.offset > headerScroll.height / 2
+                    FloatingTitle(stringResource(R.string.title_moments), folded) {
+                        FloatingButton(AppIcons.Search, stringResource(R.string.action_search), onSearch, tag = "search")
+                    }
                 }
             }
         }
@@ -364,6 +365,32 @@ class HeaderScroll {
 
     companion object {
         val Saver = androidx.compose.runtime.saveable.Saver<HeaderScroll, Float>(save = { it.offset }, restore = { HeaderScroll().apply { offset = it } })
+    }
+}
+
+/**
+ * The page's title small at the middle of the top, over a short fade of the page, while [shown],
+ * with [end] floating at the top end, as a page's top bar has it once its title has folded away.
+ */
+@Composable
+private fun FloatingTitle(title: String, shown: Boolean, end: @Composable () -> Unit) {
+    val alpha by androidx.compose.animation.core.animateFloatAsState(if (shown) 1f else 0f, AppTheme.motionScheme.fastEffectsSpec(), label = "small title")
+    val page = AppColors.page
+    Box(Modifier.fillMaxWidth()) {
+        Box(
+            Modifier.matchParentSize().padding(bottom = 0.dp).graphicsLayer { this.alpha = alpha }
+                .background(Brush.verticalGradient(0f to page, 0.75f to page, 1f to page.copy(alpha = 0f))),
+        )
+        Box(Modifier.fillMaxWidth().padding(bottom = Space.l)) {
+            Text(
+                title,
+                style = AppTheme.typography.titleSmall,
+                maxLines = 1,
+                modifier = Modifier.align(Alignment.Center).windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = FLOATING_BAR * 2)
+                    .height(FLOATING_BAR).wrapContentHeight().graphicsLayer { this.alpha = alpha }.clearAndSetSemantics {},
+            )
+            Box(Modifier.align(Alignment.TopEnd)) { end() }
+        }
     }
 }
 

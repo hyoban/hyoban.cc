@@ -10,6 +10,9 @@ import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.Ledger
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -80,7 +83,10 @@ fun MomentCard(
     bills: List<Txn> = emptyList(),
     ledger: Ledger? = null,
     onBill: (String) -> Unit = {},
+    /** As a bubble sent from the right, as the timeline and a trip are a conversation; its bills then follow it apart. */
+    bubble: Boolean = false,
 ) {
+    if (bubble) return MomentBubble(moment, places, trip, urls, onOpen, modifier, selected, hidePlace)
     // The card grows into the Moment's page when opened; shown in the detail pane beside the
     // list, it is [selected], outlined in the accent, the one colour for state.
     val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
@@ -118,6 +124,69 @@ fun MomentCard(
         }
         if (bills.isNotEmpty() && ledger != null) LinkedBills(bills, ledger, onBill)
         MomentMenu(moment, urls, menu, onDismiss = { menu = null })
+    }
+}
+
+/**
+ * A Moment as the conversation has it: a bubble from the right on the pressed fill, its photos
+ * across its top, its words, and a faint line at its foot, to the right, of where, which trip
+ * and when, and whether it is private or not yet published.
+ */
+@Composable
+private fun MomentBubble(
+    moment: MomentRecord,
+    places: Map<String, Place>,
+    trip: TripRecord?,
+    urls: MediaUrls,
+    onOpen: () -> Unit,
+    modifier: Modifier,
+    selected: Boolean,
+    hidePlace: String?,
+) {
+    val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
+    var menu by remember { mutableStateOf<DpOffset?>(null) }
+    val density = LocalDensity.current
+    val shape = cc.hyoban.moments.ui.feed.SentShape
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+        // Most of the column, never wider than 420 on a wide screen; with photos always that
+        // wide, words alone only as wide as they need.
+        val max = minOf(maxWidth * 0.82f, 420.dp)
+        val width = if (moment.media.isNotEmpty()) Modifier.width(max) else Modifier.widthIn(max = max)
+        PressableCard(
+            onClick = onOpen,
+            onLongClick = { at -> menu = with(density) { DpOffset(at.x.toDp(), at.y.toDp()) } },
+            onLongClickLabel = stringResource(R.string.action_more),
+            modifier = width.sharedCard(moment.uid).clip(shape).background(tokens.pressed).border(2.dp, ring, shape)
+                .semantics { this.selected = selected }.testTag("moment_${moment.uid}"),
+            flat = true,
+        ) {
+            if (moment.media.isNotEmpty()) MediaMosaic(moment.uid, moment.media, urls, onOpen = null)
+            Column(
+                (if (moment.media.isNotEmpty()) Modifier.fillMaxWidth() else Modifier).padding(start = Space.m, end = Space.m, top = Space.s, bottom = Space.s),
+                verticalArrangement = Arrangement.spacedBy(Space.xxs),
+            ) {
+                if (moment.text.isNotBlank()) {
+                    Text(moment.text, style = AppTheme.typography.body, maxLines = 8, overflow = TextOverflow.Ellipsis)
+                }
+                foodLine(moment.food)?.let { line ->
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                        Icon(AppIcons.Food, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(16.dp))
+                        Text(line, style = AppTheme.typography.bodySmall, color = tokens.tx2, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+                val private = (moment.hidden || moment.topic == "tech").takeIf { it }?.let { stringResource(R.string.visibility_private) }
+                val parts = moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private, formatTime(moment.occurredAt))
+                Row(
+                    Modifier.align(Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Space.s),
+                ) {
+                    Text(parts.joinToString("\u2003"), style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                    if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = AppIcons.Phone)
+                }
+            }
+            MomentMenu(moment, urls, menu, onDismiss = { menu = null })
+        }
     }
 }
 
