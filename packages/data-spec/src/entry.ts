@@ -176,7 +176,7 @@ export const collectionSchema = z
     /** Facets set by hand; the rest are worked out. */
     facets: z.record(z.string(), z.unknown()).optional(),
     route: routeHintsSchema.optional(),
-    /** A track from src/data/music.ts. */
+    /** A track from apps/web/src/data/music.ts. */
     music: id.optional(),
     note: z.string().optional(),
     createdAt: timestamp,

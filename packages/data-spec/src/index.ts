@@ -267,7 +267,7 @@ export const tripRecordSchema = z
     title: z.string().min(1),
     start: dateKey,
     end: dateKey,
-    /** A track from src/data/music.ts. */
+    /** A track from apps/web/src/data/music.ts. */
     music: id.optional(),
     note: z.string().optional(),
     /** Places passed without a Moment; `at` can be left out to follow the one before. */
