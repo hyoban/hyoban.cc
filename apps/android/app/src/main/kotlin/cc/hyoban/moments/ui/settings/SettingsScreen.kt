@@ -73,13 +73,12 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 /** The settings' sections, each a page under 我. */
 enum class SettingsSection(val title: Int) {
-    APPEARANCE(R.string.section_theme_mode),
     MOMENTS(R.string.settings_moments_data),
     MAP(R.string.settings_map_footprints),
     ABOUT(R.string.settings_about),
 }
 
-/** One [section] of the settings: the look and language; the Moments and where they're read from; the map and footprints; the credits. */
+/** One [section] of the settings: the Moments and where they're read from; the map and footprints; the credits. */
 @Composable
 fun SettingsScreen(
     container: AppContainer,
@@ -109,10 +108,6 @@ fun SettingsScreen(
                     .padding(horizontal = columns.margin)
                     .padding(bottom = Space.xl),
             ) {
-                if (section == SettingsSection.APPEARANCE) {
-                    ThemeSettings(settings)
-                    LanguageSettings()
-                }
                 if (section == SettingsSection.MOMENTS) {
                     SegmentedGroup(
                         stringResource(R.string.section_moments),

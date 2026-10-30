@@ -70,11 +70,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    // Chinese and English, offered in the system's per-app language settings on Android 13 and later.
-    androidResources {
-        generateLocaleConfig = true
-    }
-
     // The cities the map's fog of war lights, the site's own file (scripts/generate-city-boundaries.mjs).
     sourceSets["main"].assets.srcDir(rootProject.file("../web/src/data/boundaries"))
 

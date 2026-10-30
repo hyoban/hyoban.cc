@@ -752,7 +752,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 val name = entry.toRoute<SettingsPage>().section.uppercase()
                                 SettingsScreen(
                                     container,
-                                    SettingsSection.entries.firstOrNull { it.name == name } ?: SettingsSection.APPEARANCE,
+                                    SettingsSection.entries.firstOrNull { it.name == name } ?: SettingsSection.MOMENTS,
                                     onBack = back,
                                     onFootprints = { showOnMap(MapFocus.Footprints) },
                                     onFootprintSettings = { navController.navigate(FootprintSettings) },

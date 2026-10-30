@@ -96,18 +96,4 @@ class Settings(context: Context) {
         ledgerHidden = on
         prefs.edit { putBoolean("ledger_hidden", on) }
     }
-
-    /** Light, dark, or as the system is. */
-    var themeMode: ThemeMode by mutableStateOf(enumOf(prefs.getString("theme_mode", null), ThemeMode.SYSTEM))
-        private set
-
-    fun changeThemeMode(mode: ThemeMode) {
-        themeMode = mode
-        prefs.edit { putString("theme_mode", mode.name) }
-    }
 }
-
-enum class ThemeMode { SYSTEM, LIGHT, DARK }
-
-private inline fun <reified T : Enum<T>> enumOf(name: String?, default: T): T =
-    enumValues<T>().firstOrNull { it.name == name } ?: default

@@ -49,7 +49,6 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.LinkActivity
 import cc.hyoban.moments.MomentsApplication
 import cc.hyoban.moments.R
-import cc.hyoban.moments.ThemeMode
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.data.trips.coversOf
@@ -299,18 +298,11 @@ private fun Words(
     }
 }
 
-/** The app's own colours, light or dark as it is set to follow: each role the token that plays its part, by day and by night. */
+/** The app's own colours, light or dark as the system is: each role the token that plays its part, by day and by night. */
 @Composable
 private fun WidgetTheme(context: Context, content: @Composable () -> Unit) {
-    val settings = (context.applicationContext as MomentsApplication).container.settings
-    val day = when (settings.themeMode) {
-        ThemeMode.DARK -> appTokens(true)
-        else -> appTokens(false)
-    }
-    val night = when (settings.themeMode) {
-        ThemeMode.LIGHT -> appTokens(false)
-        else -> appTokens(true)
-    }
+    val day = appTokens(false)
+    val night = appTokens(true)
     fun role(pick: (Tokens) -> Color) = ColorProvider(day = pick(day), night = pick(night))
     val colors = colorProviders(
         primary = role { it.accent },

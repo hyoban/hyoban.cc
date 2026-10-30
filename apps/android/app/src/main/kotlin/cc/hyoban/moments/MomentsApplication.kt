@@ -21,7 +21,7 @@ class MomentsApplication : Application(), SingletonImageLoader.Factory {
         lastLocales = resources.configuration.locales.toLanguageTags()
     }
 
-    /** The widgets drawn again in the app's language once it changes, from its settings or the system's. */
+    /** The widgets drawn again in the system's language once it changes. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         val locales = newConfig.locales.toLanguageTags()
