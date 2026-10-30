@@ -398,12 +398,17 @@ taken from `uiautomator dump`; `ledger/AutoBill` keeps the switch and posts the 
 
 我 holds the changes waiting (a block on the accent's soft tint, only while there are any),
 this month's spending in figures with a bar for each day, and four rows: 账单与资产, 足迹,
-记录项与公开 and 设置 (`moments://settings-home`, a row for each section). The timeline, the
-ledger's bills and a trip's days open each day with a header row, its day of the month and
-weekday, the ledger's ending with what the day came to and a trip's with 第 n 天, and the day's
-Moments and bills run across the column under it; a month's heading says how many Moments it had and what it spent.
-A day with footprints ends with a 轨迹 row, the day's line drawn where a bill's icon goes, how
-long it moved and how far, and it opens the day; footprints alone don't put a day on the timeline.
+记录项与公开 and 设置 (`moments://settings-home`, a row for each section). The timeline and a
+trip's days are a conversation with oneself: each day opens with its date in a capsule at the
+middle (今天, or the date and weekday, a trip's with 第 n 天 before it, and a trip's days from the
+first), then reads from its morning. A Moment is a bubble from the right, its photos across its
+top and a faint line of where and when at its foot; the bills, charges and footprints between
+Moments come from the left in one outlined bubble, a line each with its time and amount, two
+bills or more ending in their total, more than five showing four and how many more. One record's
+bubble opens it; several, their day. A day with footprints ends with its 轨迹, the day's line for
+its icon and how far it went; footprints alone don't put a day on the timeline. The ledger's
+bills, a plain list, open each day with a header row, its day of the month and weekday and what
+the day came to. A month's heading says how many Moments it had and what it spent.
 A Moment's page lists its place, then its parts row by row, a charge among them, its trip and
 day, and ends with whether it is public and which parts would publish, and, while it is only on
 the phone or changed there, a row that says so and opens the changes; a bill's page has its 公开 switch. Writing a Moment, the
@@ -419,8 +424,11 @@ along it. The app reads the Moments and trips from `/v1` and, beside them, what 
 shape has from `/v2/changes` (charges, public bills and marks, collections, public tracks).
 The tabs stand down a rail on a window 840dp wide or more and on a phone on its side; on a wide
 window the map's trips stand in a column at its start and a bottom panel opens as a dialog in
-the middle. The timeline has no bar: its title, counts and search scroll away with it, the page under the
-status bar behind a short fade, and the car's charges (from `/v2`) are rows on their days. The
+the middle. No page has a bar: its way back and its actions are circles floating over it, its title large
+under them, which scrolls away and fades in small between the circles over a short fade of the
+page; the timeline's search floats so too, and its page runs under the status bar behind a short
+fade. An editor (writing a Moment or a bill) keeps its row of close, a switch and 保存. The car's
+charges (from `/v2`) are records on their days. The
 filters are the search page's: what kind (everything, Moments, bills or charges, each with how
 many) and when (a year, then a month); with nothing typed, a filter lists all it lets through, a
 bill matching by its category and note. What it finds is listed on the page under its years, a

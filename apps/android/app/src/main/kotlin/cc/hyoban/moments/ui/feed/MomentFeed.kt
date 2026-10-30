@@ -168,15 +168,22 @@ fun MomentFeed(
     oldestFirst: Boolean = false,
     /** Every Moment, for a trip's banner to count all of its own, on a page that shows only some. */
     allMoments: List<MomentRecord> = moments,
+    /**
+     * The single column as a conversation: each day its date in a capsule, then read from its
+     * morning, Moments as bubbles from the right and the records between them from the left.
+     */
+    chat: Boolean = false,
+    /** The days from the first, as a trip's are read, rather than newest first. */
+    chronological: Boolean = false,
     leading: FeedLeading.() -> Unit = {},
 ) {
     val days = remember(moments) { moments.groupBy { it.dateKey }.toList() }
     // The single column's days: those with Moments and those with bills alone, newest first.
     // Footprints join a day that is there, never make one of their own.
-    val timeline = remember(days, bills, tracks.days, oldestFirst) {
+    val timeline = remember(days, bills, tracks.days, oldestFirst, chat, chronological) {
         val byDay = days.toMap()
-        (byDay.keys + bills.loose.keys + bills.charges.keys).sortedDescending().map { day ->
-            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty()).let { if (oldestFirst) it.reversed() else it }
+        (byDay.keys + bills.loose.keys + bills.charges.keys).sortedDescending().let { if (chronological) it.reversed() else it }.map { day ->
+            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty()).let { if (oldestFirst || chat) it.reversed() else it }
             Triple(day, byDay[day].orEmpty(), if (day in tracks.days) items + DayItem.Track(day) else items)
         }
     }
@@ -276,6 +283,51 @@ fun MomentFeed(
                             TripBanner(trip, count, onClick = { onTrip(trip.id) }, modifier = Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.s))
                         }
                     }
+                    if (chat) {
+                        // The day's date in a capsule at the middle, a section's gap above it; then
+                        // its Moments and records, a small gap between bubbles from the same side
+                        // and a wider one where the side changes.
+                        if (dayPills) item(key = "dayhead-$day", contentType = "datecap") {
+                            DateCapsule(
+                                day,
+                                onDay?.let { { it(day) } },
+                                Modifier.animateItem().padding(horizontal = Space.gutter).padding(top = if (headed) 0.dp else (Space.section - CAPSULE_SLACK).coerceAtLeast(0.dp), bottom = (Space.m - CAPSULE_SLACK).coerceAtLeast(0.dp)),
+                                note = dayNote(day),
+                                description = pluralStringResource(R.plurals.count_moments, dayMoments.size, dayMoments.size),
+                            )
+                        }
+                        val chats = chatItems(dayItems, bills.linked)
+                        val lastChat = chats.lastOrNull()?.key
+                        items(chats, key = { it.key }, contentType = { it::class }) { item ->
+                            val index = chats.indexOf(item)
+                            val switched = index > 0 && (chats[index - 1] is ChatItem.Moment) != (item is ChatItem.Moment)
+                            val itemModifier = Modifier.animateItem().padding(
+                                start = Space.gutter,
+                                end = Space.gutter,
+                                top = if (index == 0) 0.dp else if (switched) Space.m else Space.s,
+                                bottom = if (item.key == lastChat) Space.s else 0.dp,
+                            )
+                            when (item) {
+                                is ChatItem.Moment -> MomentCard(
+                                    item.moment, places,
+                                    trip = if (showTrip) tripOf(item.moment, trips) else null,
+                                    urls = urls,
+                                    onOpen = { onMoment(item.moment.uid) },
+                                    modifier = itemModifier,
+                                    selected = item.moment.uid == selected,
+                                    hidePlace = hidePlace,
+                                    bubble = true,
+                                )
+                                is ChatItem.Records -> RecordsBubble(
+                                    item.lines, bills.ledger, tracks, bills.currency, onBill,
+                                    onDay = onDay?.let { { it(day) } },
+                                    onTrackDay = (onTrackDay ?: onDay)?.let { { it(day) } },
+                                    modifier = itemModifier,
+                                )
+                            }
+                        }
+                        return@forEach
+                    }
                     // The day's header row above it, then the day across the column, days set
                     // apart by space alone, further than anything within a day; right under a
                     // month's header or a trip's banner, only the item gap.
@@ -359,6 +411,9 @@ fun DayHeader(day: String, description: String, onClick: (() -> Unit)?, modifier
 }
 
 private val DAY_HEADER_TARGET = 48.dp
+
+/** How much of a capsule's 48dp touch target lies above and below its words, counted into the gaps around it. */
+private val CAPSULE_SLACK = 14.dp
 
 /**
  * [gap] above a day's header, less the room its touch target already leaves over its words, and

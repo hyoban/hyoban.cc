@@ -8,6 +8,9 @@ import cc.hyoban.moments.ui.theme.dividerColor
 import cc.hyoban.moments.ui.design.HorizontalDivider
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import cc.hyoban.moments.ui.design.DropdownMenu
@@ -52,9 +55,10 @@ import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
 
 /**
- * A pushed page: the top bar over [content],
- * its title large under the back button while the page is at its top, folding into the
- * bar as the content scrolls up, a hairline under the bar once it has. A
+ * A pushed page: the top bar over [content], its back button and actions floating circles,
+ * its title large under them while the page is at its top, folding away as the content
+ * scrolls up and fading in small between the circles, a short fade of the page under them once
+ * it has. A
  * page that is a full-screen dialog, done by its action or left without saving, [close]s
  * with an X rather than going back.
  */
@@ -211,10 +215,19 @@ private fun BarPage(
             large = large,
             small = startsSmall,
         )
-        // The bar's hairline, once something has scrolled under it.
+        // No hairline under it: once something has scrolled up to the circles, a short fade of the
+        // page from them, which the content passes under.
         val scrolled = scroll.state.overlappedFraction > 0.01f || scroll.state.collapsedFraction > 0.99f
-        HorizontalDivider(color = if (scrolled) dividerColor() else AppColors.page)
-        Box(Modifier.weight(1f)) { content() }
+        val fade by androidx.compose.animation.core.animateFloatAsState(if (scrolled) 1f else 0f, AppTheme.motionScheme.fastEffectsSpec(), label = "fade")
+        Box(Modifier.weight(1f)) {
+            content()
+            val page = AppColors.page
+            Box(
+                Modifier.fillMaxWidth().height(Space.l)
+                    .graphicsLayer { alpha = fade }
+                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(page, page.copy(alpha = 0f)))),
+            )
+        }
     }
 }
 

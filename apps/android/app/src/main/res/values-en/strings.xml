@@ -807,6 +807,7 @@
     <string name="footprints_span_manual">Made public by hand</string>
     <string name="footprints_make_public">Make this span public</string>
     <string name="day_track_stats">%1$.1f km moving %2$d min</string>
+    <string name="timeline_more_records">%1$d more</string>
     <string name="timeline_track">Track</string>
     <plurals name="timeline_track_moving">
         <item quantity="one">Moving %d min</item>

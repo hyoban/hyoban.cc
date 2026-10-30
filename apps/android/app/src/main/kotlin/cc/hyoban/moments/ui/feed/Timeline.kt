@@ -391,7 +391,7 @@ fun TrackRow(day: String, tracks: TimelineTracks, onClick: () -> Unit, modifier:
     val shown = track ?: return
     val minutes = (shown.movingMillis / 60_000).toInt()
     PageRow(
-        leading = { TrackGlyph(shown.stretches) },
+        leading = { TrackGlyph(shown.stretches, Modifier.size(24.dp), tokens.tx2) },
         title = androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.timeline_track),
         supporting = androidx.compose.ui.res.pluralStringResource(cc.hyoban.moments.R.plurals.timeline_track_moving, minutes, minutes),
         onClick = onClick,
@@ -408,9 +408,8 @@ fun TrackRow(day: String, tracks: TimelineTracks, onClick: () -> Unit, modifier:
 
 /** The day's line, where a bill's icon goes, drawn in an icon's stroke. */
 @Composable
-private fun TrackGlyph(stretches: List<List<Pair<Double, Double>>>) {
-    val color = tokens.tx2
-    androidx.compose.foundation.Canvas(Modifier.size(24.dp)) {
+fun TrackGlyph(stretches: List<List<Pair<Double, Double>>>, modifier: Modifier, color: androidx.compose.ui.graphics.Color) {
+    androidx.compose.foundation.Canvas(modifier) {
         val all = stretches.flatten()
         // Longitude shrunk by the latitude, so the line keeps the shape it has on a map.
         val scaleX = kotlin.math.cos(Math.toRadians(all.sumOf { it.second } / all.size))
