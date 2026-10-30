@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -40,6 +41,14 @@ object Space {
     val l = 16.dp
     val xl = 24.dp
     val xxl = 32.dp
+
+    // What a gap means, rather than how big it is: a page is set apart by these alone.
+    /** Between things within a day or a section, and below the heading that leads them. */
+    val item = l
+    /** Between groups on a page: settings' groups, a detail page's runs of rows. */
+    val section = xl
+    /** Between days on a list that holds Moments, the widest gap on a list. */
+    val day = xxl
 
     /** A screen's side margin: 20dp on a phone, 32dp on a wider window. */
     val gutter: Dp
@@ -81,8 +90,20 @@ object Elevation {
     val level4 = 8.dp
 }
 
-/** The date rail down the left of a timeline, a ledger and a trip's days: the day sits in it, the rest to its right. */
-val Rail = 56.dp
+/**
+ * The date rail down the left of a timeline, a ledger and a trip's days: the day sits in it, the
+ * rest to its right. 56dp, widening with the system's font up to a quarter more, so a day's two
+ * figures still fit at the largest size.
+ */
+val Rail: Dp
+    @Composable @ReadOnlyComposable get() = 56.dp * LocalDensity.current.fontScale.coerceIn(1f, 1.25f)
+
+/**
+ * Whether the system's font is set large (130% or more): what stands side by side at the usual
+ * size then stacks, and a row's words take two lines, rather than any figure being cut.
+ */
+@Composable @ReadOnlyComposable
+fun isLargeFont(): Boolean = LocalDensity.current.fontScale >= 1.3f
 
 // The corner sizes as continuous curves rather than arcs, so a corner eases into its sides.
 private val AppShapes = Shapes(

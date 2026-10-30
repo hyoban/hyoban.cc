@@ -88,6 +88,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   `ActionRow`, switches `AppSwitch`. What floats over a photo or the map is `FloatingButton`.
 - A 40dp button keeps its 48dp target in the layout (`minimumInteractiveComponentSize`); a 36dp
   chip is laid out at its own size, so rows of chips stand 8dp apart, Compose widening its target.
+- The design's gaps are `Space.item`, `Space.section` and `Space.day`; take them rather than a size
+  where a gap means one. Large system fonts are `isLargeFont()` (130% and up), and `Rail` widens
+  with the font, so read it in composition.
 - Words are in `values` (Chinese) and `values-en`, with TalkBack descriptions for what is shown.
 - The map's year colours are `ui/map/Years.kt`, from `packages/trip-map/src/theme.ts`: change both
   sides together. The ledger's charts are drawn on a Compose `Canvas` (`ui/ledger/Charts.kt`), not
