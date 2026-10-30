@@ -424,7 +424,8 @@ private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false) {
             contentColor = tokens.onInk,
             modifier = Modifier.testTag("new_moment"),
         ) {
-            Icon(AppIcons.Pen, contentDescription = label)
+            // A plus, as the design's every new thing is; the pen is for changing what's there.
+            Icon(AppIcons.Plus, contentDescription = label)
         }
     }
 }
