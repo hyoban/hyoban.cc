@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -63,10 +64,13 @@ fun yearsOf(moments: List<MomentRecord>): List<Int> =
 fun monthsOf(moments: List<MomentRecord>, year: Int): List<Int> =
     moments.filter { it.occurredAt.take(4).toInt() == year }.map { it.occurredAt.substring(5, 7).toInt() }.distinct().sortedDescending()
 
-/** The rows of chips choosing [filter] from [years] and, for the year chosen, [months]. */
+/**
+ * The rows of chips choosing [filter] from [years] and, for the year chosen, [months], each
+ * row 8dp under the one over it, as the kinds' row above them is.
+ */
 @Composable
 fun TimeFilterRows(filter: TimeFilter, years: List<Int>, months: List<Int>, onChange: (TimeFilter) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
+    Column(Modifier.padding(top = Space.xs), verticalArrangement = Arrangement.spacedBy(Space.s)) {
         ChipRow(
             "year_",
             listOf(null) + years,

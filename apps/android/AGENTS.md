@@ -110,7 +110,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   lines; a longer explanation goes behind an info row's dialog, not on the page.
 - What floats over a photo or the map (back and the like, `FloatingButton`) is a true circle,
   40dp drawn in a 48dp target, never a narrow pill.
-- Touch targets are at least 48dp; scrims over media, with white on them.
+- Touch targets are at least 48dp, with what is tapped drawn at its own size inside: a button 40dp,
+  its 48dp kept in the layout (`minimumInteractiveComponentSize`), a chip 36dp, laid out at that so
+  rows of chips stand 8dp apart, Compose widening its target. Scrims over media, with white on them.
 - Words are Chinese first, with English beside them in `values-en`, plain and short, with
   TalkBack descriptions for what is shown. The Moments' own words are never changed.
 - Pieces of a line (counts, a date and a place) are set apart by an em space, ` `,
