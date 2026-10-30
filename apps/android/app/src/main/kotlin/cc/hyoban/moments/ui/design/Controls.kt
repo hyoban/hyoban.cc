@@ -242,6 +242,9 @@ fun ExtendedFloatingActionButton(
 object ChipDefaults {
     val IconSize = 18.dp
     val Height = 36.dp
+
+    /** How far in from a chip's edge its words start, without an icon: what a line over or under a row of chips lines up with. */
+    val LabelInset = 14.dp
 }
 
 typealias FilterChipDefaults = ChipDefaults
@@ -265,7 +268,7 @@ private fun Chip(
             .heightIn(min = ChipDefaults.Height)
             .clip(Corners.full)
             .background(container)
-            .padding(start = if (leadingIcon != null) 10.dp else 14.dp, end = if (trailingIcon != null) 10.dp else 14.dp),
+            .padding(start = if (leadingIcon != null) 10.dp else ChipDefaults.LabelInset, end = if (trailingIcon != null) 10.dp else ChipDefaults.LabelInset),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {

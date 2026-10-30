@@ -418,7 +418,8 @@ the middle. The timeline has no bar: its title, counts and search scroll away wi
 status bar behind a short fade, and the car's charges (from `/v2`) are rows on their days. The
 filters are the search page's: what kind (everything, Moments, bills or charges, each with how
 many) and when (a year, then a month); with nothing typed, a filter lists all it lets through, a
-bill matching by its category and note. A Moment's page can make its
+bill matching by its category and note. What it finds is listed on the page under its years, a
+Moment by its photo, its words around the match, marked, and when and where. A Moment's page can make its
 meal or its photos private on their own (`partVisibility`, written onto the entry's parts as
 it publishes). 编辑旅程 also lists the Moments of its days and of two days either side, each
 taken in or left out by a switch, and its photos to pick covers from in order.
