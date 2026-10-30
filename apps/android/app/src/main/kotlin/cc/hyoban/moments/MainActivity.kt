@@ -1,6 +1,5 @@
 package cc.hyoban.moments
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -28,10 +27,6 @@ open class MainActivity : ComponentActivity() {
      * delivered straight after it is made, before Compose is listening.
      */
     val newIntents = Channel<Intent>(Channel.UNLIMITED)
-    // Before Android 13 the app keeps its own language and speaks it here; later the system does.
-    override fun attachBaseContext(newBase: Context) {
-        super.attachBaseContext(AppLanguage.wrap(newBase))
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -53,7 +48,7 @@ open class MainActivity : ComponentActivity() {
         }
         val start = startRoute()
         setContent {
-            MomentsTheme(container.settings) {
+            MomentsTheme {
                 MomentsApp(container = container, start = start)
             }
         }

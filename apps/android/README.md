@@ -214,9 +214,9 @@ are `noBackupFilesDir/connection-reminders.json` and `companion-connections.json
   way, else the last or next), in ColorOS's card sizes, drawn from the copy after each sync
   and every three hours.
 - **Video.** The viewer goes picture-in-picture when the app is left while a video plays.
-- **Language.** Chinese, and English when the phone or the settings choose it.
-- **Appearance.** 外观 picks light, dark or the system's. The API, the media origin and the
-  map's styles default to `BuildConfig` and can be changed in the settings.
+- **Language and appearance.** Always the phone's: Chinese, or English when the phone speaks
+  it, and light or dark as the system is. The API, the media origin and the map's styles
+  default to `BuildConfig` and can be changed in the settings.
 - **Maps.** OpenFreeMap's vector tiles drawn by MapLibre, needing no key.
 - **Icon.** 这里: a white cat with a grey cap peeking in from the lower left on blue, an
   adaptive icon with a monochrome layer.

@@ -7,12 +7,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
-import cc.hyoban.moments.Settings
-import cc.hyoban.moments.ThemeMode
 import com.kyant.capsule.ContinuousCapsule
 import com.kyant.capsule.ContinuousRoundedRectangle
 
@@ -43,12 +39,8 @@ private val AppShapes = Shapes(
 val TransitionMotion: MotionScheme = MotionScheme.standard()
 
 @Composable
-fun MomentsTheme(settings: Settings, content: @Composable () -> Unit) {
-    val dark = when (settings.themeMode) {
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
-    }
+fun MomentsTheme(content: @Composable () -> Unit) {
+    val dark = isSystemInDarkTheme()
     val shown = appTokens(dark)
 
     CompositionLocalProvider(LocalDarkTheme provides dark, LocalTokens provides shown) {

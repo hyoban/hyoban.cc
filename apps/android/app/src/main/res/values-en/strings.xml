@@ -143,11 +143,6 @@
     <string name="action_cancel">Cancel</string>
     <string name="error_address">The address must start with http or https</string>
     <string name="action_restore_default">Reset</string>
-    <string name="section_theme_mode">Appearance</string>
-    <string name="theme_mode_system">System</string>
-    <string name="theme_mode_light">Light</string>
-    <string name="theme_mode_dark">Dark</string>
-    <string name="section_theme_color">Theme color</string>
     <string name="theme_color_system">Wallpaper colors</string>
     <string name="action_add_color">Custom color</string>
     <string name="action_delete">Delete</string>
@@ -177,10 +172,6 @@
     <string name="widget_preview_trip_subtitle">15 Moments</string>
     <string name="separator_clause">, </string>
     <string name="separator_list">, </string>
-    <string name="section_language">Language</string>
-    <string name="language_system">System</string>
-    <string name="action_system_language">Change in system settings</string>
-    <string name="settings_language_note">The Moments’ own text stays as written</string>
     <plurals name="count_food_people">
         <item quantity="one">%1$d person</item>
         <item quantity="other">%1$d people</item>

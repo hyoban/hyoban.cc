@@ -111,7 +111,6 @@ fun SettingsHomeScreen(onBack: () -> Unit, onSection: (SettingsSection) -> Unit,
                     null,
                     null,
                     listOf(
-                        { shapes -> SectionRow(AppIcons.Palette, stringResource(R.string.section_theme_mode), "settings_appearance", shapes) { onSection(SettingsSection.APPEARANCE) } },
                         { shapes -> SectionRow(AppIcons.CloudSync, stringResource(R.string.settings_moments_data), "settings_moments", shapes) { onSection(SettingsSection.MOMENTS) } },
                         { shapes -> SectionRow(AppIcons.Map, stringResource(R.string.settings_map_footprints), "settings_map", shapes) { onSection(SettingsSection.MAP) } },
                         { shapes -> SectionRow(AppIcons.Receipt, stringResource(R.string.tab_ledger), "settings_ledger", shapes, onClick = onLedgerSettings) },
