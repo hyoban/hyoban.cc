@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -262,19 +263,20 @@ fun PlayBadge(modifier: Modifier = Modifier) {
 @Composable
 fun LiveBadge(modifier: Modifier = Modifier) {
     Row(
-        modifier.clip(CircleShape).background(MediaOverlay.control).padding(horizontal = Space.s, vertical = Space.xxs),
+        // The design's small label on a photo: 20 high, its icon 12.
+        modifier.height(20.dp).clip(CircleShape).background(MediaOverlay.control).padding(horizontal = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
-        Icon(AppIcons.Live, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(14.dp))
+        Icon(AppIcons.Live, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(12.dp))
         Text(stringResource(R.string.label_live), color = MediaOverlay.content, style = AppTheme.typography.micro)
     }
 }
 
 /**
  * A Moment's media laid out to fill a width: one as it is shaped, two side by side,
- * three as one large and two small, four or more as a two by two grid with the rest
- * counted on the last. Without [onOpen] the tiles aren't tapped on their own, and a tap
+ * three or more as one large and two small, past three with the rest counted on the
+ * last. Without [onOpen] the tiles aren't tapped on their own, and a tap
  * goes to what holds them.
  */
 @Composable
@@ -306,32 +308,23 @@ fun MediaMosaic(
             tile(0, Modifier.weight(1f).fillMaxHeight())
             tile(1, Modifier.weight(1f).fillMaxHeight())
         }
-        3 -> Row(modifier.fillMaxWidth().aspectAtMost(1.5f, most), horizontalArrangement = Arrangement.spacedBy(GAP)) {
+        // Three and more: one large and two beside it; past three, the last says how many more.
+        else -> Row(modifier.fillMaxWidth().aspectAtMost(1.5f, most), horizontalArrangement = Arrangement.spacedBy(GAP)) {
             tile(0, Modifier.weight(2f).fillMaxHeight())
             Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(GAP)) {
                 tile(1, Modifier.weight(1f).fillMaxWidth())
-                tile(2, Modifier.weight(1f).fillMaxWidth())
-            }
-        }
-        else -> Column(modifier.fillMaxWidth().aspectAtMost(1f, most), verticalArrangement = Arrangement.spacedBy(GAP)) {
-            for (row in 0..1) {
-                Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(GAP)) {
-                    for (column in 0..1) {
-                        val index = row * 2 + column
-                        Box(Modifier.weight(1f).fillMaxHeight().clip(TILE)) {
-                            tile(index, Modifier.fillMaxSize())
-                            if (index == 3 && media.size > 4) {
-                                val more = pluralStringResource(R.plurals.media_more, media.size - 4, media.size - 4)
-                                val view = stringResource(R.string.action_view)
-                                Box(
-                                    Modifier.fillMaxSize().background(MediaOverlay.control)
-                                        .then(if (onOpen != null) Modifier.clickable(onClickLabel = view) { onOpen(index) } else Modifier)
-                                        .semantics { contentDescription = more },
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text("+${media.size - 4}", color = MediaOverlay.content, style = AppTheme.typography.titlePage)
-                                }
-                            }
+                Box(Modifier.weight(1f).fillMaxWidth().clip(TILE)) {
+                    tile(2, Modifier.fillMaxSize())
+                    if (media.size > 3) {
+                        val more = pluralStringResource(R.plurals.media_more, media.size - 3, media.size - 3)
+                        val view = stringResource(R.string.action_view)
+                        Box(
+                            Modifier.fillMaxSize().background(MediaOverlay.control)
+                                .then(if (onOpen != null) Modifier.clickable(onClickLabel = view) { onOpen(2) } else Modifier)
+                                .semantics { contentDescription = more },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("+${media.size - 3}", color = MediaOverlay.content, style = AppTheme.typography.numTitle)
                         }
                     }
                 }

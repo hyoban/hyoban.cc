@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -30,6 +29,12 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.geometry.Size
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.ledger.Ledger
@@ -114,11 +119,61 @@ fun chatItems(items: List<DayItem>, linked: Map<String, List<Txn>>): List<ChatIt
     return out
 }
 
-/** A Moment's bubble corners: large, the one at its foot towards the right edge drawn in. */
-val SentShape = RoundedCornerShape(Radius.large, Radius.large, Radius.small, Radius.large)
+/** How wide the strip a bubble keeps on its side for the tail; the bubble itself stands this far in. */
+val TAIL = 8.dp
 
-/** A records bubble's corners: large, the one at its foot towards the left edge drawn in. */
-private val ReceivedShape = RoundedCornerShape(Radius.large, Radius.large, Radius.large, Radius.small)
+/** The corners of a sent bubble's body, inside its tail's strip: what its photos and its press are clipped to. */
+fun sentBodyShape(joinedAbove: Boolean, joinedBelow: Boolean) = androidx.compose.foundation.shape.RoundedCornerShape(
+    topStart = Radius.large,
+    topEnd = if (joinedAbove) Radius.small else Radius.large,
+    bottomEnd = if (joinedBelow) Radius.small else 0.dp,
+    bottomStart = Radius.large,
+)
+
+/**
+ * A bubble as Telegram draws one: large corners, and on its side ([sent], the right; else the
+ * left) a strip [TAIL] wide where its last bubble of a run curls a tail out of its foot. Within a
+ * run from the same side, the corners on that side where it meets its neighbours are small, and
+ * only the last has the tail.
+ */
+class BubbleShape(private val sent: Boolean, private val joinedAbove: Boolean, private val joinedBelow: Boolean) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline = with(density) {
+        val w = size.width
+        val h = size.height
+        val t = TAIL.toPx()
+        val large = Radius.large.toPx()
+        val small = Radius.small.toPx()
+        val right = w - t
+        // Drawn as the right side's; the left side's is its mirror.
+        fun x(v: Float) = if (sent) v else w - v
+        val k = 0.4477f // 1 − 0.5523, how far in a quarter circle's cubic handles reach
+        val path = Path()
+        fun corner(fromX: Float, fromY: Float, cx: Float, cy: Float, toX: Float, toY: Float) =
+            path.cubicTo(x(fromX + (cx - fromX) * (1 - k)), fromY + (cy - fromY) * (1 - k), x(toX + (cx - toX) * (1 - k)), toY + (cy - toY) * (1 - k), x(toX), toY)
+        val tr = if (joinedAbove) small else large
+        val tail = !joinedBelow
+        path.moveTo(x(large), 0f)
+        path.lineTo(x(right - tr), 0f)
+        corner(right - tr, 0f, right, 0f, right, tr)
+        if (tail) {
+            // The tail: straight down, then sweeping out to its tip at the foot of the strip.
+            val top = h - 16.dp.toPx()
+            val u = 16.dp.toPx() / 16f
+            path.lineTo(x(right), top)
+            path.cubicTo(x(right), top + 9 * u, x(right + 2.5f * u), top + 14.5f * u, x(right + t), h)
+            path.lineTo(x(large), h)
+        } else {
+            path.lineTo(x(right), h - small)
+            corner(right, h - small, right, h, right - small, h)
+            path.lineTo(x(large), h)
+        }
+        corner(large, h, 0f, h, 0f, h - large)
+        path.lineTo(x(0f), large)
+        corner(0f, large, 0f, 0f, large, 0f)
+        path.close()
+        Outline.Generic(path)
+    }
+}
 
 /**
  * A day's date in a capsule at the middle of the column: 今天 or the date, with its weekday, and
@@ -184,14 +239,17 @@ fun RecordsBubble(
     val large = isLargeFont()
     BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.TopStart) {
         // As wide as three quarters of the column, or the whole of it with the font set large;
-        // a single record only as wide as it needs. Never wider than 420 on a wide screen.
-        val max = minOf(if (large) maxWidth else maxWidth * 0.78f, 420.dp)
+        // a single record only as wide as it needs. Never wider than 420 on a wide screen. The
+        // tail's strip comes on top, at the left.
+        val max = minOf(if (large) maxWidth - TAIL else maxWidth * 0.78f, 420.dp) + TAIL
+        val shape = BubbleShape(sent = false, joinedAbove = false, joinedBelow = false)
         Column(
             Modifier
                 .then(if (single) Modifier.widthIn(max = max) else Modifier.width(max))
-                .clip(ReceivedShape)
-                .border(cardBorder(), ReceivedShape)
+                .clip(shape)
+                .border(cardBorder(), shape)
                 .then(if (open != null) Modifier.clickable(onClick = open) else Modifier)
+                .padding(start = TAIL)
                 .padding(horizontal = Space.m, vertical = Space.xs)
                 .testTag("records_${lines.first().key}"),
         ) {
@@ -222,7 +280,7 @@ fun RecordsBubble(
                     )
                     is RecordLine.Track -> track?.let { day ->
                         RecordRow(
-                            icon = { TrackGlyph(day.stretches, Modifier.size(18.dp), tokens.tx3) },
+                            icon = { Icon(AppIcons.Footprints, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
                             title = stringResource(R.string.timeline_track),
                             time = null,
                             end = stringResource(R.string.distance_kilometres, day.metres / 1000),

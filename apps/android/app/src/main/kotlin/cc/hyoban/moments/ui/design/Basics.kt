@@ -394,7 +394,7 @@ fun Badge(modifier: Modifier = Modifier, containerColor: Color = tokens.accent, 
 fun BadgedBox(badge: @Composable BoxScope.() -> Unit, modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     Box(modifier) {
         content()
-        Box(Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = (-2).dp)) { badge() }
+        Box(Modifier.align(Alignment.TopEnd).offset(x = 2.dp, y = (-2).dp)) { badge() }
     }
 }
 

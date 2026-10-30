@@ -402,12 +402,14 @@ this month's spending in figures with a bar for each day, and four rows: 账单�
 trip's days are a conversation with oneself: each day opens with its date in a capsule at the
 middle (今天, or the date and weekday, the year when it isn't this one, a trip's with 第 n 天
 before it, and a trip's days from the first), then reads from its morning. A Moment is a bubble from the right, its photos across its
-top and a faint line of where and when at its foot (a trip's banner marks its days, so they
-don't name it); the bills, charges and footprints between
-Moments come from the left in one outlined bubble, a line each with its time and amount, no
+top (past three, the third counts the rest) and a faint where and when after the last line of
+its words, as Telegram sets a message's time, or under them when they don't fit (a trip's
+banner marks its days, so they don't name it). Moments one after another are a run, barely
+apart, and only the last of a run curls a tail out of its foot; the bills, charges and footprints between
+Moments come from the left in one outlined bubble with its tail, a line each led by its time, and its amount, no
 total under them, more than five showing four and how many more. One record's
-bubble opens it; several, their day. A day with footprints ends with its 轨迹, the day's line for
-its icon and how far it went; footprints alone don't put a day on the timeline. The ledger's
+bubble opens it; several, their day. A day with footprints ends with its 轨迹 and how far it went,
+the last line of its records bubble or a bubble of its own after a Moment; footprints alone don't put a day on the timeline. The ledger's
 bills, a plain list, open each day with a header row, its day of the month and weekday and what
 the day came to. The conversation has no month headings, and the timeline's title has no counts under it.
 A Moment's page lists its place, then its parts row by row, a charge among them, its trip and

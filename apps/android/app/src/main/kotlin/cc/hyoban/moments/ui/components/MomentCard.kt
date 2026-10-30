@@ -85,8 +85,11 @@ fun MomentCard(
     onBill: (String) -> Unit = {},
     /** As a bubble sent from the right, as the timeline and a trip are a conversation; its bills then follow it apart. */
     bubble: Boolean = false,
+    /** As a bubble, whether the one above or below it is a Moment too, a run of them drawn together. */
+    joinedAbove: Boolean = false,
+    joinedBelow: Boolean = false,
 ) {
-    if (bubble) return MomentBubble(moment, places, trip, urls, onOpen, modifier, selected, hidePlace)
+    if (bubble) return MomentBubble(moment, places, trip, urls, onOpen, modifier, selected, hidePlace, joinedAbove, joinedBelow)
     // The card grows into the Moment's page when opened; shown in the detail pane beside the
     // list, it is [selected], outlined in the accent, the one colour for state.
     val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
@@ -142,38 +145,33 @@ private fun MomentBubble(
     modifier: Modifier,
     selected: Boolean,
     hidePlace: String?,
+    joinedAbove: Boolean,
+    joinedBelow: Boolean,
 ) {
     val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
     var menu by remember { mutableStateOf<DpOffset?>(null) }
     val density = LocalDensity.current
-    val shape = cc.hyoban.moments.ui.feed.SentShape
+    val shape = remember(joinedAbove, joinedBelow) { cc.hyoban.moments.ui.feed.BubbleShape(sent = true, joinedAbove, joinedBelow) }
+    val tail = cc.hyoban.moments.ui.feed.TAIL
     androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
         // Most of the column, never wider than 420 on a wide screen; with photos always that
-        // wide, words alone only as wide as they need.
-        val max = minOf(maxWidth * 0.82f, 420.dp)
+        // wide, words alone only as wide as they need. The tail's strip comes on top, at the right.
+        val max = minOf(maxWidth * 0.82f, 420.dp) + tail
         val width = if (moment.media.isNotEmpty()) Modifier.width(max) else Modifier.widthIn(max = max)
         PressableCard(
             onClick = onOpen,
             onLongClick = { at -> menu = with(density) { DpOffset(at.x.toDp(), at.y.toDp()) } },
             onLongClickLabel = stringResource(R.string.action_more),
-            modifier = width.sharedCard(moment.uid).clip(shape).background(tokens.pressed).border(2.dp, ring, shape)
+            modifier = width.sharedCard(moment.uid).clip(shape).background(tokens.pressed).border(2.dp, ring, shape).padding(end = tail)
                 .semantics { this.selected = selected }.testTag("moment_${moment.uid}"),
             flat = true,
+            shape = remember(joinedAbove, joinedBelow) { cc.hyoban.moments.ui.feed.sentBodyShape(joinedAbove, joinedBelow) },
         ) {
             if (moment.media.isNotEmpty()) MediaMosaic(moment.uid, moment.media, urls, onOpen = null)
             Column(
                 (if (moment.media.isNotEmpty()) Modifier.fillMaxWidth() else Modifier).padding(start = Space.m, end = Space.m, top = Space.s, bottom = Space.s),
                 verticalArrangement = Arrangement.spacedBy(Space.xxs),
             ) {
-                if (moment.text.isNotBlank()) {
-                    Text(moment.text, style = AppTheme.typography.body, maxLines = 8, overflow = TextOverflow.Ellipsis)
-                }
-                foodLine(moment.food)?.let { line ->
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
-                        Icon(AppIcons.Food, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(16.dp))
-                        Text(line, style = AppTheme.typography.bodySmall, color = tokens.tx2, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                }
                 val private = (moment.hidden || moment.topic == "tech").takeIf { it }?.let { stringResource(R.string.visibility_private) }
                 val parts = moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
                 // The time in the figures' monospace, as the records bubbles beside it have theirs.
@@ -188,16 +186,73 @@ private fun MomentBubble(
                         pop()
                     }
                 }
-                Row(
-                    Modifier.align(Alignment.End),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Space.s),
-                ) {
-                    Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                    if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = AppIcons.Phone)
+                val foot: @Composable () -> Unit = {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                        Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                        if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = AppIcons.Phone)
+                    }
+                }
+                val food = foodLine(moment.food)
+                if (moment.text.isNotBlank() && food == null) {
+                    // As Telegram has it, where and when follow the last line of the words, on
+                    // a line of their own only when they don't fit there.
+                    TrailingFoot(if (moment.media.isNotEmpty()) Modifier.fillMaxWidth() else Modifier, foot) {
+                        Text(moment.text, style = AppTheme.typography.body, maxLines = 8, overflow = TextOverflow.Ellipsis, onTextLayout = it)
+                    }
+                } else {
+                    if (moment.text.isNotBlank()) {
+                        Text(moment.text, style = AppTheme.typography.body, maxLines = 8, overflow = TextOverflow.Ellipsis)
+                    }
+                    food?.let { line ->
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                            Icon(AppIcons.Food, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(16.dp))
+                            Text(line, style = AppTheme.typography.bodySmall, color = tokens.tx2, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                    Box(Modifier.align(Alignment.End)) { foot() }
                 }
             }
             MomentMenu(moment, urls, menu, onDismiss = { menu = null })
+        }
+    }
+}
+
+/**
+ * [text], with [foot] after the end of its last line when it fits there beside it, [Space.m]
+ * apart and on the same baseline, else on a line of its own at the right, as Telegram sets a
+ * message's time. [text] passes on its layout so the last line can be measured.
+ */
+@Composable
+private fun TrailingFoot(
+    modifier: Modifier,
+    foot: @Composable () -> Unit,
+    text: @Composable ((androidx.compose.ui.text.TextLayoutResult) -> Unit) -> Unit,
+) {
+    val layout = remember { arrayOfNulls<androidx.compose.ui.text.TextLayoutResult>(1) }
+    val gap = Space.m
+    androidx.compose.ui.layout.Layout(
+        contents = listOf({ text { layout[0] = it } }, foot),
+        modifier = modifier,
+    ) { (words, feet), constraints ->
+        val free = constraints.copy(minWidth = 0, minHeight = 0)
+        val w = words.first().measure(free)
+        val f = feet.first().measure(free)
+        val result = layout[0]
+        val gapPx = gap.roundToPx()
+        val last = result?.let { it.lineCount - 1 }
+        val lastRight = if (result != null && last != null) kotlin.math.ceil(result.getLineRight(last)).toInt() else w.width
+        val inline = result != null && last != null && lastRight + gapPx + f.width <= constraints.maxWidth
+        val width = maxOf(constraints.minWidth, w.width, if (inline) lastRight + gapPx + f.width else f.width).coerceAtMost(constraints.maxWidth)
+        // On the same line, the foot's baseline on the last line's; else just under the words.
+        val footBaseline = f[androidx.compose.ui.layout.FirstBaseline]
+        val footY = if (inline && result != null && last != null) {
+            if (footBaseline != androidx.compose.ui.layout.AlignmentLine.Unspecified) result.getLineBaseline(last).toInt() - footBaseline
+            else result.getLineBottom(last).toInt() - f.height
+        } else w.height + Space.xs.roundToPx()
+        val height = maxOf(w.height, footY + f.height)
+        layout(width, height) {
+            w.place(0, 0)
+            f.place(width - f.width, footY)
         }
     }
 }

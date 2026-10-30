@@ -93,6 +93,8 @@ fun PressableCard(
     onLongClickLabel: String? = null,
     /** On the page itself, no fill or hairline of its own: an item of a list rather than a card. */
     flat: Boolean = false,
+    /** Its corners, what it clips its content and its press to. */
+    shape: androidx.compose.ui.graphics.Shape = AppTheme.shapes.large,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -102,7 +104,7 @@ fun PressableCard(
     val currentLongClick by rememberUpdatedState(onLongClick)
 
     Card(
-        shape = AppTheme.shapes.large,
+        shape = shape,
         colors = CardDefaults.cardColors(containerColor = if (flat) Color.Transparent else level.fill(), contentColor = tokens.tx),
         border = if (flat) null else cardBorder(),
         modifier = modifier,
