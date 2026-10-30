@@ -25,7 +25,7 @@ or more, or a phone on its side, they stand down a rail instead.
   bubble. A banner marks where each trip begins. Scrolling folds the tabs away.
 - **地图** shows the places, the trips' routes (listed in the sheet at its foot) and the
   footprints. 迷雾地图 lays a fog over it, as the site's map does, thinner over a city the
-  more Moments it has, from the site's `src/data/boundaries/cities.json` shipped as an asset.
+  more Moments it has, from the site's `apps/web/src/data/boundaries/cities.json` shipped as an asset.
 - **我** holds the changes waiting to be published, this month's spending, and rows for
   账单与资产, 足迹, 记录项与公开 and 设置.
 

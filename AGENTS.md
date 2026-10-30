@@ -53,7 +53,7 @@ even when starting from the repository root.
 
 | Area                | Source and reference                                                                                                                           |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Website             | Astro and plain CSS in `src/`; [DESIGN.md](DESIGN.md) defines its visual language.                                                             |
+| Website             | Astro and plain CSS in `apps/web` (`@hyoban/web`); [its DESIGN.md](apps/web/DESIGN.md) defines its visual language.                            |
 | Map and trip player | `packages/trip-map` (`@hyoban/trip-map`); its [README](packages/trip-map/README.md) describes the markup and data contract.                    |
 | Drawers             | `packages/drawer` (`@hyoban/drawer`), a plain DOM port of Base UI's Drawer with shadcn/ui CSS; used by the calendar and bundled into trip-map. |
 | Shared data model   | Plain Zod schemas in `packages/data-spec`, used by the site, scripts and API; `vp run data:schema` generates `data/schema`.                    |
@@ -97,8 +97,8 @@ even when starting from the repository root.
 
 ## Website work
 
-Read `DESIGN.md` before changing UI. Use Astro components, scoped plain CSS and the
-existing tokens in `src/styles/index.css`; preserve the site's text-first design,
+Read `apps/web/DESIGN.md` before changing UI. Use Astro components, scoped plain CSS and the
+existing tokens in `apps/web/src/styles/index.css`; preserve the site's text-first design,
 system dark mode and reduced-motion behavior. The app 「这里」 follows its own
 platform-neutral design system instead (see its guide). Shared working agreements apply
 equally to both platforms.

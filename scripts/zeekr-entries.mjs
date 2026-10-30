@@ -2,8 +2,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
 import { entrySchema, getEntryFile, getStableUlid } from '@hyoban/data-spec/entry'
-import { getVehicleCharges, readVehicleMonths } from '../src/data/vehicle.ts'
-import { dataRoot } from '../src/data/store.ts'
+import { getVehicleCharges, readVehicleMonths } from '../apps/web/src/data/vehicle.ts'
+import { dataRoot } from '../apps/web/src/data/store.ts'
 
 // vp run zeekr:entries [--write]
 //

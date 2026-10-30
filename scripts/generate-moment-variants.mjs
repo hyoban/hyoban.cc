@@ -13,7 +13,7 @@ import { readMomentRecords, writeMomentRecord } from './lib/moment-assets.mjs'
 
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../', import.meta.url))
-const config = JSON.parse(await readFile(join(root, 'src/data/asset-config.json'), 'utf8'))
+const config = JSON.parse(await readFile(join(root, 'apps/web/src/data/asset-config.json'), 'utf8'))
 const temporaryPath = await mkdtemp(join(tmpdir(), 'hyoban-moment-variants-'))
 const records = await readMomentRecords()
 const tasks = records.flatMap((record) =>

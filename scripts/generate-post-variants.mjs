@@ -8,14 +8,14 @@ import sharp from 'sharp'
 import { uploadR2Object } from './lib/r2-assets.mjs'
 
 // Article images are linked straight from R2. This makes webp copies sized for the
-// 40rem column (1x and 2x) and records them in src/data/post-images.json, which
-// src/post-images.mjs reads to give each <img> a srcset and its intrinsic size.
+// 40rem column (1x and 2x) and records them in apps/web/src/data/post-images.json, which
+// apps/web/src/post-images.mjs reads to give each <img> a srcset and its intrinsic size.
 const VARIANT_WIDTHS = [640, 960, 1280]
 
 const root = fileURLToPath(new URL('../', import.meta.url))
-const postsRoot = join(root, 'src/content/posts')
-const manifestPath = join(root, 'src/data/post-images.json')
-const config = JSON.parse(await readFile(join(root, 'src/data/asset-config.json'), 'utf8'))
+const postsRoot = join(root, 'apps/web/src/content/posts')
+const manifestPath = join(root, 'apps/web/src/data/post-images.json')
+const config = JSON.parse(await readFile(join(root, 'apps/web/src/data/asset-config.json'), 'utf8'))
 const assetPattern = new RegExp(`${escapeRegExp(config.origin)}/(posts/[^)"'\\s]+)`, 'g')
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8').catch(() => '{}'))
 const temporaryPath = await mkdtemp(join(tmpdir(), 'hyoban-post-variants-'))

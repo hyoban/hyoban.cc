@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite-plus'
 
 export default defineConfig({
-  // `vp pack` at the root builds the one library in the workspace; the site itself is
+  // `vp pack` at the root builds the one library in the workspace; the site in apps/web is
   // built by Astro through `vp run build`.
   defaultPackage: { pack: './packages/trip-map' },
   staged: {
@@ -9,10 +9,10 @@ export default defineConfig({
   },
   fmt: {
     // data/ is written by the API's backup and the scripts in their own canonical JSON,
-    // src/data/boundaries by its script, kept on one line,
+    // apps/web/src/data/boundaries by its script, kept on one line,
     // the Android app under apps/android is formatted by Android Studio, and
     // .claude/worktrees holds other checkouts of the repository.
-    ignorePatterns: ['data/**', 'src/data/boundaries/**', 'apps/android/**', '.claude/**'],
+    ignorePatterns: ['data/**', 'apps/web/src/data/boundaries/**', 'apps/android/**', '.claude/**'],
     singleQuote: true,
     semi: false,
   },

@@ -21,10 +21,10 @@ hyoban.cc is a quiet, text-first personal site built with Astro and plain CSS: e
 
 ## Calendar and map
 
-They use the full width: a rounded grid with photo thumbnails, a side drawer swiped away like a phone's sheet ([@hyoban/drawer](packages/drawer)) and a pill-shaped home button ([CalendarBackLink.astro](src/components/CalendarBackLink.astro)). Switching between them uses view transitions.
+They use the full width: a rounded grid with photo thumbnails, a side drawer swiped away like a phone's sheet ([@hyoban/drawer](../../packages/drawer)) and a pill-shaped home button ([CalendarBackLink.astro](src/components/CalendarBackLink.astro)). Switching between them uses view transitions.
 
 - **Calendar.** A month is a grid or a list ([CalendarAgenda.astro](src/components/CalendarAgenda.astro)): newest day first along a thin line, the date in a narrow rail on the left. Phones always show the list; on a desktop a small switch picks one and remembers it.
-- **Map.** Every trip from [data/collections](data/collections) is a thin route. The header's 旅程 opens the map with the trips listed in its drawer (`/trip/`, `/trip/<year>/`), and `/trip/<id>/` with one picked. Clicking one replays it stop by stop: the rest fades, the route draws in `tx`, and a card slides in for each stop.
+- **Map.** Every trip from [data/collections](../../data/collections) is a thin route. The header's 旅程 opens the map with the trips listed in its drawer (`/trip/`, `/trip/<year>/`), and `/trip/<id>/` with one picked. Clicking one replays it stop by stop: the rest fades, the route draws in `tx`, and a card slides in for each stop.
 - **A Moment's own address.** `/m/<uid>/` opens its day in the calendar with that Moment marked, under its own title and share card.
 
 ## Typography

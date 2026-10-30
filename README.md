@@ -6,7 +6,7 @@ and the pieces around it that record and serve them.
 
 ```
 .
-├─ src/                 the Astro site (DESIGN.md describes how it looks)
+├─ apps/web/            the Astro site (@hyoban/web; its DESIGN.md describes how it looks)
 ├─ data/                JSON backup of the Moments, places, trips and routes (docs/data.md)
 ├─ apps/api/            Cloudflare Worker serving the records from D1 (@hyoban/api)
 ├─ apps/android/        这里, the Android app that reads and writes Moments (Gradle)
@@ -46,7 +46,7 @@ vp install
 vp run dev          # the site, from data/ unless .env has MOMENTS_API_TOKEN
 vp check            # format, lint and type check, packages and API included
 vp test
-vp run build        # the static site into dist/
+vp run build        # the static site into apps/web/dist/
 ```
 
 `.env` (see `.env.example`) may hold:
@@ -75,6 +75,6 @@ and recovery steps are in [docs/deploy.md](docs/deploy.md).
 ## Thanks
 
 The 3D car's speed mode, held down in the year review and the 20,000 km post, where a line credits it
-(`src/car-model-speed.ts`), follows [GameMCU](https://gamemcu.com)'s
+(`apps/web/src/car-model-speed.ts`), follows [GameMCU](https://gamemcu.com)'s
 [Xiaomi SU7 showroom](https://gamemcu.com/su7/): its tunnel of streaks, its reflections
 laid crisp over the paint, its glossy floor and its camera.

@@ -28,25 +28,25 @@ pnpm-debug.log*
 .wrangler/
 
 # media is stored in Cloudflare R2
-public/*.avif
-public/*.gif
-public/*.jpeg
-public/*.jpg
-public/*.mov
-public/*.mp4
-public/*.png
-public/*.webm
-public/*.webp
-src/assets/images/posts/
-src/content/moments/**/*.avif
-src/content/moments/**/*.gif
-src/content/moments/**/*.jpeg
-src/content/moments/**/*.jpg
-src/content/moments/**/*.mov
-src/content/moments/**/*.mp4
-src/content/moments/**/*.png
-src/content/moments/**/*.webm
-src/content/moments/**/*.webp
+apps/web/public/*.avif
+apps/web/public/*.gif
+apps/web/public/*.jpeg
+apps/web/public/*.jpg
+apps/web/public/*.mov
+apps/web/public/*.mp4
+apps/web/public/*.png
+apps/web/public/*.webm
+apps/web/public/*.webp
+apps/web/src/assets/images/posts/
+apps/web/src/content/moments/**/*.avif
+apps/web/src/content/moments/**/*.gif
+apps/web/src/content/moments/**/*.jpeg
+apps/web/src/content/moments/**/*.jpg
+apps/web/src/content/moments/**/*.mov
+apps/web/src/content/moments/**/*.mp4
+apps/web/src/content/moments/**/*.png
+apps/web/src/content/moments/**/*.webm
+apps/web/src/content/moments/**/*.webp
 
 # macOS-specific files
 .DS_Store

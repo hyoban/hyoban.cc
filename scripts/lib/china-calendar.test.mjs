@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
-import { getChinaCalendarDay } from '../../src/china-calendar.ts'
+import { getChinaCalendarDay } from '../../apps/web/src/china-calendar.ts'
 
 test('looks up official days off and adjusted workdays', () => {
   assert.deepEqual(getChinaCalendarDay('2026-06-19'), {

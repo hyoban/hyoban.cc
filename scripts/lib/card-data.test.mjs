@@ -5,7 +5,7 @@ import {
   getCardPhotos,
   getYearPanel,
   isTripInPeriod,
-} from '../../src/card-data.ts'
+} from '../../apps/web/src/card-data.ts'
 
 const image = (id) => ({
   alt: id,

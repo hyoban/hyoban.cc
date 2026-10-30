@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "astro dev --force",
-    "build": "astro build --force",
-    "check": "astro check",
+    "dev": "vp run --filter @hyoban/web dev",
+    "build": "vp run --filter @hyoban/web build",
+    "check": "vp run --filter @hyoban/web check",
     "assets:migrate": "node scripts/migrate-assets-to-r2.mjs",
     "assets:upload": "node scripts/upload-asset-to-r2.mjs",
     "data:export": "node scripts/export-data.mjs",
@@ -33,28 +33,17 @@
   },
   "dependencies": {
     "@hyoban/data-spec": "workspace:*",
-    "@hyoban/drawer": "workspace:*",
-    "@hyoban/trip-map": "workspace:*",
-    "fflate": "0.8.3",
-    "modern-screenshot": "4.7.0",
-    "three": "0.186.1",
-    "yaml": "^2.9.1"
+    "@hyoban/trip-map": "workspace:*"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.12",
-    "@astrojs/markdown-remark": "7.3.5",
-    "@astrojs/rss": "4.0.19",
-    "@astrojs/sitemap": "^3.7.4",
-    "@types/three": "0.186.0",
-    "astro": "^7.4.4",
     "ffmpeg-static": "^5.3.0",
     "p-limit": "^7.3.3",
-    "satori": "^0.63.2",
     "sharp": "^0.35.5",
     "typescript": "^6.0.3",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "wrangler": "^4.155.0"
+    "wrangler": "^4.155.0",
+    "zod": "^4.6.7"
   },
   "packageManager": "pnpm@12.16.1"
 }

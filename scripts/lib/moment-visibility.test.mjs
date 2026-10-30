@@ -7,11 +7,14 @@ import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { test } from 'vite-plus/test'
 
-import { readMomentRecords } from '../../src/data/store.ts'
+import { readMomentRecords } from '../../apps/web/src/data/store.ts'
 
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../../', import.meta.url))
-const assetConfig = JSON.parse(await readFile(join(root, 'src/data/asset-config.json'), 'utf8'))
+const site = join(root, 'apps/web')
+const assetConfig = JSON.parse(
+  await readFile(join(root, 'apps/web/src/data/asset-config.json'), 'utf8'),
+)
 
 test(
   'builds optimized public calendar pages without hidden moments',
@@ -28,8 +31,8 @@ test(
       // photos, font subsets and maps unrelated to visibility. Astro runs directly, not
       // under pnpm, and is killed short of the test's timeout: a build the test gave up
       // on would otherwise run on, orphaned.
-      await execFile(join(root, 'node_modules/.bin/astro'), ['build', '--outDir', outputRoot], {
-        cwd: root,
+      await execFile(join(site, 'node_modules/.bin/astro'), ['build', '--outDir', outputRoot], {
+        cwd: site,
         env: { ...process.env, CI: '', SKIP_PAGE_OG_IMAGES: '1' },
         maxBuffer: 10 * 1024 * 1024,
         signal: AbortSignal.timeout(175_000),

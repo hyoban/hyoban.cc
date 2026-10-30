@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { test } from 'vite-plus/test'
 
-import { tripVideoMusic } from '../../src/data/music.ts'
+import { tripVideoMusic } from '../../apps/web/src/data/music.ts'
 import { getMediaKey, getMomentFile, momentRecordSchema, tripRecordSchema } from '@hyoban/data-spec'
 import { getEntryFile } from '@hyoban/data-spec/entry'
 import {
@@ -13,7 +13,7 @@ import {
   readMomentRecords,
   readPlaces,
   readTripRecords,
-} from '../../src/data/store.ts'
+} from '../../apps/web/src/data/store.ts'
 import { getDataSchemas, getSchemaFile, renderSchema } from './data-schema.mjs'
 import { getUlidTime, ulid } from './ulid.mjs'
 

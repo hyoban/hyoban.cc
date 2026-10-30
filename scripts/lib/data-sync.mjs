@@ -6,8 +6,8 @@ import { promisify } from 'node:util'
 import { momentRecordSchema, tripRecordSchema } from '@hyoban/data-spec'
 import { collectionSchema, entrySchema } from '@hyoban/data-spec/entry'
 import { buildMergeSql } from '../../apps/api/src/import.ts'
-import { DEFAULT_API_URL, fetchSnapshot, writeSnapshot } from '../../src/data/snapshot.ts'
-import { listJsonFiles, readJson } from '../../src/data/store.ts'
+import { DEFAULT_API_URL, fetchSnapshot, writeSnapshot } from '../../apps/web/src/data/snapshot.ts'
+import { listJsonFiles, readJson } from '../../apps/web/src/data/store.ts'
 import { executeSql } from './d1.mjs'
 
 // The API holds the records and data/ backs them up, so a script that writes data/

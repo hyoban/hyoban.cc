@@ -76,7 +76,7 @@ android {
     }
 
     // The cities the map's fog of war lights, the site's own file (scripts/generate-city-boundaries.mjs).
-    sourceSets["main"].assets.srcDir(rootProject.file("../../src/data/boundaries"))
+    sourceSets["main"].assets.srcDir(rootProject.file("../web/src/data/boundaries"))
 
     buildFeatures {
         buildConfig = true

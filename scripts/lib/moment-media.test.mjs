@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test } from 'vite-plus/test'
 
-import { readMomentRecords } from '../../src/data/store.ts'
+import { readMomentRecords } from '../../apps/web/src/data/store.ts'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 
@@ -44,7 +44,11 @@ test('publishes every Moment with complete metadata for each media file', async 
 })
 
 test('keeps binary site media out of the repository', async () => {
-  const roots = [join(root, 'data'), join(root, 'src/assets'), join(root, 'public')]
+  const roots = [
+    join(root, 'data'),
+    join(root, 'apps/web/src/assets'),
+    join(root, 'apps/web/public'),
+  ]
   const mediaFiles = (
     await Promise.all(
       roots.map(async (directory) => {

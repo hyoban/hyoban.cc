@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
 
 import { buildImportSql } from '../apps/api/src/import.ts'
-import { listJsonFiles, readJson } from '../src/data/store.ts'
+import { listJsonFiles, readJson } from '../apps/web/src/data/store.ts'
 import { startBuild } from './lib/data-sync.mjs'
 import { executeSql } from './lib/d1.mjs'
 

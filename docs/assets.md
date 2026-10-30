@@ -1,7 +1,7 @@
 # Asset storage
 
 Images and videos are stored in the Cloudflare R2 bucket configured in
-`src/data/asset-config.json` and served from `https://image.hyoban.cc`. Objects are
+`apps/web/src/data/asset-config.json` and served from `https://image.hyoban.cc`. Objects are
 immutable: a changed file is uploaded under a new key, never over an old one.
 
 | Prefix                                                           | For                                         |

@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { readdirSync, readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 
-import { readJson, readMomentRecords, readTripRecords } from '../../../src/data/store.ts'
+import { readJson, readMomentRecords, readTripRecords } from '../../web/src/data/store.ts'
 import { buildImportSql } from '../src/import.ts'
 import { handle } from '../src/index.ts'
 
