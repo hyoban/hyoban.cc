@@ -95,7 +95,7 @@ which leaves the recipient and the final send to the user. It never posts.
 | 发布到小红书   | its share receiver, the text copied; text alone opens 写想法                           |
 | 发布到抖音     | `SystemShareActivity` into the photo editor, the text copied; needs a photo            |
 | 微信朋友圈     | `ShareToTimeLineUI` for text or one photo; more go through 准备图文                    |
-| 飞书, 准备图文 | the photos saved to a `Pictures/这里分享-…` album and the text copied                  |
+| 飞书, 准备图文 | the photos saved to a `Pictures/Here Share-…` album and the text copied                |
 
 These entries depend on each app's version; when one fails, 准备图文 is offered with the
 edited text and selection kept. Each share has its own cache directory, cleaned up after
