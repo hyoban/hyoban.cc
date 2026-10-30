@@ -397,6 +397,8 @@ this month's spending in figures with a bar for each day, and four rows: 账单�
 记录项与公开 and 设置 (`moments://settings-home`, a row for each section). The timeline and the
 ledger's bills keep each day in a rail down the left, its day of the month and weekday, the
 ledger's with what it spent; a month's heading says how many Moments it had and what it spent.
+A day with footprints ends with a 轨迹 row, the day's line drawn where a bill's icon goes, how
+long it moved and how far, and it opens the day; footprints alone don't put a day on the timeline.
 A Moment's page lists its parts row by row, a charge among them, and ends with whether it is
 public and which parts would publish; a bill's page has its 公开 switch. Writing a Moment, the
 加一项 row opens 美食 and 账单. A day's page starts with that day's footprints on a map, the

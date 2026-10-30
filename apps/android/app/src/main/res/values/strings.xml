@@ -794,6 +794,10 @@
     <string name="footprints_span_manual">手动公开的</string>
     <string name="footprints_make_public">公开这一段</string>
     <string name="day_track_stats">%1$.1f 公里 在移动 %2$d 分钟</string>
+    <string name="timeline_track">轨迹</string>
+    <plurals name="timeline_track_moving">
+        <item quantity="other">在移动 %d 分钟</item>
+    </plurals>
     <string name="section_add_item">加一项</string>
     <string name="trip_edit_title">编辑旅程</string>
     <string name="trip_edit_name">名称</string>

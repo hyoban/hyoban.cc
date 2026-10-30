@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -141,6 +142,11 @@ sealed interface DayItem {
     data class ChargeItem(val charge: Charge) : DayItem {
         override val key get() = "charge-${charge.uid}"
     }
+
+    /** The day's footprints, after everything else of the day. */
+    data class Track(val day: String) : DayItem {
+        override val key get() = "track-$day"
+    }
 }
 
 /** A charge as a row on the page: its icon, AC or DC and how much, and when and how long in figures. */
@@ -234,5 +240,103 @@ fun TripBanner(trip: TripRecord, count: Int, onClick: () -> Unit, modifier: Modi
             Text(tripSummary(trip, count), style = AppTheme.typography.bodySmall, color = AppTheme.colorScheme.onSurfaceVariant, maxLines = 1)
         }
         Icon(AppIcons.ChevronRight, contentDescription = null, tint = AppTheme.colorScheme.outline, modifier = Modifier.size(20.dp))
+    }
+}
+
+/** A day's footprints as the timeline lists them: the line, its stretches in lon/lat, and how far and long it moved. */
+class DayTrack(val stretches: List<List<Pair<Double, Double>>>, val metres: Double, val movingMillis: Long)
+
+/**
+ * The footprints on the timeline: the days that have any, and each day's line and figures, read
+ * from the phone when its row comes into view and kept; today's again as it is recorded.
+ */
+class TimelineTracks(val days: Set<String>, private val cache: MutableMap<String, DayTrack?>, private val read: (String) -> DayTrack?) {
+    fun cached(day: String): DayTrack? = cache[day]
+
+    suspend fun load(day: String): DayTrack? = cache[day] ?: kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { read(day) }.also { cache[day] = it }
+
+    companion object {
+        val EMPTY = TimelineTracks(emptySet(), mutableMapOf()) { null }
+    }
+}
+
+@Composable
+fun rememberTimelineTracks(container: AppContainer): TimelineTracks {
+    val store = container.footprints
+    val revision by store.revision.collectAsStateWithLifecycle()
+    val cache = remember { java.util.concurrent.ConcurrentHashMap<String, DayTrack?>() }
+    val days by androidx.compose.runtime.produceState(emptySet<String>(), revision) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { store.days().toSet() }
+    }
+    return remember(days, revision) {
+        // Only today's footprints grow; every other day's are as they were read.
+        cache.remove(java.time.LocalDate.now().toString())
+        TimelineTracks(days, cache) { day ->
+            val points = store.points(cc.hyoban.moments.footprints.TrackSelection(day = day))
+            val stretches = cc.hyoban.moments.footprints.trackSegments(points, budget = 400).filter { it.size > 1 }
+            val stats = cc.hyoban.moments.footprints.trackStats(points)
+            // A day with no stretch that moved, the phone only lying still, lists nothing.
+            if (stretches.isEmpty() || stats.metres < 100) null
+            else DayTrack(stretches.map { stretch -> stretch.map { it.longitude to it.latitude } }, stats.metres, stats.recordedMillis)
+        }
+    }
+}
+
+/** A day's footprints as a row after its bills: the line itself where a bill's icon goes, how far it went and for how long it moved; tapped for the day. */
+@Composable
+fun TrackRow(day: String, tracks: TimelineTracks, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val track by androidx.compose.runtime.produceState(tracks.cached(day), day, tracks) { value = tracks.load(day) }
+    val shown = track ?: return
+    val minutes = (shown.movingMillis / 60_000).toInt()
+    cc.hyoban.moments.ui.design.ListItem(
+        headlineContent = { Text(androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.timeline_track), maxLines = 1) },
+        supportingContent = { Text(androidx.compose.ui.res.pluralStringResource(cc.hyoban.moments.R.plurals.timeline_track_moving, minutes, minutes), maxLines = 1) },
+        leadingContent = { TrackGlyph(shown.stretches) },
+        trailingContent = {
+            Text(
+                androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.distance_kilometres, shown.metres / 1000),
+                style = AppTheme.typography.titleSmall,
+            )
+        },
+        colors = cc.hyoban.moments.ui.design.ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
+        modifier = modifier.bleed(Space.l).clickable(onClick = onClick).testTag("track_$day"),
+    )
+}
+
+/** The day's line, fitted into a bill icon's round, drawn in an icon's stroke. */
+@Composable
+private fun TrackGlyph(stretches: List<List<Pair<Double, Double>>>) {
+    val color = cc.hyoban.moments.ui.theme.tokens.tx2
+    Box(
+        Modifier.size(40.dp).background(cc.hyoban.moments.ui.theme.tokens.pressed, androidx.compose.foundation.shape.CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        androidx.compose.foundation.Canvas(Modifier.size(24.dp)) {
+            val all = stretches.flatten()
+            // Longitude shrunk by the latitude, so the line keeps the shape it has on a map.
+            val scaleX = kotlin.math.cos(Math.toRadians(all.sumOf { it.second } / all.size))
+            val minX = all.minOf { it.first } * scaleX
+            val maxX = all.maxOf { it.first } * scaleX
+            val minY = all.minOf { it.second }
+            val maxY = all.maxOf { it.second }
+            val stroke = 2.dp.toPx()
+            val box = size.minDimension - stroke
+            val span = maxOf(maxX - minX, maxY - minY).takeIf { it > 0 } ?: 1.0
+            val offsetX = (size.width - (maxX - minX) / span * box) / 2
+            val offsetY = (size.height - (maxY - minY) / span * box) / 2
+            stretches.forEach { stretch ->
+                val path = androidx.compose.ui.graphics.Path()
+                stretch.forEachIndexed { index, (lon, lat) ->
+                    val x = (offsetX + (lon * scaleX - minX) / span * box).toFloat()
+                    val y = (offsetY + (maxY - lat) / span * box).toFloat()
+                    if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                }
+                drawPath(
+                    path,
+                    color,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round),
+                )
+            }
+        }
     }
 }

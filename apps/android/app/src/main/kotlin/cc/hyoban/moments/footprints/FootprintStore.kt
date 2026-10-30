@@ -175,10 +175,13 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         return decisions
     }
 
+    /** The days with any footprints, newest first. */
+    @Synchronized fun days(): List<String> = readableDatabase.rawQuery("SELECT DISTINCT day FROM points ORDER BY day DESC", null).use { c ->
+        buildList { while (c.moveToNext()) add(c.getString(0)) }
+    }
+
     @Synchronized fun history(): FootprintHistory {
-        val days = readableDatabase.rawQuery("SELECT DISTINCT day FROM points ORDER BY day DESC", null).use { c ->
-            buildList { while (c.moveToNext()) add(c.getString(0)) }
-        }
+        val days = days()
         val sessions = readableDatabase.rawQuery("SELECT id,started,ended FROM sessions ORDER BY started DESC", null).use { c ->
             buildList { while (c.moveToNext()) add(TrackSession(c.getString(0), c.getLong(1), if (c.isNull(2)) null else c.getLong(2))) }
         }

@@ -181,6 +181,7 @@ fun FeedScreen(
     val subtitle = if (shown.isEmpty()) null else
         pluralStringResource(R.plurals.count_moments, shown.size, shown.size) + "\u2003" + pluralStringResource(R.plurals.count_places, placeCount, placeCount)
     val bills = rememberTimelineBills(container, shown, TimeFilter())
+    val tracks = rememberTimelineTracks(container)
     val ledgerNav = LocalLedgerNav.current
     val feedState = rememberLazyListState()
     val gridState = rememberLazyStaggeredGridState()
@@ -265,6 +266,7 @@ fun FeedScreen(
                                     bills = bills,
                                     onBill = { ledgerNav?.bill?.invoke(it) },
                                     onTrip = onTrip,
+                                    tracks = tracks,
                                 )
                             }
                         }
