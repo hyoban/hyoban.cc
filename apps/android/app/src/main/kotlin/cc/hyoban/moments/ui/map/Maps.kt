@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.map
 
+import cc.hyoban.moments.footprints.FootprintDrawing
+import cc.hyoban.moments.footprints.TravelMode
 import android.annotation.SuppressLint
 import androidx.core.graphics.createBitmap
 import cc.hyoban.moments.ui.theme.tokens
@@ -169,6 +171,9 @@ private fun dotBlock(radius: Float) = (radius + 2f) * 2 / DOT_BLOCK_SIZE
 private const val ROUTE = "route"
 private const val FOOTPRINT_LINES = "footprint-lines"
 private const val FOOTPRINT_DOTS = "footprint-dots"
+private const val FOOTPRINT_RIDES = "footprint-rides"
+private const val FOOTPRINT_WALKS = "footprint-walks"
+private const val FOOTPRINT_STAYS = "footprint-stays"
 private const val ROUTES_DASHED = "routes-dashed"
 private const val STOPS = "stops"
 private const val RINGS = "rings"
@@ -776,7 +781,9 @@ fun PlacesMap(
     /** The regions the fog is drawn over, for how far each is from the cities been to. */
     fogRegions: List<FogRegion> = emptyList(),
     /** The selected local GPS track, over the same map as places and published trip routes. */
-    footprints: List<List<cc.hyoban.moments.footprints.TrackPoint>> = emptyList(),
+    footprints: FootprintDrawing = FootprintDrawing(),
+    /** What a request to frame the footprints shows: all of them, or one part chosen in the panel. */
+    footprintFrame: List<cc.hyoban.moments.footprints.TrackPoint> = emptyList(),
     frameFootprints: Boolean = false,
     onFootprintsFramed: () -> Unit = {},
     onFootprint: () -> Unit = {},
@@ -792,7 +799,10 @@ fun PlacesMap(
     val lifted by rememberUpdatedState(highlighted)
     val fogRegionsNow by rememberUpdatedState(fogRegions)
     val tapFootprint by rememberUpdatedState(onFootprint)
-    val footprintLocations = remember(footprints) { footprints.flatten().map { LatLng(it.latitude, it.longitude) } }
+    val footprintLocations = remember(footprints) { footprints.points.map { LatLng(it.latitude, it.longitude) } }
+    val footprintFrameLocations = remember(footprintFrame, footprintLocations) {
+        footprintFrame.map { LatLng(it.latitude, it.longitude) }.ifEmpty { footprintLocations }
+    }
     val allLocations = remember(places, footprintLocations) { places.map { it.place.latLng } + footprintLocations }
     var map by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
     var framed by remember { mutableStateOf(false) }
@@ -946,7 +956,7 @@ fun PlacesMap(
                 return@OnMapClickListener true
             }
             if (style.getLayer(FOOTPRINT_LINES) != null &&
-                ready.queryRenderedFeatures(around(routeReach), FOOTPRINT_LINES, FOOTPRINT_DOTS).isNotEmpty()
+                ready.queryRenderedFeatures(around(routeReach), FOOTPRINT_LINES, FOOTPRINT_RIDES, FOOTPRINT_WALKS, FOOTPRINT_DOTS, FOOTPRINT_STAYS).isNotEmpty()
             ) {
                 tapFootprint()
                 return@OnMapClickListener true
@@ -1005,31 +1015,44 @@ fun PlacesMap(
     // updates preserve the camera, the place markers and the existing route interactions.
     LaunchedEffect(map, footprints, me, ring) {
         val (_, style) = map?.live ?: return@LaunchedEffect
+        // One source and layer per way of going, each with constant paint: a drive solid, a ride
+        // thinner, a walk dotted; stays a larger ring, the inverse of the line's end dots.
         if (style.getSource(FOOTPRINT_LINES) == null) {
-            style.addSource(GeoJsonSource(FOOTPRINT_LINES))
-            style.addSource(GeoJsonSource(FOOTPRINT_DOTS))
+            for (id in listOf(FOOTPRINT_LINES, FOOTPRINT_RIDES, FOOTPRINT_WALKS, FOOTPRINT_DOTS, FOOTPRINT_STAYS)) style.addSource(GeoJsonSource(id))
             style.addLayerBelow(LineLayer(FOOTPRINT_LINES, FOOTPRINT_LINES).withProperties(
                 lineWidth(3f), lineCap(Property.LINE_CAP_ROUND), lineJoin(Property.LINE_JOIN_ROUND),
+            ), PLACES_SHADOW)
+            style.addLayerBelow(LineLayer(FOOTPRINT_RIDES, FOOTPRINT_RIDES).withProperties(
+                lineWidth(2f), lineCap(Property.LINE_CAP_ROUND), lineJoin(Property.LINE_JOIN_ROUND),
+            ), PLACES_SHADOW)
+            style.addLayerBelow(LineLayer(FOOTPRINT_WALKS, FOOTPRINT_WALKS).withProperties(
+                lineWidth(3f), lineCap(Property.LINE_CAP_ROUND), lineJoin(Property.LINE_JOIN_ROUND), lineDasharray(arrayOf(0f, 2f)),
             ), PLACES_SHADOW)
             style.addLayerBelow(CircleLayer(FOOTPRINT_DOTS, FOOTPRINT_DOTS).withProperties(
                 circleRadius(4f), circleStrokeWidth(1.5f),
             ), PLACES_SHADOW)
+            style.addLayerBelow(CircleLayer(FOOTPRINT_STAYS, FOOTPRINT_STAYS).withProperties(
+                circleRadius(5f), circleStrokeWidth(2.5f),
+            ), PLACES_SHADOW)
         }
-        val lines = footprints.filter { it.size > 1 }.map { segment ->
+        fun lines(mode: TravelMode) = footprints.lines.filter { it.first == mode }.map { (_, segment) ->
             Feature.fromGeometry(LineString.fromLngLats(segment.map { Point.fromLngLat(it.longitude, it.latitude) }))
         }
-        val dots = footprints.flatMap { listOf(it.first(), it.last()).distinct() }
-            .map { Feature.fromGeometry(Point.fromLngLat(it.longitude, it.latitude)) }
-        style.getSourceAs<GeoJsonSource>(FOOTPRINT_LINES)?.setGeoJson(FeatureCollection.fromFeatures(lines))
-        style.getSourceAs<GeoJsonSource>(FOOTPRINT_DOTS)?.setGeoJson(FeatureCollection.fromFeatures(dots))
-        style.getLayerAs<LineLayer>(FOOTPRINT_LINES)?.setProperties(lineColor(me))
+        fun dots(points: List<cc.hyoban.moments.footprints.TrackPoint>) =
+            points.map { Feature.fromGeometry(Point.fromLngLat(it.longitude, it.latitude)) }
+        for ((id, features) in listOf(
+            FOOTPRINT_LINES to lines(TravelMode.DRIVE), FOOTPRINT_RIDES to lines(TravelMode.CYCLE), FOOTPRINT_WALKS to lines(TravelMode.WALK),
+            FOOTPRINT_DOTS to dots(footprints.ends), FOOTPRINT_STAYS to dots(footprints.stays),
+        )) style.getSourceAs<GeoJsonSource>(id)?.setGeoJson(FeatureCollection.fromFeatures(features))
+        for (id in listOf(FOOTPRINT_LINES, FOOTPRINT_RIDES, FOOTPRINT_WALKS)) style.getLayerAs<LineLayer>(id)?.setProperties(lineColor(me))
         style.getLayerAs<CircleLayer>(FOOTPRINT_DOTS)?.setProperties(circleColor(me), circleStrokeColor(ring))
+        style.getLayerAs<CircleLayer>(FOOTPRINT_STAYS)?.setProperties(circleColor(ring), circleStrokeColor(me))
     }
 
-    LaunchedEffect(map, frameFootprints, framed, footprintLocations) {
-        if (!frameFootprints || !framed || footprintLocations.isEmpty()) return@LaunchedEffect
+    LaunchedEffect(map, frameFootprints, framed, footprintFrameLocations) {
+        if (!frameFootprints || !framed || footprintFrameLocations.isEmpty()) return@LaunchedEffect
         val (ready, _) = map?.live ?: return@LaunchedEffect
-        ready.flyToFrame(footprintLocations, frame, reduced, closest = 17.0)
+        ready.flyToFrame(footprintFrameLocations, frame, reduced, closest = 17.0)
         onFootprintsFramed()
     }
 

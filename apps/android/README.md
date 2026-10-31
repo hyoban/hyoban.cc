@@ -191,6 +191,13 @@ backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export GP
   breaks the line at fixes over 50 m uncertainty, gaps over 45 seconds, pauses and
   restarts. 导出当前原始采样 GPX exports every stored sample, with accuracy and speed in
   `https://hyoban.cc/ns/footprints/1` extensions.
+- **Moves and stays.** `TrackParts` reads the refined points of the chosen day or trip as
+  stays (five minutes or more within 120 m, a pause or a rest inside one included) and moves
+  between them, each told walking, cycling or driving by its speeds alone; slow traffic and
+  a car park's crawl stay part of the drive. The map draws a drive solid, a ride thinner, a
+  walk dotted and a stay as a ring; 足迹 → 行程分段 lists them with distance, average and top
+  speed, names a stay after one of the phone's own places within 300 m (no request leaves
+  for it), and frames one on the map when tapped.
 - **Notification.** Its icon shows the state (recording, waiting for a fix, location off).
   On Android 16 and later it asks to be a Live Update; on ColorOS that also needs
   流体云显示实时活动, linked from 足迹设置 → 状态栏显示.
