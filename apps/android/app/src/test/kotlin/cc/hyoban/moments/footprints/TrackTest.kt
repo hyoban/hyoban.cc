@@ -81,4 +81,19 @@ class TrackTest {
         writeGpx(writer, emptySequence())
         DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(InputSource(StringReader(writer.toString())))
     }
+
+    @Test fun rawExportCarriesWhatElseTheFixSaid() {
+        val point = TrackPoint(0, 31.0, 121.0, 5.0, extras = FixExtras(bearing = 90.0, verticalAccuracy = 3.5,
+            seaLevelAltitude = 8.0, provider = "gps", satellitesUsed = 27, satellitesVisible = 105, signal = 31.5))
+        val raw = StringWriter().also { writeGpx(it, sequenceOf(point), raw = true) }.toString()
+        val xml = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }.newDocumentBuilder()
+            .parse(InputSource(StringReader(raw)))
+        val ns = "https://hyoban.cc/ns/footprints/1"
+        assertEquals("90.0", xml.getElementsByTagNameNS(ns, "bearing").item(0).textContent)
+        assertEquals("27", xml.getElementsByTagNameNS(ns, "satellitesUsed").item(0).textContent)
+        assertEquals("gps", xml.getElementsByTagNameNS(ns, "provider").item(0).textContent)
+        // The ordinary export stays a plain route.
+        val plain = StringWriter().also { writeGpx(it, sequenceOf(point)) }.toString()
+        assertFalse("bearing" in plain)
+    }
 }

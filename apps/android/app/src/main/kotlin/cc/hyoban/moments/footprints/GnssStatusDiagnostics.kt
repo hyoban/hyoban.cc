@@ -20,12 +20,21 @@ internal class GnssStatusDiagnostics {
         }
     }
 
+    private val recent = ArrayDeque<Pair<Long, GnssSummary>>()
+
     fun status(summary: GnssSummary, now: Long) {
         if (lastCallback > 0) maxGap = maxOf(maxGap, now - lastCallback)
         lastCallback = now
         callbacks++
         latest = summary
+        // A batch delivers fixes up to a minute old: keep enough status to match each of them.
+        recent.addLast(now to summary)
+        while (recent.size > RECENT_LIMIT) recent.removeFirst()
     }
+
+    /** The status nearest a fix's elapsed time, if one came within [MATCH_MS] of it. */
+    fun near(elapsed: Long): GnssSummary? =
+        recent.minByOrNull { kotlin.math.abs(it.first - elapsed) }?.takeIf { kotlin.math.abs(it.first - elapsed) <= MATCH_MS }?.second
 
     /** Fields for one fix: the latest status and the callbacks since the previous fix. */
     fun take(now: Long): Array<Pair<String, Any?>> {
@@ -52,6 +61,7 @@ internal class GnssStatusDiagnostics {
     }
 
     fun reset() {
+        recent.clear()
         callbacks = 0
         lastCallback = 0
         maxGap = 0
@@ -61,6 +71,8 @@ internal class GnssStatusDiagnostics {
     companion object {
         const val SIGNAL_STATUS_MAX_AGE_MS = 15_000L
         const val MIN_SATELLITES_FOR_FIX = 4
+        private const val RECENT_LIMIT = 180
+        private const val MATCH_MS = 3_000L
 
         fun summary(status: GnssStatus): GnssSummary {
             val used = (0 until status.satelliteCount).filter(status::usedInFix)

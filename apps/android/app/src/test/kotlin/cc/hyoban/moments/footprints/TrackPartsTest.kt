@@ -59,4 +59,18 @@ class TrackPartsTest {
     }
 
     private fun TrackPoint.longitudeMetres() = (longitude - 121.0) * 95_000
+
+    @Test fun anActivityTellsADriveFromARideAtTheSameSpeed() {
+        // 20 km/h reads as a ride by speed alone; in a car it is a slow drive.
+        val slow = leg(0, 900, 20.0)
+        assertEquals(listOf(TravelMode.CYCLE), trackParts(slow).filterIsInstance<TrackMove>().map { it.mode })
+        val inCar = listOf(ActivityChange(-60_000, 0, entering = true))
+        assertEquals(listOf(TravelMode.DRIVE), trackParts(slow, inCar).filterIsInstance<TrackMove>().map { it.mode })
+    }
+
+    @Test fun speedOverrulesAnImpossibleActivity() {
+        val fast = leg(0, 900, 70.0)
+        val onFoot = listOf(ActivityChange(-60_000, 7, entering = true))
+        assertEquals(listOf(TravelMode.DRIVE), trackParts(fast, onFoot).filterIsInstance<TrackMove>().map { it.mode })
+    }
 }

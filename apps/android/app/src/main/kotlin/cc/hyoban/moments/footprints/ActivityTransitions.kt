@@ -99,6 +99,15 @@ class ActivityTransitionReceiver : BroadcastReceiver() {
             try {
                 // Keep the broadcast alive until the recorder has processed the wake-up, within its deadline.
                 withTimeoutOrNull(8_000) {
+                    // Every transition is kept, entering and leaving, by the clock's time for reading it later.
+                    val now = System.currentTimeMillis()
+                    val elapsed = SystemClock.elapsedRealtimeNanos()
+                    withContext(Dispatchers.IO) {
+                        container.footprints.saveActivities(result.transitionEvents.map { event ->
+                            ActivityChange(now - (elapsed - event.elapsedRealTimeNanos) / 1_000_000, event.activityType,
+                                event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                        })
+                    }
                     // A queued movement followed by STILL must not cold-start GPS after the user has stopped.
                     val motion = ActivityWakePolicy.latest(result.transitionEvents.mapNotNull { event ->
                         val entering = event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER

@@ -34,6 +34,8 @@ class RecordingService : Service() {
     private val store get() = (application as MomentsApplication).container.footprints
     private val diagnostics get() = (application as MomentsApplication).container.footprintDiagnostics
     private var lastActivityNanos = SystemClock.elapsedRealtimeNanos()
+    /** What last woke a resting recorder, kept with the wake in the footprints' events. */
+    private var wakeSource: String? = null
     private val runId = java.util.UUID.randomUUID().toString()
     private val manager get() = getSystemService(LocationManager::class.java)
     private val sensors get() = getSystemService(SensorManager::class.java)
@@ -103,7 +105,7 @@ class RecordingService : Service() {
         if (intent?.action == RecordingNotifications.PAUSE) {
             events.trySend {
                 diagnostic("command", "action" to "notification_pause")
-                withContext(Dispatchers.IO) { store.command("pause") }
+                withContext(Dispatchers.IO) { store.command("pause", source = "notification") }
                 stopSelfResult(latestStartId)
             }
             return START_NOT_STICKY
@@ -323,6 +325,7 @@ class RecordingService : Service() {
     /** Batching is fine, the sky is hidden: search again unbatched, and batch again after a fix. */
     private suspend fun awaitSignal() {
         diagnostic("batching_signal_lost", "sats_used" to gnss.latest?.used, "sats_visible" to gnss.latest?.visible)
+        withContext(Dispatchers.IO) { store.event("signal_lost", gnss.latest?.let { "${it.used}/${it.visible}" }) }
         stopUpdates()
         lastFix = SystemClock.elapsedRealtime()
         daily?.restartAcquisition(lastFix)
@@ -369,6 +372,14 @@ class RecordingService : Service() {
                 "activity_moving" to policy.activityMoving, "since_movement_ms" to (SystemClock.elapsedRealtime() - policy.lastMovementAt),
                 "stop_timeout_ms" to policy.stopTimeout.takeIf { policy.restReason == DailyRecordingPolicy.RestReason.STILL },
                 "last_fix_age_ms" to lastFix.takeIf { it > 0 }?.let { SystemClock.elapsedRealtime() - it }, *environment())
+            // Only resting and waking are kept: the probes in between come every few minutes all night.
+            val from = reportedPhase
+            if (policy.phase == DailyRecordingPolicy.Phase.REST && from == DailyRecordingPolicy.Phase.ACTIVE)
+                withContext(Dispatchers.IO) { store.event("rest", policy.restReason?.name?.lowercase()) }
+            if (policy.phase == DailyRecordingPolicy.Phase.ACTIVE && from != null && from != DailyRecordingPolicy.Phase.ACTIVE) {
+                withContext(Dispatchers.IO) { store.event("wake", wakeSource ?: "probe") }
+                wakeSource = null
+            }
             reportedPhase = policy.phase
         }
         if (policy.phase == DailyRecordingPolicy.Phase.REST) {
@@ -421,7 +432,10 @@ class RecordingService : Service() {
                 val woke = point != null && policy.fallbackFix(point, SystemClock.elapsedRealtime())
                 diagnostic("fallback_result", "available" to (point != null), "woke" to woke,
                     "accuracy_m" to point?.accuracy)
-                if (woke) applyDailyPolicy()
+                if (woke) {
+                    wakeSource = "network"
+                    applyDailyPolicy()
+                }
             }
         }
         try {
@@ -462,6 +476,7 @@ class RecordingService : Service() {
                 events.trySend {
                     if (motionListener !== source) return@trySend
                     diagnostic("wake", "source" to "significant_motion")
+                    wakeSource = "significant_motion"
                     motionListener = null // One-shot sensor is automatically disarmed by Android.
                     daily?.motion(SystemClock.elapsedRealtime())
                     applyDailyPolicy()
@@ -478,12 +493,25 @@ class RecordingService : Service() {
         motionListener = null
     }
 
-    private fun rawPoint(location: Location) = TrackPoint(
-        location.time, location.latitude, location.longitude, location.accuracy.toDouble(),
-        if (location.hasAltitude()) location.altitude else null,
-        speed = location.speed.toDouble().takeIf { location.hasSpeed() && it.isFinite() && it >= 0 },
-        speedAccuracy = location.speedAccuracyMetersPerSecond.toDouble().takeIf { location.hasSpeedAccuracy() && it.isFinite() && it >= 0 },
-    )
+    private fun rawPoint(location: Location): TrackPoint {
+        val satellites = gnss.near(location.elapsedRealtimeNanos / 1_000_000).takeIf { location.provider == LocationManager.GPS_PROVIDER }
+        return TrackPoint(
+            location.time, location.latitude, location.longitude, location.accuracy.toDouble(),
+            if (location.hasAltitude()) location.altitude else null,
+            speed = location.speed.toDouble().takeIf { location.hasSpeed() && it.isFinite() && it >= 0 },
+            speedAccuracy = location.speedAccuracyMetersPerSecond.toDouble().takeIf { location.hasSpeedAccuracy() && it.isFinite() && it >= 0 },
+            extras = FixExtras(
+                bearing = location.bearing.toDouble().takeIf { location.hasBearing() },
+                bearingAccuracy = location.bearingAccuracyDegrees.toDouble().takeIf { location.hasBearingAccuracy() },
+                verticalAccuracy = location.verticalAccuracyMeters.toDouble().takeIf { location.hasVerticalAccuracy() },
+                seaLevelAltitude = if (Build.VERSION.SDK_INT >= 34 && location.hasMslAltitude()) location.mslAltitudeMeters else null,
+                provider = location.provider,
+                satellitesUsed = satellites?.used,
+                satellitesVisible = satellites?.visible,
+                signal = satellites?.topCn0,
+            ),
+        )
+    }
 
     private fun usablePoint(location: Location, maxAge: Long, source: String): TrackPoint? {
         val age = SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos
@@ -512,6 +540,7 @@ class RecordingService : Service() {
                     diagnostic("passive_fix", "woke" to woke, *sampleFields(copy))
                     if (woke) {
                         diagnostic("wake", "source" to "passive_displacement")
+                        wakeSource = "passive_displacement"
                         android.util.Log.i("Footprints", "Passive displacement woke daily recording")
                         applyDailyPolicy()
                     }
@@ -648,6 +677,7 @@ class RecordingService : Service() {
                     service.lastActivityNanos = elapsedNanos
                     service.diagnostic("activity_transition", "moving" to moving, "activity" to activity)
                     // STILL is advisory: only locations confirm a stop, so a traffic light cannot pause a trip.
+                    if (moving) service.wakeSource = "activity"
                     policy.activity(moving, SystemClock.elapsedRealtime())
                     service.applyDailyPolicy()
                 } finally { done.complete(Unit) }
@@ -660,15 +690,15 @@ class RecordingService : Service() {
         fun hasPreciseLocation(context: Context) = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
         /** State is saved before starting/stopping; denied permissions cannot trap the toggle on. */
-        suspend fun control(context: Context, action: String? = null, expectedState: RecordingState? = null): Boolean {
+        suspend fun control(context: Context, action: String? = null, expectedState: RecordingState? = null, source: String = "manual"): Boolean {
             val app = context.applicationContext
             val container = (app as MomentsApplication).container
             val store = container.footprints
             val state = withContext(Dispatchers.IO) {
                 if (action != null) {
                     if (expectedState != null) {
-                        if (!store.commandIfUnchanged(action, expectedState)) return@withContext null
-                    } else store.command(action)
+                        if (!store.commandIfUnchanged(action, expectedState, source)) return@withContext null
+                    } else store.command(action, source = source)
                 }
                 store.state()
             } ?: return false

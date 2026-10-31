@@ -44,4 +44,13 @@ class GnssStatusDiagnosticsTest {
         // Without recent status nothing proves the receiver runs, so it may be the delivery.
         assertFalse(d.signalLost(22_000))
     }
+
+    @Test fun aBatchedFixTakesTheStatusOfItsOwnMoment() {
+        val d = GnssStatusDiagnostics()
+        d.status(GnssSummary(used = 20, visible = 60, topCn0 = 30.0, l5Used = 2), 10_000)
+        d.status(GnssSummary(used = 3, visible = 50, topCn0 = 18.0, l5Used = 0), 40_000)
+        assertEquals(20, d.near(11_000)?.used)
+        assertEquals(3, d.near(39_500)?.used)
+        assertNull(d.near(25_000))
+    }
 }
