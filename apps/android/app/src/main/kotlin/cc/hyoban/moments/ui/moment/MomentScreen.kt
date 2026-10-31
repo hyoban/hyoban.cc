@@ -173,7 +173,7 @@ fun MomentScreen(
     var shareTarget by remember(uid) { mutableStateOf<ShareTarget?>(null) }
     if (sharing) {
         ShareMenu(
-            onSelect = { sharing = false; shareTarget = it },
+            onSelect = { shareTarget = it },
             onDismiss = { sharing = false },
         )
     }
