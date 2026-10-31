@@ -551,9 +551,9 @@
     <string name="ledger_show_amounts">显示金额</string>
     <string name="ledger_settings_title">记账</string>
     <string name="ledger_empty_title">还没有账单</string>
-    <string name="ledger_empty_body">账单只存在这台手机上，不会同步或发布。可以从 iCost 导出的表格导入，也可以直接记一笔。</string>
+    <string name="ledger_empty_body">账单只存在这台手机上，不会同步或发布。可以从 iCost 的备份或导出导入，也可以直接记一笔。</string>
     <string name="ledger_import_icost">从 iCost 导入</string>
-    <string name="ledger_import_icost_note">选择 iCost「账单导出」得到的 .xlsx 文件</string>
+    <string name="ledger_import_icost_note">iCost 的 .backup 备份或 .xlsx 账单导出</string>
     <string name="ledger_net_assets">净资产</string>
     <string name="ledger_assets_line">资产 %1$s 负债 %2$s</string>
     <string name="ledger_not_counted">不计入净资产</string>
@@ -697,7 +697,7 @@
     <string name="ledger_csv_done">已导出</string>
     <string name="ledger_error_file">无法写入文件</string>
     <string name="ledger_error_backup">不是记账备份文件</string>
-    <string name="ledger_error_import">无法读取这个文件，请选择 iCost 导出的 .xlsx</string>
+    <string name="ledger_error_import">无法读取这个文件，请选择 iCost 的 .backup 备份或 .xlsx 账单导出</string>
     <string name="ledger_importing">正在读取…</string>
     <string name="ledger_import">导入</string>
     <string name="ledger_import_summary">%1$d 行，导入 %2$d 笔账单，新增 %3$d 个账本、%4$d 个账户。</string>
@@ -715,6 +715,13 @@
         <item quantity="other">%1$d 行无法识别：%2$s</item>
     </plurals>
     <string name="ledger_import_accounts_note">导出里没有账户余额，导入后可在账户页「校准余额」。账户类型按名称推断，可以修改。</string>
+    <string name="ledger_import_backup_note">账户余额照 iCost 设好，只记在这里的账单在此之上增减。账户类型可以修改。</string>
+    <plurals name="ledger_import_calibrated">
+        <item quantity="other">%1$d 个已有账户的余额按 iCost 校准。</item>
+    </plurals>
+    <plurals name="ledger_import_adjusted">
+        <item quantity="other">%1$d 笔余额调整已并入账户的期初余额。</item>
+    </plurals>
     <string name="ledger_merge">和现有账单合并</string>
     <string name="ledger_replace">替换现有数据</string>
     <plurals name="ledger_import_done">

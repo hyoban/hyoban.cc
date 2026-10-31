@@ -141,10 +141,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   through 全部发布到网站 (`data/store/Outside.kt`). Their only other requests are exchange
   rates, when asked, and Photon naming a bill's footprint point (`footprints/BillPlaces`),
   the point alone. Private and unpublished are two things, said 私有 and 未发布, never 仅本机.
-- The ledger replaces iCost, so what iCost's export holds must keep importing:
-  check a change to the importer against a real export with
-  `ICOST_EXPORT=<xlsx> ./gradlew :app:testDebugUnitTest --tests '*LedgerTest*'`, and never
-  commit an export.
+- The ledger replaces iCost, so what iCost's backup and export hold must keep importing:
+  check a change to the importers against real ones with
+  `ICOST_BACKUP=<backup> ICOST_EXPORT=<xlsx> ./gradlew :app:testDebugUnitTest --tests '*LedgerTest*'`
+  (with both, it also checks that a backup merged over an export-imported ledger adds only
+  what is newer), and never commit either.
 - Automatic payment categorization matches expense category names across all books present
   in the note before falling back to broad keyword rules. Past bills do not affect it.
   A matched category also selects its owning book in the bill form.

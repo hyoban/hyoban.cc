@@ -12,8 +12,8 @@ import kotlinx.coroutines.launch
  * Where what other apps share arrives, drawing nothing and leaving their task as it was.
  * A place shared from a map is handed to the app to find, and photos and videos shared from
  * the gallery are copied in while this activity may still read them; either way the app comes
- * forward on a new Moment, or on the one being written, which takes them. A spreadsheet,
- * iCost's bill export, is copied in and the app comes forward on the ledger's import. Shared to
+ * forward on a new Moment, or on the one being written, which takes them. iCost's bill export
+ * or backup is copied in and the app comes forward on the ledger's import. Shared to
  * 保存为地点 ([SAVE_ALIAS]), a place is only kept, and the map stays in front.
  */
 class ShareActivity : ComponentActivity() {
@@ -65,7 +65,7 @@ class ShareActivity : ComponentActivity() {
             return contentResolver.getType(first).let { it != null && (it.startsWith("image/") || it.startsWith("video/")) }
         }
 
-    /** A spreadsheet shared or opened with the app: iCost's bill export, for the ledger. */
+    /** A file shared or opened with the app: iCost's bill export or backup, for the ledger. */
     private fun sharedSheet(): Uri? {
         if (sharedMedia || intent.type == "text/plain") return null
         if (intent.action == Intent.ACTION_VIEW) return intent.data

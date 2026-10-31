@@ -233,11 +233,11 @@ class AppContainer(context: Context) {
     /** An iCost export shared into the app, as the app's own copy, until the ledger's import takes it. */
     val sharedExport: StateFlow<Uri?> = _sharedExport.asStateFlow()
 
-    /** Copies a spreadsheet shared from another app while the sharing still lets it be read; says so when it can't. */
+    /** Copies iCost's export or backup shared from another app while the sharing still lets it be read; says so when it can't. */
     suspend fun receiveSharedExport(uri: Uri) {
         val copy = withContext(Dispatchers.IO) {
             runCatching {
-                val file = File(sharedDirectory, "${Ulid.next()}.xlsx").also { it.parentFile?.mkdirs() }
+                val file = File(sharedDirectory, "${Ulid.next()}.icost").also { it.parentFile?.mkdirs() }
                 appContext.contentResolver.openInputStream(uri)!!.use { input -> file.outputStream().use { input.copyTo(it) } }
                 Uri.fromFile(file)
             }.getOrNull()

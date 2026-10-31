@@ -5,7 +5,9 @@ import cc.hyoban.moments.ledger.AccountKind
 import cc.hyoban.moments.ledger.Category
 import cc.hyoban.moments.ledger.CategoryType
 import cc.hyoban.moments.ledger.Flow
+import cc.hyoban.moments.ledger.ICostBackup
 import cc.hyoban.moments.ledger.ICostImport
+import cc.hyoban.moments.ledger.ICostRow
 import cc.hyoban.moments.ledger.noteWithTags
 import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.Rates
@@ -301,5 +303,155 @@ class LedgerTest {
         assertEquals("12-3", typed("12+-3"))
         assertEquals("12+0.5", typed("12+.5"))
         assertEquals(1150L, parseAmount(typed("12-0.5")))
+    }
+
+    /** A record of iCost's database, its time an offset in minutes from a fixed day. */
+    private fun record(id: String, type: Int, price: String, minutes: Int, ext: String = "{}", vararg columns: Pair<String, String?>): ICostRow =
+        mapOf(
+            "pKey" to id, "type" to "$type", "price" to price, "currency" to "CNY",
+            "time" to "${1_790_000_000_000L + minutes * 60_000L}", "remark" to "", "mutipleBookPkey" to "", "extendedData" to ext,
+        ) + columns
+
+    private fun asset(id: String, name: String, type: Int, price: String, deposit: Int = 1): ICostRow =
+        mapOf("pKey" to id, "accountName" to name, "classifyName" to name, "accountType" to "$type", "depositType" to "$deposit", "price" to price, "currency" to "CNY")
+
+    private val backup = ICostBackup.Tables(
+        books = listOf(mapOf("pKey" to "trip", "title" to "旅行账本", "currency" to "", "isArchived" to "0")),
+        defaultBook = mapOf("title" to "默认账本", "currency" to "CNY"),
+        accounts = listOf(
+            asset("cash", "现金", 0, "50"),
+            asset("bank", "储蓄卡  ", 0, "1000.5"),
+            asset("card", "信用卡", 1, "-80"),
+            asset("lent", "小明", 2, "30", deposit = 1),
+        ),
+        categories = listOf(
+            mapOf("pKey" to "food", "title" to "餐饮", "releatedTypePkey" to ""),
+            mapOf("pKey" to "snack", "title" to "零食", "releatedTypePkey" to "food"),
+            mapOf("pKey" to "salary", "title" to "工资", "releatedTypePkey" to ""),
+            mapOf("pKey" to "work", "title" to "差旅", "releatedTypePkey" to ""),
+        ),
+        tags = listOf(mapOf("pKey" to "t1", "title" to "周末")),
+        records = listOf(
+            record("r1", 1, "500", 0, columns = arrayOf("typePkey" to "salary", "accountID" to "bank")),
+            // One meal paid from two accounts, its parts in their own records.
+            record("r2", 0, "30", 10, """{"combinationFlag":1,"combinationRelatedPkey":"r2a,r2b","tagKeys":"t1"}""", "typePkey" to "snack", "remark" to "零食"),
+            record("r2a", 0, "20", 10, """{"combinationRelatedPkey":"r2"}""", "typePkey" to "snack", "accountID" to "cash"),
+            record("r2b", 0, "10", 10, """{"combinationRelatedPkey":"r2"}""", "typePkey" to "snack", "accountID" to "card"),
+            // Refunded past what it cost: the refund holds it all, 退款收入 the excess again.
+            record("r3", 0, "40", 20, """{"refundRelatedPkey":"g1","refundPrice":"45"}""", "typePkey" to "food", "accountID" to "card"),
+            record("r4", 5, "45", 30, """{"refundRelatedPkey":"g1"}""", "typePkey" to "food", "typeIconTitle" to "退款入账", "accountID" to "card"),
+            record("r5", 5, "5", 30, """{"refundRelatedPkey":"g1"}""", "typePkey" to "salary", "typeIconTitle" to "退款收入", "accountID" to "card"),
+            // A repayment with a discount iCost writes as a record of its own.
+            record("r6", 3, "50", 40, """{"discountRelatedPkey":"r7"}""", "typeIconTitle" to "还款", "fromAccountID" to "bank", "toAccountID" to "card"),
+            record("r7", 3, "2", 40, "{}", "typeIconTitle" to "还款优惠", "accountID" to "card"),
+            record("r8", 3, "30", 50, "{}", "typeIconTitle" to "转账", "fromAccountID" to "cash", "toAccountID" to "lent"),
+            // An expense claimed and paid back, in the travel book.
+            record("r9", 4, "100", 60, """{"claimId":"c1","claimStatusType":1}""", "typePkey" to "work", "mutipleBookPkey" to "trip", "accountID" to "bank", "fromAccountID" to "bank", "toAccountID" to "bank"),
+            record("r10", 4, "100", 70, """{"claimId":"c1","claimStatusType":2}""", "typeIconTitle" to "报销入账", "mutipleBookPkey" to "trip", "fromAccountID" to "bank", "toAccountID" to "bank"),
+            record("r11", 2, "12", 80, "{}", "accountID" to "cash"),
+        ),
+    )
+
+    @Test fun readsAnICostBackup() {
+        val result = ICostBackup.read(backup, zone, Rates.EMPTY) { "id${next++}" }
+        val ledger = Ledger(result.books, result.accounts, result.categories, result.txns.sortedByDescending { it.time })
+        fun account(name: String) = result.accounts.single { it.name == name }
+        fun bill(amount: Long, kind: TxnKind) = result.txns.single { it.amount == amount && it.kind == kind }
+
+        assertEquals(listOf("默认账本", "旅行账本"), result.books.map { it.name })
+        assertEquals(AccountKind.CREDIT, account("信用卡").kind)
+        assertEquals(AccountKind.PERSON, account("小明").kind)
+
+        val meal = bill(3000, TxnKind.EXPENSE)
+        assertEquals(listOf(Split(account("现金").id, 2000), Split(account("信用卡").id, 1000)), meal.splits)
+        assertEquals("零食 #周末", meal.note)
+        assertEquals("餐饮 › 零食", ledger.categoryPath(meal.category))
+
+        val refund = bill(4500, TxnKind.REFUND)
+        assertEquals(bill(4000, TxnKind.EXPENSE).id, refund.related)
+        assertTrue(result.txns.none { it.amount == 500L && it.kind == TxnKind.INCOME })
+
+        val repay = bill(5000, TxnKind.TRANSFER)
+        assertEquals(TransferType.REPAY, repay.transfer)
+        assertEquals(200L, repay.discount)
+        assertEquals(account("信用卡").id, repay.discountAccount)
+        assertEquals(TransferType.LEND, bill(3000, TxnKind.TRANSFER).transfer)
+
+        val claimed = result.txns.single { it.kind == TxnKind.EXPENSE && it.reimburse == Reimburse.DONE }
+        assertEquals(claimed.id, bill(10000, TxnKind.REIMBURSEMENT).related)
+        assertEquals(result.books.single { it.name == "旅行账本" }.id, claimed.book)
+
+        // Every account ends at iCost's balance, the adjustment taken into its opening.
+        assertEquals(mapOf("现金" to 5000L, "储蓄卡" to 100050L, "信用卡" to -8000L, "小明" to 3000L), result.accounts.associate { it.name to ledger.balances.getValue(it.id) })
+        assertEquals(8, result.txns.size)
+        assertEquals(1, result.report.adjusted)
+        assertEquals(2, result.report.folded)
+        assertTrue(result.report.skipped.isEmpty())
+
+        // Imported again beside itself, nothing is new.
+        val again = ICostBackup.read(backup, zone, Rates.EMPTY, ledger) { "id${next++}" }
+        assertEquals(0, again.txns.size)
+        assertEquals(0, again.accounts.size)
+
+        // Beside a ledger of the same bills whose accounts were never calibrated, with a bill
+        // kept only here, the accounts take iCost's balances and that bill moves its account on.
+        val here = Txn("here", result.books.first().id, TxnKind.EXPENSE, 1_800_000_000_000L, 480, 700, "CNY", account = account("现金").id)
+        val uncalibrated = ledger.copy(accounts = ledger.accounts.map { it.copy(opening = 0) }, txns = listOf(here) + ledger.txns)
+        val merged = ICostBackup.read(backup, zone, Rates.EMPTY, uncalibrated) { "id${next++}" }
+        assertEquals(0, merged.txns.size)
+        assertEquals(3, merged.report.calibrated)
+        val after = uncalibrated.copy(accounts = uncalibrated.accounts.map { old -> merged.accounts.firstOrNull { it.id == old.id } ?: old })
+        assertEquals(mapOf("现金" to 4300L, "储蓄卡" to 100050L, "信用卡" to -8000L, "小明" to 3000L), after.accounts.associate { it.name to after.balances.getValue(it.id) })
+    }
+
+    /** The whole of a real backup, when `ICOST_BACKUP` names one; it stays out of the repository. */
+    @Test fun readsARealBackup() {
+        val path = System.getenv("ICOST_BACKUP")
+        assumeTrue(path != null && File(path).exists())
+        val dir = kotlin.io.path.createTempDirectory("icost").toFile()
+        try {
+            assertTrue(ICostBackup.isBackup(File(path!!)))
+            val database = File(dir, "database.db")
+            ICostBackup.unpack(File(path), database)
+            val tables = java.sql.DriverManager.getConnection("jdbc:sqlite:${database.path}").use { connection ->
+                ICostBackup.tables { sql ->
+                    connection.createStatement().use { statement ->
+                        statement.executeQuery(sql).use { rows ->
+                            buildList {
+                                while (rows.next()) add((1..rows.metaData.columnCount).associate { rows.metaData.getColumnLabel(it) to rows.getString(it) })
+                            }
+                        }
+                    }
+                }
+            }
+            val bundled = File("src/main/assets/ledger-rates.json").readText().let(Rates::parseSeries)
+            val result = ICostBackup.read(tables, zone, Rates.EMPTY.with(bundled)) { "id${next++}" }
+            println(result.report)
+            val ledger = Ledger(result.books, result.accounts, result.categories, result.txns.sortedByDescending { it.time }, Rates.EMPTY.with(bundled))
+            result.books.forEach { book ->
+                val s = summarize(ledger.entries.filter { it.txn.book == book.id }, ledger.rates, book.currency, null, null)
+                println("${book.name}\texpense ${formatCents(s.expense)}\tincome ${formatCents(s.income)}\tunconverted ${s.unconverted}")
+            }
+            assertEquals(0, result.report.skipped.size)
+            assertEquals(0, result.report.refundsLoose)
+            assertEquals(0, result.report.reimbursementsLoose)
+            // Each account's balance is iCost's, those of one name summed.
+            val icost = tables.accounts.groupBy { it["accountName"].orEmpty().trim().ifBlank { it["classifyName"].orEmpty().trim() } }.mapValues { (_, rows) ->
+                rows.sumOf { row -> parseCents(row["price"])!!.let { if (row["price"]!!.trim().startsWith("-")) -it else it } }
+            }
+            result.accounts.forEach { account -> assertEquals(account.name, icost[account.name], ledger.balances.getValue(account.id)) }
+            // Beside a ledger imported from an export of the same bills, when `ICOST_EXPORT` names one,
+            // only what is newer than the export is new.
+            val export = System.getenv("ICOST_EXPORT")?.let(::File)?.takeIf { it.exists() } ?: return
+            val earlier = ICostImport.read(export.inputStream().use(Xlsx::read), zone, Rates.EMPTY.with(bundled)) { "id${next++}" }
+            val existing = Ledger(earlier.books, earlier.accounts, earlier.categories, earlier.txns.sortedByDescending { it.time }, Rates.EMPTY.with(bundled))
+            val merged = ICostBackup.read(tables, zone, Rates.EMPTY.with(bundled), existing) { "id${next++}" }
+            println(merged.report)
+            val since = earlier.txns.maxOf { it.time }
+            println("new before the export's last bill: ${merged.txns.count { it.time <= since }}, after: ${merged.txns.count { it.time > since }}")
+            assertEquals(0, merged.txns.count { it.time <= since })
+        } finally {
+            dir.deleteRecursively()
+        }
     }
 }
