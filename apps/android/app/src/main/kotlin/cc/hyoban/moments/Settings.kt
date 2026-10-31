@@ -79,15 +79,6 @@ class Settings(context: Context) {
         prefs.edit { putBoolean("map_fog", on) }
     }
 
-    /** Whether the Moments about tech, which the site never shows, are shown here. */
-    var showTech: Boolean by mutableStateOf(prefs.getBoolean("show_tech", false))
-        private set
-
-    fun changeShowTech(on: Boolean) {
-        showTech = on
-        prefs.edit { putBoolean("show_tech", on) }
-    }
-
     /** Whether the ledger's amounts are hidden, for opening it with others looking on. */
     var ledgerHidden: Boolean by mutableStateOf(prefs.getBoolean("ledger_hidden", false))
         private set

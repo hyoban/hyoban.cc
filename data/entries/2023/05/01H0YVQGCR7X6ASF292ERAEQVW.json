@@ -7,7 +7,7 @@
       "text": "给我的博客生成器增加了本地 md 的数据源，现在可以使从本地 md 文件通过 next.js 的静态导出生成博客，也可以使用 notion 数据库中的页面使用 ISR 生成。\nhttps://hyoban.cc/post/next-blog"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

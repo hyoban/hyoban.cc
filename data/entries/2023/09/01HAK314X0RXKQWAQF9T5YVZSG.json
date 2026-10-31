@@ -7,7 +7,7 @@
       "text": "例子可能不太好，ni 不适用于这种用法，会导致没有读到当前目录下的 .npmrc。"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 2,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

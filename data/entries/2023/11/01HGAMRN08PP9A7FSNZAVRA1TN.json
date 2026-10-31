@@ -7,7 +7,7 @@
       "text": "这个 publicDir 在 rspack/rsbuild 中对应什么配置呢？\nhttps://vitejs.dev/config/shared-options.html#publicdir"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

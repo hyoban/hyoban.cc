@@ -7,7 +7,7 @@
       "text": "这个 bug 本身也有点意思，在 react 里，文本节点和条件表达式在一起的话，最好给文本节点包上一个标签，不然在使用谷歌翻译时就会遇到问题。类似的 bad case 你可以在 https://www.npmjs.com/package/eslint-plugin-react-google-translate 看到。"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 2,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

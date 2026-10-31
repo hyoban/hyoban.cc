@@ -7,7 +7,7 @@
       "text": "还可以 check 是否能访问 secret，if: github.secret_source != 'None'"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 2,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

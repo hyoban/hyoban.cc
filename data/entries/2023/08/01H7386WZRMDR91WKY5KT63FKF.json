@@ -7,7 +7,7 @@
       "text": "tsconfig 中关于类型检查的 option\n\n1/n strict 等于一系列类型检查的合集，推荐尽量保持开启。alwaysStrict noImplicitAny noImplicitThis strictBindCallApply strictFunctionTypes strictNullChecks strictPropertyInitialization useUnknownInCatchVariables"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

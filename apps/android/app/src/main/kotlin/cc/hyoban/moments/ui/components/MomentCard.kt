@@ -172,7 +172,7 @@ private fun MomentBubble(
                 (if (moment.media.isNotEmpty()) Modifier.fillMaxWidth() else Modifier).padding(start = Space.m, end = Space.m, top = Space.s, bottom = Space.s),
                 verticalArrangement = Arrangement.spacedBy(Space.xs),
             ) {
-                val private = (moment.hidden || moment.topic == "tech").takeIf { it }?.let { stringResource(R.string.visibility_private) }
+                val private = moment.hidden.takeIf { it }?.let { stringResource(R.string.visibility_private) }
                 val parts = moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
                 // The time in the figures' monospace, as the records bubbles beside it have theirs.
                 val time = formatTime(moment.occurredAt)
@@ -257,8 +257,8 @@ private fun TrailingFoot(
 fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRecord?, showDate: Boolean = false, hidePlace: String? = null) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         val time = listOfNotNull(if (showDate) formatDate(moment.occurredAt) else null, formatTime(moment.occurredAt)).joinToString(" ")
-        // Private (hidden, or about tech) is said in the faint line itself, as the design has it.
-        val private = (moment.hidden || moment.topic == "tech").takeIf { it }?.let { stringResource(R.string.visibility_private) }
+        // Private is said in the faint line itself, as the design has it.
+        val private = moment.hidden.takeIf { it }?.let { stringResource(R.string.visibility_private) }
         val parts = listOfNotNull(time.ifEmpty { null }) + moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
         Text(
             parts.joinToString(" "),

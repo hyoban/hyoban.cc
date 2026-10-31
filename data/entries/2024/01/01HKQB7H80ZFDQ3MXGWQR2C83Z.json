@@ -7,7 +7,7 @@
       "text": "感觉学到了一个 jotai 的小技巧，write 这样写 (get, _set, anAtom: AnyAtom) =&gt; get(anAtom), 然后 setSelf 就变成了一个 writeGetter。\n它是没有响应式的 get，可以用来读一些不想建立响应式的 atom。\nhttps://github.com/jotaijs/jotai-cache/pull/7/files"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

@@ -7,7 +7,7 @@
       "text": "我也很无奈，用 FlatList 就会路由跳转很慢，用 FlashList 就会在向下滚动时出现白屏，好像无解了。\n\nhttps://github.com/hyoban/follow-app/commit/10d9c9da295fc438d0fd25fbe0f065dd8088f09b\n\nhttps://github.com/hyoban/follow-app/commit/c9c6882a7be90f07a51d94db2405d0668fc31c3a"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

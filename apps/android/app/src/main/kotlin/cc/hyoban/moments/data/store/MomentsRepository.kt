@@ -34,8 +34,8 @@ import java.security.MessageDigest
 
 /**
  * The records the screens show: read from the [DataStore] first, then brought up to
- * date from the API. Every published Moment is offered, a private one marked so by the screens,
- * those about tech only when [showTech] says so. Beside them, the Moments written on this phone and the
+ * date from the API. Every published Moment is offered, a private one marked so by the screens.
+ * Beside them, the Moments written on this phone and the
  * places they made, kept in [local], a store of their own that no sync or change of
  * API touches, with the site's Moments changed or deleted on the phone. None of it
  * reaches the API until [publishPending] sends it all through [writer], as [pending]
@@ -47,7 +47,6 @@ class MomentsRepository(
     private val io: CoroutineDispatcher = Dispatchers.IO,
     private val local: DataStore? = null,
     private val writer: MomentsWriter? = null,
-    private var showTech: Boolean = false,
     /** The ledger's public bills and the footprints' public spans, which publish with the Moments. */
     private val outside: OutsideChanges? = null,
 ) {
@@ -239,12 +238,6 @@ class MomentsRepository(
     private fun beyondFirstShape(entry: kotlinx.serialization.json.JsonObject): Boolean {
         val parts = entry["parts"] as? kotlinx.serialization.json.JsonObject ?: return true
         return !Entries.isMoment(entry) || parts.keys.any { it !in FIRST_SHAPE_PARTS }
-    }
-
-    /** Shows the Moments about tech beside what the site shows, or leaves them out again. */
-    suspend fun changeShowTech(on: Boolean) = lock.withLock {
-        showTech = on
-        publish()
     }
 
     /**
@@ -679,8 +672,8 @@ class MomentsRepository(
         _places.value = phonePlaces + apiPlaces + changedPlaces
     }
 
-    // A private one is the phone's to see, marked so; one about tech only when asked for.
-    private fun isShown(moment: MomentRecord) = moment.published != null && (showTech || moment.topic != "tech")
+    // A private one is the phone's to see, marked so.
+    private fun isShown(moment: MomentRecord) = moment.published != null
 
     /** The trips the screens show: the API's, with the phone's changes to their names and days. */
     private fun showTrips() {

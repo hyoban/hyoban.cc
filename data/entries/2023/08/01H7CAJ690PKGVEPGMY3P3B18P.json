@@ -7,7 +7,7 @@
       "text": "Published a new post on my blockchain blog: 如何让 fetch 变的类型安全. Check it out now! https://blog.hyoban.cc/type-safe-fetch via @_xLog"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 2,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

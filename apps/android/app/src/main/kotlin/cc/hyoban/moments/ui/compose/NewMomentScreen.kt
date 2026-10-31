@@ -135,8 +135,6 @@ import androidx.compose.foundation.layout.FlowRow
 import cc.hyoban.moments.ui.design.FilterChip
 import cc.hyoban.moments.ui.design.FilterChipDefaults
 import androidx.compose.ui.semantics.contentDescription
-import cc.hyoban.moments.data.spec.MomentTopic
-import cc.hyoban.moments.ui.format.topicLabel
 import cc.hyoban.moments.data.spec.LocalMedia
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
@@ -239,9 +237,6 @@ fun NewMomentScreen(
     /** Whether 美食 was added from the 加一项 row: open for a Moment that has a meal. */
     var withFood by rememberSaveable { mutableStateOf(originalFood != null) }
     val food = foodOf(dishes, verdict, amount, people, originalFood)
-    var topic by rememberSaveable { mutableStateOf(original?.topic) }
-    /** Whether 类型 was added from the 加一项 row: open for a Moment that has one. */
-    var withTopic by rememberSaveable { mutableStateOf(original?.topic != null) }
     /** Private: kept on the phone and in the API for its owner, never on the site. */
     var private by rememberSaveable { mutableStateOf(original?.hidden ?: false) }
     val openedAt = remember { OffsetDateTime.now() }
@@ -392,9 +387,9 @@ fun NewMomentScreen(
     val momentChanged = original == null ||
         text != original.text || photos != originalMedia.keys.toList() || utility.intersect(photos.toSet()) != originalUtility ||
         chosenTime != originalTime || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || food != originalFood ||
-        topic != original.topic || private != original.hidden
+        private != original.hidden
     // What leaving would lose: anything written, or, for a Moment being changed, any change.
-    val changed = if (original == null) (withMoment && (written || food != null || topic != null)) || billWritten else momentChanged || newKind != null
+    val changed = if (original == null) (withMoment && (written || food != null)) || billWritten else momentChanged || newKind != null
     val leave = { if (changed) confirmingDiscard = true else onBack() }
     BackHandler(enabled = changed && !saving) { confirmingDiscard = true }
 
@@ -410,7 +405,7 @@ fun NewMomentScreen(
             try {
                 withContext(NonCancellable) {
                     val moment = if (withMoment) {
-                        val (moment, newPlace) = buildMoment(context, container, text, photos, utility, stills, infos, time, place, food, topic, private, original, originalMedia)
+                        val (moment, newPlace) = buildMoment(context, container, text, photos, utility, stills, infos, time, place, food, private, original, originalMedia)
                         when {
                             original == null -> container.addLocal(moment, newPlace)
                             momentChanged -> container.updateLocal(moment, newPlace)
@@ -579,10 +574,6 @@ fun NewMomentScreen(
                             }
                         }
                         AddChip(withBill, AppIcons.Receipt, stringResource(R.string.section_bill), "add_bill") { withBill = !withBill }
-                        AddChip(withTopic, AppIcons.Category, stringResource(R.string.section_topic), "add_topic") {
-                            withTopic = !withTopic
-                            if (!withTopic) topic = null
-                        }
                     }
                     if (withFood) FoodGroup(
                         dishes = dishes,
@@ -599,7 +590,6 @@ fun NewMomentScreen(
                         if (withMoment) PageCaption(stringResource(R.string.section_bill))
                         BillFields(container, ledger, bill, billAt, null, null, withMoment = withMoment, keypad = keypad)
                     }
-                    if (withMoment && withTopic) TopicGroup(topic) { topic = it }
                     // Deleting is rare, so it waits down here rather than over the Moment; its snackbar can undo it.
                     if (original != null && publishing == null) {
                         PageRows(Modifier.padding(top = Space.xl)) { shapes ->
@@ -945,33 +935,6 @@ private fun Visibility(private: Boolean, onPrivate: (Boolean) -> Unit) {
     }
 }
 
-/** What the Moment is mostly about, one of the chips; the chosen one tapped again leaves it unset. */
-@Composable
-private fun TopicGroup(topic: String?, onTopic: (String?) -> Unit) {
-    val label = stringResource(R.string.section_topic)
-    PageCaption(label)
-    FlowRow(
-        Modifier.fillMaxWidth().padding(horizontal = Space.gutter).semantics { contentDescription = label },
-        horizontalArrangement = Arrangement.spacedBy(Space.s),
-        verticalArrangement = Arrangement.spacedBy(Space.s),
-    ) {
-        MomentTopic.entries.forEach { entry ->
-            val selected = entry.value == topic
-            FilterChip(
-                selected = selected,
-                onClick = { onTopic(if (selected) null else entry.value) },
-                label = { Text(stringResource(topicLabel(entry))) },
-                leadingIcon = if (selected) {
-                    { Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
-                } else {
-                    null
-                },
-                modifier = Modifier.testTag("topic_${entry.value}"),
-            )
-        }
-    }
-}
-
 /**
  * What was eaten, rows on the page: the dishes, how they were, one of three in a segmented control
  * that a second tap clears, and what the meal cost and how many it fed, with each one's share.
@@ -1126,7 +1089,6 @@ private suspend fun buildMoment(
     time: OffsetDateTime,
     place: PlaceChoice,
     food: MomentFood?,
-    topic: String?,
     private: Boolean,
     original: MomentRecord? = null,
     originalMedia: Map<Uri, MomentMedia> = emptyMap(),
@@ -1173,7 +1135,7 @@ private suspend fun buildMoment(
         is PlaceChoice.New -> listOfNotNull(newPlace?.first)
         PlaceChoice.None -> emptyList()
     }
-    val moment = original?.copy(occurredAt = stamp(time), places = placeIds, text = text.trim(), media = media, food = food, topic = topic, hidden = private, updatedAt = now)
+    val moment = original?.copy(occurredAt = stamp(time), places = placeIds, text = text.trim(), media = media, food = food, hidden = private, updatedAt = now)
         ?: MomentRecord(
             uid = Ulid.next(),
             occurredAt = stamp(time),
@@ -1182,7 +1144,6 @@ private suspend fun buildMoment(
             media = media,
             food = food,
             hidden = private,
-            topic = topic,
             createdAt = now,
             updatedAt = now,
         )

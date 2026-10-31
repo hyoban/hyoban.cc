@@ -8,7 +8,7 @@ import type { Moment, MomentTrip } from './moments/index.ts'
 
 type ReviewMoment = Pick<
   Moment,
-  'dateKey' | 'id' | 'locations' | 'media' | 'occurredAt' | 'occurredLabel' | 'text' | 'topic'
+  'dateKey' | 'id' | 'locations' | 'media' | 'occurredAt' | 'occurredLabel' | 'text'
 >
 type ReviewTrip = Pick<
   MomentTrip,

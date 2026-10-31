@@ -28,7 +28,7 @@ data/
 - A **place** has a name, WGS-84 coordinates, a kind, the province, city and district it is
   in (`vp run places:locate`), an optional note, and for a train's end its `station`.
 - Each record is public or private: its own `visibility`, else its container's, else its
-  plugin's default (a bill is private), else private for tech.
+  plugin's default (a bill is private), else public.
 
 Schema version 3 moved `data/` from the first shape (`moments/`, `trips/`) to this one.
 `vp run data:migrate` shows such a move, `--write` makes it and `--rollback --write` undoes

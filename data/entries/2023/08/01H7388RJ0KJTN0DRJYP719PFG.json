@@ -7,7 +7,7 @@
       "text": "6/n noImplicitReturns 帮助你检查函数中的每一条路径的返回值都和函数定义的返回值类型匹配"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 4,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

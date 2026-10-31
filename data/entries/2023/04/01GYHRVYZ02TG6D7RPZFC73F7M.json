@@ -7,7 +7,7 @@
       "text": "3 / 3 然后意识到 Next.js 现在支持静态导出，就把博客按这种方式部署，需要改动的代码就只有配置项而已。"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 4,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

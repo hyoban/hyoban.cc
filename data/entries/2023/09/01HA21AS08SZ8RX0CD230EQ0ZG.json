@@ -7,7 +7,7 @@
       "text": "一个我觉得还蛮好的 VS Code 设置项。因为我不太想在编辑器左上角展示面包屑，又想知道当前文件所处路径。\n\n\"breadcrumbs.enabled\": false,\n\"window.title\": \"${activeFolderLong}${separator}${rootName}\","
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

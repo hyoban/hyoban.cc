@@ -7,7 +7,7 @@
       "text": "用了 tailwind 提供的 extractor，不用正则匹配了，应该更准确了"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

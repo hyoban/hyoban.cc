@@ -7,7 +7,7 @@
       "text": "alias o='f(){ open -n -a \"Google Chrome\" --args --incognito \"http://localhost:$@\"; unset -f f; }; f'\nalias od='open -n -a \"Google Chrome\" --args --incognito \"http://localhost:5173\"'\n\n搞两个快捷指令来快捷打开浏览器"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

@@ -219,20 +219,6 @@ data class MomentMedia(
 }
 
 /** How something eaten turned out, as the spec names it. */
-/** What a Moment is mostly about; a tech one the site never shows. */
-enum class MomentTopic(val value: String) {
-    TECH("tech"),
-    TRAVEL("travel"),
-    FOOD("food"),
-    CAR("car"),
-    PHOTO("photo"),
-    LIFE("life");
-
-    companion object {
-        fun of(value: String?): MomentTopic? = entries.firstOrNull { it.value == value }
-    }
-}
-
 enum class FoodVerdict(val value: String) {
     GOOD("good"),
     OK("ok"),
@@ -291,10 +277,8 @@ data class MomentRecord(
     val places: List<String> = emptyList(),
     val text: String,
     val hidden: Boolean = false,
-    /** What it is about, like `travel`; a `tech` one is never shown, as if hidden. */
-    val topic: String? = null,
     val media: List<MomentMedia> = emptyList(),
-    /** What was eaten or drunk, whatever its topic. */
+    /** What was eaten or drunk. */
     val food: MomentFood? = null,
     val trip: String? = null,
     /** Where it sits among its day's Moments when their times don't say, lower first. */

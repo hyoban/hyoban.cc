@@ -7,7 +7,7 @@
       "text": "Filter 是用的 @shirouzu_ref 的 https://github.com/lawvs/fn-sphere\nAI 理解起来毫无压力，一句话就把前后端都集成了。"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 2,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

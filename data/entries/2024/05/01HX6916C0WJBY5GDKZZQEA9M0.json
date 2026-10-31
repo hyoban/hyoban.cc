@@ -7,7 +7,7 @@
       "text": "我不太能适应 prettier 强制决定代码什么时候该换行，主要是它的决定在不少的场景下不会让代码变得更好看。"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 2,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

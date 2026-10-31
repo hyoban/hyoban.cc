@@ -7,7 +7,7 @@
       "text": "顺便一提，vercel 部署 hono 不支持 serve static，必须把静态文件全部放在 public 文件夹下。\nhttps://vercel.com/docs/frameworks/backend/hono#serving-static-assets"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 3,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

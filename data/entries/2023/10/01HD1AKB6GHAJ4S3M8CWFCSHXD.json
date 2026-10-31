@@ -7,7 +7,7 @@
       "text": "我觉得禁止掉 export default 和 export * from xxx 让重构变得方便了不少，基本上就是可以用 f2 和重构工具随便改的程度。"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

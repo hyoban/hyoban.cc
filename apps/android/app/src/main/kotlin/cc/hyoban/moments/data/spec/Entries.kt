@@ -29,6 +29,7 @@ enum class Visibility(val value: String) {
 }
 
 object Entries {
+    // The `topic` the spec no longer has is among the keys, so a record that still carries one drops it.
     private val momentKeys = setOf(
         "uid", "occurredAt", "places", "text", "hidden", "topic", "media", "food", "trip", "order",
         "published", "createdAt", "updatedAt", PART_VISIBILITY,
@@ -81,7 +82,6 @@ object Entries {
                 parts.forEach { (plugin, part) -> put(plugin, part) }
             })
             if (moment.hidden) put("visibility", Visibility.PRIVATE.value)
-            moment.topic?.let { put("topic", it) }
             moment.order?.let { put("order", it) }
             record["published"]?.let { put("published", it) }
             put("createdAt", moment.createdAt)
@@ -115,7 +115,6 @@ object Entries {
             put("text", text["text"] ?: JsonPrimitive(""))
             // "visibility" on parts is noted below rather than lost.
             put("hidden", entry.visibility() == Visibility.PRIVATE)
-            entry["topic"]?.let { put("topic", it) }
             put("media", JsonArray(media?.get("items")?.jsonArray?.map { item -> JsonObject(item.jsonObject - "point") }.orEmpty()))
             if (food != null) {
                 put("food", buildJsonObject {

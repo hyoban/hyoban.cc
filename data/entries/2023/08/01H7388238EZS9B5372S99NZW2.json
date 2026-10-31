@@ -7,7 +7,7 @@
       "text": "4/n exactOptionalPropertyTypes 帮助你区别显式参数传入值为 undefined 的 key 与不传该 key，但是很多依赖库的里的类型定义没有区别它，所以开启会很麻烦"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 2,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

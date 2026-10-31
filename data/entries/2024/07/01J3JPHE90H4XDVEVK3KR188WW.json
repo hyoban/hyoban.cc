@@ -7,7 +7,7 @@
       "text": "无法导入 hono client，需要用 require\nhttps://github.com/honojs/hono/issues/1773"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 3,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

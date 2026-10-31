@@ -7,7 +7,7 @@
       "text": "You can use GitHub-style alerts on Nextra with remark-github-alerts.\n\nhttps://remark-github-alerts.vercel.app"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

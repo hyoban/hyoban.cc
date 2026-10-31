@@ -7,7 +7,7 @@
       "text": "项目开源在这里，不过我几乎没咋看过代码，算是用 AI 写代码的一个试验场，可能会比较乱。https://github.com/hyoban/better-github-feed"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 3,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

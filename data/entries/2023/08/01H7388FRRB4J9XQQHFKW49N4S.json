@@ -7,7 +7,7 @@
       "text": "5/n noUncheckedIndexedAccess 为你提供访问未知 key 的类型安全，开启后对于 [propName: string]: string 的类型定义，访问未知 key 拿到的值类型会是 string | undefined，这个效果同样作用于数组下标的访问"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 3,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

@@ -8,7 +8,6 @@
     }
   },
   "visibility": "private",
-  "topic": "car",
   "order": 2,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

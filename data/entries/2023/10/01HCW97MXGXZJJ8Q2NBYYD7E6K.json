@@ -7,7 +7,7 @@
       "text": "我觉得 ESLint 太影响 VS Code 的编辑体验了，我打算给全部 Vite 的项目都用上 https://vite-plugin-checker.netlify.app/，然后关掉 ESLint 插件一段时间试试。"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

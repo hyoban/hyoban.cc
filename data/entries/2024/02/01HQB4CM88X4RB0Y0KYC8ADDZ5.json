@@ -7,7 +7,7 @@
       "text": "有的时候，你会需要一个空的 ts type import 来修复打包时候类型检查的报错。比如常见的 import type { ESLintUtils } from 'typescript-eslint/utils' 来解决 TS2742 error"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 3,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

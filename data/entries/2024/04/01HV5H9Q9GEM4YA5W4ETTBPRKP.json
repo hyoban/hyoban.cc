@@ -7,7 +7,7 @@
       "text": "将 @_xLog 的代码高亮迁移到了 http://shiki.style，同时支持了自定义代码主题，目前可以在 http://xlog.page 预览。\n\nhttps://github.com/Crossbell-Box/xLog/pull/1692"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

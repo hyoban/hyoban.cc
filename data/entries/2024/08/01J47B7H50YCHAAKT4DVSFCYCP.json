@@ -7,7 +7,7 @@
       "text": "特别感谢 @YukiHakarigoto 拉我，我可以跑 app build 到我的真机设备上了。"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

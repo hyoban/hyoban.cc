@@ -7,7 +7,7 @@
       "text": "I really like the experience of release-it and @antfu7's release workflow, so I try to integrate them. I've got everything I wanted in my publishing workflow now, and I welcome more people to use it and get feedback."
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

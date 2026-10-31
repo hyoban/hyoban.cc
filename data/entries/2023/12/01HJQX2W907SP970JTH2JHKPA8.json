@@ -7,7 +7,7 @@
       "text": "说起来，@_xLog 现在就有这个功能，切换语言，文章内容就会自动显示翻译后的"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

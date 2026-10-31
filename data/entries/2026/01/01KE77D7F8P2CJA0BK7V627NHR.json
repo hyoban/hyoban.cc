@@ -7,7 +7,7 @@
       "text": "写了篇在 RSC 中使用 react-i18n 的文章。和 https://next-intl.dev 很相似，好处是可以随时切换到 CSR。\nhttps://github.com/hyoban/react-i18n-rsc"
     }
   },
-  "topic": "tech",
+  "visibility": "private",
   "order": 1,
   "published": {
     "at": "2026-07-30T08:12:13+08:00"

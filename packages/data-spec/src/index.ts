@@ -110,15 +110,9 @@ export const momentMediaSchema = z.discriminatedUnion('type', [
   }),
 ])
 
-/**
- * What a Moment is about: code and software; a trip or somewhere been to; eating; the car,
- * its charging and upkeep; a camera and taking photos; or the rest of life.
- */
-export const momentTopicSchema = z.enum(['tech', 'travel', 'food', 'car', 'photo', 'life'])
-
-/** Whether the site shows a Moment: published, not hidden and not about tech. */
-export function isMomentShown(moment: Pick<MomentRecord, 'published' | 'hidden' | 'topic'>) {
-  return Boolean(moment.published) && !moment.hidden && moment.topic !== 'tech'
+/** Whether the site shows a Moment: published and not hidden. */
+export function isMomentShown(moment: Pick<MomentRecord, 'published' | 'hidden'>) {
+  return Boolean(moment.published) && !moment.hidden
 }
 
 /** A price in yuan, as paid or got back. */
@@ -128,7 +122,7 @@ const price = z.number().nonnegative()
 export const foodVerdictSchema = z.enum(['good', 'ok', 'bad'])
 
 /**
- * What was eaten or drunk in a Moment, whatever its topic: a trip's day can name its
+ * What was eaten or drunk in a Moment, whatever else it is about: a trip's day can name its
  * meal too. Told by the Moment rather than its place, since a place is eaten at more
  * than once and most meals are only placed in their city.
  */
@@ -153,11 +147,6 @@ export const momentRecordSchema = z
     /** The words as written, with their line breaks. */
     text: z.string(),
     hidden: z.boolean().default(false),
-    /**
-     * What it is mostly about. A tech one is never shown, like a hidden one; `hidden` is
-     * kept for whatever else shouldn't be, a Moment posted twice.
-     */
-    topic: momentTopicSchema.optional(),
     media: z
       .array(momentMediaSchema)
       .refine((media) => unique(media.map((item) => item.uid)), 'Duplicate media uid.')
@@ -327,7 +316,6 @@ export const manifestSchema = z.looseObject({
 export type MomentRecord = z.output<typeof momentRecordSchema>
 export type MomentRecordInput = z.input<typeof momentRecordSchema>
 export type MomentMedia = MomentRecord['media'][number]
-export type MomentTopic = z.output<typeof momentTopicSchema>
 export type MomentFood = z.output<typeof momentFoodSchema>
 export type FoodVerdict = z.output<typeof foodVerdictSchema>
 export type PublishedImage = z.output<typeof publishedImageSchema>
