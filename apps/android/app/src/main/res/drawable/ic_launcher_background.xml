@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A soft blue behind the cat. -->
+<!-- A deep night blue behind the cat, dark enough to keep apart from blue wallpapers. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#4F74B8" />
+    <solid android:color="#2B3A5C" />
 </shape>
