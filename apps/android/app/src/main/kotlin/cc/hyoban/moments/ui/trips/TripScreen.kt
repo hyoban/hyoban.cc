@@ -372,7 +372,7 @@ private fun TripFacets(
 }
 
 /** The great-circle distance between two points, in kilometres. */
-private fun haversineKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
+internal fun haversineKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
     val dLat = Math.toRadians(lat2 - lat1)
     val dLng = Math.toRadians(lng2 - lng1)
     val a = kotlin.math.sin(dLat / 2).let { it * it } +

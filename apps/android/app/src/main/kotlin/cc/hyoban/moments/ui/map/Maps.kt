@@ -8,6 +8,20 @@ import cc.hyoban.moments.ui.theme.tokens
 import android.graphics.PointF
 import android.graphics.RectF
 import android.util.DisplayMetrics
+import cc.hyoban.moments.ui.design.AppIcons
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.graphics.drawscope.translate
+import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.vector.VectorPainter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.unit.Density
+import org.maplibre.android.style.layers.PropertyFactory.circleStrokeOpacity
+import org.maplibre.android.style.layers.PropertyFactory.textOpacity
 import android.view.Gravity
 import android.view.ViewGroup
 import androidx.compose.animation.core.animate
@@ -163,6 +177,8 @@ private const val PLACES_SHADOW = "places-shadow"
 private const val PLACES_COUNT = "places-count"
 private const val PLACES_NAMES = "places-names"
 private const val PLACES_BLOCK = "places-block"
+/** The chosen place's pin, drawn on its dot. */
+private const val PLACES_PIN = "places-pin"
 private const val DOT_BLOCK = "dot-block"
 private const val DOT_BLOCK_SIZE = 32
 
@@ -687,8 +703,10 @@ data class MapRoute(val id: String, val segments: List<RouteSegment>)
 private const val DOT_SINGLE = 7f
 private const val DOT_MANY = 9f
 private const val DOT_CLUSTER = 12f
-/** How much larger the chosen dot is drawn. */
-private const val DOT_GROWTH = 0.25f
+/** The chosen dot's radius, a 26 pin with the pin drawn on it. */
+private const val DOT_CHOSEN = 13f
+/** How large the pin on the chosen dot is drawn. */
+private val PIN_ICON = 14.dp
 /** How much of the map the place's sheet covers when it first rises, as the map tab peeks it. */
 internal const val PLACE_SHEET_SHARE = 0.55f
 
@@ -712,11 +730,13 @@ private const val CLUSTER_MAX_ZOOM = 9
 private const val CLUSTER_OPEN_MAX_ZOOM = 11.0
 // The routes: lines under the places in the site's ink, which read now the basemap's
 // streets are gone and its roads faded; a little bolder than the site's for a phone, and
-// widening as the map zooms in. The one tapped stands out, the rest fall back.
-internal const val ROUTE_OPACITY = 0.6f
+// widening as the map zooms in, fainter than the footprints. The one tapped stands out, the
+// rest fall back, and the places with them.
+internal const val ROUTE_OPACITY = 0.4f
 private const val ROUTE_WIDTH = 2f
 private const val ROUTE_LIFTED_WIDTH = 3.5f
-private const val ROUTE_DIMMED_OPACITY = 0.15f
+private const val ROUTE_DIMMED_OPACITY = 0.18f
+private const val PLACES_DIMMED_OPACITY = 0.45f
 
 /** How close the map comes to the phone's place: a town and what is around it. */
 private const val NEARBY_ZOOM = 10.0
@@ -814,6 +834,7 @@ fun PlacesMap(
     val shade = Color.Black.toArgb()
     val unknown = tokens.borderStrong.toArgb()
     val density = LocalDensity.current
+    val pin = rememberVectorPainter(AppIcons.Pin)
     // Far enough round a place that the dot takes the 48dp Material 3 has anything tapped take.
     val reach = with(density) { TAP_REACH.toPx() }
     val routeReach = with(density) { 22.dp.toPx() }
@@ -893,6 +914,15 @@ fun PlacesMap(
                 textColor(onDot),
                 textAllowOverlap(true),
                 textIgnorePlacement(true),
+            ),
+        )
+        style.addImage(PLACES_PIN, pinImage(pin, density))
+        style.addLayer(
+            SymbolLayer(PLACES_PIN, PLACES).withFilter(eq(get("id"), literal(""))).withProperties(
+                iconImage(PLACES_PIN),
+                iconAllowOverlap(true),
+                iconIgnorePlacement(true),
+                iconOpacity(0f),
             ),
         )
         // Each place's name under its dot, at any zoom, in the ink and halo of the place picker's
@@ -1013,7 +1043,7 @@ fun PlacesMap(
 
     // A dedicated pair of sources on the retained main map. Empty data hides the layer;
     // updates preserve the camera, the place markers and the existing route interactions.
-    LaunchedEffect(map, footprints, me, ring) {
+    LaunchedEffect(map, footprints, ink, ring) {
         val (_, style) = map?.live ?: return@LaunchedEffect
         // One source and layer per way of going, each with constant paint: a drive solid, a ride
         // thinner, a walk dotted; stays a larger ring, the inverse of the line's end dots.
@@ -1044,9 +1074,10 @@ fun PlacesMap(
             FOOTPRINT_LINES to lines(TravelMode.DRIVE), FOOTPRINT_RIDES to lines(TravelMode.CYCLE), FOOTPRINT_WALKS to lines(TravelMode.WALK),
             FOOTPRINT_DOTS to dots(footprints.ends), FOOTPRINT_STAYS to dots(footprints.stays),
         )) style.getSourceAs<GeoJsonSource>(id)?.setGeoJson(FeatureCollection.fromFeatures(features))
-        for (id in listOf(FOOTPRINT_LINES, FOOTPRINT_RIDES, FOOTPRINT_WALKS)) style.getLayerAs<LineLayer>(id)?.setProperties(lineColor(me))
-        style.getLayerAs<CircleLayer>(FOOTPRINT_DOTS)?.setProperties(circleColor(me), circleStrokeColor(ring))
-        style.getLayerAs<CircleLayer>(FOOTPRINT_STAYS)?.setProperties(circleColor(ring), circleStrokeColor(me))
+        // In the ink, as a track is drawn everywhere, over the routes' fainter ink.
+        for (id in listOf(FOOTPRINT_LINES, FOOTPRINT_RIDES, FOOTPRINT_WALKS)) style.getLayerAs<LineLayer>(id)?.setProperties(lineColor(ink))
+        style.getLayerAs<CircleLayer>(FOOTPRINT_DOTS)?.setProperties(circleColor(ink), circleStrokeColor(ring))
+        style.getLayerAs<CircleLayer>(FOOTPRINT_STAYS)?.setProperties(circleColor(ring), circleStrokeColor(ink))
     }
 
     LaunchedEffect(map, frameFootprints, framed, footprintFrameLocations) {
@@ -1069,6 +1100,13 @@ fun PlacesMap(
         val sweep = (sweepAsked != swept[0] || opening) && !reduced
         swept[0] = sweepAsked
         showFog(map, fog, fogRegionsNow, ink, sweep)
+    }
+
+    // Each place in its first year's colour, set again as the places come in: the map is kept
+    // between visits, built before they may have loaded.
+    LaunchedEffect(map, colors, unknown) {
+        val (_, style) = map?.live ?: return@LaunchedEffect
+        style.getLayerAs<CircleLayer>(PLACES)?.setProperties(circleColor(yearColor(colors, unknown)))
     }
 
     LaunchedEffect(map, routes) {
@@ -1134,15 +1172,20 @@ fun PlacesMap(
             gt(get("count"), literal(1)), literal(DOT_MANY),
             literal(DOT_SINGLE),
         )
+        // The chosen dot grows to a pin with the pin drawn on it, its number giving way to it.
+        style.getLayerAs<SymbolLayer>(PLACES_COUNT)?.setFilter(not(chosen))
+        style.getLayerAs<SymbolLayer>(PLACES_PIN)?.setFilter(chosen)
+        fun toward(from: Expression, to: Float, t: Float) = sum(product(from, literal(1f - t)), literal(to * t))
         fun draw(t: Float) {
-            val grown = switchCase(chosen, product(radius, literal(1f + DOT_GROWTH * t)), letGo, product(radius, literal(1f + DOT_GROWTH * (1f - t))), radius)
+            val grown = switchCase(chosen, toward(radius, DOT_CHOSEN, t), letGo, toward(radius, DOT_CHOSEN, 1f - t), radius)
             style.getLayerAs<CircleLayer>(PLACES)?.setProperties(
                 circleRadius(grown),
-                circleStrokeWidth(switchCase(chosen, literal(3f), literal(2f))),
-                circleStrokeColor(switchCase(chosen, color(ink), color(ring))),
+                circleStrokeWidth(2f),
+                circleStrokeColor(ring),
                 circleSortKey(switchCase(chosen, literal(1f), literal(0f))),
             )
             style.getLayerAs<CircleLayer>(PLACES_SHADOW)?.setProperties(circleRadius(sum(grown, literal(3f))))
+            style.getLayerAs<SymbolLayer>(PLACES_PIN)?.setProperties(iconOpacity(t))
         }
         val place = places.firstOrNull { it.id == selected }?.place?.latLng
         val flown = flownTo[0] == selected
@@ -1218,15 +1261,30 @@ fun PlacesMap(
         fun width(lifted: String?) =
             if (lifted == null) literal(ROUTE_WIDTH) else switchCase(eq(get("trip"), literal(lifted)), literal(ROUTE_LIFTED_WIDTH), literal(ROUTE_WIDTH))
         fun between(from: Expression, to: Expression, t: Float) = sum(product(from, literal(1f - t)), product(to, literal(t)))
+        fun places(lifted: String?) = if (lifted == null) 1f else PLACES_DIMMED_OPACITY
         fun draw(t: Float) {
             val opacity = between(opacity(previous), opacity(highlighted), t)
             val width = between(width(previous), width(highlighted), t)
             for (id in listOf(ROUTE, ROUTES_DASHED)) {
                 style.getLayerAs<LineLayer>(id)?.setProperties(lineOpacity(opacity), lineWidth(byZoom(width)))
             }
+            val shown = places(previous) * (1f - t) + places(highlighted) * t
+            style.getLayerAs<CircleLayer>(PLACES)?.setProperties(circleOpacity(shown), circleStrokeOpacity(shown))
+            style.getLayerAs<CircleLayer>(PLACES_SHADOW)?.setProperties(circleOpacity(0.18f * shown))
+            for (id in listOf(PLACES_COUNT, PLACES_NAMES)) style.getLayerAs<SymbolLayer>(id)?.setProperties(textOpacity(shown))
         }
         if (reduced || previous == highlighted) draw(1f) else animate(0f, 1f, animationSpec = change) { t, _ -> draw(t) }
     }
+}
+
+/** The pin drawn white on the chosen dot, at the screen's density so the map shows it at its size in dp. */
+private fun pinImage(painter: VectorPainter, density: Density): android.graphics.Bitmap {
+    val size = with(density) { PIN_ICON.toPx() }
+    val image = ImageBitmap(size.roundToInt(), size.roundToInt())
+    CanvasDrawScope().draw(density, LayoutDirection.Ltr, Canvas(image), Size(size, size)) {
+        with(painter) { draw(Size(size, size), colorFilter = ColorFilter.tint(Color.White)) }
+    }
+    return image.asAndroidBitmap().apply { this.density = (density.density * DisplayMetrics.DENSITY_DEFAULT).roundToInt() }
 }
 
 /**

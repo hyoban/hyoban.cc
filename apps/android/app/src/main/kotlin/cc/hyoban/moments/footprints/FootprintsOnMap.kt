@@ -63,6 +63,8 @@ data class FootprintsMapState(
     val frameRequested: Boolean,
     val onFramed: () -> Unit,
     val open: () -> Unit,
+    /** Whether the phone is recording now, which the map's footprints button shows. */
+    val recording: Boolean = false,
 )
 
 @Composable
@@ -171,6 +173,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
         frameRequested = frameRequested,
         onFramed = { frameRequested = false },
         open = { expanded = true },
+        recording = state.recording,
     ))
     // Paused, never started or stopped by an error, the row offers to resume; otherwise to pause.
     val resumable = state.paused || status == null || status == R.string.footprints_permission_needed || status == R.string.footprints_error

@@ -83,6 +83,10 @@
     <string name="empty_loading">正在加载时刻…</string>
     <string name="message_refresh_failed">没能更新：%1$s</string>
     <string name="year_item">%1$d 年</string>
+    <string name="map_search_hint">搜索地点和旅程</string>
+    <string name="trips_none">还没有旅程</string>
+    <string name="map_km">%1$s 公里</string>
+    <string name="footprints_map_recording">足迹，正在记录</string>
     <string name="legend_trips">旅程</string>
     <string name="trip_day">第 %1$d 天</string>
     <string name="action_play_trip">回放旅程</string>

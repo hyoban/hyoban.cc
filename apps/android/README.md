@@ -24,7 +24,10 @@ or more, or a phone on its side, they stand down a rail instead.
   the top, and the day's bills, charges and footprints come from the left in one records
   bubble. A banner marks where each trip begins. Scrolling folds the tabs away.
 - **地图** shows the places, the trips' routes (listed in the sheet at its foot) and the
-  footprints. 迷雾地图 lays a fog over it, as the site's map does, thinner over a city the
+  footprints. Search sits at the top beside the fog's switch, over a legend of the years;
+  the footprints and the phone's place are buttons down the side. A place tapped fills the
+  sheet with its Moments and the way there; a route tapped floats its trip's card, which
+  opens the trip or plays it back. 迷雾地图 lays a fog over it, as the site's map does, thinner over a city the
   more Moments it has, from the site's `apps/web/src/data/boundaries/cities.json` shipped as an asset.
 - **我** holds the changes waiting to be published, this month's spending, rows for
   账单与资产 and 足迹, and the settings in two parts: 通用 (记录项与公开, 同步与来源) and
