@@ -103,7 +103,8 @@ changed nothing drawn:
 
 With `TELEGRAM_BOT_TOKEN`, the Worker posts the Moments the site shows to the channel
 `TELEGRAM_CHAT_ID` names, through a bot that is an admin allowed to post and delete: the
-words exactly, 📍 and the place, and a link to `https://hyoban.cc/m/<uid>/`, as the caption
+words exactly, a line of 📍 and the place, with 💰 人均 and the verdict (😋 好吃, 🙂 一般 or
+😖 踩雷) for a meal, and a link to `https://hyoban.cc/m/<uid>/`, as the caption
 of its photos and videos in albums of ten, or after them past 1024 characters. Photos go as
 JPEGs from Cloudflare Images; a video over 50 MB goes as its first frame.
 

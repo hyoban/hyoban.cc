@@ -3,12 +3,12 @@ import type { Bucket } from './bucket.ts'
 import { readAll, revisionQuery, toRevision, type Database } from './database.ts'
 
 // The Moments the site shows, posted to the Telegram channel as they publish: the words
-// with the place and a link to the Moment's page, under its photos and videos. A Moment
-// that changes edits its post, or posts again when its media changed; one the site no
-// longer shows has its post deleted. Only Moments published since the channel was first
-// synced are posted, so a restore of the backup never floods it. Runs after a write the
-// site shows, after `POST /v1/build` and on the Worker's schedule, which picks up
-// whatever an earlier run left.
+// with the place, a meal's share and verdict, and a link to the Moment's page, under its
+// photos and videos. A Moment that changes edits its post, or posts again when its media
+// changed; one the site no longer shows has its post deleted. Only Moments published since
+// the channel was first synced are posted, so a restore of the backup never floods it. Runs
+// after a write the site shows, after `POST /v1/build` and on the Worker's schedule, which
+// picks up whatever an earlier run left.
 
 const SITE_URL = 'https://hyoban.cc'
 const IMAGE_ORIGIN = 'https://image.hyoban.cc'
@@ -225,11 +225,26 @@ async function postChanges(context: ChannelContext) {
   return result
 }
 
-/** The words and media a Moment is posted with: its own words exactly, then the place and the link. */
+const VERDICTS = { good: '😋 好吃', ok: '🙂 一般', bad: '😖 踩雷' } as const
+
+/**
+ * The words and media a Moment is posted with: its own words exactly, then a line of the
+ * place and, for a meal, each one's share and its verdict, as the app shares it, then the
+ * link. A bill without its people fed one.
+ */
 function toPost(moment: MomentRecord, placeNames: Map<string, string>): Post {
   const place = moment.places[0] && placeNames.get(moment.places[0])
+  const bill = moment.food?.bill
+  const verdict = moment.food?.verdict
+  const line = [
+    place && `📍 ${place}`,
+    bill && `💰 人均 ¥${Math.round(bill.amount / Math.max(bill.people ?? 1, 1))}`,
+    verdict && VERDICTS[verdict],
+  ]
+    .filter(Boolean)
+    .join('\u2003')
   const link = `${SITE_URL}/m/${moment.uid.toLowerCase()}/`
-  const footer = place ? `📍 ${place}\n${link}` : link
+  const footer = line ? `${line}\n${link}` : link
   const text = moment.text ? `${moment.text}\n\n${footer}` : footer
 
   return { text, media: moment.media.flatMap((media) => toPostMedia(media)) }
