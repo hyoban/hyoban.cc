@@ -9,11 +9,11 @@
     <group
         android:pivotX="34"
         android:pivotY="78"
-        android:rotation="-12"
-        android:scaleX="1.08"
-        android:scaleY="1.08"
-        android:translateX="15"
-        android:translateY="-14">
+        android:rotation="-8"
+        android:scaleX="1.18"
+        android:scaleY="1.18"
+        android:translateX="13"
+        android:translateY="-10">
         <path
             android:fillColor="#000000"
             android:fillType="evenOdd"
