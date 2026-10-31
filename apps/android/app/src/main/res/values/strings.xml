@@ -374,14 +374,12 @@
     <string name="telegram_assist_ready">已选择目标并填写说明，请在 Telegram 检查后手动发送</string>
     <string name="telegram_assist_stopped">自动填写已停止，请在 Telegram 手动检查目标和说明；不会自动重试</string>
     <string name="telegram_assist_invalid_target">请输入完整的公开用户名，例如 @username 或 https://t.me/username</string>
-    <string name="telegram_assist_version">分享助手目前适配 Telegram 13.1.0；其他版本请关闭助手，手动分享</string>
     <string name="telegram_assist_open">打开 Telegram 并自动填写</string>
     <string name="threads_assist_label">Threads 分享助手（试用）</string>
     <string name="threads_assist_note">保留分享带入的照片，自动填写正文，停在发布前。请手动检查图文；如出现分享选项，请手动选择发布入口。已有不同正文、页面不匹配或 40 秒内未完成时会停止，可关闭助手手动分享。</string>
     <string name="threads_assist_running">正在 Threads 中填写正文…</string>
     <string name="threads_assist_ready">正文已填写，请在 Threads 检查图文后手动发布</string>
     <string name="threads_assist_stopped">自动填写已停止，请在 Threads 手动检查照片和正文；已有草稿不会被覆盖，也不会自动重试</string>
-    <string name="threads_assist_version">分享助手目前适配 Threads 452.0.0.50.64；其他版本请关闭助手，手动分享</string>
     <string name="threads_assist_open">打开 Threads 并自动填写</string>
     <string name="footprints_title">足迹</string>
     <string name="footprints_local_note">轨迹仅保存在本机，不会上传到 API。地图需要网络；离线也能记录。</string>

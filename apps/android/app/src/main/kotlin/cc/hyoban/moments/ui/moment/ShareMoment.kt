@@ -255,13 +255,6 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                             error = R.string.telegram_assist_invalid_target
                             return@TextButton
                         }
-                        val version = runCatching {
-                            context.packageManager.getPackageInfo(adapter.packageName, 0).versionName
-                        }.getOrNull()
-                        if (version !in adapter.supportedVersions) {
-                            error = if (target == ShareTarget.TELEGRAM) R.string.telegram_assist_version else R.string.threads_assist_version
-                            return@TextButton
-                        }
                     }
                     if (needsPhoto) {
                         error = R.string.share_douyin_no_photos

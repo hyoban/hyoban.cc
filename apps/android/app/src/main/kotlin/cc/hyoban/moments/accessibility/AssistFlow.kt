@@ -31,7 +31,6 @@ internal interface AssistFlow {
 internal interface AssistAdapter {
     val id: String
     val packageName: String
-    val supportedVersions: Set<String>
     val timeoutMs: Long
     val readyMessage: Int
     val stoppedMessage: Int

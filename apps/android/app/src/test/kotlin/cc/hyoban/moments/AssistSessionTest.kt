@@ -14,7 +14,6 @@ import kotlin.test.assertEquals
 
 class AssistSessionTest {
     private class Adapter(override val id: String, override val packageName: String) : AssistAdapter {
-        override val supportedVersions = setOf("1")
         override val timeoutMs = 40_000L
         override val readyMessage = 0
         override val stoppedMessage = 0
