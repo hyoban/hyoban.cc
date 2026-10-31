@@ -122,9 +122,11 @@ dependencies {
     implementation(libs.exifinterface)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.gson)
+    implementation(libs.zip4j)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.runner)
     testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.sqlite.jdbc)
 }

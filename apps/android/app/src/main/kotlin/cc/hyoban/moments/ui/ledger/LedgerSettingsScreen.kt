@@ -5,6 +5,7 @@ import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.OutlinedTextField
 import cc.hyoban.moments.ui.design.ListItemShapes
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -60,7 +61,9 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.ledger.Book
 import cc.hyoban.moments.ledger.COMMON_CURRENCIES
+import cc.hyoban.moments.ledger.ICostBackup
 import cc.hyoban.moments.ledger.ICostImport
+import cc.hyoban.moments.ledger.ICostRow
 import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.LedgerBackup
 import cc.hyoban.moments.ledger.Xlsx
@@ -75,6 +78,7 @@ import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.Space
 import java.time.LocalDate
+import java.io.File
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -354,7 +358,7 @@ private fun SheetCaption(title: String) {
 /** An iCost import under way: its file picker, and the dialog that says what it found before it is written. */
 class ICostImporter internal constructor(val pick: () -> Unit, val read: (Uri) -> Unit, val Dialog: @Composable () -> Unit)
 
-private class Found(val table: List<List<String>>, val merged: ICostImport.Result, val alone: ICostImport.Result)
+private class Found(val merged: ICostImport.Result, val alone: ICostImport.Result)
 
 @Composable
 fun rememberICostImport(container: AppContainer): ICostImporter {
@@ -415,14 +419,44 @@ fun rememberICostImport(container: AppContainer): ICostImporter {
     }
 }
 
-private suspend fun readExport(context: Context, uri: Uri, ledger: Ledger): Found = withContext(Dispatchers.Default) {
-    val table = withContext(Dispatchers.IO) { context.contentResolver.openInputStream(uri)!!.use(Xlsx::read) }
+/** Reads iCost's backup or its bill export, whichever [uri] is, beside [ledger] and on its own. */
+private suspend fun readExport(context: Context, uri: Uri, ledger: Ledger): Found = withContext(Dispatchers.IO) {
     val zone = ZoneId.systemDefault()
-    Found(
-        table,
-        ICostImport.read(table, zone, ledger.rates, ledger) { Ulid.next() },
-        ICostImport.read(table, zone, ledger.rates) { Ulid.next() },
-    )
+    val dir = File(context.cacheDir, "icost").apply { deleteRecursively(); mkdirs() }
+    try {
+        val file = File(dir, "export")
+        context.contentResolver.openInputStream(uri)!!.use { input -> file.outputStream().use { input.copyTo(it) } }
+        if (ICostBackup.isBackup(file)) {
+            val database = File(dir, "database.db")
+            ICostBackup.unpack(file, database)
+            val tables = SQLiteDatabase.openDatabase(database.path, null, SQLiteDatabase.OPEN_READONLY).use { db -> ICostBackup.tables(db::rows) }
+            withContext(Dispatchers.Default) {
+                Found(
+                    ICostBackup.read(tables, zone, ledger.rates, ledger) { Ulid.next() },
+                    ICostBackup.read(tables, zone, ledger.rates) { Ulid.next() },
+                )
+            }
+        } else {
+            val table = file.inputStream().use(Xlsx::read)
+            withContext(Dispatchers.Default) {
+                Found(
+                    ICostImport.read(table, zone, ledger.rates, ledger) { Ulid.next() },
+                    ICostImport.read(table, zone, ledger.rates) { Ulid.next() },
+                )
+            }
+        }
+    } finally {
+        dir.deleteRecursively()
+    }
+}
+
+/** The rows [sql] gives, each column as text. */
+private fun SQLiteDatabase.rows(sql: String): List<ICostRow> = rawQuery(sql, null).use { cursor ->
+    buildList {
+        while (cursor.moveToNext()) {
+            add((0 until cursor.columnCount).associate { cursor.getColumnName(it) to if (cursor.isNull(it)) null else cursor.getString(it) })
+        }
+    }
 }
 
 /** What an import found, and whether it goes beside the ledger's bills or in their place. */
@@ -439,12 +473,14 @@ private fun ImportDialog(found: Found, hasData: Boolean, onDismiss: () -> Unit, 
                 Text(stringResource(R.string.ledger_import_summary, report.rows, report.txns, report.books, report.accounts))
                 Text(stringResource(R.string.ledger_import_matched, report.refundsMatched + report.refundsLoose, report.refundsMatched, report.reimbursementsMatched + report.reimbursementsLoose, report.reimbursementsMatched))
                 if (report.folded > 0) Text(pluralStringResource(R.plurals.ledger_import_folded, report.folded, report.folded))
+                if (report.calibrated > 0) Text(pluralStringResource(R.plurals.ledger_import_calibrated, report.calibrated, report.calibrated))
+                if (report.adjusted > 0) Text(pluralStringResource(R.plurals.ledger_import_adjusted, report.adjusted, report.adjusted))
                 if (report.converted > 0) Text(pluralStringResource(R.plurals.ledger_import_converted, report.converted, report.converted))
                 if (report.duplicates > 0) Text(pluralStringResource(R.plurals.ledger_import_duplicates, report.duplicates, report.duplicates))
                 if (report.skipped.isNotEmpty()) {
                     Text(pluralStringResource(R.plurals.ledger_import_skipped, report.skipped.size, report.skipped.size, report.skipped.take(5).joinToString { "#${it.first} ${it.second}" }), color = tokens.danger)
                 }
-                Text(stringResource(R.string.ledger_import_accounts_note), style = AppTheme.typography.caption, color = tokens.tx2)
+                Text(stringResource(if (report.balances) R.string.ledger_import_backup_note else R.string.ledger_import_accounts_note), style = AppTheme.typography.caption, color = tokens.tx2)
                 if (hasData) {
                     listOf(false to R.string.ledger_merge, true to R.string.ledger_replace).forEach { (value, label) ->
                         Row(

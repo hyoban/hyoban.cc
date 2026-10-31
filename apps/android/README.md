@@ -157,11 +157,19 @@ An empty ledger imports from iCost on its own page.
 
 The data:
 
-- **从 iCost 导入** reads the .xlsx of iCost's 账单导出 (picked, shared in or opened with the
-  app), shows what it found before writing, and skips what is already there, so each newer
-  export brings the ledger up to date. Tags become `#tag` in the note. The export has no
-  balances, so accounts are calibrated after. Recurring bills, installments, savings plans,
-  templates and photos aren't carried over.
+- **从 iCost 导入** reads either iCost's backup (`.backup`, a zip of its SQLite database sealed
+  with the password iCost itself uses) or the .xlsx of its 账单导出, picked, shared in or
+  opened with the app. It shows what it found before writing and skips what is already
+  there, so each newer file brings the ledger up to date. Tags become `#tag` in the note.
+  The backup is the fuller one: `ledger/ICostBackup` takes its accounts with their kinds and
+  balances, ties refunds, reimbursements and a transfer's discount to the bills iCost tied
+  them to, and keeps a bill paid from several accounts as one. Every account iCost has, new
+  or already here, opens where the bills iCost also has leave it at iCost's balance, so balance
+  adjustments need no bill and bills kept only here move it on from there. The export
+  has no balances, so its accounts are calibrated after, and its refunds and reimbursements
+  are matched by amount and time. Accounts are matched by name, spaces at either end aside,
+  and those of one name become one. Budgets, recurring bills,
+  installments, savings plans, templates, places and photos aren't carried over.
 - **Rates** are the European Central Bank's, bundled in `assets/ledger-rates.json` and
   refreshed from Frankfurter only when asked.
 - **备份到文件** and **从备份恢复** write and read the whole ledger as JSON; **导出 CSV**
@@ -172,7 +180,7 @@ Android's backup. Bills are private: 记录项与公开 (`moments://items`) make
 public, and a bill's 公开 chip says otherwise for one. A public bill publishes only its
 kind, amount, currency, category and note (`data/store/Outside.kt`). `ledger/ICostImport`,
 `ledger/Accounting` and `ledger/Links` are plain Kotlin tested in `LedgerTest`, which also
-reads a real export when `ICOST_EXPORT` names one.
+reads a real export when `ICOST_EXPORT` names one and a real backup when `ICOST_BACKUP` does.
 
 Opening a bill form waits for the local ledger to load before checking for a book. It
 creates a default book only when none exists, including when several forms initialize

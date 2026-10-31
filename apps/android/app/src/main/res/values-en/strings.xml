@@ -569,9 +569,9 @@
     <string name="ledger_show_amounts">Show amounts</string>
     <string name="ledger_settings_title">Ledger</string>
     <string name="ledger_empty_title">No bills yet</string>
-    <string name="ledger_empty_body">Bills stay on this phone and are never synced or published. Import an iCost export, or add a bill.</string>
+    <string name="ledger_empty_body">Bills stay on this phone and are never synced or published. Import an iCost backup or export, or add a bill.</string>
     <string name="ledger_import_icost">Import from iCost</string>
-    <string name="ledger_import_icost_note">Choose the .xlsx file from iCost\'s Bill Export</string>
+    <string name="ledger_import_icost_note">An iCost backup (.backup) or Bill Export (.xlsx)</string>
     <string name="ledger_net_assets">Net assets</string>
     <string name="ledger_assets_line">Assets %1$s Liabilities %2$s</string>
     <string name="ledger_not_counted">Not in net assets</string>
@@ -717,7 +717,7 @@
     <string name="ledger_csv_done">Exported</string>
     <string name="ledger_error_file">Couldn\'t write the file</string>
     <string name="ledger_error_backup">Not a ledger backup</string>
-    <string name="ledger_error_import">Couldn\'t read this file. Choose an .xlsx exported from iCost.</string>
+    <string name="ledger_error_import">Couldn\'t read this file. Choose an iCost backup (.backup) or Bill Export (.xlsx).</string>
     <string name="ledger_importing">Reading…</string>
     <string name="ledger_import">Import</string>
     <string name="ledger_import_summary" tools:ignore="PluralsCandidate">%1$d rows: %2$d bills, %3$d new books, %4$d new accounts.</string>
@@ -739,6 +739,15 @@
         <item quantity="other">%1$d rows not recognized: %2$s</item>
     </plurals>
     <string name="ledger_import_accounts_note">The export has no balances; use Set balance on each account. Account types are guessed from their names and can be changed.</string>
+    <string name="ledger_import_backup_note">Account balances are set to iCost\'s; bills kept only here move them on from there. Account types can be changed.</string>
+    <plurals name="ledger_import_calibrated">
+        <item quantity="one">%1$d account already here set to its balance in iCost.</item>
+        <item quantity="other">%1$d accounts already here set to their balances in iCost.</item>
+    </plurals>
+    <plurals name="ledger_import_adjusted">
+        <item quantity="one">%1$d balance adjustment taken into its account\'s opening balance.</item>
+        <item quantity="other">%1$d balance adjustments taken into their accounts\' opening balances.</item>
+    </plurals>
     <string name="ledger_merge">Add to existing bills</string>
     <string name="ledger_replace">Replace existing data</string>
     <plurals name="ledger_import_done">

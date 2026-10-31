@@ -31,6 +31,12 @@ object ICostImport {
         val converted: Int,
         /** Rows that couldn't be read, by their row number and why. */
         val skipped: List<Pair<Int, String>>,
+        /** Balance adjustments taken into the accounts' opening balances. */
+        val adjusted: Int = 0,
+        /** Whether the accounts' balances are iCost's, rather than left to be calibrated. */
+        val balances: Boolean = false,
+        /** Accounts already in the ledger whose balances were set to iCost's. */
+        val calibrated: Int = 0,
     )
 
     data class Result(
@@ -39,6 +45,8 @@ object ICostImport {
         val categories: List<Category>,
         val txns: List<Txn>,
         val report: Report,
+        /** The ledger's bills the read ones were found to be, by id. */
+        val matched: Set<String> = emptySet(),
     )
 
     /** The columns by the names iCost gives them, in Chinese and in English. */
@@ -367,10 +375,36 @@ object ICostImport {
             )
         }
 
+        val relatedOf = related.entries.mapNotNull { (child, parent) ->
+            val txn = ofRow[child] ?: return@mapNotNull null
+            val expense = ofRow[parent] ?: return@mapNotNull null
+            txn.id to expense.id
+        }.toMap()
+        return settle(
+            existing, books.values, accounts.values, categories.values, txns, relatedOf,
+            Report(total, 0, 0, 0, 0, 0, 0, 0, folded, 0, converted, skipped),
+        )
+    }
+
+    /**
+     * Puts the bills read from an export, [txns], beside what [existing] holds, each refund and
+     * reimbursement for the expense [related] names by id, and says what came of it on top of
+     * what [report] counted in the reading.
+     */
+    internal fun settle(
+        existing: Ledger,
+        books: Collection<Book>,
+        accounts: Collection<Account>,
+        categories: Collection<Category>,
+        txns: List<Txn>,
+        related: Map<String, String>,
+        report: Report,
+    ): Result {
+        val txns = txns.toMutableList()
         // A bill already in the ledger, as an earlier import of the same export left it, isn't
         // written twice: it takes the id it has there, so a refund or reimbursement new to this
         // export still finds the expense it is for. Two alike in one export match two there.
-        val names = accounts.values.associate { it.id to it.name }
+        val names = accounts.associate { it.id to it.name }
         fun key(txn: Txn, accountName: (String?) -> String?) =
             listOf(txn.time, txn.kind.value, txn.amount, txn.currency, txn.note, accountName(txn.account), accountName(txn.toAccount)).joinToString("|")
         val have = existing.txns.groupBy { txn -> key(txn) { id -> existing.accountsById[id]?.name } }.mapValues { it.value.map(Txn::id).toMutableList() }
@@ -389,20 +423,15 @@ object ICostImport {
             unclaimed.remove(same)
             existingId[txn.id] = same.id
         }
-        fun idOf(txn: Txn) = existingId[txn.id] ?: txn.id
-        val relatedOf = related.entries.mapNotNull { (child, parent) ->
-            val txn = ofRow[child] ?: return@mapNotNull null
-            val expense = ofRow[parent] ?: return@mapNotNull null
-            txn.id to idOf(expense)
-        }.toMap()
-        txns.replaceAll { txn -> txn.copy(id = idOf(txn), related = relatedOf[txn.id] ?: txn.related) }
+        fun idOf(id: String) = existingId[id] ?: id
+        txns.replaceAll { txn -> txn.copy(id = idOf(txn.id), related = related[txn.id]?.let(::idOf) ?: txn.related) }
         val known = existingId.values.toSet()
 
         val fresh = txns.filter { it.id !in known }
 
-        val newBooks = books.values.filter { book -> existing.books.none { it.id == book.id } }
-        val newAccounts = accounts.values.filter { account -> existing.accounts.none { it.id == account.id } }
-        val newCategories = categories.values.filter { category -> existing.categories.none { it.id == category.id } }
+        val newBooks = books.filter { book -> existing.books.none { it.id == book.id } }
+        val newAccounts = accounts.filter { account -> existing.accounts.none { it.id == account.id } }
+        val newCategories = categories.filter { category -> existing.categories.none { it.id == category.id } }
         val refunds = fresh.filter { it.kind == TxnKind.REFUND }
         val reimbursements = fresh.filter { it.kind == TxnKind.REIMBURSEMENT }
         return Result(
@@ -410,8 +439,7 @@ object ICostImport {
             newAccounts,
             newCategories,
             fresh,
-            Report(
-                rows = total,
+            report.copy(
                 books = newBooks.size,
                 accounts = newAccounts.size,
                 txns = fresh.size,
@@ -419,16 +447,14 @@ object ICostImport {
                 refundsLoose = refunds.count { it.related == null },
                 reimbursementsMatched = reimbursements.count { it.related != null },
                 reimbursementsLoose = reimbursements.count { it.related == null },
-                folded = folded,
                 duplicates = txns.size - fresh.size,
-                converted = converted,
-                skipped = skipped,
             ),
+            known,
         )
     }
 
     /** How far apart an exported bill and one written here can be and still be the same. */
     private const val SAME_BILL_MS = 10 * 60_000L
 
-    private fun categoryKey(book: String, type: CategoryType, parent: String?, name: String) = "$book\u0000${type.value}\u0000${parent.orEmpty()}\u0000$name"
+    internal fun categoryKey(book: String, type: CategoryType, parent: String?, name: String) = "$book\u0000${type.value}\u0000${parent.orEmpty()}\u0000$name"
 }
