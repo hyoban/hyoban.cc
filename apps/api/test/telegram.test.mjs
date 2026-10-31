@@ -96,6 +96,21 @@ test('a Moment published is posted once, its words under its photo with the plac
   assert.deepEqual(await sync(), { posted: 0, edited: 0, deleted: 0 }, 'and not again')
 })
 
+test("a meal's post adds each one's share and its verdict to the place", async () => {
+  const { env, calls, sync } = setUpChannel()
+
+  await sync()
+  await publish(env, {
+    food: { dishes: ['盐水鸭'], verdict: 'good', bill: { amount: 177.4, people: 5 } },
+  })
+
+  assert.deepEqual(await sync(), { posted: 1, edited: 0, deleted: 0 })
+  assert.equal(
+    calls[0].params.caption,
+    `在码头等船。\n\n📍 ${nanjing}\u2003💰 人均 ¥35\u2003😋 好吃\n${link}`,
+  )
+})
+
 test('changed words edit the caption; a Moment the site no longer shows is deleted', async () => {
   const { env, calls, sync } = setUpChannel()
 
