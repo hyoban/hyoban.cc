@@ -866,9 +866,14 @@
     <string name="side_key_timing_note">单击会等待双击窗口结束后执行。长按达到阈值后只触发一次。</string>
     <string name="side_key_action_failed">动作未能执行，请检查目标应用和无障碍服务</string>
     <string name="side_key_last">最近操作</string>
-    <string name="side_key_last_value">%1$s %2$s</string>
     <string name="side_key_no_last">还没有手势记录</string>
-    <string name="side_key_payment_note">在微信或支付宝已付款账单页触发，打开预填的记账确认，保存后才入账。</string>
+    <string name="side_key_scenes">场景</string>
+    <string name="side_key_scenes_note">按下时先看是不是微信或支付宝的已付款页，再看前台的应用；场景里没设的手势照常用上面的动作。读取支付页记账打开填好的记一笔，保存后才入账。</string>
+    <string name="side_key_scene_payment">付款页</string>
+    <string name="side_key_scene_follows">全部跟随默认</string>
+    <string name="side_key_follow_value">跟随默认：%1$s</string>
+    <string name="side_key_add_scene">添加应用场景</string>
+    <string name="side_key_remove_scene">移除场景</string>
     <string name="side_key_torch">手电筒</string>
     <string name="side_key_torch_on">手电筒已打开</string>
     <string name="side_key_torch_off">手电筒已关闭</string>

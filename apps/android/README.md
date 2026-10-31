@@ -211,6 +211,13 @@ requesting camera permission, reads its current system state each time (includin
 from Quick Settings), and reports when the flash is unavailable, such as while a camera
 is using it. It does not keep a camera-state listener running between presses.
 
+Under 场景 the same gestures can do something else in a scene: 付款页, a completed WeChat Pay or
+Alipay payment page as the payment reader recognizes it, and any app added there, while it is in
+front. A press first checks the payment page, then the app in front, and a gesture a scene leaves
+at 跟随默认 runs its default action; no scene is set on the user's behalf. Only a press whose gesture
+some scene changes looks at what is in front, and the payment page is read only when 付款页 changes
+that gesture; nothing read is kept. The last press shows the scene it ran in.
+
 Start Shizuku and enable the app's existing share-and-ledger accessibility service,
 then turn on the side-key switch. The listener uses a small Shizuku UserService with
 shell privileges to find the input device advertising `BTN_TRIGGER_HAPPY32` and read its

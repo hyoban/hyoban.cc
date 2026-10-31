@@ -11,3 +11,6 @@ internal enum class PaymentCapture(val message: Int) {
     ALREADY_SAVED(R.string.payment_capture_already_saved),
     FAILED(R.string.payment_capture_failed),
 }
+
+/** What a side-key press found in front: the app, and whether its page shows a payment made. */
+internal data class SideKeyFront(val packageName: String?, val paymentPage: Boolean)

@@ -98,6 +98,16 @@ open class ShareAccessibilityService : AccessibilityService() {
         }
     }
 
+    /** The app in front for a side-key press and, only when asked, whether it shows a payment made; nothing is kept. */
+    private fun front(readPayment: Boolean): SideKeyFront {
+        val root = rootInActiveWindow ?: return SideKeyFront(null, false)
+        val packageName = try { root.packageName?.toString() } finally {
+            @Suppress("DEPRECATION")
+            root.recycle()
+        }
+        return SideKeyFront(packageName, readPayment && PaymentApp.of(packageName) != null && paymentInFront() != null)
+    }
+
     /** Read first, then release every node before any activity can replace the payment page. */
     private fun paymentInFront(): Payment? {
         var root: AccessibilityNodeInfo? = null
@@ -265,6 +275,8 @@ open class ShareAccessibilityService : AccessibilityService() {
             service.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             return true
         }
+
+        internal fun sideKeyFront(readPayment: Boolean): SideKeyFront = instance?.front(readPayment) ?: SideKeyFront(null, false)
 
         /** Captures the current payment without first opening this app or requiring auto bills. */
         internal fun capturePayment(): PaymentCapture = instance?.capturePayment() ?: PaymentCapture.DISCONNECTED
