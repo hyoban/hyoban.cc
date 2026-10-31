@@ -176,12 +176,15 @@ isn't offered. It never taps, types or keeps the page. `ledger/Payments` reads t
 
 **侧键自定义**, in 我 → 设置 (`moments://side-key`), assigns an action separately to a
 single press, double press and long press of the physical OPPO key. It includes payment
-capture, opening an installed app or a link/app URI, play/pause, next/previous track,
-volume, back, home, recent apps, notifications, quick settings and lock screen. No gesture
+capture, toggling the flashlight, opening an installed app or a link/app URI, play/pause,
+next/previous track, volume, back, home, recent apps, notifications, quick settings and lock screen. No gesture
 is assigned on the user's behalf. Double press defaults to a 300 ms window, adjustable
 from 150 to 600; long press to 600 ms, adjustable from 400 to 2000. Single press waits for
 the double-press window, and long press runs once. A tap followed by a hold runs long
-press alone.
+press alone. The flashlight action toggles the rear flash without opening the camera or
+requesting camera permission, reads its current system state each time (including changes
+from Quick Settings), and reports when the flash is unavailable, such as while a camera
+is using it. It does not keep a camera-state listener running between presses.
 
 Start Shizuku and enable the app's existing share-and-ledger accessibility service,
 then turn on the side-key switch. The listener uses a small Shizuku UserService with

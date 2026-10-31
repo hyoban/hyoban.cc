@@ -6,6 +6,7 @@ internal object SideKeyActions {
     val choices = linkedMapOf(
         "none" to R.string.side_key_none,
         "ledger:capture" to R.string.side_key_payment,
+        "device:torch" to R.string.side_key_torch,
         "app" to R.string.side_key_app,
         "uri" to R.string.side_key_link,
         "media:85" to R.string.side_key_play_pause,

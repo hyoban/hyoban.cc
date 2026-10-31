@@ -6,9 +6,9 @@ import org.junit.Test
 
 class SideKeyActionsTest {
     @Test fun acceptsOnlyExecutableActions() {
-        listOf("none", "ledger:capture", "media:85", "nav:8", "app:org.example.player", "uri:https://example.invalid/path", "uri:moments://ledger")
+        listOf("none", "ledger:capture", "device:torch", "media:85", "nav:8", "app:org.example.player", "uri:https://example.invalid/path", "uri:moments://ledger")
             .forEach { assertTrue(it, SideKeyActions.valid(it)) }
-        listOf("app", "uri", "media:999", "nav:999", "app:", "app:org.example;reboot", "unknown:123")
+        listOf("device:unknown", "app", "uri", "media:999", "nav:999", "app:", "app:org.example;reboot", "unknown:123")
             .forEach { assertFalse(it, SideKeyActions.valid(it)) }
     }
 

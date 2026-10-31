@@ -69,6 +69,7 @@ internal object SideKeys {
     private val args = Shizuku.UserServiceArgs(ComponentName("cc.hyoban.moments", KeyBridge::class.java.name))
         .daemon(false).processNameSuffix("sidekey").tag("side-key").version(1)
     private val detector = GestureDetector(::execute)
+    private val torch by lazy { SideKeyTorch(context) }
     private val tick = Runnable {
         detector.tick(SystemClock.uptimeMillis())
         scheduleTick()
@@ -274,6 +275,16 @@ internal object SideKeys {
         try {
             when {
                 action == "none" -> Unit
+                action == "device:torch" -> scope.launch {
+                    try {
+                        val enabled = torch.toggle()
+                        report(context.getString(if (enabled) R.string.side_key_torch_on else R.string.side_key_torch_off))
+                    } catch (error: kotlinx.coroutines.CancellationException) {
+                        throw error
+                    } catch (_: Exception) {
+                        report(context.getString(R.string.side_key_torch_unavailable), true)
+                    }
+                }
                 action == "ledger:capture" -> {
                     val result = ShareAccessibilityService.capturePayment()
                     report(context.getString(result.message), result != cc.hyoban.moments.accessibility.PaymentCapture.OPENED)
