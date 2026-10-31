@@ -182,7 +182,8 @@ backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export GP
   positions showing it moved, or on a backed-off probe (two to ten minutes). While it
   rests the notification moves to a silent channel and says 省电等待. The optional
   活动识别增强 uses Play services' activity transitions as an extra wake-up, never as a
-  reason to rest.
+  reason to rest; while they say moving, a search that finds no fix (a garage, a tunnel)
+  keeps going for up to ten minutes since the last movement instead of resting after two.
 - **Storage and refinement.** Every fresh, valid fix is stored raw. `TrackRefiner` derives
   the map's line and ordinary GPX from them: it drops spikes and stationary clouds, and
   breaks the line at fixes over 50 m uncertainty, gaps over 45 seconds, pauses and
@@ -192,7 +193,7 @@ backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export GP
   On Android 16 and later it asks to be a Live Update; on ColorOS that also needs
   流体云显示实时活动, linked from 足迹设置 → 状态栏显示.
 - **Diagnostics.** `noBackupFilesDir/footprint-diagnostics/` keeps two rotating JSONL files
-  of 1 MiB with each request, fix, filter decision and state change, never a coordinate,
+  of 8 MiB, about two days, with each request, fix, filter decision and state change, never a coordinate,
   network name or token. 足迹设置 → 诊断 → 导出诊断日志 exports them with a replay of the
   latest day through the current filter.
 - **Publishing.** A trip's page has 公开这段旅程的轨迹: at the next 全部发布到网站 its line goes

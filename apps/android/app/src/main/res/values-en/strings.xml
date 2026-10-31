@@ -476,7 +476,7 @@
     <string name="footprints_status_icons_note">Footprints: receiving valid locations.\nCrosshair: waiting for a valid location.\nWarning triangle: system location unavailable.\nRest hides the status bar icon; its status remains in the notification drawer and footprint panel. Pausing or stopping removes the recording notification. The chain icon only indicates connection automation.\nVisibility follows system notification settings. Some systems replace ordinary notification icons with the app icon.</string>
     <string name="footprints_rest_channel">Footprint power-saving wait</string>
     <string name="footprints_export_diagnostics">Export diagnostics</string>
-    <string name="footprints_diagnostics_note">Investigates missing tracks and battery use without coordinates. Live logs stay on this device, up to about 2 MB. Exports add track decisions, break reasons and totals for the latest recorded day, so the file may be larger.</string>
+    <string name="footprints_diagnostics_note">Investigates missing tracks and battery use without coordinates. Live logs stay on this device, up to about 16 MB. Exports add track decisions, break reasons and totals for the latest recorded day, so the file may be larger.</string>
     <string name="footprints_notification_settings">Notification settings</string>
     <string name="footprints_chip_recording">Track</string>
     <string name="footprints_chip_waiting">GPS…</string>

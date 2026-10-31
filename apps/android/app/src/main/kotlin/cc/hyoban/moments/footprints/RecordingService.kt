@@ -330,6 +330,14 @@ class RecordingService : Service() {
         startUpdates(trip = false, newSegment = false)
     }
 
+    /** The last request may have expired at the system's timeout, so a longer search needs a new one. */
+    private suspend fun searchAgain(policy: DailyRecordingPolicy) {
+        diagnostic("search_extended", "reason" to "activity_moving",
+            "since_movement_ms" to (SystemClock.elapsedRealtime() - policy.lastMovementAt))
+        stopUpdates()
+        startUpdates(trip = false, newSegment = false)
+    }
+
     private fun stopUpdates() {
         if (subscribed) diagnostic("location_request_stop", "duration_ms" to (SystemClock.elapsedRealtime() - requestStarted),
             "callbacks" to callbacks, "usable_fixes" to usableFixes, "stored_fixes" to storedFixes)
@@ -377,7 +385,7 @@ class RecordingService : Service() {
                     diagnostic("timer", "late_ms" to (SystemClock.elapsedRealtime() - due).coerceAtLeast(0))
                     if (batching && batchHealth.stalled(SystemClock.elapsedRealtime()))
                         backOffBatching("delivery_timeout")
-                    else policy.tick(SystemClock.elapsedRealtime())
+                    else if (policy.tick(SystemClock.elapsedRealtime())) searchAgain(policy)
                     applyDailyPolicy()
                 }
             }
