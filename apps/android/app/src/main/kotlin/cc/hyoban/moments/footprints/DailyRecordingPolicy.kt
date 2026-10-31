@@ -87,8 +87,15 @@ internal class DailyRecordingPolicy(now: Long) {
         )
     }
 
-    fun tick(now: Long) {
-        if (now < nextCheck) return
+    /** Returns true when GPS should search again instead of resting, so the caller restarts the request. */
+    fun tick(now: Long): Boolean {
+        if (now < nextCheck) return false
+        // A garage or tunnel can hide the sky while activity still says moving: keep searching,
+        // within the same battery bound as stuck fixes, instead of waiting for a wake-up.
+        if (phase == Phase.ACTIVE && activityMoving && now - lastMovement < ACTIVITY_MOVING_STILL_TIMEOUT) {
+            lastFix = now
+            return true
+        }
         when (phase) {
             Phase.REST -> {
                 phase = Phase.PROBE
@@ -100,6 +107,7 @@ internal class DailyRecordingPolicy(now: Long) {
             }
             Phase.ACTIVE, Phase.PROBE -> rest(now, RestReason.NO_FIX)
         }
+        return false
     }
 
     fun restartAcquisition(now: Long) {

@@ -458,7 +458,7 @@
     <string name="footprints_status_icons_note">脚印：收到有效定位，正在记录。\n准星：等待有效定位。\n警告三角：系统定位不可用。\n省电等待时不显示状态栏图标，状态保留在通知栏和足迹面板。暂停或关闭后，记录通知消失；链条图标只代表连接自动控制。\n显示方式受系统通知设置影响。部分系统会将普通通知图标替换为应用图标。</string>
     <string name="footprints_rest_channel">足迹省电等待</string>
     <string name="footprints_export_diagnostics">导出诊断日志</string>
-    <string name="footprints_diagnostics_note">用于排查漏记和耗电，不含经纬度。运行日志仅保存在本机，最多约 2 MB。导出时附加最近记录日的轨迹判定、断线原因和统计，文件可能更大。</string>
+    <string name="footprints_diagnostics_note">用于排查漏记和耗电，不含经纬度。运行日志仅保存在本机，最多约 16 MB。导出时附加最近记录日的轨迹判定、断线原因和统计，文件可能更大。</string>
     <string name="footprints_notification_settings">通知设置</string>
     <string name="footprints_chip_recording">记录中</string>
     <string name="footprints_chip_waiting">定位中</string>

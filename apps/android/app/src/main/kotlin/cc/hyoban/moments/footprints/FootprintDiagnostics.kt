@@ -13,7 +13,7 @@ import kotlinx.serialization.json.*
 class FootprintDiagnostics(
     private val directory: File,
     scope: CoroutineScope,
-    private val fileLimit: Int = 1024 * 1024,
+    private val fileLimit: Int = 8 * 1024 * 1024,
 ) {
     private sealed interface Command {
         data class Event(val line: String) : Command

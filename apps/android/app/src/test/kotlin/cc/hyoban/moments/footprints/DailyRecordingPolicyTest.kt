@@ -189,4 +189,27 @@ class DailyRecordingPolicyTest {
         assertEquals(DailyRecordingPolicy.Phase.REST, p.phase)
         assertEquals(DailyRecordingPolicy.STILL_TIMEOUT, p.stopTimeout)
     }
+
+    @Test fun lostFixesKeepSearchingWhileActivitySaysMoving() {
+        val p = DailyRecordingPolicy(0)
+        p.activity(true, 0)
+        p.fix(point(), 0)
+        // Inside a garage: no fixes arrive, but GPS searches again instead of resting.
+        assertTrue(p.tick(120_000))
+        assertEquals(DailyRecordingPolicy.Phase.ACTIVE, p.phase)
+        assertEquals(240_000L, p.nextCheck)
+        for (time in 240_000L..480_000L step 120_000L) assertTrue(p.tick(time))
+        // Bounded by the same wait as stuck fixes when STILL never arrives.
+        assertFalse(p.tick(600_000))
+        assertEquals(DailyRecordingPolicy.RestReason.NO_FIX, p.restReason)
+    }
+
+    @Test fun lostFixesRestWithoutMovingActivity() {
+        val p = DailyRecordingPolicy(0)
+        p.activity(true, 0)
+        p.fix(point(), 0)
+        p.activity(false, 60_000)
+        assertFalse(p.tick(120_000))
+        assertEquals(DailyRecordingPolicy.RestReason.NO_FIX, p.restReason)
+    }
 }
