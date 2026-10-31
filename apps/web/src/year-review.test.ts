@@ -30,9 +30,8 @@ const suzhou = { id: 'suzhou', name: '苏州', latitude: 0.5, longitude: 0.5 }
 const hefei = { id: 'hefei', name: '合肥', latitude: 0.5, longitude: 2.5 }
 const photo = { type: 'image' as const }
 
-const moment = (occurredAt: string, locations = [suzhou], media: object[] = [], topic?: string) =>
+const moment = (occurredAt: string, locations = [suzhou], media: object[] = []) =>
   ({
-    ...(topic ? { topic } : {}),
     dateKey: occurredAt.slice(0, 10),
     id: occurredAt,
     locations,
@@ -72,8 +71,8 @@ describe('buildYearReview', () => {
   const moments = [
     moment('2025-06-01', [suzhou]),
     moment('2026-01-01T22:10:00+08:00', [suzhou], [photo]),
-    moment('2026-01-02T22:40:00+08:00', [hefei], [photo, photo, { type: 'video' }], 'travel'),
-    moment('2026-01-02', [], [], 'food'),
+    moment('2026-01-02T22:40:00+08:00', [hefei], [photo, photo, { type: 'video' }]),
+    moment('2026-01-02', [], []),
     moment('2026-03-10T09:00:00+08:00', [hefei]),
   ]
   const trips = [

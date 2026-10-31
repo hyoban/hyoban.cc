@@ -96,18 +96,16 @@ test('the public sees no private entry, the owner all of them', async () => {
   }
   const shown = await read()
   const all = await read(token)
-  const privateCount = snapshot.moments.filter(
-    (moment) => moment.hidden || moment.topic === 'tech',
-  ).length
+  const privateCount = snapshot.moments.filter((moment) => moment.hidden).length
 
   assert.equal(all.length, snapshot.moments.length + marks)
   assert.equal(shown.length, all.length - privateCount)
-  assert.ok(shown.every((entry) => entry.visibility !== 'private' && entry.topic !== 'tech'))
+  assert.ok(shown.every((entry) => entry.visibility !== 'private'))
 
-  const tech = snapshot.moments.find((moment) => moment.topic === 'tech')
+  const hidden = snapshot.moments.find((moment) => moment.hidden)
 
-  assert.equal((await get(env, `/v2/entries/${tech.uid}`)).status, 404)
-  assert.equal((await get(env, `/v2/entries/${tech.uid}`, owner)).body.uid, tech.uid)
+  assert.equal((await get(env, `/v2/entries/${hidden.uid}`)).status, 404)
+  assert.equal((await get(env, `/v2/entries/${hidden.uid}`, owner)).body.uid, hidden.uid)
 })
 
 test('a bill goes public by its amount, category and note alone, and a private one never comes', async () => {
@@ -271,7 +269,7 @@ test('a public span of footprints is kept and read by anyone, and goes when dele
 
 test('making an entry private takes it from the public feed', async () => {
   const { env } = setUpWithData()
-  const shown = snapshot.moments.find((moment) => !moment.hidden && moment.topic !== 'tech')
+  const shown = snapshot.moments.find((moment) => !moment.hidden)
   const entry = (await get(env, `/v2/entries/${shown.uid}`, owner)).body
   const { body } = await commit(env, { entries: [{ ...entry, visibility: 'private' }] })
   const feed = (await get(env, `/v2/changes?since=${body.revision - 1}`)).body

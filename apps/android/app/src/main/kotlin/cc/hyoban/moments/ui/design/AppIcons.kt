@@ -72,7 +72,6 @@ object AppIcons {
     val Archive: ImageVector by lazy { icon("archive", false, listOf("M5.75 4H18.25A2.25 2.25 0 0 1 20.5 6.25V6.25A2.25 2.25 0 0 1 18.25 8.5H5.75A2.25 2.25 0 0 1 3.5 6.25V6.25A2.25 2.25 0 0 1 5.75 4z", "M5 8.5V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8.5", "M10 12.5L14 12.5")) }
     val Backspace: ImageVector by lazy { icon("backspace", true, listOf("M8 5h11a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 19 19H8l-5.5-7z", "M11 9.5L16 14.5", "M16 9.5L11 14.5")) }
     val FileOpen: ImageVector by lazy { icon("file-open", false, listOf("M6 3.5h8l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V5a1.5 1.5 0 0 1 1.5-1.5z", "M14 3.5V8h4", "M9 14.5l3-3 3 3", "M12 11.5L12 17.5")) }
-    val Code: ImageVector by lazy { icon("code", false, listOf("M8.5 7 3.5 12l5 5", "M15.5 7l5 5-5 5", "M13.5 5L10.5 19")) }
 
     // Media
     val Play: ImageVector by lazy { icon("play", false, listOf("M7.5 5.2v13.6a.8.8 0 0 0 1.2.7l10.6-6.8a.8.8 0 0 0 0-1.4L8.7 4.5a.8.8 0 0 0-1.2.7z")) }

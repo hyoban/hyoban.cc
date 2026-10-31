@@ -141,8 +141,6 @@
     <string name="action_unmute">Unmute</string>
     <string name="section_photo">Photo</string>
     <string name="section_route">Route</string>
-    <string name="setting_show_tech">Show tech Moments</string>
-    <string name="settings_show_tech_note">Moments about tech never appear on the site. Turn this on to see them here.</string>
     <string name="section_map">Map</string>
     <string name="setting_api_url">API address</string>
     <string name="setting_asset_origin">Photo and video address</string>
@@ -243,15 +241,6 @@
     <string name="action_photo_still">Use the still only</string>
     <string name="action_move_earlier">Move earlier</string>
     <string name="action_move_later">Move later</string>
-    <string name="section_topic">Topic</string>
-    <string name="topic_tech">Tech</string>
-    <string name="topic_travel">Travel</string>
-    <string name="topic_food">Food</string>
-    <string name="topic_car">Car</string>
-    <string name="topic_photo">Photography</string>
-    <string name="topic_life">Life</string>
-    <string name="topic_none">None</string>
-    <string name="change_topic">Topic</string>
     <string name="section_food">Food</string>
     <string name="hint_food_dishes">What you had</string>
     <string name="food_good">Good</string>
@@ -925,7 +914,6 @@
     <string name="sync_title">Sync and sources</string>
     <string name="section_site">Site</string>
     <string name="section_media">Media</string>
-    <string name="section_timeline">Timeline</string>
     <string name="me_sync_token_set">Token set</string>
     <string name="me_sync_token_unset">No token, view only</string>
     <string name="me_auto_bill_on">Auto bills on</string>

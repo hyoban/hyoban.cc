@@ -55,7 +55,7 @@ test('a migration names things the same each time', () => {
   assert.notEqual(getStableUlid(at, 'x'), getStableUlid(at, 'y'))
 })
 
-test('a hidden or tech Moment is private, a meal keeps its cost', () => {
+test('a hidden Moment is private, a meal keeps its cost', () => {
   const moment = momentRecordSchema.parse({
     ...base,
     occurredAt: at,
@@ -72,12 +72,11 @@ test('a hidden or tech Moment is private, a meal keeps its cost', () => {
     cost: 32,
     people: 2,
   })
-  assert.equal(getEntryAudience({ topic: 'tech' }), 'private')
-  assert.equal(getEntryAudience({ topic: 'life' }), 'public')
+  assert.equal(getEntryAudience({}), 'public')
 })
 
 test('a part follows its own say, then its container, then its plugin', () => {
-  const entry = { visibility: undefined, topic: undefined }
+  const entry = { visibility: undefined }
   assert.equal(getPartAudience(entry, 'text', {}), 'public')
   assert.equal(getPartAudience(entry, 'bill', {}), 'private')
   assert.equal(getPartAudience(entry, 'bill', {}, 'public'), 'public')

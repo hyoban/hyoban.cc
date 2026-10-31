@@ -3,7 +3,6 @@ import { z } from 'zod'
 import {
   ID_PATTERN,
   momentMediaSchema,
-  momentTopicSchema,
   foodVerdictSchema,
   type MomentRecord,
   type TripRecord,
@@ -134,11 +133,6 @@ export const entrySchema = z.looseObject({
   parts: entryPartsSchema.default({}),
   links: z.array(entryLinkSchema).optional(),
   visibility: audienceSchema.optional(),
-  /**
-   * What it is mostly about, where the parts don't say: tech, photo and life. Travel, food
-   * and car are kept for the records that were given them.
-   */
-  topic: momentTopicSchema.optional(),
   /** Where it sits among its day's entries when their times don't say, lower first. */
   order: count.optional(),
   published: z.looseObject({ at: timestamp }).optional(),
@@ -310,9 +304,9 @@ function getPlugin(id: string): Plugin<never> | undefined {
 
 // Who sees what: its own say, else what holds it, else its plugin's default, else private.
 
-/** An entry's audience: its own, else private for tech, else public. */
-export function getEntryAudience(entry: Pick<Entry, 'visibility' | 'topic'>): Audience {
-  return entry.visibility ?? (entry.topic === 'tech' ? 'private' : 'public')
+/** An entry's audience: its own, else public. */
+export function getEntryAudience(entry: Pick<Entry, 'visibility'>): Audience {
+  return entry.visibility ?? 'public'
 }
 
 /**
@@ -320,7 +314,7 @@ export function getEntryAudience(entry: Pick<Entry, 'visibility' | 'topic'>): Au
  * plugin's default, following the entry for `inherit` and an unknown plugin.
  */
 export function getPartAudience(
-  entry: Pick<Entry, 'visibility' | 'topic'>,
+  entry: Pick<Entry, 'visibility'>,
   pluginId: string,
   part: { visibility?: Audience } | undefined,
   container?: Audience,
@@ -514,7 +508,8 @@ function round(value: number) {
 
 // From the first shape and back. A Moment is an entry of words, photos and a meal; a trip a
 // collection, its old id kept as the slug and its waypoints marks of their own. Both ways
-// are exact, so `data/` can move over and back again without losing a field.
+// are exact, so `data/` can move over and back again without losing a field. The `topic` an
+// older app still sends is dropped either way.
 
 const MOMENT_KEYS = new Set([
   'uid',
@@ -532,7 +527,7 @@ const MOMENT_KEYS = new Set([
   'updatedAt',
 ])
 
-/** A Moment as an entry. A hidden one is private; a tech one is private by its topic. */
+/** A Moment as an entry. A hidden one is private. */
 export function momentToEntry(moment: MomentRecord): Entry {
   const rest = Object.fromEntries(Object.entries(moment).filter(([key]) => !MOMENT_KEYS.has(key)))
   const parts: Record<string, unknown> = { text: { v: 1, text: moment.text } }
@@ -558,7 +553,6 @@ export function momentToEntry(moment: MomentRecord): Entry {
     ...(moment.places[0] ? { place: moment.places[0] } : {}),
     parts: parts as EntryParts,
     ...(moment.hidden ? { visibility: 'private' as const } : {}),
-    ...(moment.topic ? { topic: moment.topic } : {}),
     ...(moment.order ? { order: moment.order } : {}),
     ...(moment.published ? { published: moment.published } : {}),
     createdAt: moment.createdAt,
@@ -599,7 +593,6 @@ export function entryToMoment(entry: Entry, trip?: string): MomentRecord {
     places: entry.place ? [entry.place] : [],
     text: entry.parts.text?.text ?? '',
     hidden: entry.visibility === 'private',
-    ...(entry.topic ? { topic: entry.topic } : {}),
     media: (media?.items ?? []).map(({ point: _point, ...item }) => item) as MomentRecord['media'],
     ...(food
       ? {
@@ -659,7 +652,7 @@ export function mergeMomentIntoEntry(prior: Entry | undefined, moment: MomentRec
     }
   }
 
-  const { visibility: _visibility, place: _place, topic: _topic, order: _order, ...kept } = prior
+  const { visibility: _visibility, place: _place, order: _order, ...kept } = prior
 
   return {
     ...kept,
@@ -667,8 +660,6 @@ export function mergeMomentIntoEntry(prior: Entry | undefined, moment: MomentRec
     ...(prior.point ? { point: prior.point } : {}),
     ...(prior.links ? { links: prior.links } : {}),
     ...(prior.end ? { end: prior.end } : {}),
-    // Hidden or not is the Moment's say; one made public against its topic stays public.
-    ...(!next.visibility && prior.visibility === 'public' ? { visibility: 'public' as const } : {}),
     parts: parts as EntryParts,
   }
 }

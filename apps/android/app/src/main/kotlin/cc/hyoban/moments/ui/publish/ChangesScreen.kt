@@ -103,8 +103,6 @@ import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.compose.label
-import cc.hyoban.moments.data.spec.MomentTopic
-import cc.hyoban.moments.ui.format.topicLabel
 import cc.hyoban.moments.ui.format.foodLine
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
@@ -645,13 +643,6 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
             val after = foodLine(after.food)
             if (after == null) FromTo(foodLine(before.food), none, AppIcons.Food) else FromTo(foodLine(before.food), after, AppIcons.Food)
         }
-    }
-    if (before.topic != after.topic) {
-        any = true
-        val none = stringResource(R.string.topic_none)
-        val from = MomentTopic.of(before.topic)?.let { stringResource(topicLabel(it)) } ?: none
-        val to = MomentTopic.of(after.topic)?.let { stringResource(topicLabel(it)) } ?: none
-        Field(R.string.change_topic) { FromTo(from, to, AppIcons.Category) }
     }
     // Public or private, a change of its own: one made private leaves the site.
     if (before.hidden != after.hidden) {

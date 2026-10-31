@@ -97,7 +97,7 @@ function forward() {
   const existing = new Set(listJsonFiles('entries', dataRoot))
   const writes = new Map()
   const samples = []
-  const counts = { private: 0, hidden: 0, tech: 0, meals: 0, costs: 0, marks: 0, covers: 0 }
+  const counts = { private: 0, meals: 0, costs: 0, marks: 0, covers: 0 }
 
   for (const { file, raw, record } of moments) {
     const written = momentToEntry(raw)
@@ -106,8 +106,6 @@ function forward() {
     assertSame(back, record, file)
     writes.set(getEntryFile(entry), written)
     counts.private += getEntryAudience(entry) === 'private' ? 1 : 0
-    counts.hidden += record.hidden ? 1 : 0
-    counts.tech += record.topic === 'tech' ? 1 : 0
     counts.meals += record.food ? 1 : 0
     counts.costs += record.food?.bill ? 1 : 0
 
@@ -163,7 +161,7 @@ function forward() {
     removes: [...momentFiles, ...tripFiles],
     samples,
     summary: [
-      `${moments.length} Moments → entries (${counts.private} private: ${counts.hidden} hidden, ${counts.tech} tech)`,
+      `${moments.length} Moments → entries (${counts.private} private)`,
       `  ${counts.meals} with a meal, ${counts.costs} of them with a bill → food.cost and food.people`,
       `${trips.length} trips → collections, their ids kept as slugs, ${counts.covers} covers`,
       `  ${counts.marks} waypoints → mark entries`,

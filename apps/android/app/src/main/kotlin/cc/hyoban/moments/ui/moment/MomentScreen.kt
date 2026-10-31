@@ -482,7 +482,7 @@ private fun MomentDetails(
             }
             // Then who sees it: private, or public with the parts that would publish.
             add {
-                val private = moment.hidden || moment.topic == "tech"
+                val private = moment.hidden
                 val published = listOfNotNull(
                     stringResource(R.string.part_text).takeIf { moment.text.isNotBlank() },
                     stringResource(R.string.part_photos).takeIf { moment.media.isNotEmpty() },
@@ -504,7 +504,7 @@ private fun MomentDetails(
             }
             // Each part said private on its own, while the record itself is public.
             val own = moment.extra[cc.hyoban.moments.data.spec.Entries.PART_VISIBILITY] as? kotlinx.serialization.json.JsonObject
-            if (onPartPrivate != null && !(moment.hidden || moment.topic == "tech")) {
+            if (onPartPrivate != null && !moment.hidden) {
                 listOfNotNull(
                     ("food" to R.string.section_food).takeIf { moment.food != null },
                     ("media" to R.string.part_photos).takeIf { moment.media.isNotEmpty() },

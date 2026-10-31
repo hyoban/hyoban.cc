@@ -141,23 +141,15 @@ class MomentsRepositoryTest {
     }
 
     @Test
-    fun `the Moments about tech are left out unless asked for, private ones shown to the phone`() = runBlocking {
+    fun `every published Moment is shown, private ones to the phone alone`() = runBlocking {
         api.put(moment("A", "2026-10-01"))
-        api.put(moment("B", "2026-10-02", topic = "tech"))
-        api.put(moment("C", "2026-10-03", topic = "tech", hidden = true))
-        api.put(moment("D", "2026-10-04", hidden = true))
+        api.put(moment("B", "2026-10-02", hidden = true))
+        api.put(moment("C", "2026-10-03", published = false))
         val repository = repository()
         repository.load()
         repository.refresh()
-        assertEquals(listOf("D", "A"), repository.moments.value.map { it.uid })
-        assertEquals(null, repository.moment("B"))
-
-        repository.changeShowTech(true)
-        assertEquals(listOf("D", "C", "B", "A"), repository.moments.value.map { it.uid })
-        assertEquals("B", repository.moment("B")?.uid)
-
-        repository.changeShowTech(false)
-        assertEquals(listOf("D", "A"), repository.moments.value.map { it.uid })
+        assertEquals(listOf("B", "A"), repository.moments.value.map { it.uid })
+        assertEquals(null, repository.moment("C"))
     }
 
     @Test
@@ -556,13 +548,12 @@ class MomentsRepositoryTest {
         assertEquals(emptyList(), repository.moments.value.map { it.uid })
     }
 
-    private fun moment(uid: String, day: String, text: String = "", hidden: Boolean = false, published: Boolean = true, topic: String? = null) =
+    private fun moment(uid: String, day: String, text: String = "", hidden: Boolean = false, published: Boolean = true) =
         MomentRecord(
             uid = uid,
             occurredAt = day,
             text = text,
             hidden = hidden,
-            topic = topic,
             published = if (published) PublishedMoment("${day}T00:00:00Z") else null,
             createdAt = "${day}T00:00:00Z",
             updatedAt = "${day}T00:00:00Z",

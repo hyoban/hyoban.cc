@@ -58,9 +58,8 @@ what to try next.
 
 记录, or `moments://new`, opens a page of its own, or a dialog on a wide window. A Moment
 has its words, up to nine photos and videos, a time and a place, and under 加一项 a meal
-(美食: the dishes, 好吃, 一般 or 踩雷, the cost and how many it fed), a bill (账单) and a
-kind (类型: 技术, 旅行, 美食, 用车, 摄影 or 生活; the site doesn't show 技术). It is 公开 or
-私有; a private one is published for its owner but never shown on the site.
+(美食: the dishes, 好吃, 一般 or 踩雷, the cost and how many it fed) and a bill (账单). It
+is 公开 or 私有; a private one is published for its owner but never shown on the site.
 
 - **Media.** Picked with the system's documents picker, which keeps a photo's location,
   or shared in from the gallery (Here (写一个时刻)). They are copied in whole; a motion

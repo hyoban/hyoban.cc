@@ -138,8 +138,6 @@
     <string name="action_unmute">打开声音</string>
     <string name="section_photo">照片</string>
     <string name="section_route">路线</string>
-    <string name="setting_show_tech">显示技术时刻</string>
-    <string name="settings_show_tech_note">关于技术的时刻不会在网站上显示，打开后会在这里显示</string>
     <string name="section_map">地图</string>
     <string name="setting_api_url">API 地址</string>
     <string name="setting_asset_origin">图片与视频地址</string>
@@ -227,15 +225,6 @@
     <string name="action_photo_still">只用静态画面</string>
     <string name="action_move_earlier">往前移</string>
     <string name="action_move_later">往后移</string>
-    <string name="section_topic">类型</string>
-    <string name="topic_tech">技术</string>
-    <string name="topic_travel">旅行</string>
-    <string name="topic_food">美食</string>
-    <string name="topic_car">用车</string>
-    <string name="topic_photo">摄影</string>
-    <string name="topic_life">生活</string>
-    <string name="topic_none">没有</string>
-    <string name="change_topic">类型</string>
     <string name="section_food">美食</string>
     <string name="hint_food_dishes">吃了什么</string>
     <string name="food_good">好吃</string>
@@ -890,7 +879,6 @@
     <string name="sync_title">同步与来源</string>
     <string name="section_site">网站</string>
     <string name="section_media">媒体</string>
-    <string name="section_timeline">时间线</string>
     <string name="me_sync_token_set">令牌已设置</string>
     <string name="me_sync_token_unset">没有令牌，只能浏览</string>
     <string name="me_auto_bill_on">自动记账已开</string>

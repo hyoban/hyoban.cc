@@ -65,7 +65,7 @@ class AppContainer(context: Context) {
     // that is left as it was.
     val localStore = DataStore(File(context.filesDir, "local"))
     private val api = MomentsApi(baseUrl = { settings.apiUrl.value }, token = { settings.apiToken.value })
-    val repository = MomentsRepository(DataStore(File(context.filesDir, "api")), api, local = localStore, writer = api, showTech = settings.showTech,
+    val repository = MomentsRepository(DataStore(File(context.filesDir, "api")), api, local = localStore, writer = api,
         outside = cc.hyoban.moments.data.store.PhoneOutside(ledger, footprints),
     )
     val mediaUrls = MediaUrls { settings.assetOrigin.value }
@@ -128,11 +128,6 @@ class AppContainer(context: Context) {
         // The map's native library, 13 MB, loaded off the main thread too, so the map tab's
         // first showing doesn't load it in the frame that opens it.
         scope.launch(Dispatchers.IO) { runCatching { System.loadLibrary("maplibre") } }
-    }
-
-    fun changeShowTech(on: Boolean) {
-        settings.changeShowTech(on)
-        scope.launch { repository.changeShowTech(on) }
     }
 
     fun refresh() {

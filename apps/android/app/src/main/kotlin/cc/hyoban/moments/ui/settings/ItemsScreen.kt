@@ -30,15 +30,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * 记录项与公开: who sees what, by default. The timeline shows the Moments about tech, which the
- * site never does, only when asked; each book says whether its new bills are public, a public
+ * 记录项与公开: who sees what, by default. Each book says whether its new bills are public, a public
  * one publishing its amount, category and note alone; the footprints are private, with the spans
  * made public counted here and made so on a trip's page. Every bill and span can still say
  * otherwise. Nothing here opens a page further down.
  */
 @Composable
 fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
-    val settings = container.settings
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val revision by container.footprints.revision.collectAsStateWithLifecycle()
     val shares by produceState(0, revision) {
@@ -55,15 +53,6 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
                     .padding(horizontal = columns.margin)
                     .padding(bottom = Space.xl),
             ) {
-                SegmentedGroup(
-                    stringResource(R.string.section_timeline),
-                    stringResource(R.string.settings_show_tech_note),
-                    listOf { shapes ->
-                        SwitchRow(settings.showTech, AppIcons.Code, stringResource(R.string.setting_show_tech), "show_tech", shapes) {
-                            container.changeShowTech(!settings.showTech)
-                        }
-                    },
-                )
                 val books = ledger.books.filter { !it.archived }
                 if (books.isNotEmpty()) {
                     SegmentedGroup(
