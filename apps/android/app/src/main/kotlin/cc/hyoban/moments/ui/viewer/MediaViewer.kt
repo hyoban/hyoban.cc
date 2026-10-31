@@ -280,9 +280,9 @@ fun MediaViewer(
                 }
                 Row(Modifier.padding(start = Space.gutter - Space.s, end = Space.xs, bottom = Space.xs), verticalAlignment = Alignment.CenterVertically) {
                     // When and where, tapped for the rest of its day.
-                    val words = listOfNotNull(formatDay(moment.occurredAt), formatTime(moment.occurredAt)) + moment.places.map { places[it]?.name ?: it }
+                    val words = listOf(listOfNotNull(formatDay(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" ")) + moment.places.map { places[it]?.name ?: it }
                     Text(
-                        words.joinToString("\u2003"),
+                        words.joinToString(" "),
                         style = AppTheme.typography.caption,
                         color = MediaOverlay.contentVariant,
                         maxLines = 1,

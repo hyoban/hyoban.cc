@@ -242,7 +242,7 @@ function toPost(moment: MomentRecord, placeNames: Map<string, string>): Post {
     verdict && VERDICTS[verdict],
   ]
     .filter(Boolean)
-    .join('\u2003')
+    .join(' ')
   const link = `${SITE_URL}/m/${moment.uid.toLowerCase()}/`
   const footer = line ? `${line}\n${link}` : link
   const text = moment.text ? `${moment.text}\n\n${footer}` : footer

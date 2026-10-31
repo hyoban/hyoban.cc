@@ -123,7 +123,7 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
                         supporting = listOfNotNull(
                             pluralStringResource(R.plurals.me_ledger_books, books.size, books.size),
                             stringResource(R.string.me_auto_bill_on).takeIf { autoBill == true },
-                        ).joinToString(" "),
+                        ).joinToString(" "),
                         onClick = routes.ledgerSettings,
                     )
                     MeRow(AppIcons.Route, stringResource(R.string.footprint_settings_title), "settings_footprints", shapes, onClick = routes.footprintSettings)

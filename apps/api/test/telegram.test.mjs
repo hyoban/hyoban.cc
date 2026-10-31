@@ -107,7 +107,7 @@ test("a meal's post adds each one's share and its verdict to the place", async (
   assert.deepEqual(await sync(), { posted: 1, edited: 0, deleted: 0 })
   assert.equal(
     calls[0].params.caption,
-    `在码头等船。\n\n📍 ${nanjing}\u2003💰 人均 ¥35\u2003😋 好吃\n${link}`,
+    `在码头等船。\n\n📍 ${nanjing} 💰 人均 ¥35 😋 好吃\n${link}`,
   )
 })
 

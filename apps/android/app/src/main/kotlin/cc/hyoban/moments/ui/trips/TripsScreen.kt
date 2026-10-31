@@ -67,7 +67,7 @@ fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, urls: Medi
 @Composable
 fun TripSubhead(trip: TripRecord, count: Int, places: Int? = null) {
     Text(
-        (listOf(tripSummary(trip, count)) + listOfNotNull(places?.let { pluralStringResource(R.plurals.count_places, it, it) })).joinToString("\u2003"),
+        (listOf(tripSummary(trip, count)) + listOfNotNull(places?.let { pluralStringResource(R.plurals.count_places, it, it) })).joinToString(" "),
         style = AppTheme.typography.body,
         color = tokens.tx2,
     )
@@ -81,7 +81,7 @@ fun tripSummary(trip: TripRecord, moments: Int? = null): String {
         formatRange(trip.start, trip.end),
         pluralStringResource(R.plurals.count_days, days, days),
         moments?.let { pluralStringResource(R.plurals.count_moments, it, it) },
-    ).joinToString("\u2003")
+    ).joinToString(" ")
 }
 
 /** A trip's photos across the top of a card: one large and two small, or as many as it has. */

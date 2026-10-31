@@ -150,7 +150,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                                 colors = segmentColors(),
                                 leadingContent = { Icon(AppIcons.Book, contentDescription = null) },
                                 supportingContent = {
-                                    Text(listOfNotNull(book.currency, pluralStringResource(R.plurals.ledger_count_bills, count, count), stringResource(R.string.ledger_archived).takeIf { book.archived }).joinToString(" "))
+                                    Text(listOfNotNull(book.currency, pluralStringResource(R.plurals.ledger_count_bills, count, count), stringResource(R.string.ledger_archived).takeIf { book.archived }).joinToString(" "))
                                 },
                                 modifier = Modifier.testTag("book_${book.name}"),
                             ) { Text(book.name) }

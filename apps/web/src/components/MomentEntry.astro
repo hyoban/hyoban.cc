@@ -42,7 +42,7 @@ const foodParts = food
   ? [
       food.dishes.join('、'),
       food.verdict && verdictLabels[food.verdict],
-      bill && [`¥${priceFormatter.format(bill.amount)}`, bill.people && `${bill.people} 人`].filter(Boolean).join('\u2003'),
+      bill && [`¥${priceFormatter.format(bill.amount)}`, bill.people && `${bill.people} 人`].filter(Boolean).join(' '),
     ].filter(Boolean)
   : []
 

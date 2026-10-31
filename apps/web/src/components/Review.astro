@@ -113,7 +113,7 @@ const tripDate = (trip: { start: string }) =>
   `${Number(trip.start.slice(5, 7))}.${Number(trip.start.slice(8, 10))}`
 /** How long a trip was, and how far the car drove on it. */
 const tripMeta = (trip: { dayCount: number; drivingKm: number }) =>
-  `${trip.dayCount} 天${trip.drivingKm > 0 ? `\u2003${formatNumber(trip.drivingKm)} km` : ''}`
+  `${trip.dayCount} 天${trip.drivingKm > 0 ? ` ${formatNumber(trip.drivingKm)} km` : ''}`
 const topCities = review.cities.lit.slice(0, 6)
 // How many cities were first reached, where there's a year before to be new against.
 const showFirstVisits = (life || previous !== undefined) && review.firstVisits.length > 0
@@ -310,8 +310,8 @@ const highlights = [
                 <a href={`/${row.year}/`}>
                   <span class="year-years__year">{row.year}</span>
                   <span class="year-years__counts">
-                    {row.moments} 个时刻&emsp;{row.days} 天&emsp;{row.cities} 个城市
-                    {row.trips > 0 && `\u2003${row.trips} 次出行`}
+                    {row.moments} 个时刻 {row.days} 天 {row.cities} 个城市
+                    {row.trips > 0 && ` ${row.trips} 次出行`}
                   </span>
                 </a>
               </li>
@@ -455,7 +455,7 @@ const highlights = [
               <span class="year-menu__year">{life ? `${years[0]}–${years.at(-1)}` : year}</span>
               <span class="year-menu__title">{life ? '人生菜单' : '年度菜单'}</span>
               <span class="year-menu__count">
-                {meals.length} 道{menuCities > 1 && `\u2003${menuCities} 城`}
+                {meals.length} 道{menuCities > 1 && ` ${menuCities} 城`}
               </span>
             </header>
             {menuRows.map((row) => (
@@ -479,7 +479,7 @@ const highlights = [
                         <span class="year-menu__dish">
                           <span class="year-menu__name">{meal.name}</span>
                           <span class="year-menu__meta">
-                            {[formatDay(meal.moment.dateKey), meal.price].filter(Boolean).join('\u2003')}
+                            {[formatDay(meal.moment.dateKey), meal.price].filter(Boolean).join(' ')}
                           </span>
                         </span>
                         {meal.city && (
@@ -539,7 +539,7 @@ const highlights = [
                   <span class="year-devices__category">{device.category}</span>
                   <span class="year-devices__name">{device.name}</span>
                   <span class="year-devices__meta">
-                    <span>{formatDay(device.bought.on)}</span>&emsp;<span>¥{formatNumber(device.bought.price)}</span>
+                    <span>{formatDay(device.bought.on)}</span> <span>¥{formatNumber(device.bought.price)}</span>
                   </span>
                 </a>
               </li>

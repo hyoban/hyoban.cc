@@ -184,8 +184,8 @@ class BubbleShape(private val sent: Boolean, private val joinedAbove: Boolean, p
 fun DateCapsule(day: String, onClick: (() -> Unit)?, modifier: Modifier = Modifier, note: String? = null, description: String = "") {
     val date = java.time.LocalDate.parse(day)
     val weekday = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, LocalConfiguration.current.locales[0])
-    val label = if (date == java.time.LocalDate.now()) stringResource(R.string.label_today) + " " + weekday else formatDay(day)
-    val text = listOfNotNull(note, label).joinToString(" ")
+    val label = if (date == java.time.LocalDate.now()) stringResource(R.string.label_today) + " " + weekday else formatDay(day)
+    val text = listOfNotNull(note, label).joinToString(" ")
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         // At least a touch target high for its tap, the capsule itself only as tall as its words.
         Box(
@@ -194,7 +194,7 @@ fun DateCapsule(day: String, onClick: (() -> Unit)?, modifier: Modifier = Modifi
                 .then(if (onClick != null) Modifier.sharedCard(dayCardKey(day)).clip(AppTheme.shapes.medium).clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick) else Modifier)
                 .semantics(mergeDescendants = true) {
                     heading()
-                    contentDescription = listOfNotNull(note, formatDay(day), description.takeIf { it.isNotBlank() }).joinToString(" ")
+                    contentDescription = listOfNotNull(note, formatDay(day), description.takeIf { it.isNotBlank() }).joinToString(" ")
                 }
                 .testTag("day_header_$day"),
             contentAlignment = Alignment.Center,

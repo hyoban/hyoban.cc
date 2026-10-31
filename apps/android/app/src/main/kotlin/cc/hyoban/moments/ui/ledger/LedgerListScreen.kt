@@ -95,7 +95,7 @@ fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerN
                     listOf(
                         stringResource(R.string.ledger_expense_short, money(sums.expense, currency)),
                         stringResource(R.string.ledger_income_short, money(sums.income, currency)),
-                    ).joinToString(" "),
+                    ).joinToString(" "),
                     style = AppTheme.typography.body.strong,
                     modifier = Modifier.padding(start = Space.l, top = Space.s),
                 )

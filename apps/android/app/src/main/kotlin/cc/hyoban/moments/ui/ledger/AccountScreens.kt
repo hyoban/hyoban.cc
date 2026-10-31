@@ -76,7 +76,7 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
     SubPage(
         account.name,
         nav.back,
-        subtitle = accountKindLabel(account.kind) + " " + account.currency,
+        subtitle = accountKindLabel(account.kind) + " " + account.currency,
         actions = {
             Tooltip(stringResource(R.string.action_edit), below = true) {
                 IconButton(onClick = { nav.editAccount(id) }, modifier = Modifier.testTag("edit_account")) {
@@ -200,7 +200,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                     Box {
                         var open by remember { mutableStateOf(false) }
                         TextButton(onClick = { open = true }, modifier = Modifier.testTag("account_currency")) {
-                            Text(stringResource(R.string.ledger_currency) + " " + currency)
+                            Text(stringResource(R.string.ledger_currency) + " " + currency)
                         }
                         DropdownMenu(open, onDismissRequest = { open = false }) {
                             (COMMON_CURRENCIES + ledger.rates.currencies.sorted()).distinct().forEach { code ->

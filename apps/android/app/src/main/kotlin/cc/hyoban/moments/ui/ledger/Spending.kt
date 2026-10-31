@@ -90,7 +90,7 @@ fun SpendingCard(container: AppContainer, of: SpendingOf, onOpen: () -> Unit, mo
                         if (sums.income > 0) stringResource(R.string.ledger_income_short, money(sums.income, currency)) else null,
                         whole?.takeIf { it.expense != sums.expense }?.let { stringResource(R.string.ledger_trip_days_spent, money(it.expense, currency)) },
                         if (sums.unconverted > 0) stringResource(R.string.ledger_some_unconverted) else null,
-                    ).joinToString(" "),
+                    ).joinToString(" "),
                 )
             },
             leadingContent = { LeadingIcon(AppIcons.Receipt) },

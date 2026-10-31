@@ -178,9 +178,9 @@ private fun MomentBubble(
                 val time = formatTime(moment.occurredAt)
                 val numFont = AppTheme.typography.caption.fontFamily
                 val meta = androidx.compose.ui.text.buildAnnotatedString {
-                    append(parts.joinToString("\u2003"))
+                    append(parts.joinToString(" "))
                     if (time != null) {
-                        if (length > 0) append("\u2003")
+                        if (length > 0) append(" ")
                         pushStyle(androidx.compose.ui.text.SpanStyle(fontFamily = numFont))
                         append(time)
                         pop()
@@ -261,7 +261,7 @@ fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRe
         val private = (moment.hidden || moment.topic == "tech").takeIf { it }?.let { stringResource(R.string.visibility_private) }
         val parts = listOfNotNull(time.ifEmpty { null }) + moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
         Text(
-            parts.joinToString("\u2003"),
+            parts.joinToString(" "),
             style = AppTheme.typography.body,
             color = tokens.tx2,
             maxLines = 2,

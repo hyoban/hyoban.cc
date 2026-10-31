@@ -544,7 +544,7 @@ private fun PlaceSheet(
             Column(Modifier.weight(1f)) {
                 Text(place.name, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
                 Text(
-                    (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(resources.getString(R.string.separator_list)) { resources.getString(R.string.year_item, it) }).joinToString(" "),
+                    (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(resources.getString(R.string.separator_list)) { resources.getString(R.string.year_item, it) }).joinToString(" "),
                     style = AppTheme.typography.caption,
                     color = tokens.tx2,
                     maxLines = 1,
@@ -580,7 +580,7 @@ private fun PlaceSheet(
                     }
                     Column(Modifier.weight(1f)) {
                         Text(
-                            listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "),
+                            listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "),
                             style = AppTheme.typography.caption,
                             color = tokens.tx3,
                         )
@@ -661,7 +661,7 @@ private fun TripsSheet(
                     listOfNotNull(
                         pluralStringResource(R.plurals.count_trips, trips.size, trips.size),
                         total.takeIf { it >= 1 }?.let { stringResource(R.string.map_km, "%,d".format(it.roundToInt())) },
-                    ).joinToString(" ")
+                    ).joinToString(" ")
                 },
                 style = AppTheme.typography.caption,
                 color = tokens.tx2,
@@ -715,7 +715,7 @@ private fun TripRow(
                     formatDate(trip.start),
                     pluralStringResource(R.plurals.count_days, days, days),
                     km?.takeIf { it >= 1 }?.let { stringResource(R.string.map_km, "%,d".format(it.roundToInt())) },
-                ).joinToString(" "),
+                ).joinToString(" "),
                 style = AppTheme.typography.caption,
                 color = tokens.tx2,
             )

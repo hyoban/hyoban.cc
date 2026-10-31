@@ -389,7 +389,7 @@ fun DayHeader(day: String, description: String, onClick: (() -> Unit)?, modifier
             .fillMaxWidth()
             .heightIn(min = DAY_HEADER_TARGET)
             .then(if (onClick != null) Modifier.sharedCard(dayCardKey(day)).clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick) else Modifier)
-            .semantics(mergeDescendants = true) { heading(); contentDescription = listOfNotNull(formatDay(day), note, description.takeIf { it.isNotBlank() }).joinToString("\u2003") }
+            .semantics(mergeDescendants = true) { heading(); contentDescription = listOfNotNull(formatDay(day), note, description.takeIf { it.isNotBlank() }).joinToString(" ") }
             .testTag("day_header_$day"),
         contentAlignment = Alignment.BottomStart,
     ) {
@@ -430,7 +430,7 @@ fun Modifier.dayHeaderSpacing(gap: Dp, below: Dp = Space.m): Modifier {
 /** A day's pill: its label, how many Moments it has when more than one, and what it spent. */
 @Composable
 private fun dayPillText(label: String, count: Int, spent: String? = null): String =
-    listOfNotNull(label, if (count > 1) pluralStringResource(R.plurals.count_moments, count, count) else null, spent).joinToString("\u2003")
+    listOfNotNull(label, if (count > 1) pluralStringResource(R.plurals.count_moments, count, count) else null, spent).joinToString(" ")
 
 /**
  * Up by [by], taking that much off its height: the first day's capsule, its touch target's room

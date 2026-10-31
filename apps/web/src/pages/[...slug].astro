@@ -61,8 +61,7 @@ const { Content } = await render(entry)
             <header class="post__header">
               <h1>{entry.data.title}</h1>
               <p>
-                <time datetime={post.data.pubDate.toISOString()}>{formatPostFullDate(post.data.pubDate)}</time>
-                <span aria-hidden="true">&emsp;</span>
+                <time datetime={post.data.pubDate.toISOString()}>{formatPostFullDate(post.data.pubDate)}</time>{' '}
                 <span>{formatPostWordCount(wordCount)}</span>
               </p>
             </header>

@@ -80,7 +80,7 @@ const hotWords = await getHotWords()
     meta.textContent = formatSearchDate(entry.date)
     const where = getSearchPlace(result)
     if (where) {
-      meta.append(' ')
+      meta.append(' ')
       appendMarked(meta, where, terms)
     }
     body.append(text, meta)
