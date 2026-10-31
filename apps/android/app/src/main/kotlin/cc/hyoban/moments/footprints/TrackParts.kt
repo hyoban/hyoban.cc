@@ -49,8 +49,12 @@ fun footprintDrawing(points: List<TrackPoint>, parts: List<TrackPart>): Footprin
     return FootprintDrawing(lines, ends, stays)
 }
 
-/** Reads refined points, those the map draws, so spikes and stationary clouds are already gone. */
-fun trackParts(points: List<TrackPoint>): List<TrackPart> {
+/**
+ * Reads refined points, those the map draws, so spikes and stationary clouds are already gone.
+ * [activities], when activity recognition kept them, say how a move went before its speeds do.
+ */
+fun trackParts(points: List<TrackPoint>, activities: List<ActivityChange> = emptyList()): List<TrackPart> {
+    val hints = activityModes(activities)
     val parts = mutableListOf<TrackPart>()
     var moveStart = 0
     var i = 0
@@ -59,13 +63,13 @@ fun trackParts(points: List<TrackPoint>): List<TrackPart> {
         while (j + 1 < points.size && distanceMetres(points[i], points[j + 1]) <= STAY_RADIUS_M) j++
         if (points[j].time - points[i].time >= STAY_MIN_MS) {
             // The move ends where the stay begins, so the two meet on the map.
-            parts += moves(points.subList(moveStart, i + 1))
+            parts += moves(points.subList(moveStart, i + 1), hints)
             parts += TrackStay(points[i].time, points[j].time, points.subList(i, j + 1))
             moveStart = j
             i = j + 1
         } else i++
     }
-    parts += moves(points.subList(moveStart, points.size))
+    parts += moves(points.subList(moveStart, points.size), hints)
     // A gap inside a stay (a pause, GPS resting) leaves two stays with nothing between: one stay.
     val merged = mutableListOf<TrackPart>()
     for (part in parts) {
@@ -80,14 +84,16 @@ fun trackParts(points: List<TrackPoint>): List<TrackPart> {
 private class Run(val mode: TravelMode, val from: Int, var to: Int)
 
 /** One move between stays, split where its mode changes and smoothed over stops and slow traffic. */
-private fun moves(points: List<TrackPoint>): List<TrackMove> {
+private fun moves(points: List<TrackPoint>, hints: List<ActivitySpan>): List<TrackMove> {
     if (points.size < 2) return emptyList()
     val runs = mutableListOf<Run>()
     var from = 0
     while (from < points.lastIndex) {
         var to = from + 1
         while (to < points.lastIndex && points[to].time - points[from].time < CHUNK_MS) to++
-        val mode = modeOf(points.subList(from, to + 1))
+        val chunk = points.subList(from, to + 1)
+        val middle = (chunk.first().time + chunk.last().time) / 2
+        val mode = modeOf(chunk, hints.lastOrNull { middle in it.start until it.end }?.mode)
         val last = runs.lastOrNull()
         if (last?.mode == mode) last.to = to else runs += Run(mode, from, to)
         from = to
@@ -153,17 +159,53 @@ private fun trustedSpeed(point: TrackPoint): Double? {
     return speed.takeIf { it.isFinite() && it >= 0 && (error == null || error <= MAX_SPEED_ERROR) }
 }
 
-private fun modeOf(chunk: List<TrackPoint>): TravelMode {
+/** How long Play services' word holds when nothing follows it. */
+private const val ACTIVITY_HOLD_MS = 30 * 60_000L
+
+private data class ActivitySpan(val start: Long, val end: Long, val mode: TravelMode)
+
+/** From each activity entered until it is left, another is entered, or the hold runs out; STILL says nothing of a mode. */
+private fun activityModes(changes: List<ActivityChange>): List<ActivitySpan> {
+    val sorted = changes.sortedBy { it.time }
+    return sorted.withIndex().mapNotNull { (index, change) ->
+        val mode = when (change.activity) {
+            IN_VEHICLE -> TravelMode.DRIVE
+            ON_BICYCLE -> TravelMode.CYCLE
+            ON_FOOT, WALKING, RUNNING -> TravelMode.WALK
+            else -> null
+        }
+        if (!change.entering || mode == null) return@mapNotNull null
+        val ends = sorted.drop(index + 1).firstOrNull { it.activity == change.activity && !it.entering || it.entering && it.activity != change.activity }
+        ActivitySpan(change.time, minOf(ends?.time ?: Long.MAX_VALUE, change.time + ACTIVITY_HOLD_MS), mode)
+    }
+}
+
+// Play services' DetectedActivity types, kept here so the reading needs no Google library.
+private const val IN_VEHICLE = 0
+private const val ON_BICYCLE = 1
+private const val ON_FOOT = 2
+private const val WALKING = 7
+private const val RUNNING = 8
+
+private fun modeOf(chunk: List<TrackPoint>, hint: TravelMode?): TravelMode {
     var metres = 0.0
     var millis = 0L
     chunk.zipWithNext { a, b -> if (connected(a, b)) { metres += distanceMetres(a, b); millis += b.time - a.time } }
     val reported = chunk.mapNotNull(::trustedSpeed)
     val average = if (millis > 0) metres / (millis / 1000.0) else reported.average().takeIf { reported.isNotEmpty() } ?: 0.0
     val top = reported.maxOrNull() ?: average
-    return when {
+    val bySpeed = when {
         average >= DRIVE_AVERAGE || top >= DRIVE_TOP -> TravelMode.DRIVE
         average >= CYCLE_AVERAGE || top >= CYCLE_TOP -> TravelMode.CYCLE
         else -> TravelMode.WALK
+    }
+    // The activity is believed unless the speed rules it out: a car may crawl and a run may pass a
+    // ride's pace, but no walk or ride goes at a drive's.
+    return when (hint) {
+        TravelMode.DRIVE -> TravelMode.DRIVE
+        TravelMode.CYCLE -> if (average >= RIDE_LIMIT) TravelMode.DRIVE else TravelMode.CYCLE
+        TravelMode.WALK -> if (bySpeed == TravelMode.DRIVE) TravelMode.DRIVE else TravelMode.WALK
+        null -> bySpeed
     }
 }
 
@@ -180,3 +222,4 @@ private const val DRIVE_TOP = 35 / 3.6
 private const val CYCLE_AVERAGE = 8 / 3.6
 private const val CYCLE_TOP = 14 / 3.6
 private const val CAR_PARK_TOP = 25 / 3.6
+private const val RIDE_LIMIT = 35 / 3.6

@@ -36,6 +36,12 @@ data class TrackShare(
     val removed: Boolean = false,
     val published: String? = null,
 )
+/** A Play services activity (`DetectedActivity`) entered or left at [time]. */
+data class ActivityChange(val time: Long, val activity: Int, val entering: Boolean)
+
+/** A recording command (daily_on, pause, …, with who asked), a rest, a wake or a lost sky. */
+data class TrackEvent(val time: Long, val kind: String, val detail: String?)
+
 data class FootprintHistory(val days: List<String>, val sessions: List<TrackSession>)
 
 /**
@@ -43,7 +49,7 @@ data class FootprintHistory(val days: List<String>, val sessions: List<TrackSess
  * The points table is the original sample ledger; the displayed route is a bounded streaming view.
  */
 class FootprintStore(context: Context) : SQLiteOpenHelper(
-    context, File(context.noBackupFilesDir, "footprints.sqlite").absolutePath, null, 4,
+    context, File(context.noBackupFilesDir, "footprints.sqlite").absolutePath, null, 5,
 ) {
     private val _revision = MutableStateFlow(0L)
     val revision = _revision.asStateFlow()
@@ -58,6 +64,19 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         db.execSQL("CREATE INDEX points_time ON points(time)")
         createShares(db)
         createPlaceNames(db)
+        addContext(db)
+    }
+
+    /**
+     * What a fix said beyond the line, the activities Play services saw, and why recording
+     * started, stopped, rested or woke: kept as long as the samples, for reading them later.
+     */
+    private fun addContext(db: SQLiteDatabase) {
+        for (column in listOf("bearing REAL", "bearing_accuracy REAL", "vertical_accuracy REAL", "msl_altitude REAL",
+            "provider TEXT", "sats_used INTEGER", "sats_visible INTEGER", "cn0 REAL")) db.execSQL("ALTER TABLE points ADD COLUMN $column")
+        db.execSQL("CREATE TABLE activities (time INTEGER NOT NULL, activity INTEGER NOT NULL, entering INTEGER NOT NULL, PRIMARY KEY (time, activity, entering))")
+        db.execSQL("CREATE TABLE events (id INTEGER PRIMARY KEY, time INTEGER NOT NULL, kind TEXT NOT NULL, detail TEXT)")
+        db.execSQL("CREATE INDEX events_time ON events(time)")
     }
 
     private fun createShares(db: SQLiteDatabase) {
@@ -73,6 +92,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         // The footprints stay private, but spans of them can be made public.
         if (oldVersion < 3) createShares(db)
         if (oldVersion < 4) createPlaceNames(db)
+        if (oldVersion < 5) addContext(db)
     }
 
     /** What Photon calls the spots bills were paid at (`BillPlaces`), by a cell of about ten metres; empty where nothing is named. */
@@ -89,7 +109,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
 
     /** The sample nearest [time], no more than [within] ms either side of it, of those good to [accuracy] metres. */
     @Synchronized fun pointNear(time: Long, within: Long, accuracy: Double): TrackPoint? = readableDatabase.rawQuery(
-        "SELECT time,lat,lon,accuracy,altitude,segment,speed,speed_accuracy FROM points WHERE time BETWEEN ? AND ? AND accuracy<=? ORDER BY abs(time-?) LIMIT 1",
+        "SELECT time,lat,lon,accuracy,altitude,segment,speed,speed_accuracy,bearing,bearing_accuracy,vertical_accuracy,msl_altitude,provider,sats_used,sats_visible,cn0 FROM points WHERE time BETWEEN ? AND ? AND accuracy<=? ORDER BY abs(time-?) LIMIT 1",
         arrayOf((time - within).toString(), (time + within).toString(), accuracy.toString(), time.toString()),
     ).use { if (it.moveToFirst()) it.point() else null }
 
@@ -98,7 +118,8 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         RecordingState(it.getInt(0) != 0, it.getString(1), it.getInt(2) != 0)
     }
 
-    @Synchronized fun command(action: String, now: Long = System.currentTimeMillis()) {
+    /** [source] says who asked (you, the notification, a Wi-Fi or Bluetooth rule), and is kept with the change. */
+    @Synchronized fun command(action: String, now: Long = System.currentTimeMillis(), source: String? = null) {
         val db = writableDatabase
         db.transaction {
             val before = state()
@@ -121,14 +142,15 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
             if (!after.requested) after = after.copy(paused = false)
             db.execSQL("UPDATE recording SET daily=?, session=?, paused=?, segment=? WHERE id=1",
                 arrayOf<Any?>(if (after.daily) 1 else 0, after.session, if (after.paused) 1 else 0, UUID.randomUUID().toString()))
+            if (action != "break") insertEvent(db, now, action, source)
         }
         _revision.value++
     }
 
     /** A settled connection event must not overwrite a newer manual recording choice. */
-    @Synchronized fun commandIfUnchanged(action: String, expected: RecordingState): Boolean {
+    @Synchronized fun commandIfUnchanged(action: String, expected: RecordingState, source: String? = null): Boolean {
         if (state() != expected) return false
-        command(action)
+        command(action, source = source)
         return true
     }
 
@@ -150,7 +172,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         db.transaction {
             val segment = db.rawQuery("SELECT segment FROM recording WHERE id=1", null).use { it.moveToFirst(); it.getString(0) }
             if (expectedSegment != null && expectedSegment != segment) return points.map { FixDecision.NOT_RECORDING }
-            var previous = db.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment,speed,speed_accuracy FROM points ORDER BY id DESC LIMIT 1", null).use {
+            var previous = db.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment,speed,speed_accuracy,bearing,bearing_accuracy,vertical_accuracy,msl_altitude,provider,sats_used,sats_visible,cn0 FROM points ORDER BY id DESC LIMIT 1", null).use {
                 if (it.moveToFirst()) it.point() else null
             }
             for (point in points) {
@@ -164,6 +186,11 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
                     put("accuracy", point.accuracy); put("altitude", point.altitude); put("segment", segment); put("session", state.session)
                     put("speed", point.speed?.takeIf { it.isFinite() && it >= 0 })
                     put("speed_accuracy", point.speedAccuracy?.takeIf { it.isFinite() && it >= 0 })
+                    with(point.extras) {
+                        put("bearing", bearing?.takeIf { it.isFinite() }); put("bearing_accuracy", bearingAccuracy?.takeIf { it.isFinite() })
+                        put("vertical_accuracy", verticalAccuracy?.takeIf { it.isFinite() }); put("msl_altitude", seaLevelAltitude?.takeIf { it.isFinite() })
+                        put("provider", provider); put("sats_used", satellitesUsed); put("sats_visible", satellitesVisible); put("cn0", signal?.takeIf { it.isFinite() })
+                    }
                 })
                 previous = point.copy(segment = segment)
             }
@@ -171,6 +198,33 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         if (FixDecision.ACCEPT in decisions) _revision.value++
         return decisions
     }
+
+    private fun insertEvent(db: SQLiteDatabase, time: Long, kind: String, detail: String?) {
+        db.insertOrThrow("events", null, ContentValues().apply { put("time", time); put("kind", kind); put("detail", detail) })
+    }
+
+    /** Why recording rested, woke or lost the sky, for reading a gap later. */
+    @Synchronized fun event(kind: String, detail: String? = null, time: Long = System.currentTimeMillis()) =
+        insertEvent(writableDatabase, time, kind, detail)
+
+    @Synchronized fun events(from: Long, to: Long): List<TrackEvent> = readableDatabase.rawQuery(
+        "SELECT time,kind,detail FROM events WHERE time BETWEEN ? AND ? ORDER BY time,id", arrayOf(from.toString(), to.toString()),
+    ).use { c -> buildList { while (c.moveToNext()) add(TrackEvent(c.getLong(0), c.getString(1), if (c.isNull(2)) null else c.getString(2))) } }
+
+    /** Play services' activity transitions as they arrive; a repeated delivery is kept once. */
+    @Synchronized fun saveActivities(activities: List<ActivityChange>) {
+        val db = writableDatabase
+        db.transaction {
+            for (change in activities) db.insertWithOnConflict("activities", null, ContentValues().apply {
+                put("time", change.time); put("activity", change.activity); put("entering", if (change.entering) 1 else 0)
+            }, SQLiteDatabase.CONFLICT_IGNORE)
+        }
+        _revision.value++
+    }
+
+    @Synchronized fun activities(from: Long, to: Long): List<ActivityChange> = readableDatabase.rawQuery(
+        "SELECT time,activity,entering FROM activities WHERE time BETWEEN ? AND ? ORDER BY time", arrayOf(from.toString(), to.toString()),
+    ).use { c -> buildList { while (c.moveToNext()) add(ActivityChange(c.getLong(0), c.getInt(1), c.getInt(2) != 0)) } }
 
     /** The days with any footprints, newest first. */
     @Synchronized fun days(): List<String> = readableDatabase.rawQuery("SELECT DISTINCT day FROM points ORDER BY day DESC", null).use { c ->
@@ -227,7 +281,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
 
     private fun cursor(selection: TrackSelection): Cursor {
         val (where, args) = where(selection)
-        return readableDatabase.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment,speed,speed_accuracy FROM points WHERE $where ORDER BY time,id", args)
+        return readableDatabase.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment,speed,speed_accuracy,bearing,bearing_accuracy,vertical_accuracy,msl_altitude,provider,sats_used,sats_visible,cn0 FROM points WHERE $where ORDER BY time,id", args)
     }
 
     @Synchronized fun points(selection: TrackSelection): List<TrackPoint> = cursor(selection).use { c ->
@@ -257,6 +311,14 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         val (where, args) = where(selection)
         val db = writableDatabase
         db.transaction {
+            // What was kept beside the samples goes with them, over the span they covered.
+            db.rawQuery("SELECT min(time), max(time) FROM points WHERE $where", args).use {
+                if (it.moveToFirst() && !it.isNull(0)) {
+                    val span = arrayOf(it.getLong(0).toString(), it.getLong(1).toString())
+                    db.delete("activities", "time BETWEEN ? AND ?", span)
+                    db.delete("events", "time BETWEEN ? AND ?", span)
+                }
+            }
             db.delete("points", where, args)
             if (selection.session != null) db.delete("sessions", "id=?", arrayOf(selection.session))
             db.execSQL("DELETE FROM sessions WHERE id NOT IN (SELECT session FROM points WHERE session IS NOT NULL)")
@@ -265,4 +327,8 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
     }
 }
 
-private fun Cursor.point() = TrackPoint(getLong(0), getDouble(1), getDouble(2), getDouble(3), if (isNull(4)) null else getDouble(4), getString(5), if (isNull(6)) null else getDouble(6), if (isNull(7)) null else getDouble(7))
+private fun Cursor.double(index: Int) = if (isNull(index)) null else getDouble(index)
+private fun Cursor.int(index: Int) = if (isNull(index)) null else getInt(index)
+
+private fun Cursor.point() = TrackPoint(getLong(0), getDouble(1), getDouble(2), getDouble(3), double(4), getString(5), double(6), double(7),
+    FixExtras(double(8), double(9), double(10), double(11), if (isNull(12)) null else getString(12), int(13), int(14), double(15)))

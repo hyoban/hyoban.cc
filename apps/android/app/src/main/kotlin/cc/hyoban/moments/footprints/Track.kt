@@ -14,6 +14,20 @@ data class TrackPoint(
     val segment: String = "",
     val speed: Double? = null,
     val speedAccuracy: Double? = null,
+    /** Kept for later reading, not used by the line: what else the fix and the receiver said. */
+    val extras: FixExtras = FixExtras(),
+)
+
+/** Heading in degrees, accuracies in metres or degrees, altitude above sea level, and the satellites behind the fix. */
+data class FixExtras(
+    val bearing: Double? = null,
+    val bearingAccuracy: Double? = null,
+    val verticalAccuracy: Double? = null,
+    val seaLevelAltitude: Double? = null,
+    val provider: String? = null,
+    val satellitesUsed: Int? = null,
+    val satellitesVisible: Int? = null,
+    val signal: Double? = null,
 )
 
 const val TRACK_GAP_MS = 45_000L
@@ -123,6 +137,16 @@ fun writeGpx(writer: Writer, points: Sequence<TrackPoint>, raw: Boolean = false)
         if (raw) writer.write("<m:segment>${point.segment.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")}</m:segment>")
         point.speed?.let { writer.write("<m:speed>$it</m:speed>") }
         point.speedAccuracy?.let { writer.write("<m:speedAccuracy>$it</m:speedAccuracy>") }
+        if (raw) with(point.extras) {
+            bearing?.let { writer.write("<m:bearing>$it</m:bearing>") }
+            bearingAccuracy?.let { writer.write("<m:bearingAccuracy>$it</m:bearingAccuracy>") }
+            verticalAccuracy?.let { writer.write("<m:verticalAccuracy>$it</m:verticalAccuracy>") }
+            seaLevelAltitude?.let { writer.write("<m:seaLevelAltitude>$it</m:seaLevelAltitude>") }
+            provider?.let { writer.write("<m:provider>${it.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")}</m:provider>") }
+            satellitesUsed?.let { writer.write("<m:satellitesUsed>$it</m:satellitesUsed>") }
+            satellitesVisible?.let { writer.write("<m:satellitesVisible>$it</m:satellitesVisible>") }
+            signal?.let { writer.write("<m:cn0>$it</m:cn0>") }
+        }
         writer.write("</extensions></trkpt>\n")
         previous = point
     }

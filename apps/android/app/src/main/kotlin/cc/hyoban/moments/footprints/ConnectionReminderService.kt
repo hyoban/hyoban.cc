@@ -331,7 +331,8 @@ class ConnectionReminderService : Service() {
                 }
                 val signal = transitions.settle(state) ?: return@post
                 val action = signal.command(state) ?: return@post
-                val applied = RecordingService.control(this@ConnectionReminderService, action, expectedState = state)
+                val applied = RecordingService.control(this@ConnectionReminderService, action, expectedState = state,
+                    source = signal.kind.name.lowercase())
                 diagnostic("connection_action", "kind" to signal.kind.name, "connected" to signal.connected,
                     "action" to action, "accepted" to applied)
                 recording = withContext(Dispatchers.IO) { container.footprints.state() }

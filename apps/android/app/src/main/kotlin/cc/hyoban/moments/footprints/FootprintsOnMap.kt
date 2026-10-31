@@ -110,7 +110,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
         try {
             view = withContext(Dispatchers.IO) {
                 val points = store.points(selection)
-                val parts = trackParts(points)
+                val parts = trackParts(points, if (points.isEmpty()) emptyList() else store.activities(points.first().time - ACTIVITY_LOOKBACK_MS, points.last().time))
                 TrackView(store.state(), store.history(), points, trackStats(points), parts, footprintDrawing(points, parts))
             }
             loaded = true
@@ -390,6 +390,9 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
         )
     }
 }
+
+/** An activity entered before the first point may still say how it went. */
+private const val ACTIVITY_LOOKBACK_MS = 30 * 60_000L
 
 private fun day(time: Long) = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).toLocalDate()
 

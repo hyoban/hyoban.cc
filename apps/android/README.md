@@ -191,9 +191,17 @@ backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export GP
   breaks the line at fixes over 50 m uncertainty, gaps over 45 seconds, pauses and
   restarts. 导出当前原始采样 GPX exports every stored sample, with accuracy and speed in
   `https://hyoban.cc/ns/footprints/1` extensions.
+- **What else is kept.** Beside each sample the store keeps what the fix and the receiver
+  said: heading and its accuracy, vertical accuracy, altitude above sea level, the provider,
+  and the satellites used and seen with their signal (matched by time, so batched fixes
+  get their own); the raw GPX carries them too. With 活动识别增强 on it keeps every activity
+  transition, and it keeps recording events: each command with who gave it (`manual`,
+  `notification`, `wifi`, `bluetooth`), each rest with its reason, each wake with what woke
+  it, and each lost sky. Deleting a day or trip deletes these over its span too.
 - **Moves and stays.** `TrackParts` reads the refined points of the chosen day or trip as
   stays (five minutes or more within 120 m, a pause or a rest inside one included) and moves
-  between them, each told walking, cycling or driving by its speeds alone; slow traffic and
+  between them, each told walking, cycling or driving by the kept activities where there are
+  any, else by its speeds, and never against them (a walk can't go at a drive's pace); slow traffic and
   a car park's crawl stay part of the drive. The map draws a drive solid, a ride thinner, a
   walk dotted and a stay as a ring; 足迹 → 行程分段 lists them with distance, average and top
   speed, names a stay after one of the phone's own places within 300 m (no request leaves
