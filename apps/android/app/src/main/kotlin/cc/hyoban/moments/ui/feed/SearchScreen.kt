@@ -45,6 +45,7 @@ import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Surface
 import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -146,7 +147,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                 state = query,
                 // Searched, the keyboard goes, so what was found has the screen.
                 onSearch = { keyboard?.hide() },
-                placeholder = { Text(stringResource(R.string.hint_search_moments)) },
+                placeholder = { Text(stringResource(R.string.hint_search_everything)) },
                 leadingIcon = {
                     Tooltip(stringResource(R.string.action_back), below = true) {
                         IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
@@ -211,19 +212,30 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
         }
         // What the search found, said as it changes, so a screen reader hears it too; shown only
         // when there is nothing to list, as the kinds' counts say how many there are.
+        // Nothing to list says why, and under it the next step: what can be searched, or what to
+        // loosen.
         val status = when {
             !searching -> stringResource(R.string.search_prompt)
+            found.isEmpty() && text.isNotEmpty() -> stringResource(R.string.search_none_for, text)
             found.isEmpty() -> stringResource(R.string.search_none)
             else -> pluralStringResource(R.plurals.count_results, found.size, found.size)
         }
+        val note = when {
+            !searching -> stringResource(R.string.search_prompt_note)
+            found.isEmpty() && filter != TimeFilter() -> stringResource(R.string.search_none_note_time)
+            found.isEmpty() -> stringResource(R.string.search_none_note)
+            else -> null
+        }
         val announce = Modifier.semantics { liveRegion = LiveRegionMode.Polite }.testTag("search_status")
         if (found.isEmpty()) {
-            Text(
-                status,
-                style = AppTheme.typography.body,
-                color = tokens.tx2,
-                modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).then(announce),
-            )
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = Space.xl * 2, vertical = Space.xl * 3).then(announce),
+                verticalArrangement = Arrangement.spacedBy(Space.xs),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(status, style = AppTheme.typography.body, color = tokens.tx2, textAlign = TextAlign.Center)
+                if (note != null) Text(note, style = AppTheme.typography.caption, color = tokens.tx3, textAlign = TextAlign.Center)
+            }
         } else {
             Box(announce.semantics { contentDescription = status })
         }

@@ -21,6 +21,8 @@ import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -479,6 +481,19 @@ private fun ZoomableStill(
                 placeholderUrl = drawn,
                 detail = if (scale > 1.5f) scale else 1f,
                 modifier = Modifier.fillMaxSize().sharedMedia(mediaKey(momentUid, media.uid).takeIf { shared }),
+                // Fetching it failed: said in the middle, with the way to try again, on the black.
+                failed = { retry ->
+                    Column(
+                        Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(Space.s),
+                    ) {
+                        Text(stringResource(R.string.media_not_loaded), style = AppTheme.typography.body, color = MediaOverlay.content)
+                        TextButton(onClick = retry, modifier = Modifier.testTag("media_retry")) {
+                            Text(stringResource(R.string.action_retry), color = MediaOverlay.content)
+                        }
+                    }
+                },
             )
             overlay()
         }

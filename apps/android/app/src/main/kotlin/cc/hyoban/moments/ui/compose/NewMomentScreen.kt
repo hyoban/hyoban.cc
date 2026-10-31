@@ -679,10 +679,10 @@ fun NewMomentScreen(
             text = { Text(stringResource(R.string.confirm_discard_note)) },
             confirmButton = {
                 TextButton(onClick = { confirmingDiscard = false; onBack() }, modifier = Modifier.testTag("discard")) {
-                    Text(stringResource(R.string.action_discard))
+                    Text(stringResource(R.string.action_discard), color = tokens.danger)
                 }
             },
-            dismissButton = { TextButton(onClick = { confirmingDiscard = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { confirmingDiscard = false }) { Text(stringResource(R.string.action_keep_writing)) } },
         )
     }
 }
@@ -924,10 +924,13 @@ private fun Visibility(private: Boolean, onPrivate: (Boolean) -> Unit) {
         )
         DropdownMenu(open, onDismissRequest = { open = false }) {
             listOf(false to AppIcons.Eye, true to AppIcons.EyeOff).forEach { (choice, icon) ->
+                // The chosen one on the accent's tint, its icon in the accent, besides its tick.
+                val chosen = choice == private
                 DropdownMenuItem(
                     text = { Text(stringResource(if (choice) R.string.visibility_private else R.string.visibility_public)) },
-                    leadingIcon = { Icon(icon, contentDescription = null) },
-                    trailingIcon = if (choice == private) {
+                    leadingIcon = { Icon(icon, contentDescription = null, tint = if (chosen) tokens.accent else LocalContentColor.current) },
+                    modifier = if (chosen) Modifier.background(tokens.accentSoft) else Modifier,
+                    trailingIcon = if (chosen) {
                         { Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent) }
                     } else {
                         null

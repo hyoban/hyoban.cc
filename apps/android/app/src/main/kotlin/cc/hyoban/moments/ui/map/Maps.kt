@@ -1422,10 +1422,13 @@ fun PickerMap(
     onCenter: (latitude: Double, longitude: Double, byUser: Boolean) -> Unit,
     onPlace: (String) -> Unit,
     modifier: Modifier = Modifier,
+    /** Told when a finger starts moving the map, and when it comes to rest again. */
+    onDrag: (Boolean) -> Unit = {},
 ) {
     val reduced = LocalReducedMotion.current
     val tapPlace by rememberUpdatedState(onPlace)
     val centered by rememberUpdatedState(onCenter)
+    val dragged by rememberUpdatedState(onDrag)
     var map by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
     val primary = tokens.accent.toArgb()
     val dot = tokens.tx2.toArgb()
@@ -1494,8 +1497,10 @@ fun PickerMap(
         var byUser = false
         val started = MapLibreMap.OnCameraMoveStartedListener { reason ->
             byUser = reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE
+            if (byUser) dragged(true)
         }
         val idle = MapLibreMap.OnCameraIdleListener {
+            dragged(false)
             val center = ready.cameraPosition.target ?: return@OnCameraIdleListener
             centered(center.latitude, center.longitude, byUser)
             byUser = false

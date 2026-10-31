@@ -75,10 +75,13 @@
     <string name="media_photo">照片</string>
     <string name="media_live">实况照片</string>
     <string name="media_video">视频</string>
+    <string name="media_not_loaded">照片没载入</string>
+    <string name="action_retry">重试</string>
     <string name="title_moments">时间线</string>
     <string name="title_trips">旅程</string>
     <string name="label_live">实况</string>
     <string name="empty_moments">还没有时刻</string>
+    <string name="empty_moments_hint">用右下角的加号记下第一条，账单和足迹也会出现在这里</string>
     <string name="empty_trips">还没有旅程</string>
     <string name="empty_loading">正在加载时刻…</string>
     <string name="message_refresh_failed">没能更新：%1$s</string>
@@ -89,6 +92,8 @@
     <string name="footprints_map_recording">足迹，正在记录</string>
     <string name="legend_trips">旅程</string>
     <string name="trip_day">第 %1$d 天</string>
+    <string name="trip_ongoing">进行中</string>
+    <string name="trip_since">%1$s起</string>
     <string name="action_play_trip">回放旅程</string>
     <string name="action_previous_stop">上一站</string>
     <string name="action_next_stop">下一站</string>
@@ -115,9 +120,13 @@
     <string name="message_text_copied">已复制文字</string>
     <string name="action_view_photo">看大图</string>
     <string name="action_see_moments">查看全部时刻</string>
-    <string name="hint_search_moments">搜索</string>
-    <string name="search_prompt">按文字、地点或旅程找时刻</string>
-    <string name="search_none">没有找到相关的时刻</string>
+    <string name="hint_search_everything">搜时刻、地点、旅程和账单</string>
+    <string name="search_prompt">输入文字，或者只选上面的筛选</string>
+    <string name="search_prompt_note">时刻搜正文、地点和旅程，账单搜分类和备注</string>
+    <string name="search_none">没有找到</string>
+    <string name="search_none_for">没有找到「%1$s」</string>
+    <string name="search_none_note">换个说法再找找</string>
+    <string name="search_none_note_time">换个说法，或者把年份放宽到「全部」</string>
     <string name="explain_on_phone">这个时刻目前只在这台手机上。发布更改后，网站上才会出现。</string>
     <string name="explain_unpublished_change">这个时刻在手机上改过。发布更改后，网站上的才会更新。</string>
     <string name="label_pick_moment">选一个时刻，在这里看它</string>
@@ -348,6 +357,7 @@
     <string name="refreshing">正在刷新</string>
     <string name="share_manual_note">保存照片、复制文字后手动发布</string>
     <string name="confirm_discard_note">还没保存的文字、照片和地点都会丢掉</string>
+    <string name="action_keep_writing">继续写</string>
     <string name="reason_no_token">还没设置 API 令牌</string>
     <string name="reason_token">API 令牌无效，在设置里换一个</string>
     <string name="reason_not_found">API 地址上没有找到内容，检查设置里的 API 地址</string>
@@ -781,6 +791,7 @@
     <string name="footprints_span_manual">手动公开的</string>
     <string name="footprints_make_public">公开这一段</string>
     <string name="day_track_stats">%1$.1f 公里 在移动 %2$d 分钟</string>
+    <string name="day_still_recording">还在记录</string>
     <string name="timeline_more_records">还有 %1$d 条</string>
     <string name="timeline_track">轨迹</string>
     <plurals name="timeline_track_moving">

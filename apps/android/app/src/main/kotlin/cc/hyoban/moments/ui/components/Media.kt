@@ -59,6 +59,8 @@ import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
 import coil3.compose.AsyncImage
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.foundation.layout.BoxScope
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.SingletonImageLoader
@@ -90,8 +92,13 @@ fun MediaStill(
     placeholderUrl: String? = null,
     /** How many times wider than it is laid out to fetch it: more than 1 while zoomed in. */
     detail: Float = 1f,
+    /** Drawn over it when it couldn't be fetched, with a way to try again; none leaves the placeholder. */
+    failed: (@Composable BoxScope.(retry: () -> Unit) -> Unit)? = null,
 ) {
     val context = LocalPlatformContext.current
+    // A new request each time it is tried again, as Coil doesn't keep a failure to give back.
+    var attempt by remember(media.uid) { mutableIntStateOf(0) }
+    var failing by remember(media.uid) { mutableStateOf(false) }
 
     // The widest it has been drawn: a still growing or shrinking between screens keeps
     // the larger file it already has rather than fetching one for every size on the way.
@@ -107,7 +114,7 @@ fun MediaStill(
         val height = if (constraints.hasBoundedHeight) constraints.maxHeight else widest[0]
         // A still fades in over its placeholder, unless the phone has animations removed.
         val reduced = LocalReducedMotion.current
-        val request = remember(url, placeholderUrl, reduced) {
+        val request = remember(url, placeholderUrl, reduced, attempt) {
             ImageRequest.Builder(context)
                 .data(url)
                 .memoryCacheKey(url)
@@ -129,8 +136,14 @@ fun MediaStill(
             error = fill,
             fallback = fill,
             contentScale = contentScale,
+            onError = if (failed != null) {
+                { failing = true }
+            } else {
+                null
+            },
             modifier = Modifier.fillMaxSize(),
         )
+        if (failing && failed != null) failed { failing = false; attempt++ }
     }
 }
 
@@ -208,7 +221,9 @@ private fun edgeColors(bitmap: android.graphics.Bitmap, top: Boolean): ImageBitm
 
 /**
  * A still with what it holds marked: a play button on a video, a live badge on a live
- * photo, in the corner [liveBadgeAlignment] names.
+ * photo, in the corner [liveBadgeAlignment] names. Among a Moment's photos in a small
+ * mosaic, a video is marked the live photo's way instead, a small label at the bottom
+ * start ([videoAsLabel]), as a play button there would sit over the next tile.
  */
 @Composable
 fun MediaTile(
@@ -221,6 +236,7 @@ fun MediaTile(
     /** Where it is among its Moment's media, as an index and a count, for a screen reader. */
     position: Pair<Int, Int>? = null,
     onClick: (() -> Unit)? = null,
+    videoAsLabel: Boolean = false,
 ) {
     // Read as one thing to open: what it is, where it is among the rest, and what it shows,
     // rather than an unnamed button with "play" or "live" somewhere inside it.
@@ -243,7 +259,7 @@ fun MediaTile(
     ) {
         MediaStill(media, urls, Modifier.fillMaxSize().sharedMedia(sharedKey, sharedShape))
         when (media.type) {
-            MediaType.VIDEO -> PlayBadge(Modifier.align(Alignment.Center))
+            MediaType.VIDEO -> if (videoAsLabel) VideoBadge(Modifier.align(Alignment.BottomStart).padding(Space.s)) else PlayBadge(Modifier.align(Alignment.Center))
             MediaType.LIVE_PHOTO -> LiveBadge(Modifier.align(liveBadgeAlignment).padding(Space.s))
             MediaType.IMAGE -> Unit
         }
@@ -258,6 +274,19 @@ fun PlayBadge(modifier: Modifier = Modifier) {
         tint = MediaOverlay.content,
         modifier = modifier.size(44.dp).clip(CircleShape).background(MediaOverlay.control).padding(Space.s),
     )
+}
+
+/** A video among photos: the live label's look, a play icon and the word. */
+@Composable
+fun VideoBadge(modifier: Modifier = Modifier) {
+    Row(
+        modifier.height(20.dp).clip(CircleShape).background(MediaOverlay.control).padding(horizontal = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.xs),
+    ) {
+        Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(12.dp))
+        Text(stringResource(R.string.media_video), color = MediaOverlay.content, style = AppTheme.typography.caption)
+    }
 }
 
 @Composable
@@ -296,6 +325,7 @@ fun MediaMosaic(
             sharedShape = TILE,
             position = index to media.size,
             onClick = onOpen?.let { open -> { open(index) } },
+            videoAsLabel = true,
         )
     }
 

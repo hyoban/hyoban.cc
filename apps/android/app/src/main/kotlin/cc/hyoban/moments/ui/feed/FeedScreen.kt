@@ -250,7 +250,7 @@ fun FeedScreen(
                 // keeps the system's icons clear on.
                 Box(Modifier.fillMaxSize().background(AppColors.page)) {
                     TabRefreshBox(pull) {
-                        LoadedContent(moments.isEmpty() || !tracks.ready, loading = !loaded || syncing || !tracks.ready, message = R.string.empty_moments) {
+                        LoadedContent(moments.isEmpty() || !tracks.ready, loading = !loaded || syncing || !tracks.ready, message = R.string.empty_moments, hint = R.string.empty_moments_hint) {
                             // The rows over the Moments, the changes, list or calendar and the
                             // filter, stand once above both views rather than heading each, so
                             // switching cross-fades only what changes and leaves them still.
@@ -460,6 +460,12 @@ fun DayScreen(
             container.footprints.points(cc.hyoban.moments.footprints.TrackSelection(day = date))
         }
     }
+    // Whether today is still being recorded, said after its figures; read with the footprints.
+    val recording by androidx.compose.runtime.produceState(false, date) {
+        if (date == java.time.LocalDate.now().toString()) {
+            value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { container.footprints.state().recording }
+        }
+    }
     // The day's bills, as the timeline has them for its month, kept to this day.
     val month = remember(date) { TimeFilter(date.take(4).toInt(), date.substring(5, 7).toInt()) }
     val monthBills = rememberTimelineBills(container, moments, month)
@@ -489,7 +495,7 @@ fun DayScreen(
             oldestFirst = true,
             allMoments = all,
         ) {
-            item("head") { DayHead(date, track, moments, places, bills) }
+            item("head") { DayHead(date, track, moments, places, bills, recording) }
         }
         FloatingBack(onBack, Modifier.align(Alignment.TopStart))
     }
@@ -508,6 +514,8 @@ private fun DayHead(
     moments: List<cc.hyoban.moments.data.spec.MomentRecord>,
     places: Map<String, cc.hyoban.moments.data.spec.Place>,
     bills: TimelineBills,
+    /** Today, with the footprints still recording: its line ends where the phone is now. */
+    recording: Boolean = false,
 ) {
     val points = track.orEmpty()
     // While they are read, the timeline's word on them keeps room for the map and gives the
@@ -552,7 +560,24 @@ private fun DayHead(
                 if (moving && metres != null && millis != null) stringResource(R.string.day_track_stats, metres / 1000, millis / 60_000) else null,
                 daySpent(bills, date)?.let { stringResource(R.string.ledger_expense_short, it) },
             ).joinToString("\u2003")
-            if (line.isNotEmpty()) Text(line, style = AppTheme.typography.caption, color = tokens.tx2)
+            // Still recording is a state, so in the accent, after the figures it keeps growing.
+            val still = if (recording) stringResource(R.string.day_still_recording) else null
+            val accent = tokens.accent
+            if (line.isNotEmpty() || still != null) {
+                Text(
+                    androidx.compose.ui.text.buildAnnotatedString {
+                        append(line)
+                        if (still != null) {
+                            if (line.isNotEmpty()) append("\u2003")
+                            pushStyle(androidx.compose.ui.text.SpanStyle(color = accent))
+                            append(still)
+                            pop()
+                        }
+                    },
+                    style = AppTheme.typography.caption,
+                    color = tokens.tx2,
+                )
+            }
         }
     }
 }
