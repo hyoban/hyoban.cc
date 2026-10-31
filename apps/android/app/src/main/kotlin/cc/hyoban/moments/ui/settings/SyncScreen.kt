@@ -50,13 +50,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.shape.CircleShape
-import cc.hyoban.moments.ui.design.ListItem
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.unit.Constraints
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Setting
@@ -68,25 +61,12 @@ import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.theme.Space
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
-// Each section of the settings a page of its own, opened from 我: rows grouped on one surface
+// Where the app reads from and what lets it write, a page under 我: rows grouped on one surface
 // under a small caption, a note under the group, and a tap on a row opening a dialog to change it.
 
-/** The settings' sections, each a page under 我. */
-enum class SettingsSection(val title: Int) {
-    MOMENTS(R.string.settings_moments_data),
-    MAP(R.string.settings_map_footprints),
-    ABOUT(R.string.settings_about),
-}
-
-/** One [section] of the settings: the Moments and where they're read from; the map and footprints; the credits. */
+/** 同步与来源: the API, its token and reading from it again; where the photos come from; the map's styles. */
 @Composable
-fun SettingsScreen(
-    container: AppContainer,
-    section: SettingsSection,
-    onBack: () -> Unit,
-    onFootprints: () -> Unit = {},
-    onFootprintSettings: () -> Unit = {},
-) {
+fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
     val settings = container.settings
     // The setting whose dialog is open, by its place in the list, so it stays open across a rotation.
     var editing by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -98,7 +78,7 @@ fun SettingsScreen(
         Row(settings.mapStyleDark, R.string.setting_map_style_dark, AppIcons.Moon) { settings.mapStyleDark.set(it) },
     )
 
-    SubPage(stringResource(section.title), onBack, Modifier.background(AppColors.page)) {
+    SubPage(stringResource(R.string.sync_title), onBack, Modifier.background(AppColors.page)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
@@ -108,82 +88,37 @@ fun SettingsScreen(
                     .padding(horizontal = columns.margin)
                     .padding(bottom = Space.xl),
             ) {
-                if (section == SettingsSection.MOMENTS) {
-                    SegmentedGroup(
-                        stringResource(R.string.section_moments),
-                        stringResource(R.string.settings_show_tech_note),
-                        listOf { shapes ->
-                            SwitchRow(settings.showTech, AppIcons.Code, stringResource(R.string.setting_show_tech), "show_tech", shapes) {
-                                container.changeShowTech(!settings.showTech)
-                            }
+                // The token publishing takes; the changes themselves wait at the top of 我.
+                val token: Segment = { shapes ->
+                    SegmentedListItem(
+                        onClick = { editingToken = true },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        leadingContent = { Icon(AppIcons.Key, contentDescription = null) },
+                        supportingContent = { Text(stringResource(if (settings.apiToken.isSet) R.string.token_set else R.string.token_unset)) },
+                        modifier = Modifier.testTag("api_token"),
+                    ) { Text(stringResource(R.string.setting_api_token)) }
+                }
+                // Reading from the API again with a tap, as a refresh pulled for on the tabs is had without the gesture too.
+                val syncing by container.repository.syncing.collectAsStateWithLifecycle()
+                val refresh: Segment = { shapes ->
+                    SegmentedListItem(
+                        onClick = { if (!syncing) container.refresh() },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
+                        supportingContent = { Text(stringResource(if (syncing) R.string.refreshing else R.string.refresh_note)) },
+                        trailingContent = if (syncing) {
+                            { Spinner(Modifier.size(24.dp)) }
+                        } else {
+                            null
                         },
-                    )
-                    // Where the app reads from, and reading from it again with a tap, as Material 3 asks a
-                    // refresh pulled for on the tabs be had without the gesture too.
-                    val syncing by container.repository.syncing.collectAsStateWithLifecycle()
-                    val refresh: Segment = { shapes ->
-                        SegmentedListItem(
-                            onClick = { if (!syncing) container.refresh() },
-                            shapes = shapes,
-                            colors = segmentColors(),
-                            leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
-                            supportingContent = { Text(stringResource(if (syncing) R.string.refreshing else R.string.refresh_note)) },
-                            trailingContent = if (syncing) {
-                                { Spinner(Modifier.size(24.dp)) }
-                            } else {
-                                null
-                            },
-                            modifier = Modifier.testTag("refresh"),
-                        ) { Text(stringResource(R.string.action_refresh)) }
-                    }
-                    Section(stringResource(R.string.section_sources), rows.subList(0, 2), 0, stringResource(R.string.settings_api_note), extra = listOf(refresh)) { editing = it }
-                    // The token publishing takes; the changes themselves wait at the top of 我.
-                    val token: Segment = { shapes ->
-                        SegmentedListItem(
-                            onClick = { editingToken = true },
-                            shapes = shapes,
-                            colors = segmentColors(),
-                            leadingContent = { Icon(AppIcons.Key, contentDescription = null) },
-                            supportingContent = { Text(stringResource(if (settings.apiToken.isSet) R.string.token_set else R.string.token_unset)) },
-                            modifier = Modifier.testTag("api_token"),
-                        ) { Text(stringResource(R.string.setting_api_token)) }
-                    }
-                    SegmentedGroup(
-                        stringResource(R.string.section_publishing),
-                        stringResource(R.string.settings_token_note),
-                        listOf(token),
-                    )
+                        modifier = Modifier.testTag("refresh"),
+                    ) { Text(stringResource(R.string.action_refresh)) }
                 }
-                if (section == SettingsSection.MAP) {
-                    Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
-                    // Footprints are looked at on the map, and how they are recorded set on a page of their own.
-                    SegmentedGroup(
-                        stringResource(R.string.footprints_title),
-                        stringResource(R.string.footprints_local_note),
-                        listOf(
-                            { shapes ->
-                                SegmentedListItem(
-                                    onClick = onFootprints,
-                                    shapes = shapes,
-                                    colors = segmentColors(),
-                                    leadingContent = { Icon(AppIcons.Footprints, contentDescription = null) },
-                                    modifier = Modifier.testTag("footprints"),
-                                ) { Text(stringResource(R.string.footprints_view_on_map)) }
-                            },
-                            { shapes ->
-                                SegmentedListItem(
-                                    onClick = onFootprintSettings,
-                                    shapes = shapes,
-                                    colors = segmentColors(),
-                                    leadingContent = { Icon(AppIcons.Sliders, contentDescription = null) },
-                                    trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
-                                    modifier = Modifier.testTag("footprint_settings"),
-                                ) { Text(stringResource(R.string.footprint_settings_title)) }
-                            },
-                        ),
-                    )
-                }
-                if (section == SettingsSection.ABOUT) Credits()
+                Section(stringResource(R.string.section_site), rows.subList(0, 1), 0, stringResource(R.string.settings_api_note), extra = listOf(token, refresh)) { editing = it }
+                Section(stringResource(R.string.section_media), rows.subList(1, 2), 1, null) { editing = it }
+                Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
             }
         }
     }
@@ -231,34 +166,6 @@ private fun SettingRow(row: Row, shapes: ListItemShapes, onClick: () -> Unit) {
             null
         },
     ) { Text(stringResource(row.title)) }
-}
-
-/** 馒头, the cat the icon is drawn from, in a photo of its face. */
-@Composable
-private fun Credits() {
-    val mantou = boxed {
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.credit_mantou)) },
-            supportingContent = { Text(stringResource(R.string.credit_mantou_note)) },
-            leadingContent = {
-                // Drawn at 32dp centred where a row's icon is, but taking an icon's 24dp less the
-                // 4dp more a plain list item leaves after it than a segmented one, so the words
-                // line up with the settings' rows.
-                Image(
-                    painterResource(R.drawable.mantou),
-                    contentDescription = null,
-                    Modifier
-                        .layout { measurable, _ ->
-                            val photo = measurable.measure(Constraints.fixed(32.dp.roundToPx(), 32.dp.roundToPx()))
-                            layout(20.dp.roundToPx(), 24.dp.roundToPx()) { photo.place(-4.dp.roundToPx(), -4.dp.roundToPx()) }
-                        }
-                        .clip(CircleShape),
-                )
-            },
-            colors = rowColors(),
-        )
-    }
-    SegmentedGroup(stringResource(R.string.section_credits), null, listOf(mantou))
 }
 
 /** Blank is the build's own; anything else an http or https address. */
@@ -345,6 +252,8 @@ private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) ->
                     onKeyboardAction = { field.text.toString().takeIf { it.isNotBlank() }?.let(onSave) },
                     modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("api_token_field"),
                 )
+                // What the token is for, said where it is set: the changes wait on the phone until published.
+                Text(stringResource(R.string.settings_token_note), style = AppTheme.typography.caption, color = tokens.tx2)
                 if (token.isSet) {
                     TextButton(
                         onClick = { onSave("") },

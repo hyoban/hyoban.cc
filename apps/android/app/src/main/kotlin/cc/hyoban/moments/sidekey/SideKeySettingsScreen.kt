@@ -23,6 +23,19 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.R
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.unit.dp
+import cc.hyoban.moments.ui.components.AppColors
+import cc.hyoban.moments.ui.design.Button
+import cc.hyoban.moments.ui.design.ListItem
+import cc.hyoban.moments.ui.design.ModalBottomSheet
+import cc.hyoban.moments.ui.design.RadioButton
+import cc.hyoban.moments.ui.design.SegmentedListItem
+import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.accessibility.ShareAccessibilityService
 import cc.hyoban.moments.footprints.ActionRow
 import cc.hyoban.moments.ui.components.PageWidth
@@ -50,7 +63,6 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
     val state by SideKeys.state.collectAsStateWithLifecycle()
     val connected by ShareAccessibilityService.connected.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<String?>(null) }
-    var picker by remember { mutableStateOf("actions") }
     var timing by remember { mutableStateOf(false) }
     LifecycleResumeEffect(Unit) {
         SideKeys.refresh()
@@ -67,16 +79,20 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
         PageWidth(maxColumns = 1) { columns ->
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).navigationBarsPadding()
                 .padding(horizontal = columns.margin).padding(bottom = Space.xl)) {
-                SegmentedGroup(null, stringResource(R.string.side_key_note), buildList {
-                    add { shapes -> SwitchRow(config.enabled, AppIcons.Sliders,
+                SegmentedGroup(null, stringResource(R.string.side_key_note), listOf { shapes ->
+                    SwitchRow(config.enabled, AppIcons.Phone,
                         stringResource(R.string.side_key_enabled), "sidekey_enabled", shapes,
-                        supporting = stringResource(state.phase.label)) { SideKeys.setEnabled(!config.enabled) } }
-                    if (!connected) add { shapes -> ActionRow(AppIcons.Accessibility,
-                        stringResource(R.string.side_key_accessibility), shapes, tag = "sidekey_accessibility", external = true) {
+                        supporting = stringResource(state.phase.label)) { SideKeys.setEnabled(!config.enabled) }
+                })
+                // What it needs, each with where it stands, the way to the system's own settings at its end.
+                SegmentedGroup(stringResource(R.string.side_key_needs), null, buildList {
+                    add { shapes -> ActionRow(AppIcons.Accessibility, stringResource(R.string.side_key_service), shapes,
+                        supporting = stringResource(if (connected) R.string.side_key_service_on else R.string.side_key_service_off),
+                        tag = "sidekey_accessibility", external = true) {
                         context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
                     } }
-                    add { shapes -> ActionRow(AppIcons.External,
-                        stringResource(R.string.side_key_open_shizuku), shapes, tag = "sidekey_shizuku", external = true) {
+                    add { shapes -> ActionRow(AppIcons.Key,
+                        stringResource(R.string.side_key_shizuku), shapes, tag = "sidekey_shizuku", external = true) {
                         val intent = context.packageManager.getLaunchIntentForPackage("moe.shizuku.privileged.api")
                         if (intent != null) context.startActivity(intent)
                         else Toast.makeText(context, R.string.side_key_shizuku_missing, Toast.LENGTH_LONG).show()
@@ -91,7 +107,7 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
                     SideKeys.gestures.map { gesture -> { shapes ->
                         ActionRow(AppIcons.Sliders, stringResource(SideKeyActions.gestureLabel(gesture)), shapes,
                             supporting = actionLabel(config.actions[gesture] ?: "none", config.labels[gesture].orEmpty()),
-                            tag = "sidekey_$gesture") { editing = gesture; picker = "actions" }
+                            tag = "sidekey_$gesture") { editing = gesture }
                     } })
                 SegmentedGroup(null, stringResource(R.string.side_key_timing_note), listOf { shapes ->
                     ActionRow(AppIcons.Clock, stringResource(R.string.side_key_timing), shapes,
@@ -112,16 +128,9 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
         }
     }
     editing?.let { gesture ->
-        when (picker) {
-            "actions" -> ActionPicker(onDismiss = { editing = null }) { value ->
-                if (value == "app" || value == "uri") picker = value
-                else { SideKeys.setAction(gesture, value); editing = null }
-            }
-            "app" -> AppPicker(onDismiss = { editing = null }) { pkg, label ->
-                SideKeys.setAction(gesture, "app:$pkg", label); editing = null
-            }
-            "uri" -> LinkPicker(config.actions[gesture]?.takeIf { it.startsWith("uri:") }?.substringAfter(':').orEmpty(),
-                onDismiss = { editing = null }) { link -> SideKeys.setAction(gesture, "uri:$link"); editing = null }
+        val current = config.actions[gesture] ?: "none"
+        ActionSheet(stringResource(SideKeyActions.gestureLabel(gesture)), current, onDismiss = { editing = null }) { action, label ->
+            SideKeys.setAction(gesture, action, label.orEmpty()); editing = null
         }
     }
     if (timing) TimingPicker(config, onDismiss = { timing = false }) { double, long -> SideKeys.setTiming(double, long); timing = false }
@@ -134,20 +143,41 @@ private fun actionLabel(action: String, label: String): String = when {
     else -> stringResource(SideKeyActions.choices[action] ?: R.string.side_key_none)
 }
 
+/**
+ * What a gesture does, chosen in a sheet over the page, the one it does now marked: an action, or
+ * an app searched for or a link typed in the same sheet, never a page further down.
+ */
 @Composable
-private fun ActionPicker(onDismiss: () -> Unit, onPick: (String) -> Unit) {
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(stringResource(R.string.side_key_pick)) },
-        text = { Column(Modifier.verticalScroll(rememberScrollState())) {
-            SideKeyActions.choices.forEach { (value, label) ->
-                TextButton(onClick = { onPick(value) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(label)) }
+private fun ActionSheet(title: String, current: String, onDismiss: () -> Unit, onPick: (String, String?) -> Unit) {
+    var mode by remember { mutableStateOf("actions") }
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet, modifier = Modifier.semantics { testTagsAsResourceId = true }) {
+        Text(title, style = AppTheme.typography.title, modifier = Modifier.padding(horizontal = Space.gutter).semantics { heading() })
+        when (mode) {
+            "actions" -> Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(bottom = Space.l)) {
+                SegmentedGroup(null, null, SideKeyActions.choices.map { (value, label) ->
+                    { shapes ->
+                        val chosen = current == value || current.startsWith("$value:") && (value == "app" || value == "uri")
+                        SegmentedListItem(
+                            onClick = { if (value == "app" || value == "uri") mode = value else onPick(value, null) },
+                            shapes = shapes,
+                            colors = segmentColors(),
+                            trailingContent = { RadioButton(chosen, onClick = null) },
+                            modifier = Modifier.testTag("sidekey_action_$value"),
+                        ) { Text(stringResource(label)) }
+                    }
+                })
             }
-        } }, confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } })
+            "app" -> AppList(Modifier.weight(1f, fill = false)) { pkg, label -> onPick("app:$pkg", label) }
+            else -> LinkField(current.takeIf { it.startsWith("uri:") }?.substringAfter(':').orEmpty()) { link -> onPick("uri:$link", null) }
+        }
+    }
 }
 
 private data class LaunchableApp(val packageName: String, val label: String)
 
+/** The apps that can be opened, searched as typed. */
 @Composable
-private fun AppPicker(onDismiss: () -> Unit, onPick: (String, String) -> Unit) {
+private fun AppList(modifier: Modifier, onPick: (String, String) -> Unit) {
     val context = LocalContext.current
     var query by remember { mutableStateOf("") }
     val apps by produceState<List<LaunchableApp>>(emptyList()) {
@@ -158,35 +188,37 @@ private fun AppPicker(onDismiss: () -> Unit, onPick: (String, String) -> Unit) {
         }
     }
     val duplicates = remember(apps) { apps.groupingBy { it.label }.eachCount().filterValues { it > 1 }.keys }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(stringResource(R.string.side_key_app)) }, text = {
-        Column(verticalArrangement = Arrangement.spacedBy(Space.m)) {
-            OutlinedTextField(query, { query = it }, label = { Text(stringResource(R.string.side_key_search_apps)) }, singleLine = true)
-            Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
-                apps.filter { it.label.contains(query, true) || it.packageName.contains(query, true) }.forEach { app ->
-                    TextButton(onClick = { onPick(app.packageName, app.label) }, modifier = Modifier.fillMaxWidth()) {
-                        Column(Modifier.fillMaxWidth()) {
-                            Text(app.label)
-                            if (app.label in duplicates) Text(app.packageName, style = AppTheme.typography.caption, color = tokens.tx2,
-                                maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                    }
-                }
+    Column(modifier.padding(top = Space.l, bottom = Space.l)) {
+        OutlinedTextField(query, { query = it }, label = { Text(stringResource(R.string.side_key_search_apps)) }, singleLine = true,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = Space.gutter).testTag("sidekey_app_search"))
+        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(top = Space.s)) {
+            apps.filter { it.label.contains(query, true) || it.packageName.contains(query, true) }.forEach { app ->
+                ListItem(
+                    headlineContent = { Text(app.label) },
+                    supportingContent = if (app.label in duplicates) {
+                        { Text(app.packageName, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    } else null,
+                    modifier = Modifier.clickable { onPick(app.packageName, app.label) }.padding(horizontal = Space.gutter - 16.dp),
+                )
             }
         }
-    }, confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } })
+    }
 }
 
+/** A link or an app's URI typed in, saved once it is one. */
 @Composable
-private fun LinkPicker(initial: String, onDismiss: () -> Unit, onPick: (String) -> Unit) {
+private fun LinkField(initial: String, onPick: (String) -> Unit) {
     var value by remember { mutableStateOf(initial) }
     var error by remember { mutableStateOf(false) }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(stringResource(R.string.side_key_link)) }, text = {
+    Column(Modifier.fillMaxWidth().padding(start = Space.gutter, end = Space.gutter, top = Space.l, bottom = Space.l)) {
         OutlinedTextField(value, { value = it; error = false }, label = { Text(stringResource(R.string.side_key_uri_label)) },
             isError = error, supportingText = if (error) ({ Text(stringResource(R.string.side_key_invalid_uri)) }) else null,
-            singleLine = true, modifier = Modifier.testTag("sidekey_uri"))
-    }, confirmButton = { TextButton(onClick = { val link = value.trim(); if (SideKeyActions.validLink(link)) onPick(link) else error = true }) {
-        Text(stringResource(R.string.action_save))
-    } }, dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } })
+            singleLine = true, modifier = Modifier.fillMaxWidth().testTag("sidekey_uri"))
+        Button(onClick = { val link = value.trim(); if (SideKeyActions.validLink(link)) onPick(link) else error = true },
+            modifier = Modifier.align(Alignment.End).padding(top = Space.l)) {
+            Text(stringResource(R.string.action_save))
+        }
+    }
 }
 
 @Composable

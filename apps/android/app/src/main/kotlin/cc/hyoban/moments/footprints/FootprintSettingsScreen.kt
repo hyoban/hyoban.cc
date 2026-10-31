@@ -53,13 +53,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * How footprints are recorded, apart from the recording itself, which stays on the map's sheet:
- * starting and pausing by connection, motion detection, what the status bar shows, running in
- * the background and the diagnostics log, each a segmented group as the settings page has them.
+ * 足迹记录, a page under 我 and from the map's footprint sheet: how footprints are recorded,
+ * apart from the recording itself, which stays on that sheet. What the status bar shows, running
+ * in the background, starting and pausing by connection, motion detection and the diagnostics
+ * log, each a segmented group; what goes deeper opens as a dialog over the page.
  */
 @Composable
 fun FootprintSettingsScreen(container: AppContainer, onBack: () -> Unit) {
-    SubPage(stringResource(R.string.footprint_settings_title), onBack, Modifier.background(AppColors.page)) {
+    SubPage(stringResource(R.string.footprint_settings_title), onBack, Modifier.background(AppColors.page), subtitle = stringResource(R.string.footprint_settings_subtitle)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
@@ -70,10 +71,10 @@ fun FootprintSettingsScreen(container: AppContainer, onBack: () -> Unit) {
                     .padding(bottom = Space.xl)
                     .semantics { testTagsAsResourceId = true },
             ) {
-                ConnectionAutomationSettings(container)
-                ActivityRecognitionSettings()
                 StatusBarSettings()
                 BackgroundSettings()
+                ConnectionAutomationSettings(container)
+                ActivityRecognitionSettings()
                 DiagnosticsSettings(container)
             }
         }

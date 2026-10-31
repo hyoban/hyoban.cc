@@ -6,7 +6,6 @@ import cc.hyoban.moments.ui.design.AssistChip
 import cc.hyoban.moments.ui.design.Button
 import cc.hyoban.moments.ui.design.ChipDefaults
 import cc.hyoban.moments.ui.design.ListItem
-import cc.hyoban.moments.ui.design.ListItemShapes
 import cc.hyoban.moments.ui.design.LocalContentColor
 import cc.hyoban.moments.ui.design.LocalTextStyle
 import cc.hyoban.moments.ui.theme.tokens
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.text.TextStyle
 import cc.hyoban.moments.ui.design.PressIndication
 import cc.hyoban.moments.ui.design.DateTimeDialog
@@ -171,6 +169,8 @@ import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.settings.PageCaption
+import cc.hyoban.moments.ui.settings.PageRows
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import coil3.compose.AsyncImage
@@ -896,24 +896,6 @@ private fun PhotoStrip(
             }
         }
     }
-}
-
-/** Rows on the page itself, with space rather than lines between them, their icons on the gutter. */
-@Composable
-private fun PageRows(modifier: Modifier = Modifier, rows: @Composable (ListItemShapes) -> Unit) {
-    val shapes = ListItemShapes(AppTheme.shapes.medium)
-    Column(modifier.padding(horizontal = Space.gutter - ROW_PADDING)) { rows(shapes) }
-}
-
-/** What heads a part of the page, in the third grey on the gutter, well clear of what is over it. */
-@Composable
-private fun PageCaption(title: String) {
-    Text(
-        title,
-        style = AppTheme.typography.caption,
-        color = tokens.tx3,
-        modifier = Modifier.fillMaxWidth().padding(start = Space.gutter, end = Space.gutter, top = Space.xl, bottom = Space.xs).semantics { heading() },
-    )
 }
 
 /** One of 加一项's plugins: its icon, a tick once added. */

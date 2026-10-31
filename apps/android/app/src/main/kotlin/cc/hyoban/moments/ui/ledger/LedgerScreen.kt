@@ -101,11 +101,13 @@ private enum class LedgerTab(val label: Int, val tag: String) {
  * Bills are written from the timeline's 记录, where they show too.
  */
 @Composable
-fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit, startTab: Int = 0) {
+fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val loaded by container.ledger.loaded.collectAsStateWithLifecycle()
     val book = ledger.book
     var tab by rememberSaveable { mutableIntStateOf(startTab.coerceIn(0, LedgerTab.entries.lastIndex)) }
+    // An empty ledger imports right here, rather than opening 记账 on top of the ledger.
+    val importer = rememberICostImport(container)
 
     // The chosen book's bills, or every book's, summed in the chosen book's currency.
     val shown = ledger.shownBooks
@@ -132,7 +134,7 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit, 
         // Switched from its name, when there are books to switch between, so the bar keeps
         // to its one action.
         titleMenu = if (ledger.books.count { !it.archived } >= 2) {
-            TitleMenu(stringResource(R.string.ledger_switch_book)) { close -> BookMenuItems(container, ledger, nav, close) }
+            TitleMenu(stringResource(R.string.ledger_switch_book)) { close -> BookMenuItems(container, ledger, close) }
         } else {
             null
         },
@@ -160,17 +162,18 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, onImport: () -> Unit, 
             when {
                 !loaded -> Unit
                 LedgerTab.entries[tab] == LedgerTab.ASSETS -> AssetsView(ledger, currency, nav)
-                book == null || bills.isEmpty() -> EmptyLedger(onImport = onImport, onNew = { nav.entry(LedgerEntryArgs()) })
+                book == null || bills.isEmpty() -> EmptyLedger(onImport = importer.pick, onNew = { nav.entry(LedgerEntryArgs()) })
                 LedgerTab.entries[tab] == LedgerTab.BILLS -> BillsView(ledger, bills, currency, nav)
                 else -> StatsView(ledger, shown, currency, nav, byName = ledger.allBooks)
             }
         }
     }
+    importer.Dialog()
 }
 
-/** The books to switch between, from the title, and the way to manage them. */
+/** The books to switch between, from the title; they are managed under 我 → 记账. */
 @Composable
-private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, nav: LedgerNav, close: () -> Unit) {
+private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, close: () -> Unit) {
     val scope = rememberCoroutineScope()
     DropdownMenuItem(
         text = { Text(stringResource(R.string.ledger_all_books)) },
@@ -192,8 +195,6 @@ private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, n
             },
         )
     }
-    HorizontalDivider()
-    DropdownMenuItem(text = { Text(stringResource(R.string.ledger_manage_books)) }, onClick = { close(); nav.settings() })
 }
 
 /** Hides the ledger's amounts, or shows them again: an eye beside the month's sums. */
