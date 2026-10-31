@@ -132,13 +132,13 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                     if (txn.kind == TxnKind.TRANSFER) {
                         txn.account?.let(ledger.accountsById::get)?.let { from ->
                             add { shapes ->
-                                InfoRow(shapes, accountKindIcon(from.kind), stringResource(R.string.ledger_from_account), from.name,
+                                InfoRow(shapes, accountIcon(from), stringResource(R.string.ledger_from_account), from.name,
                                     trailing = txn.accountAmount?.let { money(it, from.currency) }) { nav.account(from.id) }
                             }
                         }
                         txn.toAccount?.let(ledger.accountsById::get)?.let { to ->
                             add { shapes ->
-                                InfoRow(shapes, accountKindIcon(to.kind), stringResource(R.string.ledger_to_account), to.name,
+                                InfoRow(shapes, accountIcon(to), stringResource(R.string.ledger_to_account), to.name,
                                     trailing = txn.toAmount?.let { money(it, to.currency) }) { nav.account(to.id) }
                             }
                         }
@@ -148,7 +148,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                         txn.payers.forEach { split ->
                             val account = ledger.accountsById[split.account] ?: return@forEach
                             add { shapes ->
-                                InfoRow(shapes, accountKindIcon(account.kind), stringResource(R.string.ledger_account), account.name,
+                                InfoRow(shapes, accountIcon(account), stringResource(R.string.ledger_account), account.name,
                                     trailing = if (txn.splits.isNotEmpty()) money(split.amount, txn.currency)
                                     else txn.accountAmount?.let { money(it, account.currency) }) { nav.account(account.id) }
                             }

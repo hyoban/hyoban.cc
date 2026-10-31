@@ -389,7 +389,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                                 onClick = { nav.account(account.id) },
                                 shapes = shapes,
                                 colors = segmentColors(),
-                                leadingContent = { Icon(accountKindIcon(account.kind), contentDescription = null) },
+                                leadingContent = { Icon(accountIcon(account), contentDescription = null) },
                                 supportingContent = if (!account.counted || account.note.isNotBlank()) {
                                     { Text(listOfNotNull(stringResource(R.string.ledger_not_counted).takeIf { !account.counted }, account.note.takeIf { it.isNotBlank() }).joinToString(" "), maxLines = 2) }
                                 } else null,
@@ -411,7 +411,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                                 onClick = { nav.account(account.id) },
                                 shapes = shapes,
                                 colors = segmentColors(),
-                                leadingContent = { Icon(accountKindIcon(account.kind), contentDescription = null) },
+                                leadingContent = { Icon(accountIcon(account), contentDescription = null) },
                                 trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                             ) { Text(account.name, maxLines = 1) }
                         }
