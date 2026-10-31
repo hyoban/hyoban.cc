@@ -49,6 +49,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.util.Log
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.semantics.heading
+import cc.hyoban.moments.ui.components.AppColors
+import cc.hyoban.moments.ui.design.Button
+import cc.hyoban.moments.ui.design.ModalBottomSheet
+import cc.hyoban.moments.ui.settings.SwitchRow
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.Ulid
@@ -77,9 +83,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * The ledger's own settings, as segmented lists: its books and their categories, the exchange
- * rates, and its data, brought in from iCost, kept in a backup of one's own, written out as
- * CSV, and linked to the Moments and trips. [startImport] opens the import's file picker at once.
+ * 记账, a page under 我, as segmented lists: its books, each opening a sheet with its name,
+ * currency and categories; the exchange rates, in a sheet too; 自动记账; and its data, brought in
+ * from iCost, kept in a backup of one's own, written out as CSV, and linked to the Moments and
+ * trips. Nothing here opens a page further down. [startImport] opens the import's file picker at once.
  */
 @Composable
 fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: Boolean = false) {
@@ -91,6 +98,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
     val chinese = LocalConfiguration.current.locales[0].language == "zh"
     var editingBook by remember { mutableStateOf<Book?>(null) }
     var addingBook by remember { mutableStateOf(false) }
+    var rates by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var restoring by remember { mutableStateOf<LedgerBackup?>(null) }
     val importer = rememberICostImport(container)
@@ -163,7 +171,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                     listOf { shapes ->
                         val latest = ledger.rates.currencies.filter { it != "CNY" }.mapNotNull { ledger.rates.latest(it)?.first }.maxOrNull()
                         SegmentedListItem(
-                            onClick = nav.rates,
+                            onClick = { rates = true },
                             shapes = shapes,
                             colors = segmentColors(),
                             leadingContent = { Icon(AppIcons.Exchange, contentDescription = null) },
@@ -226,17 +234,18 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
 
     importer.Dialog()
     editingBook?.let { book ->
-        BookDialog(
+        BookSheet(
+            container,
             book,
             canDelete = ledger.books.size > 1,
             onDismiss = { editingBook = null },
-            onCategories = { editingBook = null; nav.categories(book.id) },
             onDelete = { editingBook = null; scope.launch { container.ledger.deleteBook(book.id) } },
         ) { changed ->
             editingBook = null
             scope.launch { container.ledger.saveBook(changed) }
         }
     }
+    if (rates) RatesSheet(container) { rates = false }
     if (addingBook) {
         NameDialog(stringResource(R.string.ledger_add_book), "", onDismiss = { addingBook = false }) { name ->
             addingBook = false
@@ -264,39 +273,62 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
     }
 }
 
-/** A book's name and currency to change, its categories to manage, archiving and deleting it. */
+/**
+ * A book in a sheet over the page: its name and currency to change, its categories to manage
+ * right there, archiving and deleting it, the name, currency and archiving kept on 保存.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun BookDialog(book: Book, canDelete: Boolean, onDismiss: () -> Unit, onCategories: () -> Unit, onDelete: () -> Unit, onSave: (Book) -> Unit) {
+private fun BookSheet(container: AppContainer, book: Book, canDelete: Boolean, onDismiss: () -> Unit, onDelete: () -> Unit, onSave: (Book) -> Unit) {
     var name by remember { mutableStateOf(book.name) }
     var currency by remember { mutableStateOf(book.currency) }
     var archived by remember { mutableStateOf(book.archived) }
     var confirming by remember { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.ledger_book)) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_book_name)) }, singleLine = true)
-                Text(stringResource(R.string.ledger_book_currency), style = AppTheme.typography.label)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet, modifier = Modifier.semantics { testTagsAsResourceId = true }) {
+        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(bottom = Space.l)) {
+            Column(Modifier.padding(horizontal = Space.gutter)) {
+                Text(book.name, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
+                OutlinedTextField(
+                    name, { name = it },
+                    label = { Text(stringResource(R.string.ledger_book_name)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(top = Space.l).testTag("book_name"),
+                )
+                SheetCaption(stringResource(R.string.ledger_book_currency))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     (COMMON_CURRENCIES.take(8) + book.currency).distinct().forEach { code ->
                         FilterChip(selected = currency == code, onClick = { currency = code }, label = { Text(code) })
                     }
                 }
-                FilterChip(selected = archived, onClick = { archived = !archived }, label = { Text(stringResource(R.string.ledger_archive)) })
-                TextButton(onClick = onCategories, modifier = Modifier.testTag("book_categories")) {
-                    Icon(AppIcons.Category, contentDescription = null)
-                    Text(stringResource(R.string.ledger_categories), modifier = Modifier.padding(start = Space.s))
-                }
-                if (canDelete) {
-                    TextButton(onClick = { confirming = true }) { Text(stringResource(R.string.ledger_delete_book), color = tokens.danger) }
-                }
+                SheetCaption(stringResource(R.string.ledger_categories))
+                BookCategories(container, book.id)
             }
-        },
-        confirmButton = { TextButton(onClick = { onSave(book.copy(name = name.trim(), currency = currency, archived = archived)) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_save)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
-    )
+            SegmentedGroup(
+                null,
+                null,
+                listOfNotNull<Segment>(
+                    { shapes ->
+                        SwitchRow(archived, AppIcons.Archive, stringResource(R.string.ledger_archive), "book_archive", shapes,
+                            supporting = stringResource(R.string.ledger_archive_note)) { archived = !archived }
+                    },
+                    if (canDelete) { shapes ->
+                        SegmentedListItem(
+                            onClick = { confirming = true },
+                            shapes = shapes,
+                            colors = segmentColors(),
+                            leadingContent = { Icon(AppIcons.Trash, contentDescription = null, tint = tokens.danger) },
+                            modifier = Modifier.testTag("book_delete"),
+                        ) { Text(stringResource(R.string.ledger_delete_book), color = tokens.danger) }
+                    } else null,
+                ),
+            )
+            Button(
+                onClick = { onSave(book.copy(name = name.trim(), currency = currency, archived = archived)) },
+                enabled = name.isNotBlank(),
+                modifier = Modifier.align(Alignment.End).padding(start = Space.gutter, end = Space.gutter, top = Space.l).testTag("book_save"),
+            ) { Text(stringResource(R.string.action_save)) }
+        }
+    }
     if (confirming) {
         AlertDialog(
             onDismissRequest = { confirming = false },
@@ -306,6 +338,17 @@ private fun BookDialog(book: Book, canDelete: Boolean, onDismiss: () -> Unit, on
             dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
+}
+
+/** What heads a part of a sheet: the second grey, clear of what is over it. */
+@Composable
+private fun SheetCaption(title: String) {
+    Text(
+        title,
+        style = AppTheme.typography.caption,
+        color = tokens.tx2,
+        modifier = Modifier.padding(top = Space.xl, bottom = Space.s).semantics { heading() },
+    )
 }
 
 /** An iCost import under way: its file picker, and the dialog that says what it found before it is written. */

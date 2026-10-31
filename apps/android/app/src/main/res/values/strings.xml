@@ -125,9 +125,6 @@
     <string name="action_unmute">打开声音</string>
     <string name="section_photo">照片</string>
     <string name="section_route">路线</string>
-    <string name="title_settings">设置</string>
-    <string name="section_sources">数据来源</string>
-    <string name="section_moments">时刻</string>
     <string name="setting_show_tech">显示技术时刻</string>
     <string name="settings_show_tech_note">关于技术的时刻不会在网站上显示，打开后会在这里显示</string>
     <string name="section_map">地图</string>
@@ -144,9 +141,6 @@
     <string name="error_address">需要 http 或 https 开头的地址</string>
     <string name="action_restore_default">重置</string>
     <string name="action_delete">删除</string>
-    <string name="section_credits">致谢</string>
-    <string name="credit_mantou">馒头</string>
-    <string name="credit_mantou_note">App 的图标画的就是这只猫</string>
     <string name="action_view">查看</string>
     <string name="media_position">%1$s，第 %2$d 个，共 %3$d 个</string>
     <string name="label_today">今天</string>
@@ -295,7 +289,6 @@
     <string name="error_not_media">只能添加照片和视频</string>
     <string name="error_video_type">网站只收 MP4、MOV 和 WebM 视频</string>
     <string name="error_video_too_big">视频超过 100 MB，网站收不下</string>
-    <string name="section_publishing">发布</string>
     <string name="setting_api_token">API 令牌</string>
     <string name="token_set">已设置</string>
     <string name="token_unset">未设置，只能浏览</string>
@@ -421,7 +414,7 @@
     <plurals name="footprints_points"><item quantity="other">%d 个点</item></plurals>
     <string name="footprints_frame">显示完整轨迹</string>
     <string name="footprints_show">在地图显示足迹</string>
-    <string name="footprint_settings_title">足迹设置</string>
+    <string name="footprint_settings_title">足迹记录</string>
     <string name="footprints_section_recording">记录</string>
     <string name="footprints_section_tracks">轨迹</string>
     <string name="footprints_section_parts">行程分段</string>
@@ -438,7 +431,6 @@
     <string name="footprints_speed_average">平均 %d km/h</string>
     <string name="footprints_trip">单次行程</string>
     <string name="footprints_trip_off_note">开始后持续记录，直到手动结束</string>
-    <string name="footprints_view_on_map">在地图查看足迹</string>
     <string name="connection_automation_switch">按连接开始和暂停</string>
     <string name="connection_automation_off">已关闭</string>
     <string name="connection_automation_none">未选择</string>
@@ -541,10 +533,9 @@
     <string name="ledger_balance_label">余额</string>
     <string name="ledger_switch_book">切换账本</string>
     <string name="ledger_all_books">全部账本</string>
-    <string name="ledger_manage_books">管理账本</string>
     <string name="ledger_hide_amounts">隐藏金额</string>
     <string name="ledger_show_amounts">显示金额</string>
-    <string name="ledger_settings_title">记账设置</string>
+    <string name="ledger_settings_title">记账</string>
     <string name="ledger_empty_title">还没有账单</string>
     <string name="ledger_empty_body">账单只存在这台手机上，不会同步或发布。可以从 iCost 导出的表格导入，也可以直接记一笔。</string>
     <string name="ledger_import_icost">从 iCost 导入</string>
@@ -740,9 +731,6 @@
     <string name="tab_me">我</string>
     <string name="me_pending_note">发布前先看一遍改动，再一起发到网站。</string>
     <string name="action_review_publish">查看并发布</string>
-    <string name="settings_moments_data">时刻与数据</string>
-    <string name="settings_map_footprints">地图与足迹</string>
-    <string name="settings_about">关于</string>
     <string name="me_month_expense">本月支出</string>
     <string name="label_time">时间</string>
     <string name="action_previous_month">上个月</string>
@@ -821,7 +809,7 @@
     <string name="payment_capture_already_saved">这笔付款已经记过了</string>
     <string name="payment_capture_failed">未能打开记账确认，请重试</string>
 
-    <string name="side_key_title">侧键自定义</string>
+    <string name="side_key_title">侧键</string>
     <string name="side_key_enabled">启用侧键自定义</string>
     <string name="side_key_off">已停止</string>
     <string name="side_key_connecting">正在连接侧键</string>
@@ -861,17 +849,38 @@
     <string name="side_key_timing">识别时间</string>
     <string name="side_key_double_time">双击窗口（毫秒）</string>
     <string name="side_key_long_time">长按阈值（毫秒）</string>
-    <string name="side_key_timing_value">双击 %1$d 毫秒 · 长按 %2$d 毫秒</string>
+    <string name="side_key_timing_value">双击 %1$d 毫秒 长按 %2$d 毫秒</string>
     <string name="side_key_invalid_timing">双击请输入 150–600，长按请输入 400–2000</string>
     <string name="side_key_note">需要 Shizuku 与分享与记账助手无障碍服务。启用时保存并关闭系统预设，停止时恢复；手机重启后需重新启动 Shizuku。</string>
     <string name="side_key_timing_note">单击会等待双击窗口结束后执行。长按达到阈值后只触发一次。</string>
     <string name="side_key_action_failed">动作未能执行，请检查目标应用和无障碍服务</string>
     <string name="side_key_last">最近操作</string>
-    <string name="side_key_last_value">%1$s · %2$s</string>
+    <string name="side_key_last_value">%1$s %2$s</string>
     <string name="side_key_no_last">还没有手势记录</string>
     <string name="side_key_payment_note">在微信或支付宝已付款账单页触发，打开预填的记账确认，保存后才入账。</string>
     <string name="side_key_torch">手电筒</string>
     <string name="side_key_torch_on">手电筒已打开</string>
     <string name="side_key_torch_off">手电筒已关闭</string>
     <string name="side_key_torch_unavailable">手电筒暂不可用，请检查相机是否正在使用</string>
+    <string name="me_general">通用</string>
+    <string name="me_on_phone">只在这台手机上</string>
+    <string name="me_footer">%1$s %2$s 图标里的猫是馒头</string>
+    <string name="sync_title">同步与来源</string>
+    <string name="section_site">网站</string>
+    <string name="section_media">媒体</string>
+    <string name="section_timeline">时间线</string>
+    <string name="me_sync_token_set">令牌已设置</string>
+    <string name="me_sync_token_unset">没有令牌，只能浏览</string>
+    <string name="me_auto_bill_on">自动记账已开</string>
+    <string name="me_items_public">公开：%1$d 个账本 %2$d 段轨迹</string>
+    <string name="side_key_needs">需要</string>
+    <string name="side_key_service">分享与记账助手</string>
+    <string name="side_key_service_on">无障碍服务已开启</string>
+    <string name="side_key_service_off">无障碍服务未开启</string>
+    <string name="side_key_shizuku">Shizuku</string>
+    <plurals name="me_ledger_books">
+        <item quantity="one">%d 个账本</item>
+        <item quantity="other">%d 个账本</item>
+    </plurals>
+    <string name="footprint_settings_subtitle">轨迹只在这台手机上，离线也能记</string>
 </resources>

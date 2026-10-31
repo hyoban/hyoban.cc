@@ -128,9 +128,6 @@
     <string name="action_unmute">Unmute</string>
     <string name="section_photo">Photo</string>
     <string name="section_route">Route</string>
-    <string name="title_settings">Settings</string>
-    <string name="section_sources">Sources</string>
-    <string name="section_moments">Moments</string>
     <string name="setting_show_tech">Show tech Moments</string>
     <string name="settings_show_tech_note">Moments about tech never appear on the site. Turn this on to see them here.</string>
     <string name="section_map">Map</string>
@@ -147,9 +144,6 @@
     <string name="error_address">The address must start with http or https</string>
     <string name="action_restore_default">Reset</string>
     <string name="action_delete">Delete</string>
-    <string name="section_credits">Thanks</string>
-    <string name="credit_mantou">Mantou</string>
-    <string name="credit_mantou_note">The cat the app’s icon is drawn from</string>
     <string name="action_view">View</string>
     <string name="media_position">%1$s, %2$d of %3$d</string>
     <string name="label_today">Today</string>
@@ -312,7 +306,6 @@
     <string name="error_not_media">Only photos and videos can be added</string>
     <string name="error_video_type">The site takes MP4, MOV and WebM videos only</string>
     <string name="error_video_too_big">Videos over 100 MB are too big for the site</string>
-    <string name="section_publishing">Publishing</string>
     <string name="setting_api_token">API token</string>
     <string name="token_set">Set</string>
     <string name="token_unset">Not set, view only</string>
@@ -439,7 +432,7 @@
     <plurals name="footprints_points"><item quantity="one">%d point</item><item quantity="other">%d points</item></plurals>
     <string name="footprints_frame">Fit track</string>
     <string name="footprints_show">Show footprints on the map</string>
-    <string name="footprint_settings_title">Footprint settings</string>
+    <string name="footprint_settings_title">Footprint recording</string>
     <string name="footprints_section_recording">Recording</string>
     <string name="footprints_section_tracks">Tracks</string>
     <string name="footprints_section_parts">Moves and stays</string>
@@ -456,7 +449,6 @@
     <string name="footprints_speed_average">Average %d km/h</string>
     <string name="footprints_trip">Trip</string>
     <string name="footprints_trip_off_note">Records until you end it</string>
-    <string name="footprints_view_on_map">View on the map</string>
     <string name="connection_automation_switch">Start and pause by connection</string>
     <string name="connection_automation_off">Off</string>
     <string name="connection_automation_none">None chosen</string>
@@ -559,10 +551,9 @@
     <string name="ledger_balance_label">Balance</string>
     <string name="ledger_switch_book">Switch book</string>
     <string name="ledger_all_books">All books</string>
-    <string name="ledger_manage_books">Manage books</string>
     <string name="ledger_hide_amounts">Hide amounts</string>
     <string name="ledger_show_amounts">Show amounts</string>
-    <string name="ledger_settings_title">Ledger settings</string>
+    <string name="ledger_settings_title">Ledger</string>
     <string name="ledger_empty_title">No bills yet</string>
     <string name="ledger_empty_body">Bills stay on this phone and are never synced or published. Import an iCost export, or add a bill.</string>
     <string name="ledger_import_icost">Import from iCost</string>
@@ -769,9 +760,6 @@
     <string name="tab_me">Me</string>
     <string name="me_pending_note">Look over the changes, then publish them to the site together.</string>
     <string name="action_review_publish">Review and publish</string>
-    <string name="settings_moments_data">Moments and data</string>
-    <string name="settings_map_footprints">Map and footprints</string>
-    <string name="settings_about">About</string>
     <string name="me_month_expense">Spent this month</string>
     <string name="label_time">Time</string>
     <string name="action_previous_month">Previous month</string>
@@ -894,17 +882,38 @@
     <string name="side_key_timing">Gesture timing</string>
     <string name="side_key_double_time">Double press window (ms)</string>
     <string name="side_key_long_time">Long press threshold (ms)</string>
-    <string name="side_key_timing_value">Double press %1$d ms · long press %2$d ms</string>
+    <string name="side_key_timing_value">Double %1$d ms, long %2$d ms</string>
     <string name="side_key_invalid_timing">Use 150–600 for double press and 400–2000 for long press</string>
     <string name="side_key_note">Requires Shizuku and the Share and ledger assistant accessibility service. Enabling saves and disables the system preset; stopping restores it. Restart Shizuku after a phone restart.</string>
     <string name="side_key_timing_note">Single press waits until the double press window ends. Long press triggers once at its threshold.</string>
     <string name="side_key_action_failed">Action failed. Check the target app and accessibility service</string>
     <string name="side_key_last">Last gesture</string>
-    <string name="side_key_last_value">%1$s · %2$s</string>
+    <string name="side_key_last_value">%1$s %2$s</string>
     <string name="side_key_no_last">No gestures yet</string>
     <string name="side_key_payment_note">Trigger on a completed WeChat Pay or Alipay payment page to open a prefilled bill. It is recorded only after you save.</string>
     <string name="side_key_torch">Flashlight</string>
     <string name="side_key_torch_on">Flashlight on</string>
     <string name="side_key_torch_off">Flashlight off</string>
     <string name="side_key_torch_unavailable">Flashlight unavailable. Check whether the camera is in use</string>
+    <string name="me_general">General</string>
+    <string name="me_on_phone">Only on this phone</string>
+    <string name="me_footer">%1$s %2$s The cat on the icon is Mantou</string>
+    <string name="sync_title">Sync and sources</string>
+    <string name="section_site">Site</string>
+    <string name="section_media">Media</string>
+    <string name="section_timeline">Timeline</string>
+    <string name="me_sync_token_set">Token set</string>
+    <string name="me_sync_token_unset">No token, view only</string>
+    <string name="me_auto_bill_on">Auto bills on</string>
+    <string name="me_items_public">Public: %1$d books, %2$d spans</string>
+    <string name="side_key_needs">Requires</string>
+    <string name="side_key_service">Share and bill assistant</string>
+    <string name="side_key_service_on">Accessibility service on</string>
+    <string name="side_key_service_off">Accessibility service off</string>
+    <string name="side_key_shizuku">Shizuku</string>
+    <plurals name="me_ledger_books">
+        <item quantity="one">%d book</item>
+        <item quantity="other">%d books</item>
+    </plurals>
+    <string name="footprint_settings_subtitle">Tracks stay on this phone and record offline</string>
 </resources>

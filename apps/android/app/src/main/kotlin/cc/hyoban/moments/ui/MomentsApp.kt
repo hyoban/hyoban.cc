@@ -27,7 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.background
 import cc.hyoban.moments.ui.theme.tokens
-import cc.hyoban.moments.ui.settings.SettingsSection
+import cc.hyoban.moments.ui.settings.MeRoutes
 import cc.hyoban.moments.ui.settings.MeScreen
 import android.net.Uri
 import androidx.activity.compose.BackHandler
@@ -164,13 +164,12 @@ import cc.hyoban.moments.ui.map.MapFocus
 import cc.hyoban.moments.ui.map.MapScreen
 import cc.hyoban.moments.ui.moment.MomentScreen
 import cc.hyoban.moments.ui.publish.ChangesScreen
-import cc.hyoban.moments.ui.settings.SettingsScreen
+import cc.hyoban.moments.ui.settings.SyncScreen
 import cc.hyoban.moments.footprints.FootprintSettingsScreen
 import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ui.ledger.AccountEditScreen
 import cc.hyoban.moments.ui.ledger.AccountScreen
 import cc.hyoban.moments.ui.ledger.BillScreen
-import cc.hyoban.moments.ui.ledger.CategoriesScreen
 import cc.hyoban.moments.ui.ledger.EntryScreen
 import cc.hyoban.moments.ui.ledger.LedgerEntryArgs
 import cc.hyoban.moments.ui.ledger.LedgerFilter
@@ -179,7 +178,6 @@ import cc.hyoban.moments.ui.ledger.LedgerNav
 import cc.hyoban.moments.ui.ledger.LedgerScreen
 import cc.hyoban.moments.ui.ledger.LedgerSettingsScreen
 import cc.hyoban.moments.ui.ledger.LocalLedgerNav
-import cc.hyoban.moments.ui.ledger.RatesScreen
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.TransitionMotion
 import cc.hyoban.moments.ui.trips.TripPlayerScreen
@@ -236,15 +234,15 @@ data class Day(val date: String, val card: String? = null)
 @Serializable
 data class PlaceMoments(val id: String)
 
-/** The 我 tab: the changes waiting to be published, the ledger's month and the settings. */
+/** The 我 tab: the changes waiting to be published, the ledger's month and the settings, each a page under it. */
 @Serializable
 object Preferences
 
-/** One section of the settings, by its [SettingsSection]'s name. */
+/** 同步与来源: the API, its token, the photos' origin and the map's styles. */
 @Serializable
-data class SettingsPage(val section: String)
+object SyncSettings
 
-/** How footprints are recorded, from the settings page or the map's footprint sheet. */
+/** How footprints are recorded, a page under 我. */
 @Serializable
 object FootprintSettings
 
@@ -252,13 +250,9 @@ object FootprintSettings
 @Serializable
 object SideKeySettings
 
-/** Who sees what by default: the books' new bills and the public spans of the footprints. */
+/** Who sees what by default: the Moments about tech, the books' new bills and the public spans of the footprints. */
 @Serializable
 object Items
-
-/** The settings, a row for each section. */
-@Serializable
-object SettingsHome
 
 /** A Moment to write, kept on the phone, with a bill or the [bill] alone. */
 @Serializable
@@ -320,14 +314,6 @@ data class LedgerAccountEdit(val id: String? = null)
 /** The ledger's settings; with [import], its iCost import's file picker opened at once. */
 @Serializable
 data class LedgerSettings(val import: Boolean = false)
-
-/** A book's categories. */
-@Serializable
-data class LedgerCategories(val book: String)
-
-/** The exchange rates. */
-@Serializable
-object LedgerRates
 
 /** Bills picked as [LedgerFilter] has it. */
 @Serializable
@@ -477,9 +463,6 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             account = { navController.goTo(LedgerAccount(it)) },
             editAccount = { navController.navigate(LedgerAccountEdit(it)) },
             list = { f -> navController.navigate(LedgerList(f.title, f.book, f.account, f.category, f.categoryName, f.trip, f.place, f.day, f.period, f.search)) },
-            settings = { navController.navigate(LedgerSettings()) },
-            categories = { navController.navigate(LedgerCategories(it)) },
-            rates = { navController.navigate(LedgerRates) },
             moment = { navController.goTo(Moment(it)) },
             place = { navController.goTo(PlaceMoments(it)) },
             trip = { navController.goTo(Trip(it)) },
@@ -747,36 +730,26 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             screen<Preferences>(link = "settings") {
                                 MeScreen(
                                     container,
-                                    onChanges = { navController.navigate(Changes) },
-                                    onLedger = { navController.goTo(LedgerHome(it)) },
-                                    onFootprints = { showOnMap(MapFocus.Footprints) },
-                                    onItems = { navController.navigate(Items) },
-                                    onSettings = { navController.navigate(SettingsHome) },
+                                    MeRoutes(
+                                        changes = { navController.navigate(Changes) },
+                                        ledger = { navController.goTo(LedgerHome(it)) },
+                                        footprints = { showOnMap(MapFocus.Footprints) },
+                                        items = { navController.navigate(Items) },
+                                        sync = { navController.navigate(SyncSettings) },
+                                        ledgerSettings = { navController.navigate(LedgerSettings()) },
+                                        footprintSettings = { navController.navigate(FootprintSettings) },
+                                        sideKey = { navController.navigate(SideKeySettings) },
+                                    ),
                                 )
                             }
-                            screen<SettingsPage>(link = "settings/{section}") { entry ->
-                                val name = entry.toRoute<SettingsPage>().section.uppercase()
-                                SettingsScreen(
-                                    container,
-                                    SettingsSection.entries.firstOrNull { it.name == name } ?: SettingsSection.MOMENTS,
-                                    onBack = back,
-                                    onFootprints = { showOnMap(MapFocus.Footprints) },
-                                    onFootprintSettings = { navController.navigate(FootprintSettings) },
-                                )
-                            }
-                            screen<SettingsHome>(link = "settings-home") {
-                                cc.hyoban.moments.ui.settings.SettingsHomeScreen(
-                                    onBack = back,
-                                    onSection = { navController.navigate(SettingsPage(it.name)) },
-                                    onLedgerSettings = { navController.navigate(LedgerSettings()) },
-                                    onSideKeySettings = { navController.navigate(SideKeySettings) },
-                                )
+                            screen<SyncSettings>(link = "sync") {
+                                SyncScreen(container, onBack = back)
                             }
                             screen<SideKeySettings>(link = "side-key") {
                                 cc.hyoban.moments.sidekey.SideKeySettingsScreen(onBack = back)
                             }
                             screen<Items>(link = "items") {
-                                cc.hyoban.moments.ui.settings.ItemsScreen(container, onBack = back, onFootprints = { showOnMap(MapFocus.Footprints) })
+                                cc.hyoban.moments.ui.settings.ItemsScreen(container, onBack = back)
                             }
                             screen<FootprintSettings>(link = "footprint-settings") {
                                 FootprintSettingsScreen(container, onBack = back)
@@ -821,7 +794,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 ChangesScreen(container, onMoment = openMoment, onBack = back)
                             }
                             screen<LedgerHome>(link = "ledger") { entry ->
-                                LedgerScreen(container, ledgerNav, onImport = { navController.navigate(LedgerSettings(import = true)) }, startTab = entry.toRoute<LedgerHome>().tab)
+                                LedgerScreen(container, ledgerNav, startTab = entry.toRoute<LedgerHome>().tab)
                             }
                             // A payment's from 自动记账's notification opening the app, with what it read.
                             screen<LedgerEntry>(link = "new-bill", aliases = listOf(PAYMENT_LINK)) { entry ->
@@ -851,12 +824,6 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             }
                             screen<LedgerSettings>(link = "ledger-settings") { entry ->
                                 LedgerSettingsScreen(container, ledgerNav, startImport = entry.toRoute<LedgerSettings>().import)
-                            }
-                            screen<LedgerCategories> { entry ->
-                                CategoriesScreen(container, entry.toRoute<LedgerCategories>().book, ledgerNav)
-                            }
-                            screen<LedgerRates> {
-                                RatesScreen(container, ledgerNav)
                             }
                             screen<LedgerList> { entry ->
                                 val route = entry.toRoute<LedgerList>()
@@ -1204,11 +1171,11 @@ fun routeOf(link: Uri): Any? {
         "map" -> Atlas
         // The trips are listed in the map's sheet.
         "trips" -> Atlas
-        "settings" -> id?.let(::SettingsPage) ?: Preferences
+        "settings" -> Preferences
+        "sync" -> SyncSettings
         "footprints" -> Atlas
         "footprint-settings" -> FootprintSettings
         "items" -> Items
-        "settings-home" -> SettingsHome
         "side-key" -> SideKeySettings
         "new" -> NewMoment()
         "edit" -> id?.let(::EditMoment)

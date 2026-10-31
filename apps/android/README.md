@@ -8,11 +8,11 @@ is the app's design system (the 「这里 App 设计系统」 artifact, mirrored
 
 It reads the API's public endpoints (`apps/api`) and keeps a copy under the app's `api/`
 directory in the layout `packages/data-spec` defines, so it opens at once and works
-offline. Each start, each pull down on a list, and 刷新 in the settings ask only for what
+offline. Each start, each pull down on a list, and 刷新 in 我 → 同步与来源 ask only for what
 changed since: the Moments, places and trips from `/v1/changes`, and what only the second
 shape has (charges, public bills and marks, collections, public tracks) from `/v2/changes`.
 The routes (`GET /v1/routes`) are asked for again only when the API's revision has moved
-on. A new API, set in the settings, drops the copy and reads everything again.
+on. A new API, set in 同步与来源, drops the copy and reads everything again.
 
 ## Pages
 
@@ -26,8 +26,12 @@ or more, or a phone on its side, they stand down a rail instead.
 - **地图** shows the places, the trips' routes (listed in the sheet at its foot) and the
   footprints. 迷雾地图 lays a fog over it, as the site's map does, thinner over a city the
   more Moments it has, from the site's `apps/web/src/data/boundaries/cities.json` shipped as an asset.
-- **我** holds the changes waiting to be published, this month's spending, and rows for
-  账单与资产, 足迹, 记录项与公开 and 设置.
+- **我** holds the changes waiting to be published, this month's spending, rows for
+  账单与资产 and 足迹, and the settings in two parts: 通用 (记录项与公开, 同步与来源) and
+  只在这台手机上 (记账, 足迹记录, 侧键), each a page with what it is set to under its name.
+  There is no settings page over them, and under 我 there is one level of pages: what goes
+  deeper, such as a book, the exchange rates or a side key gesture's action, opens over its
+  page as a sheet or a dialog. Theme and language have no setting; they follow the phone.
 
 The pages lead to each other wherever they can: a place or a trip to the map, a day's pill
 to the day, a Moment's menu to its place, trip and day. A day's page opens on that day's
@@ -71,7 +75,7 @@ places with provisional ids (`p-<ulid>`), marked 未发布 until published.
 
 ## Publishing
 
-With the API's token, set under 我 → 时刻与数据 (in a file backups leave out), the site's
+With the API's token, set under 我 → 同步与来源 (in a file backups leave out), the site's
 Moments can be changed and deleted too. Nothing reaches the site as it is saved: new,
 changed and deleted Moments, changed places, public bills, trips and footprint spans wait
 on the phone, past a restart. 发布更改, from the card at the top of 我, lists them, shows
@@ -138,7 +142,13 @@ The ledger meets the Moments: a Moment's page lists its bills, a meal with no bi
 记一笔, a trip's and a day's page show what was spent, and 关联时刻和旅程 links meals and a
 travel book's bills to their Moments and trips.
 
-记账设置 manages the books and their categories, the exchange rates and the data:
+记账, under 我 (`moments://ledger-settings`), manages the books, the exchange rates, 自动记账 and
+the data. A book opens as a sheet with its name, currency and categories (chips, each opening
+a dialog to rename, add a second level, merge or delete it), archiving and deleting it; the
+rates open as a sheet too, with the European Central Bank's brought up to date from its head.
+An empty ledger imports from iCost on its own page.
+
+The data:
 
 - **从 iCost 导入** reads the .xlsx of iCost's 账单导出 (picked, shared in or opened with the
   app), shows what it found before writing, and skips what is already there, so each newer
@@ -161,7 +171,7 @@ Opening a bill form waits for the local ledger to load before checking for a boo
 creates a default book only when none exists, including when several forms initialize
 at once.
 
-**自动记账（试用）**, switched on in 记账设置, has the same accessibility service read WeChat
+**自动记账（试用）**, switched on in 记账, has the same accessibility service read WeChat
 Pay's and Alipay's pages. On one that says a payment went through, it offers a 记一笔
 notification with the amount, time, note and account it read; tapping it opens
 `moments://payment?amount=…&time=…&note=…` with a guessed category. Categorization matches
@@ -174,7 +184,7 @@ Nothing is written until saved, and a payment matching a kept bill within ten mi
 isn't offered. It never taps, types or keeps the page. `ledger/Payments` reads the page, with fixtures in
 `PaymentsTest`; `ledger/AutoBill` keeps the switch and posts the notification.
 
-**侧键自定义**, in 我 → 设置 (`moments://side-key`), assigns an action separately to a
+**侧键**, in 我 (`moments://side-key`), assigns an action separately to a
 single press, double press and long press of the physical OPPO key. It includes payment
 capture, toggling the flashlight, opening an installed app or a link/app URI, play/pause,
 next/previous track, volume, back, home, recent apps, notifications, quick settings and lock screen. No gesture
@@ -210,7 +220,7 @@ settings and original system action are excluded from Android backup and device 
 The footprints are GPS tracks kept on the phone alone, in
 `noBackupFilesDir/footprints.sqlite` (`footprints/FootprintStore`), outside sync and
 backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export and import GPX and delete;
-足迹设置 (`moments://footprint-settings`) sets how recording behaves.
+足迹记录 (`moments://footprint-settings`), from 我 or the panel's settings button, sets how recording behaves.
 
 - **Recording.** 日常自动记录 runs until turned off; 单次行程 marks a trip over the same
   samples; 暂停所有记录 pauses both. A foreground service with precise location asks for a
@@ -254,10 +264,10 @@ backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export an
   for it), and frames one on the map when tapped.
 - **Notification.** Its icon shows the state (recording, waiting for a fix, location off).
   On Android 16 and later it asks to be a Live Update; on ColorOS that also needs
-  流体云显示实时活动, linked from 足迹设置 → 状态栏显示.
+  流体云显示实时活动, linked from 足迹记录 → 状态栏显示.
 - **Diagnostics.** `noBackupFilesDir/footprint-diagnostics/` keeps two rotating JSONL files
   of 8 MiB, about two days, with each request, fix, filter decision and state change, never a coordinate,
-  network name or token. 足迹设置 → 诊断 → 导出诊断日志 exports them with a replay of the
+  network name or token. 足迹记录 → 诊断 → 导出诊断日志 exports them with a replay of the
   latest day through the current filter.
 - **Publishing.** A trip's page has 公开这段旅程的轨迹: at the next 全部发布到网站 its line goes
   out simplified to 30 m (`track_shares`), and the site draws the trip along it. The raw
@@ -265,7 +275,7 @@ backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export an
 
 ### Connection automation
 
-足迹设置 → 连接自动控制 starts and pauses recording by connections the user picks, none by
+足迹记录 → 连接自动控制 starts and pauses recording by connections the user picks, none by
 default: joining a chosen Wi-Fi pauses and leaving all of them starts; connecting a chosen
 Bluetooth device starts and disconnecting the last pauses, and Bluetooth wins over Wi-Fi.
 Changes settle for five seconds; a manual choice made since always wins. A `specialUse`
@@ -282,7 +292,7 @@ are `noBackupFilesDir/connection-reminders.json` and `companion-connections.json
 - **Video.** The viewer goes picture-in-picture when the app is left while a video plays.
 - **Language and appearance.** Always the phone's: Chinese, or English when the phone speaks
   it, and light or dark as the system is. The API, the media origin and the map's styles
-  default to `BuildConfig` and can be changed in the settings.
+  default to `BuildConfig` and can be changed in 我 → 同步与来源.
 - **Maps.** OpenFreeMap's vector tiles drawn by MapLibre, needing no key.
 - **Name and icon.** Here, in English whatever the phone speaks: a white cat with a grey cap
   peeking in from the lower left on blue, an adaptive icon with a monochrome layer.
@@ -312,7 +322,8 @@ adb -s emulator-5554 shell am instrument -w -e class cc.hyoban.moments.footprint
 
 ## On the phone, from adb
 
-Every page has a link, `moments://moments`, `map`, `trips`, `settings`, `new`,
+Every page has a link, `moments://moments`, `map`, `trips`, `settings` (我), `sync`, `items`,
+`ledger-settings`, `footprint-settings`, `side-key`, `new`,
 `moment/{uid}`, `trip/{id}`, `play/{id}`, `day/{YYYY-MM-DD}` and `place/{id}`, which
 `adb shell am start -d` opens. Buttons, tabs and cards carry test tags that
 `uiautomator dump` reports as resource ids (`tab_map`, `settings`, `back`,
@@ -341,5 +352,5 @@ scripts/ui.py tap tab_map
 
 ## Thanks
 
-The cat on the icon is 馒头 (Mantou), drawn from a photo of the real one. The settings
-page says so too, with a photo of its face.
+The cat on the icon is 馒头 (Mantou), drawn from a photo of the real one. The foot of 我
+says so too, beside a photo of its face and the app's version.

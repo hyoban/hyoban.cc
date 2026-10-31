@@ -5,18 +5,13 @@ import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import cc.hyoban.moments.ui.design.AlertDialog
-import cc.hyoban.moments.ui.design.IconButtonDefaults
-import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.Icon
-import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.OutlinedTextField
 import cc.hyoban.moments.ui.design.SegmentedButton
@@ -38,15 +33,24 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import cc.hyoban.moments.ui.components.AppColors
+import cc.hyoban.moments.ui.design.AssistChip
+import cc.hyoban.moments.ui.design.FilterChipDefaults
+import cc.hyoban.moments.ui.design.ModalBottomSheet
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.ledger.Category
 import cc.hyoban.moments.ledger.CategoryType
 import cc.hyoban.moments.ledger.Rates
-import cc.hyoban.moments.ui.components.PageWidth
-import cc.hyoban.moments.ui.components.SubPage
-import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.segmentColors
@@ -56,12 +60,13 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 /**
- * A book's categories of either kind, each first-level one with its second-level ones under it,
- * as a segmented list; tapped, one is renamed, given a second level, merged into another or,
- * unused, deleted.
+ * A book's categories of either kind, in its sheet: each first-level one a chip, its second-level
+ * ones after it; tapped, one is renamed, given a second level, merged into another or, unused,
+ * deleted, in a dialog over the sheet.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun CategoriesScreen(container: AppContainer, book: String, nav: LedgerNav) {
+internal fun BookCategories(container: AppContainer, book: String) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var income by rememberSaveable { mutableStateOf(false) }
@@ -71,46 +76,38 @@ fun CategoriesScreen(container: AppContainer, book: String, nav: LedgerNav) {
     val categories = ledger.categories.filter { it.book == book && it.type == type }
     val uses = remember(ledger) { ledger.txns.groupingBy { it.category }.eachCount() }
 
-    SubPage(stringResource(R.string.ledger_categories), nav.back, subtitle = ledger.books.firstOrNull { it.id == book }?.name) {
-        PageWidth(maxColumns = 1) { columns ->
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).navigationBarsPadding()
-                    .padding(start = columns.margin, end = columns.margin, bottom = Space.xl),
-            ) {
-                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s)) {
-                    listOf(false to R.string.ledger_kind_expense, true to R.string.ledger_kind_income).forEachIndexed { index, (value, label) ->
-                        SegmentedButton(selected = income == value, onClick = { income = value }) { Text(stringResource(label)) }
-                    }
-                }
-                categories.filter { it.parent == null }.forEach { top ->
-                    val children = categories.filter { it.parent == top.id }
-                    SegmentedGroup(
-                        null,
-                        null,
-                        (listOf(top) + children).map { category ->
-                            { shapes ->
-                                val count = uses[category.id] ?: 0
-                                SegmentedListItem(
-                                    onClick = { editing = category },
-                                    shapes = shapes,
-                                    colors = segmentColors(),
-                                    leadingContent = {
-                                        if (category.parent == null) LeadingIcon(categoryIcon(category.name))
-                                        else Icon(AppIcons.SubArrow, contentDescription = null)
-                                    },
-                                    supportingContent = { Text(pluralStringResource(R.plurals.ledger_count_bills, count, count)) },
-                                    modifier = Modifier.testTag("category_row_${category.name}"),
-                                ) { Text(category.name) }
-                            }
-                        },
-                    )
-                }
-                TextButton(onClick = { adding = "" }, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).fillMaxWidth()) {
-                    Icon(AppIcons.Plus, contentDescription = null)
-                    Text(stringResource(R.string.ledger_add_category), modifier = Modifier.padding(start = Space.s))
-                }
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        listOf(false to R.string.ledger_kind_expense, true to R.string.ledger_kind_income).forEach { (value, label) ->
+            SegmentedButton(selected = income == value, onClick = { income = value }) { Text(stringResource(label)) }
+        }
+    }
+    FlowRow(
+        Modifier.fillMaxWidth().padding(top = Space.m),
+        horizontalArrangement = Arrangement.spacedBy(Space.s),
+        verticalArrangement = Arrangement.spacedBy(Space.s),
+    ) {
+        categories.filter { it.parent == null }.forEach { top ->
+            (listOf(top) + categories.filter { it.parent == top.id }).forEach { category ->
+                AssistChip(
+                    onClick = { editing = category },
+                    label = { Text(category.name) },
+                    leadingIcon = {
+                        Icon(
+                            if (category.parent == null) categoryIcon(category.name) else AppIcons.SubArrow,
+                            contentDescription = null,
+                            Modifier.size(FilterChipDefaults.IconSize),
+                        )
+                    },
+                    modifier = Modifier.testTag("category_row_${category.name}"),
+                )
             }
         }
+        AssistChip(
+            onClick = { adding = "" },
+            label = { Text(stringResource(R.string.ledger_add_category)) },
+            leadingIcon = { Icon(AppIcons.Plus, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
+            modifier = Modifier.testTag("add_category"),
+        )
     }
 
     editing?.let { category ->
@@ -184,12 +181,13 @@ private val ECB = setOf(
 )
 
 /**
- * The exchange rates bills in other currencies are summed at: each currency's latest, a rate
- * of one's own set for one, and the European Central Bank's brought up to date from the bar,
- * the one time the ledger goes online, and only when asked.
+ * The exchange rates bills in other currencies are summed at, in a sheet over the ledger's
+ * settings: each currency's latest, a rate of one's own set for one, and the European Central
+ * Bank's brought up to date from the sheet's head, the one time the ledger goes online, and
+ * only when asked.
  */
 @Composable
-fun RatesScreen(container: AppContainer, nav: LedgerNav) {
+internal fun RatesSheet(container: AppContainer, onDismiss: () -> Unit) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val show = rememberShowMessage()
@@ -199,58 +197,49 @@ fun RatesScreen(container: AppContainer, nav: LedgerNav) {
     val used = remember(ledger) { (ledger.accounts.map { it.currency } + ledger.txns.map { it.currency } + ledger.books.map { it.currency }).toSet() }
     val currencies = (ledger.rates.currencies + used - "CNY").sortedWith(compareBy({ it !in used }, { it }))
 
-    SubPage(
-        stringResource(R.string.ledger_rates),
-        nav.back,
-        actions = {
-            Tooltip(stringResource(R.string.ledger_rates_refresh), below = true) {
-                IconButton(
-                    enabled = !refreshing,
-                    onClick = {
-                        refreshing = true
-                        scope.launch {
-                            try {
-                                val from = currencies.mapNotNull { ledger.rates.latest(it)?.first }.minOrNull()?.minusDays(7) ?: LocalDate.now().minusYears(2)
-                                val fetched = Rates.fetch(from, currencies.filter { it in ECB })
-                                container.ledger.putRates(fetched)
-                                show(resources.getString(R.string.ledger_rates_refreshed))
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (_: Exception) {
-                                show(resources.getString(R.string.ledger_rates_failed))
-                            } finally {
-                                refreshing = false
-                            }
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet, modifier = Modifier.semantics { testTagsAsResourceId = true }) {
+        Row(Modifier.fillMaxWidth().padding(start = Space.gutter, end = Space.m), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.ledger_rates), style = AppTheme.typography.title, modifier = Modifier.weight(1f).semantics { heading() })
+            TextButton(
+                enabled = !refreshing,
+                onClick = {
+                    refreshing = true
+                    scope.launch {
+                        try {
+                            val from = currencies.mapNotNull { ledger.rates.latest(it)?.first }.minOrNull()?.minusDays(7) ?: LocalDate.now().minusYears(2)
+                            val fetched = Rates.fetch(from, currencies.filter { it in ECB })
+                            container.ledger.putRates(fetched)
+                            show(resources.getString(R.string.ledger_rates_refreshed))
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Exception) {
+                            show(resources.getString(R.string.ledger_rates_failed))
+                        } finally {
+                            refreshing = false
                         }
-                    },
-                    modifier = Modifier.testTag("refresh_rates"),
-                ) { Icon(AppIcons.Refresh, contentDescription = stringResource(R.string.ledger_rates_refresh)) }
-            }
-        },
-    ) {
-        PageWidth(maxColumns = 1) { columns ->
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).navigationBarsPadding()
-                    .padding(start = columns.margin, end = columns.margin, bottom = Space.xl),
-            ) {
-                SegmentedGroup(
-                    null,
-                    stringResource(R.string.ledger_rates_note),
-                    currencies.map { code ->
-                        { shapes ->
-                            val latest = ledger.rates.latest(code)
-                            SegmentedListItem(
-                                onClick = { editing = code },
-                                shapes = shapes,
-                                colors = segmentColors(),
-                                supportingContent = { Text(latest?.first?.toString() ?: stringResource(R.string.ledger_rate_missing)) },
-                                trailingContent = latest?.let { { Text("%.4f".format(1 / it.second) + " CNY", style = AppTheme.typography.body.strong) } },
-                                modifier = Modifier.testTag("rate_$code"),
-                            ) { Text("1 $code") }
-                        }
-                    },
-                )
-            }
+                    }
+                },
+                modifier = Modifier.testTag("refresh_rates"),
+            ) { Text(stringResource(R.string.ledger_rates_refresh)) }
+        }
+        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(bottom = Space.l)) {
+            SegmentedGroup(
+                null,
+                stringResource(R.string.ledger_rates_note),
+                currencies.map { code ->
+                    { shapes ->
+                        val latest = ledger.rates.latest(code)
+                        SegmentedListItem(
+                            onClick = { editing = code },
+                            shapes = shapes,
+                            colors = segmentColors(),
+                            supportingContent = { Text(latest?.first?.toString() ?: stringResource(R.string.ledger_rate_missing)) },
+                            trailingContent = latest?.let { { Text("%.4f".format(1 / it.second) + " CNY", style = AppTheme.typography.body.strong) } },
+                            modifier = Modifier.testTag("rate_$code"),
+                        ) { Text("1 $code") }
+                    }
+                },
+            )
         }
     }
 

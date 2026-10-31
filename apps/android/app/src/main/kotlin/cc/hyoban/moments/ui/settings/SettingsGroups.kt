@@ -156,11 +156,20 @@ fun segmentColors() = ListItemDefaults.segmentedColors(
     supportingContentColor = tokens.tx2,
 )
 
-/** A row on a group's card: no fill of its own, its icon and secondary text in the secondary colour. */
+/** Rows on the page itself, with space rather than lines between them, their icons on the gutter. */
 @Composable
-fun rowColors() = ListItemDefaults.colors(
-    containerColor = Color.Transparent,
-    leadingIconColor = tokens.tx2,
-    supportingColor = tokens.tx2,
-    trailingIconColor = tokens.tx2,
-)
+fun PageRows(modifier: Modifier = Modifier, rows: @Composable (ListItemShapes) -> Unit) {
+    val shapes = ListItemShapes(AppTheme.shapes.medium)
+    Column(modifier.padding(horizontal = Space.gutter - 16.dp)) { rows(shapes) }
+}
+
+/** What heads a part of the page, in the third grey on the gutter, well clear of what is over it. */
+@Composable
+fun PageCaption(title: String) {
+    Text(
+        title,
+        style = AppTheme.typography.caption,
+        color = tokens.tx3,
+        modifier = Modifier.fillMaxWidth().padding(start = Space.gutter, end = Space.gutter, top = Space.xl, bottom = Space.xs).semantics { heading() },
+    )
+}
