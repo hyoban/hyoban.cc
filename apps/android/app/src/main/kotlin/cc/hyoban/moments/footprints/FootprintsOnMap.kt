@@ -37,7 +37,11 @@ import cc.hyoban.moments.ui.settings.SwitchRow
 import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.Space
 import kotlinx.coroutines.*
+import cc.hyoban.moments.data.local.Fix
+import cc.hyoban.moments.data.local.SAME_PLACE_METRES
+import cc.hyoban.moments.data.local.nearestPlaces
 import java.time.Instant
+import kotlin.math.roundToInt
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -47,12 +51,15 @@ private data class TrackView(
     val history: FootprintHistory = FootprintHistory(emptyList(), emptyList()),
     val points: List<TrackPoint> = emptyList(),
     val stats: TrackStats = TrackStats(0.0, 0),
-    val segments: List<List<TrackPoint>> = emptyList(),
+    val parts: List<TrackPart> = emptyList(),
+    val drawing: FootprintDrawing = FootprintDrawing(),
 )
 
 /** Controls and selection live with the map, even while the bottom panel is closed. */
 data class FootprintsMapState(
-    val segments: List<List<TrackPoint>>,
+    val drawing: FootprintDrawing,
+    /** The part chosen in the panel to frame, or empty for all of it. */
+    val frame: List<TrackPoint>,
     val frameRequested: Boolean,
     val onFramed: () -> Unit,
     val open: () -> Unit,
@@ -66,6 +73,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
     LaunchedEffect(Unit) { if (reopen) { reopen = false; expanded = true } }
     var showTracks by rememberSaveable { mutableStateOf(true) }
     var frameRequested by rememberSaveable { mutableStateOf(false) }
+    var frame by remember { mutableStateOf(emptyList<TrackPoint>()) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val store = container.footprints
@@ -102,12 +110,21 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
         try {
             view = withContext(Dispatchers.IO) {
                 val points = store.points(selection)
-                TrackView(store.state(), store.history(), points, trackStats(points), trackSegments(points))
+                val parts = trackParts(points)
+                TrackView(store.state(), store.history(), points, trackStats(points), parts, footprintDrawing(points, parts))
             }
             loaded = true
         } catch (e: CancellationException) { throw e } catch (_: Exception) {
             error = R.string.footprints_error
         }
+    }
+    // A stay's name, by its start, from the phone's own places nearby; no request leaves for it.
+    val places by container.repository.places.collectAsStateWithLifecycle()
+    val stayNames = remember(view.parts, places) {
+        view.parts.filterIsInstance<TrackStay>().mapNotNull { stay ->
+            nearestPlaces(places, Fix(stay.latitude, stay.longitude), limit = 1).firstOrNull()
+                ?.takeIf { (_, metres) -> metres <= SAME_PLACE_METRES }?.let { (id, _) -> stay.start to places.getValue(id).name }
+        }.toMap()
     }
     val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         val action = pendingAction
@@ -133,7 +150,8 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
     }
     val state = view.state
     content(FootprintsMapState(
-        segments = if (showTracks) view.segments else emptyList(),
+        drawing = if (showTracks) view.drawing else FootprintDrawing(),
+        frame = frame,
         frameRequested = frameRequested,
         onFramed = { frameRequested = false },
         open = { expanded = true },
@@ -200,7 +218,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                         { shapes ->
                             // What is chosen, and a tap shows the whole of it on the map.
                             SegmentedListItem(
-                                onClick = { showTracks = true; frameRequested = true; expanded = false },
+                                onClick = { showTracks = true; frame = emptyList(); frameRequested = true; expanded = false },
                                 shapes = shapes,
                                 enabled = view.points.isNotEmpty(),
                                 colors = segmentColors(),
@@ -277,6 +295,45 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                     },
                 )
             }
+            if (view.parts.isNotEmpty()) item {
+                // The day or trip told as moves and stays; a tap frames that part on the map.
+                val days = view.points.map { day(it.time) }.distinct().size > 1
+                SegmentedGroup(
+                    stringResource(R.string.footprints_section_parts),
+                    stringResource(R.string.footprints_parts_note),
+                    view.parts.map<TrackPart, cc.hyoban.moments.ui.settings.Segment> { part ->
+                        { shapes ->
+                            val span = clock(part.start, days) + "–" + clock(part.end, days)
+                            val (icon, title, supporting) = when (part) {
+                                is TrackStay -> Triple(AppIcons.Pin,
+                                    stringResource(R.string.footprints_stay) + "\u2003" + duration(part.end - part.start),
+                                    listOfNotNull(span, stayNames[part.start]).joinToString("\u2003"))
+                                is TrackMove -> Triple(
+                                    when (part.mode) { TravelMode.WALK -> AppIcons.Walk; TravelMode.CYCLE -> AppIcons.Bike; TravelMode.DRIVE -> AppIcons.Car },
+                                    stringResource(when (part.mode) {
+                                        TravelMode.WALK -> R.string.footprints_mode_walk
+                                        TravelMode.CYCLE -> R.string.footprints_mode_cycle
+                                        TravelMode.DRIVE -> R.string.footprints_mode_drive
+                                    }) + "\u2003" + stringResource(R.string.footprints_part_km, part.metres / 1000),
+                                    listOfNotNull(span, part.averageSpeed?.let { average ->
+                                        val top = part.topSpeed
+                                        if (top != null) stringResource(R.string.footprints_speeds, kmh(average), kmh(top))
+                                        else stringResource(R.string.footprints_speed_average, kmh(average))
+                                    }).joinToString("\n"))
+                            }
+                            SegmentedListItem(
+                                onClick = { showTracks = true; frame = part.points; frameRequested = true; expanded = false },
+                                shapes = shapes,
+                                colors = segmentColors(),
+                                leadingContent = { Icon(icon, contentDescription = null) },
+                                supportingContent = { Text(supporting) },
+                                trailingContent = { Icon(AppIcons.Fit, contentDescription = stringResource(R.string.footprints_frame_part)) },
+                                modifier = Modifier.testTag("footprints_part_${part.start}"),
+                            ) { Text(title) }
+                        }
+                    },
+                )
+            }
             item {
                 // The spans made public: private by default, each taken back by its switch; the
                 // day or trip chosen above can be made one.
@@ -332,6 +389,21 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.footprints_cancel)) } },
         )
     }
+}
+
+private fun day(time: Long) = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).toLocalDate()
+
+/** A part's time of day, with its date where the selection spans more than one day. */
+private fun clock(time: Long, withDate: Boolean): String =
+    Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern(if (withDate) "MM-dd HH:mm" else "HH:mm"))
+
+private fun kmh(metresPerSecond: Double) = (metresPerSecond * 3.6).roundToInt()
+
+@Composable
+private fun duration(millis: Long): String {
+    val minutes = (millis / 60_000).toInt()
+    return if (minutes < 60) stringResource(R.string.footprints_minutes, minutes)
+    else stringResource(R.string.footprints_hours_minutes, minutes / 60, minutes % 60)
 }
 
 private fun stamp(time: Long): String = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
