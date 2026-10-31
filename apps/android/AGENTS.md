@@ -13,9 +13,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   install it over what is there, a few seconds each: `./gradlew :app:assembleDebug`, then
   `adb install -r app/build/outputs/apk/debug/app-debug.apk`. Launch it and look at
   logcat's crash buffer. Build only what the step needs, not the CI set each time.
-- The debug build runs slower, so judge motion and dropped frames on the release, and
-  install the release once the change is done: `./gradlew :app:assembleRelease` (half a
-  minute, R8's), then `app/build/outputs/apk/release/app-release.apk`. Both are signed
+- While the change is still in development, install only the debug build, never the release.
+  Install the release once, after committing and before pushing: `./gradlew :app:assembleRelease`
+  (half a minute, R8's), then `app/build/outputs/apk/release/app-release.apk`; judge motion
+  and dropped frames on it then, as the debug build runs slower. Both are signed
   with the debug key unless `local.properties` has a release key, so either installs over
   the other and the app's data stays.
 - Testing never costs the app's data: the ledger and footprints live in `noBackupFilesDir`
