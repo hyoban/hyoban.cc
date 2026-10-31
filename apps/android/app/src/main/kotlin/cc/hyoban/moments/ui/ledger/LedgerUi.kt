@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
 import cc.hyoban.moments.footprints.footprintPlace
+import cc.hyoban.moments.ledger.Account
 import cc.hyoban.moments.ledger.AccountKind
 import cc.hyoban.moments.ledger.DISCOUNT_CATEGORY
 import cc.hyoban.moments.ledger.FEE_CATEGORY
@@ -168,6 +169,61 @@ fun accountKindIcon(kind: AccountKind): ImageVector = when (kind) {
     AccountKind.OTHER -> AppIcons.Savings
 }
 
+/** An account's icon: the mark of the bank or wallet its name says, else what its name or kind says it is. */
+fun accountIcon(account: Account): ImageVector {
+    val name = account.name
+    return brandIcon(name) ?: when {
+        name.contains("红包") -> AppIcons.RedPacket
+        name.contains("公积金") -> AppIcons.Home
+        name.contains("电卡") -> AppIcons.Ev
+        name.contains("车贷") -> AppIcons.Car
+        else -> accountKindIcon(account.kind)
+    }
+}
+
+/** The mark of a shop or service [name] names, one that says what was bought, so a bill's note may pick it. */
+fun shopBrandIcon(name: String?): ImageVector? {
+    val text = name.orEmpty()
+    fun has(vararg words: String) = words.any { text.contains(it, ignoreCase = true) }
+    return when {
+        has("肯德基", "KFC") -> AppIcons.Kfc
+        has("麦当劳", "McDonald") -> AppIcons.Mcdonalds
+        has("蜜雪") -> AppIcons.Mixue
+        has("喜茶", "HEYTEA") -> AppIcons.Heytea
+        has("瑞幸", "luckin") -> AppIcons.Luckin
+        has("星巴克", "Starbucks") -> AppIcons.Starbucks
+        has("老乡鸡") -> AppIcons.Laoxiangji
+        has("高德") -> AppIcons.Amap
+        has("闲鱼") -> AppIcons.Xianyu
+        has("GitHub") -> AppIcons.Github
+        has("小米", "Redmi", "Xiaomi") -> AppIcons.Xiaomi
+        has("Apple", "iCloud", "App Store") -> AppIcons.Apple
+        has("联通") -> AppIcons.Unicom
+        has("京东", "白条") -> AppIcons.Jd
+        has("拼多多") -> AppIcons.Pinduoduo
+        else -> null
+    }
+}
+
+/** The mark of the brand a category's or an account's name says: a shop, a platform, a bank or a wallet. */
+fun brandIcon(name: String?): ImageVector? {
+    val text = name.orEmpty()
+    fun has(vararg words: String) = words.any { text.contains(it, ignoreCase = true) }
+    return shopBrandIcon(text) ?: when {
+        has("支付宝", "余额宝", "花呗", "Alipay") -> AppIcons.Alipay
+        has("微信", "WeChat") -> AppIcons.Wechat
+        has("抖音") -> AppIcons.Douyin
+        has("中国银行", "中行") -> AppIcons.Boc
+        has("招商银行", "招行") -> AppIcons.Cmb
+        ZA.containsMatchIn(text) -> AppIcons.ZaBank
+        has("USDT") -> AppIcons.Usdt
+        else -> null
+    }
+}
+
+/** ZA Bank by its letters alone, not inside a word. */
+private val ZA = Regex("""(?<![A-Za-z])ZA(?![A-Za-z])""")
+
 /** A category's icon, guessed from its name, the categories being the user's own words. */
 fun categoryIcon(name: String?): ImageVector = categoryIconOrNull(name) ?: AppIcons.Category
 
@@ -175,9 +231,11 @@ fun categoryIcon(name: String?): ImageVector = categoryIconOrNull(name) ?: AppIc
 fun categoryIconOrNull(name: String?): ImageVector? {
     val text = name.orEmpty()
     fun has(vararg words: String) = words.any { text.contains(it, ignoreCase = true) }
+    brandIcon(text)?.let { return it }
     return when {
         text == FEE_CATEGORY -> AppIcons.Receipt
         text == DISCOUNT_CATEGORY -> AppIcons.Discount
+        has("手续费") -> AppIcons.Receipt
         has("酸奶", "奶茶", "茶饮", "果茶", "bubble tea") -> AppIcons.BubbleTea
         has("瓶装水", "矿泉水", "饮用水", "bottled") -> AppIcons.Bottle
         has("咖啡", "瑞幸", "星巴克", "coffee") -> AppIcons.Cafe
@@ -186,7 +244,7 @@ fun categoryIconOrNull(name: String?): ImageVector? {
         has("水果", "fruit") -> AppIcons.Fruit
         has("买菜", "蔬菜", "菜场", "grocer") -> AppIcons.Vegetable
         has("聚餐", "请客", "餐厅", "dining") -> AppIcons.Cutlery
-        has("餐", "饭", "食", "菜", "外卖", "food", "meal") -> AppIcons.Food
+        has("餐", "饭", "食", "菜", "饺", "外卖", "food", "meal") -> AppIcons.Food
         has("快充") -> AppIcons.Bolt
         has("家充") -> AppIcons.HomeCharge
         has("充电宝") -> AppIcons.BatteryCharging
@@ -202,7 +260,7 @@ fun categoryIconOrNull(name: String?): ImageVector? {
         has("车品") -> AppIcons.Steering
         has("打车", "顺风车", "taxi") -> AppIcons.Taxi
         has("火车", "高铁", "地铁", "train", "metro") -> AppIcons.Train
-        has("飞机", "机票", "机场", "flight") -> AppIcons.Plane
+        has("飞机", "机票", "flight") -> AppIcons.Plane
         has("骑行", "单车", "bike") -> AppIcons.Bike
         has("车", "car") -> AppIcons.Car
         has("交通", "公交", "bus") -> AppIcons.Bus
@@ -216,6 +274,7 @@ fun categoryIconOrNull(name: String?): ImageVector? {
         has("住房", "房租", "home", "rent") -> AppIcons.Home
         has("话费", "手机", "phone", "mobile") -> AppIcons.Phone
         has("网络", "宽带", "internet") -> AppIcons.Wifi
+        has("机场", "VPN", "proxy") -> AppIcons.Shield
         has("云", "存储") -> AppIcons.Cloud
         has("相机", "摄影") -> AppIcons.Camera
         has("数码", "电脑", "computer", "gadget") -> AppIcons.Laptop
@@ -252,11 +311,16 @@ fun categoryIconOrNull(name: String?): ImageVector? {
     }
 }
 
-/** A bill's icon: its second-level category's when that names what it was, else its first-level one's, or what the bill is when it has none. */
+/**
+ * A bill's icon: the brand its category names, else the shop its note names, else its second-level category's
+ * when that names what it was, else its first-level one's, or what the bill is when it has none.
+ */
 fun txnIcon(txn: Txn, ledger: Ledger): ImageVector = when {
     txn.kind == TxnKind.TRANSFER -> if (txn.transfer == TransferType.TRANSFER) AppIcons.Swap else AppIcons.People
     txn.kind == TxnKind.REFUND -> AppIcons.Undo
-    else -> ledger.categoriesById[txn.category]?.takeIf { it.parent != null }?.let { categoryIconOrNull(it.name) }
+    else -> brandIcon(ledger.categoriesById[txn.category]?.name)
+        ?: shopBrandIcon(txn.note)
+        ?: ledger.categoriesById[txn.category]?.takeIf { it.parent != null }?.let { categoryIconOrNull(it.name) }
         ?: categoryIcon(ledger.categoriesById[ledger.topCategory(txn.category)]?.name ?: ledger.categoriesById[txn.category]?.name)
 }
 

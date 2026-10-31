@@ -530,8 +530,8 @@ internal fun BillFields(
 
     if (kind == TxnKind.TRANSFER) {
         val rows = listOf<@Composable (ListItemShapes) -> Unit>(
-            { shapes -> PickRow(shapes, accountKindIconOf(ledger, account), stringResource(R.string.ledger_from_account), accountName(ledger, account), "from_account") { sheet = Sheet.From } },
-            { shapes -> PickRow(shapes, accountKindIconOf(ledger, draft.toAccount), stringResource(R.string.ledger_to_account), accountName(ledger, draft.toAccount), "to_account") { sheet = Sheet.To } },
+            { shapes -> PickRow(shapes, accountIconOf(ledger, account), stringResource(R.string.ledger_from_account), accountName(ledger, account), "from_account") { sheet = Sheet.From } },
+            { shapes -> PickRow(shapes, accountIconOf(ledger, draft.toAccount), stringResource(R.string.ledger_to_account), accountName(ledger, draft.toAccount), "to_account") { sheet = Sheet.To } },
         )
         SegmentedGroup(null, null, rows)
         Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
@@ -648,7 +648,7 @@ internal enum class Sheet { Account, From, To, Split, Book, Moment, Place, Trip 
 
 private fun accountName(ledger: Ledger, id: String?): String? = id?.let { ledger.accountsById[it]?.name }
 
-private fun accountKindIconOf(ledger: Ledger, id: String?) = accountKindIcon(id?.let(ledger.accountsById::get)?.kind ?: AccountKind.OTHER)
+private fun accountIconOf(ledger: Ledger, id: String?) = id?.let(ledger.accountsById::get)?.let(::accountIcon) ?: accountKindIcon(AccountKind.OTHER)
 
 /** A row of the form that opens a choice: what it is, and what is chosen or that nothing is. */
 @Composable
@@ -820,7 +820,7 @@ private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraf
     val discount = parseAmount(draft.discount)?.takeIf { it > 0 }
     val chips: @Composable () -> Unit = {
         if (kind != TxnKind.TRANSFER && !draft.splitting) {
-            OptionChip(accountName(ledger, account) ?: stringResource(R.string.ledger_choose_account), accountKindIconOf(ledger, account), "account") { draft.sheet = Sheet.Account }
+            OptionChip(accountName(ledger, account) ?: stringResource(R.string.ledger_choose_account), accountIconOf(ledger, account), "account") { draft.sheet = Sheet.Account }
         }
         if (!withMoment && !keypad) {
             OptionChip(formatDay(at.toLocalDate().toString()) + " " + at.format(DateTimeFormatter.ofPattern("HH:mm")), AppIcons.Calendar, "time") { draft.timeOpen = true }
@@ -1123,7 +1123,7 @@ fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> U
                 ListItem(
                     headlineContent = { Text(account.name) },
                     supportingContent = { Text(accountKindLabel(account.kind) + " " + money(ledger.balances[account.id] ?: 0, account.currency)) },
-                    leadingContent = { Icon(accountKindIcon(account.kind), contentDescription = null) },
+                    leadingContent = { Icon(accountIcon(account), contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     modifier = Modifier.clickable { onPick(account.id) }.testTag("pick_account_${account.name}"),
                 )
