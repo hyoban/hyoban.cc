@@ -121,5 +121,8 @@ fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: 
             onDismiss = { sharing = false },
         )
     }
-    target?.let { ShareMoment(moment, urls, it, onDismiss = { target = null }) }
+    target?.let {
+        val place = remember(actions, moment) { moment.places.firstOrNull()?.let { id -> actions?.places()?.get(id)?.name } }
+        ShareMoment(moment, urls, it, onDismiss = { target = null }, place = place)
+    }
 }

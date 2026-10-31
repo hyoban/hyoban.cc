@@ -177,7 +177,7 @@ fun MomentScreen(
             onDismiss = { sharing = false },
         )
     }
-    shareTarget?.let { ShareMoment(moment, urls, it, onDismiss = { shareTarget = null }) }
+    shareTarget?.let { ShareMoment(moment, urls, it, onDismiss = { shareTarget = null }, place = moment.places.firstOrNull()?.let { id -> places[id]?.name }) }
 
     // The photos swiped above and the strip under them are one place in the Moment's media.
     val pager = rememberPagerState { moment.media.size }

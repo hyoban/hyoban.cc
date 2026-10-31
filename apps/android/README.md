@@ -84,7 +84,9 @@ leaves the phone's store for the site's.
 ## Sharing
 
 A Moment's share sheet hands a copy of its words and a choice of photos to another app,
-which leaves the recipient and the final send to the user. It never posts.
+which leaves the recipient and the final send to the user. It never posts. A meal's copy
+ends with a line of its place, each one's share of the bill and its verdict (好吃, 一般 or
+踩雷), each behind an emoji, which can be edited away like the rest.
 
 | Destination    | How                                                                                     |
 | -------------- | --------------------------------------------------------------------------------------- |

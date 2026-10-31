@@ -73,6 +73,7 @@ import cc.hyoban.moments.data.media.ShareAlbum
 import cc.hyoban.moments.data.media.saveShareAlbum
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.ui.format.foodShareLine
 import cc.hyoban.moments.accessibility.AssistStatus
 import cc.hyoban.moments.accessibility.ShareAccessibilityService
 import cc.hyoban.moments.share.TelegramAssistFlow
@@ -162,12 +163,16 @@ private val ROW_PADDING = 16.dp
 /** A separate copy for another platform; the original Moment stays as written. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarget, onDismiss: () -> Unit) {
+fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarget, onDismiss: () -> Unit, place: String? = null) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val photos = remember(moment.media) { moment.media.filter { it.type != MediaType.VIDEO } }
     var target by rememberSaveable(moment.uid, initialTarget) { mutableStateOf(initialTarget) }
-    var text by rememberSaveable(moment.uid, initialTarget) { mutableStateOf(moment.text) }
+    // A meal's copy ends with where it was, each one's share and how it went.
+    val food = foodShareLine(moment.food, place)
+    var text by rememberSaveable(moment.uid, initialTarget) {
+        mutableStateOf(listOfNotNull(moment.text.takeIf { it.isNotBlank() }, food).joinToString("\n\n"))
+    }
     // Above the platform's limit, ask for an explicit choice instead of dropping photos.
     var selected by rememberSaveable(moment.uid, initialTarget) {
         mutableStateOf(if (photos.size <= target.limit) photos.map { it.uid } else emptyList())
