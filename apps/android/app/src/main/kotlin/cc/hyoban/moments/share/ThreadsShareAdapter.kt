@@ -7,7 +7,6 @@ import cc.hyoban.moments.accessibility.AssistRequest
 internal object ThreadsShareAdapter : AssistAdapter {
     override val id = "threads-share"
     override val packageName = "com.instagram.barcelona"
-    override val supportedVersions = setOf("452.0.0.50.64")
     override val timeoutMs = 40_000L
     override val readyMessage = R.string.threads_assist_ready
     override val stoppedMessage = R.string.threads_assist_stopped

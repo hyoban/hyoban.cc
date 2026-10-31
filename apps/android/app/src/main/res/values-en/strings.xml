@@ -392,14 +392,12 @@
     <string name="telegram_assist_ready">Recipient and caption ready. Review in Telegram and send manually.</string>
     <string name="telegram_assist_stopped">Assistant stopped. Check the recipient and caption manually in Telegram. It will not retry automatically.</string>
     <string name="telegram_assist_invalid_target">Enter a public username, such as @username or https://t.me/username.</string>
-    <string name="telegram_assist_version">The assistant currently supports Telegram 13.1.0. Turn it off to share manually with another version.</string>
     <string name="telegram_assist_open">Open Telegram and fill caption</string>
     <string name="threads_assist_label">Threads share assistant (experimental)</string>
     <string name="threads_assist_note">Keeps the shared photos and fills the body, stopping before Post. Review text and photos manually. If share options appear, choose the composer manually. Stops on a different draft, an unknown page, or after 40 seconds. Turn it off to share manually.</string>
     <string name="threads_assist_running">Filling the Threads composer…</string>
     <string name="threads_assist_ready">Text filled. Review text and photos in Threads and post manually.</string>
     <string name="threads_assist_stopped">Assistant stopped. Check photos and text manually in Threads. Existing drafts are preserved and there is no automatic retry.</string>
-    <string name="threads_assist_version">The assistant currently supports Threads 452.0.0.50.64. Turn it off to share manually with another version.</string>
     <string name="threads_assist_open">Open Threads and fill text</string>
     <string name="footprints_title">Footprints</string>
     <string name="footprints_local_note">Tracks stay on this phone and are never published to the API. The basemap uses the network; recording works offline.</string>
