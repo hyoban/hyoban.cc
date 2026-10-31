@@ -32,4 +32,16 @@ class GnssStatusDiagnosticsTest {
         assertNull(fields["sats_used"])
         assertNull(fields["gnss_status_age_ms"])
     }
+
+    @Test fun signalIsLostOnlyWhileFreshStatusUsesTooFewSatellites() {
+        val d = GnssStatusDiagnostics()
+        assertFalse(d.signalLost(1_000))
+        d.status(GnssSummary(used = 27, visible = 105, topCn0 = 31.0, l5Used = 4), 1_000)
+        assertFalse(d.signalLost(2_000))
+        // Inside a garage the receiver keeps reporting, with no satellites in its fix.
+        d.status(GnssSummary(used = 0, visible = 71, topCn0 = null, l5Used = 0), 6_000)
+        assertTrue(d.signalLost(20_000))
+        // Without recent status nothing proves the receiver runs, so it may be the delivery.
+        assertFalse(d.signalLost(22_000))
+    }
 }

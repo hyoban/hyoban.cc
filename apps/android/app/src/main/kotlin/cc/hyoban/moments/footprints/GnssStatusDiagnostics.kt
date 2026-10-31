@@ -10,7 +10,8 @@ internal class GnssStatusDiagnostics {
     private var callbacks = 0
     private var lastCallback = 0L
     private var maxGap = 0L
-    private var latest: GnssSummary? = null
+    var latest: GnssSummary? = null
+        private set
 
     // Lazy so the aggregation can be tested on the JVM without Android's stub classes.
     val callback by lazy {
@@ -41,6 +42,15 @@ internal class GnssStatusDiagnostics {
         return fields
     }
 
+    /**
+     * The receiver still reports status but uses too few satellites for a fix: the sky is hidden
+     * (a garage, a tunnel), so missing deliveries are not the provider's batching failing.
+     */
+    fun signalLost(now: Long): Boolean {
+        val summary = latest ?: return false
+        return now - lastCallback <= SIGNAL_STATUS_MAX_AGE_MS && summary.used < MIN_SATELLITES_FOR_FIX
+    }
+
     fun reset() {
         callbacks = 0
         lastCallback = 0
@@ -49,6 +59,9 @@ internal class GnssStatusDiagnostics {
     }
 
     companion object {
+        const val SIGNAL_STATUS_MAX_AGE_MS = 15_000L
+        const val MIN_SATELLITES_FOR_FIX = 4
+
         fun summary(status: GnssStatus): GnssSummary {
             val used = (0 until status.satelliteCount).filter(status::usedInFix)
             return GnssSummary(
