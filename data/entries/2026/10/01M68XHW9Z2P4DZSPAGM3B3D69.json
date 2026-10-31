@@ -1,0 +1,39 @@
+{
+  "uid": "01M68XHW9Z2P4DZSPAGM3B3D69",
+  "at": "2026-10-31T20:01:58+08:00",
+  "parts": {
+    "text": {
+      "v": 1,
+      "text": "OPPO 的侧键没有官方办法接入，咱就让 AI 帮我搓了个识别侧键的功能，并且接入我的记账功能。完全恢复之前用 iPhone 加 icost 的按一下自动记账的体验。"
+    },
+    "media": {
+      "v": 1,
+      "items": [
+        {
+          "uid": "01M68XHW939QF8TR0A5SZJZTHS",
+          "alt": "",
+          "takenAt": "2026-10-31T20:01:58+08:00",
+          "type": "image",
+          "width": 1272,
+          "height": 2772,
+          "published": {
+            "key": "moments/01m68xhw9z2p4dzspagm3b3d69/01m68xhw939qf8tr0a5szjzths.jpg",
+            "contentType": "image/jpeg",
+            "bytes": 387627,
+            "etag": "dbb5802c9861b28f71a5fc6f2bdd3148",
+            "width": 1272,
+            "height": 2772,
+            "variants": [],
+            "original": true
+          }
+        }
+      ]
+    }
+  },
+  "topic": "tech",
+  "published": {
+    "at": "2026-10-31T12:05:09Z"
+  },
+  "createdAt": "2026-10-31T20:04:36+08:00",
+  "updatedAt": "2026-10-31T20:04:36+08:00"
+}

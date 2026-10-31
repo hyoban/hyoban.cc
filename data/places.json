@@ -232,6 +232,18 @@
       "district": "包河区"
     }
   },
+  "guang-hai-xiang-ji-suan-cai-yu-wei-xing-wan-yue-cheng-dian": {
+    "name": "光海乡记酸菜鱼(伟星万悦城店)",
+    "latitude": 31.37684630555556,
+    "longitude": 118.40187072222221,
+    "division": {
+      "code": "340207",
+      "province": "安徽省",
+      "city": "芜湖市",
+      "district": "鸠江区"
+    },
+    "createdAt": "2026-10-31T17:09:56+08:00"
+  },
   "guangzhou": {
     "name": "广州",
     "latitude": 23.1291,
