@@ -172,7 +172,8 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         db.transaction {
             val segment = db.rawQuery("SELECT segment FROM recording WHERE id=1", null).use { it.moveToFirst(); it.getString(0) }
             if (expectedSegment != null && expectedSegment != segment) return points.map { FixDecision.NOT_RECORDING }
-            var previous = db.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment,speed,speed_accuracy,bearing,bearing_accuracy,vertical_accuracy,msl_altitude,provider,sats_used,sats_visible,cn0 FROM points ORDER BY id DESC LIMIT 1", null).use {
+            // The latest by time: an import adds older samples after the newest ones.
+            var previous = db.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment,speed,speed_accuracy,bearing,bearing_accuracy,vertical_accuracy,msl_altitude,provider,sats_used,sats_visible,cn0 FROM points ORDER BY time DESC, id DESC LIMIT 1", null).use {
                 if (it.moveToFirst()) it.point() else null
             }
             for (point in points) {
@@ -180,23 +181,56 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
                     else evaluateRawFix(point, now)
                 decisions += decision
                 if (decision != FixDecision.ACCEPT) continue
-                val day = Instant.ofEpochMilli(point.time).atZone(ZoneId.systemDefault()).toLocalDate().toString()
-                db.insertOrThrow("points", null, ContentValues().apply {
-                    put("time", point.time); put("day", day); put("lat", point.latitude); put("lon", point.longitude)
-                    put("accuracy", point.accuracy); put("altitude", point.altitude); put("segment", segment); put("session", state.session)
-                    put("speed", point.speed?.takeIf { it.isFinite() && it >= 0 })
-                    put("speed_accuracy", point.speedAccuracy?.takeIf { it.isFinite() && it >= 0 })
-                    with(point.extras) {
-                        put("bearing", bearing?.takeIf { it.isFinite() }); put("bearing_accuracy", bearingAccuracy?.takeIf { it.isFinite() })
-                        put("vertical_accuracy", verticalAccuracy?.takeIf { it.isFinite() }); put("msl_altitude", seaLevelAltitude?.takeIf { it.isFinite() })
-                        put("provider", provider); put("sats_used", satellitesUsed); put("sats_visible", satellitesVisible); put("cn0", signal?.takeIf { it.isFinite() })
-                    }
-                })
+                insertPoint(db, point.copy(segment = segment), state.session)
                 previous = point.copy(segment = segment)
             }
         }
         if (FixDecision.ACCEPT in decisions) _revision.value++
         return decisions
+    }
+
+    private fun insertPoint(db: SQLiteDatabase, point: TrackPoint, session: String?) {
+        val day = Instant.ofEpochMilli(point.time).atZone(ZoneId.systemDefault()).toLocalDate().toString()
+        db.insertOrThrow("points", null, ContentValues().apply {
+            put("time", point.time); put("day", day); put("lat", point.latitude); put("lon", point.longitude)
+            put("accuracy", point.accuracy); put("altitude", point.altitude); put("segment", point.segment); put("session", session)
+            put("speed", point.speed?.takeIf { it.isFinite() && it >= 0 })
+            put("speed_accuracy", point.speedAccuracy?.takeIf { it.isFinite() && it >= 0 })
+            with(point.extras) {
+                put("bearing", bearing?.takeIf { it.isFinite() }); put("bearing_accuracy", bearingAccuracy?.takeIf { it.isFinite() })
+                put("vertical_accuracy", verticalAccuracy?.takeIf { it.isFinite() }); put("msl_altitude", seaLevelAltitude?.takeIf { it.isFinite() })
+                put("provider", provider); put("sats_used", satellitesUsed); put("sats_visible", satellitesVisible); put("cn0", signal?.takeIf { it.isFinite() })
+            }
+        })
+    }
+
+    /**
+     * Adds samples read from a file ([readGpx]) to no trip. Where the phone already has samples
+     * within [TRACK_GAP_MS], its own are kept and the file's left out, so importing a file twice adds nothing.
+     */
+    @Synchronized fun import(points: List<TrackPoint>, now: Long = System.currentTimeMillis()): TrackImportResult {
+        var added = 0
+        var overlapping = 0
+        var invalid = 0
+        var firstDay: String? = null
+        val db = writableDatabase
+        db.transaction {
+            // Coverage is the phone's own: decided for every point before any of the file's goes in.
+            val kept = mutableListOf<TrackPoint>()
+            var last: Long? = null
+            for (point in points.sortedBy { it.time }) {
+                if (!importable(point, now) || point.time == last) { invalid++; continue }
+                last = point.time
+                val covered = db.rawQuery("SELECT 1 FROM points WHERE time BETWEEN ? AND ? LIMIT 1",
+                    arrayOf((point.time - TRACK_GAP_MS).toString(), (point.time + TRACK_GAP_MS).toString())).use { it.moveToFirst() }
+                if (covered) overlapping++ else kept += point
+            }
+            kept.forEach { insertPoint(db, it, null) }
+            added = kept.size
+            firstDay = kept.firstOrNull()?.let { Instant.ofEpochMilli(it.time).atZone(ZoneId.systemDefault()).toLocalDate().toString() }
+        }
+        if (added > 0) _revision.value++
+        return TrackImportResult(added, overlapping, invalid, firstDay)
     }
 
     private fun insertEvent(db: SQLiteDatabase, time: Long, kind: String, detail: String?) {

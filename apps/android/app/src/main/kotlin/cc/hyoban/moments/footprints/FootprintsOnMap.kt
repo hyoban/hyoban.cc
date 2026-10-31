@@ -86,6 +86,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
     var loaded by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var error by rememberSaveable { mutableStateOf<Int?>(null) }
+    var imported by remember { mutableStateOf<TrackImportResult?>(null) }
     var deleting by remember { mutableStateOf<TrackSelection?>(null) }
     var exportDay by rememberSaveable { mutableStateOf<String?>(null) }
     var exportSession by rememberSaveable { mutableStateOf<String?>(null) }
@@ -146,6 +147,21 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                 val output = context.contentResolver.openOutputStream(uri, "wt") ?: error("Cannot open document")
                 output.bufferedWriter(Charsets.UTF_8).use { store.export(TrackSelection(exportDay, exportSession), it, raw = exportRaw) }
             }
+        }
+    }
+    val import = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) work {
+            imported = null
+            val result = withContext(Dispatchers.IO) {
+                val points = context.contentResolver.openInputStream(uri)?.use {
+                    // Not a GPX at all reads as one with nothing in it.
+                    try { readGpx(it) } catch (_: org.xml.sax.SAXException) { emptyList() }
+                } ?: error("Cannot open document")
+                store.import(points)
+            }
+            imported = result
+            // Shows the first day it added.
+            result.firstDay?.let { day = it; session = null }
         }
     }
     val state = view.state
@@ -213,7 +229,10 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                 val selectedTrip = view.history.sessions.firstOrNull { it.id == session }
                 SegmentedGroup(
                     stringResource(R.string.footprints_section_tracks),
-                    stringResource(R.string.footprints_quality_note),
+                    imported?.let {
+                        if (it.added + it.overlapping + it.invalid == 0) stringResource(R.string.footprints_import_empty)
+                        else stringResource(R.string.footprints_import_done, it.added, it.overlapping, it.invalid)
+                    } ?: stringResource(R.string.footprints_quality_note),
                     listOf(
                         { shapes ->
                             // What is chosen, and a tap shows the whole of it on the map.
@@ -256,6 +275,14 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                             }
                         },
                         { shapes ->
+                            ActionRow(AppIcons.FileOpen, stringResource(R.string.footprints_import), shapes,
+                                supporting = stringResource(R.string.footprints_import_note),
+                                tag = "footprints_import", enabled = loaded && !busy) {
+                                // Files apps call a .gpx by several types, or none.
+                                import.launch(arrayOf("*/*"))
+                            }
+                        },
+                        { shapes ->
                             ActionRow(AppIcons.Download, stringResource(R.string.footprints_export_raw), shapes,
                                 supporting = stringResource(R.string.footprints_export_raw_note),
                                 enabled = loaded && !busy && (selection.day in view.history.days || session != null)) {
@@ -263,6 +290,17 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                                 exportSession = selection.session
                                 exportRaw = true
                                 export.launch("footprints-raw-${session ?: day}.gpx")
+                            }
+                        },
+                        { shapes ->
+                            // Every sample in one file: what 导入 GPX 轨迹 needs to bring all of it back.
+                            ActionRow(AppIcons.Download, stringResource(R.string.footprints_export_all_raw), shapes,
+                                supporting = stringResource(R.string.footprints_export_all_raw_note),
+                                tag = "footprints_export_all_raw", enabled = loaded && !busy && view.history.days.isNotEmpty()) {
+                                exportDay = null
+                                exportSession = null
+                                exportRaw = true
+                                export.launch("footprints-raw-all.gpx")
                             }
                         },
                         { shapes ->
