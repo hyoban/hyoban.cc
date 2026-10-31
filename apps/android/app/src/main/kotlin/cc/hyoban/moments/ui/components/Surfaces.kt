@@ -199,13 +199,13 @@ fun MonthHeader(month: String, year: String?) {
 /**
  * A day over its Moments, floating over them as they scroll: the surface with its hairline and a
  * shadow.
- * With [onClick], tapped it opens the day, growing into its page from [date]'s card.
+ * With [onClick], tapped it opens the day.
  */
 @Composable
 fun DayPill(text: String, date: String? = null, onClick: (() -> Unit)? = null) {
     Box(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s).semantics(mergeDescendants = true) { heading() }) {
         val open = if (onClick != null && date != null) {
-            Modifier.sharedCard(dayCardKey(date), cardCorner = PILL_CORNER, relayout = true).clip(PillShape)
+            Modifier.clip(PillShape)
                 .clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick).testTag("day_pill_$date")
         } else {
             Modifier

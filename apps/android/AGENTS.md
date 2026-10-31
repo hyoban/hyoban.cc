@@ -116,8 +116,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 
 ## Motion and navigation
 
-- Shared elements must not fight predictive back, drag-to-dismiss or paging in the
-  viewer; check entering and leaving, and the in-between frames, on the phone.
+- The one shared element is a Moment's card growing into its page and shrinking back
+  (`sharedCard`); other pages slide or fade through, and the photo viewer fades over the
+  page. It must not fight predictive back; check entering and leaving, and the in-between
+  frames, on the phone.
 - Animate map layers a frame at a time with constant paint values, each layer's
   transition set to 0: MapLibre lays a source out again for a data-driven value, a
   frame or more late and drawing the default meanwhile, and eases every change over

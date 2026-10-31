@@ -57,9 +57,7 @@ import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.kindLabel
 import cc.hyoban.moments.ui.components.landscape
-import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.sideInsetsPadding
-import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.feed.MomentFeed
 import cc.hyoban.moments.ui.ledger.LedgerFilter
 import cc.hyoban.moments.ui.ledger.LocalLedgerNav
@@ -201,7 +199,7 @@ fun TripScreen(
             }
         }
     }
-    SubPage(trip.title, onBack, Modifier.sharedCard(tripCardKey(id), page = true).background(AppColors.page), actions = actions) {
+    SubPage(trip.title, onBack, Modifier.background(AppColors.page), actions = actions) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             if (landscape) {
                 // On its side, the route stays on the start side, as tall as the space under

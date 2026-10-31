@@ -39,8 +39,6 @@ import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.PressableCard
 import cc.hyoban.moments.ui.components.TabPage
-import cc.hyoban.moments.ui.components.sharedCard
-import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.feed.CardRow
 import cc.hyoban.moments.ui.feed.LoadedContent
 import cc.hyoban.moments.ui.feed.TabRefreshBox
@@ -54,7 +52,7 @@ import cc.hyoban.moments.ui.theme.Space
 @Composable
 fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, urls: MediaUrls, onClick: () -> Unit, modifier: Modifier) {
     // It grows into the trip's page when opened.
-    PressableCard(onClick = onClick, modifier = modifier.fillMaxWidth().sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}")) {
+    PressableCard(onClick = onClick, modifier = modifier.fillMaxWidth().testTag("trip_${trip.id}")) {
         CoverCollage(covers, urls, Modifier)
         Column(Modifier.padding(start = Space.l, end = Space.l, top = Space.s, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.m)) {
             Text(trip.title, style = AppTheme.typography.title)

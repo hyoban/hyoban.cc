@@ -35,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -231,8 +230,6 @@ fun MediaTile(
     urls: MediaUrls,
     modifier: Modifier = Modifier,
     liveBadgeAlignment: Alignment = Alignment.TopStart,
-    sharedKey: String? = null,
-    sharedShape: Shape = RectangleShape,
     /** Where it is among its Moment's media, as an index and a count, for a screen reader. */
     position: Pair<Int, Int>? = null,
     onClick: (() -> Unit)? = null,
@@ -257,7 +254,7 @@ fun MediaTile(
             },
         ),
     ) {
-        MediaStill(media, urls, Modifier.fillMaxSize().sharedMedia(sharedKey, sharedShape))
+        MediaStill(media, urls, Modifier.fillMaxSize())
         when (media.type) {
             MediaType.VIDEO -> if (videoAsLabel) VideoBadge(Modifier.align(Alignment.BottomStart).padding(Space.s)) else PlayBadge(Modifier.align(Alignment.Center))
             MediaType.LIVE_PHOTO -> LiveBadge(Modifier.align(liveBadgeAlignment).padding(Space.s))
@@ -321,8 +318,6 @@ fun MediaMosaic(
             media[index],
             urls,
             tileModifier.clip(TILE).testTag("media_${momentUid}_$index"),
-            sharedKey = mediaKey(momentUid, media[index].uid),
-            sharedShape = TILE,
             position = index to media.size,
             onClick = onOpen?.let { open -> { open(index) } },
             videoAsLabel = true,

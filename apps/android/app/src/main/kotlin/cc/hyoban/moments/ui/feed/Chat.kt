@@ -40,8 +40,6 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.Txn
-import cc.hyoban.moments.ui.components.dayCardKey
-import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Icon
@@ -191,7 +189,7 @@ fun DateCapsule(day: String, onClick: (() -> Unit)?, modifier: Modifier = Modifi
         Box(
             Modifier
                 .heightIn(min = 48.dp)
-                .then(if (onClick != null) Modifier.sharedCard(dayCardKey(day)).clip(AppTheme.shapes.medium).clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick) else Modifier)
+                .then(if (onClick != null) Modifier.clip(AppTheme.shapes.medium).clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick) else Modifier)
                 .semantics(mergeDescendants = true) {
                     heading()
                     contentDescription = listOfNotNull(note, formatDay(day), description.takeIf { it.isNotBlank() }).joinToString(" ")
@@ -221,7 +219,6 @@ fun RecordsBubble(
     tracks: TimelineTracks,
     onBill: (String) -> Unit,
     onDay: (() -> Unit)?,
-    onTrackDay: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     // A day's footprints read from the phone as the bubble comes into view; a day that moved
@@ -233,8 +230,7 @@ fun RecordsBubble(
     val single = shown.size == 1
     val open: (() -> Unit)? = when (val only = shown.singleOrNull()) {
         is RecordLine.Bill -> ({ onBill(only.txn.id) })
-        is RecordLine.Track -> onTrackDay ?: onDay
-        is RecordLine.ChargeLine -> onDay
+        is RecordLine.Track, is RecordLine.ChargeLine -> onDay
         null -> onDay
     }
     val large = isLargeFont()

@@ -124,7 +124,6 @@ import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.sideInsetsPadding
-import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.rememberShowMessage
@@ -676,7 +675,7 @@ private fun TripsSheet(
                 val covers = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1) }
                 TripRow(
                     trip, covers.firstOrNull(), tripColor(trip, colors), kilometres[trip.id], urls,
-                    modifier = Modifier.fillMaxWidth().sharedCard(tripCardKey(trip.id)).clickable(enabled = open) { onTrip(trip.id) }
+                    modifier = Modifier.fillMaxWidth().clickable(enabled = open) { onTrip(trip.id) }
                         .padding(horizontal = Space.gutter, vertical = Space.s).testTag("trip_${trip.id}"),
                 ) { Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(20.dp)) }
             }
@@ -921,7 +920,7 @@ private fun RouteCard(trip: TripRecord, cover: MomentMedia?, year: Color?, km: D
         color = SurfaceLevel.Floating.fill(),
         border = cardBorder(),
         shadowElevation = ShadowElevation,
-        modifier = Modifier.fillMaxWidth().heightIn(min = ROUTE_CARD).sharedCard(tripCardKey(trip.id)).testTag("trip_${trip.id}"),
+        modifier = Modifier.fillMaxWidth().heightIn(min = ROUTE_CARD).testTag("trip_${trip.id}"),
     ) {
         TripRow(trip, cover, year, km, urls, Modifier.fillMaxWidth().padding(start = Space.m, end = Space.xs, top = Space.m, bottom = Space.m)) {
             val label = stringResource(R.string.action_play_trip)
