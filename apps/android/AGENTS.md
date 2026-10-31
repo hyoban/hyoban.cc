@@ -75,6 +75,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   has no Material dependency (`androidx.compose.material3`, `glance-material3`): its
   components are its own, in `ui/design`, on Compose foundation. Don't add Material
   components or icon packs back.
+- Design first, and the two kept in step: a change to what the app shows or how it behaves
+  goes into the artifact first (the page card's frames and README, the component cards it
+  uses, a new card for a new part), and the code follows it. Where building it shows the
+  design wrong or not workable, change the design in the same task rather than leave the
+  code to differ. Before a task ends, the cards it touched and the app say the same thing.
 - Icons are the design system's own set (`AppIcons`, 24 grid, 2 stroke, round ends and softened corners),
   generated into `ui/design/AppIcons.kt` by `python3 packages/design-tokens/icons/kotlin.py`
   (from the repository root) from `packages/design-tokens/icons/icons.py`. A new icon is drawn there first, in the same hand, then
