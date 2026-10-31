@@ -27,6 +27,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -174,6 +178,7 @@ internal fun PlacePicker(
     // the pin at the middle of what shows of it.
     val density = LocalDensity.current
     var sheetHeight by remember { mutableStateOf(0.dp) }
+    var dragging by remember { mutableStateOf(false) }
     val sheet = rememberBottomSheetScaffoldState(rememberStandardBottomSheetState(skipHiddenState = true))
     BottomSheetScaffold(
         scaffoldState = sheet,
@@ -235,6 +240,7 @@ internal fun PlacePicker(
                 },
                 onPlace = choose,
                 modifier = Modifier.fillMaxSize().testTag("place_map"),
+                onDrag = { dragging = it },
             )
             // The pin's point at the map's middle; a known place chosen shows as its own dot instead.
             val motion = AppTheme.motionScheme
@@ -244,7 +250,17 @@ internal fun PlacePicker(
                 exit = scaleOut(motion.fastSpatialSpec(), transformOrigin = TransformOrigin(0.5f, 1f)) + fadeOut(motion.fastEffectsSpec()),
                 modifier = Modifier.align(Alignment.Center).offset(y = -(PIN_SIZE / 2)),
             ) {
-                Icon(AppIcons.Pin, contentDescription = null, tint = tokens.accent, modifier = Modifier.size(PIN_SIZE))
+                // Lifted off the map while a finger moves it, a small shadow left where its point
+                // will land; set down again when the map comes to rest.
+                val lift by animateDpAsState(if (dragging) PIN_LIFT else 0.dp, motion.fastSpatialSpec(), label = "pin lift")
+                Box(contentAlignment = Alignment.BottomCenter) {
+                    Box(
+                        Modifier.size(width = 12.dp, height = 4.dp).offset(y = 2.dp)
+                            .graphicsLayer { alpha = (lift / PIN_LIFT).coerceIn(0f, 1f) * 0.25f }
+                            .background(tokens.tx, CircleShape),
+                    )
+                    Icon(AppIcons.Pin, contentDescription = null, tint = tokens.accent, modifier = Modifier.offset(y = -lift).size(PIN_SIZE))
+                }
             }
             FloatingBack(onDismiss, Modifier.align(Alignment.TopStart))
             val granted = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
@@ -452,3 +468,6 @@ private const val KNOWN_NEARBY = 3
 private val PIN_SIZE = 44.dp
 /** How far the map reaches under the sheet: its corners' radius, Material 3's extra large. */
 private val SHEET_CORNER = Radius.large
+
+/** How far the pin lifts off the map while it is dragged. */
+private val PIN_LIFT = 8.dp

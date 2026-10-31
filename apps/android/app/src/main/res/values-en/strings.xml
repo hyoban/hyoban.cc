@@ -78,10 +78,13 @@
     <string name="media_photo">Photo</string>
     <string name="media_live">Live Photo</string>
     <string name="media_video">Video</string>
+    <string name="media_not_loaded">The photo didn’t load</string>
+    <string name="action_retry">Retry</string>
     <string name="title_moments">Timeline</string>
     <string name="title_trips">Trips</string>
     <string name="label_live">Live</string>
     <string name="empty_moments">No Moments yet</string>
+    <string name="empty_moments_hint">Write the first with the plus at the bottom; bills and footprints show up here too</string>
     <string name="empty_trips">No trips yet</string>
     <string name="empty_loading">Loading Moments…</string>
     <string name="message_refresh_failed">Couldn’t update: %1$s</string>
@@ -92,6 +95,8 @@
     <string name="footprints_map_recording">Footprints, recording</string>
     <string name="legend_trips">Trips</string>
     <string name="trip_day">Day %1$d</string>
+    <string name="trip_ongoing">Ongoing</string>
+    <string name="trip_since">Since %1$s</string>
     <string name="action_play_trip">Play trip</string>
     <string name="action_previous_stop">Previous stop</string>
     <string name="action_next_stop">Next stop</string>
@@ -118,9 +123,13 @@
     <string name="message_text_copied">Text copied</string>
     <string name="action_view_photo">View photo</string>
     <string name="action_see_moments">See all Moments</string>
-    <string name="hint_search_moments">Search</string>
-    <string name="search_prompt">Find Moments by text, place, or trip</string>
-    <string name="search_none">No Moments found</string>
+    <string name="hint_search_everything">Search Moments, places, trips and bills</string>
+    <string name="search_prompt">Type, or just pick a filter above</string>
+    <string name="search_prompt_note">Moments by their text, place and trip; bills by category and note</string>
+    <string name="search_none">Nothing found</string>
+    <string name="search_none_for">Nothing found for “%1$s”</string>
+    <string name="search_none_note">Try other words</string>
+    <string name="search_none_note_time">Try other words, or widen the year to All</string>
     <string name="explain_on_phone">This Moment is only on this phone. Publish your changes to add it to the site.</string>
     <string name="explain_unpublished_change">This Moment was edited on this phone. Publish your changes to update the site.</string>
     <string name="label_pick_moment">Pick a Moment to see it here</string>
@@ -366,6 +375,7 @@
     <string name="refreshing">Refreshing</string>
     <string name="share_manual_note">Save the photos and copy the text, then post yourself</string>
     <string name="confirm_discard_note">Unsaved text, photos, and place will be lost</string>
+    <string name="action_keep_writing">Keep writing</string>
     <string name="reason_no_token">no API token is set</string>
     <string name="reason_token">the API token was rejected. Replace it in settings</string>
     <string name="reason_not_found">nothing was found at the API address. Check it in settings</string>
@@ -812,6 +822,7 @@
     <string name="footprints_span_manual">Made public by hand</string>
     <string name="footprints_make_public">Make this span public</string>
     <string name="day_track_stats">%1$.1f km moving %2$d min</string>
+    <string name="day_still_recording">Still recording</string>
     <string name="timeline_more_records" tools:ignore="PluralsCandidate">%1$d more</string>
     <string name="timeline_track">Track</string>
     <plurals name="timeline_track_moving">

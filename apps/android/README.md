@@ -22,7 +22,8 @@ or more, or a phone on its side, they stand down a rail instead.
 - **时间线** is everything newest first, as a conversation with oneself: each day opens
   with its date in a capsule, Moments are bubbles from the right with their photos across
   the top, and the day's bills, charges and footprints come from the left in one records
-  bubble. A banner marks where each trip begins. Scrolling folds the tabs away.
+  bubble. A banner marks where each trip begins, or, for the trip under way, says
+  进行中 and which day it is. Scrolling folds the tabs away.
 - **地图** shows the places, the trips' routes (listed in the sheet at its foot) and the
   footprints. Search sits at the top beside the fog's switch, over a legend of the years;
   the footprints and the phone's place are buttons down the side. A place tapped fills the
@@ -38,7 +39,8 @@ or more, or a phone on its side, they stand down a rail instead.
 
 The pages lead to each other wherever they can: a place or a trip to the map, a day's pill
 to the day, a Moment's menu to its place, trip and day. A day's page opens on that day's
-footprints on a map. A trip's page has 回放旅程, which plays the trip back as the site's
+footprints on a map, its bills and charges read down by their times, and today's says
+还在记录 while the footprints are recording. A trip's page has 回放旅程, which plays the trip back as the site's
 player does (`packages/trip-map/src/player`): the route never still, a vehicle at its tip,
 a card per Moment stepped through from a toolbar, by a swipe or with a keyboard's arrows
 and Space. 编辑旅程 changes its name, days, public switch, Moments and covers, published
@@ -49,7 +51,8 @@ under them. On a wide window the map's trips stand in a column and bottom panels
 dialogs.
 
 The search (`moments://search`) filters by kind (Moments, bills, charges) and by year and
-month, and lists what it finds under its years.
+month, and lists what it finds under its years; with nothing to list it says why and
+what to try next.
 
 ## Writing a Moment
 
@@ -293,6 +296,7 @@ are `noBackupFilesDir/connection-reminders.json` and `companion-connections.json
   way, else the last or next), in ColorOS's card sizes, drawn from the copy after each sync
   and every three hours.
 - **Video.** The viewer goes picture-in-picture when the app is left while a video plays.
+  A photo that can't be fetched there says so, with 重试.
 - **Language and appearance.** Always the phone's: Chinese, or English when the phone speaks
   it, and light or dark as the system is. The API, the media origin and the map's styles
   default to `BuildConfig` and can be changed in 我 → 同步与来源.

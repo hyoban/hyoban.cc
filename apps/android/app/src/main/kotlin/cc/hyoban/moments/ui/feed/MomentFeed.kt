@@ -58,6 +58,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
@@ -469,7 +470,7 @@ fun <T> CardRow(cards: List<T>, columns: Int, modifier: Modifier = Modifier, car
  * ends a skeleton loader.
  */
 @Composable
-fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, content: @Composable () -> Unit) {
+fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, hint: Int? = null, content: @Composable () -> Unit) {
     val fade = AppTheme.motionScheme.fastEffectsSpec<Float>()
     // Three faces, the skeleton, the message and the content, each kept as it was while it
     // fades out: the skeleton leaving as the content comes doesn't turn into the message on its way.
@@ -492,7 +493,7 @@ fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, content: @Comp
         when (shown) {
             LoadedFace.Content -> Box(Modifier.fillMaxSize().background(LocalSurfaceLevel.current.fill())) { content() }
             LoadedFace.Loading -> EmptyState(loading = true, message)
-            LoadedFace.Empty -> EmptyState(loading = false, message)
+            LoadedFace.Empty -> EmptyState(loading = false, message, hint)
         }
     }
 }
@@ -502,22 +503,29 @@ private enum class LoadedFace { Loading, Empty, Content }
 /**
  * A tab with nothing to show yet: while it loads, cards drawn as their shapes, pulsing
  * softly, as Material 3 keeps a layout steady with skeleton loaders rather than letting the
- * content pop in; once loaded and still empty, [message].
+ * content pop in; once loaded and still empty, [message], and under it a [hint] at the next step.
  */
 @Composable
-fun EmptyState(loading: Boolean, message: Int) {
+fun EmptyState(loading: Boolean, message: Int, hint: Int? = null) {
     if (loading) {
         SkeletonCards()
         return
     }
     LazyColumn(Modifier.fillMaxSize()) {
         item {
-            Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+            Column(
+                Modifier.fillParentMaxSize().padding(horizontal = Space.xl * 2),
+                verticalArrangement = Arrangement.spacedBy(Space.xs, Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 Text(
                     stringResource(message),
                     color = tokens.tx2,
                     style = AppTheme.typography.bodyReading,
                 )
+                if (hint != null) {
+                    Text(stringResource(hint), color = tokens.tx3, style = AppTheme.typography.caption, textAlign = TextAlign.Center)
+                }
             }
         }
     }

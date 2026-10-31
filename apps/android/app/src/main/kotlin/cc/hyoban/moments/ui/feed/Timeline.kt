@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,6 +51,16 @@ import androidx.compose.foundation.layout.heightIn
 import cc.hyoban.moments.ui.ledger.money
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.trips.tripSummary
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import cc.hyoban.moments.R
+import cc.hyoban.moments.ui.format.daysBetween
+import cc.hyoban.moments.ui.format.formatDate
+import java.time.LocalDate
 
 // The ledger on the timeline: the bills of the books shown, those written with a Moment in its
 // card and the rest in groups between the Moments of their day, and each day's spending beside
@@ -158,7 +169,7 @@ sealed interface DayItem {
     }
 }
 
-/** A charge as a row on the page, as a bill is: AC or DC with how much and how long under it, and its time at the end. */
+/** A charge as a row on the page, as a bill is: its time first, then AC or DC with how much and how long under it. */
 @Composable
 fun ChargeRow(charge: Charge, modifier: Modifier = Modifier) {
     PageRow(
@@ -171,15 +182,16 @@ fun ChargeRow(charge: Charge, modifier: Modifier = Modifier) {
         ).joinToString("\u2003"),
         onClick = null,
         modifier = modifier.testTag("charge_${charge.uid}"),
-    ) {
-        charge.at.drop(11).take(5).ifEmpty { null }?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx3) }
-    }
+        time = charge.at.drop(11).take(5),
+    )
 }
 
 /**
  * A row on the timeline's page, for what has no words of its own: an icon at the Moments' edge,
  * a title and a line under it, and figures at the end; pressed, its wash reaches a little past
- * its edges. It stands as tall as a touch target, so rows one after another sit evenly.
+ * its edges. It stands as tall as a touch target, so rows one after another sit evenly. With a
+ * [time] (empty for what has none), the time leads in a column of its own, as the records
+ * bubble has it, so a day's rows read down by the hour.
  */
 @Composable
 fun PageRow(
@@ -188,6 +200,7 @@ fun PageRow(
     supporting: String?,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    time: String? = null,
     trailing: @Composable ColumnScope.() -> Unit = {},
 ) {
     Row(
@@ -200,6 +213,13 @@ fun PageRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.m),
     ) {
+        if (time != null) {
+            // As wide as 00:00, the system's monospace not always keeping its digits one width.
+            Box {
+                Text("00:00", style = AppTheme.typography.caption, color = androidx.compose.ui.graphics.Color.Transparent, maxLines = 1, modifier = Modifier.clearAndSetSemantics {})
+                Text(time, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 1)
+            }
+        }
         Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
             CompositionLocalProvider(LocalContentColor provides tokens.tx2) { leading() }
         }
@@ -218,7 +238,7 @@ fun PageRow(
     }
 }
 
-/** A bill as a row on the timeline's page: its category's icon, its name and what sets it apart, and its amount over its time. */
+/** A bill as a row on the timeline's page: its time, its category's icon, its name and what sets it apart, and its amount. */
 @Composable
 fun BillRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = Modifier) {
     PageRow(
@@ -227,9 +247,9 @@ fun BillRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = 
         supporting = txnSupporting(txn, ledger, withTime = false, place = cc.hyoban.moments.footprints.footprintPlace(txn)),
         onClick = onClick,
         modifier = modifier.testTag("bill_${txn.id}"),
+        time = txn.local.format(TIME),
     ) {
         Text(signedMoney(txn.amount, txn.currency, txn.incoming), style = AppTheme.typography.body, color = amountColor(txn))
-        Text(txn.local.format(TIME), style = AppTheme.typography.caption, color = tokens.tx3)
     }
 }
 
@@ -297,9 +317,33 @@ fun TripBanner(trip: TripRecord, count: Int, onClick: () -> Unit, modifier: Modi
         Icon(AppIcons.Route, contentDescription = null, tint = tokens.tx2)
         Column(Modifier.weight(1f)) {
             Text(trip.title, style = AppTheme.typography.body.strong, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(tripSummary(trip, count), style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1)
+            Text(tripBannerSummary(trip, count), style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1)
         }
         Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(20.dp))
+    }
+}
+
+/**
+ * A trip's line under its name: its dates, days and Moments, or, while it goes on, the state in the
+ * accent first, the day it began and which day this is.
+ */
+@Composable
+private fun tripBannerSummary(trip: TripRecord, count: Int): AnnotatedString {
+    val today = LocalDate.now()
+    val ongoing = runCatching { !today.isBefore(LocalDate.parse(trip.start)) && !today.isAfter(LocalDate.parse(trip.end)) }.getOrDefault(false)
+    if (!ongoing) return AnnotatedString(tripSummary(trip, count))
+    val day = daysBetween(trip.start, today.toString())
+    val accent = tokens.accent
+    val rest = listOf(
+        stringResource(R.string.trip_since, formatDate(trip.start)),
+        stringResource(R.string.trip_day, day),
+        pluralStringResource(R.plurals.count_moments, count, count),
+    ).joinToString("\u2003")
+    val ongoingLabel = stringResource(R.string.trip_ongoing)
+    return buildAnnotatedString {
+        withStyle(SpanStyle(color = accent)) { append(ongoingLabel) }
+        append("\u2003")
+        append(rest)
     }
 }
 
@@ -419,6 +463,8 @@ fun TrackRow(day: String, tracks: TimelineTracks, onClick: () -> Unit, modifier:
         onClick = onClick,
         // The day's page grows out of the row and shrinks back into it.
         modifier = modifier.sharedCard(dayTrackKey(day)).testTag("track_$day"),
+        // No time of its own, the column kept so its glyph stays in line with the bills' icons.
+        time = "",
     ) {
         Text(
             androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.distance_kilometres, shown.metres / 1000),
