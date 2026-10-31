@@ -117,7 +117,7 @@ fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: 
     }
     if (sharing) {
         ShareMenu(
-            onSelect = { sharing = false; target = it },
+            onSelect = { target = it },
             onDismiss = { sharing = false },
         )
     }

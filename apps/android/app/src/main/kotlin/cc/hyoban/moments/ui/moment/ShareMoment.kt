@@ -115,8 +115,8 @@ private val ShareTarget.icon: ImageVector
  * Where to share a Moment, in a bottom sheet: the apps it is sent to straight away, then
  * those it is made ready for by hand, a space between, each a row on the sheet's gutter
  * leading on to its copy to edit. Each app in an outline after its own mark, drawn in the
- * design's hand and the text's grey rather than with the app's logo. The scrim or a swipe
- * down closes it.
+ * design's hand and the text's grey rather than with the app's logo. It stays open under
+ * each share, for the next one; the scrim or a swipe down closes it.
  */
 @Composable
 fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
