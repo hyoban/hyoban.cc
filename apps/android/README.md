@@ -168,7 +168,8 @@ The data:
   adjustments need no bill and bills kept only here move it on from there. The export
   has no balances, so its accounts are calibrated after, and its refunds and reimbursements
   are matched by amount and time. Accounts are matched by name, spaces at either end aside,
-  and those of one name become one. Budgets, recurring bills,
+  and those of one name become one, archived only when all of them are hidden in iCost and
+  counted in net assets when any of them is. Budgets, recurring bills,
   installments, savings plans, templates, places and photos aren't carried over.
 - **Rates** are the European Central Bank's, bundled in `assets/ledger-rates.json` and
   refreshed from Frankfurter only when asked.

@@ -312,13 +312,16 @@ class LedgerTest {
             "time" to "${1_790_000_000_000L + minutes * 60_000L}", "remark" to "", "mutipleBookPkey" to "", "extendedData" to ext,
         ) + columns
 
-    private fun asset(id: String, name: String, type: Int, price: String, deposit: Int = 1): ICostRow =
-        mapOf("pKey" to id, "accountName" to name, "classifyName" to name, "accountType" to "$type", "depositType" to "$deposit", "price" to price, "currency" to "CNY")
+    private fun asset(id: String, name: String, type: Int, price: String, deposit: Int = 1, vararg flags: String): ICostRow =
+        mapOf("pKey" to id, "accountName" to name, "classifyName" to name, "accountType" to "$type", "depositType" to "$deposit", "price" to price, "currency" to "CNY") +
+            flags.map { it to "1" }
 
     private val backup = ICostBackup.Tables(
         books = listOf(mapOf("pKey" to "trip", "title" to "旅行账本", "currency" to "", "isArchived" to "0")),
         defaultBook = mapOf("title" to "默认账本", "currency" to "CNY"),
         accounts = listOf(
+            // An old card hidden in iCost, one of the name in use after it.
+            asset("old", "信用卡", 1, "0", 1, "isHidden", "isHiddenCount"),
             asset("cash", "现金", 0, "50"),
             asset("bank", "储蓄卡  ", 0, "1000.5"),
             asset("card", "信用卡", 1, "-80"),
@@ -360,6 +363,8 @@ class LedgerTest {
 
         assertEquals(listOf("默认账本", "旅行账本"), result.books.map { it.name })
         assertEquals(AccountKind.CREDIT, account("信用卡").kind)
+        assertEquals(false, account("信用卡").archived)
+        assertEquals(true, account("信用卡").counted)
         assertEquals(AccountKind.PERSON, account("小明").kind)
 
         val meal = bill(3000, TxnKind.EXPENSE)
