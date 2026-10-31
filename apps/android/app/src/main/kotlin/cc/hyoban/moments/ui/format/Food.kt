@@ -38,3 +38,21 @@ fun foodLine(food: MomentFood?): String? {
         food.bill?.let { billLine(it, each = false) },
     ).joinToString(" ").ifEmpty { null }
 }
+
+/** What a meal's share ends with: where, each one's share and how it was, each behind an emoji; null when it says nothing. A bill without its people fed one. */
+@Composable
+fun foodShareLine(food: MomentFood?, place: String?): String? {
+    food ?: return null
+    return listOfNotNull(
+        place?.takeIf { it.isNotBlank() }?.let { "📍 $it" },
+        food.bill?.let { "💰 " + stringResource(R.string.food_each, (it.amount / (it.people ?: 1).coerceAtLeast(1)).roundToLong()) },
+        FoodVerdict.of(food.verdict)?.let { verdict ->
+            val face = when (verdict) {
+                FoodVerdict.GOOD -> "😋"
+                FoodVerdict.OK -> "🙂"
+                FoodVerdict.BAD -> "😖"
+            }
+            "$face " + stringResource(verdictLabel(verdict))
+        },
+    ).joinToString(" ").ifEmpty { null }
+}
