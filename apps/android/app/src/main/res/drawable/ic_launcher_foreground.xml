@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The cat, white with a grey cap split by a white blaze, peeking in from the lower left
-     as Shizuku's does, so the launcher's mask cuts it off at the corner. -->
+     as Shizuku's does, so the launcher's mask cuts it off at the corner. Kept to flat shapes
+     (dark eyes with one highlight, a nose) so it sits with the other icons at launcher size. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
@@ -28,48 +29,21 @@
             <path
                 android:fillColor="#FFFFFF"
                 android:pathData="M43,58.5C51,52.5 54.5,51.8 56.5,53C59.5,55 61,61 60.5,69z" />
-            <path
-                android:fillColor="#F4B7BC"
-                android:pathData="M11,64C11,59.5 11.8,56.5 13.3,55.8C14.5,55.3 16.5,56 20.5,59z" />
-            <path
-                android:fillColor="#F6C9CC"
-                android:pathData="M47.5,59C51.5,56 53.5,55.3 54.7,55.8C56.2,56.5 57,59.5 57,64z" />
-            <path
-                android:fillColor="#F7A8B4"
-                android:fillAlpha="0.55"
-                android:pathData="M8.5,88a4,2.3 0,1 1,8,0a4,2.3 0,1 1,-8,0z" />
         </group>
         <path
-            android:fillColor="#C98E2E"
-            android:pathData="M13.1,78a8.4,8.4 0,1 1,16.8,0a8.4,8.4 0,1 1,-16.8,0z" />
+            android:fillColor="#231F1C"
+            android:pathData="M14.1,77.7a7.6,7.6 0,1 1,15.2,0a7.6,7.6 0,1 1,-15.2,0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M21.8,74.6a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0z" />
         <path
             android:fillColor="#231F1C"
-            android:pathData="M14.8,77.4a7,7 0,1 1,14,0a7,7 0,1 1,-14,0z" />
+            android:pathData="M39.1,76.7a7.6,7.6 0,1 1,15.2,0a7.6,7.6 0,1 1,-15.2,0z" />
         <path
             android:fillColor="#FFFFFF"
-            android:pathData="M22.1,74.4a2.5,2.5 0,1 1,5,0a2.5,2.5 0,1 1,-5,0z" />
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M17.7,80.6a1.1,1.1 0,1 1,2.2,0a1.1,1.1 0,1 1,-2.2,0z" />
-        <path
-            android:fillColor="#C98E2E"
-            android:pathData="M38.1,77a8.4,8.4 0,1 1,16.8,0a8.4,8.4 0,1 1,-16.8,0z" />
-        <path
-            android:fillColor="#231F1C"
-            android:pathData="M39.8,76.4a7,7 0,1 1,14,0a7,7 0,1 1,-14,0z" />
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M47.1,73.4a2.5,2.5 0,1 1,5,0a2.5,2.5 0,1 1,-5,0z" />
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M42.7,79.6a1.1,1.1 0,1 1,2.2,0a1.1,1.1 0,1 1,-2.2,0z" />
+            android:pathData="M46.8,73.6a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0z" />
         <path
             android:fillColor="#F2A0AA"
             android:pathData="M31.8,85.4Q34,84.6 36.2,85.4Q36.7,85.7 36.3,86.2L34.6,87.9Q34,88.4 33.4,87.9L31.7,86.2Q31.3,85.7 31.8,85.4z" />
-        <path
-            android:strokeColor="#D9C2C0"
-            android:strokeWidth="0.8"
-            android:strokeLineCap="round"
-            android:pathData="M34,88.2V89.6M32,90.6Q33,91.2 34,89.8Q35,91.2 36,90.6" />
     </group>
 </vector>
