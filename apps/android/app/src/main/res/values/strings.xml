@@ -404,9 +404,15 @@
     <string name="footprints_empty">这段时间还没有轨迹。开启记录后，移动时获取到的有效定位会显示在这里。</string>
     <string name="footprints_export">导出当前轨迹 GPX</string>
     <string name="footprints_export_all">导出全部轨迹 GPX</string>
+    <string name="footprints_import">导入 GPX 轨迹</string>
+    <string name="footprints_import_note">读取本应用导出的轨迹或原始采样。与本机已有记录重叠的时段保留本机的。</string>
+    <string name="footprints_import_done">导入 %1$d 个轨迹点，跳过与本机记录重叠的 %2$d 个、无法读取的 %3$d 个。</string>
+    <string name="footprints_import_empty">文件里没有可读取的轨迹点。</string>
     <string name="footprints_export_raw">导出当前原始采样 GPX</string>
     <string name="footprints_quality_note">只连接可信的连续定位，信号差或漏记处会留空。轨迹末端需等待后续定位确认。</string>
     <string name="footprints_export_raw_note">包含未用于轨迹的定位及精度信息，便于重新分析；旧版本丢弃的采样无法恢复。</string>
+    <string name="footprints_export_all_raw">导出全部原始采样 GPX</string>
+    <string name="footprints_export_all_raw_note">所有日期的全部采样，可作为完整备份再导入。</string>
     <string name="footprints_delete">删除当前轨迹</string>
     <string name="footprints_delete_note">关闭日常记录并结束单次行程后可删除。建议先导出备份；卸载应用会丢失本机轨迹。</string>
     <string name="footprints_delete_confirm">删除后无法恢复。轨迹点由日期和单次行程共用，删除也会移除其他视图中的相同轨迹点。</string>

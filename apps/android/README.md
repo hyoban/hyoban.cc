@@ -209,7 +209,7 @@ settings and original system action are excluded from Android backup and device 
 
 The footprints are GPS tracks kept on the phone alone, in
 `noBackupFilesDir/footprints.sqlite` (`footprints/FootprintStore`), outside sync and
-backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export GPX and delete;
+backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export and import GPX and delete;
 足迹设置 (`moments://footprint-settings`) sets how recording behaves.
 
 - **Recording.** 日常自动记录 runs until turned off; 单次行程 marks a trip over the same
@@ -229,8 +229,14 @@ backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export GP
 - **Storage and refinement.** Every fresh, valid fix is stored raw. `TrackRefiner` derives
   the map's line and ordinary GPX from them: it drops spikes and stationary clouds, and
   breaks the line at fixes over 50 m uncertainty, gaps over 45 seconds, pauses and
-  restarts. 导出当前原始采样 GPX exports every stored sample, with accuracy and speed in
-  `https://hyoban.cc/ns/footprints/1` extensions.
+  restarts. 导出当前原始采样 GPX exports every stored sample of the chosen day or trip, and
+  导出全部原始采样 GPX those of every day, with accuracy and speed in
+  `https://hyoban.cc/ns/footprints/1` extensions: the full backup to import again.
+- **Import.** 导入 GPX 轨迹 reads a GPX the app exported (`footprints/TrackImport`), a line
+  or raw samples, back into the store as samples of no trip: raw samples keep their
+  segments and extras, each `trkseg` of a line becomes a segment. Where the phone already
+  has samples within 45 seconds, its own are kept and the file's skipped, so importing a
+  file twice adds nothing; a raw export before the line of the same day keeps the most.
 - **What else is kept.** Beside each sample the store keeps what the fix and the receiver
   said: heading and its accuracy, vertical accuracy, altitude above sea level, the provider,
   and the satellites used and seen with their signal (matched by time, so batched fixes
