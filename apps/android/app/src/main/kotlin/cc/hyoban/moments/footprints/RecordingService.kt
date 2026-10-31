@@ -320,6 +320,15 @@ class RecordingService : Service() {
         }
     }
 
+    /** Batching is fine, the sky is hidden: search again unbatched, and batch again after a fix. */
+    private suspend fun awaitSignal() {
+        diagnostic("batching_signal_lost", "sats_used" to gnss.latest?.used, "sats_visible" to gnss.latest?.visible)
+        stopUpdates()
+        lastFix = SystemClock.elapsedRealtime()
+        daily?.restartAcquisition(lastFix)
+        startUpdates(trip = false, newSegment = false)
+    }
+
     private suspend fun backOffBatching(reason: String) {
         val now = SystemClock.elapsedRealtime()
         batchHealth.backOff(now)
@@ -384,7 +393,7 @@ class RecordingService : Service() {
                 if (daily === policy) {
                     diagnostic("timer", "late_ms" to (SystemClock.elapsedRealtime() - due).coerceAtLeast(0))
                     if (batching && batchHealth.stalled(SystemClock.elapsedRealtime()))
-                        backOffBatching("delivery_timeout")
+                        if (gnss.signalLost(SystemClock.elapsedRealtime())) awaitSignal() else backOffBatching("delivery_timeout")
                     else if (policy.tick(SystemClock.elapsedRealtime())) searchAgain(policy)
                     applyDailyPolicy()
                 }

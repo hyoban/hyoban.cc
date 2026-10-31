@@ -175,7 +175,9 @@ backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export GP
 - **Recording.** 日常自动记录 runs until turned off; 单次行程 marks a trip over the same
   samples; 暂停所有记录 pauses both. A foreground service with precise location asks for a
   fix every 5 seconds (a trip: 5 s / 5 m); after a good fix daily recording allows up to 60
-  seconds of batching, falling back when batches stop arriving and retrying with backoff.
+  seconds of batching, falling back when batches stop arriving and retrying with backoff;
+  when they stop because the receiver sees too few satellites (a garage, a tunnel), it
+  searches again unbatched and batches again after the next fix, without the backoff.
   It resumes when the app opens, and after a reboot when background location is allowed.
 - **Resting.** Daily recording rests GPS once several fixes over three minutes show no
   movement, and wakes on the significant-motion sensor, on passive or low-power network
