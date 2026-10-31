@@ -112,7 +112,7 @@
     <string name="action_locate">Your location</string>
     <string name="action_north">Face north</string>
     <string name="action_fog">Fog of war</string>
-    <string name="fog_lit">Cities lit: %1$d\u2003Provinces: %2$d</string>
+    <string name="fog_lit">Cities lit: %1$d Provinces: %2$d</string>
     <string name="error_location">Couldn’t find your location. Check that location is on.</string>
     <string name="error_location_permission">Location permission is needed to show where you are</string>
     <string name="label_publish_all">Publish all</string>
@@ -424,7 +424,7 @@
     <string name="footprints_settings">Open app settings</string>
     <string name="footprints_background_permission">Allow recording after reboot</string>
     <string name="footprints_active_trip">In progress</string>
-    <string name="footprints_stats">%1$.2f km %2$s %3$d min of connected track</string>
+    <string name="footprints_stats">%1$.2f km %2$s %3$d min of connected track</string>
     <string name="footprints_last_fix">Last sample: %1$s</string>
     <string name="footprints_empty">No track for this period yet. Enable recording; accurate fixes collected as you move will appear here.</string>
     <string name="footprints_export">Export this track as GPX</string>
@@ -459,7 +459,7 @@
     <string name="footprints_part_km">%.1f km</string>
     <string name="footprints_minutes">%d min</string>
     <string name="footprints_hours_minutes">%1$d h %2$d min</string>
-    <string name="footprints_speeds">Average %1$d km/h top %2$d km/h</string>
+    <string name="footprints_speeds">Average %1$d km/h top %2$d km/h</string>
     <string name="footprints_speed_average">Average %d km/h</string>
     <string name="footprints_trip">Trip</string>
     <string name="footprints_trip_off_note">Records until you end it</string>
@@ -535,7 +535,7 @@
     <string name="ledger_new_bill">Add bill</string>
     <string name="ledger_edit_bill">Edit bill</string>
     <string name="ledger_default_book">Ledger</string>
-    <string name="ledger_this_month">This month: spent %1$s earned %2$s</string>
+    <string name="ledger_this_month">This month: spent %1$s earned %2$s</string>
     <string name="ledger_kind_expense">Expense</string>
     <string name="ledger_kind_income">Income</string>
     <string name="ledger_kind_transfer">Transfer</string>
@@ -573,7 +573,7 @@
     <string name="ledger_import_icost">Import from iCost</string>
     <string name="ledger_import_icost_note">Choose the .xlsx file from iCost\'s Bill Export</string>
     <string name="ledger_net_assets">Net assets</string>
-    <string name="ledger_assets_line">Assets %1$s Liabilities %2$s</string>
+    <string name="ledger_assets_line">Assets %1$s Liabilities %2$s</string>
     <string name="ledger_not_counted">Not in net assets</string>
     <string name="ledger_archived">Archived</string>
     <string name="ledger_add_account">Add account</string>
@@ -821,7 +821,7 @@
     <string name="footprints_span_trip">Follows its trip’s days</string>
     <string name="footprints_span_manual">Made public by hand</string>
     <string name="footprints_make_public">Make this span public</string>
-    <string name="day_track_stats">%1$.1f km moving %2$d min</string>
+    <string name="day_track_stats">%1$.1f km moving %2$d min</string>
     <string name="day_still_recording">Still recording</string>
     <string name="timeline_more_records" tools:ignore="PluralsCandidate">%1$d more</string>
     <string name="timeline_track">Track</string>
@@ -903,7 +903,7 @@
     <string name="side_key_timing_note">Single press waits until the double press window ends. Long press triggers once at its threshold.</string>
     <string name="side_key_action_failed">Action failed. Check the target app and accessibility service</string>
     <string name="side_key_last">Last gesture</string>
-    <string name="side_key_last_value">%1$s %2$s</string>
+    <string name="side_key_last_value">%1$s %2$s</string>
     <string name="side_key_no_last">No gestures yet</string>
     <string name="side_key_payment_note">Trigger on a completed WeChat Pay or Alipay payment page to open a prefilled bill. It is recorded only after you save.</string>
     <string name="side_key_torch">Flashlight</string>
@@ -912,7 +912,7 @@
     <string name="side_key_torch_unavailable">Flashlight unavailable. Check whether the camera is in use</string>
     <string name="me_general">General</string>
     <string name="me_on_phone">Only on this phone</string>
-    <string name="me_footer">%1$s %2$s The cat on the icon is Mantou</string>
+    <string name="me_footer">%1$s %2$s The cat on the icon is Mantou</string>
     <string name="sync_title">Sync and sources</string>
     <string name="section_site">Site</string>
     <string name="section_media">Media</string>

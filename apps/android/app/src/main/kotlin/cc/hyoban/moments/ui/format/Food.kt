@@ -26,7 +26,7 @@ fun billLine(bill: FoodBill, each: Boolean = true): String = listOfNotNull(
     "¥" + formatAmount(bill.amount),
     bill.people?.let { pluralStringResource(R.plurals.count_food_people, it, it) },
     bill.people?.takeIf { each && it > 1 }?.let { stringResource(R.string.food_each, (bill.amount / it).roundToLong()) },
-).joinToString(" ")
+).joinToString(" ")
 
 /** The dishes, how they were and what they cost in a line, as the site writes it under a Moment; null when it says nothing. */
 @Composable
@@ -36,7 +36,7 @@ fun foodLine(food: MomentFood?): String? {
         food.dishes.takeIf { it.isNotEmpty() }?.joinToString(stringResource(R.string.separator_list)),
         FoodVerdict.of(food.verdict)?.let { stringResource(verdictLabel(it)) },
         food.bill?.let { billLine(it, each = false) },
-    ).joinToString(" ").ifEmpty { null }
+    ).joinToString(" ").ifEmpty { null }
 }
 
 /** What a meal's share ends with: where, each one's share and how it was, each behind an emoji; null when it says nothing. A bill without its people fed one. */
@@ -54,5 +54,5 @@ fun foodShareLine(food: MomentFood?, place: String?): String? {
             }
             "$face " + stringResource(verdictLabel(verdict))
         },
-    ).joinToString(" ").ifEmpty { null }
+    ).joinToString(" ").ifEmpty { null }
 }

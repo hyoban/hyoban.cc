@@ -559,7 +559,7 @@ private fun DayHead(
             val line = listOfNotNull(
                 if (moving && metres != null && millis != null) stringResource(R.string.day_track_stats, metres / 1000, millis / 60_000) else null,
                 daySpent(bills, date)?.let { stringResource(R.string.ledger_expense_short, it) },
-            ).joinToString("\u2003")
+            ).joinToString(" ")
             // Still recording is a state, so in the accent, after the figures it keeps growing.
             val still = if (recording) stringResource(R.string.day_still_recording) else null
             val accent = tokens.accent
@@ -568,7 +568,7 @@ private fun DayHead(
                     androidx.compose.ui.text.buildAnnotatedString {
                         append(line)
                         if (still != null) {
-                            if (line.isNotEmpty()) append("\u2003")
+                            if (line.isNotEmpty()) append(" ")
                             pushStyle(androidx.compose.ui.text.SpanStyle(color = accent))
                             append(still)
                             pop()
@@ -609,7 +609,7 @@ fun PlaceScreen(
         onBack,
         Modifier.background(AppColors.page),
         // What sort of place, where it is, then how many Moments are there.
-        subtitle = listOfNotNull(PlaceKind.of(place?.kind)?.let { stringResource(it.label) }, place?.division?.label(), pluralStringResource(R.plurals.count_moments, moments.size, moments.size)).joinToString("\u2003"),
+        subtitle = listOfNotNull(PlaceKind.of(place?.kind)?.let { stringResource(it.label) }, place?.division?.label(), pluralStringResource(R.plurals.count_moments, moments.size, moments.size)).joinToString(" "),
         actions = {
             // On the map tab, its panel up, and the way there, as from that panel.
             if (place != null) {

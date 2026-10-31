@@ -1122,7 +1122,7 @@ fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> U
             items(ledger.accountsByUse, key = { it.id }) { account ->
                 ListItem(
                     headlineContent = { Text(account.name) },
-                    supportingContent = { Text(accountKindLabel(account.kind) + " " + money(ledger.balances[account.id] ?: 0, account.currency)) },
+                    supportingContent = { Text(accountKindLabel(account.kind) + " " + money(ledger.balances[account.id] ?: 0, account.currency)) },
                     leadingContent = { Icon(accountIcon(account), contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     modifier = Modifier.clickable { onPick(account.id) }.testTag("pick_account_${account.name}"),

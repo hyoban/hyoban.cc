@@ -179,7 +179,7 @@ fun ChargeRow(charge: Charge, modifier: Modifier = Modifier) {
             androidx.compose.ui.res.stringResource(if (charge.dc) cc.hyoban.moments.R.string.charge_dc else cc.hyoban.moments.R.string.charge_ac),
             charge.kwh?.let { "%.1f kWh".format(it) },
             charge.minutes?.let { androidx.compose.ui.res.pluralStringResource(cc.hyoban.moments.R.plurals.charge_minutes, it, it) },
-        ).joinToString("\u2003"),
+        ).joinToString(" "),
         onClick = null,
         modifier = modifier.testTag("charge_${charge.uid}"),
         time = charge.at.drop(11).take(5),
@@ -338,11 +338,11 @@ private fun tripBannerSummary(trip: TripRecord, count: Int): AnnotatedString {
         stringResource(R.string.trip_since, formatDate(trip.start)),
         stringResource(R.string.trip_day, day),
         pluralStringResource(R.plurals.count_moments, count, count),
-    ).joinToString("\u2003")
+    ).joinToString(" ")
     val ongoingLabel = stringResource(R.string.trip_ongoing)
     return buildAnnotatedString {
         withStyle(SpanStyle(color = accent)) { append(ongoingLabel) }
-        append("\u2003")
+        append(" ")
         append(rest)
     }
 }

@@ -32,7 +32,7 @@ const firstMoment = months.find(({ month }) => pickedMonth === undefined || mont
   {
     // The month picked links back to the whole year, as pressing it again goes.
     months.toReversed().map(({ month, moments: monthMoments }) => (
-      <a class="map-moments__month map-moments__month--number" href={`/map/${year}/${month === pickedMonth ? '' : `${String(month).padStart(2, '0')}/`}`} data-trip-map-month={month} aria-current={month === pickedMonth ? 'true' : undefined} aria-label={`${month} 月`} title={`${month} 月\u2003${monthMoments.length} 条记录`}>
+      <a class="map-moments__month map-moments__month--number" href={`/map/${year}/${month === pickedMonth ? '' : `${String(month).padStart(2, '0')}/`}`} data-trip-map-month={month} aria-current={month === pickedMonth ? 'true' : undefined} aria-label={`${month} 月`} title={`${month} 月 ${monthMoments.length} 条记录`}>
         {month}
       </a>
     ))

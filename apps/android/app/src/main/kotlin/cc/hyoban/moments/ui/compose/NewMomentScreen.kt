@@ -525,7 +525,7 @@ fun NewMomentScreen(
                             leadingContent = { Icon(AppIcons.Clock, contentDescription = null) },
                             trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                             modifier = Modifier.testTag("moment_time"),
-                        ) { Text(listOfNotNull(formatDay(stamp(time)), formatTime(stamp(time))).joinToString("\u2003")) }
+                        ) { Text(listOfNotNull(formatDay(stamp(time)), formatTime(stamp(time))).joinToString(" ")) }
                         SegmentedListItem(
                             onClick = { editingPlace = true },
                             shapes = shapes,
@@ -549,7 +549,7 @@ fun NewMomentScreen(
                                             locationDenied -> R.string.place_no_permission
                                             else -> R.string.place_unknown
                                         },
-                                    )).joinToString("\u2003"),
+                                    )).joinToString(" "),
                                 )
                             },
                             leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
@@ -1039,7 +1039,7 @@ private fun FoodGroup(
                         fit = true,
                     )
                     if (people.isNotEmpty()) Text(" " + stringResource(R.string.unit_food_people))
-                    if (share != null) Text("\u2003" + stringResource(R.string.food_share, formatAmount(share)))
+                    if (share != null) Text(" " + stringResource(R.string.food_share, formatAmount(share)))
                 }
             },
         )

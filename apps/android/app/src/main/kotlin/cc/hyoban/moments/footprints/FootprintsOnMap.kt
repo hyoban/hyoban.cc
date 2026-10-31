@@ -329,7 +329,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                                 items(view.history.sessions, key = { it.id }) { trip ->
                                     FilterChip(selected = session == trip.id, onClick = { session = trip.id },
                                         leadingIcon = { Icon(if (session == trip.id) AppIcons.Check else AppIcons.Flag, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
-                                        label = { Text(stamp(trip.started) + if (trip.ended == null) "\u2003" + stringResource(R.string.footprints_active_trip) else "") })
+                                        label = { Text(stamp(trip.started) + if (trip.ended == null) " " + stringResource(R.string.footprints_active_trip) else "") })
                                 }
                             }
                         }
@@ -347,15 +347,15 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                             val span = clock(part.start, days) + "–" + clock(part.end, days)
                             val (icon, title, supporting) = when (part) {
                                 is TrackStay -> Triple(AppIcons.Pin,
-                                    stringResource(R.string.footprints_stay) + "\u2003" + duration(part.end - part.start),
-                                    listOfNotNull(span, stayNames[part.start]).joinToString("\u2003"))
+                                    stringResource(R.string.footprints_stay) + " " + duration(part.end - part.start),
+                                    listOfNotNull(span, stayNames[part.start]).joinToString(" "))
                                 is TrackMove -> Triple(
                                     when (part.mode) { TravelMode.WALK -> AppIcons.Walk; TravelMode.CYCLE -> AppIcons.Bike; TravelMode.DRIVE -> AppIcons.Car },
                                     stringResource(when (part.mode) {
                                         TravelMode.WALK -> R.string.footprints_mode_walk
                                         TravelMode.CYCLE -> R.string.footprints_mode_cycle
                                         TravelMode.DRIVE -> R.string.footprints_mode_drive
-                                    }) + "\u2003" + stringResource(R.string.footprints_part_km, part.metres / 1000),
+                                    }) + " " + stringResource(R.string.footprints_part_km, part.metres / 1000),
                                     listOfNotNull(span, part.averageSpeed?.let { average ->
                                         val top = part.topSpeed
                                         if (top != null) stringResource(R.string.footprints_speeds, kmh(average), kmh(top))

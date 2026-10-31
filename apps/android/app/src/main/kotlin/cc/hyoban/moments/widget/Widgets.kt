@@ -94,7 +94,7 @@ class MemoryWidget : GlanceAppWidget() {
         val moment = memory.moment
         val places = container.repository.places.value
         val words = moment.text.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
-        val where = moment.places.mapNotNull { places[it]?.name }.joinToString("\u2003").ifEmpty { null }
+        val where = moment.places.mapNotNull { places[it]?.name }.joinToString(" ").ifEmpty { null }
 
         return Card.Photo(
             photo = photo(context, container, memory.media),
@@ -131,7 +131,7 @@ class TripWidget : GlanceAppWidget() {
         val (trip, phase) = tripFor(trips, today) ?: return Card.Empty(context.getString(R.string.empty_trips))
         val total = daysBetween(trip.start, trip.end)
         val when_ = when (phase) {
-            TripPhase.ONGOING -> context.getString(R.string.trip_day, daysBetween(trip.start, today.toString())) + "\u2003" +
+            TripPhase.ONGOING -> context.getString(R.string.trip_day, daysBetween(trip.start, today.toString())) + " " +
                 context.resources.getQuantityString(R.plurals.count_days_total, total, total)
             TripPhase.UPCOMING -> (daysBetween(today.toString(), trip.start) - 1).let { context.resources.getQuantityString(R.plurals.widget_trip_in_days, it, it) }
             TripPhase.PAST -> formatRange(trip.start, trip.end, today)

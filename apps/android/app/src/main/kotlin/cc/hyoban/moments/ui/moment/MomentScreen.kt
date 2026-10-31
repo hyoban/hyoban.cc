@@ -383,7 +383,7 @@ private fun MomentDetails(
     Column(Modifier.padding(top = Space.xl, bottom = Space.xl)) {
         // When, in the second grey over the words, as the timeline's line over a Moment has it.
         Text(
-            listOfNotNull(formatDay(moment.occurredAt), formatTime(moment.occurredAt)).joinToString("\u2003"),
+            listOfNotNull(formatDay(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "),
             style = AppTheme.typography.body,
             color = tokens.tx2,
             modifier = Modifier.padding(horizontal = Space.gutter).semantics { heading() },
@@ -413,7 +413,7 @@ private fun MomentDetails(
                         supportingContent = listOfNotNull(
                             PlaceKind.of(place?.kind)?.let { stringResource(it.label) },
                             place?.note?.takeIf { it.isNotBlank() },
-                        ).joinToString("\u2003").takeIf { it.isNotEmpty() }?.let { { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) } },
+                        ).joinToString(" ").takeIf { it.isNotEmpty() }?.let { { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) } },
                         modifier = Modifier.testTag("place_$id"),
                     ) { Text(place?.name ?: id, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
@@ -432,7 +432,7 @@ private fun MomentDetails(
                             )
                         },
                         supportingContent = listOfNotNull(verdict?.let { stringResource(verdictLabel(it)) }, food.bill?.let { billLine(it) })
-                            .joinToString("\u2003").takeIf { it.isNotEmpty() }?.let { { Text(it) } },
+                            .joinToString(" ").takeIf { it.isNotEmpty() }?.let { { Text(it) } },
                         leadingContent = { Icon(AppIcons.Food, contentDescription = null) },
                         modifier = Modifier.testTag("food"),
                     )
@@ -570,14 +570,14 @@ private fun chargeTitle(charge: kotlinx.serialization.json.JsonObject): String {
     return listOfNotNull(
         stringResource(if (type == "DC") R.string.charge_dc else R.string.charge_ac),
         kwh?.let { "%.1f kWh".format(it) },
-    ).joinToString("\u2003")
+    ).joinToString(" ")
 }
 
 /** How long it charged and what it cost, in figures. */
 private fun chargeLine(charge: kotlinx.serialization.json.JsonObject): String? {
     val minutes = (charge["durationMin"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()
     val cost = (charge["cost"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()
-    return listOfNotNull(minutes?.let { "${it.toInt()} min" }, cost?.let { "¥%.2f".format(it) }).joinToString("\u2003").ifEmpty { null }
+    return listOfNotNull(minutes?.let { "${it.toInt()} min" }, cost?.let { "¥%.2f".format(it) }).joinToString(" ").ifEmpty { null }
 }
 
 /** Room under the page's words for the floating toolbar over them: its height and margin. */

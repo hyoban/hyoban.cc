@@ -195,7 +195,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                         Text(
                             buildAnnotatedString {
                                 append(name)
-                                if (searching) withStyle(SpanStyle(fontFamily = figures)) { append("\u2003$count") }
+                                if (searching) withStyle(SpanStyle(fontFamily = figures)) { append(" $count") }
                             },
                         )
                     },
@@ -345,7 +345,7 @@ private fun SearchResult(
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            marked((listOfNotNull(formatDate(moment.occurredAt, ownYear(moment.occurredAt)), formatTime(moment.occurredAt)) + where).joinToString("\u2003"), text, mark),
+            marked((listOf(listOfNotNull(formatDate(moment.occurredAt, ownYear(moment.occurredAt)), formatTime(moment.occurredAt)).joinToString(" ")) + where).joinToString(" "), text, mark),
             style = AppTheme.typography.caption,
             color = tokens.tx2,
             maxLines = 1,
@@ -429,7 +429,7 @@ private fun SearchCharge(charge: Charge, modifier: Modifier) {
                 stringResource(if (charge.dc) R.string.charge_dc else R.string.charge_ac),
                 charge.kwh?.let { "%.1f kWh".format(it) },
                 charge.minutes?.let { pluralStringResource(R.plurals.charge_minutes, it, it) },
-            ).joinToString("\u2003"),
+            ).joinToString(" "),
             style = AppTheme.typography.caption,
             color = tokens.tx2,
             maxLines = 1,

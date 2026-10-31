@@ -210,7 +210,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                             pluralStringResource(R.plurals.ledger_count_bills, returns.size, returns.size),
                             returns.sortedBy { it.time }.map { back ->
                                 { shapes ->
-                                    InfoRow(shapes, txnIcon(back, ledger), kindLabel(back.kind), formatDay(back.dateKey) + " " + (back.account?.let(ledger.accountsById::get)?.name ?: ""),
+                                    InfoRow(shapes, txnIcon(back, ledger), kindLabel(back.kind), formatDay(back.dateKey) + " " + (back.account?.let(ledger.accountsById::get)?.name ?: ""),
                                         trailing = signedMoney(back.amount, back.currency, true)) { nav.bill(back.id) }
                                 }
                             },

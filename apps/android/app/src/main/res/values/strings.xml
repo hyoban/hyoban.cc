@@ -109,7 +109,7 @@
     <string name="action_locate">我的位置</string>
     <string name="action_north">回到正北</string>
     <string name="action_fog">迷雾地图</string>
-    <string name="fog_lit">点亮 %1$d 座城市\u2003%2$d 个省份</string>
+    <string name="fog_lit">点亮 %1$d 座城市 %2$d 个省份</string>
     <string name="error_location">没能定位，确认定位已打开</string>
     <string name="error_location_permission">需要定位权限才能显示所在位置</string>
     <string name="label_publish_all">全部发布</string>
@@ -165,7 +165,7 @@
     <string name="widget_preview_memory_eyebrow">3 年前的今天</string>
     <string name="widget_preview_memory_title">海边的书店，终于轮到我了</string>
     <string name="widget_preview_memory_subtitle">青岛</string>
-    <string name="widget_preview_trip_eyebrow">第 2 天\u2003共 5 天</string>
+    <string name="widget_preview_trip_eyebrow">第 2 天 共 5 天</string>
     <string name="widget_preview_trip_title">东北自驾</string>
     <string name="widget_preview_trip_subtitle">15 个时刻</string>
     <!-- Between clauses read out together, and between the items of a list. -->
@@ -406,7 +406,7 @@
     <string name="footprints_settings">打开应用设置</string>
     <string name="footprints_background_permission">允许重启后自动恢复</string>
     <string name="footprints_active_trip">进行中</string>
-    <string name="footprints_stats">%1$.2f 公里 %2$s 有效轨迹 %3$d 分钟</string>
+    <string name="footprints_stats">%1$.2f 公里 %2$s 有效轨迹 %3$d 分钟</string>
     <string name="footprints_last_fix">最后记录：%1$s</string>
     <string name="footprints_empty">这段时间还没有轨迹。开启记录后，移动时获取到的有效定位会显示在这里。</string>
     <string name="footprints_export">导出当前轨迹 GPX</string>
@@ -441,7 +441,7 @@
     <string name="footprints_part_km">%.1f 公里</string>
     <string name="footprints_minutes">%d 分钟</string>
     <string name="footprints_hours_minutes">%1$d 小时 %2$d 分钟</string>
-    <string name="footprints_speeds">平均 %1$d km/h 最高 %2$d km/h</string>
+    <string name="footprints_speeds">平均 %1$d km/h 最高 %2$d km/h</string>
     <string name="footprints_speed_average">平均 %d km/h</string>
     <string name="footprints_trip">单次行程</string>
     <string name="footprints_trip_off_note">开始后持续记录，直到手动结束</string>
@@ -517,7 +517,7 @@
     <string name="ledger_new_bill">记一笔</string>
     <string name="ledger_edit_bill">编辑账单</string>
     <string name="ledger_default_book">默认账本</string>
-    <string name="ledger_this_month">本月支出 %1$s 收入 %2$s</string>
+    <string name="ledger_this_month">本月支出 %1$s 收入 %2$s</string>
     <string name="ledger_kind_expense">支出</string>
     <string name="ledger_kind_income">收入</string>
     <string name="ledger_kind_transfer">转账</string>
@@ -555,7 +555,7 @@
     <string name="ledger_import_icost">从 iCost 导入</string>
     <string name="ledger_import_icost_note">选择 iCost「账单导出」得到的 .xlsx 文件</string>
     <string name="ledger_net_assets">净资产</string>
-    <string name="ledger_assets_line">资产 %1$s 负债 %2$s</string>
+    <string name="ledger_assets_line">资产 %1$s 负债 %2$s</string>
     <string name="ledger_not_counted">不计入净资产</string>
     <string name="ledger_archived">已归档</string>
     <string name="ledger_add_account">添加账户</string>
@@ -790,7 +790,7 @@
     <string name="footprints_span_trip">跟着旅程，旅程改了时间也跟着改</string>
     <string name="footprints_span_manual">手动公开的</string>
     <string name="footprints_make_public">公开这一段</string>
-    <string name="day_track_stats">%1$.1f 公里 在移动 %2$d 分钟</string>
+    <string name="day_track_stats">%1$.1f 公里 在移动 %2$d 分钟</string>
     <string name="day_still_recording">还在记录</string>
     <string name="timeline_more_records">还有 %1$d 条</string>
     <string name="timeline_track">轨迹</string>
@@ -864,13 +864,13 @@
     <string name="side_key_timing">识别时间</string>
     <string name="side_key_double_time">双击窗口（毫秒）</string>
     <string name="side_key_long_time">长按阈值（毫秒）</string>
-    <string name="side_key_timing_value">双击 %1$d 毫秒 长按 %2$d 毫秒</string>
+    <string name="side_key_timing_value">双击 %1$d 毫秒 长按 %2$d 毫秒</string>
     <string name="side_key_invalid_timing">双击请输入 150–600，长按请输入 400–2000</string>
     <string name="side_key_note">需要 Shizuku 与分享与记账助手无障碍服务。启用时保存并关闭系统预设，停止时恢复；手机重启后需重新启动 Shizuku。</string>
     <string name="side_key_timing_note">单击会等待双击窗口结束后执行。长按达到阈值后只触发一次。</string>
     <string name="side_key_action_failed">动作未能执行，请检查目标应用和无障碍服务</string>
     <string name="side_key_last">最近操作</string>
-    <string name="side_key_last_value">%1$s %2$s</string>
+    <string name="side_key_last_value">%1$s %2$s</string>
     <string name="side_key_no_last">还没有手势记录</string>
     <string name="side_key_payment_note">在微信或支付宝已付款账单页触发，打开预填的记账确认，保存后才入账。</string>
     <string name="side_key_torch">手电筒</string>
@@ -879,7 +879,7 @@
     <string name="side_key_torch_unavailable">手电筒暂不可用，请检查相机是否正在使用</string>
     <string name="me_general">通用</string>
     <string name="me_on_phone">只在这台手机上</string>
-    <string name="me_footer">%1$s %2$s 图标里的猫是馒头</string>
+    <string name="me_footer">%1$s %2$s 图标里的猫是馒头</string>
     <string name="sync_title">同步与来源</string>
     <string name="section_site">网站</string>
     <string name="section_media">媒体</string>
@@ -887,7 +887,7 @@
     <string name="me_sync_token_set">令牌已设置</string>
     <string name="me_sync_token_unset">没有令牌，只能浏览</string>
     <string name="me_auto_bill_on">自动记账已开</string>
-    <string name="me_items_public">公开：%1$d 个账本 %2$d 段轨迹</string>
+    <string name="me_items_public">公开：%1$d 个账本 %2$d 段轨迹</string>
     <string name="side_key_needs">需要</string>
     <string name="side_key_service">分享与记账助手</string>
     <string name="side_key_service_on">无障碍服务已开启</string>

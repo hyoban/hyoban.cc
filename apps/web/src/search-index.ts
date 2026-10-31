@@ -42,7 +42,7 @@ export function getSearchEntries() {
 async function loadSearchEntries() {
   const moments = (await getMoments()).map((moment): SearchEntry => {
     const photos = moment.media.flatMap((media) => getPhoto(media) ?? [])
-    const place = moment.locations.map((location) => location.name).join(' ')
+    const place = moment.locations.map((location) => location.name).join(' ')
     return {
       kind: 'moment',
       url: getMomentPagePath(moment),

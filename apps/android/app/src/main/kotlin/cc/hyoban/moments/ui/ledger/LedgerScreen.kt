@@ -346,7 +346,7 @@ private fun MonthTotals(month: String, expense: Long, income: Long, currency: St
                 stringResource(R.string.ledger_expense_short, money(expense, currency)),
                 stringResource(R.string.ledger_income_short, money(income, currency)),
                 stringResource(R.string.ledger_balance_short, money(income - expense, currency)),
-            ).joinToString(" "),
+            ).joinToString(" "),
             style = AppTheme.typography.body,
             color = tokens.tx2,
         )
@@ -391,7 +391,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                                 colors = segmentColors(),
                                 leadingContent = { Icon(accountIcon(account), contentDescription = null) },
                                 supportingContent = if (!account.counted || account.note.isNotBlank()) {
-                                    { Text(listOfNotNull(stringResource(R.string.ledger_not_counted).takeIf { !account.counted }, account.note.takeIf { it.isNotBlank() }).joinToString(" "), maxLines = 2) }
+                                    { Text(listOfNotNull(stringResource(R.string.ledger_not_counted).takeIf { !account.counted }, account.note.takeIf { it.isNotBlank() }).joinToString(" "), maxLines = 2) }
                                 } else null,
                                 trailingContent = { Text(money(balance, account.currency), style = AppTheme.typography.body.strong) },
                                 modifier = Modifier.testTag("account_${account.id}"),

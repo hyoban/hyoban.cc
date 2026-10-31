@@ -92,7 +92,7 @@ object AutoBill {
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentTitle(context.getString(R.string.auto_bill_title, amount))
-            .setContentText(listOfNotNull(payment.note, payment.method, context.getString(if (payment.app == PaymentApp.WECHAT) R.string.auto_bill_wechat else R.string.auto_bill_alipay)).joinToString(" "))
+            .setContentText(listOfNotNull(payment.note, payment.method, context.getString(if (payment.app == PaymentApp.WECHAT) R.string.auto_bill_wechat else R.string.auto_bill_alipay)).joinToString(" "))
             .setWhen(time)
             .setShowWhen(true)
             .setContentIntent(open)

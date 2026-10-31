@@ -510,7 +510,7 @@ private fun OutsideCard(title: String, date: String?, figure: String?, note: Str
             figure?.let { Text(it, style = AppTheme.typography.body) }
         }
         Text(
-            listOfNotNull(date, note).joinToString("\u2003"),
+            listOfNotNull(date, note).joinToString(" "),
             style = AppTheme.typography.caption,
             color = tokens.tx2,
         )
@@ -551,8 +551,8 @@ private fun MomentIdentity(identity: Identity, modifier: Modifier = Modifier) {
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt), where.takeIf { moment.text.isNotBlank() && it.isNotEmpty() })
-                    .joinToString("\u2003"),
+                listOfNotNull(listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "), where.takeIf { moment.text.isNotBlank() && it.isNotEmpty() })
+                    .joinToString(" "),
                 style = AppTheme.typography.caption,
                 color = tokens.tx2,
                 maxLines = 1,
@@ -582,7 +582,7 @@ private fun MomentWhole(moment: MomentRecord, places: Map<String, Place>, urls: 
         if (moment.places.isNotEmpty()) {
             // Where, as a subhead rather than labels, none of them tapped on its own.
             Text(
-                moment.places.joinToString("\u2003") { places[it]?.name ?: it },
+                moment.places.joinToString(" ") { places[it]?.name ?: it },
                 style = AppTheme.typography.body,
                 color = tokens.tx2,
             )

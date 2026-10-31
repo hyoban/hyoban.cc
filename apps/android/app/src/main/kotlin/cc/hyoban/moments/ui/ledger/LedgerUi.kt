@@ -367,7 +367,7 @@ fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false, withTime:
     // The day first, so a long note doesn't cut it off; the time only where the row's end lacks it.
     val day = if (showDate) formatDay(txn.dateKey) else null
     val time = if (withTime) txn.local.format(TIME) else null
-    return listOfNotNull(day, txn.note.takeIf { it.isNotBlank() }, place, state, transfer, time).joinToString(" ")
+    return listOfNotNull(day, txn.note.takeIf { it.isNotBlank() }, place, state, transfer, time).joinToString(" ")
 }
 
 /**
@@ -391,7 +391,7 @@ fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = M
                 )
                 val book = if (showBook) ledger.books.firstOrNull { it.id == txn.book }?.name else null
                 Text(
-                    listOfNotNull(book, txn.local.format(TIME)).joinToString("\u2003"),
+                    listOfNotNull(book, txn.local.format(TIME)).joinToString(" "),
                     style = AppTheme.typography.caption,
                     color = tokens.tx2,
                     maxLines = 1,
@@ -416,7 +416,7 @@ fun DayTotals(dateKey: String, expense: Long, income: Long, currency: String, mo
             listOfNotNull(
                 if (expense != 0L) stringResource(R.string.ledger_expense_short, money(expense, currency)) else null,
                 if (income != 0L) stringResource(R.string.ledger_income_short, money(income, currency)) else null,
-            ).joinToString(" "),
+            ).joinToString(" "),
             style = AppTheme.typography.caption,
             color = tokens.tx2,
         )

@@ -40,7 +40,7 @@ export function getSearchPlace(result: SearchResult) {
 export function getSearchWords({ entry, terms, inText, photos }: SearchResult, length?: number) {
   return inText || photos.length === 0
     ? getSnippet(entry.text, terms, length)
-    : photos.map((photo) => photo.alt).join(' ')
+    : photos.map((photo) => photo.alt).join(' ')
 }
 
 export function createSearchImage({ src, alt, width, height }: SearchResult['photos'][number]) {
