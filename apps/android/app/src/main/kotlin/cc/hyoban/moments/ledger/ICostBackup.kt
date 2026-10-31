@@ -108,13 +108,16 @@ object ICostBackup {
             books[name] = Book(newId(), name, currency, position = books.size, archived = icost?.get("isArchived") == "1")
         }
 
-        // Accounts by name, of the kind iCost says, their balances set at the end.
+        // Accounts by name, of the kind iCost says, their balances set at the end. Those of one
+        // name are one, archived only when all of them are and counted when any is, and
+        // otherwise as the newest one still in use says, an old one being hidden for it.
         val icostAccounts = tables.accounts.associateBy { it.id }
         val accounts = mutableMapOf<String, Account>()
         existing.accounts.forEach { accounts[it.name] = it }
-        for (row in tables.accounts) {
-            val name = row.accountName
+        for ((name, rows) in tables.accounts.groupBy { it.accountName }) {
             if (name.isBlank() || name in accounts) continue
+            val archived = rows.all { it["isHidden"] == "1" || it["isArchieve"] == "1" }
+            val row = rows.lastOrNull { archived || (it["isHidden"] != "1" && it["isArchieve"] != "1") } ?: rows.last()
             val classify = row["classifyName"].orEmpty().trim()
             val kind = when (row["accountType"]) {
                 CREDIT -> if (classify.contains("贷")) AccountKind.LOAN else AccountKind.CREDIT
@@ -125,8 +128,8 @@ object ICostBackup {
             }
             accounts[name] = Account(
                 newId(), name, kind, row["currency"].orEmpty().ifBlank { "CNY" },
-                counted = row["isHiddenCount"] != "1" && row["isNoCount"] != "1",
-                archived = row["isHidden"] == "1" || row["isArchieve"] == "1",
+                counted = rows.any { it["isHiddenCount"] != "1" && it["isNoCount"] != "1" },
+                archived = archived,
                 note = row["remark"].orEmpty(),
                 position = accounts.size,
             )
