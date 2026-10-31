@@ -18,6 +18,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   minute, R8's), then `app/build/outputs/apk/release/app-release.apk`. Both are signed
   with the debug key unless `local.properties` has a release key, so either installs over
   the other and the app's data stays.
+- Testing never costs the app's data: the ledger and footprints live in `noBackupFilesDir`
+  and have no other copy. Ask before anything that would lose or reset it, and say what
+  would go: `adb uninstall`, `pm clear`, a reinstall after `INSTALL_FAILED_UPDATE_INCOMPATIBLE`
+  (fix the signing instead), a downgrade (`install -d`), deleting or overwriting the app's
+  files, or running a new database migration on the phone before it has passed on a copy.
 - The phone is usually on wireless adb. Take its serial from `adb devices`, leaving out
   `emulator-*`, and never start the emulator while the phone is there. If the phone is
   locked or adb has dropped, say so instead of working around it.
