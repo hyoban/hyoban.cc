@@ -165,6 +165,34 @@ until saved, and a payment matching a kept bill within ten minutes isn't offered
 taps, types or keeps the page. `ledger/Payments` reads the page, with fixtures in
 `PaymentsTest`; `ledger/AutoBill` keeps the switch and posts the notification.
 
+**侧键自定义**, in 我 → 设置 (`moments://side-key`), assigns an action separately to a
+single press, double press and long press of the physical OPPO key. It includes payment
+capture, opening an installed app or a link/app URI, play/pause, next/previous track,
+volume, back, home, recent apps, notifications, quick settings and lock screen. No gesture
+is assigned on the user's behalf. Double press defaults to a 300 ms window, adjustable
+from 150 to 600; long press to 600 ms, adjustable from 400 to 2000. Single press waits for
+the double-press window, and long press runs once. A tap followed by a hold runs long
+press alone.
+
+Start Shizuku and enable the app's existing share-and-ledger accessibility service,
+then turn on the side-key switch. The listener uses a small Shizuku UserService with
+shell privileges to find the input device advertising `BTN_TRIGGER_HAPPY32` and read its
+press/release events, without root or a fixed device number. It is hosted by the existing
+accessibility service, with no separate foreground service or notification. Switching it
+off or disconnecting accessibility stops the reader and restores the saved system action.
+Shizuku loss leaves restoration pending until it is available and authorized again. A
+phone restart needs Shizuku started again; while the switch stays on, the listener resumes
+when both services are ready. Unsupported devices report a connection failure. Stop any
+standalone side-key remapper before enabling this one.
+
+The payment action directly calls the same accessibility reader while WeChat or Alipay
+is still in front, then opens the prefilled confirmation; it does not require the auto-bills
+switch. The phone must be unlocked. An already saved payment is reported instead of opened
+again. Nothing is saved until the user confirms. There is no cross-app capture broadcast
+or signature permission anymore. The reader never keeps a payment page, and the side-key
+settings and original system action are excluded from Android backup and device transfer.
+`sidekey/GestureDetector` and `SideKeyActions` are covered by timing and validation tests.
+
 ## Footprints
 
 The footprints are GPS tracks kept on the phone alone, in

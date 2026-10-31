@@ -97,7 +97,7 @@ fun MeScreen(
 
 /** The settings, a row for each section opening its page: what 我 held before its four rows. */
 @Composable
-fun SettingsHomeScreen(onBack: () -> Unit, onSection: (SettingsSection) -> Unit, onLedgerSettings: () -> Unit) {
+fun SettingsHomeScreen(onBack: () -> Unit, onSection: (SettingsSection) -> Unit, onLedgerSettings: () -> Unit, onSideKeySettings: () -> Unit) {
     cc.hyoban.moments.ui.components.SubPage(stringResource(R.string.title_settings), onBack) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
@@ -114,6 +114,7 @@ fun SettingsHomeScreen(onBack: () -> Unit, onSection: (SettingsSection) -> Unit,
                         { shapes -> SectionRow(AppIcons.CloudSync, stringResource(R.string.settings_moments_data), "settings_moments", shapes) { onSection(SettingsSection.MOMENTS) } },
                         { shapes -> SectionRow(AppIcons.Map, stringResource(R.string.settings_map_footprints), "settings_map", shapes) { onSection(SettingsSection.MAP) } },
                         { shapes -> SectionRow(AppIcons.Receipt, stringResource(R.string.tab_ledger), "settings_ledger", shapes, onClick = onLedgerSettings) },
+                        { shapes -> SectionRow(AppIcons.Sliders, stringResource(R.string.side_key_title), "settings_sidekey", shapes, onClick = onSideKeySettings) },
                         { shapes -> SectionRow(AppIcons.Info, stringResource(R.string.settings_about), "settings_about", shapes) { onSection(SettingsSection.ABOUT) } },
                     ),
                 )

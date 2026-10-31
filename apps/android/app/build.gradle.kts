@@ -80,6 +80,7 @@ android {
     sourceSets["main"].assets.srcDir(rootProject.file("../web/src/data/boundaries"))
 
     buildFeatures {
+        aidl = true
         buildConfig = true
         compose = true
     }
@@ -92,6 +93,8 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.shizuku.api)
+    implementation(libs.shizuku.provider)
     implementation(libs.play.services.location)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.core.ktx)

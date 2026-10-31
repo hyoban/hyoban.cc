@@ -2,6 +2,8 @@ package cc.hyoban.moments.accessibility
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
+import android.app.KeyguardManager
+import android.content.Intent
 import android.graphics.Path
 import android.graphics.Rect
 import android.os.Bundle
@@ -13,8 +15,10 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Toast
 import androidx.core.os.HandlerCompat
 import cc.hyoban.moments.ledger.AutoBill
+import cc.hyoban.moments.ledger.Payment
 import cc.hyoban.moments.ledger.PaymentApp
 import cc.hyoban.moments.ledger.PaymentPage
+import cc.hyoban.moments.sidekey.SideKeys
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -32,12 +36,14 @@ open class ShareAccessibilityService : AccessibilityService() {
     override fun dump(fd: java.io.FileDescriptor, writer: java.io.PrintWriter, args: Array<out String>) {
         // State only: no destination, caption, or third-party screen contents in diagnostics.
         writer.println("assist=${assistState.value}, stage=${session?.request?.flow?.stage ?: "idle"}, autoBill=${AutoBill.enabled(this)}")
+        writer.println("sideKey=${SideKeys.state.value.phase}, gesture=${SideKeys.state.value.lastGesture}, restorePending=${SideKeys.state.value.restorePending}")
     }
 
     override fun onServiceConnected() {
         instance = this
         listenIdle()
         connectedState.value = true
+        SideKeys.accessibilityChanged(true)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -57,6 +63,7 @@ open class ShareAccessibilityService : AccessibilityService() {
         if (instance === this) {
             instance = null
             connectedState.value = false
+            SideKeys.accessibilityChanged(false)
         }
         super.onDestroy()
     }
@@ -71,19 +78,38 @@ open class ShareAccessibilityService : AccessibilityService() {
         if (AutoBill.enabled(this)) listenTo(packageName, *PaymentApp.entries.map { it.packageName }.toTypedArray()) else listenTo(packageName)
     }
 
-    /** The payment on the payment app's page in front, offered as a bill; nothing of the page is kept. */
+    /** The payment in front, offered as a bill only while automatic reading is enabled. */
     private fun readPayment() {
         if (session != null || !AutoBill.enabled(this)) return
+        paymentInFront()?.let { AutoBill.offer(this, it, System.currentTimeMillis()) }
+    }
+
+    /** A side-key request works independently of automatic reading and never keeps the page. */
+    private fun capturePayment(): PaymentCapture {
+        if (getSystemService(KeyguardManager::class.java).isKeyguardLocked) return PaymentCapture.LOCKED
+        if (session != null) return PaymentCapture.BUSY
+        handler.removeCallbacks(payment)
+        val found = paymentInFront() ?: return PaymentCapture.NOT_FOUND
+        return try {
+            if (AutoBill.open(this, found, System.currentTimeMillis())) PaymentCapture.OPENED
+            else PaymentCapture.ALREADY_SAVED
+        } catch (_: Exception) {
+            PaymentCapture.FAILED
+        }
+    }
+
+    /** Read first, then release every node before any activity can replace the payment page. */
+    private fun paymentInFront(): Payment? {
         var root: AccessibilityNodeInfo? = null
         val raw = mutableListOf<AccessibilityNodeInfo>()
-        try {
-            root = rootInActiveWindow ?: return
-            val app = PaymentApp.of(root.packageName?.toString()) ?: return
+        return try {
+            root = rootInActiveWindow ?: return null
+            val app = PaymentApp.of(root.packageName?.toString()) ?: return null
             val nodes = mutableListOf<AssistNode>().also { collect(root, app.packageName, false, raw, it, hidden = true) }
-            val found = PaymentPage.read(app, nodes.map { it.text.ifEmpty { it.description } })
-            if (found != null) AutoBill.offer(this, found, System.currentTimeMillis())
+            PaymentPage.read(app, nodes.map { it.text.ifEmpty { it.description } })
         } catch (_: Exception) {
-            // A page gone while it was read is read again at its next change.
+            // A page can disappear during traversal; no partial or previous payment is used.
+            null
         } finally {
             @Suppress("DEPRECATION")
             raw.filter { it !== root }.forEach { it.recycle() }
@@ -231,6 +257,17 @@ open class ShareAccessibilityService : AccessibilityService() {
             val service = checkNotNull(instance) { "Share accessibility service is not connected" }
             service.begin(request)
         }
+
+        internal fun sideKeyNavigation(action: Int): Boolean = instance?.performGlobalAction(action) == true
+
+        internal fun sideKeyOpen(intent: Intent): Boolean {
+            val service = instance ?: return false
+            service.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            return true
+        }
+
+        /** Captures the current payment without first opening this app or requiring auto bills. */
+        internal fun capturePayment(): PaymentCapture = instance?.capturePayment() ?: PaymentCapture.DISCONNECTED
 
         /** Follows 自动记账 turned on or off, unless a share is running, which comes back to it after. */
         fun listenIdle() {

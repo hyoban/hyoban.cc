@@ -46,10 +46,26 @@ object AutoBill {
         ShareAccessibilityService.listenIdle()
     }
 
+    /** Opens a prefilled bill after an explicit capture; saving is still the user's decision. */
+    fun open(context: Context, payment: Payment, seenAt: Long): Boolean {
+        val ledger = (context.applicationContext as MomentsApplication).container.ledger.ledger.value
+        val time = payment.time ?: seenAt
+        if (ledger.hasPayment(payment, time)) return false
+        context.startActivity(Intent(context, MainActivity::class.java)
+            .setAction(Intent.ACTION_VIEW)
+            .setData(paymentLink(ledger, payment, time))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP))
+        context.getSystemService(NotificationManager::class.java).cancel(notificationId(payment))
+        Log.i(TAG, "payment capture opened for confirmation")
+        return true
+    }
+
+    private fun notificationId(payment: Payment): Int =
+        "${payment.app}|${payment.amount}|${payment.time ?: payment.note}".hashCode()
+
     /** Offers [payment] as a bill, unless its notification is up or the ledger already has it. */
     fun offer(context: Context, payment: Payment, seenAt: Long) {
         // A bill's page gives its time, which names the payment better than its words.
-        val key = "${payment.app}|${payment.amount}|${payment.time ?: payment.note}"
         val ledger = (context.applicationContext as MomentsApplication).container.ledger.ledger.value
         val time = payment.time ?: seenAt
         // What became of a payment read, and nothing of what it was.
@@ -59,19 +75,12 @@ object AutoBill {
         }
         // A page read again as it changes is the payment offered while its notification is up;
         // cleared without the bill written, it is offered again when the page is next opened.
-        val id = key.hashCode()
+        val id = notificationId(payment)
         val manager = context.getSystemService(NotificationManager::class.java)
         if (manager.activeNotifications.any { it.id == id }) return
         Log.i(TAG, "payment read, offered")
 
-        val link = Uri.Builder().scheme("moments").authority("payment")
-            .appendQueryParameter("amount", payment.amount.toString())
-            .appendQueryParameter("time", time.toString())
-            .apply {
-                payment.note?.let { appendQueryParameter("note", it) }
-                ledger.accountFor(payment)?.let { appendQueryParameter("account", it) }
-                ledger.categoryFor(payment.note)?.let { appendQueryParameter("category", it) }
-            }.build()
+        val link = paymentLink(ledger, payment, time)
         val open = PendingIntent.getActivity(context, id,
             Intent(context, MainActivity::class.java).setAction(Intent.ACTION_VIEW).setData(link),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
@@ -91,4 +100,13 @@ object AutoBill {
             .build()
         if (NotificationManagerCompat.from(context).areNotificationsEnabled()) manager.notify(id, notification)
     }
+
+    private fun paymentLink(ledger: Ledger, payment: Payment, time: Long): Uri = Uri.Builder().scheme("moments").authority("payment")
+            .appendQueryParameter("amount", payment.amount.toString())
+            .appendQueryParameter("time", time.toString())
+            .apply {
+                payment.note?.let { appendQueryParameter("note", it) }
+                ledger.accountFor(payment)?.let { appendQueryParameter("account", it) }
+                ledger.categoryFor(payment.note)?.let { appendQueryParameter("category", it) }
+            }.build()
 }
