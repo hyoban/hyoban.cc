@@ -44,9 +44,19 @@ class PaymentsTest {
         )
         val read = PaymentPage.read(wechat, page, zone)!!
         assertEquals(1250, read.amount)
-        assertEquals("某某零食", read.note)
+        assertEquals("某某零食 某某食品销售店", read.note)
         assertEquals("零钱", read.method)
         assertEquals(LocalDateTime.of(2026, 1, 15, 12, 30, 1).atZone(zone).toInstant().toEpochMilli(), read.time)
+    }
+
+    @Test
+    fun includesWeChatProductWithoutRepeatingThePayee() {
+        assertEquals("某某商店 咖啡", PaymentPage.read(wechat,
+            listOf("某某商店", "-12.50", "支付成功", "商品：咖啡"), zone)?.note)
+        assertEquals("某某商店", PaymentPage.read(wechat,
+            listOf("某某商店", "-12.50", "支付成功", "商品", "某某商店"), zone)?.note)
+        assertEquals("咖啡", PaymentPage.read(wechat,
+            listOf("账单详情", "-12.50", "支付成功", "商品", "咖啡"), zone)?.note)
     }
 
     @Test
@@ -120,13 +130,67 @@ class PaymentsTest {
         val ledger = Ledger(books = listOf(Book("b", "默认账本")), categories = categories, txns = listOf(
             Txn("t", "b", TxnKind.EXPENSE, 0, 480, 1500, "CNY", category = "food", note = "某某茶饮 加料"),
         ))
-        // The same shop's last bill, its branch and 外卖订单 left out.
-        assertEquals("food", ledger.categoryFor("某某茶饮(某某路店)外卖订单"))
+        // Past bills cannot override a match from the payment note.
+        assertEquals("drink", ledger.categoryFor("某某茶饮(某某路店)外卖订单"))
         assertEquals("drink", ledger.categoryFor("瑞幸咖啡(万达店)"))
         assertEquals("ride", ledger.categoryFor("滴滴快车-张师傅"))
         assertEquals("food", ledger.categoryFor("老王面馆外卖订单"))
         assertNull(ledger.categoryFor("某某科技有限公司"))
         assertNull(ledger.categoryFor(null))
+    }
+
+    @Test
+    fun prefersSpecificCategoryNamesBeforeKeywordFallbacks() {
+        val ledger = Ledger(
+            books = listOf(Book("current", "Daily"), Book("other", "Travel")),
+            currentBook = "current",
+            categories = listOf(
+                Category("transport", "current", CategoryType.EXPENSE, "交通"),
+                Category("income", "current", CategoryType.INCOME, "停车费"),
+                Category("parking", "other", CategoryType.EXPENSE, "停车", parent = "travel"),
+                Category("travel", "other", CategoryType.EXPENSE, "出行"),
+                Category("empty", "current", CategoryType.EXPENSE, ""),
+            ),
+        )
+        assertEquals("parking", ledger.categoryFor("某某停车场 停车费"))
+        assertEquals("parking", ledger.categoryFor("交通停车费"))
+        assertEquals("transport", ledger.categoryFor("滴滴快车"))
+        val longer = ledger.copy(categories = ledger.categories + Category("fee", "other", CategoryType.EXPENSE, "停车费"))
+        assertEquals("fee", longer.categoryFor("某某停车场 停车费"))
+        val history = ledger.copy(txns = listOf(
+            Txn("previous", "current", TxnKind.EXPENSE, 1000, 480, 1000, "CNY", category = "transport", note = "某某停车场 停车费"),
+        ))
+        assertEquals("parking", history.categoryFor("某某停车场 停车费"))
+        assertNull(ledger.categoryFor("未知商家"))
+        val unknownHistory = ledger.copy(txns = listOf(
+            Txn("unknown", "current", TxnKind.EXPENSE, 1000, 480, 1000, "CNY", category = "transport", note = "未知商家"),
+        ))
+        assertNull(unknownHistory.categoryFor("未知商家"))
+    }
+
+    @Test
+    fun guessesAcrossAllBooksRegardlessOfTheSelectedBook() {
+        val ledger = Ledger(
+            books = listOf(Book("current", "日常"), Book("other", "旅行")),
+            currentBook = "current",
+            categories = listOf(
+                Category("food", "current", CategoryType.EXPENSE, "三餐"),
+                Category("drink", "other", CategoryType.EXPENSE, "饮料"),
+                Category("income", "current", CategoryType.INCOME, "交通"),
+                Category("ride", "other", CategoryType.EXPENSE, "交通"),
+            ),
+            txns = listOf(
+                Txn("new", "other", TxnKind.EXPENSE, 2000, 480, 1500, "CNY", category = "drink", note = "某某茶饮 加料"),
+                Txn("old", "current", TxnKind.EXPENSE, 1000, 480, 1500, "CNY", category = "food", note = "某某茶饮"),
+            ),
+        )
+        for (book in listOf("current", "other")) {
+            val selected = ledger.copy(currentBook = book)
+            assertEquals("drink", selected.categoryFor("某某茶饮(分店)外卖订单"))
+            assertEquals("drink", selected.categoryFor("瑞幸咖啡"))
+            assertEquals("ride", selected.categoryFor("滴滴快车"))
+            assertNull(selected.categoryFor("未知商家"))
+        }
     }
 
     @Test

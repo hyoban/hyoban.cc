@@ -22,7 +22,7 @@ enum class PaymentApp(val packageName: String) {
 data class Payment(
     val app: PaymentApp,
     val amount: Long,
-    /** What the bill's note starts as: Alipay's 商品说明, WeChat's payee over the amount. */
+    /** What the bill's note starts as: Alipay's 商品说明, WeChat's payee and 商品. */
     val note: String? = null,
     val method: String? = null,
     /** Epoch milliseconds; null when the page doesn't say, and the time it is seen is taken. */
@@ -64,12 +64,15 @@ object PaymentPage {
         }
         if (amount == null || amount <= 0) return null
         // Each app's rows to the fields, as they are. 支付时间 is the time; the account is
-        // Alipay's 付款方式 and WeChat's 支付方式; the note is Alipay's 商品说明 and the name over
-        // WeChat's amount, its brand, where 商品 and 商户全称 can be a franchisee's and a company's.
+        // Alipay's 付款方式 and WeChat's 支付方式; the note is Alipay's 商品说明, or the name over
+        // WeChat's amount followed by its 商品 row.
         val note = when (app) {
             PaymentApp.ALIPAY -> labelled(texts, "商品说明")
-            PaymentApp.WECHAT -> texts.getOrNull(if (texts.getOrNull(at - 1) in setOf("¥", "￥")) at - 2 else at - 1)
-                ?.takeIf { word -> word.length <= 40 && PAID.none { word.contains(it) } && word !in PAGE_TITLES }
+            PaymentApp.WECHAT -> {
+                val payee = texts.getOrNull(if (texts.getOrNull(at - 1) in setOf("¥", "￥")) at - 2 else at - 1)
+                    ?.takeIf { word -> word.length <= 40 && PAID.none { word.contains(it) } && word !in PAGE_TITLES }
+                listOfNotNull(payee, labelled(texts, "商品")).distinct().joinToString(" ").ifEmpty { null }
+            }
         }
         val method = labelled(texts, if (app == PaymentApp.ALIPAY) "付款方式" else "支付方式")
         val time = labelled(texts, "支付时间")?.let { text ->
@@ -130,20 +133,15 @@ fun Ledger.accountFor(payment: Payment): String? {
 }
 
 /**
- * A guess at the category from [note], null when there is none: the category of the last
- * expense in the book whose note has the same name in it, a shop's or a dish's, else the
- * book's category named for a kind of spending its words point to.
+ * A guess at the category from [note] across all books: a category named in the note,
+ * then one its keywords point to; null when neither matches. Past bills do not affect it.
  */
 fun Ledger.categoryFor(note: String?): String? {
     if (note.isNullOrBlank()) return null
-    val bookId = book?.id
-    // 某某茶饮(某某路店)外卖订单 is 某某茶饮's.
-    val name = note.replace(Regex("""[(（][^)）]*[)）]"""), " ").replace(Regex("""(外卖)?订单.*$|-.*$"""), "").trim()
-    if (name.length >= 2) {
-        txns.firstOrNull { it.book == bookId && it.kind == TxnKind.EXPENSE && it.category != null && it.note.contains(name) }
-            ?.let { return it.category }
-    }
-    val expenses = categories.filter { it.book == bookId && it.type == CategoryType.EXPENSE }
+    val expenses = categories.filter { it.type == CategoryType.EXPENSE }
+    expenses.filter { it.name.isNotBlank() && note.contains(it.name, ignoreCase = true) }
+        .maxWithOrNull(compareBy<Category> { it.name.length }.thenBy { if (it.parent != null) 1 else 0 })
+        ?.let { return it.id }
     for ((words, names) in CATEGORY_WORDS) {
         if (words.none { note.contains(it, ignoreCase = true) }) continue
         for (wanted in names) expenses.firstOrNull { it.name == wanted }?.let { return it.id }
@@ -151,7 +149,7 @@ fun Ledger.categoryFor(note: String?): String? {
     return null
 }
 
-/** Words of a note and the category names they point to, the first of each a book has; in order, drinks ahead of meals. */
+/** Words of a note and the category names they point to, the first available; in order, drinks ahead of meals. */
 private val CATEGORY_WORDS = listOf(
     listOf("充电宝", "街电", "怪兽", "小电", "来电") to listOf("充电宝"),
     listOf("奶茶", "咖啡", "酸奶", "茶饮", "饮品", "果汁", "瑞幸", "星巴克", "喜茶", "蜜雪", "霸王茶姬", "古茗", "茶百道") to listOf("饮料", "饮品", "餐饮", "三餐"),

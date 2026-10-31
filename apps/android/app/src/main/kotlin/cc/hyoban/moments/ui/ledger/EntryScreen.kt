@@ -390,7 +390,7 @@ internal fun rememberBillDraft(ledger: Ledger, original: Txn?, related: Txn?, mo
         BillDraft(
             kind = kind,
             transfer = original?.transfer ?: TransferType.TRANSFER,
-            book = original?.book ?: related?.book,
+            book = original?.book ?: related?.book ?: args.category?.let { ledger.categoriesById[it]?.book },
             amount = fieldOf(original?.amount ?: left?.coerceAtLeast(0) ?: args.amount ?: moment?.food?.bill?.amount?.let { Math.round(it * 100) }),
             currency = original?.currency ?: related?.currency,
             // A meal's bill starts in the book's most used food category.

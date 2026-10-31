@@ -6,6 +6,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import androidx.core.database.sqlite.transaction
+import cc.hyoban.moments.data.local.Ulid
 import java.io.File
 import java.time.LocalDate
 import java.util.TreeMap
@@ -13,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 /**
@@ -139,6 +141,27 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
     }
 
     suspend fun saveBook(book: Book) = write { it.replace("books", book.values()) }
+
+    /** Waits for disk state before checking, then creates at most one initial book. */
+    internal suspend fun ensureDefaultBook(defaultName: String, chinese: Boolean): Book {
+        loaded.first { it }
+        return withContext(Dispatchers.IO) {
+            synchronized(this@LedgerStore) {
+                _ledger.value.book ?: run {
+                    val book = Book(Ulid.next(), defaultName, "CNY")
+                    val db = writableDatabase
+                    db.transaction {
+                        db.replace("books", book.values())
+                        defaultCategories(book.id, chinese).forEach { db.replace("categories", it.values()) }
+                        db.replace("meta", ContentValues().apply { put("key", "book"); put("value", book.id) })
+                        db.replace("meta", ContentValues().apply { put("key", "all"); put("value", "0") })
+                    }
+                    publish()
+                    book
+                }
+            }
+        }
+    }
 
     /** Deletes a book with its bills and categories. */
     suspend fun deleteBook(id: String) = write { db ->
