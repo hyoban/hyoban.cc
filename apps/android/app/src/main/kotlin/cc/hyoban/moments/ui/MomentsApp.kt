@@ -677,6 +677,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onMoment = openMoment,
                                     onPlace = openPlace,
                                     onTrip = openTrip,
+                                    onPlay = { navController.navigate(TripPlay(it)) },
+                                    onSearch = { navController.navigate(Search) },
                                     focus = mapFocus,
                                     onFocused = { mapFocus = null },
                                     onFootprintSettings = { navController.navigate(FootprintSettings) },

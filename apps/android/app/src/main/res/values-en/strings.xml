@@ -86,6 +86,10 @@
     <string name="empty_loading">Loading Moments…</string>
     <string name="message_refresh_failed">Couldn’t update: %1$s</string>
     <string name="year_item">%1$d</string>
+    <string name="map_search_hint">Search places and trips</string>
+    <string name="trips_none">No trips yet</string>
+    <string name="map_km">%1$s km</string>
+    <string name="footprints_map_recording">Footprints, recording</string>
     <string name="legend_trips">Trips</string>
     <string name="trip_day">Day %1$d</string>
     <string name="action_play_trip">Play trip</string>

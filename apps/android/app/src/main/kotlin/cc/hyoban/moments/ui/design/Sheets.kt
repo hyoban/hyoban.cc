@@ -131,6 +131,19 @@ class SheetState(initialValue: SheetValue, val skipHiddenState: Boolean) {
     internal val offset = Animatable(Float.NaN)
     internal var anchors by mutableStateOf<Map<SheetValue, Float>>(emptyMap())
 
+    /** Where its top edge is, in pixels from the top of its scaffold; NaN before it's laid out. */
+    val top: Float get() = offset.value
+
+    /** How far it is drawn up from resting toward its full height: 0 resting or below, 1 at full height. */
+    val raised: Float
+        get() {
+            val rest = anchors[SheetValue.PartiallyExpanded] ?: return 0f
+            val top = anchors[SheetValue.Expanded] ?: return 0f
+            val now = offset.value
+            if (now.isNaN() || rest <= top) return 0f
+            return ((rest - now) / (rest - top)).coerceIn(0f, 1f)
+        }
+
     suspend fun partialExpand() = animateTo(SheetValue.PartiallyExpanded)
     suspend fun expand() = animateTo(SheetValue.Expanded)
     suspend fun hide() = animateTo(if (skipHiddenState) SheetValue.PartiallyExpanded else SheetValue.Hidden)
