@@ -864,4 +864,8 @@
     <string name="side_key_last_value">%1$s · %2$s</string>
     <string name="side_key_no_last">还没有手势记录</string>
     <string name="side_key_payment_note">在微信或支付宝已付款账单页触发，打开预填的记账确认，保存后才入账。</string>
+    <string name="side_key_torch">手电筒</string>
+    <string name="side_key_torch_on">手电筒已打开</string>
+    <string name="side_key_torch_off">手电筒已关闭</string>
+    <string name="side_key_torch_unavailable">手电筒暂不可用，请检查相机是否正在使用</string>
 </resources>

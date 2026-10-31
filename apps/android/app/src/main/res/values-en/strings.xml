@@ -897,4 +897,8 @@
     <string name="side_key_last_value">%1$s · %2$s</string>
     <string name="side_key_no_last">No gestures yet</string>
     <string name="side_key_payment_note">Trigger on a completed WeChat Pay or Alipay payment page to open a prefilled bill. It is recorded only after you save.</string>
+    <string name="side_key_torch">Flashlight</string>
+    <string name="side_key_torch_on">Flashlight on</string>
+    <string name="side_key_torch_off">Flashlight off</string>
+    <string name="side_key_torch_unavailable">Flashlight unavailable. Check whether the camera is in use</string>
 </resources>
