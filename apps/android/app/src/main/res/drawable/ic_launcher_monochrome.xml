@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The cat in one flat colour, its eyes and nose cut out of it, for the launcher to tint
-     as a themed icon. -->
+<!-- The cat in one flat colour, its eyes and nose cut out of it and each eye's highlight
+     left in, for the launcher to tint as a themed icon. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
@@ -17,12 +17,12 @@
         <path
             android:fillColor="#000000"
             android:fillType="evenOdd"
-            android:pathData="M4,80C4,64 17,56 34,56C51,56 64,64 64,80C64,94 51,102 34,102C17,102 4,94 4,80zM13.1,78a8.4,8.4 0,1 1,16.8,0a8.4,8.4 0,1 1,-16.8,0zM38.1,77a8.4,8.4 0,1 1,16.8,0a8.4,8.4 0,1 1,-16.8,0zM31.8,85.4Q34,84.6 36.2,85.4Q36.7,85.7 36.3,86.2L34.6,87.9Q34,88.4 33.4,87.9L31.7,86.2Q31.3,85.7 31.8,85.4z" />
+            android:pathData="M4,80C4,64 17,56 34,56C51,56 64,64 64,80C64,94 51,102 34,102C17,102 4,94 4,80zM14.1,77.7a7.6,7.6 0,1 1,15.2,0a7.6,7.6 0,1 1,-15.2,0zM39.1,76.7a7.6,7.6 0,1 1,15.2,0a7.6,7.6 0,1 1,-15.2,0zM31.8,85.4Q34,84.6 36.2,85.4Q36.7,85.7 36.3,86.2L34.6,87.9Q34,88.4 33.4,87.9L31.7,86.2Q31.3,85.7 31.8,85.4z" />
         <path
             android:fillColor="#000000"
             android:pathData="M7.5,69C7,61 8.5,55 11.5,53C13.5,51.8 17,52.5 25,58.5zM43,58.5C51,52.5 54.5,51.8 56.5,53C59.5,55 61,61 60.5,69z" />
         <path
             android:fillColor="#000000"
-            android:pathData="M15.8,77.4a6,6 0,1 1,12,0a6,6 0,1 1,-12,0zM40.8,76.4a6,6 0,1 1,12,0a6,6 0,1 1,-12,0z" />
+            android:pathData="M21.8,74.6a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0zM46.8,73.6a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0z" />
     </group>
 </vector>
