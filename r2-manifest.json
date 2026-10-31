@@ -3,10 +3,10 @@
   "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
   "bucket": "blog-images",
   "origin": "https://image.hyoban.cc",
-  "createdAt": "2026-10-31T09:25:04.510Z",
-  "inventorySha256": "d741023b37b994bd7aa84427178193ffbb02abb98db7b26e74e950f4e0db538d",
-  "objectCount": 5391,
-  "totalBytes": 1611606265,
+  "createdAt": "2026-10-31T12:11:30.251Z",
+  "inventorySha256": "715782b29bd89b9414a756ff1cdfe6f75eadaf2d3e9879b50d700fdf0ac8c118",
+  "objectCount": 5392,
+  "totalBytes": 1611993892,
   "objects": [
     {
       "key": "devices/airpods-4.webp",
@@ -19238,6 +19238,14 @@
       "contentType": "image/jpeg",
       "etag": "7b3469186a728474685e2e916cc41d36",
       "lastModified": "2026-10-31T09:10:34.477Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "moments/01m68xhw9z2p4dzspagm3b3d69/01m68xhw939qf8tr0a5szjzths.jpg",
+      "bytes": 387627,
+      "contentType": "image/jpeg",
+      "etag": "dbb5802c9861b28f71a5fc6f2bdd3148",
+      "lastModified": "2026-10-31T12:05:11.284Z",
       "storageClass": "Standard"
     },
     {
