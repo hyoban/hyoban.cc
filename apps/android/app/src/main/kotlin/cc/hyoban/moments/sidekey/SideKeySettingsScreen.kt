@@ -6,6 +6,7 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -64,6 +65,8 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
     val connected by ShareAccessibilityService.connected.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<String?>(null) }
     var timing by remember { mutableStateOf(false) }
+    // A scene's sheet: its id, or "" while an app is being chosen for a new one.
+    var scene by remember { mutableStateOf<String?>(null) }
     LifecycleResumeEffect(Unit) {
         SideKeys.refresh()
         onPauseOrDispose {}
@@ -103,12 +106,19 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
                         catch (_: Exception) { Toast.makeText(context, R.string.side_key_needs_shizuku, Toast.LENGTH_LONG).show() }
                     } }
                 })
-                SegmentedGroup(stringResource(R.string.side_key_gestures), stringResource(R.string.side_key_payment_note),
+                SegmentedGroup(stringResource(R.string.side_key_gestures), null,
                     SideKeys.gestures.map { gesture -> { shapes ->
                         ActionRow(AppIcons.Sliders, stringResource(SideKeyActions.gestureLabel(gesture)), shapes,
                             supporting = actionLabel(config.actions[gesture] ?: "none", config.labels[gesture].orEmpty()),
                             tag = "sidekey_$gesture") { editing = gesture }
                     } })
+                SegmentedGroup(stringResource(R.string.side_key_scenes), stringResource(R.string.side_key_scenes_note), buildList {
+                    config.scenes.forEach { item -> add { shapes ->
+                        ActionRow(if (item.id == SideKeyScene.PAYMENT) AppIcons.Receipt else AppIcons.Sliders, sceneName(item), shapes,
+                            supporting = sceneSummary(item), tag = "sidekey_scene_${item.id}") { scene = item.id }
+                    } }
+                    add { shapes -> ActionRow(AppIcons.Plus, stringResource(R.string.side_key_add_scene), shapes, tag = "sidekey_add_scene") { scene = "" } }
+                })
                 SegmentedGroup(null, stringResource(R.string.side_key_timing_note), listOf { shapes ->
                     ActionRow(AppIcons.Clock, stringResource(R.string.side_key_timing), shapes,
                         supporting = stringResource(R.string.side_key_timing_value, config.doubleMs, config.longMs),
@@ -117,9 +127,13 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
                 SegmentedGroup(stringResource(R.string.side_key_last), null, listOf { _ ->
                     Column(Modifier.padding(Space.l), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                         val gesture = state.lastGesture
-                        Text(if (gesture != null && state.lastTime != null) stringResource(R.string.side_key_last_value,
-                            stringResource(SideKeyActions.gestureLabel(gesture)), DateFormat.getTimeInstance().format(Date(state.lastTime!!)))
-                            else stringResource(R.string.side_key_no_last), style = AppTheme.typography.body)
+                        Text(if (gesture != null) stringResource(SideKeyActions.gestureLabel(gesture)) else stringResource(R.string.side_key_no_last),
+                            style = AppTheme.typography.body)
+                        if (gesture != null && state.lastTime != null) Text(listOfNotNull(
+                            DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(state.lastTime!!)),
+                            config.scenes.firstOrNull { it.id == state.lastScene }?.let { sceneName(it) },
+                            state.lastAction?.let { actionLabel(it, state.lastLabel) },
+                        ).joinToString(" "), style = AppTheme.typography.caption, color = tokens.tx2)
                         state.message?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx2) }
                         if (state.restorePending) Text(stringResource(R.string.side_key_restore_pending), style = AppTheme.typography.caption, color = tokens.tx2)
                     }
@@ -133,6 +147,9 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
             SideKeys.setAction(gesture, action, label.orEmpty()); editing = null
         }
     }
+    scene?.let { id ->
+        SceneSheet(config, id.ifEmpty { null }, onDismiss = { scene = null }, onAdded = { scene = it })
+    }
     if (timing) TimingPicker(config, onDismiss = { timing = false }) { double, long -> SideKeys.setTiming(double, long); timing = false }
 }
 
@@ -143,32 +160,98 @@ private fun actionLabel(action: String, label: String): String = when {
     else -> stringResource(SideKeyActions.choices[action] ?: R.string.side_key_none)
 }
 
+@Composable
+private fun sceneName(scene: SideKeyScene): String =
+    if (scene.id == SideKeyScene.PAYMENT) stringResource(R.string.side_key_scene_payment) else scene.name.ifEmpty { scene.id.substringAfter(':') }
+
+/** The gestures a scene changes, each with its action, or that it follows the defaults. */
+@Composable
+private fun sceneSummary(scene: SideKeyScene): String {
+    val changed = SideKeys.gestures.filter { it in scene.actions }
+    if (changed.isEmpty()) return stringResource(R.string.side_key_scene_follows)
+    return changed.map { "${stringResource(SideKeyActions.gestureLabel(it))} ${actionLabel(scene.actions.getValue(it), scene.labels[it].orEmpty())}" }
+        .joinToString(" ")
+}
+
 /**
  * What a gesture does, chosen in a sheet over the page, the one it does now marked: an action, or
  * an app searched for or a link typed in the same sheet, never a page further down.
  */
 @Composable
 private fun ActionSheet(title: String, current: String, onDismiss: () -> Unit, onPick: (String, String?) -> Unit) {
-    var mode by remember { mutableStateOf("actions") }
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet, modifier = Modifier.semantics { testTagsAsResourceId = true }) {
         Text(title, style = AppTheme.typography.title, modifier = Modifier.padding(horizontal = Space.gutter).semantics { heading() })
-        when (mode) {
-            "actions" -> Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(bottom = Space.l)) {
-                SegmentedGroup(null, null, SideKeyActions.choices.map { (value, label) ->
-                    { shapes ->
-                        val chosen = current == value || current.startsWith("$value:") && (value == "app" || value == "uri")
-                        SegmentedListItem(
-                            onClick = { if (value == "app" || value == "uri") mode = value else onPick(value, null) },
-                            shapes = shapes,
-                            colors = segmentColors(),
-                            trailingContent = { RadioButton(chosen, onClick = null) },
-                            modifier = Modifier.testTag("sidekey_action_$value"),
-                        ) { Text(stringResource(label)) }
-                    }
-                })
+        ActionChoices(current, null) { action, label -> onPick(checkNotNull(action), label) }
+    }
+}
+
+/**
+ * The actions to choose from, with [follow], the default's own, first when a scene can leave the
+ * gesture to it: picking that gives a null action.
+ */
+@Composable
+private fun ColumnScope.ActionChoices(current: String?, follow: String?, onPick: (String?, String?) -> Unit) {
+    var mode by remember { mutableStateOf("actions") }
+    when (mode) {
+        "actions" -> Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(bottom = Space.l)) {
+            val choices = SideKeyActions.choices.map { (value, label) -> value to stringResource(label) }
+            val items = if (follow != null) listOf(null to stringResource(R.string.side_key_follow_value, follow)) + choices else choices
+            SegmentedGroup(null, null, items.map { (value, label) ->
+                { shapes ->
+                    val chosen = current == value || value != null && current?.startsWith("$value:") == true && (value == "app" || value == "uri")
+                    SegmentedListItem(
+                        onClick = { if (value == "app" || value == "uri") mode = value else onPick(value, null) },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        trailingContent = { RadioButton(chosen, onClick = null) },
+                        modifier = Modifier.testTag("sidekey_action_${value ?: "follow"}"),
+                    ) { Text(label) }
+                }
+            })
+        }
+        "app" -> AppList(Modifier.weight(1f, fill = false)) { pkg, label -> onPick("app:$pkg", label) }
+        else -> LinkField(current?.takeIf { it.startsWith("uri:") }?.substringAfter(':').orEmpty()) { link -> onPick("uri:$link", null) }
+    }
+}
+
+/**
+ * A scene's three gestures in one sheet, each switching the sheet to its actions; with no [id], an
+ * app chosen first for a new scene. An app's scene ends with removing it.
+ */
+@Composable
+private fun SceneSheet(config: SideKeyConfig, id: String?, onDismiss: () -> Unit, onAdded: (String) -> Unit) {
+    var gesture by remember(id) { mutableStateOf<String?>(null) }
+    val scene = config.scenes.firstOrNull { it.id == id }
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet, modifier = Modifier.semantics { testTagsAsResourceId = true }) {
+        val title = when {
+            scene == null -> stringResource(R.string.side_key_add_scene)
+            gesture == null -> sceneName(scene)
+            else -> "${sceneName(scene)} ${stringResource(SideKeyActions.gestureLabel(gesture!!))}"
+        }
+        Text(title, style = AppTheme.typography.title, modifier = Modifier.padding(horizontal = Space.gutter).semantics { heading() })
+        val current = gesture
+        when {
+            scene == null -> AppList(Modifier.weight(1f, fill = false)) { pkg, label -> onAdded(SideKeys.addAppScene(pkg, label)) }
+            current == null -> Column(Modifier.padding(bottom = Space.l)) {
+                SegmentedGroup(null, null, SideKeys.gestures.map { item -> { shapes ->
+                    val default = actionLabel(config.actions[item] ?: "none", config.labels[item].orEmpty())
+                    SegmentedListItem(
+                        onClick = { gesture = item },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        supportingContent = { Text(scene.actions[item]?.let { actionLabel(it, scene.labels[item].orEmpty()) }
+                            ?: stringResource(R.string.side_key_follow_value, default)) },
+                        modifier = Modifier.testTag("sidekey_scene_$item"),
+                    ) { Text(stringResource(SideKeyActions.gestureLabel(item))) }
+                } })
+                if (scene.id != SideKeyScene.PAYMENT) TextButton(onClick = { SideKeys.removeAppScene(scene.id); onDismiss() },
+                    modifier = Modifier.padding(horizontal = Space.gutter - 12.dp).testTag("sidekey_remove_scene")) {
+                    Text(stringResource(R.string.side_key_remove_scene))
+                }
             }
-            "app" -> AppList(Modifier.weight(1f, fill = false)) { pkg, label -> onPick("app:$pkg", label) }
-            else -> LinkField(current.takeIf { it.startsWith("uri:") }?.substringAfter(':').orEmpty()) { link -> onPick("uri:$link", null) }
+            else -> ActionChoices(scene.actions[current], actionLabel(config.actions[current] ?: "none", config.labels[current].orEmpty())) { action, label ->
+                SideKeys.setSceneAction(scene.id, current, action, label.orEmpty()); gesture = null
+            }
         }
     }
 }

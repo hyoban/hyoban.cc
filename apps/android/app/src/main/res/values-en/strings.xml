@@ -901,9 +901,14 @@
     <string name="side_key_timing_note">Single press waits until the double press window ends. Long press triggers once at its threshold.</string>
     <string name="side_key_action_failed">Action failed. Check the target app and accessibility service</string>
     <string name="side_key_last">Last gesture</string>
-    <string name="side_key_last_value">%1$s %2$s</string>
     <string name="side_key_no_last">No gestures yet</string>
-    <string name="side_key_payment_note">Trigger on a completed WeChat Pay or Alipay payment page to open a prefilled bill. It is recorded only after you save.</string>
+    <string name="side_key_scenes">Scenes</string>
+    <string name="side_key_scenes_note">A press first checks for a completed WeChat Pay or Alipay payment page, then for the app in front; gestures a scene leaves unset use the actions above. Reading a payment page opens a prefilled bill, recorded only after you save.</string>
+    <string name="side_key_scene_payment">Payment page</string>
+    <string name="side_key_scene_follows">All follow the defaults</string>
+    <string name="side_key_follow_value">Follow default: %1$s</string>
+    <string name="side_key_add_scene">Add an app scene</string>
+    <string name="side_key_remove_scene">Remove scene</string>
     <string name="side_key_torch">Flashlight</string>
     <string name="side_key_torch_on">Flashlight on</string>
     <string name="side_key_torch_off">Flashlight off</string>

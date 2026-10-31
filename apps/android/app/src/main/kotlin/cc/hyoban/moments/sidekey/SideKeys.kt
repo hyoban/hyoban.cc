@@ -25,13 +25,37 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
 
+/**
+ * Where a press can be: [PAYMENT] on WeChat Pay's or Alipay's paid page, or `app:<package>` while that
+ * app is in front. A gesture missing from [actions] follows the default.
+ */
+internal data class SideKeyScene(
+    val id: String,
+    val name: String = "",
+    val actions: Map<String, String> = emptyMap(),
+    val labels: Map<String, String> = emptyMap(),
+) {
+    companion object { const val PAYMENT = "payment" }
+}
+
 internal data class SideKeyConfig(
     val enabled: Boolean = false,
     val actions: Map<String, String> = emptyMap(),
     val labels: Map<String, String> = emptyMap(),
     val doubleMs: Int = 300,
     val longMs: Int = 600,
-)
+    val scenes: List<SideKeyScene> = listOf(SideKeyScene(SideKeyScene.PAYMENT)),
+) {
+    /** The payment page first, then the app in front, then the defaults: the scene a press is in, if any, and its action. */
+    fun resolve(gesture: String, paymentPage: Boolean, foreground: String?): Pair<SideKeyScene?, String> {
+        val scene = scenes.firstOrNull { gesture in it.actions &&
+            if (it.id == SideKeyScene.PAYMENT) paymentPage else it.id == "app:$foreground" }
+        return scene to (scene?.actions?.get(gesture) ?: actions[gesture] ?: "none")
+    }
+
+    /** Whether any scene changes a gesture, so a press needs to look at what is in front. */
+    fun needsFront(gesture: String) = scenes.any { gesture in it.actions }
+}
 
 internal enum class SideKeyPhase(val label: Int) {
     OFF(R.string.side_key_off), CONNECTING(R.string.side_key_connecting),
@@ -44,6 +68,9 @@ internal data class SideKeyState(
     val phase: SideKeyPhase = SideKeyPhase.OFF,
     val lastGesture: String? = null,
     val lastTime: Long? = null,
+    val lastScene: String? = null,
+    val lastAction: String? = null,
+    val lastLabel: String = "",
     val message: String? = null,
     val restorePending: Boolean = false,
 )
@@ -102,7 +129,15 @@ internal object SideKeys {
         gestures.associateWith { prefs.getString("${it}Label", "") ?: "" },
         prefs.getInt("doubleMs", 300).coerceIn(150, 600),
         prefs.getInt("longMs", 600).coerceIn(400, 2000),
+        (listOf(SideKeyScene.PAYMENT) + appScenes().sortedBy { prefs.getString("$it/name", "").orEmpty().lowercase() }).map { id ->
+            val set = gestures.filter { prefs.contains("$id/$it") }
+            SideKeyScene(id, prefs.getString("$id/name", "").orEmpty(),
+                set.associateWith { prefs.getString("$id/$it", "none") ?: "none" },
+                set.associateWith { prefs.getString("$id/${it}Label", "") ?: "" })
+        },
     )
+
+    private fun appScenes(): Set<String> = prefs.getStringSet("scenes", emptySet()).orEmpty().toSet()
 
     fun refresh() { scope.launch { reconcile() } }
 
@@ -121,6 +156,32 @@ internal object SideKeys {
     fun setAction(gesture: String, action: String, label: String = "") {
         require(gesture in gestures && SideKeyActions.valid(action))
         prefs.edit().putString(gesture, action).putString("${gesture}Label", label).apply()
+    }
+
+    /** A scene's action for a gesture, or with a null [action], the default's again. */
+    fun setSceneAction(scene: String, gesture: String, action: String?, label: String = "") {
+        require(gesture in gestures && (scene == SideKeyScene.PAYMENT || scene in appScenes()) && (action == null || SideKeyActions.valid(action)))
+        prefs.edit().apply {
+            if (action == null) remove("$scene/$gesture").remove("$scene/${gesture}Label")
+            else putString("$scene/$gesture", action).putString("$scene/${gesture}Label", label)
+        }.apply()
+        configState.value = readConfig()
+    }
+
+    /** A scene for an app, every gesture following the default until one is chosen. */
+    fun addAppScene(packageName: String, name: String): String {
+        require(SideKeyActions.valid("app:$packageName"))
+        val id = "app:$packageName"
+        prefs.edit().putStringSet("scenes", appScenes() + id).putString("$id/name", name).apply()
+        configState.value = readConfig()
+        return id
+    }
+
+    fun removeAppScene(id: String) {
+        prefs.edit().putStringSet("scenes", appScenes() - id).remove("$id/name").apply {
+            gestures.forEach { remove("$id/$it").remove("$id/${it}Label") }
+        }.apply()
+        configState.value = readConfig()
     }
 
     fun setTiming(doubleMs: Int, longMs: Int) {
@@ -270,8 +331,14 @@ internal object SideKeys {
     }
 
     private fun execute(gesture: String) {
-        runtime.value = runtime.value.copy(lastGesture = gesture, lastTime = System.currentTimeMillis(), message = null)
-        val action = configState.value.actions[gesture] ?: "none"
+        val config = configState.value
+        val front = if (config.needsFront(gesture)) {
+            ShareAccessibilityService.sideKeyFront(config.scenes.any { it.id == SideKeyScene.PAYMENT && gesture in it.actions })
+        } else null
+        val (scene, action) = config.resolve(gesture, front?.paymentPage == true, front?.packageName)
+        val label = (scene?.labels ?: config.labels)[gesture].orEmpty()
+        runtime.value = runtime.value.copy(lastGesture = gesture, lastTime = System.currentTimeMillis(), lastScene = scene?.id,
+            lastAction = action, lastLabel = label, message = null)
         try {
             when {
                 action == "none" -> Unit
