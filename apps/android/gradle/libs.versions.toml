@@ -1,4 +1,6 @@
 [versions]
+# Exposes the shell user service used to read the physical side key, without root.
+shizuku = "13.1.5"
 playLocation = "21.4.0"
 agp = "9.5.0"
 # Newer than the Kotlin the Android Gradle plugin bundles, so the root build file pins it;
@@ -32,6 +34,8 @@ exifinterface = "1.4.2"
 gson = "2.10.1"
 
 [libraries]
+shizuku-api = { group = "dev.rikka.shizuku", name = "api", version.ref = "shizuku" }
+shizuku-provider = { group = "dev.rikka.shizuku", name = "provider", version.ref = "shizuku" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playLocation" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }

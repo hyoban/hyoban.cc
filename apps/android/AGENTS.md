@@ -51,6 +51,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   idle and within this task's scope), then verify that the processes exited.
   Do not close the user's IDE, stop unrelated processes or interrupt another build.
 
+- Programmable actions stay configurable: adding an action must not assign or replace the
+  user’s gesture bindings.
+
 ## Design
 
 - The app follows its own design system, the 「这里 App 设计系统」 artifact, not Material 3:

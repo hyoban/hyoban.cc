@@ -248,6 +248,10 @@ data class SettingsPage(val section: String)
 @Serializable
 object FootprintSettings
 
+/** The physical side key and the action assigned to each gesture. */
+@Serializable
+object SideKeySettings
+
 /** Who sees what by default: the books' new bills and the public spans of the footprints. */
 @Serializable
 object Items
@@ -765,7 +769,11 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onBack = back,
                                     onSection = { navController.navigate(SettingsPage(it.name)) },
                                     onLedgerSettings = { navController.navigate(LedgerSettings()) },
+                                    onSideKeySettings = { navController.navigate(SideKeySettings) },
                                 )
+                            }
+                            screen<SideKeySettings>(link = "side-key") {
+                                cc.hyoban.moments.sidekey.SideKeySettingsScreen(onBack = back)
                             }
                             screen<Items>(link = "items") {
                                 cc.hyoban.moments.ui.settings.ItemsScreen(container, onBack = back, onFootprints = { showOnMap(MapFocus.Footprints) })
@@ -1201,6 +1209,7 @@ fun routeOf(link: Uri): Any? {
         "footprint-settings" -> FootprintSettings
         "items" -> Items
         "settings-home" -> SettingsHome
+        "side-key" -> SideKeySettings
         "new" -> NewMoment()
         "edit" -> id?.let(::EditMoment)
         "changes" -> Changes

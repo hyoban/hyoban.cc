@@ -18,6 +18,7 @@ class MomentsApplication : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        cc.hyoban.moments.sidekey.SideKeys.initialize(this)
         lastLocales = resources.configuration.locales.toLanguageTags()
     }
 
