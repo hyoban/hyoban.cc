@@ -134,6 +134,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   check a change to the importer against a real export with
   `ICOST_EXPORT=<xlsx> ./gradlew :app:testDebugUnitTest --tests '*LedgerTest*'`, and never
   commit an export.
+- Automatic payment categorization matches expense category names across all books present
+  in the note before falling back to broad keyword rules. Past bills do not affect it.
+  A matched category also selects its owning book in the bill form.
+- Verify ledger initialization with an isolated database, including entry before loading
+  and concurrent first entries. Opening a test form must not add books to the user's ledger.
 - Sharing hands off to the other app and leaves posting to the user. Never post, pick a
   recipient or drive another app automatically. The one exception is the opt-in share
   assistant (Telegram, Threads): an accessibility service that only fills the composer

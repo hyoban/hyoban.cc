@@ -157,12 +157,21 @@ kind, amount, currency, category and note (`data/store/Outside.kt`). `ledger/ICo
 `ledger/Accounting` and `ledger/Links` are plain Kotlin tested in `LedgerTest`, which also
 reads a real export when `ICOST_EXPORT` names one.
 
+Opening a bill form waits for the local ledger to load before checking for a book. It
+creates a default book only when none exists, including when several forms initialize
+at once.
+
 **自动记账（试用）**, switched on in 记账设置, has the same accessibility service read WeChat
 Pay's and Alipay's pages. On one that says a payment went through, it offers a 记一笔
 notification with the amount, time, note and account it read; tapping it opens
-`moments://payment?amount=…&time=…&note=…` with a guessed category. Nothing is written
-until saved, and a payment matching a kept bill within ten minutes isn't offered. It never
-taps, types or keeps the page. `ledger/Payments` reads the page, with fixtures in
+`moments://payment?amount=…&time=…&note=…` with a guessed category. Categorization matches
+expense category names across all books contained in the note before falling back to fixed
+keywords; past bills do not affect it. Longer names win; equal-length names prefer a
+subcategory. A matched category also selects its book in the form.
+WeChat notes combine the payee above the amount and the 商品 row, separated by a space;
+identical values appear only once. Without 商品, the payee alone is kept.
+Nothing is written until saved, and a payment matching a kept bill within ten minutes
+isn't offered. It never taps, types or keeps the page. `ledger/Payments` reads the page, with fixtures in
 `PaymentsTest`; `ledger/AutoBill` keeps the switch and posts the notification.
 
 **侧键自定义**, in 我 → 设置 (`moments://side-key`), assigns an action separately to a
