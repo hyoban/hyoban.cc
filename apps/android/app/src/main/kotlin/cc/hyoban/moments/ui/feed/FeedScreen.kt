@@ -102,7 +102,6 @@ import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.isExpandedWidth
 import cc.hyoban.moments.ui.components.isMediumWidth
-import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.ledger.LedgerFilter
 import cc.hyoban.moments.ui.ledger.LocalLedgerNav
@@ -134,9 +133,6 @@ fun FeedScreen(
     onPlace: (String) -> Unit = {},
     onTrip: (String) -> Unit = {},
     onEdit: (String) -> Unit = {},
-    /** A day opened from the row for it on the Moment beside the feed. */
-    onDayRow: (String) -> Unit = onDay,
-    onTrackDay: (String) -> Unit = onDay,
 ) {
     // From Material 3's expanded breakpoint, its list and detail: a Moment chosen opens in a
     // pane beside the Moments rather than as a page over them. Turned upright with one chosen,
@@ -279,7 +275,6 @@ fun FeedScreen(
                                     onBill = { ledgerNav?.bill?.invoke(it) },
                                     onTrip = onTrip,
                                     tracks = tracks,
-                                    onTrackDay = onTrackDay,
                                     chat = true,
                                 )
                             }
@@ -322,7 +317,7 @@ fun FeedScreen(
                                 onTrip = onTrip,
                                 onBack = { chosen = null },
                                 onEdit = onEdit,
-                                onDay = onDayRow,
+                                onDay = onDay,
                                 pane = true,
                                 onChanges = onChanges,
                             )
@@ -445,8 +440,6 @@ fun DayScreen(
     onMoment: (String) -> Unit,
     onBack: () -> Unit,
     onTrip: (String) -> Unit = {},
-    /** The key of the card the page grows out of; none when it was opened from elsewhere, as a menu. */
-    card: String? = null,
 ) {
     val all by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -482,8 +475,7 @@ fun DayScreen(
     // The trip goes unsaid on the cards when all of them were on it: its row heads the day.
     val oneTrip = trip != null && moments.all { tripOf(it, trips)?.id == trip.id }
 
-    // The page is the calendar's day, its pill or a Moment's row for it grown to the screen.
-    Box(Modifier.fillMaxSize().then(if (card != null) Modifier.sharedCard(card, page = true) else Modifier).background(AppColors.page)) {
+    Box(Modifier.fillMaxSize().background(AppColors.page)) {
         MomentFeed(
             moments, places, trips, container.mediaUrls, onMoment,
             months = false,

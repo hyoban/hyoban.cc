@@ -105,9 +105,7 @@ import cc.hyoban.moments.ui.format.billLine
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.data.trips.tripOf
-import cc.hyoban.moments.ui.Day
 import cc.hyoban.moments.ui.LocalSnackbarLift
-import cc.hyoban.moments.ui.Trip
 import cc.hyoban.moments.ui.components.rememberScreenReader
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FLOATING_BAR
@@ -118,17 +116,13 @@ import cc.hyoban.moments.ui.components.READABLE_WIDTH
 import cc.hyoban.moments.ui.components.RisingSheet
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.components.Tooltip
-import cc.hyoban.moments.ui.components.dayRowKey
 import cc.hyoban.moments.ui.components.kindLabel
 import cc.hyoban.moments.ui.components.landscape
-import cc.hyoban.moments.ui.components.mediaKey
 import cc.hyoban.moments.ui.components.shapeOf
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.sideInsetsPadding
-import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
-import cc.hyoban.moments.ui.openedFrom
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Radius
@@ -185,7 +179,7 @@ fun MomentScreen(
     val screenReader = rememberScreenReader()
 
     // The whole page is the card it was opened from, grown to the screen.
-    // As a pane beside the Moments, it neither grows out of a card nor flies its photos, the card still in sight.
+    // As a pane beside the Moments, it doesn't grow out of a card, the card still in sight.
     BoxWithConstraints(Modifier.fillMaxSize().then(if (pane) Modifier else Modifier.sharedCard(uid, page = true)).background(AppColors.page)) {
         val screenWidth = maxWidth
         val screenHeight = maxHeight
@@ -216,7 +210,7 @@ fun MomentScreen(
             // On its side, the photos fill the left half, up under the status bar, and the
             // words scroll beside them, rather than a photo taller than the screen over them.
             Row(Modifier.fillMaxSize()) {
-                MomentPhotos(moment, urls, pager, onMedia, Modifier.weight(1f).fillMaxHeight(), shared = !pane)
+                MomentPhotos(moment, urls, pager, onMedia, Modifier.weight(1f).fillMaxHeight())
                 Column(Modifier.weight(1f).fillMaxHeight().statusBarsPadding().padding(top = FLOATING_BAR).verticalScroll(scroll).sideInsetsPadding(WindowInsetsSides.End)) { details() }
             }
         } else {
@@ -241,7 +235,6 @@ fun MomentScreen(
                         Modifier.then(if (bleeds) Modifier else Modifier.statusBarsPadding().padding(top = FLOATING_BAR))
                             .fillMaxWidth().height(minOf(screenWidth / shape!!, screenHeight - above)),
                         whole = true,
-                        shared = !pane,
                     )
                 } else {
                     Spacer(Modifier.statusBarsPadding().height(FLOATING_BAR))
@@ -330,7 +323,7 @@ private const val TALLEST = 3f / 4f
  * it is taller than the space.
  */
 @Composable
-private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, pager: PagerState, onMedia: (String, Int) -> Unit, modifier: Modifier, whole: Boolean = false, shared: Boolean = true) {
+private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, pager: PagerState, onMedia: (String, Int) -> Unit, modifier: Modifier, whole: Boolean = false) {
     val uid = moment.uid
     HorizontalPager(pager, modifier, key = { moment.media[it].uid }) { page ->
         val media = moment.media[page]
@@ -344,7 +337,6 @@ private fun MomentPhotos(moment: MomentRecord, urls: MediaUrls, pager: PagerStat
                 (if (whole) Modifier.fillMaxWidth().height(minOf(maxWidth / shapeOf(media), maxHeight)) else Modifier.fillMaxSize())
                     .testTag("media_${uid}_$page"),
                 liveBadgeAlignment = Alignment.BottomStart,
-                sharedKey = if (shared) mediaKey(uid, media.uid) else null,
                 position = page to moment.media.size,
                 onClick = { onMedia(uid, page) },
             )
@@ -460,13 +452,11 @@ private fun MomentDetails(
                         leadingContent = { Icon(AppIcons.Route, contentDescription = null) },
                         trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                         supportingContent = { Text(tripSummary(trip, count), maxLines = 2) },
-                        // Not shared with the trip's page when it is the page under this one,
-                        // which this one shrinks back into rather than the trip growing out of the row.
-                        modifier = (if (openedFrom(Trip(trip.id))) Modifier else Modifier.sharedCard(tripCardKey(trip.id))).testTag("trip_${trip.id}"),
+                        modifier = Modifier.testTag("trip_${trip.id}"),
                     ) { Text(trip.title, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
-            // Only when the day has more than this one, the row grows into the day's page.
+            // Only when the day has more than this one.
             if (sameDay > 1) {
                 add { shapes ->
                     SegmentedListItem(
@@ -476,7 +466,7 @@ private fun MomentDetails(
                         leadingContent = { Icon(AppIcons.Calendar, contentDescription = null) },
                         trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                         supportingContent = { Text(pluralStringResource(R.plurals.count_moments, sameDay, sameDay)) },
-                        modifier = (if (openedFrom(Day(moment.dateKey))) Modifier else Modifier.sharedCard(dayRowKey(moment.dateKey))).testTag("day_${moment.dateKey}"),
+                        modifier = Modifier.testTag("day_${moment.dateKey}"),
                     ) { Text(stringResource(R.string.label_whole_day)) }
                 }
             }

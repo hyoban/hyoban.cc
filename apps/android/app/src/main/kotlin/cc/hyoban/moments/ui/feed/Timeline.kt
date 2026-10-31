@@ -33,9 +33,6 @@ import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ledger.summarize
-import cc.hyoban.moments.ui.components.sharedCard
-import cc.hyoban.moments.ui.components.dayTrackKey
-import cc.hyoban.moments.ui.components.tripCardKey
 import cc.hyoban.moments.ui.ledger.TIME
 import cc.hyoban.moments.ui.ledger.amountColor
 import cc.hyoban.moments.ui.ledger.incoming
@@ -298,7 +295,7 @@ private fun Modifier.bleed(by: Dp): Modifier = layout { measurable, constraints 
 
 /**
  * Where a trip begins on the timeline (its last day, as the newest come first): a row on the
- * page, its route icon, its name, its dates and length, and an arrow; it grows into the trip's
+ * page, its route icon, its name, its dates and length, and an arrow; it opens the trip's
  * page when tapped.
  */
 @Composable
@@ -306,7 +303,6 @@ fun TripBanner(trip: TripRecord, count: Int, onClick: () -> Unit, modifier: Modi
     Row(
         modifier
             .fillMaxWidth()
-            .sharedCard(tripCardKey(trip.id))
             .clip(AppTheme.shapes.medium)
             .clickable(onClick = onClick)
             .padding(vertical = Space.m)
@@ -462,7 +458,7 @@ fun TrackRow(day: String, tracks: TimelineTracks, onClick: () -> Unit, modifier:
         supporting = androidx.compose.ui.res.pluralStringResource(cc.hyoban.moments.R.plurals.timeline_track_moving, minutes, minutes),
         onClick = onClick,
         // The day's page grows out of the row and shrinks back into it.
-        modifier = modifier.sharedCard(dayTrackKey(day)).testTag("track_$day"),
+        modifier = modifier.testTag("track_$day"),
         // No time of its own, the column kept so its glyph stays in line with the bills' icons.
         time = "",
     ) {

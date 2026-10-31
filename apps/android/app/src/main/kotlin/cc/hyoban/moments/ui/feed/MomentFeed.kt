@@ -1,8 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
 import androidx.compose.ui.platform.LocalConfiguration
-import cc.hyoban.moments.ui.components.sharedCard
-import cc.hyoban.moments.ui.components.dayCardKey
 import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.ui.format.formatDay
 import androidx.compose.ui.semantics.semantics
@@ -163,8 +161,6 @@ fun MomentFeed(
     onTrip: ((String) -> Unit)? = null,
     /** The footprints, a row at the foot of each day that has any; they open the day. */
     tracks: TimelineTracks = TimelineTracks.EMPTY,
-    /** Opens a day's page from its footprints row, which it grows out of; else as its header does. */
-    onTrackDay: ((String) -> Unit)? = null,
     /** Each day read from its morning, as a day's own page reads it, rather than newest first. */
     oldestFirst: Boolean = false,
     /** Every Moment, for a trip's banner to count all of its own, on a page that shows only some. */
@@ -322,7 +318,6 @@ fun MomentFeed(
                                 is ChatItem.Records -> RecordsBubble(
                                     item.lines, bills.ledger, tracks, onBill,
                                     onDay = onDay?.let { { it(day) } },
-                                    onTrackDay = (onTrackDay ?: onDay)?.let { { it(day) } },
                                     modifier = itemModifier,
                                 )
                             }
@@ -362,7 +357,7 @@ fun MomentFeed(
                             is DayItem.Moment -> card(item.moment, itemModifier, false)
                             is DayItem.Bills -> BillGroup(item.txns, bills.ledger, onBill, itemModifier)
                             is DayItem.ChargeItem -> ChargeRow(item.charge, itemModifier)
-                            is DayItem.Track -> TrackRow(item.day, tracks, onClick = { (onTrackDay ?: onDay)?.invoke(item.day) }, itemModifier)
+                            is DayItem.Track -> TrackRow(item.day, tracks, onClick = { onDay?.invoke(item.day) }, itemModifier)
                         }
                     }
                 }
@@ -388,7 +383,7 @@ fun DayHeader(day: String, description: String, onClick: (() -> Unit)?, modifier
         modifier
             .fillMaxWidth()
             .heightIn(min = DAY_HEADER_TARGET)
-            .then(if (onClick != null) Modifier.sharedCard(dayCardKey(day)).clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick) else Modifier)
+            .then(if (onClick != null) Modifier.clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick) else Modifier)
             .semantics(mergeDescendants = true) { heading(); contentDescription = listOfNotNull(formatDay(day), note, description.takeIf { it.isNotBlank() }).joinToString(" ") }
             .testTag("day_header_$day"),
         contentAlignment = Alignment.BottomStart,

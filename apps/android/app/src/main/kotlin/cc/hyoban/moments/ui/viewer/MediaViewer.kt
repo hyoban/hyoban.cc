@@ -95,9 +95,7 @@ import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.ui.components.DrawnStills
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.Tooltip
-import cc.hyoban.moments.ui.components.mediaKey
 import cc.hyoban.moments.ui.components.shapeOf
-import cc.hyoban.moments.ui.components.sharedMedia
 import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
@@ -129,7 +127,6 @@ fun MediaViewer(
     uid: String,
     index: Int,
     onBack: () -> Unit,
-    onShown: (String) -> Unit = {},
     onDay: (String) -> Unit = {},
 ) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
@@ -150,8 +147,6 @@ fun MediaViewer(
     // In a window of its own only the video shows: no bars, no controls.
     val inPip = LocalInPictureInPicture.current
     ViewerSystemBars(hidden = !chrome || inPip)
-    // The photo shown, for its tile to step aside while it is.
-    LaunchedEffect(pager.currentPage, media) { onShown(mediaKey(moment.uid, media[pager.currentPage.coerceIn(0, media.lastIndex)].uid)) }
     // Each one's motion and video, held here so the bars over the pages work the one shown.
     val lives = remember(media) { media.associate { it.uid to LiveMotionState() } }
     val videos = remember(media) { media.associate { it.uid to VideoState() } }
@@ -233,7 +228,6 @@ fun MediaViewer(
             key = { media[it].uid },
         ) { page ->
             ViewerPage(
-                momentUid = moment.uid,
                 media = media[page],
                 urls = container.mediaUrls,
                 active = pager.currentPage == page,
@@ -339,7 +333,6 @@ private fun ShareShown(container: AppContainer, shown: MomentMedia) {
 
 @Composable
 private fun ViewerPage(
-    momentUid: String,
     media: MomentMedia,
     urls: MediaUrls,
     active: Boolean,
@@ -370,12 +363,10 @@ private fun ViewerPage(
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         ZoomableStill(
-            momentUid,
             media,
             urls,
             onZoom,
             onTap,
-            shared = active,
             // Held down, a live photo plays with its sound until let go.
             onHold = if (liveMotion != null) { held -> if (held) live.play(sound = true) else live.stop() } else null,
         ) {
@@ -409,14 +400,11 @@ private fun ViewerLiveButton(state: LiveMotionState, modifier: Modifier = Modifi
  */
 @Composable
 private fun ZoomableStill(
-    momentUid: String,
     media: MomentMedia,
     urls: MediaUrls,
     onZoom: (Boolean) -> Unit,
     onTap: () -> Unit,
     onHold: ((Boolean) -> Unit)? = null,
-    /** Whether this is the page shown, the one photo that flies to and from its tile. */
-    shared: Boolean = true,
     overlay: @Composable () -> Unit = {},
 ) {
     val zoom = rememberZoomableState(ZoomSpec(maxZoomFactor = MAX_ZOOM))
@@ -480,7 +468,7 @@ private fun ZoomableStill(
                 placeholder = Color.Transparent,
                 placeholderUrl = drawn,
                 detail = if (scale > 1.5f) scale else 1f,
-                modifier = Modifier.fillMaxSize().sharedMedia(mediaKey(momentUid, media.uid).takeIf { shared }),
+                modifier = Modifier.fillMaxSize(),
                 // Fetching it failed: said in the middle, with the way to try again, on the black.
                 failed = { retry ->
                     Column(

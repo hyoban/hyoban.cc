@@ -79,10 +79,11 @@ import cc.hyoban.moments.ui.design.SnackbarResult
 import cc.hyoban.moments.ui.design.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -127,8 +128,6 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
-import androidx.navigationevent.NavigationEventTransitionState
-import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.MainActivity
 import cc.hyoban.moments.R
@@ -140,17 +139,11 @@ import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.components.AdaptiveStatusBarIcons
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.DialogPane
-import cc.hyoban.moments.ui.components.LocalBackSwipe
-import cc.hyoban.moments.ui.components.LocalInViewer
 import cc.hyoban.moments.ui.components.LocalMediaMaxHeight
 import cc.hyoban.moments.ui.components.LocalNavAnimatedScope
 import cc.hyoban.moments.ui.components.LocalReducedMotion
+import cc.hyoban.moments.ui.components.LocalCardOpening
 import cc.hyoban.moments.ui.components.LocalSharedTransitionScope
-import cc.hyoban.moments.ui.components.LocalViewerShowing
-import cc.hyoban.moments.ui.components.LocalViewerShownKey
-import cc.hyoban.moments.ui.components.dayCardKey
-import cc.hyoban.moments.ui.components.dayRowKey
-import cc.hyoban.moments.ui.components.dayTrackKey
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.components.isExpandedWidth
@@ -186,10 +179,8 @@ import cc.hyoban.moments.ui.viewer.LocalInPictureInPicture
 import cc.hyoban.moments.ui.viewer.MediaViewer
 import cc.hyoban.moments.ui.viewer.rememberInPictureInPicture
 import kotlin.reflect.KClass
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -229,7 +220,7 @@ data class TripPlay(val id: String)
  * day, a day's pill or a Moment's row for it. Opened from elsewhere, a menu, it slides in.
  */
 @Serializable
-data class Day(val date: String, val card: String? = null)
+data class Day(val date: String)
 
 @Serializable
 data class PlaceMoments(val id: String)
@@ -414,22 +405,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     // The viewer opens over the page it was opened from rather than as a page of its own,
     // so the page stays under it: a drag down to close shows it through the thinning black.
     var viewer by rememberSaveable(stateSaver = ViewerSaver) { mutableStateOf<Viewer?>(null) }
-    var viewerKey by remember { mutableStateOf<String?>(null) }
-    // The photo shown as the viewer is swiped through; its tile steps aside only as the
-    // viewer closes, so a swipe sideways moves no tile and starts no flight.
-    var shownKey by remember { mutableStateOf<String?>(null) }
-    // Open, or still closing: the viewer's own photo flights run only then.
-    val viewerShowing = remember { mutableStateOf(false) }
-    val openMedia: (String, Int) -> Unit = { uid, index ->
-        viewerKey = null
-        shownKey = null
-        viewerShowing.value = true
-        viewer = Viewer(uid, index)
-    }
-    val closeViewer = {
-        viewerKey = shownKey
-        viewer = null
-    }
+    val openMedia: (String, Int) -> Unit = { uid, index -> viewer = Viewer(uid, index) }
+    val closeViewer = { viewer = null }
     val openTrip: (String) -> Unit = { navController.goTo(Trip(it)) }
     // Editing from a card's menu, where its page would offer it: the phone's own Moments, the
     // site's with the API's token, and none while publishing;
@@ -447,10 +424,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
         )
     }
     val openPlace: (String) -> Unit = { navController.goTo(PlaceMoments(it)) }
-    // A day out of its calendar day or its pill, or out of a Moment's row for it.
-    val openDay: (String) -> Unit = { navController.goTo(Day(it, dayCardKey(it))) }
-    val openDayRow: (String) -> Unit = { navController.goTo(Day(it, dayRowKey(it))) }
-    val openDayTrack: (String) -> Unit = { navController.goTo(Day(it, dayTrackKey(it))) }
+    val openDay: (String) -> Unit = { navController.goTo(Day(it)) }
 
     // Where the ledger's pages lead, to each other and to the Moments' own.
     val ledgerNav = remember(navController) {
@@ -560,21 +534,10 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val tabFab = if (!railed && accessorySlot.value != null) fabHeight else 0.dp
     val tabsHidden = remember { mutableStateOf(false) }
 
-    // A back swipe, from its start until a moment after the finger lifts, while the page
-    // change it started plays out: shared photos stay with their pages meanwhile.
-    val backSwipe = remember { mutableStateOf(false) }
-    val gestures = LocalNavigationEventDispatcherOwner.current?.navigationEventDispatcher
-    LaunchedEffect(gestures) {
-        gestures?.transitionState?.collectLatest { state ->
-            // A finger dragging from the edge; a back key reports no progress.
-            if (state is NavigationEventTransitionState.InProgress && state.latestEvent.progress > 0.01f) {
-                backSwipe.value = true
-            } else if (backSwipe.value) {
-                delay(800)
-                backSwipe.value = false
-            }
-        }
-    }
+    // The Moment whose card grows into its page, or its page shrinks back, while that page and
+    // the one its card is on are both in sight; none between any other two pages.
+    val visibleEntries = navController.visibleEntries.collectAsState()
+    val cardOpening = remember { derivedStateOf { openingCard(visibleEntries.value) } }
 
     AdaptiveStatusBarIcons()
     val inPictureInPicture = rememberInPictureInPicture()
@@ -631,9 +594,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 SharedTransitionLayout(Modifier.fillMaxSize()) {
                     CompositionLocalProvider(
                         LocalSharedTransitionScope provides this,
-                        LocalViewerShownKey provides viewerKey.takeIf { viewer != null },
-                        LocalBackSwipe provides backSwipe,
-                        LocalViewerShowing provides viewerShowing,
+                        LocalCardOpening provides cardOpening,
                         LocalSettings provides container.settings,
                         cc.hyoban.moments.footprints.LocalBillPlaces provides container.billPlaces,
                         LocalTabReselects provides tabReselects,
@@ -660,8 +621,6 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     container,
                                     onMoment = openMoment,
                                     onDay = openDay,
-                                    onDayRow = openDayRow,
-                                    onTrackDay = openDayTrack,
                                     onNew = { openEditor(null, false) },
                                     onChanges = { navController.navigate(Changes) },
                                     onSearch = { navController.navigate(Search) },
@@ -693,7 +652,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                     onTrip = openTrip,
                                     onBack = back,
                                     onEdit = { openEditor(it, false) },
-                                    onDay = openDayRow,
+                                    onDay = openDay,
                                     onChanges = { navController.navigate(Changes) },
                                 )
                             }
@@ -717,7 +676,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             }
                             screen<Day>(link = "day/{date}") { entry ->
                                 val day = entry.toRoute<Day>()
-                                DayScreen(container, day.date, onMoment = openMoment, onBack = back, onTrip = openTrip, card = day.card)
+                                DayScreen(container, day.date, onMoment = openMoment, onBack = back, onTrip = openTrip)
                             }
                             screen<PlaceMoments>(link = "place/{id}") { entry ->
                                 PlaceScreen(
@@ -836,27 +795,20 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                 )
                             }
                         }
-                        // Kept while it leaves, so the photo has somewhere to fly back from.
+                        // Kept while it fades out.
                         var shown by remember { mutableStateOf(viewer) }
                         if (viewer != null) shown = viewer
                         AnimatedVisibility(viewer != null, enter = fadeIn(motion.defaultEffectsSpec()), exit = fadeOut(motion.defaultEffectsSpec())) {
                             val route = shown ?: return@AnimatedVisibility
-                            // Gone once it has finished closing.
-                            DisposableEffect(Unit) { onDispose { if (viewer == null) viewerShowing.value = false } }
                             // Registered after the pages' own, so back closes the viewer before it leaves a page.
                             BackHandler(enabled = viewer != null, onBack = closeViewer)
-                            CompositionLocalProvider(LocalNavAnimatedScope provides this, LocalInViewer provides true) {
+                            run {
                                 MediaViewer(
                                     container,
                                     route.uid,
                                     route.index,
                                     onDay = { closeViewer(); navController.goTo(Day(it)) },
                                     onBack = closeViewer,
-                                    onShown = {
-                                        // The first photo's tile steps aside as the viewer opens.
-                                        if (viewerKey == null || shownKey == null) viewerKey = it
-                                        shownKey = it
-                                    },
                                 )
                             }
                         }
@@ -984,31 +936,25 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.exit(forward: Bool
     else if (switchesTab(forward)) FADE_THROUGH_OUT
     else pageOut(forward, motion)
 
-/**
- * Whether both pages hold while a card grows into its page or the page shrinks back: as
- * the page opens or goes back, or as a page goes on to another tab holding its card, a
- * trip's page to the map with the trip's route card up, closing into it as going back would.
- */
+/** Whether both pages hold while a Moment's card grows into its page or the page shrinks back. */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.holdsForCard(forward: Boolean): Boolean =
-    if (forward) opensCard() || (switchesTab(forward) && closesCard()) else closesCard()
+    if (forward) opensCard() else closesCard()
 
 /**
- * Where a page grows out of a card, by the page and the pages that hold its card: a
- * Moment's from a list of Moments, the calendar, the map's place panel or a trip's playback; a trip's from
- * the timeline's trip banner, the map's sheet of trips, a Moment's trip card or the map's route card. A day's grows out of the card its
- * route names, wherever that is: a calendar day, a day's pill or a Moment's row for it.
+ * Where a page grows out of a card: only a Moment's, from a list of Moments, the calendar,
+ * the map's place panel or a trip's playback.
  */
-private val CARD_OPENINGS: Map<KClass<*>, List<KClass<*>>> = mapOf(
-    Moment::class to listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class, TripPlay::class, Atlas::class, Search::class),
-    Trip::class to listOf(Feed::class, Moment::class, Atlas::class),
-)
+private val CARD_ORIGINS: List<KClass<*>> =
+    listOf(Feed::class, Day::class, PlaceMoments::class, Trip::class, TripPlay::class, Atlas::class, Search::class)
 
 private fun opens(page: NavBackStackEntry, from: NavBackStackEntry): Boolean =
-    if (page.destination.hasRoute(Day::class)) {
-        page.toRoute<Day>().card != null
-    } else {
-        CARD_OPENINGS.any { (target, origins) -> page.destination.hasRoute(target) && origins.any { from.destination.hasRoute(it) } }
-    }
+    page.destination.hasRoute(Moment::class) && CARD_ORIGINS.any { from.destination.hasRoute(it) }
+
+/** The uid of the Moment whose page opens from, or closes into, a card on the other page in sight. */
+private fun openingCard(entries: List<NavBackStackEntry>): String? {
+    val page = entries.firstOrNull { it.destination.hasRoute(Moment::class) } ?: return null
+    return if (entries.any { it !== page && opens(page, it) }) page.toRoute<Moment>().uid else null
+}
 
 /** Whether a page opens from a card on the one before: the card grows into it while that page stays put. */
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.opensCard(): Boolean = opens(targetState, initialState)
@@ -1214,24 +1160,6 @@ private val NavController.backStack: StateFlow<List<NavBackStackEntry>>
     @SuppressLint("RestrictedApi") get() = currentBackStack
 
 /** The page's own entry on the back stack. */
-private val LocalPageEntry = staticCompositionLocalOf<NavBackStackEntry?> { null }
-
-/**
- * Whether the page was opened from [route]'s page, the one just under it, as it was when the
- * page opened: kept while it closes, when it has left the back stack. A card for that page
- * then isn't shared with it, so going back the page doesn't grow out of the card as this one
- * shrinks into its own.
- */
-@Composable
-fun openedFrom(route: Any): Boolean {
-    val navController = LocalNavController.current ?: return false
-    val entry = LocalPageEntry.current ?: return false
-    val below = remember(entry) {
-        val stack = navController.backStack.value.filter { it.destination !is NavGraph }
-        stack.getOrNull(stack.indexOfFirst { it.id == entry.id } - 1)
-    }
-    return below?.isOf(route) == true
-}
 
 private inline fun <reified T : Any> NavGraphBuilder.screen(
     link: String? = null,
@@ -1243,7 +1171,6 @@ private inline fun <reified T : Any> NavGraphBuilder.screen(
         val room = LocalTabClearance.current
         CompositionLocalProvider(
             LocalNavAnimatedScope provides this,
-            LocalPageEntry provides entry,
             LocalBottomClearance provides if (tab) room.bottom else 0.dp,
             LocalFabClearance provides if (tab) room.fab else 0.dp,
         ) { content(entry) }
