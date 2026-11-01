@@ -12,10 +12,6 @@ import androidx.compose.ui.platform.LocalDensity
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -24,13 +20,13 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -47,11 +43,11 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Spinner
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,25 +55,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
@@ -91,7 +76,6 @@ import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalFabClearance
 import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.components.DayPill
-import cc.hyoban.moments.ui.components.LocalReducedMotion
 import cc.hyoban.moments.ui.components.MomentCard
 import cc.hyoban.moments.ui.components.MonthHeader
 import cc.hyoban.moments.ui.components.PageWidth
@@ -99,7 +83,6 @@ import cc.hyoban.moments.ui.format.failureReason
 import cc.hyoban.moments.ui.format.formatDayOfMonth
 import cc.hyoban.moments.ui.format.formatMonth
 import cc.hyoban.moments.ui.rememberShowMessage
-import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
@@ -461,17 +444,15 @@ fun <T> CardRow(cards: List<T>, columns: Int, modifier: Modifier = Modifier, car
     }
 }
 
-/** The middle of an empty screen: a loading indicator while the first refresh runs, else a line; scrollable, so it still pulls to refresh. */
 /**
- * A tab's [content], or while it is [empty] its [EmptyState]. Once there is something to show
- * it fades in quickly over the skeleton, which stays under it until it has, as Material 3
- * ends a skeleton loader.
+ * A tab's [content], or while it is [empty] its [EmptyState]; while it is still [loading] with
+ * nothing to show, the first sync on a phone with nothing on it yet, a spinner in the middle.
  */
 @Composable
 fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, hint: Int? = null, content: @Composable () -> Unit) {
     val fade = AppTheme.motionScheme.fastEffectsSpec<Float>()
-    // Three faces, the skeleton, the message and the content, each kept as it was while it
-    // fades out: the skeleton leaving as the content comes doesn't turn into the message on its way.
+    // Three faces, the spinner, the message and the content, each kept as it was while it fades
+    // out: the spinner leaving as the content comes doesn't turn into the message on its way.
     val face = when {
         !empty -> LoadedFace.Content
         loading -> LoadedFace.Loading
@@ -486,29 +467,20 @@ fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, hint: Int? = n
         },
         label = "loaded",
     ) { shown ->
-        // On the page's own colour, so as it fades in it covers the skeleton under it whole,
-        // rather than the skeleton's cards showing through until they are taken away at once.
+        // On the page's own colour, so as it fades in it covers what was under it whole.
         when (shown) {
             LoadedFace.Content -> Box(Modifier.fillMaxSize().background(LocalSurfaceLevel.current.fill())) { content() }
-            LoadedFace.Loading -> EmptyState(loading = true, message)
-            LoadedFace.Empty -> EmptyState(loading = false, message, hint)
+            LoadedFace.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Spinner(Modifier.size(24.dp)) }
+            LoadedFace.Empty -> EmptyState(message, hint)
         }
     }
 }
 
 private enum class LoadedFace { Loading, Empty, Content }
 
-/**
- * A tab with nothing to show yet: while it loads, cards drawn as their shapes, pulsing
- * softly, as Material 3 keeps a layout steady with skeleton loaders rather than letting the
- * content pop in; once loaded and still empty, [message], and under it a [hint] at the next step.
- */
+/** A tab with nothing to show: [message], and under it a [hint] at the next step; scrollable, so it still pulls to refresh. */
 @Composable
-fun EmptyState(loading: Boolean, message: Int, hint: Int? = null) {
-    if (loading) {
-        SkeletonCards()
-        return
-    }
+fun EmptyState(message: Int, hint: Int? = null) {
     LazyColumn(Modifier.fillMaxSize()) {
         item {
             Column(
@@ -529,76 +501,9 @@ fun EmptyState(loading: Boolean, message: Int, hint: Int? = null) {
     }
 }
 
-/**
- * A few cards' shapes, a photo, a subhead and two lines of words each, pulsing while what
- * they stand for loads, the pulse moving from the top start to the bottom end as Material 3
- * has a skeleton's; still, with the phone's animations removed.
- */
-@Composable
-private fun SkeletonCards() {
-    // How far the pulse has gone, 0 to 1, or null with the phone's animations removed.
-    val sweep = if (LocalReducedMotion.current) {
-        null
-    } else {
-        rememberInfiniteTransition(label = "skeleton").animateFloat(
-            initialValue = 0f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(tween(SKELETON_SWEEP_MS, easing = LinearEasing)),
-            label = "skeleton sweep",
-        )
-    }
-    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    val bone = tokens.fill
-    val loading = stringResource(R.string.empty_loading)
-    PageWidth { columns ->
-        Column(
-            Modifier.fillMaxSize().padding(horizontal = columns.margin).padding(Space.gutter)
-                .skeletonSweep(sweep, rtl)
-                .clearAndSetSemantics { contentDescription = loading }
-                .testTag("skeleton"),
-            verticalArrangement = Arrangement.spacedBy(Space.s),
-        ) {
-            repeat(3) {
-                Column(
-                    Modifier.fillMaxWidth().clip(AppTheme.shapes.medium).background(LocalSurfaceLevel.current.raised.fill()).padding(bottom = Space.l),
-                    verticalArrangement = Arrangement.spacedBy(Space.m),
-                ) {
-                    Box(Modifier.fillMaxWidth().aspectRatio(4f / 3f).background(bone))
-                    Box(Modifier.padding(horizontal = Space.l).fillMaxWidth(0.45f).height(14.dp).background(bone, Corners.full))
-                    Box(Modifier.padding(horizontal = Space.l).fillMaxWidth().height(16.dp).background(bone, Corners.full))
-                    Box(Modifier.padding(horizontal = Space.l).fillMaxWidth(0.7f).height(16.dp).background(bone, Corners.full))
-                }
-            }
-        }
-    }
-}
-
-/**
- * The pulse as a band across the skeleton at 45°, full where it is and faint either side,
- * crossing from the top start corner to the bottom end one and starting over off the edge,
- * where the whole skeleton is faint, so it starts over without a jump.
- */
-private fun Modifier.skeletonSweep(sweep: State<Float>?, rtl: Boolean): Modifier =
-    if (sweep == null) this
-    else graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawWithContent {
-        drawContent()
-        // A point's place along the diagonal is half of x and y together, so the band runs
-        // from before 0 to past the far corner's (width + height) / 2.
-        val far = (size.width + size.height) / 2
-        val band = far * SKELETON_BAND
-        val middle = -band + (far + band * 2) * sweep.value
-        val faint = Color.Black.copy(alpha = SKELETON_FAINT)
-        val start = Offset(if (rtl) size.width - (middle - band) else middle - band, middle - band)
-        val end = Offset(if (rtl) size.width - (middle + band) else middle + band, middle + band)
-        drawRect(Brush.linearGradient(listOf(faint, Color.Black, faint), start, end), blendMode = BlendMode.DstIn)
-    }
-
-private const val SKELETON_SWEEP_MS = 1600
 // Material's fade-through timings, for a list emptied.
 private const val EMPTY_FADE_OUT_MS = 90
 private const val EMPTY_FADE_IN_MS = 210
-private const val SKELETON_BAND = 0.5f
-private const val SKELETON_FAINT = 0.5f
 
 /** Says when a refresh failed, as a snackbar in the app's host. */
 @Composable

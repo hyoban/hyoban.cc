@@ -23,7 +23,7 @@
       "name": "effects-default",
       "dampingRatio": 1,
       "stiffness": 1600,
-      "usage": "Colour and fades by default, content replacing a skeleton."
+      "usage": "Colour and fades by default, content arriving."
     }
   ]
 }
