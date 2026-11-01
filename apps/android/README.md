@@ -6,7 +6,8 @@ is the app's design system (the 「这里 App 设计系统」 artifact, mirrored
 
 ## Reading
 
-It reads the API's public endpoints (`apps/api`) and keeps a copy under the app's `api/`
+It reads the API (`apps/api`) with its token, which every request needs, set under
+我 → 同步与来源, and keeps a copy under the app's `api/`
 directory in the layout `packages/data-spec` defines, so it opens at once and works
 offline. Each start, each pull down on a list, and 刷新 in 我 → 同步与来源 ask only for what
 changed since: the Moments, places and trips from `/v1/changes`, and what only the second

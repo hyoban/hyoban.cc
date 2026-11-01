@@ -8,11 +8,18 @@ export default defineConfig({
     '*': 'vp check --fix',
   },
   fmt: {
-    // data/ is written by the API's backup and the scripts in their own canonical JSON,
+    // data/ is written by data:export and the scripts in their own canonical JSON, as is
+    // the tests' made-up copy of it,
     // apps/web/src/data/boundaries by its script, kept on one line,
     // the Android app under apps/android is formatted by Android Studio, and
     // .claude/worktrees holds other checkouts of the repository.
-    ignorePatterns: ['data/**', 'apps/web/src/data/boundaries/**', 'apps/android/**', '.claude/**'],
+    ignorePatterns: [
+      'data/**',
+      'packages/data-spec/test/fixtures/data/**',
+      'apps/web/src/data/boundaries/**',
+      'apps/android/**',
+      '.claude/**',
+    ],
     singleQuote: true,
     semi: false,
   },

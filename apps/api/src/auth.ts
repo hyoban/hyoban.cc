@@ -1,21 +1,13 @@
-// One owner, so a bearer token is all there is: any of the comma-separated tokens in
-// the API_TOKENS secret, one for the recording app and one for the site's build, so
-// each can be revoked alone.
+// One owner, so a bearer token is all there is, and every request needs one: any of the
+// comma-separated tokens in the API_TOKENS secret, one for the recording app and one for
+// the site's build, so each can be revoked alone.
 
-export type Access = 'public' | 'owner' | 'denied'
-
-/** Public without a token, the owner with a known one, denied with any other. */
-export async function authorize(request: Request, tokens = ''): Promise<Access> {
-  const header = request.headers.get('Authorization')
-
-  if (header === null) {
-    return 'public'
-  }
-
-  const given = header.match(/^Bearer (\S+)$/)?.[1]
+/** Whether the request carries one of the known tokens. */
+export async function authorize(request: Request, tokens = ''): Promise<boolean> {
+  const given = request.headers.get('Authorization')?.match(/^Bearer (\S+)$/)?.[1]
 
   if (!given) {
-    return 'denied'
+    return false
   }
 
   // Compare digests, so how long a comparison takes says nothing about the token.
@@ -23,11 +15,11 @@ export async function authorize(request: Request, tokens = ''): Promise<Access> 
 
   for (const token of tokens.split(',')) {
     if (token.trim() && equal(givenDigest, await digest(token.trim()))) {
-      return 'owner'
+      return true
     }
   }
 
-  return 'denied'
+  return false
 }
 
 async function digest(value: string) {

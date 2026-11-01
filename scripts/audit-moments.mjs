@@ -1,9 +1,7 @@
 import assert from 'node:assert/strict'
-import { execFile as execFileCallback } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { promisify } from 'node:util'
 
 import {
   getReferencedAssetFiles,
@@ -11,16 +9,12 @@ import {
   readMomentRecords,
 } from './lib/moment-assets.mjs'
 
-const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../', import.meta.url))
 const config = JSON.parse(await readFile(join(root, 'apps/web/src/data/asset-config.json'), 'utf8'))
 const options = parseArguments(process.argv.slice(2))
 const records = await readMomentRecords()
 const objects = getReferencedR2Objects(records)
 const blankAltIds = []
-const changedMomentFiles = options.changedFrom
-  ? await getChangedMomentFiles(options.changedFrom)
-  : new Set()
 
 for (const record of records) {
   const directFiles = new Set()
@@ -39,11 +33,6 @@ for (const record of records) {
 
     if (!record.moment.hidden && media.alt.trim() === '') {
       blankAltIds.push(`${record.id}/${media.file}`)
-
-      assert.ok(
-        !changedMomentFiles.has(record.file),
-        `Visible changed Moment requires non-empty alt text: ${record.id}/${media.file}`,
-      )
     }
 
     if (media.type === 'video' && media.poster) {
@@ -186,31 +175,6 @@ async function auditRemoteObjects(items) {
   )
 }
 
-/** The Moment and entry files added or changed since a ref, relative to data/. */
-async function getChangedMomentFiles(ref) {
-  const { stdout } = await execFile(
-    'git',
-    [
-      'diff',
-      '--name-only',
-      '--diff-filter=AM',
-      `${ref}...HEAD`,
-      '--',
-      'data/moments/**/*.json',
-      'data/entries/**/*.json',
-    ],
-    { cwd: root },
-  )
-
-  return new Set(
-    stdout
-      .trim()
-      .split('\n')
-      .filter(Boolean)
-      .map((file) => file.replace(/^data\//, '')),
-  )
-}
-
 async function headWithRetries(url) {
   let lastError
 
@@ -240,7 +204,6 @@ async function headWithRetries(url) {
 
 function parseArguments(argv) {
   const options = {
-    changedFrom: undefined,
     remote: false,
   }
 
@@ -249,11 +212,8 @@ function parseArguments(argv) {
 
     if (argument === '--remote') {
       options.remote = true
-    } else if (argument === '--changed-from' && argv[index + 1]) {
-      options.changedFrom = argv[index + 1]
-      index += 1
     } else {
-      throw new Error('Usage: audit-moments.mjs [--remote] [--changed-from <git-ref>]')
+      throw new Error('Usage: audit-moments.mjs [--remote]')
     }
   }
 

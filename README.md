@@ -7,7 +7,7 @@ and the pieces around it that record and serve them.
 ```
 .
 ├─ apps/web/            the Astro site (@hyoban/web; its DESIGN.md describes how it looks)
-├─ data/                JSON backup of the Moments, places, trips and routes (docs/data.md)
+├─ data/                the car's records, and a local copy of the API's (docs/data.md)
 ├─ apps/api/            Cloudflare Worker serving the records from D1 (@hyoban/api)
 ├─ apps/android/        这里, the Android app that reads and writes Moments (Gradle)
 ├─ packages/data-spec/  the Zod schemas every side shares (@hyoban/data-spec)
@@ -23,19 +23,19 @@ Android app ──POST /v2/changes──▶ API Worker (D1 + R2) ──deploy ho
                                        │   ▲                                 │
                          data:export   │   │ data:push / data:import         ▼
                                        ▼   │                          hyoban.cc (static)
-                                     data/ (backup in git)
+                                     data/ (local copy, out of git)
 ```
 
 - The **API** (`apps/api`) keeps the Moments, places, trips and the trips' routes in a
   D1 database, and the photos and videos in the `blog-images` R2 bucket, served from
   `https://image.hyoban.cc`.
-- The **Android app** writes to it as one change set (`POST /v1/changes`) and reads
-  its public endpoints.
-- The **site** is static. Its build reads the API's export when `MOMENTS_API_TOKEN` is
-  set, else the committed `data/`.
-- **`data/`** is a backup: a workflow writes the API's export into it every six hours.
-  Edit records through the API, or push what you wrote with `vp run data:push`
-  (docs/data.md).
+- Every request to the API needs a token. The **Android app** writes to it as one change
+  set (`POST /v2/changes`) and reads it with its token.
+- The **site** is static. Its build reads the API's export with `MOMENTS_API_TOKEN`, and
+  fails without it.
+- **`data/`** holds the car's records in git; the rest of it is a local copy of the API's
+  that `vp run data:export` writes for the scripts, which git leaves out. Edit records
+  through the API, or push what you wrote with `vp run data:push` (docs/data.md).
 
 ## Development
 
@@ -43,7 +43,7 @@ This is a pnpm workspace driven by [Vite+](https://viteplus.dev) (`vp`); see AGE
 
 ```sh
 vp install
-vp run dev          # the site, from data/ unless .env has MOMENTS_API_TOKEN
+vp run dev          # the site, from the API: .env needs MOMENTS_API_TOKEN
 vp check            # format, lint and type check, packages and API included
 vp test
 vp run build        # the static site into apps/web/dist/
@@ -55,7 +55,7 @@ vp run build        # the static site into apps/web/dist/
 | --------------------- | --------------------------------------------------------------------- |
 | `VITE_MAPBOX_TOKEN`   | the map page's Mapbox tiles                                           |
 | `MAPBOX_STATIC_TOKEN` | the map pages' placeholders, if `VITE_MAPBOX_TOKEN` is URL-restricted |
-| `MOMENTS_API_TOKEN`   | building from the API, `data:export` and `data:push`                  |
+| `MOMENTS_API_TOKEN`   | building the site, `data:export` and `data:push`                      |
 | `MOMENTS_API_URL`     | another API than `https://hyoban-cc-api.hyoban.workers.dev`           |
 | `CI`                  | set, the build draws every Moment's share card (slow; off locally)    |
 

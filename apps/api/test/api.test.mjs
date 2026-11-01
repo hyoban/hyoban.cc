@@ -4,7 +4,7 @@ import { test } from 'vite-plus/test'
 import { handle } from '../src/index.ts'
 import { get, setUp, snapshot, token } from './setup.mjs'
 
-// The reads: an import of the repository's data/, and what a client reads afterwards.
+// The reads: an import of the made-up data/, and what a client with the token reads afterwards.
 
 /** Every page of the change feed from a revision on. */
 async function readFeed(env, { auth, since = 0, limit = 100 } = {}) {
@@ -34,7 +34,7 @@ async function readFeed(env, { auth, since = 0, limit = 100 } = {}) {
   }
 }
 
-test('an import of data/ comes back out of the export exactly as written', async () => {
+test('an import comes back out of the export exactly as written', async () => {
   const { env, importSnapshot } = setUp()
 
   importSnapshot(snapshot)
@@ -58,21 +58,18 @@ test('an import of data/ comes back out of the export exactly as written', async
   )
 })
 
-test('the feed pages through every published Moment, and drafts only with a token', async () => {
+test('the feed pages through every Moment, drafts included', async () => {
   const { env, importSnapshot } = setUp()
   const [first, ...rest] = snapshot.moments
   const { published: _, ...draft } = first
 
   importSnapshot({ ...snapshot, moments: [draft, ...rest] })
 
-  const publicFeed = await readFeed(env, { limit: 37 })
-  const ownerFeed = await readFeed(env, { auth: token, limit: 500 })
+  const feed = await readFeed(env, { limit: 5 })
 
-  assert.equal(publicFeed.moments.length, rest.length)
-  assert.ok(!publicFeed.moments.some((moment) => moment.uid === draft.uid))
-  assert.equal(ownerFeed.moments.length, snapshot.moments.length)
-  assert.equal((await get(env, `/v1/moments/${draft.uid}`)).status, 404)
-  assert.deepEqual((await get(env, `/v1/moments/${draft.uid}`, { auth: token })).body, draft)
+  assert.equal(feed.moments.length, snapshot.moments.length)
+  assert.ok(feed.moments.some((moment) => moment.uid === draft.uid))
+  assert.deepEqual((await get(env, `/v1/moments/${draft.uid}`)).body, draft)
   assert.deepEqual((await get(env, `/v1/moments/${rest[0].uid}`)).body, rest[0])
 })
 
@@ -116,9 +113,9 @@ test('a feed from the start, page after page, leaves out what was removed', asyn
   importSnapshot(snapshot)
   importSnapshot({ ...snapshot, places, trips, moments: rest }, '2026-10-20T08:00:00Z')
 
-  const fresh = await readFeed(env, { limit: 7 })
+  const fresh = await readFeed(env, { limit: 3 })
 
-  assert.equal(fresh.moments.length, rest.filter((moment) => moment.published).length)
+  assert.equal(fresh.moments.length, rest.length)
   assert.deepEqual(fresh.deleted, [])
   assert.deepEqual(fresh.places.deleted, [])
   assert.deepEqual(fresh.trips.deleted, [])
@@ -135,7 +132,7 @@ test('the feed hands out the places and trips whole from the start, then only wh
 
   importSnapshot(snapshot)
 
-  const all = await readFeed(env, { limit: 50 })
+  const all = await readFeed(env, { limit: 4 })
 
   assert.deepEqual(all.places.places, snapshot.places)
   assert.equal(all.trips.trips.length, snapshot.trips.length)
@@ -167,13 +164,13 @@ test('a feed read a page at a time stays at its first page’s revision', async 
 
   importSnapshot(snapshot)
 
-  const first = (await get(env, '/v1/changes?limit=10')).body
+  const first = (await get(env, '/v1/changes?limit=4')).body
   const [edited, ...rest] = snapshot.moments
   const changed = { ...edited, text: `${edited.text}！` }
 
   importSnapshot({ ...snapshot, moments: [...rest, changed] }, '2026-10-20T08:00:00Z')
 
-  const second = (await get(env, `/v1/changes?cursor=${first.next}&limit=10`)).body
+  const second = (await get(env, `/v1/changes?cursor=${first.next}&limit=4`)).body
 
   assert.equal(second.revision, first.revision)
   assert.deepEqual(second.places, {})
@@ -195,13 +192,35 @@ test('places and trips are read whole or one at a time', async () => {
   assert.equal((await get(env, '/v1/places/nowhere-at-all')).status, 404)
 })
 
-test('tokens, methods and queries are checked', async () => {
+test('every request needs a token, and methods and queries are checked', async () => {
   const { env, importSnapshot } = setUp()
 
   importSnapshot(snapshot)
 
-  assert.equal((await get(env, '/v1/export')).status, 401)
+  for (const path of [
+    '/',
+    '/v1/export',
+    '/v1/changes',
+    '/v1/places',
+    '/v2/changes',
+    '/v2/tracks',
+  ]) {
+    const { status, body } = await get(env, path, { auth: null })
+
+    assert.equal(status, 401, path)
+    assert.match(body.error, /needs a token/)
+  }
+
   assert.equal((await get(env, '/v1/changes', { auth: 'wrong' })).status, 401)
+  assert.equal(
+    (
+      await handle(
+        new Request('https://api.test/v1/changes', { headers: { Authorization: 'Basic x' } }),
+        env,
+      )
+    ).status,
+    401,
+  )
   assert.equal((await get(env, '/v1/moments')).status, 404)
   assert.equal((await get(env, '/v1/changes?limit=0')).status, 400)
   assert.equal((await get(env, '/v1/changes?cursor=nope')).status, 400)

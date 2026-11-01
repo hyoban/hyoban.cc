@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
 import { handle } from '../src/index.ts'
+import { getStableUlid } from '@hyoban/data-spec/entry'
 import { getLegKey } from '@hyoban/trip-map'
 
 import { fillRoutes, FETCHES_PER_RUN } from '../src/routes.ts'
@@ -35,7 +36,7 @@ const refuse = async (leg) => {
   throw new Error(`Nothing should be fetched, but ${leg.from.name} → ${leg.to.name} was`)
 }
 
-test('the legs the trips need are the ones data/ has routes for, so none are fetched or dropped', async () => {
+test('the legs the trips need are the ones the fixture has routes for, so none are fetched or dropped', async () => {
   const { env } = setUpWithData()
   const result = await fillRoutes({ db: env.DB, bucket: env.BUCKET, now }, refuse)
 
@@ -86,9 +87,45 @@ test('a missing leg is fetched once, a train leg between the places’ stations'
 })
 
 test('a fill fetches at most a batch, and leaves the rest for the next', async () => {
-  const { env, sqlite } = setUpWithData()
+  const { env, importSnapshot } = setUp()
+  const stops = Array.from({ length: FETCHES_PER_RUN + 5 }, (_, index) => `stop-${index}`)
+  const long = {
+    id: 'long-drive',
+    title: '很长的一趟',
+    start: '2026-06-01',
+    end: '2026-06-02',
+    createdAt: now,
+    updatedAt: now,
+  }
+  const moments = stops.map((place, index) => {
+    const at = new Date(Date.parse('2026-06-01T00:00:00Z') + index * 3_600_000).toISOString()
 
-  sqlite.prepare(`DELETE FROM routes`).run()
+    return {
+      uid: getStableUlid(at, place),
+      occurredAt: at.replace('.000Z', 'Z'),
+      places: [place],
+      text: place,
+      published: { at: now },
+      createdAt: now,
+      updatedAt: now,
+    }
+  })
+
+  importSnapshot({
+    ...snapshot,
+    places: {
+      ...snapshot.places,
+      ...Object.fromEntries(
+        stops.map((id, index) => [
+          id,
+          { name: `第${index}站`, latitude: 30 + index / 100, longitude: 120 },
+        ]),
+      ),
+    },
+    trips: [...snapshot.trips, long],
+    moments: [...snapshot.moments, ...moments],
+    routes: {},
+  })
 
   let calls = 0
   const result = await fillRoutes({ db: env.DB, bucket: env.BUCKET, now }, async () => {
@@ -97,7 +134,10 @@ test('a fill fetches at most a batch, and leaves the rest for the next', async (
   })
 
   assert.equal(calls, FETCHES_PER_RUN)
-  assert.equal(result.left, Object.keys(snapshot.routes).length - FETCHES_PER_RUN)
+  assert.equal(
+    result.left,
+    Object.keys(snapshot.routes).length + stops.length - 1 - FETCHES_PER_RUN,
+  )
 })
 
 test('a leg with no route is remembered and not asked for again, and one that failed is', async () => {
@@ -187,8 +227,8 @@ test('GET /v1/routes gives every trip with Moments its stretches, drives solid a
     }
   }
 
-  // The 2024 trip went by train and plane, so some of its stretches are dashed.
-  assert.ok(body.trips['2024-code-and-travel'].some((segment) => segment.straight))
+  // The Shanghai trip went by train, so some of its stretches are dashed.
+  assert.ok(body.trips['2025-shanghai'].some((segment) => segment.straight))
 })
 
 test('GET /v1/routes is worked out once per revision, and again once the revision moves on', async () => {
@@ -200,18 +240,21 @@ test('GET /v1/routes is worked out once per revision, and again once the revisio
 
   // A trip with nothing in it any more, as a write past the Worker (data:push) leaves it.
   sqlite.exec(`UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`)
-  sqlite.exec(`UPDATE trips SET deleted_at = '${now}' WHERE id = '2024-code-and-travel'`)
+  sqlite.exec(`UPDATE trips SET deleted_at = '${now}' WHERE id = '2025-shanghai'`)
 
   const second = (await get(env, '/v1/routes')).body
 
   assert.equal(second.revision, first.revision + 1)
-  assert.ok(!('2024-code-and-travel' in second.trips))
+  assert.ok(!('2025-shanghai' in second.trips))
   assert.deepEqual(kept(), second)
 })
 
 test('GET /v1/routes has an ETag of its routes, which a new revision with the same routes keeps', async () => {
   const { env, sqlite } = setUpWithData()
-  const first = await handle(new Request('https://api.test/v1/routes'), env)
+  const first = await handle(
+    new Request('https://api.test/v1/routes', { headers: { Authorization: `Bearer ${token}` } }),
+    env,
+  )
   const etag = first.headers.get('ETag')
 
   assert.equal(first.status, 200)
@@ -220,7 +263,9 @@ test('GET /v1/routes has an ETag of its routes, which a new revision with the sa
   sqlite.exec(`UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`)
 
   const unchanged = await handle(
-    new Request('https://api.test/v1/routes', { headers: { 'If-None-Match': etag } }),
+    new Request('https://api.test/v1/routes', {
+      headers: { Authorization: `Bearer ${token}`, 'If-None-Match': etag },
+    }),
     env,
   )
 
@@ -229,10 +274,12 @@ test('GET /v1/routes has an ETag of its routes, which a new revision with the sa
   assert.equal(readKept(sqlite).revision, 2, 'worked out again for the new revision')
 
   sqlite.exec(`UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`)
-  sqlite.exec(`UPDATE trips SET deleted_at = '${now}' WHERE id = '2024-code-and-travel'`)
+  sqlite.exec(`UPDATE trips SET deleted_at = '${now}' WHERE id = '2025-shanghai'`)
 
   const changed = await handle(
-    new Request('https://api.test/v1/routes', { headers: { 'If-None-Match': etag } }),
+    new Request('https://api.test/v1/routes', {
+      headers: { Authorization: `Bearer ${token}`, 'If-None-Match': etag },
+    }),
     env,
   )
 
@@ -261,7 +308,7 @@ test('a fill keeps what GET /v1/routes answers, of the revision its own write to
 test('POST /v1/routes is the owner’s and needs the Mapbox token', async () => {
   const { env } = setUpWithData()
 
-  assert.equal((await call(env, 'POST', '/v1/routes')).status, 401)
+  assert.equal((await call(env, 'POST', '/v1/routes', { auth: null })).status, 401)
   assert.equal((await call(env, 'POST', '/v1/routes', owner)).status, 503)
 
   const { status, body } = await call(

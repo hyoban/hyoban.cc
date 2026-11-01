@@ -1,0 +1,54 @@
+{
+  "uid": "01HRHN2530ZJEC38YBFDYKNBH1",
+  "at": "2024-03-09T21:05:00+08:00",
+  "parts": {
+    "text": {
+      "v": 1,
+      "text": "只给自己看的一句话。"
+    },
+    "media": {
+      "v": 1,
+      "items": [
+        {
+          "uid": "01HRHN25301H60EJ0SCD7YBHB3",
+          "alt": "书桌上摊开的笔记本",
+          "type": "image",
+          "width": 1600,
+          "height": 1200,
+          "published": {
+            "key": "moments/01hrhn2530zjec38ybfdyknbh1/01hrhn25301h60ej0scd7ybhb3.jpg",
+            "contentType": "image/jpeg",
+            "bytes": 200000,
+            "etag": "aad653ca3ee669635f2938b73098b6d7",
+            "width": 1600,
+            "height": 1200,
+            "variants": [
+              {
+                "key": "moments/01hrhn2530zjec38ybfdyknbh1/01hrhn25301h60ej0scd7ybhb3-480w.webp",
+                "contentType": "image/webp",
+                "bytes": 1480,
+                "etag": "678f9b939b2796cc95481881cd1ffe08",
+                "width": 480,
+                "height": 360
+              },
+              {
+                "key": "moments/01hrhn2530zjec38ybfdyknbh1/01hrhn25301h60ej0scd7ybhb3-960w.webp",
+                "contentType": "image/webp",
+                "bytes": 1960,
+                "etag": "ed8f9abe6485e1cacc8482369420384c",
+                "width": 960,
+                "height": 720
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "visibility": "private",
+  "published": {
+    "at": "2024-03-09T21:05:00+08:00"
+  },
+  "createdAt": "2024-03-09T21:05:00+08:00",
+  "updatedAt": "2024-03-09T21:05:00+08:00"
+}

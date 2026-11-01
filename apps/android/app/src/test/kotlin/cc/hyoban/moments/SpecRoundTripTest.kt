@@ -22,22 +22,24 @@ import kotlin.test.fail
 
 /**
  * Every record the site has must come back out of the app's models exactly as it went
- * in: the spec is shared, and nothing may be lost on the way.
+ * in: the spec is shared, and nothing may be lost on the way. Over the made-up data/ the
+ * root's tests read too, or the real one at HYOBAN_DATA_ROOT, as `pnpm data:export` writes it.
  */
 class SpecRoundTripTest {
-    private val repository = generateSequence(File("").absoluteFile) { it.parentFile }
-        .first { File(it, "data/manifest.json").exists() }
+    private val data = System.getenv("HYOBAN_DATA_ROOT")?.let(::File)
+        ?: generateSequence(File("").absoluteFile) { it.parentFile }
+            .first { File(it, "pnpm-workspace.yaml").exists() }
+            .resolve("packages/data-spec/test/fixtures/data")
 
     @Test
-    fun `every Moment in the repository round-trips`() {
-        val files = roundTripAll(File(repository, "data/moments"), MomentRecord.serializer())
-        assertTrue(files > 400 || File(repository, "data/entries").isDirectory, "expected the site's Moments, saw $files")
+    fun `every Moment in the first layout round-trips`() {
+        val files = roundTripAll(File(data, "moments"), MomentRecord.serializer())
+        assertTrue(files > 0 || File(data, "entries").isDirectory, "expected Moments under $data")
     }
 
     /** Once data/ is in the second shape: every entry with words is a Moment and the same entry again. */
     @Test
-    fun `every entry in the repository round-trips through a Moment`() {
-        val data = System.getenv("HYOBAN_DATA_ROOT")?.let(::File) ?: File(repository, "data")
+    fun `every entry round-trips through a Moment`() {
         val files = File(data, "entries").walkTopDown().filter { it.isFile && it.extension == "json" }.toList()
         var moments = 0
         for (file in files) {
@@ -46,7 +48,7 @@ class SpecRoundTripTest {
             assertEquivalent(entry, Entries.fromMoment(moment), file.path)
             moments++
         }
-        assertTrue(files.isEmpty() || moments > 400, "expected the site's Moments, saw $moments")
+        assertTrue(moments > 0, "expected Moments under $data, saw none")
     }
 
     @Test
@@ -86,9 +88,9 @@ class SpecRoundTripTest {
 
     @Test
     fun `trips, places and the manifest round-trip`() {
-        roundTripAll(File(repository, "data/trips"), TripRecord.serializer())
-        roundTrip(File(repository, "data/places.json"), MapSerializer(String.serializer(), Place.serializer()))
-        roundTrip(File(repository, "data/manifest.json"), Manifest.serializer())
+        roundTripAll(File(data, "trips"), TripRecord.serializer())
+        roundTrip(File(data, "places.json"), MapSerializer(String.serializer(), Place.serializer()))
+        roundTrip(File(data, "manifest.json"), Manifest.serializer())
     }
 
     @Test

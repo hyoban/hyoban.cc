@@ -4,6 +4,12 @@ dist/
 .private/
 outputs/
 
+# The API's records: data/ is a working copy of them that `pnpm data:export` writes, and
+# git keeps only the car's records (zeekr/) and the JSON Schema.
+/data/*
+!/data/zeekr/
+!/data/schema/
+
 # Unredacted phone captures and report-access links stay local.
 /data/zeekr/zeekr-*.json
 /data/zeekr/current-*.json

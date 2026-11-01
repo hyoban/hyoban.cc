@@ -374,6 +374,16 @@ async function renderPhotos(urls: string[]) {
 
 /** A photo and its shape as it is shown, turned by its EXIF orientation. */
 async function fetchPhoto(url: string): Promise<Photo> {
+  // An HTML-only integration build reads made-up Moments, whose photos were never uploaded:
+  // a plain tile stands in for each, and the image origin is never asked for them.
+  if (process.env.SKIP_PAGE_OG_IMAGES === '1') {
+    const data = await sharp({
+      create: { width: 4, height: 3, channels: 3, background: '#888888' },
+    })
+      .jpeg()
+      .toBuffer()
+    return { aspect: 4 / 3, data }
+  }
   const data = await cachedOgAsset('photo', url, async () => {
     const response = await fetchRetrying(url)
     if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.status}`)

@@ -53,8 +53,8 @@ vp run moments:review-hidden    # a report on hidden records under .artifacts, c
 vp run moments:gc               # an R2 cleanup manifest under .artifacts, deleting nothing
 ```
 
-`moments:audit --changed-from <git-ref>` requires non-empty alt text on changed visible
-Moments. `moments:gc` keeps a 30-day grace period; deletion is a separate step, which
+These read the Moments from `data/`, so run `vp run data:export` first. `moments:audit`
+warns about visible media with empty alt text. `moments:gc` keeps a 30-day grace period; deletion is a separate step, which
 reloads the references and the inventory and refuses anything that changed since:
 
 ```sh

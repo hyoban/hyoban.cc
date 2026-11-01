@@ -1,0 +1,53 @@
+{
+  "uid": "01K5J8E6T02EC5A1B55ZP70X49",
+  "at": "2025-09-20T08:30:00+08:00",
+  "parts": {
+    "text": {
+      "v": 1,
+      "text": "换了张新桌子。"
+    },
+    "media": {
+      "v": 1,
+      "items": [
+        {
+          "uid": "01K5J8E6T0W2A5TANR8AQAEBB6",
+          "alt": "空荡荡的新桌面",
+          "type": "image",
+          "width": 1600,
+          "height": 1200,
+          "published": {
+            "key": "moments/01k5j8e6t02ec5a1b55zp70x49/01k5j8e6t0w2a5tanr8aqaebb6.jpg",
+            "contentType": "image/jpeg",
+            "bytes": 200000,
+            "etag": "b506e098cf253ce028b8ba0a5fc7d473",
+            "width": 1600,
+            "height": 1200,
+            "variants": [
+              {
+                "key": "moments/01k5j8e6t02ec5a1b55zp70x49/01k5j8e6t0w2a5tanr8aqaebb6-480w.webp",
+                "contentType": "image/webp",
+                "bytes": 1480,
+                "etag": "f8c1d237fe40c21b8a882b9d8cdadbd6",
+                "width": 480,
+                "height": 360
+              },
+              {
+                "key": "moments/01k5j8e6t02ec5a1b55zp70x49/01k5j8e6t0w2a5tanr8aqaebb6-960w.webp",
+                "contentType": "image/webp",
+                "bytes": 1960,
+                "etag": "e40ba1c8e6dbd56ce8dea5124dac7511",
+                "width": 960,
+                "height": 720
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "published": {
+    "at": "2025-09-20T08:30:00+08:00"
+  },
+  "createdAt": "2025-09-20T08:30:00+08:00",
+  "updatedAt": "2025-09-20T08:30:00+08:00"
+}

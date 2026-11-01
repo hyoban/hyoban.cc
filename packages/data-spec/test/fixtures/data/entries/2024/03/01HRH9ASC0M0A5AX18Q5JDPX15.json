@@ -1,0 +1,54 @@
+{
+  "uid": "01HRH9ASC0M0A5AX18Q5JDPX15",
+  "at": "2024-03-09T17:40:00+08:00",
+  "place": "xuan-wu-hu",
+  "parts": {
+    "text": {
+      "v": 1,
+      "text": "湖边走了一圈，风很大。"
+    },
+    "media": {
+      "v": 1,
+      "items": [
+        {
+          "uid": "01HRH9ASC0TDKDHSFWRRJB84QA",
+          "alt": "傍晚的湖面和远处的城墙",
+          "type": "image",
+          "width": 1600,
+          "height": 1200,
+          "published": {
+            "key": "moments/01hrh9asc0m0a5ax18q5jdpx15/01hrh9asc0tdkdhsfwrrjb84qa.jpg",
+            "contentType": "image/jpeg",
+            "bytes": 200000,
+            "etag": "97d986e2afa2c72986972e6433fbeaf9",
+            "width": 1600,
+            "height": 1200,
+            "variants": [
+              {
+                "key": "moments/01hrh9asc0m0a5ax18q5jdpx15/01hrh9asc0tdkdhsfwrrjb84qa-480w.webp",
+                "contentType": "image/webp",
+                "bytes": 1480,
+                "etag": "058c17316742b128d74496cf4f0c0f07",
+                "width": 480,
+                "height": 360
+              },
+              {
+                "key": "moments/01hrh9asc0m0a5ax18q5jdpx15/01hrh9asc0tdkdhsfwrrjb84qa-960w.webp",
+                "contentType": "image/webp",
+                "bytes": 1960,
+                "etag": "c6eaa55b0a3898a2b1545459a3a68b38",
+                "width": 960,
+                "height": 720
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "published": {
+    "at": "2024-03-09T17:40:00+08:00"
+  },
+  "createdAt": "2024-03-09T17:40:00+08:00",
+  "updatedAt": "2024-03-09T17:40:00+08:00"
+}

@@ -4,7 +4,6 @@ import {
   collectionToTrip,
   entrySchema,
   getCollectionKey,
-  getPublicEntry,
   getUploadEntry,
   isImportedCharge,
   isInCollection,
@@ -47,16 +46,14 @@ import {
 
 // The second shape's side of the API, `/v2`: entries, collections and public tracks, read
 // and written as one change set like the first. Every row holds both shapes (rows.ts), so
-// `/v1` keeps serving the app installed before this. The public reads see only what is
-// public, as `getPublicEntry` trims it: no private entry or part, a bill by its amount,
-// currency, category and note alone; the owner sees everything kept here. What stays on the
-// phone (a private bill, the raw footprints) never comes here: a private part of a plugin
-// that keeps to the phone is dropped even if it is sent.
+// `/v1` keeps serving the app installed before this. Every read is the owner's and sees
+// everything kept here; the site trims what it shows to what is public itself. What stays
+// on the phone (a private bill, the raw footprints) never comes here: a private part of a
+// plugin that keeps to the phone is dropped even if it is sent.
 
 interface EntryRow extends MomentRow {
   rev: number
   published: number
-  shown: string | null
 }
 
 interface CollectionRow {
@@ -65,7 +62,6 @@ interface CollectionRow {
   deleted_at: string | null
   record: string
   collection: string | null
-  shown: string | null
 }
 
 interface TrackRow {
@@ -75,44 +71,29 @@ interface TrackRow {
   record: string
 }
 
-/** What an entry row is to a reader: the entry, what of it is public, and whether it is gone. */
-function readEntryRow(row: EntryRow, owner: boolean) {
-  const entry = toEntry(row)
-  const text = owner
-    ? (row.entry ?? JSON.stringify(entry))
-    : row.entry
-      ? row.shown
-      : jsonOrNull(getPublicEntry(entry))
-  const gone = row.deleted_at !== null || text === null || (!owner && row.published !== 1)
-
-  return { key: row.uid, text, gone }
+/** What an entry row is to a reader: the entry, and whether it is gone. */
+function readEntryRow(row: EntryRow) {
+  return {
+    key: row.uid,
+    text: row.entry ?? JSON.stringify(toEntry(row)),
+    gone: row.deleted_at !== null,
+  }
 }
 
 /** A collection row as a reader sees it, the trip it was worked out from before it had one. */
-function readCollectionRow(row: CollectionRow, owner: boolean) {
-  const collection = row.collection
+function readCollectionRow(row: CollectionRow) {
+  const text = row.collection
     ? row.collection
     : JSON.stringify(
         collectionSchema.parse(
           tripToCollection(tripRecordSchema.parse(JSON.parse(row.record))).collection,
         ),
       )
-  const text = owner
-    ? collection
-    : row.collection
-      ? row.shown
-      : (JSON.parse(collection) as Collection).visibility === 'private'
-        ? null
-        : collection
 
-  return { key: row.id, text, gone: row.deleted_at !== null || text === null }
+  return { key: row.id, text, gone: row.deleted_at !== null }
 }
 
-function jsonOrNull(value: unknown) {
-  return value === undefined ? null : JSON.stringify(value)
-}
-
-const ENTRY_COLUMNS = 'uid, kind, rev, deleted_at, published, record, entry, shown'
+const ENTRY_COLUMNS = 'uid, kind, rev, deleted_at, published, record, entry'
 
 /**
  * The car's statistics, all public, as the export and the feed's first page name them: a
@@ -128,7 +109,7 @@ const VEHICLE_TABLES = [
   },
   { table: 'vehicle_captures', key: 'id', name: 'vehicleCaptures', gone: 'deletedVehicleCaptures' },
 ] as const
-const COLLECTION_COLUMNS = 'id, rev, deleted_at, record, collection, shown'
+const COLLECTION_COLUMNS = 'id, rev, deleted_at, record, collection'
 
 /**
  * What changed after a revision, as `/v1/changes` but in the second shape: the entries a page
@@ -137,9 +118,9 @@ const COLLECTION_COLUMNS = 'id, rev, deleted_at, record, collection, shown'
  */
 export async function readEntryChanges(
   db: Database,
-  query: ({ since: number } | { cursor: Cursor }) & { limit: number; owner: boolean },
+  query: ({ since: number } | { cursor: Cursor }) & { limit: number },
 ): Promise<string> {
-  const { limit, owner } = query
+  const { limit } = query
   const first = 'since' in query
   const since = first ? query.since : 0
   const after = first ? { rev: since + 1, uid: '' } : query.cursor
@@ -176,12 +157,12 @@ export async function readEntryChanges(
     results.length > limit && last
       ? formatCursor({ upto: of, rev: last.rev, uid: last.uid, live })
       : null
-  const entries = page.map((row) => readEntryRow(row, owner))
+  const entries = page.map((row) => readEntryRow(row))
   const placeRows = (
     (places ?? []) as { key: string; deleted_at: string | null; record: string }[]
   ).map((row) => ({ key: row.key, text: row.record, gone: row.deleted_at !== null }))
   const collectionRows = ((collections ?? []) as CollectionRow[]).map((row) =>
-    readCollectionRow(row, owner),
+    readCollectionRow(row),
   )
   const trackRows = ((tracks ?? []) as TrackRow[]).map((row) => ({
     key: row.uid,
@@ -206,19 +187,19 @@ export async function readEntryChanges(
   return `{"revision":${of},"entries":${arrayText(liveEntries)},"deleted":${keysText(goneEntries)},"places":{${livePlaces.map((row) => `${JSON.stringify(row.key)}:${row.text}`).join(',')}},"deletedPlaces":${keysText(gonePlaces)},"collections":${arrayText(liveCollections)},"deletedCollections":${keysText(goneCollections)},"tracks":${arrayText(liveTracks)},"deletedTracks":${keysText(goneTracks)},${first ? vehicleText : ''}"next":${JSON.stringify(next)}}`
 }
 
-/** One entry as its reader may see it, or null. */
-export async function readEntry(db: Database, uid: string, owner: boolean) {
+/** One entry as stored, or null. */
+export async function readEntry(db: Database, uid: string) {
   const row = await db
     .prepare(`SELECT ${ENTRY_COLUMNS} FROM moments WHERE uid = ?1`)
     .bind(uid)
     .first<EntryRow>()
-  const read = row && readEntryRow(row, owner)
+  const read = row && readEntryRow(row)
 
   return read && !read.gone ? read.text : null
 }
 
 /** `{ revision, collections }`, by start date. */
-export async function readCollections(db: Database, owner: boolean) {
+export async function readCollections(db: Database) {
   const [revision, rows] = await readAll(db, [
     revisionQuery(db),
     db.prepare(
@@ -226,18 +207,18 @@ export async function readCollections(db: Database, owner: boolean) {
     ),
   ])
   const live = (rows as CollectionRow[])
-    .map((row) => readCollectionRow(row, owner))
+    .map((row) => readCollectionRow(row))
     .filter((row) => !row.gone)
 
   return `{"revision":${toRevision(revision)},"collections":${arrayText(live)}}`
 }
 
-export async function readCollection(db: Database, key: string, owner: boolean) {
+export async function readCollection(db: Database, key: string) {
   const row = await db
     .prepare(`SELECT ${COLLECTION_COLUMNS} FROM trips WHERE id = ?1`)
     .bind(key)
     .first<CollectionRow>()
-  const read = row && readCollectionRow(row, owner)
+  const read = row && readCollectionRow(row)
 
   return read && !read.gone ? read.text : null
 }
@@ -281,7 +262,7 @@ export async function readEntrySnapshot(db: Database) {
   const keyed = (rows: unknown[]) =>
     `{${(rows as { key: string; record: string }[]).map((row) => `${JSON.stringify(row.key)}:${row.record}`).join(',')}}`
 
-  return `{"revision":${toRevision(revision)},"manifest":${manifestRow?.value ?? 'null'},"places":${keyed(places)},"entries":${arrayText((entries as EntryRow[]).map((row) => readEntryRow(row, true)))},"collections":${arrayText((collections as CollectionRow[]).map((row) => readCollectionRow(row, true)))},"tracks":${arrayText((tracks as { record: string }[]).map((row) => ({ text: row.record })))},"routes":${keyed(routes)}${vehicleText}}`
+  return `{"revision":${toRevision(revision)},"manifest":${manifestRow?.value ?? 'null'},"places":${keyed(places)},"entries":${arrayText((entries as EntryRow[]).map((row) => readEntryRow(row)))},"collections":${arrayText((collections as CollectionRow[]).map((row) => readCollectionRow(row)))},"tracks":${arrayText((tracks as { record: string }[]).map((row) => ({ text: row.record })))},"routes":${keyed(routes)}${vehicleText}}`
 }
 
 /** What `POST /v2/changes` did. */
@@ -586,7 +567,7 @@ async function readEntryWriteState(db: Database, uids: string[]) {
       }),
     ),
     collections: (collections as CollectionRow[]).map(
-      (row) => JSON.parse(readCollectionRow(row, true).text!) as Collection,
+      (row) => JSON.parse(readCollectionRow(row).text!) as Collection,
     ),
     marks: (marks as MomentRow[]).map((row) => toEntry(row)),
   }

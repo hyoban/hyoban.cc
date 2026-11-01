@@ -1,0 +1,93 @@
+{
+  "nanjing": {
+    "name": "南京",
+    "latitude": 32.06,
+    "longitude": 118.8,
+    "kind": "city",
+    "division": {
+      "code": "320100",
+      "province": "江苏省",
+      "city": "南京市"
+    },
+    "station": {
+      "name": "南京南站",
+      "latitude": 31.97,
+      "longitude": 118.8
+    }
+  },
+  "xuan-wu-hu": {
+    "name": "玄武湖",
+    "latitude": 32.07,
+    "longitude": 118.79,
+    "kind": "scenic",
+    "division": {
+      "code": "320102",
+      "province": "江苏省",
+      "city": "南京市",
+      "district": "玄武区"
+    }
+  },
+  "shanghai": {
+    "name": "上海",
+    "latitude": 31.23,
+    "longitude": 121.47,
+    "kind": "city",
+    "division": {
+      "code": "310000",
+      "province": "上海市",
+      "city": "上海市"
+    },
+    "station": {
+      "name": "上海虹桥站",
+      "latitude": 31.19,
+      "longitude": 121.32
+    }
+  },
+  "wai-tan": {
+    "name": "外滩",
+    "latitude": 31.24,
+    "longitude": 121.49,
+    "kind": "scenic",
+    "division": {
+      "code": "310101",
+      "province": "上海市",
+      "city": "上海市",
+      "district": "黄浦区"
+    }
+  },
+  "xiao-mian-guan": {
+    "name": "小面馆",
+    "latitude": 31.22,
+    "longitude": 121.46,
+    "kind": "food",
+    "division": {
+      "code": "310101",
+      "province": "上海市",
+      "city": "上海市",
+      "district": "黄浦区"
+    }
+  },
+  "hangzhou": {
+    "name": "杭州",
+    "latitude": 30.27,
+    "longitude": 120.16,
+    "kind": "city",
+    "division": {
+      "code": "330100",
+      "province": "浙江省",
+      "city": "杭州市"
+    }
+  },
+  "xi-hu": {
+    "name": "西湖",
+    "latitude": 30.25,
+    "longitude": 120.14,
+    "kind": "scenic",
+    "division": {
+      "code": "330106",
+      "province": "浙江省",
+      "city": "杭州市",
+      "district": "西湖区"
+    }
+  }
+}

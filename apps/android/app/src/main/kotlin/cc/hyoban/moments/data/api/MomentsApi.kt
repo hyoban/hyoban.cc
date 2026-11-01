@@ -161,8 +161,8 @@ interface MomentsSource {
 }
 
 /**
- * The API at [baseUrl], with the owner's [token] for writes, each read again for each
- * request so a change in the settings takes at once.
+ * The API at [baseUrl], with the owner's [token], which every request needs, reads too;
+ * each read again for each request so a change in the settings takes at once.
  */
 class MomentsApi(
     private val baseUrl: () -> String,
@@ -173,7 +173,7 @@ class MomentsApi(
     override suspend fun changes(since: Long, cursor: String?): Changes =
         get(if (cursor != null) "/v1/changes?cursor=$cursor&limit=500" else "/v1/changes?since=$since&limit=500", Changes.serializer())
 
-    /** With the token when there is one, so the owner's copy has what is private too. */
+    /** With the token: the API answers nothing without one. */
     override suspend fun entryChanges(since: Long, cursor: String?): EntryChanges? = withContext(io) {
         val path = if (cursor != null) "/v2/changes?cursor=$cursor&limit=500" else "/v2/changes?since=$since&limit=500"
         val request = Request.Builder().url(baseUrl() + path).apply {
@@ -237,7 +237,7 @@ class MomentsApi(
     }
 
     private suspend fun <T> get(path: String, serializer: KSerializer<T>): T =
-        decode(Http.getText(baseUrl() + path, client, io), serializer)
+        decode(Http.getText(baseUrl() + path, client, io, token()), serializer)
 
     private fun <T> encode(serializer: KSerializer<T>, value: T): RequestBody =
         Spec.json.encodeToString(serializer, value).toRequestBody(JSON)

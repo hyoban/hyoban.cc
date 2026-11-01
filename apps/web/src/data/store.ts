@@ -31,16 +31,17 @@ import {
   type TripRecord,
 } from '@hyoban/data-spec'
 
-// Reads the recording app's records for the site's build and for the scripts, from the
-// repository's `data/` directory or, when the build fetched one, the API's snapshot in
-// the same layout (see api-data.ts). Everything is validated on the way in.
+// Reads the recording app's records for the site's build and for the scripts: the build's
+// from the API's snapshot (see api-data.ts), the scripts' from `data/`, where
+// `pnpm data:export` writes the same snapshot and git keeps only the car's records.
+// Everything is validated on the way in.
 //
 // The records are entries, collections and public tracks (`entries/`, `collections/`,
 // `tracks/`); Moments and trips in the first layout (`moments/`, `trips/`), from before the
 // migration or written since by a script that still writes them, are read as entries too.
 // What still works on Moments and trips reads them back in that shape.
 
-/** The repository's `data/`, the committed copy, found from the site or the repository's root. */
+/** The repository's `data/`, found from the site or the repository's root. */
 export const dataRoot = join(findRepositoryRoot(process.cwd()), 'data')
 
 function findRepositoryRoot(directory: string): string {
@@ -52,7 +53,7 @@ function findRepositoryRoot(directory: string): string {
 /** Set by the build to the directory it wrote the API's snapshot to. */
 export const DATA_ROOT_VARIABLE = 'HYOBAN_DATA_ROOT'
 
-/** Where the Moments, places and trips are read from: the API's snapshot, else `data/`. */
+/** Where the Moments, places and trips are read from: the build's snapshot, else `data/`. */
 export function getDataRoot() {
   return process.env[DATA_ROOT_VARIABLE] ?? dataRoot
 }
@@ -65,14 +66,9 @@ export function readPlaces(root = getDataRoot()): Places {
   return placesSchema.parse(readJson('places.json', root))
 }
 
-/**
- * Each trip leg's route by its key, as the API fetched them; data/'s copy when the
- * export came from an API that doesn't keep them yet.
- */
+/** Each trip leg's route by its key, as the API fetched them. */
 export function readRoutes(root = getDataRoot()): Routes {
-  return routesSchema.parse(
-    readJson('routes.json', existsSync(join(root, 'routes.json')) ? root : dataRoot),
-  )
+  return routesSchema.parse(readJson('routes.json', root))
 }
 
 /**

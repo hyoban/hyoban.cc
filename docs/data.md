@@ -1,12 +1,14 @@
 # Data
 
 The Moments, places and trips live in the API's D1 database (`apps/api`), which the
-Android app writes and the site's build reads. `data/` keeps a backup of them as JSON
-records in the shape `packages/data-spec` defines: the data-backup workflow writes the
-API's export into it every six hours and commits what changed, so edit records through
-the API rather than here. So are the car's statistics in `data/zeekr/` (see
-[its README](../data/zeekr/README.md)); its expenses and the redacted sources live only in
-the repository.
+Android app writes and the site's build reads; every request to it needs a token. Git
+keeps none of them. `data/` is a local copy, as JSON records in the shape
+`packages/data-spec` defines, that `vp run data:export` writes for the scripts and git
+leaves out, so edit records through the API rather than here. The car's statistics are in
+the API too, and in `data/zeekr/` (see [its README](../data/zeekr/README.md)), which git
+keeps with the car's expenses and the redacted sources, which live only in the
+repository. `data/schema/` is in git as well. The tests read a made-up copy in this layout,
+`packages/data-spec/test/fixtures/data/`.
 
 ```
 data/
@@ -41,17 +43,18 @@ it byte for byte; the store reads either layout.
 
 ## Building from the API
 
-With `MOMENTS_API_TOKEN` set, in the environment or `.env`, the site is built from the API
-instead: `apps/web/src/data/api-data.ts` fetches `/v2/export` once, writes it under
+The site is built from the API, with `MOMENTS_API_TOKEN` in the environment or `.env`:
+`apps/web/src/data/api-data.ts` fetches `/v2/export` once, writes it under
 `apps/web/.artifacts/api-data/` in this layout, and points the store there. `MOMENTS_API_URL`
-overrides the address. Without a token the build reads `data/`; a token that fails to fetch
-fails the build. The scripts always read `data/`.
+overrides the address. Without a token, or with one that fails to fetch, the build fails;
+`HYOBAN_DATA_ROOT` set to a directory in this layout builds from that instead, as the tests
+do with the fixture. The scripts read `data/`.
 
 ## Writing outside the API
 
 Anything that writes records into `data/` itself, like the create-moment skill, brings
 `data/` up to date first and pushes what it wrote afterwards. Otherwise the site never shows
-it, and the next backup removes it.
+it, and the next `data:export` stops rather than overwrite it.
 
 ```sh
 vp run data:export                                    # data/ from the API first
@@ -64,20 +67,22 @@ stays. It writes the deployed database, then has the API fetch the new legs' rou
 start a site build (`POST /v1/build`), since a write past the Worker starts none.
 `--local` writes the database `wrangler dev` uses, `--dry-run` only the SQL.
 
-## Backing up and restoring
+## Exporting and restoring
 
 ```sh
-vp run data:export            # the API's export into data/, as the workflow does
+vp run data:export            # the API's export into data/
 vp run data:import            # data/ into the local database `wrangler dev` uses
 vp run data:import --remote   # data/ into the deployed one, to restore it
 ```
 
 `data:export` needs `MOMENTS_API_TOKEN`. It writes canonical JSON and removes what the API
-no longer has, so a run with nothing new changes nothing. It stops when `data/` has
-uncommitted record changes, which may not be in the API yet.
+no longer has, so a run with nothing new changes nothing. It keeps the digest of each
+record it wrote, and of each one `data:push` sent, in `data/.synced.json`, and stops when a
+record in `data/` differs from those, or the car's statistics have changes git hasn't
+committed: those may not be in the API yet.
 
 `data:import` makes the database a mirror of `data/`, so use it only to restore: it applies
 the migrations, writes new and changed records and marks the rest deleted, including what
-the app published since the backup. Only those take a new revision, so the app's sync sees
+the app published since that copy was exported. Only those take a new revision, so the app's sync sees
 just the difference. `--dry-run` writes the SQL under `.artifacts/import/`. D1's Time Travel
 also keeps 30 days of the database.

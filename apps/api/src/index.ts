@@ -34,9 +34,9 @@ import {
   type WriteResult,
 } from './writes.ts'
 
-// The API. Reads are public except drafts, which only the owner sees, and the full
-// export; writes are the owner's. `/v1` serves Moments and trips, `/v2` entries,
-// collections and public tracks (entries.ts), the public seeing only what is public. Records come back exactly as stored, in the shape
+// The API, the owner's alone: every request needs a token, and reads see everything,
+// drafts and private records included. `/v1` serves Moments and trips, `/v2` entries,
+// collections and public tracks (entries.ts). Records come back exactly as stored, in the shape
 // @hyoban/data-spec defines. A write the site shows first brings the trips' routes up to
 // date, when MAPBOX_TOKEN is set and the write changed what the trips are built from,
 // then calls DEPLOY_HOOK_URL, when there is one, so the site builds again with them, and
@@ -93,16 +93,17 @@ export async function handle(
 }
 
 async function route(request: Request, env: Env, executionContext?: ExecutionContext) {
-  const access = await authorize(request, env.API_TOKENS)
-
-  if (access === 'denied') {
-    return error(401, 'Unknown token.', { 'WWW-Authenticate': 'Bearer' })
+  if (!(await authorize(request, env.API_TOKENS))) {
+    return error(
+      401,
+      request.headers.has('Authorization') ? 'Unknown token.' : 'The API needs a token.',
+      { 'WWW-Authenticate': 'Bearer' },
+    )
   }
 
   const url = new URL(request.url)
   const segments = url.pathname.split('/').filter(Boolean)
   const [version, collection, key, ...rest] = segments
-  const owner = access === 'owner'
   const method = request.method
   const db = env.DB
 
@@ -114,10 +115,6 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
   if (version !== 'v1' && version !== 'v2') {
     return notFound()
-  }
-
-  if (method !== 'GET' && !owner) {
-    throw new HttpError(401, 'Writing needs a token.', { 'WWW-Authenticate': 'Bearer' })
   }
 
   const childrenOf = env.DIVISIONS_URL ? createDataVChildren(env.DIVISIONS_URL) : undefined
@@ -148,7 +145,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
         }
 
         if (rest.length === 0) {
-          return method === 'GET' ? found(await readEntry(db, key, owner)) : notAllowed('GET')
+          return method === 'GET' ? found(await readEntry(db, key)) : notAllowed('GET')
         }
 
         // An entry's media uploads as a Moment's does, under the same keys.
@@ -160,10 +157,10 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
         }
 
         if (key === undefined) {
-          return method === 'GET' ? jsonText(await readCollections(db, owner)) : notAllowed('GET')
+          return method === 'GET' ? jsonText(await readCollections(db)) : notAllowed('GET')
         }
 
-        return method === 'GET' ? found(await readCollection(db, key, owner)) : notAllowed('GET')
+        return method === 'GET' ? found(await readCollection(db, key)) : notAllowed('GET')
       }
       case 'tracks': {
         if (key !== undefined) {
@@ -183,7 +180,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
             return 'error' in query
               ? error(400, query.error)
-              : jsonText(await readEntryChanges(db, { ...query, owner }))
+              : jsonText(await readEntryChanges(db, query))
           }
           case 'POST': {
             const body = await readBody(request)
@@ -203,9 +200,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
           return notAllowed('GET')
         }
 
-        return owner
-          ? jsonText(await readEntrySnapshot(db))
-          : error(401, 'The export needs a token.', { 'WWW-Authenticate': 'Bearer' })
+        return jsonText(await readEntrySnapshot(db))
       }
       case 'places':
       case 'routes':
@@ -223,9 +218,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       }
 
       if (rest.length === 0) {
-        return method === 'GET'
-          ? found(await readMoment(db, key, { drafts: owner }))
-          : notAllowed('GET')
+        return method === 'GET' ? found(await readMoment(db, key)) : notAllowed('GET')
       }
 
       const [media, mediaUid, part, ...more] = rest
@@ -342,9 +335,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
         case 'GET': {
           const query = readFeedQuery(url.searchParams)
 
-          return 'error' in query
-            ? error(400, query.error)
-            : jsonText(await readChanges(db, { ...query, drafts: owner }))
+          return 'error' in query ? error(400, query.error) : jsonText(await readChanges(db, query))
         }
         case 'POST': {
           const body = await readBody(request)
@@ -364,9 +355,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
         return notAllowed('GET')
       }
 
-      return owner
-        ? jsonText(await readSnapshot(db))
-        : error(401, 'The export needs a token.', { 'WWW-Authenticate': 'Bearer' })
+      return jsonText(await readSnapshot(db))
     }
     default:
       return notFound()

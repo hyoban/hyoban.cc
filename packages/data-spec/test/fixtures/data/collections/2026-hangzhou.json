@@ -1,0 +1,29 @@
+{
+  "uid": "01M3TSWZG01K9P3BCQ4A1DKYDC",
+  "slug": "2026-hangzhou",
+  "kind": "trip",
+  "title": "开车去杭州",
+  "span": {
+    "start": "2026-04-04",
+    "end": "2026-04-05"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01KNBEMY104VP0QXQDE2TCT9K3",
+      "media": "01KNBEMY10A9QJVR97AEGG4H1H"
+    }
+  ],
+  "route": {
+    "straightLegs": [],
+    "sameWayBack": [
+      {
+        "from": "hangzhou",
+        "to": "nanjing"
+      }
+    ]
+  },
+  "createdAt": "2026-10-01T12:00:00+08:00",
+  "updatedAt": "2026-10-01T12:00:00+08:00"
+}

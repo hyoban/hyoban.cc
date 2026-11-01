@@ -23,10 +23,14 @@ object Http {
             .build()
     }
 
+    /** A GET of [url] for JSON, with [token] as the bearer when there is one. */
+    private fun jsonRequest(url: String, token: String?) = Request.Builder().url(url).header("Accept", "application/json")
+        .apply { token?.takeIf { it.isNotBlank() }?.let { header("Authorization", "Bearer $it") } }
+
     /** The body of a GET of [url] as text; an answer other than 2xx is an [HttpException]. */
-    suspend fun getText(url: String, client: OkHttpClient = this.client, io: CoroutineDispatcher = Dispatchers.IO): String =
+    suspend fun getText(url: String, client: OkHttpClient = this.client, io: CoroutineDispatcher = Dispatchers.IO, token: String? = null): String =
         withContext(io) {
-            client.newCall(Request.Builder().url(url).header("Accept", "application/json").build()).execute().use { response ->
+            client.newCall(jsonRequest(url, token).build()).execute().use { response ->
                 if (!response.isSuccessful) throw HttpException(response.code, "GET $url answered ${response.code}")
                 response.body?.string() ?: throw IOException("GET $url answered without a body")
             }
@@ -39,9 +43,9 @@ object Http {
      * The body of a GET of [url] with its ETag, or null when the server says the one
      * kept, of [etag], hasn't changed; an answer other than 2xx or 304 is an [HttpException].
      */
-    suspend fun getIfChanged(url: String, etag: String?, client: OkHttpClient = this.client, io: CoroutineDispatcher = Dispatchers.IO): Tagged? =
+    suspend fun getIfChanged(url: String, etag: String?, client: OkHttpClient = this.client, io: CoroutineDispatcher = Dispatchers.IO, token: String? = null): Tagged? =
         withContext(io) {
-            val request = Request.Builder().url(url).header("Accept", "application/json")
+            val request = jsonRequest(url, token)
                 .apply { if (etag != null) header("If-None-Match", etag) }
                 .build()
             client.newCall(request).execute().use { response ->

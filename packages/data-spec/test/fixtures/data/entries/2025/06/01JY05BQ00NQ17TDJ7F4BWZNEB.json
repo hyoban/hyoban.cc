@@ -1,0 +1,18 @@
+{
+  "uid": "01JY05BQ00NQ17TDJ7F4BWZNEB",
+  "at": "2025-06-18",
+  "parts": {
+    "device": {
+      "v": 1,
+      "id": "test-laptop",
+      "name": "测试笔记本",
+      "category": "电脑",
+      "price": 8999
+    }
+  },
+  "published": {
+    "at": "2026-10-01T12:00:00+08:00"
+  },
+  "createdAt": "2026-10-01T12:00:00+08:00",
+  "updatedAt": "2026-10-01T12:00:00+08:00"
+}

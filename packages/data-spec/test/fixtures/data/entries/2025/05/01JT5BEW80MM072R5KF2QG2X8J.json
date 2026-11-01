@@ -1,0 +1,54 @@
+{
+  "uid": "01JT5BEW80MM072R5KF2QG2X8J",
+  "at": "2025-05-01T15:20:00+08:00",
+  "place": "wai-tan",
+  "parts": {
+    "text": {
+      "v": 1,
+      "text": "到外滩了，人比想象的多。"
+    },
+    "media": {
+      "v": 1,
+      "items": [
+        {
+          "uid": "01JT5BEW80T1NSBEV96HC4WNAQ",
+          "alt": "外滩江边一排老楼",
+          "type": "image",
+          "width": 1600,
+          "height": 1200,
+          "published": {
+            "key": "moments/01jt5bew80mm072r5kf2qg2x8j/01jt5bew80t1nsbev96hc4wnaq.jpg",
+            "contentType": "image/jpeg",
+            "bytes": 200000,
+            "etag": "42946c81b039c802769d91e486a4d5fb",
+            "width": 1600,
+            "height": 1200,
+            "variants": [
+              {
+                "key": "moments/01jt5bew80mm072r5kf2qg2x8j/01jt5bew80t1nsbev96hc4wnaq-480w.webp",
+                "contentType": "image/webp",
+                "bytes": 1480,
+                "etag": "583206d228497fdeecd971fdc436ed08",
+                "width": 480,
+                "height": 360
+              },
+              {
+                "key": "moments/01jt5bew80mm072r5kf2qg2x8j/01jt5bew80t1nsbev96hc4wnaq-960w.webp",
+                "contentType": "image/webp",
+                "bytes": 1960,
+                "etag": "47efec699dc757fb6fedf8533a025fe7",
+                "width": 960,
+                "height": 720
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "published": {
+    "at": "2025-05-01T15:20:00+08:00"
+  },
+  "createdAt": "2025-05-01T15:20:00+08:00",
+  "updatedAt": "2025-05-01T15:20:00+08:00"
+}

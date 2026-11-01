@@ -1,0 +1,22 @@
+{
+  "uid": "01KEZF7C005JW36DCVZ4SH74KV",
+  "at": "2026-01-15",
+  "parts": {
+    "subscription": {
+      "v": 1,
+      "name": "测试笔记",
+      "link": "https://example.com/notes",
+      "price": 98,
+      "currency": "CNY",
+      "period": "year",
+      "renews": "2027-01-15",
+      "autoRenew": true,
+      "paidWith": "测试卡"
+    }
+  },
+  "published": {
+    "at": "2026-10-01T12:00:00+08:00"
+  },
+  "createdAt": "2026-10-01T12:00:00+08:00",
+  "updatedAt": "2026-10-01T12:00:00+08:00"
+}

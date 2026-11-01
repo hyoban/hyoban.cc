@@ -1,0 +1,54 @@
+{
+  "uid": "01KNBEMY104VP0QXQDE2TCT9K3",
+  "at": "2026-04-04T13:15:00+08:00",
+  "place": "xi-hu",
+  "parts": {
+    "text": {
+      "v": 1,
+      "text": "西湖边坐了一下午。"
+    },
+    "media": {
+      "v": 1,
+      "items": [
+        {
+          "uid": "01KNBEMY10A9QJVR97AEGG4H1H",
+          "alt": "湖边的柳树和游船",
+          "type": "image",
+          "width": 1600,
+          "height": 1200,
+          "published": {
+            "key": "moments/01knbemy104vp0qxqde2tct9k3/01knbemy10a9qjvr97aegg4h1h.jpg",
+            "contentType": "image/jpeg",
+            "bytes": 200000,
+            "etag": "3eea1177faac80a40edfa520460d410f",
+            "width": 1600,
+            "height": 1200,
+            "variants": [
+              {
+                "key": "moments/01knbemy104vp0qxqde2tct9k3/01knbemy10a9qjvr97aegg4h1h-480w.webp",
+                "contentType": "image/webp",
+                "bytes": 1480,
+                "etag": "73d23a78d86555ca2544082b88940da7",
+                "width": 480,
+                "height": 360
+              },
+              {
+                "key": "moments/01knbemy104vp0qxqde2tct9k3/01knbemy10a9qjvr97aegg4h1h-960w.webp",
+                "contentType": "image/webp",
+                "bytes": 1960,
+                "etag": "551aff74e6689f5d53115b20ce2452a5",
+                "width": 960,
+                "height": 720
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "published": {
+    "at": "2026-04-04T13:15:00+08:00"
+  },
+  "createdAt": "2026-04-04T13:15:00+08:00",
+  "updatedAt": "2026-04-04T13:15:00+08:00"
+}
