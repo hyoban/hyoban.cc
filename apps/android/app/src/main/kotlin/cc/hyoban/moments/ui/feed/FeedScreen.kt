@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.MainActivity
 import cc.hyoban.moments.ui.components.MediaBeside
 import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.components.LocalTopClearance
@@ -35,6 +36,7 @@ import cc.hyoban.moments.ui.components.floatingElevation
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -192,8 +194,10 @@ fun FeedScreen(
     val loaded by container.repository.loaded.collectAsStateWithLifecycle()
     val tracks = rememberTimelineTracks(container)
     // The app counts as started once the Moments on the phone are read, as the system measures
-    // a start to the screen people came for; the splash stays up until then (MainActivity).
+    // a start to the screen people came for. The splash stays up until then.
     ReportDrawnWhen { loaded && tracks.ready }
+    val activity = LocalActivity.current as? MainActivity
+    LaunchedEffect(loaded, tracks.ready) { if (loaded && tracks.ready) activity?.showTimeline() }
     val syncing by container.repository.syncing.collectAsStateWithLifecycle()
     val pull = rememberPulledRefresh(container)
     ShowRefreshErrors(container)

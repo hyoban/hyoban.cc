@@ -50,7 +50,7 @@ open class MainActivity : ComponentActivity() {
             }
         }
         val pages = startPages(restored = savedInstanceState != null)
-        if (pages == listOf(Feed)) holdSplashUntilDrawn()
+        if (pages == listOf(Feed)) holdSplash()
         setContent {
             MomentsTheme {
                 MomentsApp(container = container, pages = pages)
@@ -61,24 +61,31 @@ open class MainActivity : ComponentActivity() {
         window.setBackgroundDrawable(null)
     }
 
+    /** Whether the system's splash is still held up, until [showTimeline]. */
+    private var splashHeld = false
+
     /**
      * Keeps the system's splash, the app's icon, up until the timeline has read what is on the
-     * phone and reported itself drawn, so the app opens on its Moments rather than a skeleton.
-     * The page is composed and laid out behind it meanwhile, only not drawn; past
-     * [SPLASH_LIMIT_MS] it shows whatever it has.
+     * phone ([showTimeline]), so the app opens on its Moments rather than an empty page. The
+     * page is composed and laid out behind it meanwhile, only not drawn, so the timeline can't
+     * wait for a drawn frame to say so; past [SPLASH_LIMIT_MS] it shows whatever it has.
      */
-    private fun holdSplashUntilDrawn() {
-        var held = true
-        fullyDrawnReporter.addOnReportDrawnListener { held = false }
+    private fun holdSplash() {
+        splashHeld = true
         val content = findViewById<View>(android.R.id.content)
-        content.postDelayed({ held = false }, SPLASH_LIMIT_MS)
+        content.postDelayed(::showTimeline, SPLASH_LIMIT_MS)
         content.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
             override fun onPreDraw(): Boolean {
-                if (held) return false
+                if (splashHeld) return false
                 content.viewTreeObserver.removeOnPreDrawListener(this)
                 return true
             }
         })
+    }
+
+    /** Lets the splash go: the timeline has what it opens with. */
+    fun showTimeline() {
+        splashHeld = false
     }
 
     /** Whether this activity has handed its work to others and finished, so it draws nothing. */
