@@ -6,15 +6,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -31,6 +28,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.Path
@@ -125,6 +125,19 @@ fun chatItems(items: List<DayItem>, linked: Map<String, List<Txn>>): List<ChatIt
 
 /** How wide the strip a bubble keeps on its side for the tail; the bubble itself stands this far in. */
 val TAIL = 8.dp
+
+/**
+ * A bubble as wide as [widest] makes of the [column] it stands in, and its tail's strip: just
+ * that wide if [fill], else as wide as it needs up to that. Worked out as it is measured, so the
+ * bubble is composed with the rest of its row and a list can make it ready ahead of a scroll.
+ */
+fun Modifier.bubbleWidth(fill: Boolean, widest: (column: Dp) -> Dp): Modifier = layout { measurable, constraints ->
+    val max = constraints.constrainWidth((widest(constraints.maxWidth.toDp()) + TAIL).roundToPx())
+    val placeable = measurable.measure(
+        if (fill) constraints.copy(minWidth = max, maxWidth = max) else constraints.copy(minWidth = minOf(constraints.minWidth, max), maxWidth = max),
+    )
+    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+}
 
 /** The corners of a sent bubble's body, inside its tail's strip: what its photos and its press are clipped to. */
 fun sentBodyShape(joinedAbove: Boolean, joinedBelow: Boolean) = androidx.compose.foundation.shape.RoundedCornerShape(
@@ -241,15 +254,14 @@ fun RecordsBubble(
         null -> onDay
     }
     val large = isLargeFont()
-    BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.TopStart) {
+    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopStart) {
         // As wide as three quarters of the column, or the whole of it with the font set large;
         // a single record only as wide as it needs. Never wider than 420 on a wide screen. The
         // tail's strip comes on top, at the left.
-        val max = minOf(if (large) maxWidth - TAIL else maxWidth * 0.86f, 420.dp) + TAIL
         val shape = BubbleShape(sent = false, joinedAbove = false, joinedBelow = false)
         Column(
             Modifier
-                .then(if (single) Modifier.widthIn(max = max) else Modifier.width(max))
+                .bubbleWidth(fill = !single) { column -> minOf(if (large) column - TAIL else column * 0.86f, 420.dp) }
                 .clip(shape)
                 .border(cardBorder(), shape)
                 .then(if (open != null) Modifier.clickable(onClick = open) else Modifier)

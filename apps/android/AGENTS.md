@@ -15,7 +15,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   logcat's crash buffer. Build only what the step needs, not the CI set each time.
 - While the change is still in development, install only the debug build, never the release.
   Install the release once, after committing and before pushing: `./gradlew :app:assembleRelease`
-  (half a minute, R8's), then `app/build/outputs/apk/release/app-release.apk`; judge motion
+  (half a minute, R8's), then `adb install-multiple -r app/build/outputs/apk/release/app-release.apk
+  app/build/outputs/apk/release/baselineProfiles/0/app-release.dm`: with its profile beside it the
+  phone compiles the app ahead of time on install (`dumpsys package` says `speed-profile`), where
+  the APK alone runs interpreted until the phone next compiles in the background. Judge motion
   and dropped frames on it then, as the debug build runs slower. Both are signed
   with the debug key unless `local.properties` has a release key, so either installs over
   the other and the app's data stays.
