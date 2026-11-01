@@ -179,8 +179,8 @@ fun MomentFeed(
     // Footprints join a day that is there, never make one of their own.
     val timeline = remember(days, bills, tracks.days, oldestFirst, chat, chronological) {
         val byDay = days.toMap()
-        (byDay.keys + bills.loose.keys + bills.charges.keys).sortedDescending().let { if (chronological) it.reversed() else it }.map { day ->
-            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty()).let { if (oldestFirst || chat) it.reversed() else it }
+        (byDay.keys + bills.loose.keys + bills.charges.keys + bills.things.keys).sortedDescending().let { if (chronological) it.reversed() else it }.map { day ->
+            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty(), bills.things[day].orEmpty()).let { if (oldestFirst || chat) it.reversed() else it }
             Triple(day, byDay[day].orEmpty(), if (day in tracks.days) items + DayItem.Track(day) else items)
         }
     }
@@ -357,6 +357,7 @@ fun MomentFeed(
                             is DayItem.Moment -> card(item.moment, itemModifier, false)
                             is DayItem.Bills -> BillGroup(item.txns, bills.ledger, onBill, itemModifier)
                             is DayItem.ChargeItem -> ChargeRow(item.charge, itemModifier)
+                            is DayItem.ThingItem -> ThingRow(item.thing, itemModifier)
                             is DayItem.Track -> TrackRow(item.day, tracks, onClick = { onDay?.invoke(item.day) }, itemModifier)
                         }
                     }

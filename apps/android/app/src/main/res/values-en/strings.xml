@@ -1022,4 +1022,6 @@
     <string name="thing_deleted">Will be deleted from the site</string>
     <string name="thing_changed">Changed</string>
     <string name="me_car_summary">%2$s in month %1$d</string>
+    <string name="timeline_bought">Bought %s</string>
+    <string name="timeline_renewed">Renewed %s</string>
 </resources>

@@ -127,11 +127,12 @@ private fun PageColumn(content: @Composable () -> Unit) {
 
 /** 设备: what is owned, newest first, and what was sold, each with what it costs a day. */
 @Composable
-fun DevicesScreen(container: AppContainer, onBack: () -> Unit) {
+fun DevicesScreen(container: AppContainer, onBack: () -> Unit, open: String? = null) {
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val devices = remember(entries) { Things.devices(entries.values) }
     val today = LocalDate.now()
-    var editing by remember { mutableStateOf<Device?>(null) }
+    // Opened from a record on the timeline, with that device's sheet over the page.
+    var editing by remember { mutableStateOf(devices.firstOrNull { it.uid == open }) }
     var adding by rememberSaveable { mutableStateOf(false) }
     val (sold, owned) = devices.partition { it.soldOn != null }
     SubPage(
@@ -304,11 +305,11 @@ private fun DeviceSheet(container: AppContainer, device: Device?, categories: Li
 
 /** 订阅: by month, by year, then one row each for what was bought once and what was stopped. */
 @Composable
-fun SubscriptionsScreen(container: AppContainer, onBack: () -> Unit) {
+fun SubscriptionsScreen(container: AppContainer, onBack: () -> Unit, open: String? = null) {
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val all = remember(entries) { Things.subscriptions(entries.values) }
     val today = LocalDate.now()
-    var editing by remember { mutableStateOf<Subscription?>(null) }
+    var editing by remember { mutableStateOf(all.firstOrNull { it.uid == open }) }
     var adding by rememberSaveable { mutableStateOf(false) }
     var showOnce by rememberSaveable { mutableStateOf(false) }
     var showEnded by rememberSaveable { mutableStateOf(false) }
