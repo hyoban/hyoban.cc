@@ -98,6 +98,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -398,11 +399,14 @@ private fun MapContent(
         var card by remember { mutableStateOf(ROUTE_CARD) }
         val lift = animateDpAsState(if (trip != null) card + Space.m - FLOATING_INSET else 0.dp, AppTheme.motionScheme.defaultSpatialSpec(), label = "map buttons")
         val sheetTop: () -> Float? = { sheetState.top.takeUnless { wide || it.isNaN() || screenHeight == 0 }?.plus(statusTop) }
+        // Above the resting trips' line on a phone held upright; on a wide window the panel stands
+        // beside the map, so only [foot] keeps them off its foot.
+        val restingLift: Density.() -> Int = { if (wide) 0 else -(clearance + TRIPS_PEEK).roundToPx() }
         Column(
             Modifier.align(Alignment.BottomEnd).then(if (wide) Modifier.navigationBarsPadding() else Modifier).sideInsetsPadding()
                 .padding(end = MAP_EDGE - FLOATING_INSET, bottom = if (wide) foot else Space.m - FLOATING_INSET)
                 .offset {
-                    val above = sheetTop()?.let { (it - screenHeight).roundToInt() } ?: -(clearance + TRIPS_PEEK).roundToPx()
+                    val above = sheetTop()?.let { (it - screenHeight).roundToInt() } ?: restingLift()
                     IntOffset(0, above - lift.value.roundToPx())
                 }
                 .graphicsLayer {
@@ -428,7 +432,7 @@ private fun MapContent(
             // 12 above the panel's top, as the buttons are.
             modifier = Modifier.align(Alignment.BottomCenter).then(if (wide) Modifier.navigationBarsPadding() else Modifier).sideInsetsPadding()
                 .padding(start = if (wide) rail.left + panelWidth + MAP_EDGE else MAP_EDGE, end = MAP_EDGE, bottom = if (wide) foot else Space.m)
-                .offset { IntOffset(0, sheetTop()?.let { (it - screenHeight).roundToInt() } ?: -(clearance + TRIPS_PEEK).roundToPx()) }
+                .offset { IntOffset(0, sheetTop()?.let { (it - screenHeight).roundToInt() } ?: restingLift()) }
                 .widthIn(max = READABLE_WIDTH)
                 .onSizeChanged { card = with(density) { it.height.toDp() } },
         ) {
@@ -500,7 +504,12 @@ private fun MapContent(
                 shadowElevation = ShadowElevation,
             ) { panel() }
         } else {
-            Box(Modifier.fillMaxHeight().padding(start = rail.left).width(panelWidth).background(AppColors.sheet).testTag("map_panel")) { panel() }
+            // The column's colour runs to the screen's edge, under the rail and the camera's cutout;
+            // its content stands clear of both, as the map's controls beside it do.
+            Box(
+                Modifier.fillMaxHeight().background(AppColors.sheet).sideInsetsPadding(WindowInsetsSides.Start)
+                    .padding(start = rail.left).width(panelWidth).testTag("map_panel"),
+            ) { panel() }
         }
         return
     }
