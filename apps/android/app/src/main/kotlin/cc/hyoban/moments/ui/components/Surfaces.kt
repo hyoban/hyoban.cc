@@ -141,7 +141,7 @@ fun PressableCard(
 @Composable
 fun Pill(text: String, modifier: Modifier = Modifier, icon: ImageVector? = null) {
     Row(
-        modifier.clip(Corners.full).background(LocalSurfaceLevel.current.raised.fill())
+        modifier.background(LocalSurfaceLevel.current.raised.fill(), Corners.full)
             .heightIn(min = 28.dp).padding(start = if (icon != null) Space.s else Space.m, end = Space.m, top = Space.xs, bottom = Space.xs),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.s),

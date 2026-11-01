@@ -33,9 +33,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.unit.LayoutDirection
+import cc.hyoban.moments.ui.theme.Radius
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -58,10 +66,32 @@ import kotlin.math.roundToInt
 // Sheets from the foot of the screen: the surface, its top in the large corners, a short handle
 // at its top, dragged by it or by what it holds once that is at its top.
 
+/**
+ * [color] in [shape], round at its top alone, as a sheet is, and what it holds clipped to its
+ * rectangle, for a sheet whose content keeps clear of its corners. The graphics pipeline draws a
+ * shape it can't work out as a mask in software, again every frame, as large as the shape and
+ * across every word and photo clipped to it: the corners are drawn as shapes the size of the
+ * corners alone, and the rest, and the clip, as rectangles, which it draws and clips as it goes.
+ */
+fun Modifier.sheetSurface(color: Color, shape: CornerBasedShape): Modifier =
+    drawWithCache {
+        val corner = minOf((Radius.large * 3).toPx(), size.width / 2, size.height).roundToInt().toFloat()
+        val piece = Size(corner, corner)
+        val start = shape.copy(topEnd = ZeroCornerSize).createOutline(piece, layoutDirection, this)
+        val end = shape.copy(topStart = ZeroCornerSize).createOutline(piece, layoutDirection, this)
+        val (left, right) = if (layoutDirection == LayoutDirection.Ltr) start to end else end to start
+        onDrawBehind {
+            drawOutline(left, color)
+            translate(left = size.width - corner) { drawOutline(right, color) }
+            drawRect(color, Offset(corner, 0f), Size(size.width - corner * 2, corner))
+            drawRect(color, Offset(0f, corner), Size(size.width, size.height - corner))
+        }
+    }.clipToBounds()
+
 /** A sheet's handle: a short capsule in the control border. */
 @Composable
 fun SheetHandle(modifier: Modifier = Modifier) {
-    Box(modifier.padding(vertical = 12.dp).size(32.dp, 4.dp).clip(Corners.full).background(tokens.borderStrong))
+    Box(modifier.padding(vertical = 12.dp).size(32.dp, 4.dp).background(tokens.borderStrong, Corners.full))
 }
 
 /**
@@ -255,8 +285,8 @@ fun BottomSheetScaffold(
                 .onSizeChanged { sheetHeight = it.height.toFloat() }
                 .offset { IntOffset(0, (state.offset.value.takeUnless { it.isNaN() } ?: room).roundToInt()) }
                 .then(if (sheetShadowElevation > 0.dp) Modifier.softShadow(sheetShadowElevation, shape) else Modifier)
-                .clip(shape)
-                .background(sheetContainerColor)
+                // Below a handle, taller than the corners are round, nothing in the sheet reaches them.
+                .then(if (sheetDragHandle != null) Modifier.sheetSurface(sheetContainerColor, shape) else Modifier.clip(shape).background(sheetContainerColor))
                 .draggable(
                     rememberDraggableState { delta ->
                         val moved = state.dragBy(delta)
