@@ -1,5 +1,4 @@
 import {
-  momentRecordSchema,
   placesSchema,
   routeSchema,
   tripRecordSchema,
@@ -19,6 +18,12 @@ import {
   type TripLocation,
   type TripRoute,
 } from '@hyoban/trip-map'
+import {
+  collectionSchema,
+  collectionToTrip,
+  entryToMoment,
+  isMomentEntry,
+} from '@hyoban/data-spec/entry'
 import pLimit from 'p-limit'
 import {
   placesQuery,
@@ -30,11 +35,11 @@ import {
   TRIP_ROUTES,
   TRIP_ROUTES_ETAG,
   TRIP_ROUTES_REVISION,
-  tripsQuery,
   type Database,
 } from './database.ts'
 import { REVISION, routeRow } from './rows.ts'
-import { commit, upsert, type WriteContext } from './writes.ts'
+import { readCollectionRow } from './entries.ts'
+import { commit, toEntry, upsert, type WriteContext } from './writes.ts'
 
 // The trips' routes. Each leg between two consecutive places of a trip is driven along
 // the road Mapbox's Directions finds, or for a train leg along the rail line
@@ -73,28 +78,35 @@ const NO_ROUTE = 'routes_none'
 
 /** What the trips are built from, read at one revision. */
 export async function readTripInputs(db: Database) {
-  const [revision, places, trips, moments, routes, none] = await readAll(db, [
+  const [revision, places, collections, entryRows, routes, none] = await readAll(db, [
     revisionQuery(db),
     placesQuery(db),
-    tripsQuery(db),
     db.prepare(
-      `SELECT record FROM moments
-       WHERE deleted_at IS NULL AND published = 1 AND hidden = 0 AND kind = 'moment'`,
+      `SELECT id, rev, deleted_at, record, collection FROM trips
+       WHERE deleted_at IS NULL ORDER BY start_date, id`,
+    ),
+    // Moments for the stops, and marks for the waypoints.
+    db.prepare(
+      `SELECT record, entry FROM moments WHERE deleted_at IS NULL AND kind IN ('moment', 'mark')`,
     ),
     routesQuery(db),
     db.prepare(`SELECT value FROM meta WHERE key = ?1`).bind(NO_ROUTE),
   ])
   const [noRoute] = none as { value: string }[]
+  const entries = (entryRows as Parameters<typeof toEntry>[0][]).map((row) => toEntry(row))
 
   return {
     revision: toRevision(revision),
     places: placesSchema.parse(toRecordsByKey(places)),
-    trips: (trips as { record: string }[]).map((row) =>
-      tripRecordSchema.parse(JSON.parse(row.record)),
+    trips: (collections as Parameters<typeof readCollectionRow>[0][]).map((row) =>
+      tripRecordSchema.parse(
+        collectionToTrip(collectionSchema.parse(JSON.parse(readCollectionRow(row).text)), entries),
+      ),
     ),
-    moments: (moments as { record: string }[]).map((row) =>
-      momentRecordSchema.parse(JSON.parse(row.record)),
-    ),
+    // As the site takes them: Moments published and not private.
+    moments: entries
+      .filter((entry) => isMomentEntry(entry) && entry.published && entry.visibility !== 'private')
+      .map((entry) => entryToMoment(entry)),
     routes: toRecordsByKey(routes) as Record<string, TripRoute>,
     noRoute: new Set<string>(noRoute ? (JSON.parse(noRoute.value) as string[]) : []),
   }

@@ -72,7 +72,7 @@ even when starting from the repository root.
   record a moment and an optional point with parts by plugin, a trip a collection, each
   thing public or private by its own say, its container's, its plugin's, else private.
   The API serves them as entries and collections, `/v2` alone; D1 still keeps each row's
-  first shape (Moments and trips) beside it, which the routes and the channel work from.
+  first shape (Moments and trips) beside it, read only for rows written before the second.
   Every API request needs a token and sees everything; the site trims what it shows to what
   is public. `vp run data:migrate` moves `data/` between the layouts (dry run by default,
   `--rollback` back); `vp run data:import` then moves D1. Ask before either touches live data.
@@ -83,6 +83,16 @@ even when starting from the repository root.
   `data/zeekr/` and `data/schema/`. The car's expenses and redacted Zeekr sources live only
   there in the repository. Tests read the made-up `packages/data-spec/test/fixtures/data/`,
   never real records. The formatter leaves `data/` alone.
+- What leaves the phone keeps one shape on both sides: the app keeps a complete copy of D1's
+  records in SQLite, every kind (entries, collections, places, public tracks, routes, the
+  car's statistics and captures) in the same table, with the same columns and the same
+  record JSON, defined once in `@hyoban/data-spec/tables` and generated for each by
+  `vp run data:tables`, so changing one changes both. The copy only follows `GET /v2/rows`;
+  the phone's edits still go through `POST /v2/changes`. The server's own bookkeeping (caches, leases, the channel's
+  posts) is not copied. Only what stays on the phone (the ledger, the footprints, the app's
+  unpublished changes and settings) takes a shape of its own. D1 still carries the first
+  shape and the app keeps a partial copy as JSON files; work moves both toward this, never
+  away.
 - Android keeps edits locally until the user reviews and publishes one change set
   through `POST /v2/changes`. Upload originals first; do not bypass this publishing
   boundary with individual writes. The API fetches missing trip routes after writes.

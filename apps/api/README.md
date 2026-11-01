@@ -16,6 +16,7 @@ is public itself, as `getPublicEntry` does.
 | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `GET /`                                       | `{ name, revision }`                                                                                                    |
 | `GET /v2/changes?since=&limit=`               | the change feed: `entries`, `deleted`, `places`, `collections`, `tracks`, the car's statistics and theirs gone          |
+| `GET /v2/rows?since=&limit=`                  | every row of every table, deleted ones too, for a copy of D1 row for row                                                |
 | `GET /v2/entries/:uid`                        | one entry                                                                                                               |
 | `GET /v2/collections`, `/v2/collections/:key` | `{ revision, collections }` by start date, or one by its slug (else its uid)                                            |
 | `GET /v2/tracks`                              | `{ revision, tracks }`, the spans of footprints made public                                                             |
@@ -26,8 +27,9 @@ is public itself, as `getPublicEntry` does.
 The records are entries, collections and public tracks (`@hyoban/data-spec/entry`). `/v1`,
 which served them as Moments and trips, is gone. Each row still holds the first shape too
 (`migrations/0006_entries.sql`): `record` as first written, beside `entry` or `collection`,
-and `shown`, what of it is public. No read serves `record` or `shown` any more, but the
-routes and the Telegram channel are still worked out from the Moments and trips it holds.
+and `shown`, what of it is public. Nothing reads `record` or `shown` any more but for a row
+written before it had its second shape; the routes and the Telegram channel are worked out
+from the entries and collections too.
 
 ### The change feed
 
@@ -38,6 +40,12 @@ Follow `next` with `?cursor=<next>` until it is null, then keep `revision` for t
 `since`. Every page is of the revision the first was read at, so an entry never names a
 place the feed hasn't handed out. `since=0` is everything; nothing is dropped from the
 database, only marked deleted.
+
+`GET /v2/rows` pages the same way, `500` at most, but hands out rows rather than records:
+each `{ table, key, rev, deletedAt, record }` of the tables in
+`@hyoban/data-spec/tables`, a table at a time in its order, deleted rows included from the
+start too, so the app can keep the same tables D1 does. Until D1 moves over, entries and
+collections are read from the Moments and trips that keep them. Its cursor is its own.
 
 ## Writing
 
