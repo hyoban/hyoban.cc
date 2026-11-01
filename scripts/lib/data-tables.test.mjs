@@ -11,7 +11,7 @@ import {
   isMarkEntry,
   isMomentEntry,
 } from '@hyoban/data-spec/entry'
-import { getTableStatements } from '@hyoban/data-spec/tables'
+import { copiedTables, getTableStatements } from '@hyoban/data-spec/tables'
 import { listJsonFiles, readJson } from '../../apps/web/src/data/store.ts'
 import { kotlinFile, renderKotlin, renderSql, sqlFile } from './data-tables.mjs'
 
@@ -32,7 +32,8 @@ test('the Kotlin strings read back as the same statements', () => {
     text.replaceAll(/^ {8}/gm, '').replaceAll("${'$'}", '$'),
   )
 
-  assert.deepEqual(statements, getTableStatements())
+  assert.deepEqual(statements, getTableStatements(copiedTables))
+  assert.ok(!copiedTables.some((table) => table.name === 'routes'), 'the routes are D1’s alone')
 })
 
 test("the worked-out columns agree with the spec's rules", () => {

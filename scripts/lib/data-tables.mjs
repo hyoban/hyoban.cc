@@ -1,9 +1,9 @@
 import { fileURLToPath } from 'node:url'
 
-import { getTableStatements, tables } from '@hyoban/data-spec/tables'
+import { copiedTables, getTableStatements } from '@hyoban/data-spec/tables'
 
 // What `vp run data:tables` writes from @hyoban/data-spec/tables: the tables as SQL for D1,
-// and as Kotlin for the app's copy, so both keep what leaves the phone the same way.
+// and those the app copies as Kotlin, so both keep what leaves the phone the same way.
 
 export const sqlFile = fileURLToPath(new URL('../../apps/api/schema.sql', import.meta.url))
 
@@ -35,11 +35,13 @@ export function renderKotlin() {
     "/** The tables the copy keeps the API's records in, as D1 keeps them. */",
     'object CopyTables {',
     '    /** Every table, in the order the change feed hands them out. */',
-    `    val names = listOf(${tables.map((table) => JSON.stringify(table.name)).join(', ')})`,
+    `    val names = listOf(${copiedTables.map((table) => JSON.stringify(table.name)).join(', ')})`,
     '',
     '    /** The statements that make them, one per table and index. */',
     '    val statements = listOf(',
-    ...getTableStatements().map((statement) => `${indent(raw(statement), 8)}.trimIndent(),`),
+    ...getTableStatements(copiedTables).map(
+      (statement) => `${indent(raw(statement), 8)}.trimIndent(),`,
+    ),
     '    )',
     '}',
     '',

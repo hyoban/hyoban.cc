@@ -1,7 +1,8 @@
 // The tables what leaves the phone is kept in, the same in D1 and in the app's copy. A row
 // is its key, the revision it last changed at, when it was deleted, and its record as the
 // spec has it, in JSON; every other column is worked out from the record by SQLite itself,
-// so it always says what the record says. `vp run data:tables` writes these out for both.
+// so it always says what the record says. `vp run data:tables` writes these out for both;
+// what the server works out for itself (the trips' routes) is D1's alone.
 
 export interface TableColumn {
   name: string
@@ -16,6 +17,8 @@ export interface Table {
   columns: readonly TableColumn[]
   /** Indexes beyond `(rev, key)`, which every table has for `GET /v2/rows`. */
   indexes: readonly (readonly string[])[]
+  /** False for what the server works out and serves on its own, which the app doesn't copy. */
+  copied?: false
 }
 
 const field = (path: string) => `json_extract(record, '$.${path}')`
@@ -27,7 +30,8 @@ export const ROW_COLUMNS = ['key', 'rev', 'deleted_at', 'record'] as const
 /** Every table, in the order `GET /v2/rows` hands them out: what others name comes first. */
 export const tables = [
   { name: 'places', key: 'a place id', columns: [], indexes: [] },
-  { name: 'routes', key: 'a leg key', columns: [], indexes: [] },
+  // Worked out from the trips and fetched by the server; the app reads them as `GET /v2/routes`.
+  { name: 'routes', key: 'a leg key', columns: [], indexes: [], copied: false },
   {
     name: 'collections',
     key: "the collection's slug, else its uid in lowercase (getCollectionKey)",
@@ -90,9 +94,14 @@ export const tables = [
 
 export type TableName = (typeof tables)[number]['name']
 
-/** The statements that make the tables, one per table and index. */
-export function getTableStatements(): string[] {
-  return tables.flatMap((table: Table) => [
+/** The tables `GET /v2/rows` hands out and the app keeps a copy of, in their order. */
+export const copiedTables: readonly Table[] = tables.filter(
+  (table: Table) => table.copied !== false,
+)
+
+/** The statements that make the tables (`of` them, else all), one per table and index. */
+export function getTableStatements(of: readonly Table[] = tables): string[] {
+  return of.flatMap((table: Table) => [
     [
       `CREATE TABLE ${table.name} (`,
       [
