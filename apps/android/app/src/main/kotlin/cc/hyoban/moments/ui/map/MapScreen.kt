@@ -364,7 +364,7 @@ private fun MapContent(
                     },
                 )
                 .statusBarsPadding().sideInsetsPadding()
-                .padding(top = Space.s, start = if (wide) rail.left + panelWidth + MAP_EDGE else MAP_EDGE, end = MAP_EDGE),
+                .padding(top = Space.s, start = if (wide) rail.left + panelWidth + MAP_EDGE else MAP_EDGE, end = rail.right + MAP_EDGE),
             verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
@@ -431,7 +431,7 @@ private fun MapContent(
             exit = fadeOut(motion.defaultEffectsSpec()) + slideOutVertically(motion.defaultSpatialSpec()) { it / 2 },
             // 12 above the panel's top, as the buttons are.
             modifier = Modifier.align(Alignment.BottomCenter).then(if (wide) Modifier.navigationBarsPadding() else Modifier).sideInsetsPadding()
-                .padding(start = if (wide) rail.left + panelWidth + MAP_EDGE else MAP_EDGE, end = MAP_EDGE, bottom = if (wide) foot else Space.m)
+                .padding(start = if (wide) rail.left + panelWidth + MAP_EDGE else MAP_EDGE, end = rail.right + MAP_EDGE, bottom = if (wide) foot else Space.m)
                 .offset { IntOffset(0, sheetTop()?.let { (it - screenHeight).roundToInt() } ?: restingLift()) }
                 .widthIn(max = READABLE_WIDTH)
                 .onSizeChanged { card = with(density) { it.height.toDp() } },

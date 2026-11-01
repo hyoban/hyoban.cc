@@ -675,7 +675,7 @@ private object MainMap {
     var style: Style? = null
 
     /** The screen's shape the places were last framed for: on its side or not, and which side the tabs stood down. */
-    var framedFor: Triple<Boolean, Boolean, Dp>? = null
+    var framedFor: Triple<Boolean, cc.hyoban.moments.ui.RailSpace, Dp>? = null
 
     /** Whether the fog has been shown since the app started; left on, it sweeps in the first time. */
     var fogOpened = false
@@ -1019,7 +1019,7 @@ fun PlacesMap(
         if (allLocations.isNotEmpty()) ready.flyToFrame(allLocations, frame, reduced)
     }
 
-    val shape = Triple(landscape, rail.left > 0.dp, panel)
+    val shape = Triple(landscape, rail, panel)
     LaunchedEffect(map, places, shape, allLocations) {
         val (ready, style) = map?.live ?: return@LaunchedEffect
         val features = places.map { place ->
