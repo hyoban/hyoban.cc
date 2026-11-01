@@ -1289,6 +1289,17 @@ private fun pinImage(painter: VectorPainter, density: Density): android.graphics
     return image.asAndroidBitmap().apply { this.density = (density.density * DisplayMetrics.DENSITY_DEFAULT).roundToInt() }
 }
 
+
+/** One place on a map, close enough to see its streets: a place's page on a phone on its side. */
+@Composable
+fun PlaceMap(place: Place, modifier: Modifier = Modifier, topInset: Dp = 0.dp) {
+    val points = remember(place) { listOf(place.latLng) }
+    PointsMap(points, emptyList(), dot = 7f, padding = 48.dp, modifier = modifier, interactive = false, topInset = topInset, closest = PLACE_CLOSEST)
+}
+
+/** How close a place's own map frames it: its neighbourhood, a few streets round it. */
+private const val PLACE_CLOSEST = 13.0
+
 /**
  * A trip's route along the roads where [segments] has it, else its stops joined straight,
  * framed to fit; a still picture unless [interactive], so a list around it still scrolls.

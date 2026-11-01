@@ -1,5 +1,9 @@
 package cc.hyoban.moments.ui.trips
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxHeight
+import cc.hyoban.moments.ui.components.railPadding
+import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
@@ -79,112 +83,139 @@ fun TripEditScreen(container: AppContainer, id: String, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val valid = title.isNotBlank() && start <= end
     SubPage(stringResource(R.string.trip_edit_title), onBack, Modifier.background(AppColors.page)) {
-        PageWidth(maxColumns = 1) { columns ->
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = LocalTopClearance.current)
-                    .imePadding()
-                    .navigationBarsPadding()
-                    .padding(horizontal = columns.margin)
-                    .padding(bottom = Space.xl),
-                verticalArrangement = Arrangement.spacedBy(Space.s),
-            ) {
-                OutlinedTextField(
-                    title,
-                    { title = it },
-                    Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s).testTag("trip_title"),
-                    label = { Text(stringResource(R.string.trip_edit_name)) },
-                    singleLine = true,
-                )
-                SegmentedGroup(
-                    stringResource(R.string.trip_edit_days),
-                    stringResource(R.string.trip_edit_days_note),
-                    listOf(
-                        { shapes -> cc.hyoban.moments.footprints.ActionRow(AppIcons.Calendar, stringResource(R.string.trip_edit_start), shapes, supporting = formatDay(start), tag = "trip_start") { picking = "start" } },
-                        { shapes -> cc.hyoban.moments.footprints.ActionRow(AppIcons.Calendar, stringResource(R.string.trip_edit_end), shapes, supporting = formatDay(end), tag = "trip_end") { picking = "end" } },
-                    ),
-                )
-                // Which records it holds: its days' by themselves, the rest of these taken in by hand.
-                if (nearby.isNotEmpty()) SegmentedGroup(
-                    stringResource(R.string.trip_edit_members),
-                    stringResource(R.string.trip_edit_members_note),
-                    nearby.map<cc.hyoban.moments.data.spec.MomentRecord, cc.hyoban.moments.ui.settings.Segment> { moment ->
-                        { shapes ->
-                            val inside = moment.dateKey in start..end
-                            val on = moment in members
-                            SwitchRow(
-                                on,
-                                if (inside) AppIcons.Calendar else AppIcons.Plus,
-                                moment.text.lines().firstOrNull()?.take(24)?.ifBlank { null } ?: formatDay(moment.dateKey),
-                                "member_${moment.uid}",
-                                shapes,
-                                supporting = formatDay(moment.dateKey),
-                            ) {
-                                if (inside) exclude = if (on) exclude + moment.uid else exclude - moment.uid
-                                else include = if (on) include - moment.uid else include + moment.uid
-                            }
+        val form: @Composable () -> Unit = {
+            OutlinedTextField(
+                title,
+                { title = it },
+                Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s).testTag("trip_title"),
+                label = { Text(stringResource(R.string.trip_edit_name)) },
+                singleLine = true,
+            )
+            SegmentedGroup(
+                stringResource(R.string.trip_edit_days),
+                stringResource(R.string.trip_edit_days_note),
+                listOf(
+                    { shapes -> cc.hyoban.moments.footprints.ActionRow(AppIcons.Calendar, stringResource(R.string.trip_edit_start), shapes, supporting = formatDay(start), tag = "trip_start") { picking = "start" } },
+                    { shapes -> cc.hyoban.moments.footprints.ActionRow(AppIcons.Calendar, stringResource(R.string.trip_edit_end), shapes, supporting = formatDay(end), tag = "trip_end") { picking = "end" } },
+                ),
+            )
+        }
+        val membersGroup: @Composable () -> Unit = {
+            // Which records it holds: its days' by themselves, the rest of these taken in by hand.
+            if (nearby.isNotEmpty()) SegmentedGroup(
+                stringResource(R.string.trip_edit_members),
+                stringResource(R.string.trip_edit_members_note),
+                nearby.map<cc.hyoban.moments.data.spec.MomentRecord, cc.hyoban.moments.ui.settings.Segment> { moment ->
+                    { shapes ->
+                        val inside = moment.dateKey in start..end
+                        val on = moment in members
+                        SwitchRow(
+                            on,
+                            if (inside) AppIcons.Calendar else AppIcons.Plus,
+                            moment.text.lines().firstOrNull()?.take(24)?.ifBlank { null } ?: formatDay(moment.dateKey),
+                            "member_${moment.uid}",
+                            shapes,
+                            supporting = formatDay(moment.dateKey),
+                        ) {
+                            if (inside) exclude = if (on) exclude + moment.uid else exclude - moment.uid
+                            else include = if (on) include - moment.uid else include + moment.uid
                         }
-                    },
-                )
-                // Its covers, chosen from its records' photos in the order tapped.
-                val photos = members.flatMap { moment -> moment.media.filter { it.type != cc.hyoban.moments.data.spec.MediaType.VIDEO }.map { moment.uid to it } }
-                if (photos.isNotEmpty()) {
-                    cc.hyoban.moments.ui.settings.Caption(stringResource(R.string.trip_edit_covers))
-                    androidx.compose.foundation.lazy.LazyRow(
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Space.gutter),
-                        horizontalArrangement = Arrangement.spacedBy(Space.s),
-                    ) {
-                        items(photos.size) { index ->
-                            val (uid, media) = photos[index]
-                            val key = "$uid/${media.uid}"
-                            val order = covers.indexOf(key)
-                            androidx.compose.foundation.layout.Box(
-                                Modifier
-                                    .size(88.dp)
-                                    .clip(AppTheme.shapes.medium)
-                                    .clickable { covers = if (order >= 0) covers - key else covers + key }
-                                    .testTag("cover_${media.uid}"),
-                            ) {
-                                cc.hyoban.moments.ui.components.Thumbnail(media, container.mediaUrls, size = 88)
-                                if (order >= 0) {
-                                    Text(
-                                        (order + 1).toString(),
-                                        style = AppTheme.typography.caption,
-                                        color = cc.hyoban.moments.ui.theme.tokens.onAccent,
-                                        modifier = Modifier
-                                            .padding(Space.xs)
-                                            .background(cc.hyoban.moments.ui.theme.tokens.accent, cc.hyoban.moments.ui.theme.Corners.full)
-                                            .padding(horizontal = Space.s, vertical = Space.xs),
-                                    )
-                                }
+                    }
+                },
+            )
+        }
+        val rest: @Composable () -> Unit = {
+            // Its covers, chosen from its records' photos in the order tapped.
+            val photos = members.flatMap { moment -> moment.media.filter { it.type != cc.hyoban.moments.data.spec.MediaType.VIDEO }.map { moment.uid to it } }
+            if (photos.isNotEmpty()) {
+                cc.hyoban.moments.ui.settings.Caption(stringResource(R.string.trip_edit_covers))
+                androidx.compose.foundation.lazy.LazyRow(
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Space.gutter),
+                    horizontalArrangement = Arrangement.spacedBy(Space.s),
+                ) {
+                    items(photos.size) { index ->
+                        val (uid, media) = photos[index]
+                        val key = "$uid/${media.uid}"
+                        val order = covers.indexOf(key)
+                        androidx.compose.foundation.layout.Box(
+                            Modifier
+                                .size(88.dp)
+                                .clip(AppTheme.shapes.medium)
+                                .clickable { covers = if (order >= 0) covers - key else covers + key }
+                                .testTag("cover_${media.uid}"),
+                        ) {
+                            cc.hyoban.moments.ui.components.Thumbnail(media, container.mediaUrls, size = 88)
+                            if (order >= 0) {
+                                Text(
+                                    (order + 1).toString(),
+                                    style = AppTheme.typography.caption,
+                                    color = cc.hyoban.moments.ui.theme.tokens.onAccent,
+                                    modifier = Modifier
+                                        .padding(Space.xs)
+                                        .background(cc.hyoban.moments.ui.theme.tokens.accent, cc.hyoban.moments.ui.theme.Corners.full)
+                                        .padding(horizontal = Space.s, vertical = Space.xs),
+                                )
                             }
                         }
                     }
                 }
-                SegmentedGroup(
-                    null,
-                    stringResource(if (private) R.string.moment_private_note else R.string.trip_edit_public_note),
-                    listOf { shapes ->
-                        SwitchRow(private, AppIcons.EyeOff, stringResource(R.string.visibility_private), "trip_private", shapes) { private = !private }
+            }
+            SegmentedGroup(
+                null,
+                stringResource(if (private) R.string.moment_private_note else R.string.trip_edit_public_note),
+                listOf { shapes ->
+                    SwitchRow(private, AppIcons.EyeOff, stringResource(R.string.visibility_private), "trip_private", shapes) { private = !private }
+                },
+            )
+            Row(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.l), horizontalArrangement = Arrangement.End) {
+                Button(
+                    enabled = valid,
+                    onClick = {
+                        scope.launch {
+                            container.repository.editTrip(
+                                id, title.trim(), start, end, if (private) Visibility.PRIVATE else Visibility.PUBLIC,
+                                include = include, exclude = exclude,
+                                covers = covers.map { it.substringBefore('/') to it.substringAfter('/') },
+                            )
+                            onBack()
+                        }
                     },
-                )
-                Row(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.l), horizontalArrangement = Arrangement.End) {
-                    Button(
-                        enabled = valid,
-                        onClick = {
-                            scope.launch {
-                                container.repository.editTrip(
-                                    id, title.trim(), start, end, if (private) Visibility.PRIVATE else Visibility.PUBLIC,
-                                    include = include, exclude = exclude,
-                                    covers = covers.map { it.substringBefore('/') to it.substringAfter('/') },
-                                )
-                                onBack()
-                            }
-                        },
-                        modifier = Modifier.testTag("trip_save"),
-                    ) { Text(stringResource(R.string.action_save)) }
+                    modifier = Modifier.testTag("trip_save"),
+                ) { Text(stringResource(R.string.action_save)) }
+            }
+        }
+        // On a phone on its side, its name, days, covers and saving at the start, the records it
+        // holds in a list of their own beside them, each scrolling by itself (H13).
+        if (isPhoneLandscape()) {
+            Row(Modifier.fillMaxSize().railPadding().imePadding()) {
+                Column(
+                    Modifier.width(FORM_COLUMN).fillMaxHeight().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current, bottom = Space.xl),
+                    verticalArrangement = Arrangement.spacedBy(Space.s),
+                ) {
+                    form()
+                    rest()
+                }
+                Column(
+                    Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current, bottom = Space.xl),
+                    verticalArrangement = Arrangement.spacedBy(Space.s),
+                ) { membersGroup() }
+            }
+        } else {
+            PageWidth(maxColumns = 1) { columns ->
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(top = LocalTopClearance.current)
+                        .imePadding()
+                        .navigationBarsPadding()
+                        .padding(horizontal = columns.margin)
+                        .padding(bottom = Space.xl),
+                    verticalArrangement = Arrangement.spacedBy(Space.s),
+                ) {
+                    form()
+                    membersGroup()
+                    rest()
                 }
             }
         }
@@ -198,3 +229,5 @@ fun TripEditScreen(container: AppContainer, id: String, onBack: () -> Unit) {
     }
 }
 
+/** How wide the trip's name, days and covers stand at the start on a phone on its side, its records beside them. */
+private val FORM_COLUMN = 320.dp

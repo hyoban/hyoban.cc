@@ -1,5 +1,15 @@
 package cc.hyoban.moments.ui.feed
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.FlowRow
+import cc.hyoban.moments.ui.components.SIDE_COLUMN
+import cc.hyoban.moments.ui.components.railPadding
+import cc.hyoban.moments.ui.components.isPhoneLandscape
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.ColumnScope
@@ -90,6 +100,7 @@ import cc.hyoban.moments.ui.theme.fill
  * matches by its words, the names of its places or its trip's title, a bill by its category
  * and note; with nothing typed, a filter chosen lists all it lets through.
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit, onBill: (String) -> Unit = {}) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
@@ -169,111 +180,134 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                 modifier = Modifier.focusRequester(focus).testTag("search_field"),
             )
         }
-        // What kind and when: everything until one is chosen.
-        androidx.compose.foundation.lazy.LazyRow(
-            contentPadding = PaddingValues(horizontal = Space.gutter),
-            horizontalArrangement = Arrangement.spacedBy(Space.s),
-            modifier = Modifier.padding(vertical = Space.xs),
-        ) {
-            items(FeedKind.entries.size) { index ->
-                val option = FeedKind.entries[index]
-                val count = counts.getValue(option)
-                cc.hyoban.moments.ui.design.FilterChip(
-                    selected = option == kind,
-                    onClick = { kind = option },
-                    // Its name, and how many it found in figures.
-                    label = {
-                        val name = stringResource(
-                            when (option) {
-                                FeedKind.ALL -> R.string.filter_all
-                                FeedKind.MOMENTS -> R.string.filter_moments
-                                FeedKind.BILLS -> R.string.section_bill
-                                FeedKind.CHARGES -> R.string.part_charge
-                            },
-                        )
-                        val figures = AppTheme.typography.caption.fontFamily
-                        Text(
-                            buildAnnotatedString {
-                                append(name)
-                                if (searching) withStyle(SpanStyle(fontFamily = figures)) { append(" $count") }
-                            },
-                        )
-                    },
-                    leadingIcon = if (option == kind) ({ SelectedCheck() }) else null,
-                    modifier = Modifier.testTag("kind_${option.name.lowercase()}"),
-                )
+        // One kind's chip: its name and, searching, how many it found.
+        val kindChip: @Composable (Int) -> Unit = { index ->
+            val option = FeedKind.entries[index]
+            val count = counts.getValue(option)
+            cc.hyoban.moments.ui.design.FilterChip(
+                selected = option == kind,
+                onClick = { kind = option },
+                // Its name, and how many it found in figures.
+                label = {
+                    val name = stringResource(
+                        when (option) {
+                            FeedKind.ALL -> R.string.filter_all
+                            FeedKind.MOMENTS -> R.string.filter_moments
+                            FeedKind.BILLS -> R.string.section_bill
+                            FeedKind.CHARGES -> R.string.part_charge
+                        },
+                    )
+                    val figures = AppTheme.typography.caption.fontFamily
+                    Text(
+                        buildAnnotatedString {
+                            append(name)
+                            if (searching) withStyle(SpanStyle(fontFamily = figures)) { append(" $count") }
+                        },
+                    )
+                },
+                leadingIcon = if (option == kind) ({ SelectedCheck() }) else null,
+                modifier = Modifier.testTag("kind_${option.name.lowercase()}"),
+            )
+        }
+        val time: @Composable () -> Unit = {
+            if (years.size > 1) {
+                TimeFilterRows(filter, years, months) { next ->
+                    year = next.year
+                    month = next.month
+                }
             }
         }
-        if (years.size > 1) {
-            TimeFilterRows(filter, years, months) { next ->
-                year = next.year
-                month = next.month
+        // On a phone on its side, the keyboard down, the kinds and the time stand in a column at
+        // the start, wrapped rather than scrolled, the results beside them (H06).
+        val sideways = isPhoneLandscape() && !WindowInsets.isImeVisible
+        val results: @Composable ColumnScope.() -> Unit = {
+            // What the search found, said as it changes, so a screen reader hears it too; shown only
+            // when there is nothing to list, as the kinds' counts say how many there are.
+            // Nothing to list says why, and under it the next step: what can be searched, or what to
+            // loosen.
+            val status = when {
+                !searching -> stringResource(R.string.search_prompt)
+                found.isEmpty() && text.isNotEmpty() -> stringResource(R.string.search_none_for, text)
+                found.isEmpty() -> stringResource(R.string.search_none)
+                else -> pluralStringResource(R.plurals.count_results, found.size, found.size)
+            }
+            val note = when {
+                !searching -> stringResource(R.string.search_prompt_note)
+                found.isEmpty() && filter != TimeFilter() -> stringResource(R.string.search_none_note_time)
+                found.isEmpty() -> stringResource(R.string.search_none_note)
+                else -> null
+            }
+            val announce = Modifier.semantics { liveRegion = LiveRegionMode.Polite }.testTag("search_status")
+            if (found.isEmpty()) {
+                Column(
+                    Modifier.fillMaxWidth().padding(horizontal = Space.xl * 2, vertical = Space.xl * 3).then(announce),
+                    verticalArrangement = Arrangement.spacedBy(Space.xs),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(status, style = AppTheme.typography.body, color = tokens.tx2, textAlign = TextAlign.Center)
+                    if (note != null) Text(note, style = AppTheme.typography.caption, color = tokens.tx3, textAlign = TextAlign.Center)
+                }
+            } else {
+                Box(announce.semantics { contentDescription = status })
+            }
+            // The results on the page under their years, newest first: a Moment its first photo,
+            // its words around what was searched for, that marked, and when and where under them;
+            // a bill or a charge as the timeline lists it.
+            val years = remember(found) { found.groupBy { it.at.take(4) }.toList() }
+            Box(Modifier.weight(1f)) {
+                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = Space.xl)) {
+                    years.forEach { (year, items) ->
+                        // Held at the top while its year is in sight, on the page's colour, so the
+                        // rows under it say which year they are of; the next year's pushes it off.
+                        // In the middle of the photos' column, as the icons in it are.
+                        stickyHeader(key = "year-$year") {
+                            Box(
+                                Modifier.fillMaxWidth().background(AppColors.page).padding(start = Space.gutter, top = Space.l, bottom = Space.xs),
+                            ) {
+                                Text(
+                                    stringResource(R.string.filter_year, year.toInt()),
+                                    style = AppTheme.typography.caption,
+                                    color = tokens.tx2,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    softWrap = false,
+                                    modifier = Modifier.width(LEAD).semantics { heading() },
+                                )
+                            }
+                        }
+                        items(items, key = { it.key }) { item ->
+                            val row = Modifier.padding(horizontal = Space.gutter)
+                            when (item) {
+                                is Found.Moment -> SearchResult(item.moment, text, places, trips, container.mediaUrls, row) { onMoment(item.moment.uid) }
+                                is Found.Bill -> SearchBill(item.txn, ledger, row) { onBill(item.txn.id) }
+                                is Found.ChargeFound -> SearchCharge(item.charge, row)
+                            }
+                        }
+                    }
+                    item { Box(Modifier.navigationBarsPadding()) }
+                }
             }
         }
-        // What the search found, said as it changes, so a screen reader hears it too; shown only
-        // when there is nothing to list, as the kinds' counts say how many there are.
-        // Nothing to list says why, and under it the next step: what can be searched, or what to
-        // loosen.
-        val status = when {
-            !searching -> stringResource(R.string.search_prompt)
-            found.isEmpty() && text.isNotEmpty() -> stringResource(R.string.search_none_for, text)
-            found.isEmpty() -> stringResource(R.string.search_none)
-            else -> pluralStringResource(R.plurals.count_results, found.size, found.size)
-        }
-        val note = when {
-            !searching -> stringResource(R.string.search_prompt_note)
-            found.isEmpty() && filter != TimeFilter() -> stringResource(R.string.search_none_note_time)
-            found.isEmpty() -> stringResource(R.string.search_none_note)
-            else -> null
-        }
-        val announce = Modifier.semantics { liveRegion = LiveRegionMode.Polite }.testTag("search_status")
-        if (found.isEmpty()) {
-            Column(
-                Modifier.fillMaxWidth().padding(horizontal = Space.xl * 2, vertical = Space.xl * 3).then(announce),
-                verticalArrangement = Arrangement.spacedBy(Space.xs),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(status, style = AppTheme.typography.body, color = tokens.tx2, textAlign = TextAlign.Center)
-                if (note != null) Text(note, style = AppTheme.typography.caption, color = tokens.tx3, textAlign = TextAlign.Center)
+        if (sideways) {
+            Row(Modifier.fillMaxSize().railPadding()) {
+                Column(Modifier.width(SIDE_COLUMN).fillMaxHeight().verticalScroll(rememberScrollState()).padding(start = Space.gutter, top = Space.xs, bottom = Space.xl)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                        FeedKind.entries.indices.forEach { kindChip(it) }
+                    }
+                    Box(Modifier.offset(x = -Space.gutter)) { time() }
+                }
+                Column(Modifier.weight(1f).fillMaxHeight()) { results() }
             }
         } else {
-            Box(announce.semantics { contentDescription = status })
-        }
-        // The results on the page under their years, newest first: a Moment its first photo,
-        // its words around what was searched for, that marked, and when and where under them;
-        // a bill or a charge as the timeline lists it.
-        val years = remember(found) { found.groupBy { it.at.take(4) }.toList() }
-        Box(Modifier.weight(1f)) {
-            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = Space.xl)) {
-                years.forEach { (year, items) ->
-                    // Held at the top while its year is in sight, on the page's colour, so the
-                    // rows under it say which year they are of; the next year's pushes it off.
-                    // In the middle of the photos' column, as the icons in it are.
-                    stickyHeader(key = "year-$year") {
-                        Box(
-                            Modifier.fillMaxWidth().background(AppColors.page).padding(start = Space.gutter, top = Space.l, bottom = Space.xs),
-                        ) {
-                            Text(
-                                stringResource(R.string.filter_year, year.toInt()),
-                                style = AppTheme.typography.caption,
-                                color = tokens.tx2,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                softWrap = false,
-                                modifier = Modifier.width(LEAD).semantics { heading() },
-                            )
-                        }
-                    }
-                    items(items, key = { it.key }) { item ->
-                        val row = Modifier.padding(horizontal = Space.gutter)
-                        when (item) {
-                            is Found.Moment -> SearchResult(item.moment, text, places, trips, container.mediaUrls, row) { onMoment(item.moment.uid) }
-                            is Found.Bill -> SearchBill(item.txn, ledger, row) { onBill(item.txn.id) }
-                            is Found.ChargeFound -> SearchCharge(item.charge, row)
-                        }
-                    }
-                }
-                item { Box(Modifier.navigationBarsPadding()) }
+            // What kind and when: everything until one is chosen.
+            androidx.compose.foundation.lazy.LazyRow(
+                contentPadding = PaddingValues(horizontal = Space.gutter),
+                horizontalArrangement = Arrangement.spacedBy(Space.s),
+                modifier = Modifier.padding(vertical = Space.xs),
+            ) {
+                items(FeedKind.entries.size) { index -> kindChip(index) }
             }
+            time()
+            results()
         }
     }
 }

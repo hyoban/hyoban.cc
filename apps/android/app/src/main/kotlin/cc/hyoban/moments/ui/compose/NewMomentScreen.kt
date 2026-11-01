@@ -1,5 +1,9 @@
 package cc.hyoban.moments.ui.compose
 
+import cc.hyoban.moments.ui.theme.dividerColor
+import androidx.compose.foundation.layout.fillMaxHeight
+import cc.hyoban.moments.ui.components.railPadding
+import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.core.net.toUri
 import cc.hyoban.moments.ui.design.AppIcons
@@ -430,6 +434,7 @@ fun NewMomentScreen(
     // the ink 保存, never greyed out, telling what is missing rather than refusing to be tapped.
     // A bill alone is typed on the keypad, pinned under its fields, as iCost has it.
     val keypad = withBill && !withMoment && keypadFits()
+    val sideways = isPhoneLandscape()
     Box(Modifier.fillMaxSize()) {
         SubPage(
             stringResource(
@@ -464,154 +469,173 @@ fun NewMomentScreen(
                 ) { Text(stringResource(R.string.action_save)) }
             },
         ) {
-            PageWidth(maxColumns = 1) { columns ->
-                Column(Modifier.fillMaxSize().imePadding().navigationBarsPadding().padding(horizontal = columns.margin)) {
-                Column(
-                    Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(top = LocalTopClearance.current, bottom = if (keypad) Space.s else Space.xl),
-                ) {
-                    val focus = remember { FocusRequester() }
-                    // A new Moment starts at its words; one being changed waits to be told what to change.
-                    LaunchedEffect(Unit) { if (original == null && withMoment) focus.requestFocus() }
-                    if (withMoment) {
-                    // The words on the page itself, on the gutter, the field's own padding outside it.
-                    TextField(
-                        value = text,
-                        onValueChange = { text = it },
-                        placeholder = { Text(stringResource(R.string.hint_moment_text)) },
-                        textStyle = AppTheme.typography.bodyReading,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Default),
-                        isError = emptyError,
-                        // The error marked by an icon as well as the colour.
-                        trailingIcon = if (emptyError) {
-                            { Icon(AppIcons.Alert, contentDescription = null, tint = tokens.danger) }
-                        } else {
-                            null
-                        },
-                        supportingText = if (emptyError) {
-                            { Text(stringResource(R.string.error_empty_moment)) }
-                        } else {
-                            null
-                        },
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = Space.gutter - ROW_PADDING).focusRequester(focus).testTag("moment_text"),
-                    )
-                    PhotoStrip(
-                        photos,
-                        onAdd = addPhotos,
-                        onOpenCamera = openCamera,
-                        utility = utility,
-                        onToggleUtility = { uri -> utility = if (uri in utility) utility - uri else utility + uri },
-                        motion = photos.filter { infos[it]?.motion == true }.toSet(),
-                        videos = photos.filter { infos[it]?.video == true || originalMedia[it]?.type == MediaType.VIDEO }.toSet(),
-                        stills = stills,
-                        onToggleStill = { uri -> stills = if (uri in stills) stills - uri else stills + uri },
-                        onRemove = { removed -> photos = photos - removed },
-                        onMove = { from, to -> photos = photos.toMutableList().apply { add(to, removeAt(from)) } },
-                        modifier = Modifier.padding(top = Space.xs),
-                    )
-                    // When and where, rows on the page, their icons on the words' edge above.
-                    PageRows(Modifier.padding(top = Space.l + Space.xs)) { shapes ->
-                        SegmentedListItem(
-                            onClick = { editingTime = true },
-                            shapes = shapes,
-                            colors = segmentColors(),
-                            supportingContent = { Text(stringResource(timeSource)) },
-                            leadingContent = { Icon(AppIcons.Clock, contentDescription = null) },
-                            trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
-                            modifier = Modifier.testTag("moment_time"),
-                        ) { Text(listOfNotNull(formatDay(stamp(time)), formatTime(stamp(time))).joinToString(" ")) }
-                        SegmentedListItem(
-                            onClick = { editingPlace = true },
-                            shapes = shapes,
-                            colors = segmentColors(),
-                            supportingContent = {
-                                // Its kind, as it will be once saved, then where the place came from.
-                                val kind = when (place) {
-                                    is PlaceChoice.Known -> place.kind ?: PlaceKind.of(places[place.id]?.kind)
-                                    is PlaceChoice.New -> place.kind
-                                    PlaceChoice.None -> null
-                                }
-                                Text(
-                                    listOfNotNull(kind?.let { stringResource(it.label) }, stringResource(
-                                        when {
-                                            original != null && chosenPlace == originalPlace -> R.string.source_saved
-                                            chosenPlace != null && chosenPlace == sharedFrom -> R.string.source_shared
-                                            chosenPlace != null -> R.string.source_chosen
-                                            photoFix != null -> R.string.source_photo
-                                            fix != null -> R.string.source_location
-                                            locating -> R.string.place_locating
-                                            locationDenied -> R.string.place_no_permission
-                                            else -> R.string.place_unknown
-                                        },
-                                    )).joinToString(" "),
-                                )
-                            },
-                            leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
-                            trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
-                            modifier = Modifier.testTag("moment_place"),
-                        ) {
-                            Text(
-                                when (place) {
-                                    is PlaceChoice.Known -> places[place.id]?.name ?: place.id
-                                    is PlaceChoice.New -> place.name
-                                    PlaceChoice.None -> stringResource(R.string.place_none)
-                                },
-                            )
-                        }
-                    }
-                    // 加一项: the plugins in a row, each opening its fields when chosen, a tick in place of its icon.
-                    PageCaption(stringResource(R.string.section_add_item))
-                    FlowRow(
-                        Modifier.fillMaxWidth().padding(horizontal = Space.gutter),
-                        horizontalArrangement = Arrangement.spacedBy(Space.s),
-                        verticalArrangement = Arrangement.spacedBy(Space.s),
-                    ) {
-                        AddChip(withFood, AppIcons.Food, stringResource(R.string.section_food), "add_food") {
-                            withFood = !withFood
-                            if (!withFood) {
-                                dishes = ""; verdict = null; amount = ""; people = ""
+            val focus = remember { FocusRequester() }
+            // A new Moment starts at its words; one being changed waits to be told what to change.
+            LaunchedEffect(Unit) { if (original == null && withMoment) focus.requestFocus() }
+            val words: @Composable () -> Unit = {
+                TextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    placeholder = { Text(stringResource(R.string.hint_moment_text)) },
+                    textStyle = AppTheme.typography.bodyReading,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Default),
+                    isError = emptyError,
+                    // The error marked by an icon as well as the colour.
+                    trailingIcon = if (emptyError) {
+                        { Icon(AppIcons.Alert, contentDescription = null, tint = tokens.danger) }
+                    } else {
+                        null
+                    },
+                    supportingText = if (emptyError) {
+                        { Text(stringResource(R.string.error_empty_moment)) }
+                    } else {
+                        null
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = Space.gutter - ROW_PADDING).focusRequester(focus).testTag("moment_text"),
+                )
+            }
+            val details: @Composable () -> Unit = {
+                if (withMoment) {
+                PhotoStrip(
+                    photos,
+                    onAdd = addPhotos,
+                    onOpenCamera = openCamera,
+                    utility = utility,
+                    onToggleUtility = { uri -> utility = if (uri in utility) utility - uri else utility + uri },
+                    motion = photos.filter { infos[it]?.motion == true }.toSet(),
+                    videos = photos.filter { infos[it]?.video == true || originalMedia[it]?.type == MediaType.VIDEO }.toSet(),
+                    stills = stills,
+                    onToggleStill = { uri -> stills = if (uri in stills) stills - uri else stills + uri },
+                    onRemove = { removed -> photos = photos - removed },
+                    onMove = { from, to -> photos = photos.toMutableList().apply { add(to, removeAt(from)) } },
+                    modifier = Modifier.padding(top = Space.xs),
+                )
+                // When and where, rows on the page, their icons on the words' edge above.
+                PageRows(Modifier.padding(top = Space.l + Space.xs)) { shapes ->
+                    SegmentedListItem(
+                        onClick = { editingTime = true },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        supportingContent = { Text(stringResource(timeSource)) },
+                        leadingContent = { Icon(AppIcons.Clock, contentDescription = null) },
+                        trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
+                        modifier = Modifier.testTag("moment_time"),
+                    ) { Text(listOfNotNull(formatDay(stamp(time)), formatTime(stamp(time))).joinToString(" ")) }
+                    SegmentedListItem(
+                        onClick = { editingPlace = true },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        supportingContent = {
+                            // Its kind, as it will be once saved, then where the place came from.
+                            val kind = when (place) {
+                                is PlaceChoice.Known -> place.kind ?: PlaceKind.of(places[place.id]?.kind)
+                                is PlaceChoice.New -> place.kind
+                                PlaceChoice.None -> null
                             }
-                        }
-                        AddChip(withBill, AppIcons.Receipt, stringResource(R.string.section_bill), "add_bill") { withBill = !withBill }
-                    }
-                    if (withFood) FoodGroup(
-                        dishes = dishes,
-                        onDishes = { dishes = it },
-                        verdict = verdict,
-                        onVerdict = { verdict = it },
-                        amount = amount,
-                        onAmount = { amount = it },
-                        people = people,
-                        onPeople = { people = it },
-                    )
-                    }
-                    if (withBill) {
-                        if (withMoment) PageCaption(stringResource(R.string.section_bill))
-                        BillFields(container, ledger, bill, billAt, null, null, withMoment = withMoment, keypad = keypad)
-                    }
-                    // Deleting is rare, so it waits down here rather than over the Moment; its snackbar can undo it.
-                    if (original != null && publishing == null) {
-                        PageRows(Modifier.padding(top = Space.xl)) { shapes ->
-                            SegmentedListItem(
-                                onClick = {
-                                    container.delete(original.uid)
-                                    onDeleted()
-                                },
-                                shapes = shapes,
-                                enabled = !saving,
-                                colors = ListItemDefaults.segmentedColors(
-                                    contentColor = tokens.danger,
-                                    leadingContentColor = tokens.danger,
-                                ),
-                                leadingContent = { Icon(AppIcons.Trash, contentDescription = null) },
-                                modifier = Modifier.testTag("delete"),
-                            ) { Text(stringResource(R.string.action_delete_moment)) }
-                        }
+                            Text(
+                                listOfNotNull(kind?.let { stringResource(it.label) }, stringResource(
+                                    when {
+                                        original != null && chosenPlace == originalPlace -> R.string.source_saved
+                                        chosenPlace != null && chosenPlace == sharedFrom -> R.string.source_shared
+                                        chosenPlace != null -> R.string.source_chosen
+                                        photoFix != null -> R.string.source_photo
+                                        fix != null -> R.string.source_location
+                                        locating -> R.string.place_locating
+                                        locationDenied -> R.string.place_no_permission
+                                        else -> R.string.place_unknown
+                                    },
+                                )).joinToString(" "),
+                            )
+                        },
+                        leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
+                        trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
+                        modifier = Modifier.testTag("moment_place"),
+                    ) {
+                        Text(
+                            when (place) {
+                                is PlaceChoice.Known -> places[place.id]?.name ?: place.id
+                                is PlaceChoice.New -> place.name
+                                PlaceChoice.None -> stringResource(R.string.place_none)
+                            },
+                        )
                     }
                 }
-                if (keypad) BillKeypad(container, ledger, bill, billAt, null, onSave = { if (!saving) save() })
+                // 加一项: the plugins in a row, each opening its fields when chosen, a tick in place of its icon.
+                PageCaption(stringResource(R.string.section_add_item))
+                FlowRow(
+                    Modifier.fillMaxWidth().padding(horizontal = Space.gutter),
+                    horizontalArrangement = Arrangement.spacedBy(Space.s),
+                    verticalArrangement = Arrangement.spacedBy(Space.s),
+                ) {
+                    AddChip(withFood, AppIcons.Food, stringResource(R.string.section_food), "add_food") {
+                        withFood = !withFood
+                        if (!withFood) {
+                            dishes = ""; verdict = null; amount = ""; people = ""
+                        }
+                    }
+                    AddChip(withBill, AppIcons.Receipt, stringResource(R.string.section_bill), "add_bill") { withBill = !withBill }
+                }
+                if (withFood) FoodGroup(
+                    dishes = dishes,
+                    onDishes = { dishes = it },
+                    verdict = verdict,
+                    onVerdict = { verdict = it },
+                    amount = amount,
+                    onAmount = { amount = it },
+                    people = people,
+                    onPeople = { people = it },
+                )
+                }
+                if (withBill) {
+                    if (withMoment) PageCaption(stringResource(R.string.section_bill))
+                    BillFields(container, ledger, bill, billAt, null, null, withMoment = withMoment, keypad = keypad)
+                }
+                // Deleting is rare, so it waits down here rather than over the Moment; its snackbar can undo it.
+                if (original != null && publishing == null) {
+                    PageRows(Modifier.padding(top = Space.xl)) { shapes ->
+                        SegmentedListItem(
+                            onClick = {
+                                container.delete(original.uid)
+                                onDeleted()
+                            },
+                            shapes = shapes,
+                            enabled = !saving,
+                            colors = ListItemDefaults.segmentedColors(
+                                contentColor = tokens.danger,
+                                leadingContentColor = tokens.danger,
+                            ),
+                            leadingContent = { Icon(AppIcons.Trash, contentDescription = null) },
+                            modifier = Modifier.testTag("delete"),
+                        ) { Text(stringResource(R.string.action_delete_moment)) }
+                    }
+                }
+            }
+            // On a phone on its side the words have a column of their own at the start, the photos,
+            // when and where and what else is added scrolling beside them, a hairline between (H07).
+            if (sideways && withMoment && !keypad) {
+                Row(Modifier.fillMaxSize().imePadding().railPadding()) {
+                    Column(Modifier.width(WORDS_COLUMN).fillMaxHeight().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current, bottom = Space.xl)) {
+                        words()
+                    }
+                    Box(Modifier.padding(top = LocalTopClearance.current).fillMaxHeight().width(1.dp).background(dividerColor()))
+                    Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current, bottom = Space.xl)) {
+                        details()
+                    }
+                }
+            } else {
+                PageWidth(maxColumns = 1) { columns ->
+                    Column(Modifier.fillMaxSize().imePadding().navigationBarsPadding().padding(horizontal = columns.margin)) {
+                        Column(
+                            Modifier
+                                .weight(1f)
+                                .verticalScroll(rememberScrollState())
+                                .padding(top = LocalTopClearance.current, bottom = if (keypad) Space.s else Space.xl),
+                        ) {
+                            if (withMoment) words()
+                            details()
+                        }
+                        if (keypad) BillKeypad(container, ledger, bill, billAt, null, onSave = { if (!saving) save() })
+                    }
                 }
             }
         }
@@ -677,6 +701,9 @@ fun NewMomentScreen(
         )
     }
 }
+
+/** How wide the words stand at the start on a phone on its side, the rest of the Moment beside them. */
+private val WORDS_COLUMN = 360.dp
 
 /**
  * A shared place as the Moment's: the known place it is, when one with its name is
