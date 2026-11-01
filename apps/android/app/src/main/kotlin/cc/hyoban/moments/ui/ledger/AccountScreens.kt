@@ -188,7 +188,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                 Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), verticalArrangement = Arrangement.spacedBy(Space.m)) {
                     OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_account_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("account_name"))
                     Text(stringResource(R.string.ledger_account_kind), style = AppTheme.typography.label, color = tokens.tx2)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                         AccountKind.entries.forEach { entry ->
                             FilterChip(
                                 selected = kind == entry,

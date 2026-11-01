@@ -426,13 +426,13 @@ private fun SubscriptionSheet(container: AppContainer, subscription: Subscriptio
                 OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.subscription_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("subscription_name"))
                 Row(horizontalArrangement = Arrangement.spacedBy(Space.m), verticalAlignment = Alignment.CenterVertically) {
                     NumberField(stringResource(R.string.subscription_price), price, Modifier.weight(1f)) { price = it }
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                         listOf("CNY", "USD").forEach { code ->
                             FilterChip(selected = currency == code, onClick = { currency = code }, label = { Text(currencySymbol(code)) })
                         }
                     }
                 }
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     listOf(
                         Period.YEAR to R.string.subscription_period_year,
                         Period.MONTH to R.string.subscription_period_month,

@@ -488,7 +488,7 @@ internal fun BillFields(
         )
     }
     if (kind == TxnKind.TRANSFER) {
-        FlowRow(Modifier.padding(horizontal = Space.gutter), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+        FlowRow(Modifier.padding(horizontal = Space.gutter), horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
             TransferType.entries.forEach { type ->
                 FilterChip(selected = draft.transfer == type, onClick = { draft.transfer = type }, label = { Text(transferLabel(type)) })
             }
@@ -879,13 +879,14 @@ private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraf
 
     if (keypad) {
         Row(
-            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = Space.gutter),
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(start = Space.gutter, end = Space.gutter, top = Space.s),
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) { chips() }
     } else {
         FlowRow(
             Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s),
             horizontalArrangement = Arrangement.spacedBy(Space.s),
+            verticalArrangement = Arrangement.spacedBy(Space.s),
         ) { chips() }
     }
 }
@@ -1169,10 +1170,10 @@ private fun QuickAccountDialog(onDismiss: () -> Unit, onDone: (Account) -> Unit)
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_account_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     AccountKind.entries.forEach { entry -> FilterChip(selected = kind == entry, onClick = { kind = entry }, label = { Text(accountKindLabel(entry)) }) }
                 }
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     COMMON_CURRENCIES.take(6).forEach { code -> FilterChip(selected = currency == code, onClick = { currency = code }, label = { Text(code) }) }
                 }
             }
