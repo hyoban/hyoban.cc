@@ -45,6 +45,7 @@ import cc.hyoban.moments.ui.design.LocalTextStyle
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
@@ -228,6 +229,13 @@ private fun BarPage(
     // whose own bottom half is taken, the bill's keypad. Its subtitle too small to act on beside,
     // what it would there joins the bar's actions.
     val startsSmall = isCompactHeight() || small || centre != null
+    // Turned on its side, the large title goes, and with it what the bar could fold: open, nothing to fold.
+    LaunchedEffect(startsSmall) {
+        if (startsSmall) {
+            scroll.state.heightOffsetLimit = -Float.MAX_VALUE
+            scroll.state.heightOffset = 0f
+        }
+    }
     Layout(
         content = {
             Layout(

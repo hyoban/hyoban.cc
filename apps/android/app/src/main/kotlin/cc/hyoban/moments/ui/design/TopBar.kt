@@ -86,7 +86,9 @@ class TopBarState(heightOffset: Float = 0f) {
 class TopBarScroll(val state: TopBarState, val pinned: Boolean, private val distance: Float, private val spring: AnimationSpec<Float>) {
     val nestedScrollConnection = object : NestedScrollConnection {
         override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-            if (pinned || available.y >= 0f) return Offset.Zero
+            // No large title laid out (a bar that starts small, a phone on its side): nothing to fold,
+            // so the page scrolls at once rather than the bar taking the scroll without end.
+            if (pinned || available.y >= 0f || state.heightOffsetLimit == -Float.MAX_VALUE) return Offset.Zero
             // Pushed back up, a pull gives way first, then the title folds.
             var left = available.y
             if (state.pull > 0f) {
