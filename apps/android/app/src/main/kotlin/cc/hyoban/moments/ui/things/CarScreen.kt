@@ -82,22 +82,16 @@ fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Un
             ).joinToString(APART).ifEmpty { null }
         },
     ) {
-        PageWidth(maxColumns = 1) { columns ->
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = LocalTopClearance.current)
-                    .navigationBarsPadding()
-                    .padding(horizontal = columns.margin)
-                    .padding(bottom = Space.xl),
-            ) {
+        PageColumn(
+            figures = month?.let { shownMonth -> {
+                MonthSwitch(shownMonth, hasOlder = shown < months.lastIndex, hasNewer = shown > 0, onOlder = { index = shown + 1 }, onNewer = { index = shown - 1 })
+                Report(shownMonth)
+            } },
+        ) {
                 if (month == null) {
                     Text(stringResource(R.string.car_empty), color = tokens.tx2, modifier = Modifier.padding(Space.gutter))
-                    return@Column
+                    return@PageColumn
                 }
-                MonthSwitch(month, hasOlder = shown < months.lastIndex, hasNewer = shown > 0, onOlder = { index = shown + 1 }, onNewer = { index = shown - 1 })
-                Report(month)
                 PageCaption(stringResource(R.string.car_daily))
                 DailyBars(month)
                 val monthCharges = charges.filter { it.at.year == month.month.year && it.at.monthValue == month.month.monthValue }
@@ -141,7 +135,6 @@ fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Un
                         modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l),
                     )
                 }
-            }
         }
     }
 }

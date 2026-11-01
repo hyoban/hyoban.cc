@@ -1,5 +1,14 @@
 package cc.hyoban.moments.ui.trips
 
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.CompositionLocalProvider
+import cc.hyoban.moments.ui.LocalRailSpace
+import cc.hyoban.moments.ui.RailSpace
+import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
@@ -103,8 +112,11 @@ fun TripScreen(
     // 第 n 天 at the end of each day's header.
     val dayNote = { day: String -> resources.getString(R.string.trip_day, daysBetween(trip.start, day)) }
     // The title is the bar's; under it, what the trip covered.
+    val sideways = isPhoneLandscape()
     val summary: @Composable () -> Unit = {
         Column(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xs, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.m)) {
+            // On its side the bar's middle stands over the map's edge, so the name heads the column instead.
+            if (sideways) Text(trip.title, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
             TripSubhead(trip, moments.size, places = stops.distinctBy { it.placeId }.size)
             if (moments.isNotEmpty()) {
                 cc.hyoban.moments.ui.design.Button(onClick = { onPlay(trip.id) }, modifier = Modifier.testTag("play_trip")) {
@@ -200,26 +212,22 @@ fun TripScreen(
             }
         }
     }
-    SubPage(trip.title, onBack, Modifier.background(AppColors.page), actions = actions) {
+    SubPage(trip.title, onBack, Modifier.background(AppColors.page), actions = actions, centre = if (sideways) { {} } else null) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
-            if (landscape) {
-                // On its side, the route stays on the start side, as tall as the space under
-                // the bar, and what the trip covered and its Moments scroll beside it, its top
-                // level with what the trip covered.
+            if (sideways) {
+                // On a phone on its side, the route down the start half, edge to edge and the whole
+                // height, and what the trip covered and its Moments scroll beside it (H11).
                 Row(Modifier.fillMaxSize()) {
-                    Column(
-                        Modifier.weight(0.42f).fillMaxHeight().sideInsetsPadding(WindowInsetsSides.Start)
-                            .navigationBarsPadding().padding(top = LocalTopClearance.current + Space.xs, bottom = Space.l),
-                    ) {
-                        routeCard(Modifier.weight(1f), Modifier.weight(1f))
-                    }
+                    TripMap(stops, routes[trip.id].orEmpty(), Modifier.weight(0.5f).fillMaxHeight())
+                    Box(Modifier.weight(0.5f).fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End))) {
+                    CompositionLocalProvider(LocalRailSpace provides RailSpace(0.dp, 0.dp, clearOfInsets = true)) {
                     MomentFeed(
                         moments,
                         places,
                         trips,
                         container.mediaUrls,
                         onMoment,
-                        modifier = Modifier.weight(0.58f),
+                        modifier = Modifier.fillMaxSize(),
                         state = feedState,
                         months = false,
                         dayLabel = dayLabel,
@@ -233,6 +241,8 @@ fun TripScreen(
                         item(key = "spending") { spending() }
                         item(key = "track") { TrackShareRow(container, trip) }
                         if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(3) }
+                    }
+                    }
                     }
                 }
             } else {

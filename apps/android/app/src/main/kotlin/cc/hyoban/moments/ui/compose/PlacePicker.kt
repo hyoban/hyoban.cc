@@ -1,5 +1,15 @@
 package cc.hyoban.moments.ui.compose
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxHeight
+import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.Spinner
@@ -180,16 +190,10 @@ internal fun PlacePicker(
     var sheetHeight by remember { mutableStateOf(0.dp) }
     var dragging by remember { mutableStateOf(false) }
     val sheet = rememberBottomSheetScaffoldState(rememberStandardBottomSheetState(skipHiddenState = true))
-    BottomSheetScaffold(
-        scaffoldState = sheet,
-        modifier = Modifier.predictiveBackScale(back),
-        sheetPeekHeight = sheetHeight,
-        sheetSwipeEnabled = false,
-        sheetDragHandle = null,
-        sheetContainerColor = AppColors.sheet,
-        sheetShadowElevation = 0.dp,
-        containerColor = AppColors.page,
-        sheetContent = {
+    // On a phone on its side the choice stands in a panel down the end, the whole height, the pin
+    // at the middle of the map beside it (H08).
+    val sideways = isPhoneLandscape()
+    val card: @Composable (Modifier) -> Unit = { cardModifier ->
             ChoiceCard(
                 pick = pick,
                 name = name,
@@ -224,11 +228,11 @@ internal fun PlacePicker(
                 onKnown = choose,
                 onNone = { onPick(PlaceChoice.None) },
                 onConfirm = { onPick(pick) },
-                modifier = Modifier.onSizeChanged { sheetHeight = with(density) { it.height.toDp() } },
+                modifier = cardModifier,
             )
-        },
-    ) {
-        Box(Modifier.fillMaxSize().padding(bottom = (sheetHeight - SHEET_CORNER).coerceAtLeast(0.dp))) {
+    }
+    val mapArea: @Composable (Modifier) -> Unit = { areaModifier ->
+        Box(areaModifier) {
             PickerMap(
                 places = places,
                 chosen = (pick as? PlaceChoice.Known)?.id,
@@ -267,7 +271,7 @@ internal fun PlacePicker(
             if (granted) {
                 // At the map's bottom end, clear of the sheet's corners; a box of its own places
                 // it, as the tooltip's box doesn't pass an alignment on.
-                Box(Modifier.align(Alignment.BottomEnd).padding(bottom = SHEET_CORNER).padding(Space.l)) {
+                Box(Modifier.align(if (sideways) Alignment.TopEnd else Alignment.BottomEnd).padding(bottom = if (sideways) 0.dp else SHEET_CORNER).padding(Space.l)) {
                     val locateLabel = stringResource(R.string.action_locate)
                     Tooltip(locateLabel) {
                         FloatingActionButton(
@@ -310,7 +314,35 @@ internal fun PlacePicker(
             }
         }
     }
+    if (sideways) {
+        Row(Modifier.fillMaxSize().predictiveBackScale(back).background(AppColors.page)) {
+            mapArea(Modifier.weight(1f).fillMaxHeight())
+            Box(
+                Modifier.width(PANEL_WIDTH).fillMaxHeight().background(AppColors.sheet)
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End + WindowInsetsSides.Vertical))
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = Space.s),
+            ) { card(Modifier) }
+        }
+    } else {
+        BottomSheetScaffold(
+            scaffoldState = sheet,
+            modifier = Modifier.predictiveBackScale(back),
+            sheetPeekHeight = sheetHeight,
+            sheetSwipeEnabled = false,
+            sheetDragHandle = null,
+            sheetContainerColor = AppColors.sheet,
+            sheetShadowElevation = 0.dp,
+            containerColor = AppColors.page,
+            sheetContent = { card(Modifier.onSizeChanged { sheetHeight = with(density) { it.height.toDp() } }) },
+        ) {
+            mapArea(Modifier.fillMaxSize().padding(bottom = (sheetHeight - SHEET_CORNER).coerceAtLeast(0.dp)))
+        }
+    }
 }
+
+/** How wide the choice's panel stands down the end on a phone on its side. */
+private val PANEL_WIDTH = 360.dp
 
 /** What is chosen, under the map: a known place, a new one to name, or none; and the buttons to keep it. */
 @Composable

@@ -1,5 +1,9 @@
 package cc.hyoban.moments.ui.publish
 
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.heading
+import cc.hyoban.moments.ui.components.SideBySide
+import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.strong
 import kotlinx.coroutines.launch
@@ -141,13 +145,17 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
         if (busy) started = true else if (started && pending.size == 0) onBack()
     }
 
+    // Nothing waiting, there is nothing to stand beside the list.
+    val sideways = isPhoneLandscape() && pending.size > 0
     SubPage(
         stringResource(R.string.title_changes),
         onBack,
         Modifier.background(AppColors.page),
-        subtitle = if (pending.size == 0) null else pluralStringResource(R.plurals.count_changes, pending.size, pending.size),
+        subtitle = if (pending.size == 0 || sideways) null else pluralStringResource(R.plurals.count_changes, pending.size, pending.size),
     ) {
-        PageWidth(maxColumns = 1) { columns ->
+        // On a phone on its side, how many and what stays on the phone stand in a column at the
+        // start, the changes beside it (H16).
+        val list: @Composable () -> Unit = { PageWidth(maxColumns = 1) { columns ->
             // A lazy list, so a change taken back folds away and one brought back by its
             // snackbar opens out again, the rest stepping aside, rather than jumping.
             LazyColumn(
@@ -156,7 +164,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
             ) {
                 if (pending.size == 0) {
                     item(key = "empty") { Column(Modifier.animateItem()) { Group(null, stringResource(R.string.empty_changes)) {} } }
-                } else {
+                } else if (!sideways) {
                     item(key = "private-note") {
                         Text(
                             stringResource(R.string.changes_private_note),
@@ -258,7 +266,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         }
                     }
                 }
-                if (pending.size > 0) {
+                if (pending.size > 0 && !sideways) {
                     item(key = "foot") {
                         Column(
                             Modifier.animateItem().padding(start = Space.gutter, end = Space.gutter, top = Space.xl).navigationBarsPadding(),
@@ -277,6 +285,27 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                     }
                 }
             }
+        } }
+        if (sideways) {
+            SideBySide(
+                Modifier.fillMaxSize(),
+                side = {
+                    Column(Modifier.padding(top = LocalTopClearance.current + Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                        if (pending.size > 0) {
+                            Text(pluralStringResource(R.plurals.count_changes, pending.size, pending.size), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
+                            Text(stringResource(R.string.changes_private_note), style = AppTheme.typography.caption, color = tokens.tx2)
+                            PublishingIndicator(publishing, Modifier.fillMaxWidth().padding(vertical = Space.xs).testTag("publish_progress"))
+                            Text(
+                                stringResource(if (container.canPublish) R.string.note_publish_all else R.string.note_publish_needs_token),
+                                style = AppTheme.typography.caption,
+                                color = tokens.tx3,
+                            )
+                        }
+                    }
+                },
+            ) { Box(Modifier.weight(1f)) { list() } }
+        } else {
+            list()
         }
         // Publishing, the page's one action, an ink capsule floating at the bottom end to keep it
         // in reach over a long list, saying how far it has got while it runs.

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -100,8 +101,60 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
     val autoBill by AutoBill.enabledFlow(context).collectAsStateWithLifecycle()
     val sideKey by SideKeys.state.collectAsStateWithLifecycle()
     val books = ledger.books.filter { !it.archived }
+    // On its side, one scroll in two columns: what is waiting, the month and the ledger at the
+    // start, the things and the settings beside them (H15).
+    val sideways = isPhoneLandscape()
+    val first: @Composable () -> Unit = {
+        // With no API to publish to, what is kept here is simply the phone's.
+        if (pending.size > 0 && container.canPublish) PublishCard(pending.size, routes.changes)
+        MonthSpending(container) { routes.ledger(1) }
+        PageRows(Modifier.padding(top = Space.s)) { shapes ->
+            MeRow(AppIcons.Wallet, stringResource(R.string.me_ledger), "me_ledger", shapes) { routes.ledger(0) }
+            MeRow(AppIcons.Footprints, stringResource(R.string.footprints_title), "me_footprints", shapes, onClick = routes.footprints)
+        }
+    }
+    val second: @Composable () -> Unit = {
+        Things(container, routes)
+        PageCaption(stringResource(R.string.me_general))
+        PageRows { shapes ->
+            MeRow(
+                AppIcons.Eye, stringResource(R.string.me_items), "settings_items", shapes,
+                supporting = stringResource(R.string.me_items_public, books.count { it.visibility == "public" }, shares),
+                onClick = routes.items,
+            )
+            MeRow(
+                AppIcons.CloudSync, stringResource(R.string.sync_title), "settings_sync", shapes,
+                supporting = stringResource(
+                    when {
+                        !container.settings.apiUrl.isSet -> R.string.me_sync_no_api
+                        container.settings.apiToken.isSet -> R.string.me_sync_token_set
+                        else -> R.string.me_sync_token_unset
+                    },
+                ),
+                onClick = routes.sync,
+            )
+        }
+        PageCaption(stringResource(R.string.me_on_phone))
+        PageRows { shapes ->
+            MeRow(
+                AppIcons.Receipt, stringResource(R.string.ledger_settings_title), "settings_ledger", shapes,
+                supporting = listOfNotNull(
+                    pluralStringResource(R.plurals.me_ledger_books, books.size, books.size),
+                    stringResource(R.string.me_auto_bill_on).takeIf { autoBill == true },
+                ).joinToString(" "),
+                onClick = routes.ledgerSettings,
+            )
+            MeRow(AppIcons.Route, stringResource(R.string.footprint_settings_title), "settings_footprints", shapes, onClick = routes.footprintSettings)
+            MeRow(
+                AppIcons.Phone, stringResource(R.string.side_key_title), "settings_sidekey", shapes,
+                supporting = stringResource(sideKey.phase.label),
+                onClick = routes.sideKey,
+            )
+        }
+        Credits()
+    }
     TabPage(stringResource(R.string.tab_me), tab = Preferences) {
-        PageWidth(maxColumns = 1) { columns ->
+        PageWidth(maxColumns = if (sideways) 2 else 1) { columns ->
             Column(
                 Modifier
                     .fillMaxSize()
@@ -109,51 +162,15 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
                     .padding(horizontal = columns.margin)
                     .padding(top = LocalTopClearance.current, bottom = LocalBottomClearance.current + Space.xl),
             ) {
-                // With no API to publish to, what is kept here is simply the phone's.
-                if (pending.size > 0 && container.canPublish) PublishCard(pending.size, routes.changes)
-                MonthSpending(container) { routes.ledger(1) }
-                PageRows(Modifier.padding(top = Space.s)) { shapes ->
-                    MeRow(AppIcons.Wallet, stringResource(R.string.me_ledger), "me_ledger", shapes) { routes.ledger(0) }
-                    MeRow(AppIcons.Footprints, stringResource(R.string.footprints_title), "me_footprints", shapes, onClick = routes.footprints)
+                if (sideways) {
+                    Row {
+                        Column(Modifier.weight(1f)) { first() }
+                        Column(Modifier.weight(1f)) { second() }
+                    }
+                } else {
+                    first()
+                    second()
                 }
-                Things(container, routes)
-                PageCaption(stringResource(R.string.me_general))
-                PageRows { shapes ->
-                    MeRow(
-                        AppIcons.Eye, stringResource(R.string.me_items), "settings_items", shapes,
-                        supporting = stringResource(R.string.me_items_public, books.count { it.visibility == "public" }, shares),
-                        onClick = routes.items,
-                    )
-                    MeRow(
-                        AppIcons.CloudSync, stringResource(R.string.sync_title), "settings_sync", shapes,
-                        supporting = stringResource(
-                            when {
-                                !container.settings.apiUrl.isSet -> R.string.me_sync_no_api
-                                container.settings.apiToken.isSet -> R.string.me_sync_token_set
-                                else -> R.string.me_sync_token_unset
-                            },
-                        ),
-                        onClick = routes.sync,
-                    )
-                }
-                PageCaption(stringResource(R.string.me_on_phone))
-                PageRows { shapes ->
-                    MeRow(
-                        AppIcons.Receipt, stringResource(R.string.ledger_settings_title), "settings_ledger", shapes,
-                        supporting = listOfNotNull(
-                            pluralStringResource(R.plurals.me_ledger_books, books.size, books.size),
-                            stringResource(R.string.me_auto_bill_on).takeIf { autoBill == true },
-                        ).joinToString(" "),
-                        onClick = routes.ledgerSettings,
-                    )
-                    MeRow(AppIcons.Route, stringResource(R.string.footprint_settings_title), "settings_footprints", shapes, onClick = routes.footprintSettings)
-                    MeRow(
-                        AppIcons.Phone, stringResource(R.string.side_key_title), "settings_sidekey", shapes,
-                        supporting = stringResource(sideKey.phase.label),
-                        onClick = routes.sideKey,
-                    )
-                }
-                Credits()
             }
         }
     }

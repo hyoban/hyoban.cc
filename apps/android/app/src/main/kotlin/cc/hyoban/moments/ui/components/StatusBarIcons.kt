@@ -15,6 +15,9 @@ import androidx.core.graphics.createBitmap
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.compose.runtime.LaunchedEffect
 
 /** How long after the last frame is drawn the strip under the status bar is looked at again. */
 private const val SAMPLE_DELAY_MS = 120L
@@ -104,5 +107,41 @@ fun AdaptiveStatusBarIcons() {
             handler.removeCallbacks(sample)
             if (view.viewTreeObserver.isAlive) view.viewTreeObserver.removeOnDrawListener(drawn)
         }
+    }
+}
+
+/**
+ * Whether the system's bars are put away: on a phone on its side, where the design (H00) gives
+ * their height to the page; a swipe from the top or the bottom edge shows them for a moment.
+ */
+@Composable
+fun hidesSystemBars(): Boolean = isLandscape() && isCompactHeight()
+
+/** Puts the system's bars away while [hidesSystemBars], and brings them back once the phone is upright again. */
+@Composable
+fun LandscapeSystemBars() {
+    val view = LocalView.current
+    val window = (view.context as? Activity)?.window ?: return
+    val hidden = hidesSystemBars()
+    LaunchedEffect(hidden, window, view) {
+        val controller = WindowCompat.getInsetsController(window, view)
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        if (hidden) controller.hide(WindowInsetsCompat.Type.systemBars()) else controller.show(WindowInsetsCompat.Type.systemBars())
+    }
+}
+
+/**
+ * In a dialog's window, which shows the system's bars again of its own accord, puts them away as
+ * the app's window has them when [hidden], read from the app's window by [hidesSystemBars] before the dialog opens.
+ */
+@Composable
+fun DialogSystemBars(hidden: Boolean) {
+    val view = LocalView.current
+    val window = (view.parent as? DialogWindowProvider)?.window ?: return
+    LaunchedEffect(hidden, window, view) {
+        if (!hidden) return@LaunchedEffect
+        val controller = WindowCompat.getInsetsController(window, view)
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.hide(WindowInsetsCompat.Type.systemBars())
     }
 }

@@ -1,5 +1,10 @@
 package cc.hyoban.moments.ui.ledger
 
+import androidx.compose.ui.text.style.TextOverflow
+import cc.hyoban.moments.ui.components.TitleMenuButton
+import cc.hyoban.moments.ui.components.SIDE_COLUMN
+import cc.hyoban.moments.ui.components.SideBySide
+import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.TextButton
@@ -124,41 +129,31 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
         null
     }
 
-    SubPage(
-        when {
-            book == null -> stringResource(R.string.tab_ledger)
-            ledger.allBooks -> stringResource(R.string.ledger_all_books)
-            else -> book.name
-        },
-        onBack = nav.back,
-        subtitle = subtitle,
-        // Switched from its name, when there are books to switch between, so the bar keeps
-        // to its one action.
-        titleMenu = if (ledger.books.count { !it.archived } >= 2) {
-            TitleMenu(stringResource(R.string.ledger_switch_book)) { close -> BookMenuItems(container, ledger, close) }
-        } else {
-            null
-        },
-        actions = {
-            Tooltip(stringResource(R.string.action_search), below = true) {
-                IconButton(onClick = { nav.list(LedgerFilter(book = book?.id.takeIf { !ledger.allBooks }, search = true)) }, modifier = Modifier.testTag("ledger_search")) {
-                    Icon(AppIcons.Search, contentDescription = stringResource(R.string.action_search))
+    val title = when {
+        book == null -> stringResource(R.string.tab_ledger)
+        ledger.allBooks -> stringResource(R.string.ledger_all_books)
+        else -> book.name
+    }
+    // Switched from its name, when there are books to switch between, so the bar keeps
+    // to its one action.
+    val titleMenu = if (ledger.books.count { !it.archived } >= 2) {
+        TitleMenu(stringResource(R.string.ledger_switch_book)) { close -> BookMenuItems(container, ledger, close) }
+    } else {
+        null
+    }
+    // Its bills, sums and accounts, one of three in a segmented control: under the bar, the lists
+    // passing under it; on a phone on its side, in the bar's middle instead (H17).
+    val sideways = isPhoneLandscape()
+    val segments: @Composable (Modifier) -> Unit = { segmentsModifier ->
+        SingleChoiceSegmentedButtonRow(segmentsModifier) {
+            LedgerTab.entries.forEachIndexed { index, entry ->
+                SegmentedButton(selected = tab == index, onClick = { tab = index }, modifier = Modifier.testTag(entry.tag)) {
+                    Text(stringResource(entry.label))
                 }
             }
-        },
-        // Its bills, sums and accounts, one of three in a segmented control staying under the
-        // bar, the lists passing under it, clear of the tabs down the side on a phone on its side
-        // as the lists are.
-        accessory = {
-            SingleChoiceSegmentedButtonRow(Modifier.railPadding().fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s)) {
-                LedgerTab.entries.forEachIndexed { index, entry ->
-                    SegmentedButton(selected = tab == index, onClick = { tab = index }, modifier = Modifier.testTag(entry.tag)) {
-                        Text(stringResource(entry.label))
-                    }
-                }
-            }
-        },
-    ) {
+        }
+    }
+    val views: @Composable () -> Unit = {
         Column(Modifier.fillMaxSize()) {
             when {
                 !loaded -> Unit
@@ -167,6 +162,46 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
                 LedgerTab.entries[tab] == LedgerTab.BILLS -> BillsView(ledger, bills, currency, nav)
                 else -> StatsView(ledger, shown, currency, nav, byName = ledger.allBooks)
             }
+        }
+    }
+    SubPage(
+        title,
+        onBack = nav.back,
+        subtitle = subtitle.takeUnless { sideways },
+        titleMenu = titleMenu.takeUnless { sideways },
+        actions = {
+            Tooltip(stringResource(R.string.action_search), below = true) {
+                IconButton(onClick = { nav.list(LedgerFilter(book = book?.id.takeIf { !ledger.allBooks }, search = true)) }, modifier = Modifier.testTag("ledger_search")) {
+                    Icon(AppIcons.Search, contentDescription = stringResource(R.string.action_search))
+                }
+            }
+        },
+        centre = if (sideways) { { segments(Modifier.width(SIDE_COLUMN)) } } else null,
+        accessory = if (sideways) null else { { segments(Modifier.railPadding().fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s)) } },
+    ) {
+        if (sideways) {
+            // The book and this month's sums stay at the start, whichever of the three is shown.
+            SideBySide(
+                Modifier.fillMaxSize(),
+                side = {
+                    Column(Modifier.padding(top = LocalTopClearance.current + Space.s), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+                        val heading: @Composable (Modifier) -> Unit = { headingModifier ->
+                            Text(title, style = AppTheme.typography.title, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = headingModifier.semantics { heading() })
+                        }
+                        if (titleMenu != null) TitleMenuButton(titleMenu) { heading(it) } else heading(Modifier)
+                        if (month != null) {
+                            Row(Modifier.padding(top = Space.l), verticalAlignment = Alignment.CenterVertically) {
+                                Text(stringResource(R.string.me_month_expense), style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.weight(1f))
+                                HideAmountsButton()
+                            }
+                            Text(money(month.expense, currency), style = AppTheme.typography.titlePage, modifier = Modifier.testTag("ledger_side_expense"))
+                            Text(stringResource(R.string.ledger_income_short, money(month.income, currency)), style = AppTheme.typography.caption, color = tokens.tx3)
+                        }
+                    }
+                },
+            ) { Box(Modifier.weight(1f)) { views() } }
+        } else {
+            views()
         }
     }
     importer.Dialog()

@@ -111,6 +111,24 @@ fun TabPage(
  */
 class TitleMenu(val label: String, val items: @Composable ColumnScope.(close: () -> Unit) -> Unit)
 
+/** A title that opens [menu]: [title], a dropdown arrow after it, the menu under it; in the bar, or on a page on its side at the head of its first column. */
+@Composable
+fun TitleMenuButton(menu: TitleMenu, modifier: Modifier = Modifier, title: @Composable (Modifier) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box(modifier) {
+        Row(
+            Modifier.clip(AppTheme.shapes.medium)
+                .clickable(onClickLabel = menu.label, role = Role.DropdownList) { open = true }
+                .testTag("title_menu"),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            title(Modifier.weight(1f, fill = false))
+            Icon(AppIcons.CaretDown, contentDescription = null)
+        }
+        DropdownMenu(open, onDismissRequest = { open = false }) { menu.items(this) { open = false } }
+    }
+}
+
 @Composable
 private fun BarPage(
     title: String,
@@ -159,19 +177,7 @@ private fun BarPage(
         } else if (titleMenu == null) {
             text(Modifier)
         } else {
-            var open by remember { mutableStateOf(false) }
-            Box {
-                Row(
-                    Modifier.clip(AppTheme.shapes.medium)
-                        .clickable(onClickLabel = titleMenu.label, role = Role.DropdownList) { open = true }
-                        .testTag("title_menu"),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    text(Modifier.weight(1f, fill = false))
-                    Icon(AppIcons.CaretDown, contentDescription = null)
-                }
-                DropdownMenu(open, onDismissRequest = { open = false }) { titleMenu.items(this) { open = false } }
-            }
+            TitleMenuButton(titleMenu) { text(it) }
         }
     }
     // What the subtitle is about acted on beside it while the bar is open, its summary's

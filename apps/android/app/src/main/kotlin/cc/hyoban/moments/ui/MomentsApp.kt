@@ -17,9 +17,7 @@ import cc.hyoban.moments.ui.design.FloatingBar
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.width
 import cc.hyoban.moments.ui.design.AppSnackbar
-import cc.hyoban.moments.ui.theme.dividerColor
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.animation.animateColorAsState
 import cc.hyoban.moments.ui.design.LocalContentColor
 import androidx.compose.ui.semantics.Role
@@ -58,6 +56,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -140,6 +139,7 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.components.AdaptiveStatusBarIcons
+import cc.hyoban.moments.ui.components.LandscapeSystemBars
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.DialogPane
 import cc.hyoban.moments.ui.components.LocalMediaMaxHeight
@@ -385,7 +385,7 @@ private fun TabItem(tab: Tab, chosen: Boolean, pending: Int, modifier: Modifier,
     }
 }
 
-/** How wide the rail is, down the side of a wide window. */
+/** How wide the tabs stand down the side of a wide window or a phone on its side: the capsule and 12 either side. */
 private val RAIL_WIDTH = 80.dp
 
 /** The tabs at the bottom; everything else opens over them. */
@@ -405,8 +405,9 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
     val stack by navController.backStack.collectAsStateWithLifecycle()
     val entry = stack.lastOrNull { it.destination !is NavGraph && it.destination.navigatorName != DIALOG_NAVIGATOR }
     val current = Tab.entries.firstOrNull { tab -> entry?.destination?.hasRoute(tab.type) == true }
-    // Writing or changing a Moment: a page on a compact window, a dialog from the medium breakpoint on.
-    val wide by rememberUpdatedState(isMediumWidth())
+    // Writing or changing a Moment: a page on a compact window, a dialog from the medium breakpoint on;
+    // a page again on a phone on its side, too short for a dialog to hold the keyboard and the words (H07).
+    val wide by rememberUpdatedState(isMediumWidth() && !cc.hyoban.moments.ui.components.isPhoneLandscape())
     val opened: (Any) -> Any = { route ->
         when {
             !wide -> route
@@ -581,6 +582,7 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
     val cardOpening = remember { derivedStateOf { openingCard(visibleEntries.value) } }
 
     AdaptiveStatusBarIcons()
+    LandscapeSystemBars()
     val inPictureInPicture = rememberInPictureInPicture()
 
     // A link opened while the app is already open, `adb shell am start -d moments://…` among
@@ -885,7 +887,6 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                 (scaleIn(motion.fastSpatialSpec()) + fadeIn(motion.fastEffectsSpec())) togetherWith
                     (scaleOut(motion.fastSpatialSpec()) + fadeOut(motion.fastEffectsSpec())) using SizeTransform(clip = false)
             }
-            val railLine = dividerColor()
             val navigation = Modifier.semantics {
                 isTraversalGroup = true
                 traversalIndex = -1f
@@ -896,26 +897,22 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                 exit = slideOutHorizontally(transitions.defaultSpatialSpec()) { if (railLeft) -it else it },
                 modifier = navigation.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight).fillMaxHeight(),
             ) {
-                // The compact rail, its button at the top and the tabs centred under it, so all of
-                // it fits the little height a phone on its side has; on the page, a hairline along
-                // its inner edge.
+                // The tab bar stood on its end down the side, as the design has it on its side (H00):
+                // the same floating capsule, centred in the height, the tab's button under it; no
+                // strip behind it, so the page shows round it.
                 Column(
-                    Modifier.fillMaxHeight().width(RAIL_WIDTH).background(AppColors.page)
+                    Modifier.fillMaxHeight().width(RAIL_WIDTH)
                         .onSizeChanged { railWidth = with(density) { it.width.toDp() } }
-                        .drawBehind {
-                            val x = if (railLeft) size.width - 0.5.dp.toPx() else 0.5.dp.toPx()
-                            drawLine(railLine, Offset(x, 0f), Offset(x, size.height), strokeWidth = 1.dp.toPx())
-                        }
-                        .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Vertical + WindowInsetsSides.Start))
-                        .padding(top = Space.m),
+                        .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)),
                     horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(Space.m, Alignment.CenterVertically),
                 ) {
-                    AnimatedContent(accessorySlot.value, transitionSpec = fabTransition, label = "rail button") { button -> button?.invoke() }
-                    Spacer(Modifier.weight(1f))
-                    Column(Modifier.selectableGroup()) {
-                        Tab.entries.forEachIndexed { index, tab -> TabItem(tab, index == selectedTab, pending.size, Modifier.width(RAIL_WIDTH).height(56.dp)) { onTab(index) } }
+                    FloatingBar(Modifier.selectableGroup()) {
+                        Column {
+                            Tab.entries.forEachIndexed { index, tab -> TabItem(tab, index == selectedTab, pending.size, Modifier.size(48.dp)) { onTab(index) } }
+                        }
                     }
-                    Spacer(Modifier.weight(1f))
+                    AnimatedContent(accessorySlot.value, transitionSpec = fabTransition, label = "rail button") { button -> button?.invoke() }
                 }
             }
             AnimatedVisibility(

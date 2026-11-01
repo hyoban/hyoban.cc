@@ -384,7 +384,9 @@ fun AlertDialog(
     text: (@Composable () -> Unit)? = null,
     properties: DialogProperties = DialogProperties(),
 ) {
+    val noSystemBars = cc.hyoban.moments.ui.components.hidesSystemBars()
     Dialog(onDismissRequest, properties) {
+        cc.hyoban.moments.ui.components.DialogSystemBars(noSystemBars)
         Surface(
             modifier.sizeIn(minWidth = 280.dp, maxWidth = 560.dp),
             shape = AppTheme.shapes.large,
