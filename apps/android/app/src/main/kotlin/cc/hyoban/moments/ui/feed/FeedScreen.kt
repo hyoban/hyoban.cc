@@ -192,7 +192,7 @@ fun FeedScreen(
     val loaded by container.repository.loaded.collectAsStateWithLifecycle()
     val tracks = rememberTimelineTracks(container)
     // The app counts as started once the Moments on the phone are read, as the system measures
-    // a start to the screen people came for, not the first frame of its skeleton.
+    // a start to the screen people came for; the splash stays up until then (MainActivity).
     ReportDrawnWhen { loaded && tracks.ready }
     val syncing by container.repository.syncing.collectAsStateWithLifecycle()
     val pull = rememberPulledRefresh(container)
