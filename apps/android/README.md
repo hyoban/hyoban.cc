@@ -162,8 +162,9 @@ in their own currencies. Its page (`moments://ledger`, from 我) has three tabs:
   drawn on a canvas (`ui/ledger/Charts.kt`) by day, by category and by weekday;
 - **资产**, net assets, a line of the last twelve months, and the accounts by kind.
 
-The book's name switches books or shows 全部账本. The eye beside the sums hides every
-amount (隐藏金额), here and on the other pages.
+The book's name switches books or shows 全部账本, which the app opens on each time it
+starts. The eye on 我's ledger card, beside this month's spending, hides every amount
+(隐藏金额), there and on the ledger's pages.
 
 A bill is an expense, an income or a transfer (also a repayment or a loan), or a refund or
 reimbursement written from its expense. `moments://new-bill`, or the ledger's +, opens one

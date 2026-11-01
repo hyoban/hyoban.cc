@@ -56,6 +56,7 @@ import cc.hyoban.moments.ui.design.ListItemShapes
 import cc.hyoban.moments.ui.design.SegmentedListItem
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.strong
+import cc.hyoban.moments.ui.ledger.HideAmountsButton
 import cc.hyoban.moments.ui.ledger.money
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
@@ -222,6 +223,8 @@ private fun MonthSpending(container: AppContainer, onOpen: () -> Unit) {
                 color = tokens.tx3,
                 modifier = Modifier.weight(1f),
             )
+            // The amounts hidden or shown here, before the ledger opens.
+            HideAmountsButton()
             Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx3)
         }
         Text(stringResource(R.string.me_month_expense), style = AppTheme.typography.caption, color = tokens.tx2)
