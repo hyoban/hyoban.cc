@@ -147,6 +147,8 @@
     <string name="settings_api_note">换了 API 地址后，手机上的副本会清空，再从新的 API 重新读取</string>
     <string name="settings_map_note">MapLibre 样式的地址，浅色和深色随系统切换</string>
     <string name="setting_is_default">默认</string>
+    <string name="setting_unset">未设置</string>
+    <string name="setting_blank_none">留空则不使用</string>
     <string name="action_confirm">确定</string>
     <string name="action_cancel">取消</string>
     <string name="error_address">需要 http 或 https 开头的地址</string>
@@ -293,7 +295,7 @@
     <string name="error_video_too_big">视频超过 100 MB，网站收不下</string>
     <string name="setting_api_token">API 令牌</string>
     <string name="token_set">已设置</string>
-    <string name="token_unset">未设置，只能浏览</string>
+    <string name="token_unset">未设置</string>
     <string name="token_hint">粘贴 API 的令牌</string>
     <string name="token_replace">输入新的令牌来替换</string>
     <string name="action_forget_token">移除令牌</string>
@@ -319,7 +321,7 @@
     <string name="notification_publish_waiting">网络断开了，联网后接着发布</string>
     <string name="notification_publish_failed">没能发布到网站</string>
     <string name="note_publish_all">发布后所有人都能看到：新写的时刻和照片、视频会上传，改过的会更新，要删除的会从网站上删掉。中途失败的话，没发出去的会留在这里。</string>
-    <string name="note_publish_needs_token">在设置里填上 API 令牌后才能发布</string>
+    <string name="note_publish_needs_token">在同步与来源里填上 API 地址和令牌后才能发布</string>
     <string name="change_text">文字</string>
     <string name="change_photos">照片</string>
     <string name="change_cover">封面</string>
@@ -343,6 +345,7 @@
     <string name="action_navigate_short">导航</string>
     <string name="action_refresh">刷新</string>
     <string name="refresh_note">从 API 读取最新的时刻、地点和旅程</string>
+    <string name="refresh_needs_api">填上 API 地址和令牌后才能刷新</string>
     <string name="refreshing">正在刷新</string>
     <string name="share_manual_note">保存照片、复制文字后手动发布</string>
     <string name="confirm_discard_note">还没保存的文字、照片和地点都会丢掉</string>
@@ -885,7 +888,8 @@
     <string name="section_site">网站</string>
     <string name="section_media">媒体</string>
     <string name="me_sync_token_set">令牌已设置</string>
-    <string name="me_sync_token_unset">没有令牌，只能浏览</string>
+    <string name="me_sync_token_unset">没有令牌，不能同步</string>
+    <string name="me_sync_no_api">未连接 API</string>
     <string name="me_auto_bill_on">自动记账已开</string>
     <string name="me_items_public">公开：%1$d 个账本 %2$d 段轨迹</string>
     <string name="side_key_needs">需要</string>

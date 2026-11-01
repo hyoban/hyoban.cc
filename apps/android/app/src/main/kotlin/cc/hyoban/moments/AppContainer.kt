@@ -264,8 +264,8 @@ class AppContainer(context: Context) {
         Widgets.update(appContext)
     }
 
-    /** Whether the app may write to the API: it has the owner's token. */
-    val canPublish get() = settings.apiToken.isSet
+    /** Whether the app may write to the API: it has one, and the owner's token. */
+    val canPublish get() = settings.connected
 
     /** How far publishing the changes has got, done of total, while it runs. */
     private val _publishing = MutableStateFlow<PublishProgress?>(null)
@@ -365,7 +365,8 @@ class AppContainer(context: Context) {
     private var widgetsDrawn: Triple<Any, Any, LocalDate>? = null
 
     private suspend fun refreshAll() {
-        repository.refresh().onSuccess { revision -> routes.refresh(revision) }
+        // Without an API and its token the app is the phone's alone, and asks nothing of the network.
+        if (settings.connected) repository.refresh().onSuccess { revision -> routes.refresh(revision) }
         // The widgets show what the sync brought, or what was on the phone if it failed; the
         // same Moments and trips on the same day draw them the same, so they aren't again.
         val drawn = Triple(repository.moments.value, repository.trips.value, LocalDate.now())

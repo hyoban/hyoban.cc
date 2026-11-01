@@ -107,7 +107,8 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
                     .padding(horizontal = columns.margin)
                     .padding(bottom = LocalBottomClearance.current + Space.xl),
             ) {
-                if (pending.size > 0) PublishCard(pending.size, routes.changes)
+                // With no API to publish to, what is kept here is simply the phone's.
+                if (pending.size > 0 && container.canPublish) PublishCard(pending.size, routes.changes)
                 MonthSpending(container) { routes.ledger(1) }
                 PageRows(Modifier.padding(top = Space.s)) { shapes ->
                     MeRow(AppIcons.Wallet, stringResource(R.string.me_ledger), "me_ledger", shapes) { routes.ledger(0) }
@@ -123,7 +124,13 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
                     )
                     MeRow(
                         AppIcons.CloudSync, stringResource(R.string.sync_title), "settings_sync", shapes,
-                        supporting = stringResource(if (container.settings.apiToken.isSet) R.string.me_sync_token_set else R.string.me_sync_token_unset),
+                        supporting = stringResource(
+                            when {
+                                !container.settings.apiUrl.isSet -> R.string.me_sync_no_api
+                                container.settings.apiToken.isSet -> R.string.me_sync_token_set
+                                else -> R.string.me_sync_token_unset
+                            },
+                        ),
                         onClick = routes.sync,
                     )
                 }

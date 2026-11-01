@@ -9,14 +9,16 @@ import androidx.core.content.edit
 import java.io.File
 
 /**
- * An address the app reaches, set on the settings page, or the build's own until it is.
- * Its value is Compose state, so what reads it while drawing draws again when it changes.
+ * An address the app reaches, set on the settings page, or the build's own until it is; one
+ * the build has none of is empty until set. Its value is Compose state, so what reads it while drawing draws again when it changes.
  */
 class Setting internal constructor(private val prefs: SharedPreferences, private val key: String, val default: String) {
     var value: String by mutableStateOf(prefs.getString(key, null) ?: default)
         private set
 
     val isDefault get() = value == default
+
+    val isSet get() = value.isNotEmpty()
 
     /** Keeps [text] without the slash it may end in; blank goes back to [default]. */
     fun set(text: String) {
@@ -50,14 +52,17 @@ class Token internal constructor(private val file: File) {
 class Settings(context: Context) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
-    /** The API the records and the routes come from. */
-    val apiUrl = Setting(prefs, "api_url", BuildConfig.API_URL)
+    /** The API the records and the routes come from; none until set, the app then the phone's alone. */
+    val apiUrl = Setting(prefs, "api_url", "")
 
     /** The owner's token, with which the app publishes, changes and deletes the site's Moments. */
     val apiToken = Token(File(context.noBackupFilesDir, "api-token"))
 
-    /** The origin the photos and videos are served from. */
-    val assetOrigin = Setting(prefs, "asset_origin", BuildConfig.ASSET_ORIGIN)
+    /** The origin the published photos and videos are served from; none until set. */
+    val assetOrigin = Setting(prefs, "asset_origin", "")
+
+    /** Whether the app reads from and publishes to an API: it has one, and the token every request needs. */
+    val connected get() = apiUrl.isSet && apiToken.isSet
 
     /** The map's style in light and in dark, as MapLibre style URLs. */
     val mapStyleLight = Setting(prefs, "map_style_light", BuildConfig.MAP_STYLE_LIGHT)

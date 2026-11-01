@@ -150,6 +150,8 @@
     <string name="settings_api_note">Changing the API address clears the copy on this phone and reads everything again from the new API</string>
     <string name="settings_map_note">Addresses of MapLibre styles. Light and dark follow the system.</string>
     <string name="setting_is_default">Default</string>
+    <string name="setting_unset">Not set</string>
+    <string name="setting_blank_none">Leave blank to use none</string>
     <string name="action_confirm">OK</string>
     <string name="action_cancel">Cancel</string>
     <string name="error_address">The address must start with http or https</string>
@@ -310,7 +312,7 @@
     <string name="error_video_too_big">Videos over 100 MB are too big for the site</string>
     <string name="setting_api_token">API token</string>
     <string name="token_set">Set</string>
-    <string name="token_unset">Not set, view only</string>
+    <string name="token_unset">Not set</string>
     <string name="token_hint">Paste the API token</string>
     <string name="token_replace">Type a new token to replace it</string>
     <string name="action_forget_token">Remove token</string>
@@ -337,7 +339,7 @@
     <string name="notification_publish_waiting">Connection lost; publishing goes on once you’re back online</string>
     <string name="notification_publish_failed">Couldn’t publish to the site</string>
     <string name="note_publish_all">Publishing makes everything here public. New Moments and their photos and videos are uploaded, edited ones are updated, and deleted ones are taken off the site. If publishing stops partway, anything not sent stays here.</string>
-    <string name="note_publish_needs_token">Add an API token in settings to publish</string>
+    <string name="note_publish_needs_token">Add an API address and token under Sync and sources to publish</string>
     <string name="change_text">text</string>
     <string name="change_photos">photos</string>
     <string name="change_cover">covers</string>
@@ -361,6 +363,7 @@
     <string name="action_navigate_short">Directions</string>
     <string name="action_refresh">Refresh</string>
     <string name="refresh_note">Get the latest Moments, places and trips from the API</string>
+    <string name="refresh_needs_api">Add an API address and token to refresh</string>
     <string name="refreshing">Refreshing</string>
     <string name="share_manual_note">Save the photos and copy the text, then post yourself</string>
     <string name="confirm_discard_note">Unsaved text, photos, and place will be lost</string>
@@ -920,7 +923,8 @@
     <string name="section_site">Site</string>
     <string name="section_media">Media</string>
     <string name="me_sync_token_set">Token set</string>
-    <string name="me_sync_token_unset">No token, view only</string>
+    <string name="me_sync_token_unset">No token, can’t sync</string>
+    <string name="me_sync_no_api">No API connected</string>
     <string name="me_auto_bill_on">Auto bills on</string>
     <string name="me_items_public">Public: %1$d books, %2$d spans</string>
     <string name="side_key_needs">Requires</string>
