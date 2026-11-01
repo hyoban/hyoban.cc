@@ -49,9 +49,9 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.LinkActivity
 import cc.hyoban.moments.MomentsApplication
 import cc.hyoban.moments.R
+import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.trips.countOf
-import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.ui.DEEP_LINK_SCHEME
 import cc.hyoban.moments.ui.format.daysBetween
 import cc.hyoban.moments.ui.format.formatDate
@@ -88,11 +88,15 @@ class MemoryWidget : GlanceAppWidget() {
 
     private suspend fun memoryCard(context: Context): Card {
         val container = container(context)
-        val memory = memoryFor(container.repository.moments.value, LocalDate.now()) { container.mediaUrls.still(it, PHOTO_WIDTH) != null }
+        val repository = container.repository
+        val moments = publicMoments(repository.moments.value, repository.trips.value, repository::isTripPrivate)
+        val memory = memoryFor(moments, LocalDate.now()) { container.mediaUrls.still(it, PHOTO_WIDTH) != null }
             ?: return Card.Empty(context.getString(R.string.widget_memory_empty))
         val moment = memory.moment
         val places = container.repository.places.value
-        val words = moment.text.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
+        // Words private on their own stay off the widget, as they do off the site.
+        val text = moment.text.takeUnless { Entries.isPartPrivate(moment, "text") }.orEmpty()
+        val words = text.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
         val where = moment.places.mapNotNull { places[it]?.name }.joinToString(" ").ifEmpty { null }
 
         return Card.Photo(
@@ -103,7 +107,7 @@ class MemoryWidget : GlanceAppWidget() {
             title = words ?: where ?: formatDate(moment.dateKey),
             subtitle = if (words != null) where else null,
             link = "moment/${moment.uid}",
-            text = moment.text.trim().ifEmpty { null },
+            text = text.trim().ifEmpty { null },
         )
     }
 }
@@ -125,9 +129,10 @@ class TripWidget : GlanceAppWidget() {
     private suspend fun tripCard(context: Context): Card {
         val container = container(context)
         val today = LocalDate.now()
-        val trips = container.repository.trips.value
-        val moments = container.repository.moments.value
-        val (trip, phase) = tripFor(trips, today) ?: return Card.Empty(context.getString(R.string.empty_trips))
+        val repository = container.repository
+        val trips = repository.trips.value
+        val moments = publicMoments(repository.moments.value, trips, repository::isTripPrivate)
+        val (trip, phase) = tripFor(trips.filterNot { repository.isTripPrivate(it.id) }, today) ?: return Card.Empty(context.getString(R.string.empty_trips))
         val total = daysBetween(trip.start, trip.end)
         val when_ = when (phase) {
             TripPhase.ONGOING -> context.getString(R.string.trip_day, daysBetween(trip.start, today.toString())) + " " +
@@ -136,7 +141,7 @@ class TripWidget : GlanceAppWidget() {
             TripPhase.PAST -> formatRange(trip.start, trip.end, today)
         }
         val count = countOf(trip, moments, trips)
-        val cover = coversOf(trip, moments, trips, limit = 1).firstOrNull()
+        val cover = tripCover(trip, moments, trips)
 
         return Card.Photo(
             photo = cover?.let { photo(context, container, it) },
