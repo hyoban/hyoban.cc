@@ -40,6 +40,7 @@ import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.accessibility.ShareAccessibilityService
 import cc.hyoban.moments.footprints.ActionRow
 import cc.hyoban.moments.ui.components.PageWidth
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.AppIcons
@@ -80,7 +81,7 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
     }
     SubPage(stringResource(R.string.side_key_title), onBack) {
         PageWidth(maxColumns = 1) { columns ->
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).navigationBarsPadding()
+            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current).navigationBarsPadding()
                 .padding(horizontal = columns.margin).padding(bottom = Space.xl)) {
                 SegmentedGroup(null, stringResource(R.string.side_key_note), listOf { shapes ->
                     SwitchRow(config.enabled, AppIcons.Phone,
