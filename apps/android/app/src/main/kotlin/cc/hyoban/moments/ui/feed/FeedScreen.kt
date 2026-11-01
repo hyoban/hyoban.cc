@@ -6,6 +6,7 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.LocalTabsHidden
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.wrapContentHeight
 import cc.hyoban.moments.ui.components.FloatingButton
 import androidx.compose.ui.semantics.heading
@@ -52,6 +53,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import cc.hyoban.moments.ui.design.FloatingActionButton
@@ -124,6 +126,7 @@ import kotlin.math.roundToInt
  * month by month, with the ledger's bills among them and a banner where each trip begins; its
  * button records a Moment or a bill. Pull down to bring them up to date.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FeedScreen(
     container: AppContainer,
@@ -180,7 +183,9 @@ fun FeedScreen(
     val shown = moments
     val bills = rememberTimelineBills(container, shown, TimeFilter())
     val ledgerNav = LocalLedgerNav.current
-    val feedState = rememberLazyListState()
+    // A screen ahead and half one behind composed while the list is idle between frames, so a
+    // Moment coming into view on a fling is ready rather than composed within the frame it shows.
+    val feedState = rememberLazyListState(cacheWindow = LazyLayoutCacheWindow(aheadFraction = 1f, behindFraction = 0.5f))
     val gridState = rememberLazyStaggeredGridState()
     // The header over the views folds away as they scroll on and opens again as they scroll back,
     // or as the tab tapped again takes them to their top. How far it is folded is kept, so a page

@@ -10,8 +10,6 @@ import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.Ledger
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -60,6 +58,7 @@ import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
+import cc.hyoban.moments.ui.feed.bubbleWidth
 
 /**
  * A Moment in a list, on the page itself rather than in a card: its photos in rounded corners,
@@ -153,11 +152,10 @@ private fun MomentBubble(
     val density = LocalDensity.current
     val shape = remember(joinedAbove, joinedBelow) { cc.hyoban.moments.ui.feed.BubbleShape(sent = true, joinedAbove, joinedBelow) }
     val tail = cc.hyoban.moments.ui.feed.TAIL
-    androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
         // Most of the column, never wider than 420 on a wide screen; with photos always that
         // wide, words alone only as wide as they need. The tail's strip comes on top, at the right.
-        val max = minOf(maxWidth * 0.88f, 420.dp) + tail
-        val width = if (moment.media.isNotEmpty()) Modifier.width(max) else Modifier.widthIn(max = max)
+        val width = Modifier.bubbleWidth(fill = moment.media.isNotEmpty()) { column -> minOf(column * 0.88f, 420.dp) }
         PressableCard(
             onClick = onOpen,
             onLongClick = { at -> menu = with(density) { DpOffset(at.x.toDp(), at.y.toDp()) } },

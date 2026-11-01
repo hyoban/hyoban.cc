@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.PixelCopy
 import android.view.ViewTreeObserver
 import androidx.compose.runtime.Composable
@@ -15,8 +16,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 
-/** How long after a frame is drawn the strip under the status bar is looked at again. */
+/** How long after the last frame is drawn the strip under the status bar is looked at again. */
 private const val SAMPLE_DELAY_MS = 120L
+
+/** The longest the strip goes unlooked at while frames keep coming, a scroll or what plays. */
+private const val SAMPLE_MAX_WAIT_MS = 1000L
 
 // Dark icons over what is lighter than this, light icons over what is darker than that;
 // between the two they stay as they are, so a middling photo doesn't flip them back and forth.
@@ -28,9 +32,10 @@ private const val ICON_END = 14
 
 /**
  * The status bar's icons dark over a light page and light over a dark photo, whatever is
- * under them: a moment after anything is drawn, the strip under the bar is copied small
- * and the brightness at its ends, under the icons, picks them. Nothing is copied while
- * nothing is drawn, nor while the bar is hidden.
+ * under them: a moment after drawing stops, the strip under the bar is copied small and the
+ * brightness at its ends, under the icons, picks them. Nothing is copied while nothing is
+ * drawn, nor while the bar is hidden; while frames keep coming, once a second at most, as
+ * each copy holds up the frame being drawn.
  */
 @Composable
 fun AdaptiveStatusBarIcons() {
@@ -44,6 +49,9 @@ fun AdaptiveStatusBarIcons() {
         val strip = createBitmap(48, 2)
         val pixels = IntArray(strip.width * strip.height)
         var scheduled = false
+        // When the last frame was drawn, and the first since the strip was last looked at.
+        var lastDrawn = 0L
+        var firstDrawn = 0L
         var copying = false
         var stopped = false
 
@@ -60,7 +68,14 @@ fun AdaptiveStatusBarIcons() {
             }
         }
 
-        val sample = Runnable {
+        lateinit var sample: Runnable
+        sample = Runnable {
+            val now = SystemClock.uptimeMillis()
+            val settled = now - lastDrawn >= SAMPLE_DELAY_MS
+            if (!settled && now - firstDrawn < SAMPLE_MAX_WAIT_MS) {
+                handler.postDelayed(sample, minOf(lastDrawn + SAMPLE_DELAY_MS, firstDrawn + SAMPLE_MAX_WAIT_MS) - now)
+                return@Runnable
+            }
             scheduled = false
             val bar = ViewCompat.getRootWindowInsets(view)?.getInsets(WindowInsetsCompat.Type.statusBars())?.top ?: 0
             if (stopped || copying || bar <= 0 || view.width <= 0) return@Runnable
@@ -76,8 +91,10 @@ fun AdaptiveStatusBarIcons() {
             }
         }
         val drawn = ViewTreeObserver.OnDrawListener {
+            lastDrawn = SystemClock.uptimeMillis()
             if (!scheduled) {
                 scheduled = true
+                firstDrawn = lastDrawn
                 handler.postDelayed(sample, SAMPLE_DELAY_MS)
             }
         }
