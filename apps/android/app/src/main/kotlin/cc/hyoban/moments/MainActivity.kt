@@ -9,6 +9,8 @@ import cc.hyoban.moments.ui.Feed
 import cc.hyoban.moments.ui.LedgerSettings
 import cc.hyoban.moments.ui.NewMoment
 import cc.hyoban.moments.ui.MomentsApp
+import cc.hyoban.moments.ui.pagesOf
+import cc.hyoban.moments.ui.routeOf
 import cc.hyoban.moments.ui.theme.MomentsTheme
 import kotlinx.coroutines.channels.Channel
 import androidx.lifecycle.lifecycleScope
@@ -45,10 +47,10 @@ open class MainActivity : ComponentActivity() {
                 }
             }
         }
-        val start = startRoute()
+        val pages = startPages(restored = savedInstanceState != null)
         setContent {
             MomentsTheme {
-                MomentsApp(container = container, start = start)
+                MomentsApp(container = container, pages = pages)
             }
         }
         // Compose paints the whole window, so the window's own background would only be
@@ -59,11 +61,19 @@ open class MainActivity : ComponentActivity() {
     /** Whether this activity has handed its work to others and finished, so it draws nothing. */
     protected open fun handOff(savedInstanceState: Bundle?): Boolean = false
 
-    /** The page the app opens on: the Moments tab, from the launcher or a link; a new Moment, for a place shared into it. */
-    protected open fun startRoute(): Any = when (intent.action) {
-        ACTION_NEW_MOMENT -> NewMoment()
-        ACTION_LEDGER_IMPORT -> LedgerSettings()
-        else -> Feed
+    /**
+     * The pages the app opens on: the Moments tab from the launcher; a link's page over its tab;
+     * a new Moment for a place shared into it. Made again, or opened again from the recent apps,
+     * it goes back to where it was rather than to the link once more.
+     */
+    protected open fun startPages(restored: Boolean): List<Any> {
+        if (restored || intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) return listOf(Feed)
+        val route = when (intent.action) {
+            ACTION_NEW_MOMENT -> NewMoment()
+            ACTION_LEDGER_IMPORT -> LedgerSettings()
+            else -> intent.data?.let(::routeOf)
+        }
+        return route?.let(::pagesOf) ?: listOf(Feed)
     }
 
     companion object {

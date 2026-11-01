@@ -89,8 +89,8 @@
             </intent-filter>
             <!-- moments://moment/{uid}, trip/{id}, day/{date}, place/{id}, settings, map,
                  trips, moments and new open their pages, from a link or from
-                 `adb shell am start -d`; one opened while the app is on screen goes over
-                 the page shown rather than starting it again. -->
+                 `adb shell am start -d`, over the tab each is under; one opened while the
+                 app is on screen goes over the page shown rather than starting it again. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

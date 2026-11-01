@@ -380,7 +380,11 @@ adb -s emulator-5554 shell am instrument -w -e class cc.hyoban.moments.footprint
 Every page has a link, `moments://moments`, `map`, `trips`, `settings` (我), `sync`, `items`,
 `ledger-settings`, `footprint-settings`, `side-key`, `new`,
 `moment/{uid}`, `trip/{id}`, `play/{id}`, `day/{YYYY-MM-DD}` and `place/{id}`, which
-`adb shell am start -d` opens. Buttons, tabs and cards carry test tags that
+`adb shell am start -d` opens. Opening the app, a link's page comes over the tab it is
+under (a trip or a place over 地图, a setting, the ledger or the changes over 我, the rest
+over 时间线), so back, the top bar's or the system's, leads to that tab and the tabs go on
+from there; opened while the app is on screen, it goes over the page shown. A page a widget
+opens stands alone over the app, and back closes it onto the app as it was. Buttons, tabs and cards carry test tags that
 `uiautomator dump` reports as resource ids (`tab_map`, `settings`, `back`,
 `moment_{uid}`, `media_{uid}_{index}`, `trip_{id}`, `day_{date}`, …), and
 `scripts/ui.py` uses both:
