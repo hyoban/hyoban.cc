@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.components.MediaBeside
+import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.foundation.layout.navigationBarsPadding
 import cc.hyoban.moments.ui.design.Surface
@@ -255,12 +257,20 @@ fun FeedScreen(
         }
     }
 
+    // On a phone on its side the day's map takes the camera's side, the conversation beside the tabs
+    // across from it; without a cutout, the map at the right.
+    val mapFirst = dayMap && !cc.hyoban.moments.ui.components.railOnLeft()
     Row(Modifier.fillMaxSize()) {
         // Beside a detail pane, the list is a pane of its own, as wide as Material 3's list
         // pane, starting past the cutout and the rail, which it then needn't keep clear of.
         val rail = LocalRailSpace.current
+        if (mapFirst) {
+            TimelineDayMap(container, feedState, moments, places, bills, onDay, onSearch, Modifier.weight(1f).fillMaxHeight(), railBeside = false)
+        }
         val listPane = if (twoPane) {
             Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)).padding(start = rail.left).width(LIST_PANE_WIDTH + Space.gutter * 2)
+        } else if (mapFirst) {
+            Modifier.padding(end = rail.right).width(CHAT_COLUMN)
         } else if (dayMap) {
             Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)).padding(start = rail.left).width(CHAT_COLUMN)
         } else {
@@ -325,8 +335,8 @@ fun FeedScreen(
                 }
             }
         }
-        if (dayMap) {
-            TimelineDayMap(container, feedState, moments, places, bills, onDay, onSearch, Modifier.weight(1f).fillMaxHeight())
+        if (dayMap && !mapFirst) {
+            TimelineDayMap(container, feedState, moments, places, bills, onDay, onSearch, Modifier.weight(1f).fillMaxHeight(), railBeside = true)
         }
         if (twoPane) {
             // The detail pane, a container of its own beside the list, clear of the bars.
@@ -517,8 +527,8 @@ fun DayScreen(
     // The trip goes unsaid on the cards when all of them were on it: its row heads the day.
     val oneTrip = trip != null && moments.all { tripOf(it, trips)?.id == trip.id }
 
-    // On a phone on its side, a day that moved has its map down the start half, the whole height,
-    // and the day beside it (H05).
+    // On a phone on its side, a day that moved has its map down the half on the camera's side, the
+    // whole height, and the day beside it (H05).
     val points = track
     val sideways = isPhoneLandscape() && points != null && points.size > 1
     val feed: @Composable (Modifier) -> Unit = { feedModifier ->
@@ -539,9 +549,8 @@ fun DayScreen(
     }
     Box(Modifier.fillMaxSize().background(AppColors.page)) {
         if (sideways && points != null) {
-            Row(Modifier.fillMaxSize()) {
-                DayMap(date, points, moments, places, bills, Modifier.weight(1f).fillMaxHeight(), topInset = FLOATING_BAR)
-                Box(Modifier.weight(1f).fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End))) {
+            MediaBeside(media = { half -> DayMap(date, points, moments, places, bills, half, topInset = FLOATING_BAR) }) { half ->
+                Box(half) {
                     CompositionLocalProvider(LocalRailSpace provides RailSpace(0.dp, 0.dp, clearOfInsets = true)) { feed(Modifier.fillMaxSize()) }
                 }
             }
@@ -671,6 +680,8 @@ private fun TimelineDayMap(
     onDay: (String) -> Unit,
     onSearch: () -> Unit,
     modifier: Modifier,
+    /** Whether the tabs stand down this map's far side, its card and search keeping clear of them. */
+    railBeside: Boolean,
 ) {
     var day by rememberSaveable { mutableStateOf<String?>(null) }
     val clearance = with(LocalDensity.current) { LocalTopClearance.current.roundToPx() }
@@ -717,8 +728,9 @@ private fun TimelineDayMap(
         }
         // The whole map opens the day, as its card does.
         Box(Modifier.fillMaxSize().clickable(onClickLabel = openDay) { day?.let(onDay) }.testTag("timeline_day_map"))
-        // Its card and search clear of the tabs when they stand down this side, the map running under them.
-        val controls = Modifier.matchParentSize().padding(end = LocalRailSpace.current.right)
+        // Its card and search clear of the cutout and of the tabs when they stand down this side, the
+        // map running under both.
+        val controls = Modifier.matchParentSize().sideInsetsPadding().padding(end = if (railBeside) LocalRailSpace.current.right else 0.dp)
         day?.let { shown ->
             val stats = remember(mapped, nowhere) { mapped?.takeIf { !nowhere }?.let { cc.hyoban.moments.footprints.trackStats(it.points) } }
             val line = if (nowhere) {
@@ -822,9 +834,8 @@ fun PlaceScreen(
             }
         }
         if (sideways && place != null) {
-            Row(Modifier.fillMaxSize()) {
-                cc.hyoban.moments.ui.map.PlaceMap(place, Modifier.weight(1f).fillMaxHeight(), topInset = FLOATING_BAR)
-                Box(Modifier.weight(1f).fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End))) {
+            MediaBeside(media = { half -> cc.hyoban.moments.ui.map.PlaceMap(place, half, topInset = FLOATING_BAR) }) { half ->
+                Box(half) {
                     CompositionLocalProvider(LocalRailSpace provides RailSpace(0.dp, 0.dp, clearOfInsets = true)) { feed(Modifier.fillMaxSize()) }
                 }
             }

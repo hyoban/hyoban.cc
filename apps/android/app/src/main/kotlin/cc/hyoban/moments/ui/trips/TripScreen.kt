@@ -1,9 +1,5 @@
 package cc.hyoban.moments.ui.trips
 
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.CompositionLocalProvider
 import cc.hyoban.moments.ui.LocalRailSpace
@@ -25,7 +21,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -67,7 +62,6 @@ import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.kindLabel
 import cc.hyoban.moments.ui.components.landscape
-import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.feed.MomentFeed
 import cc.hyoban.moments.ui.ledger.LedgerFilter
 import cc.hyoban.moments.ui.ledger.LocalLedgerNav
@@ -215,11 +209,10 @@ fun TripScreen(
     SubPage(trip.title, onBack, Modifier.background(AppColors.page), actions = actions, centre = if (sideways) { {} } else null) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             if (sideways) {
-                // On a phone on its side, the route down the start half, edge to edge and the whole
-                // height, and what the trip covered and its Moments scroll beside it (H11).
-                Row(Modifier.fillMaxSize()) {
-                    TripMap(stops, routes[trip.id].orEmpty(), Modifier.weight(0.5f).fillMaxHeight())
-                    Box(Modifier.weight(0.5f).fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End))) {
+                // On a phone on its side, the route down the half on the camera's side, edge to edge
+                // and the whole height, and what the trip covered and its Moments scroll beside it (H11).
+                cc.hyoban.moments.ui.components.MediaBeside(media = { half -> TripMap(stops, routes[trip.id].orEmpty(), half) }) { half ->
+                    Box(half) {
                     CompositionLocalProvider(LocalRailSpace provides RailSpace(0.dp, 0.dp, clearOfInsets = true)) {
                     MomentFeed(
                         moments,

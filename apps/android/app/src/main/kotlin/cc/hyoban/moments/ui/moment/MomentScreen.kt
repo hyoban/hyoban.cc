@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.moment
 
+import androidx.compose.ui.AbsoluteAlignment
 import cc.hyoban.moments.data.store.isPublic
 
 import cc.hyoban.moments.ui.design.AppIcons
@@ -204,12 +205,11 @@ fun MomentScreen(
         // On its side, the photos and the words side by side, each half the page.
         val split = landscape && !pane && moment.media.isNotEmpty()
         if (split) {
-            // On its side, the photos fill the left half, up under the status bar, and the
-            // words scroll beside them, rather than a photo taller than the screen over them.
-            Row(Modifier.fillMaxSize()) {
-                MomentPhotos(moment, urls, pager, onMedia, Modifier.weight(1f).fillMaxHeight())
-                Column(Modifier.weight(1f).fillMaxHeight().statusBarsPadding().padding(top = FLOATING_BAR).verticalScroll(scroll).sideInsetsPadding(WindowInsetsSides.End)) { details() }
-            }
+            // On its side, the photos fill the half on the camera's side, up under the status bar,
+            // and the words scroll beside them, rather than a photo taller than the screen over them.
+            cc.hyoban.moments.ui.components.MediaBeside(
+                media = { half -> MomentPhotos(moment, urls, pager, onMedia, half) },
+            ) { half -> Column(half.statusBarsPadding().padding(top = FLOATING_BAR).verticalScroll(scroll)) { details() } }
         } else {
             // The photos are as tall as the tallest of them, but no taller than a 3:4 portrait
             // one, so a screenshot is cropped rather than filling the screen. A portrait one runs
@@ -268,7 +268,13 @@ fun MomentScreen(
             }
         }
         // Under the words it acts on: in the middle of the page, or of their half beside the photos.
-        val toolbarArea = if (split) Modifier.align(Alignment.BottomEnd).fillMaxWidth(0.5f).sideInsetsPadding(WindowInsetsSides.End) else Modifier.align(Alignment.BottomCenter)
+        val mediaLeft = cc.hyoban.moments.ui.components.mediaOnLeft()
+        val toolbarArea = if (split) {
+            Modifier.align(if (mediaLeft) AbsoluteAlignment.BottomRight else AbsoluteAlignment.BottomLeft).fillMaxWidth(0.5f)
+                .sideInsetsPadding(if (mediaLeft) WindowInsetsSides.Right else WindowInsetsSides.Left)
+        } else {
+            Modifier.align(Alignment.BottomCenter)
+        }
         val toolbar = Modifier.testTag("moment_toolbar")
         // Snackbars stand above the toolbar while the page is shown.
         val lift = LocalSnackbarLift.current

@@ -6,7 +6,12 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
@@ -43,6 +48,42 @@ fun railOnLeft(): Boolean {
         left > right -> false
         right > left -> true
         else -> LocalLayoutDirection.current == LayoutDirection.Ltr
+    }
+}
+
+/**
+ * Whether a page's photo or map takes the left half on its side (H00): the camera's side, where it
+ * runs under the cutout and the words beside it needn't keep clear of it; the left without one.
+ */
+@Composable
+fun mediaOnLeft(): Boolean {
+    val cutout = WindowInsets.displayCutout
+    val density = LocalDensity.current
+    return cutout.getLeft(density, LayoutDirection.Ltr) >= cutout.getRight(density, LayoutDirection.Ltr)
+}
+
+/**
+ * A page on its side opening with a photo or a map (H00): [media] filling the half on the camera's
+ * side, edge to edge and the whole height, and [content], the words, the other half, clear of the
+ * bars on its far side. Each is handed the modifier of its half.
+ */
+@Composable
+fun MediaBeside(
+    modifier: Modifier = Modifier,
+    media: @Composable (Modifier) -> Unit,
+    content: @Composable (Modifier) -> Unit,
+) {
+    val left = mediaOnLeft()
+    Row(modifier.fillMaxSize()) {
+        val half = Modifier.weight(1f).fillMaxHeight()
+        val words = half.windowInsetsPadding(WindowInsets.safeDrawing.only(if (left) WindowInsetsSides.Right else WindowInsetsSides.Left))
+        if (left) {
+            media(half)
+            content(words)
+        } else {
+            content(words)
+            media(half)
+        }
     }
 }
 
