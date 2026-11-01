@@ -85,7 +85,6 @@
     <string name="empty_moments">No Moments yet</string>
     <string name="empty_moments_hint">Write the first with the plus at the bottom; bills and footprints show up here too</string>
     <string name="empty_trips">No trips yet</string>
-    <string name="empty_loading">Loading Moments…</string>
     <string name="message_refresh_failed">Couldn’t update: %1$s</string>
     <string name="year_item">%1$d</string>
     <string name="map_search_hint">Search places and trips</string>

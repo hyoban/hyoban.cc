@@ -82,7 +82,6 @@
     <string name="empty_moments">还没有时刻</string>
     <string name="empty_moments_hint">用右下角的加号记下第一条，账单和足迹也会出现在这里</string>
     <string name="empty_trips">还没有旅程</string>
-    <string name="empty_loading">正在加载时刻…</string>
     <string name="message_refresh_failed">没能更新：%1$s</string>
     <string name="year_item">%1$d 年</string>
     <string name="map_search_hint">搜索地点和旅程</string>
