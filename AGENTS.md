@@ -84,12 +84,13 @@ even when starting from the repository root.
   there in the repository. Tests read the made-up `packages/data-spec/test/fixtures/data/`,
   never real records. The formatter leaves `data/` alone.
 - What leaves the phone keeps one shape on both sides: the app keeps a complete copy of D1's
-  records in SQLite, every kind (entries, collections, places, public tracks, routes, the
-  car's statistics and captures) in the same table, with the same columns and the same
+  records in SQLite, every kind (entries, collections, places, public tracks, the car's
+  statistics and captures) in the same table, with the same columns and the same
   record JSON, defined once in `@hyoban/data-spec/tables` and generated for each by
   `vp run data:tables`, so changing one changes both. The copy only follows `GET /v2/rows`;
-  the phone's edits still go through `POST /v2/changes`. The server's own bookkeeping (caches, leases, the channel's
-  posts) is not copied. Only what stays on the phone (the ledger, the footprints, the app's
+  the phone's edits still go through `POST /v2/changes`. What the server keeps or works out for itself (caches,
+  leases, the channel's posts, the trips' routes, which the app reads as `GET /v2/routes`) is
+  not copied; a sync skips a table the copy doesn't keep and rebuilds only the rows it brought. Only what stays on the phone (the ledger, the footprints, the app's
   unpublished changes and settings) takes a shape of its own.
 - Android keeps edits locally until the user reviews and publishes one change set
   through `POST /v2/changes`. Upload originals first; do not bypass this publishing

@@ -1,9 +1,10 @@
-import { tables } from '@hyoban/data-spec/tables'
+import { copiedTables as tables } from '@hyoban/data-spec/tables'
 import { readAll, revisionQuery, toRevision, type Database } from './database.ts'
 import { REVISION } from './rows.ts'
 
 // `GET /v2/rows`: every row the API keeps, table by table, as @hyoban/data-spec/tables has
-// the tables, for the app to keep a copy of D1 row for row: its key, the revision it last
+// the tables, but for the trips' routes, which the server works out and serves as
+// `GET /v2/routes`; for the app to keep a copy of D1 row for row: its key, the revision it last
 // changed at, when it was deleted and its record. Deleted rows come too, from the start as
 // after a revision, so the copy has every row D1 has. Every page is of the revision the
 // first was read at; a row changed since is left for the next read after it.

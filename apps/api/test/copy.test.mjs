@@ -47,7 +47,8 @@ test('the rows from the start are every row, a table at a time, in the spec’s 
   assert.equal(of('entries').length, count('entries'))
   assert.equal(of('collections').length, count('collections'))
   assert.equal(of('places').length, count('places'))
-  assert.equal(of('routes').length, count('routes'))
+  assert.equal(of('routes').length, 0, 'the routes are worked out on the server, and not copied')
+  assert.ok(count('routes') > 0)
   of('entries').forEach((row) => assert.equal(entrySchema.parse(row.record).uid, row.key))
   of('collections').forEach((row) => collectionSchema.parse(row.record))
 
