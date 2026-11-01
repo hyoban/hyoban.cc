@@ -245,13 +245,13 @@ object SideKeySettings
 @Serializable
 object Items
 
-/** 设备: what is owned and what it costs a day. */
+/** 设备: what is owned and what it costs a day, with the sheet of the device [open] over it. */
 @Serializable
-object Devices
+data class Devices(val open: String? = null)
 
-/** 订阅: what digital life costs. */
+/** 订阅: what digital life costs, with the sheet of the subscription [open] over it. */
 @Serializable
-object Subscriptions
+data class Subscriptions(val open: String? = null)
 
 /** 车: the car's statistics from the Zeekr import. */
 @Serializable
@@ -439,6 +439,16 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val openDay: (String) -> Unit = { navController.goTo(Day(it)) }
 
     // Where the ledger's pages lead, to each other and to the Moments' own.
+    // A device's or a subscription's record on the timeline opens its sheet on its page.
+    val thingNav: (String) -> Unit = remember(navController) {
+        { uid ->
+            val parts = container.repository.entries.value[uid]?.get("parts") as? kotlinx.serialization.json.JsonObject
+            when {
+                parts?.containsKey("device") == true -> navController.navigate(Devices(open = uid))
+                parts?.containsKey("subscription") == true -> navController.navigate(Subscriptions(open = uid))
+            }
+        }
+    }
     val ledgerNav = remember(navController) {
         LedgerNav(
             bill = { navController.goTo(LedgerBill(it)) },
@@ -614,6 +624,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                         LocalMomentActions provides momentActions,
                         LocalNavController provides navController,
                         LocalLedgerNav provides ledgerNav,
+                        cc.hyoban.moments.ui.feed.LocalThingNav provides thingNav,
                     ) {
                         NavHost(
                             navController = navController,
@@ -712,8 +723,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                         ledgerSettings = { navController.navigate(LedgerSettings()) },
                                         footprintSettings = { navController.navigate(FootprintSettings) },
                                         sideKey = { navController.navigate(SideKeySettings) },
-                                        devices = { navController.navigate(Devices) },
-                                        subscriptions = { navController.navigate(Subscriptions) },
+                                        devices = { navController.navigate(Devices()) },
+                                        subscriptions = { navController.navigate(Subscriptions()) },
                                         car = { navController.navigate(Car) },
                                     ),
                                 )
@@ -727,11 +738,11 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             screen<Items>(link = "items") {
                                 cc.hyoban.moments.ui.settings.ItemsScreen(container, onBack = back)
                             }
-                            screen<Devices>(link = "devices") {
-                                cc.hyoban.moments.ui.things.DevicesScreen(container, onBack = back)
+                            screen<Devices>(link = "devices") { entry ->
+                                cc.hyoban.moments.ui.things.DevicesScreen(container, onBack = back, open = entry.toRoute<Devices>().open)
                             }
-                            screen<Subscriptions>(link = "subscriptions") {
-                                cc.hyoban.moments.ui.things.SubscriptionsScreen(container, onBack = back)
+                            screen<Subscriptions>(link = "subscriptions") { entry ->
+                                cc.hyoban.moments.ui.things.SubscriptionsScreen(container, onBack = back, open = entry.toRoute<Subscriptions>().open)
                             }
                             screen<Car>(link = "car") {
                                 cc.hyoban.moments.ui.things.CarScreen(container, onBack = back, onDay = openDay)

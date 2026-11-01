@@ -86,6 +86,10 @@ sealed interface RecordLine {
         override val key get() = "charge-${charge.uid}"
     }
 
+    data class ThingLine(val thing: ThingRecord) : RecordLine {
+        override val key get() = "thing-${thing.uid}"
+    }
+
     data class Track(val day: String) : RecordLine {
         override val key get() = "track-$day"
     }
@@ -111,6 +115,7 @@ fun chatItems(items: List<DayItem>, linked: Map<String, List<Txn>>): List<ChatIt
             }
             is DayItem.Bills -> item.txns.sortedBy { it.time }.forEach { run += RecordLine.Bill(it) }
             is DayItem.ChargeItem -> run += RecordLine.ChargeLine(item.charge)
+            is DayItem.ThingItem -> run += RecordLine.ThingLine(item.thing)
             is DayItem.Track -> run += RecordLine.Track(item.day)
         }
     }
@@ -228,8 +233,10 @@ fun RecordsBubble(
     val shown = lines.filter { it !is RecordLine.Track || track != null }
     if (shown.isEmpty()) return
     val single = shown.size == 1
+    val openThing = LocalThingNav.current
     val open: (() -> Unit)? = when (val only = shown.singleOrNull()) {
         is RecordLine.Bill -> ({ onBill(only.txn.id) })
+        is RecordLine.ThingLine -> openThing?.let { { it(only.thing.uid) } }
         is RecordLine.Track, is RecordLine.ChargeLine -> onDay
         null -> onDay
     }
@@ -274,6 +281,17 @@ fun RecordsBubble(
                         large = large,
                         timed = timed,
                         tag = "charge_${line.charge.uid}",
+                    )
+                    is RecordLine.ThingLine -> RecordRow(
+                        icon = { Icon(if (line.thing.device) AppIcons.Laptop else AppIcons.Subscription, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
+                        title = thingTitle(line.thing),
+                        // Known by its day alone: the time's column stays, empty.
+                        time = null,
+                        end = cc.hyoban.moments.ui.things.priceOf(line.thing.price, line.thing.currency),
+                        endColor = tokens.tx,
+                        large = large,
+                        timed = timed,
+                        tag = "thing_${line.thing.uid}",
                     )
                     is RecordLine.Track -> track?.let { day ->
                         RecordRow(

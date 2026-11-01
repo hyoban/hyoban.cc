@@ -987,4 +987,6 @@
     <string name="thing_deleted">会从网站删除</string>
     <string name="thing_changed">改过的</string>
     <string name="me_car_summary">%1$d 月 %2$s</string>
+    <string name="timeline_bought">买了 %s</string>
+    <string name="timeline_renewed">续费 %s</string>
 </resources>

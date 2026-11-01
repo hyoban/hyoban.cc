@@ -470,6 +470,7 @@ fun DayScreen(
             monthBills.spent.filterKeys { it == date },
             monthBills.currency,
             monthBills.charges.filterKeys { it == date },
+            monthBills.things.filterKeys { it == date },
         )
     }
     // The trip goes unsaid on the cards when all of them were on it: its row heads the day.

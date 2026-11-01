@@ -42,6 +42,8 @@ or more, or a phone on its side, they stand down a rail instead.
   part, edited in a sheet and published with the rest from 发布更改. 车 (`moments://car`)
   shows a month of the Zeekr import at a time, its days, charges and assisted driving, and
   is read-only: only an import changes the car's data.
+  On the timeline a device comes as a record on the day it was bought, a subscription on the
+  day it was last paid, first in its day's records bubble; tapped, it opens its sheet.
 
 The pages lead to each other wherever they can: a place or a trip to the map, a day's pill
 to the day, a Moment's menu to its place, trip and day. A day's page opens on that day's
