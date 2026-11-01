@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.Ulid
+import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.things.Device
 import cc.hyoban.moments.data.things.DeviceEdit
 import cc.hyoban.moments.data.things.DeviceStatus
@@ -68,8 +69,6 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import kotlin.math.roundToLong
 
 // 设备 and 订阅, two pages under 我: what is owned and what it costs a day, and what digital life
@@ -83,8 +82,6 @@ internal const val APART = " "
 internal fun yuan(amount: Double): String = formatMoney((amount * 100).roundToLong(), "CNY")
 
 internal fun priceOf(amount: Double, currency: String): String = formatMoney((amount * 100).roundToLong(), currency)
-
-internal fun now(): String = OffsetDateTime.now(ZoneOffset.UTC).withNano(0).toString()
 
 /** The page's three figures in a row, each under its name, a note under some. */
 @Composable
@@ -285,7 +282,7 @@ private fun DeviceSheet(container: AppContainer, device: Device?, categories: Li
                                 private = !public,
                             )
                             scope.launch {
-                                container.repository.saveEntry(Things.deviceEntry(device?.entry, edit, now()))
+                                container.repository.saveEntry(Things.deviceEntry(device?.entry, edit, recordTime()))
                                 onDismiss()
                             }
                         },
@@ -492,7 +489,7 @@ private fun SubscriptionSheet(container: AppContainer, subscription: Subscriptio
                                 private = !public,
                             )
                             scope.launch {
-                                container.repository.saveEntry(Things.subscriptionEntry(subscription?.entry, edit, now()))
+                                container.repository.saveEntry(Things.subscriptionEntry(subscription?.entry, edit, recordTime()))
                                 onDismiss()
                             }
                         },

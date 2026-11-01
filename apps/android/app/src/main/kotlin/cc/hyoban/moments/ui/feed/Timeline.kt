@@ -128,7 +128,7 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
                 at,
                 text("type") == "DC",
                 text("energyWh")?.toDoubleOrNull()?.div(1000),
-                text("durationMin")?.toDoubleOrNull()?.toInt(),
+                cc.hyoban.moments.data.spec.Entries.chargeMinutes(charge)?.toInt(),
             )
         }.filter { charge ->
             (filter.year == null || charge.at.take(4).toInt() == filter.year) &&

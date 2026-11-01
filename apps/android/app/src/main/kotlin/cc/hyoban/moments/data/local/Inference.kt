@@ -44,6 +44,13 @@ const val SAME_PLACE_METRES = 300.0
 /** A Moment's time as the records write it: to the second, with its offset, `+00:00` rather than `Z`. */
 fun stamp(time: OffsetDateTime): String = time.truncatedTo(ChronoUnit.SECONDS).format(STAMP)
 
+/**
+ * Now as a record's `createdAt` and `updatedAt` are written, the spec's `getRecordTime`: UTC
+ * to the second, seconds always, like `2026-11-01T05:28:14Z`. When it happened keeps its
+ * own offset (`stamp`); when it was written doesn't need one.
+ */
+fun recordTime(): String = java.time.Instant.now().truncatedTo(ChronoUnit.SECONDS).toString()
+
 private val STAMP = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssxxx")
 
 /** A record's time read back, a bare day as its start; null if it is neither. */

@@ -892,6 +892,10 @@
               "type": "number",
               "minimum": 0
             },
+            "durationSeconds": {
+              "type": "number",
+              "minimum": 0
+            },
             "durationMin": {
               "type": "number",
               "minimum": 0

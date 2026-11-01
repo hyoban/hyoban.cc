@@ -47,6 +47,21 @@ class ThingsTest {
     }
 
     @Test
+    fun `a charge's time is read from its seconds, else from the minutes written before them`() {
+        val charge = { part: String ->
+            json("""{"uid":"01J00000000000000000000000","at":"2026-03-02T10:00+08:00","parts":{"charge":{"v":1,"vehicle":"car",$part}}}""")
+        }
+        assertEquals(25L, Vehicle.charges(listOf(charge("\"durationSeconds\":1500,\"durationMin\":30")), "car").single().durationMinutes)
+        assertEquals(30L, Vehicle.charges(listOf(charge("\"durationMin\":30")), "car").single().durationMinutes)
+        assertNull(Vehicle.charges(listOf(charge("\"energyWh\":1000")), "car").single().durationMinutes)
+    }
+
+    @Test
+    fun `a record is stamped in UTC to the second`() {
+        assertTrue(Regex("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$").matches(cc.hyoban.moments.data.local.recordTime()))
+    }
+
+    @Test
     fun `a device written back keeps what this version doesn't know and drops what was taken off`() {
         val device = Things.device(phone)!!
         val edited = Things.deviceEntry(

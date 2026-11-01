@@ -29,13 +29,24 @@ data/
   The use page lists both from these entries. It is named by its uid alone:
   its page is `/m/<uid>/` and its media sit under `moments/<uid>/` in R2, so its day, place
   and words can change after it is published. One without `published` is a draft the site
-  skips; `published` blocks, the entry's and each media item's, never change.
+  skips; `published` blocks, the entry's and each media item's, never change. A device's
+  `id` names one device, and a charge's `vehicle` names one of them; the API turns away a
+  change set that breaks either.
 - A **trip** is a collection taking the entries in its span (with `include` and
   `exclude`), its waypoints marks of their own (entries with a place and no parts).
 - A **place** has a name, WGS-84 coordinates, a kind, the province, city and district it is
   in (`vp run places:locate`), an optional note, and for a train's end its `station`.
 - Each record is public or private: its own `visibility`, else its container's, else its
   plugin's default (a bill is private), else public.
+- Units are those `packages/data-spec/src/primitives.ts` gives: metres, watt-hours, seconds,
+  and yuan where no `currency` is beside an amount. What happened keeps the offset it
+  happened at; `createdAt` and `updatedAt` are written in UTC. Records written before
+  that rule keep their offsets. A charge's `durationMin` is still written beside its
+  `durationSeconds` for the apps installed before it.
+
+`vp run data:check` checks `data/` as a whole, past what each record's schema sees: that
+every entry and collection parses, that what they name is there, that device ids hold,
+and it warns of fields the spec doesn't name, which the loose schemas let through.
 
 Schema version 3 moved `data/` from the first shape (`moments/`, `trips/`) to this one.
 `vp run data:migrate` shows such a move, `--write` makes it and `--rollback --write` undoes

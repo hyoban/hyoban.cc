@@ -14,7 +14,7 @@ import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.data.local.coordinatesName
 import cc.hyoban.moments.data.local.nearestPlaces
 import cc.hyoban.moments.data.local.newPlaceId
-import cc.hyoban.moments.data.local.stamp
+import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
@@ -28,7 +28,6 @@ import cc.hyoban.moments.ui.viewer.MotionCache
 import cc.hyoban.moments.widget.Widgets
 import java.io.File
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -203,7 +202,7 @@ class AppContainer(context: Context) {
             val same = nearestPlaces(places, shared.fix, limit = 3)
                 .firstOrNull { (id, metres) -> metres <= SAME_PLACE_METRES && places.getValue(id).name == name }
             if (same == null) {
-                repository.addLocalPlace(newPlaceId(), Place(name, shared.fix.latitude, shared.fix.longitude, createdAt = stamp(OffsetDateTime.now())))
+                repository.addLocalPlace(newPlaceId(), Place(name, shared.fix.latitude, shared.fix.longitude, createdAt = recordTime()))
             }
             val message = if (same == null) R.string.message_place_saved else R.string.message_place_known
             Toast.makeText(appContext, appContext.getString(message, name), Toast.LENGTH_SHORT).show()

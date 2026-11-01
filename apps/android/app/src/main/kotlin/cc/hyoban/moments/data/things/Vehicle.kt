@@ -1,5 +1,6 @@
 package cc.hyoban.moments.data.things
 
+import cc.hyoban.moments.data.spec.Entries
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -62,7 +63,7 @@ object Vehicle {
             val part = (entry["parts"] as? JsonObject)?.get("charge") as? JsonObject ?: return@mapNotNull null
             if (part.text("vehicle") != deviceId) return@mapNotNull null
             val at = entry.text("at")?.takeIf { it.length > 10 }?.let(OffsetDateTime::parse) ?: return@mapNotNull null
-            VehicleCharge(entry.text("uid").orEmpty(), at, part.text("type"), part.long("energyWh"), part.long("durationMin"))
+            VehicleCharge(entry.text("uid").orEmpty(), at, part.text("type"), part.long("energyWh"), Entries.chargeMinutes(part)?.toLong())
         }.sortedByDescending { it.at }
 
     private fun month(record: JsonObject): VehicleMonth? {

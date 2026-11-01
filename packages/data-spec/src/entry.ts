@@ -1,35 +1,27 @@
 import { z } from 'zod'
 
+import type { MomentRecord, TripRecord } from './legacy.ts'
+import { momentMediaSchema } from './media.ts'
 import {
-  ID_PATTERN,
-  momentMediaSchema,
+  count,
+  currency,
+  dateKey,
   foodVerdictSchema,
-  vehicleSourceSchema,
-  type MomentRecord,
-  type TripRecord,
-} from './index.ts'
+  id,
+  occurredAt,
+  price,
+  timestamp,
+  ulid,
+} from './primitives.ts'
+import { vehicleSourceSchema } from './vehicle.ts'
 
 // The second shape of the data: every record is a moment and an optional point (an Entry),
 // whatever it holds is a part a plugin defines (words, photos, a meal, a bill, a charge), a
 // trip is a Collection that takes the entries in its span, and the footprints are tracks,
 // some spans of which can be made public. Each of these is public or private, inherited
 // from what holds it. Unknown parts and fields travel through untouched, like the rest of
-// the spec; a new plugin is a new optional part and needs no new SCHEMA_VERSION.
-
-const ULID_PATTERN = /^[0-9A-HJKMNP-TV-Z]{26}$/
-const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
-const TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})$/
-
-const id = z.string().regex(ID_PATTERN, 'Use a kebab-case id.')
-const ulid = z.string().regex(ULID_PATTERN, 'Use a ULID.')
-const dateKey = z.string().regex(DATE_KEY_PATTERN, 'Use a YYYY-MM-DD date.')
-const timestamp = z
-  .string()
-  .regex(TIMESTAMP_PATTERN, 'Use an ISO timestamp with an explicit offset.')
-  .refine((value) => !Number.isNaN(Date.parse(value)), 'Use a real date and time.')
-const occurredAt = z.union([dateKey, timestamp])
-const count = z.int().positive()
-const price = z.number().nonnegative()
+// the spec; a new plugin is a new optional part and needs no new SCHEMA_VERSION. Amounts
+// without a `currency` are in yuan, and the other units are those `./primitives.ts` gives.
 
 /**
  * Who sees something. Only `public` and `private` for now; it is to widen to `followers`, a
@@ -87,7 +79,7 @@ export const billPartSchema = z.looseObject({
   kind: z.enum(['expense', 'income', 'transfer']).default('expense'),
   /** In the currency's unit, as `12.5`. */
   amount: price,
-  currency: z.string().regex(/^[A-Z]{3}$/),
+  currency,
   /** The category as shown, `餐饮 › 零食`. */
   category: z.string().optional(),
   note: z.string().optional(),
@@ -99,12 +91,17 @@ export const billPartSchema = z.looseObject({
   reimburse: z.string().optional(),
 })
 
-/** A charge of the car. */
+/** A charge of the car: its energy in watt-hours, its cost in yuan. */
 export const chargePartSchema = z.looseObject({
   ...partBase,
   type: z.enum(['AC', 'DC']).optional(),
   energyWh: z.number().nonnegative().optional(),
   cost: price.optional(),
+  durationSeconds: z.number().nonnegative().optional(),
+  /**
+   * @deprecated Minutes, still written beside `durationSeconds` for the apps installed
+   * before it; read `durationSeconds` first.
+   */
   durationMin: z.number().nonnegative().optional(),
   station: z.string().optional(),
   socFrom: z.number().min(0).max(100).optional(),
@@ -146,7 +143,7 @@ export const subscriptionPartSchema = z.looseObject({
   name: z.string().min(1),
   link: z.url({ protocol: /^https?$/ }).optional(),
   price,
-  currency: z.string().regex(/^[A-Z]{3}$/),
+  currency,
   /** How often it is paid: each year, each month, or once. */
   period: z.enum(['year', 'month', 'once']),
   /**
@@ -336,7 +333,7 @@ export const plugins = {
     id: 'charge',
     version: 1,
     defaultVisibility: 'inherit',
-    publicFields: ['type', 'energyWh', 'cost', 'durationMin'],
+    publicFields: ['type', 'energyWh', 'cost', 'durationSeconds', 'durationMin'],
     fallback: (part) =>
       `充电 ${part.energyWh === undefined ? '' : `${part.energyWh / 1000} kWh`}`.trim(),
   }),
@@ -371,7 +368,9 @@ function getPlugin(id: string): Plugin<never> | undefined {
   return (plugins as Record<string, Plugin<never>>)[id]
 }
 
-// Who sees what: its own say, else what holds it, else its plugin's default, else private.
+// Who sees what. An entry is public unless it says it is private. A part of a public entry
+// takes its own say, else what holds it, else its plugin's default, which is private for a
+// bill and the entry's own for the rest; a private entry keeps every part private.
 
 /** An entry's audience: its own, else public. */
 export function getEntryAudience(entry: Pick<Entry, 'visibility'>): Audience {
@@ -394,12 +393,7 @@ export function getPartAudience(
 
   const fallback = getPlugin(pluginId)?.defaultVisibility ?? 'inherit'
 
-  return (
-    part?.visibility ??
-    container ??
-    (fallback === 'inherit' ? getEntryAudience(entry) : fallback) ??
-    'private'
-  )
+  return part?.visibility ?? container ?? (fallback === 'inherit' ? 'public' : fallback)
 }
 
 /**
@@ -873,4 +867,87 @@ export function getPublicTrackFile(track: Pick<PublicTrack, 'uid'>) {
 /** Whether an entry is a charge imported from the car's statistics, which only an import changes. */
 export function isImportedCharge(entry: Pick<Entry, 'parts'>) {
   return entry.parts.charge?.source !== undefined
+}
+
+// What a record's schema can't see on its own: the ids that name devices across entries, and
+// the fields no plugin knows, which a loose schema keeps rather than turns away.
+
+export interface EntryIssue {
+  uid: string
+  message: string
+}
+
+/**
+ * Where entries disagree about devices: an id given to more than one device, or a charge
+ * naming a car that no device is. Only `uids`, when given, are reported on.
+ */
+export function getDeviceIssues(entries: readonly Entry[], uids?: ReadonlySet<string>) {
+  const issues: EntryIssue[] = []
+  const owners = new Map<string, string[]>()
+
+  for (const entry of entries) {
+    const device = entry.parts.device
+
+    if (device) {
+      owners.set(device.id, [...(owners.get(device.id) ?? []), entry.uid])
+    }
+  }
+
+  for (const entry of entries) {
+    if (uids && !uids.has(entry.uid)) {
+      continue
+    }
+
+    const device = entry.parts.device
+    const others = device ? owners.get(device.id)!.filter((uid) => uid !== entry.uid) : []
+
+    if (device && others.length > 0) {
+      issues.push({
+        uid: entry.uid,
+        message: `The device id ${device.id} is also ${others.join(', ')}'s.`,
+      })
+    }
+
+    const vehicle = entry.parts.charge?.vehicle
+
+    if (vehicle && !owners.has(vehicle)) {
+      issues.push({ uid: entry.uid, message: `The charge names ${vehicle}, which no device is.` })
+    }
+  }
+
+  return issues
+}
+
+const knownFields = (schema: { shape: Record<string, unknown> }) =>
+  new Set(Object.keys(schema.shape))
+const ENTRY_FIELDS = knownFields(entrySchema)
+const PART_FIELDS: Record<string, Set<string>> = Object.fromEntries(
+  Object.entries(entryPartsSchema.shape).map(([pluginId, schema]) => [
+    pluginId,
+    knownFields(schema.unwrap()),
+  ]),
+)
+
+/**
+ * The fields of an entry, and of the parts of the plugins this version knows, that the spec
+ * doesn't name: likely a typo, or a field of a newer version. Parts of plugins it doesn't know
+ * aren't looked into.
+ */
+export function getUnknownFields(entry: Record<string, unknown>) {
+  const unknown = Object.keys(entry).filter((key) => !ENTRY_FIELDS.has(key))
+  const parts = (entry.parts ?? {}) as Record<string, Record<string, unknown> | undefined>
+
+  for (const [pluginId, part] of Object.entries(parts)) {
+    const fields = PART_FIELDS[pluginId]
+
+    if (fields && part) {
+      unknown.push(
+        ...Object.keys(part)
+          .filter((key) => !fields.has(key))
+          .map((key) => `parts.${pluginId}.${key}`),
+      )
+    }
+  }
+
+  return unknown
 }

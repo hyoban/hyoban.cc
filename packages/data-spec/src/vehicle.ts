@@ -1,9 +1,13 @@
 import { z } from 'zod'
 
-const deviceId = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+import { id as deviceId } from './primitives.ts'
+
 const sha256 = z.string().regex(/^[a-f0-9]{64}$/)
 const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/)
 const date = z.iso.date()
+// The car's statistics keep the timestamps of the captures they were read from, fractions of
+// a second included, so they take any ISO date-time with an offset rather than the
+// entries' own `timestamp`.
 const timestamp = z.union([
   z.iso.datetime({ offset: true }),
   z.iso.datetime({ offset: true, precision: -1 }),

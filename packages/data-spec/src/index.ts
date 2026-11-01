@@ -1,201 +1,23 @@
 import { z } from 'zod'
 
+import { id, timestamp } from './primitives.ts'
+
 export * from './vehicle.ts'
+export * from './media.ts'
+export * from './legacy.ts'
+export { ID_PATTERN, foodVerdictSchema, getRecordTime, type FoodVerdict } from './primitives.ts'
 
 // The data spec: the format the recording app stores, the repository commits under
 // `data/` and the site reads. Every object is loose, so a field one side doesn't know
 // yet travels through the other untouched; `pnpm data:schema` writes these schemas out
 // as JSON Schema for the app. Changes only add optional fields, or tighten a rule every
 // stored record already keeps (a Moment at one place at most); any other change bumps
-// SCHEMA_VERSION.
+// SCHEMA_VERSION. The values and units every record shares are in `./primitives.ts`; the
+// entries and collections in `./entry.ts`, the first shape in `./legacy.ts`.
 
 // 3: Moments became entries with parts, trips collections (`./entry.ts`); a manifest of 2 is the
 // first shape, still read while the data moves over.
 export const SCHEMA_VERSION = 3
-
-/** A kebab-case id: a place, a trip, a music track or a Moment's slug. */
-export const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
-const ULID_PATTERN = /^[0-9A-HJKMNP-TV-Z]{26}$/
-const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
-const TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})$/
-
-const id = z.string().regex(ID_PATTERN, 'Use a kebab-case id.')
-const ulid = z.string().regex(ULID_PATTERN, 'Use a ULID.')
-const dateKey = z.string().regex(DATE_KEY_PATTERN, 'Use a YYYY-MM-DD date.')
-const timestamp = z
-  .string()
-  .regex(TIMESTAMP_PATTERN, 'Use an ISO timestamp with an explicit offset.')
-  .refine((value) => !Number.isNaN(Date.parse(value)), 'Use a real date and time.')
-/** When something happened: a timestamp with its offset, or just the day. */
-const occurredAt = z.union([dateKey, timestamp])
-const count = z.int().positive()
-const unique = (values: readonly string[]) => new Set(values).size === values.length
-
-const r2Object = z.looseObject({
-  /** The object's key in the bucket, like `moments/<moment uid>/<media uid>-960w.webp` (see `getMediaKey`). */
-  key: z.string().min(1),
-  contentType: z.string().min(1),
-  bytes: count,
-  etag: z.string().regex(/^[0-9a-f]{32}$/, "Use the object's MD5 ETag."),
-})
-
-/** An uploaded image with its responsive variants. */
-export const publishedImageSchema = r2Object.extend({
-  contentType: z.string().startsWith('image/'),
-  width: count,
-  height: count,
-  variants: z.array(r2Object.extend({ width: count, height: count })).default([]),
-  /**
-   * Kept as uploaded rather than optimized, with no variants: the site has Cloudflare
-   * Images resize it. What the API publishes; the create-moment skill optimizes instead.
-   */
-  original: z.boolean().optional(),
-})
-
-/** An uploaded video. */
-export const publishedVideoSchema = r2Object.extend({
-  contentType: z.string().startsWith('video/'),
-  /**
-   * Kept as uploaded rather than transcoded, with no poster: the site takes its first
-   * frame from Cloudflare's Media Transformations. What the API publishes.
-   */
-  original: z.boolean().optional(),
-})
-
-/** Where a media item lives on the phone; only ever in the app's own store. */
-const localMediaSchema = z.looseObject({
-  uri: z.string().min(1),
-  videoUri: z.string().min(1).optional(),
-  sha256: z
-    .string()
-    .regex(/^[0-9a-f]{64}$/)
-    .optional(),
-  copied: z.boolean().default(false),
-})
-
-const mediaBase = {
-  uid: ulid,
-  /** Alt text; empty until someone writes it. */
-  alt: z.string().default(''),
-  takenAt: timestamp.optional(),
-  /**
-   * Kept for the record, a screenshot or a flat tyre, rather than worth showing off: it
-   * shows in its own Moment but is never picked for a cover, a collage or a share card.
-   */
-  utility: z.boolean().optional(),
-  local: localMediaSchema.optional(),
-}
-
-export const momentMediaSchema = z.discriminatedUnion('type', [
-  z.looseObject({
-    ...mediaBase,
-    type: z.literal('image'),
-    width: count,
-    height: count,
-    published: publishedImageSchema.optional(),
-  }),
-  z.looseObject({
-    ...mediaBase,
-    type: z.literal('live-photo'),
-    width: count,
-    height: count,
-    published: publishedImageSchema.extend({ video: publishedVideoSchema }).optional(),
-  }),
-  z.looseObject({
-    ...mediaBase,
-    type: z.literal('video'),
-    width: count.optional(),
-    height: count.optional(),
-    published: publishedVideoSchema.extend({ poster: publishedImageSchema.optional() }).optional(),
-  }),
-])
-
-/** Whether the site shows a Moment: published and not hidden. */
-export function isMomentShown(moment: Pick<MomentRecord, 'published' | 'hidden'>) {
-  return Boolean(moment.published) && !moment.hidden
-}
-
-/** A price in yuan, as paid or got back. */
-const price = z.number().nonnegative()
-
-/** How something eaten turned out: worth having again, passable, or not. */
-export const foodVerdictSchema = z.enum(['good', 'ok', 'bad'])
-
-/**
- * What was eaten or drunk in a Moment, whatever else it is about: a trip's day can name its
- * meal too. Told by the Moment rather than its place, since a place is eaten at more
- * than once and most meals are only placed in their city.
- */
-export const momentFoodSchema = z.looseObject({
-  /** The dishes and drinks as the words name them, like 沙茶面 or 卡旺卡. */
-  dishes: z.array(z.string().min(1)).default([]),
-  verdict: foodVerdictSchema.optional(),
-  /** What the meal cost all told, and how many it fed. */
-  bill: z.looseObject({ amount: price, people: count.optional() }).optional(),
-})
-
-export const momentRecordSchema = z
-  .looseObject({
-    uid: ulid,
-    occurredAt,
-    /**
-     * The place it was at, if any: one at most, so each place's Moments, photos and map
-     * drawer hold only what happened there. A day at several places is one Moment each.
-     * Still a list, as it was when a Moment could name several.
-     */
-    places: z.array(id).max(1, 'A Moment is at one place at most.').default([]),
-    /** The words as written, with their line breaks. */
-    text: z.string(),
-    hidden: z.boolean().default(false),
-    media: z
-      .array(momentMediaSchema)
-      .refine((media) => unique(media.map((item) => item.uid)), 'Duplicate media uid.')
-      .default([]),
-    food: momentFoodSchema.optional(),
-    /** The trip it belongs to; without one, the trip whose dates include it. */
-    trip: id.optional(),
-    /**
-     * Where it sits among its day's Moments when their times don't say, lower first; one
-     * without comes after those with one, the one made first first. Only a way to sort:
-     * it names nothing, and needn't be unique or follow on.
-     */
-    order: count.optional(),
-    /**
-     * Set when the Moment is published: when it was. Nothing about it names the Moment,
-     * which is its uid, so its day, places and words can all change afterwards.
-     */
-    published: z.looseObject({ at: timestamp }).optional(),
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  })
-  .superRefine((moment, context) => {
-    // Every uploaded object of the Moment lives under its uid (see `getMediaKey`).
-    const keys: string[] = []
-    const collectKeys = (value: unknown) => {
-      if (value && typeof value === 'object') {
-        for (const [name, entry] of Object.entries(value)) {
-          if (name === 'key' && typeof entry === 'string') {
-            keys.push(entry)
-          } else {
-            collectKeys(entry)
-          }
-        }
-      }
-    }
-
-    for (const media of moment.media) {
-      collectKeys(media.published)
-    }
-
-    for (const key of keys) {
-      if (!key.startsWith(getMediaDirectory(moment.uid))) {
-        context.addIssue({
-          code: 'custom',
-          message: `Media key outside the Moment's directory: ${key}`,
-        })
-      }
-    }
-  })
 
 const point = {
   latitude: z.number().min(-90).max(90),
@@ -248,30 +70,6 @@ export const placeSchema = z.looseObject({
 
 export const placesSchema = z.record(id, placeSchema)
 
-const travelMode = z.enum(['ferry', 'plane', 'train'])
-
-export const tripRecordSchema = z
-  .looseObject({
-    id,
-    title: z.string().min(1),
-    start: dateKey,
-    end: dateKey,
-    /** A track from apps/web/src/data/music.ts. */
-    music: id.optional(),
-    note: z.string().optional(),
-    /** Places passed without a Moment; `at` can be left out to follow the one before. */
-    waypoints: z.array(z.looseObject({ at: occurredAt.optional(), place: id })).default([]),
-    /** Legs taken by ferry, plane or train rather than driven. */
-    straightLegs: z.array(z.looseObject({ from: id, to: id, by: travelMode })).default([]),
-    /** Places driven back the way they came. */
-    sameWayBack: z.array(z.looseObject({ from: id, to: id })).default([]),
-    /** Photos for the intro and summary, best first. */
-    covers: z.array(z.looseObject({ moment: ulid, media: ulid })).default([]),
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  })
-  .refine((trip) => trip.start <= trip.end, 'The trip ends before it starts.')
-
 /**
  * A driving route between two places, or a rail line for a train leg, as the API fetched
  * it: its points as `[longitude, latitude]`, simplified to about 30 m.
@@ -290,72 +88,15 @@ export const routeSchema = z.looseObject({
  */
 export const routesSchema = z.record(z.string().min(1), routeSchema)
 
-export const deviceSchema = z
-  .looseObject({
-    name: z.string().min(1),
-    /** What kind of thing it is, like 手机 or 电脑; the use page gives each its own lane. */
-    category: z.string().min(1),
-    bought: z.looseObject({ on: dateKey, price }),
-    sold: z.looseObject({ on: dateKey, price }).optional(),
-    /** Still owned but no longer used. */
-    idle: z.boolean().default(false),
-    /** A picture of it on a clear background, its key in the bucket, like `devices/<id>.webp`. */
-    image: z.string().min(1).optional(),
-    note: z.string().optional(),
-  })
-  .refine((device) => !device.sold || device.bought.on <= device.sold.on, 'Sold before bought.')
-
-export const devicesSchema = z.record(id, deviceSchema)
-
 export const manifestSchema = z.looseObject({
   schemaVersion: z.union([z.literal(2), z.literal(SCHEMA_VERSION)]),
   generator: z.string().min(1),
   updatedAt: timestamp,
 })
 
-export type MomentRecord = z.output<typeof momentRecordSchema>
-export type MomentRecordInput = z.input<typeof momentRecordSchema>
-export type MomentMedia = MomentRecord['media'][number]
-export type MomentFood = z.output<typeof momentFoodSchema>
-export type FoodVerdict = z.output<typeof foodVerdictSchema>
-export type PublishedImage = z.output<typeof publishedImageSchema>
-export type PublishedVideo = z.output<typeof publishedVideoSchema>
 export type Place = z.output<typeof placeSchema>
 export type PlaceKind = z.output<typeof placeKindSchema>
 export type Places = z.output<typeof placesSchema>
-export type TripRecord = z.output<typeof tripRecordSchema>
-export type TripRecordInput = z.input<typeof tripRecordSchema>
 export type Route = z.output<typeof routeSchema>
 export type Routes = z.output<typeof routesSchema>
-export type Device = z.output<typeof deviceSchema>
-export type Devices = z.output<typeof devicesSchema>
 export type Manifest = z.output<typeof manifestSchema>
-
-/** Where a Moment's media live in the bucket: `moments/<its uid, lowercase>/`. */
-export function getMediaDirectory(momentUid: string) {
-  return `moments/${momentUid.toLowerCase()}/`
-}
-
-/**
- * A media item's key in the bucket, named by uids alone so it never moves: the file
- * itself, or a `part` of it, a responsive variant (`960w`), a live photo's `video` or a
- * video's `poster`. Like `moments/01kv4t…/01kv4t…-960w.webp`.
- */
-export function getMediaKey(
-  momentUid: string,
-  mediaUid: string,
-  extension: string,
-  part?: 'video' | 'poster' | `${number}w`,
-) {
-  return `${getMediaDirectory(momentUid)}${mediaUid.toLowerCase()}${part ? `-${part}` : ''}.${extension}`
-}
-
-/** The directory a Moment's file sits in under `data/moments`: its year and month. */
-export function getMomentDirectory(occurredAt: string) {
-  return `${occurredAt.slice(0, 4)}/${occurredAt.slice(5, 7)}`
-}
-
-/** A Moment's file under `data/`, like `moments/2026/10/01K7….json`. */
-export function getMomentFile(moment: Pick<MomentRecord, 'occurredAt' | 'uid'>) {
-  return `moments/${getMomentDirectory(moment.occurredAt)}/${moment.uid}.json`
-}

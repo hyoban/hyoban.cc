@@ -70,7 +70,8 @@ even when starting from the repository root.
 
 - Records are entries, collections and public tracks (`@hyoban/data-spec/entry`): every
   record a moment and an optional point with parts by plugin, a trip a collection, each
-  thing public or private by its own say, its container's, its plugin's, else private.
+  thing public or private by its own say, its container's, its plugin's (a bill's is
+  private), else its entry's; an entry is public unless it says otherwise.
   The API serves them as entries and collections, `/v2` alone, and D1 keeps them only so.
   Every API request needs a token and sees everything; the site trims what it shows to what
   is public. `vp run data:migrate` moves `data/` between the layouts (dry run by default,
