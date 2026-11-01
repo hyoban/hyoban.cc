@@ -16,7 +16,7 @@ import java.io.IOException
 // Each trip's route as the site draws it: along the roads it drove, and straight and
 // dashed where it took a train, a plane or a ferry. The API fetches every leg's route
 // after a write and serves each trip's route already cut into stretches at
-// `GET /v1/routes`, which the app keeps a copy of so routes draw offline.
+// `GET /v2/routes`, which the app keeps a copy of so routes draw offline.
 
 /** A stretch of a route as (longitude, latitude) points: drives run together, and each other leg is [straight], drawn dashed. */
 data class RouteSegment(val line: List<Pair<Double, Double>>, val straight: Boolean)
@@ -24,14 +24,14 @@ data class RouteSegment(val line: List<Pair<Double, Double>>, val straight: Bool
 @Serializable
 private data class SegmentRecord(val line: List<List<Double>>, val straight: Boolean)
 
-/** `GET /v1/routes`: each published trip's stretches, by its id. */
+/** `GET /v2/routes`: each published trip's stretches, by its id. */
 @Serializable
 private data class RoutesResponse(val revision: Long, val trips: Map<String, List<SegmentRecord>>)
 
-/** The routes in an answer from `GET /v1/routes`, or null when it isn't one. */
+/** The routes in an answer from `GET /v2/routes`, or null when it isn't one. */
 fun parseRoutes(text: String): Map<String, List<RouteSegment>>? = parseAnswer(text)?.second
 
-/** An answer from `GET /v1/routes`: the revision it is of, and the routes. */
+/** An answer from `GET /v2/routes`: the revision it is of, and the routes. */
 private fun parseAnswer(text: String): Pair<Long, Map<String, List<RouteSegment>>>? = try {
     val answer = Json { ignoreUnknownKeys = true }.decodeFromString(RoutesResponse.serializer(), text)
     answer.revision to answer.trips.mapValues { (_, segments) ->
@@ -90,7 +90,7 @@ class TripRoutes(
         if (apiRevision == revision) return@withContext
         val kept = etagFile.takeIf { revision != null && it.exists() }?.readText()
         val answer = try {
-            Http.getIfChanged("${apiUrl()}/v1/routes", kept, io = io, token = token())
+            Http.getIfChanged("${apiUrl()}/v2/routes", kept, io = io, token = token())
         } catch (_: IOException) {
             return@withContext
         }

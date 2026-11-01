@@ -2,10 +2,11 @@ package cc.hyoban.moments
 
 import cc.hyoban.moments.data.api.AppliedChanges
 import cc.hyoban.moments.data.api.ChangeSet
-import cc.hyoban.moments.data.api.Changes
+import cc.hyoban.moments.data.api.EntryChanges
 import cc.hyoban.moments.data.api.MomentsSource
 import cc.hyoban.moments.data.api.MomentsWriter
 import cc.hyoban.moments.data.api.UploadPart
+import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.LocalMedia
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
@@ -42,16 +43,16 @@ class MomentsRepositoryTest {
             places[id] = ++revision to place
         }
 
-        override suspend fun changes(since: Long, cursor: String?): Changes {
+        override suspend fun entryChanges(since: Long, cursor: String?): EntryChanges {
             calls++
             val after = cursor?.toLong() ?: since
             val page = changes.filter { it.first > after }.take(2)
             val more = changes.count { it.first > after } > 2
             val changedPlaces = if (cursor == null) places.filterValues { (rev) -> rev > since || since == 0L }.mapValues { it.value.second } else emptyMap()
             placesSent += changedPlaces.size
-            return Changes(
+            return EntryChanges(
                 revision = revision,
-                moments = page.mapNotNull { it.second as? MomentRecord },
+                entries = page.mapNotNull { (it.second as? MomentRecord)?.let { moment -> Entries.fromMoment(moment) } },
                 deleted = page.mapNotNull { it.second as? String },
                 places = changedPlaces,
                 next = if (more) page.last().first.toString() else null,
@@ -200,7 +201,7 @@ class MomentsRepositoryTest {
         repository.refresh()
 
         val failing = MomentsRepository(DataStore(directory), object : MomentsSource by api {
-            override suspend fun changes(since: Long, cursor: String?): Changes = error("offline")
+            override suspend fun entryChanges(since: Long, cursor: String?): EntryChanges = error("offline")
         }, Dispatchers.Unconfined)
         failing.load()
 
@@ -415,24 +416,23 @@ class MomentsRepositoryTest {
     }
 
     @Test
-    fun `a write right after the copy's revision moves the copy on to it, one after another's doesn't`() = runBlocking {
+    fun `a write leaves the copy at its revision, for the next sync to bring what it changed`() = runBlocking {
         val writer = FakeWriter()
         val store = DataStore(directory)
         val repository = MomentsRepository(store, api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
         api.put(moment("A", "2026-10-01"))
         repository.load()
         repository.refresh()
-        assertEquals(1, store.readRevision())
+        assertEquals(1, store.readSecond().revision)
 
         repository.addLocal(moment("L", "2026-10-02", published = false).copy(places = listOf("nanjing")))
         writer.revision = 2
         repository.publishPending()
-        assertEquals(2, store.readRevision(), "the copy has all the write did")
+        assertEquals(1, store.readSecond().revision, "the collections the write changed come with the feed")
 
-        repository.addLocal(moment("M", "2026-10-03", published = false).copy(places = listOf("nanjing")))
-        writer.revision = 5
-        repository.publishPending()
-        assertEquals(2, store.readRevision(), "writes in between are for the next sync to bring")
+        api.put(moment("L", "2026-10-02"))
+        repository.refresh()
+        assertEquals(2, store.readSecond().revision)
     }
 
     @Test

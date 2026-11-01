@@ -71,9 +71,10 @@ even when starting from the repository root.
 - Records are entries, collections and public tracks (`@hyoban/data-spec/entry`): every
   record a moment and an optional point with parts by plugin, a trip a collection, each
   thing public or private by its own say, its container's, its plugin's, else private.
-  D1 keeps each row in both shapes while an app that reads Moments and trips is installed:
-  `/v1` serves the first, `/v2` the second. Every API request needs a token and sees
-  everything; the site trims what it shows to what is public. `vp run data:migrate` moves `data/` between the layouts (dry run by default,
+  The API serves them as entries and collections, `/v2` alone; D1 still keeps each row's
+  first shape (Moments and trips) beside it, which the routes and the channel work from.
+  Every API request needs a token and sees everything; the site trims what it shows to what
+  is public. `vp run data:migrate` moves `data/` between the layouts (dry run by default,
   `--rollback` back); `vp run data:import` then moves D1. Ask before either touches live data.
 - D1 holds entries, places, collections, public tracks, routes and the car's statistics. A
   device or a subscription is an entry with its plugin's part, not a record of its own.
@@ -83,7 +84,7 @@ even when starting from the repository root.
   there in the repository. Tests read the made-up `packages/data-spec/test/fixtures/data/`,
   never real records. The formatter leaves `data/` alone.
 - Android keeps edits locally until the user reviews and publishes one change set
-  through `POST /v2/changes` (`/v1` on an API without it). Upload originals first; do not bypass this publishing
+  through `POST /v2/changes`. Upload originals first; do not bypass this publishing
   boundary with individual writes. The API fetches missing trip routes after writes.
 - Scripts that write records first export the latest data, then push the
   changed records with `vp run data:push`. `vp run data:import` restores an entire

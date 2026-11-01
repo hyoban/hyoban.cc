@@ -20,20 +20,14 @@ is public itself, as `getPublicEntry` does.
 | `GET /v2/collections`, `/v2/collections/:key` | `{ revision, collections }` by start date, or one by its slug (else its uid)                                            |
 | `GET /v2/tracks`                              | `{ revision, tracks }`, the spans of footprints made public                                                             |
 | `GET /v2/export`                              | `{ revision, manifest, places, entries, collections, tracks, routes, vehicleMonths, vehicleAssisted, vehicleCaptures }` |
-| `GET /v1/changes?since=&limit=`               | the same feed in the first shape: `moments`, `places`, `trips` and theirs gone                                          |
-| `GET /v1/moments/:uid`, `/v1/trips[/:id]`     | Moments and trips in the first shape                                                                                    |
-| `GET /v1/places[/:id]`                        | `{ revision, places }` by id, or one place                                                                              |
-| `GET /v1/routes`                              | `{ revision, trips }`, each published trip's route as stretches, with an `ETag`                                         |
-| `GET /v1/export`                              | the export in the first shape                                                                                           |
+| `GET /v2/places[/:id]`                        | `{ revision, places }` by id, or one place                                                                              |
+| `GET /v2/routes`                              | `{ revision, trips }`, each published trip's route as stretches, with an `ETag`                                         |
 
-### Two shapes
-
-The records are entries, collections and public tracks (`@hyoban/data-spec/entry`), served
-by `/v2`. `/v1` keeps serving Moments and trips while an app that reads them is installed.
-Each row holds both (`migrations/0006_entries.sql`): `record` as first written, `entry` or
-`collection`, and `shown`, what of it is public, which no read serves any more. An entry
-with no words (a bill alone, a mark) has no Moment and is left out of `/v1`; a trip's
-waypoints come from its collection's marks.
+The records are entries, collections and public tracks (`@hyoban/data-spec/entry`). `/v1`,
+which served them as Moments and trips, is gone. Each row still holds the first shape too
+(`migrations/0006_entries.sql`): `record` as first written, beside `entry` or `collection`,
+and `shown`, what of it is public. No read serves `record` or `shown` any more, but the
+routes and the Telegram channel are still worked out from the Moments and trips it holds.
 
 ### The change feed
 
@@ -47,14 +41,13 @@ database, only marked deleted.
 
 ## Writing
 
-| Path                                                      | Does                                                                                                                                       |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `PUT /v2/entries/:uid/media/:mediaUid/:part`              | keeps an original, `image` or `video`, until its entry publishes                                                                           |
-| `HEAD` on the same path                                   | 200 with the original's MD5 as its `ETag` once uploaded, else 404                                                                          |
-| `POST /v2/changes`                                        | applies `{ places, entries, deleted, collections, deletedCollections, tracks, deletedTracks }` as one write; an imported charge is refused |
-| `PUT`/`HEAD /v1/moments/:uid/media/…`, `POST /v1/changes` | the same in the first shape (`{ places, moments, deleted }`)                                                                               |
-| `POST /v1/build`                                          | calls the site's deploy hook and posts to the channel; `{ started }`                                                                       |
-| `POST /v1/routes`                                         | fetches missing routes; `{ fetched, removed, failed, left }`                                                                               |
+| Path                                         | Does                                                                                                                                       |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PUT /v2/entries/:uid/media/:mediaUid/:part` | keeps an original, `image` or `video`, until its entry publishes                                                                           |
+| `HEAD` on the same path                      | 200 with the original's MD5 as its `ETag` once uploaded, else 404                                                                          |
+| `POST /v2/changes`                           | applies `{ places, entries, deleted, collections, deletedCollections, tracks, deletedTracks }` as one write; an imported charge is refused |
+| `POST /v2/build`                             | calls the site's deploy hook and posts to the channel; `{ started }`                                                                       |
+| `POST /v2/routes`                            | fetches missing routes; `{ fetched, removed, failed, left }`                                                                               |
 
 A change set is checked whole, then written in one transaction that bumps the revision and
 stamps the manifest's `updatedAt`; one that doesn't fit changes nothing (a 422 names every
@@ -71,7 +64,7 @@ each place is known by, the records as published, the uids deleted and the revis
   Cloudflare resize them ([docs/assets.md](../../docs/assets.md)). The rules live in
   `@hyoban/data-spec/publish`.
 - **Privacy.** A private part of a plugin that keeps to the phone (a bill) is dropped even
-  when sent; a Moment written through `/v1` keeps the parts it knows nothing of.
+  when sent.
 - **After a write the site shows**, the trips' routes are brought up to date when what they
   are built from changed, then `DEPLOY_HOOK_URL` is called so the site builds again.
 
@@ -87,7 +80,7 @@ see, the Worker fetches the legs it lacks (up to 30, 6 at once) and marks delete
 trip has. A leg with no way along it is remembered and drawn straight; a failed fetch is
 retried after the next write.
 
-`GET /v1/routes` gives each published trip's route as the site's overview draws it, drives
+`GET /v2/routes` gives each published trip's route as the site's overview draws it, drives
 joined into one stretch and other legs dashed. The answer is cached in `meta` with its
 revision, and its `ETag` covers the routes alone, so `If-None-Match` gets a 304 when a write
 changed nothing drawn:
@@ -108,7 +101,7 @@ JPEGs from Cloudflare Images; a video over 50 MB goes as its first frame.
 Changed words edit the post, changed media repost it, and a Moment the site stops showing
 has its post deleted. `telegram_posts` keeps each Moment's messages. Only Moments published
 since `telegram_since` are posted, so a restore never reposts old ones. It runs after a
-write the site shows, after `POST /v1/build`, and on the 15-minute cron, from the revision
+write the site shows, after `POST /v2/build`, and on the 15-minute cron, from the revision
 the last whole run reached (`telegram_revision`), under a lease in `meta` so two runs never
 post twice.
 

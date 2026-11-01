@@ -64,7 +64,7 @@ vp run data:push data/entries/2026/10/<uid>.json      # then the records written
 `data:push` merges: it writes the entries and collections it is given, every place they
 name and any `--place <id>`, and removes nothing, so what the app published meanwhile
 stays. It writes the deployed database, then has the API fetch the new legs' routes and
-start a site build (`POST /v1/build`), since a write past the Worker starts none.
+start a site build (`POST /v2/build`), since a write past the Worker starts none.
 `--local` writes the database `wrangler dev` uses, `--dry-run` only the SQL.
 
 ## Exporting and restoring

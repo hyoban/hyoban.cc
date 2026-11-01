@@ -4,10 +4,19 @@ import { readFileSync } from 'node:fs'
 import { test } from 'vite-plus/test'
 
 import { handle } from '../src/index.ts'
-import { call, get, setUp, snapshot, token } from './setup.mjs'
+import {
+  call,
+  get,
+  getMoment,
+  momentsOf,
+  publishMoments,
+  setUp,
+  snapshot,
+  token,
+} from './setup.mjs'
 
 // The writes, as the recording app commits what it kept on the phone: the originals
-// uploaded first, then everything else as one POST /v1/changes; over the made-up data/,
+// uploaded first, then everything else as one POST /v2/changes; over the made-up data/,
 // so they meet the Moments already there.
 
 const fixture = (file) => JSON.parse(readFileSync(new URL(`fixtures/${file}`, import.meta.url)))
@@ -32,7 +41,7 @@ const keyOf = (momentUid, mediaUid, extension, part) =>
   `moments/${momentUid.toLowerCase()}/${mediaUid.toLowerCase()}${part ? `-${part}` : ''}.${extension}`
 
 function upload(env, momentUid, mediaUid, part, body, contentType) {
-  return call(env, 'PUT', `/v1/moments/${momentUid}/media/${mediaUid}/${part}`, {
+  return call(env, 'PUT', `/v2/entries/${momentUid}/media/${mediaUid}/${part}`, {
     ...owner,
     body,
     headers: { 'Content-Type': contentType },
@@ -40,7 +49,7 @@ function upload(env, momentUid, mediaUid, part, body, contentType) {
 }
 
 function commit(env, changes, options = {}) {
-  return call(env, 'POST', '/v1/changes', { ...owner, body: changes, ...options })
+  return publishMoments(env, changes, options)
 }
 
 /** The dock Moment at Nanjing, sent with a dock the app made. */
@@ -75,12 +84,12 @@ test('a place near a known one, or with its name, is that one; one the app made 
     [made]: 'ce-shi-ma-tou',
   })
   assert.deepEqual(
-    (await get(env, '/v1/places/nanjing')).body,
+    (await get(env, '/v2/places/nanjing')).body,
     nanjing,
     'a known place keeps its point',
   )
-  assert.equal((await get(env, '/v1/places/ce-shi-ma-tou')).body.name, '测试码头')
-  assert.equal((await get(env, '/v1/places/somewhere-else')).status, 404)
+  assert.equal((await get(env, '/v2/places/ce-shi-ma-tou')).body.name, '测试码头')
+  assert.equal((await get(env, '/v2/places/somewhere-else')).status, 404)
 })
 
 test('a known place sent under its own id takes the kind it is sent with, and nothing else', async () => {
@@ -93,7 +102,7 @@ test('a known place sent under its own id takes the kind it is sent with, and no
 
   assert.equal(changed.status, 200)
   assert.ok(changed.body.revision, 'and takes a revision')
-  assert.deepEqual((await get(env, '/v1/places/nanjing')).body, { ...nanjing, kind })
+  assert.deepEqual((await get(env, '/v2/places/nanjing')).body, { ...nanjing, kind })
 
   const again = await commit(env, { places: { nanjing: { ...nanjing, kind } } })
 
@@ -146,7 +155,7 @@ test('a new place is kept with the division it is in, and without one when that 
     const first = await commit(located, { places: { 'p-01k7zq9x3m4n5p6q7r8s9t0v1a': lake } })
 
     assert.equal(first.status, 200)
-    assert.deepEqual((await get(env, '/v1/places/jing-hu')).body, {
+    assert.deepEqual((await get(env, '/v2/places/jing-hu')).body, {
       name: '镜湖',
       latitude: 31.35,
       longitude: 118.43,
@@ -161,20 +170,10 @@ test('a new place is kept with the division it is in, and without one when that 
     const second = await commit(located, { places: { 'p-01k7zq9x3m4n5p6q7r8s9t0v1b': plaza } })
 
     assert.equal(second.status, 200)
-    assert.deepEqual((await get(env, '/v1/places/zhong-shan-guang-chang')).body, plaza)
+    assert.deepEqual((await get(env, '/v2/places/zhong-shan-guang-chang')).body, plaza)
   } finally {
     globalThis.fetch = realFetch
   }
-})
-
-test('a Moment is at one place at most', async () => {
-  const { env } = setUpWithData()
-  const { status, body } = await commit(env, {
-    moments: [{ ...ferryMoment, places: ['nanjing', 'yantai-port'] }],
-  })
-
-  assert.equal(status, 422)
-  assert.match(body.error, /one place at most/)
 })
 
 test('a Moment of words alone is published with the time, and named by its uid alone', async () => {
@@ -193,7 +192,7 @@ test('a Moment publishes with its media moved under its uid, once the originals 
 
   assert.equal(early.status, 422)
   assert.match(early.body.error, new RegExp(`${item.uid} \\(image\\)`))
-  assert.equal((await get(env, `/v1/moments/${draft.uid}`, owner)).status, 404)
+  assert.equal((await getMoment(env, draft.uid)).status, 404)
 
   const uploaded = await upload(env, draft.uid, item.uid, 'image', photo, 'image/jpeg')
 
@@ -219,7 +218,7 @@ test('a Moment publishes with its media moved under its uid, once the originals 
   })
   assert.ok(bucket.objects.has(key))
   assert.ok(!bucket.objects.has(uploaded.body.key))
-  assert.deepEqual((await get(env, `/v1/moments/${draft.uid}`)).body, published)
+  assert.deepEqual((await getMoment(env, draft.uid)).body, published)
 })
 
 test('a published Moment keeps its blocks, and publishes new media as it changes', async () => {
@@ -345,15 +344,15 @@ test('the changes go as one write: places, Moments published, deletions, the sit
   try {
     assert.equal((await commit(env, changes)).status, 422, 'the photo is not uploaded yet')
     assert.equal(
-      (await get(env, '/v1/places/ce-shi-ma-tou')).status,
+      (await get(env, '/v2/places/ce-shi-ma-tou')).status,
       404,
       'and nothing was written',
     )
-    assert.equal((await get(env, `/v1/moments/${target.uid}`)).status, 200)
+    assert.equal((await getMoment(env, target.uid)).status, 200)
 
     await upload(env, draft.uid, draft.media[0].uid, 'image', photo, 'image/jpeg')
 
-    const before = (await get(env, '/v1/changes?limit=1')).body.revision
+    const before = (await get(env, '/v2/changes?limit=1')).body.revision
     const applied = await commit(env, changes, { context })
 
     await Promise.all(pending)
@@ -371,19 +370,19 @@ test('the changes go as one write: places, Moments published, deletions, the sit
     )
     assert.ok(bucket.objects.has(applied.body.moments[0].media[0].published.key))
     assert.deepEqual(calls, [['https://deploy.test/hook', 'POST']], 'the site is built again once')
-    assert.equal((await get(env, `/v1/moments/${target.uid}`)).status, 404)
+    assert.equal((await getMoment(env, target.uid)).status, 404)
 
-    const { body: after } = await get(env, `/v1/changes?since=${before}`)
+    const { body: after } = await get(env, `/v2/changes?since=${before}`)
 
     assert.deepEqual(after.deleted, [target.uid])
     assert.deepEqual(
-      after.moments
+      momentsOf(after.entries)
         .map((moment) => moment.uid)
         .sort((first, second) => first.localeCompare(second)),
       [draft.uid, words.uid].sort((first, second) => first.localeCompare(second)),
     )
 
-    const { body: exported } = await get(env, '/v1/export', owner)
+    const { body: exported } = await get(env, '/v2/export', owner)
 
     assert.equal(exported.revision, before + 1, 'one write')
     assert.equal(exported.manifest.generator, 'hyoban.cc api')
@@ -398,8 +397,10 @@ test('changes that don’t fit are turned down whole', async () => {
   const status = async (body) => (await commit(env, body)).status
   const words = { ...ferryMoment, places: ['nanjing'] }
 
-  assert.equal(await status({ moments: {} }), 422)
-  assert.equal(await status({ moments: [{ text: 1 }] }), 422)
+  const sent = async (body) => (await call(env, 'POST', '/v2/changes', { body })).status
+
+  assert.equal(await sent({ entries: {} }), 422)
+  assert.equal(await sent({ entries: [{ parts: { text: 1 } }] }), 422)
   assert.equal(await status({ places: { 'Not An Id': snapshot.places.nanjing } }), 422)
   assert.equal(
     await status({ moments: [{ ...words, places: ['nowhere'] }] }),
@@ -408,11 +409,8 @@ test('changes that don’t fit are turned down whole', async () => {
   )
   assert.equal(await status({ moments: [words, words] }), 422, 'one Moment twice')
   assert.equal(await status({ moments: [words], deleted: [words.uid] }), 422, 'saved and deleted')
-  assert.equal(
-    (await call(env, 'POST', '/v1/changes', { auth: null, body: { moments: [words] } })).status,
-    401,
-  )
-  assert.equal((await get(env, `/v1/moments/${words.uid}`, owner)).status, 404)
+  assert.equal((await publishMoments(env, { moments: [words] }, { auth: null })).status, 401)
+  assert.equal((await getMoment(env, words.uid)).status, 404)
 })
 
 test('an original needs the token and a type the API takes', async () => {
@@ -421,7 +419,7 @@ test('an original needs the token and a type the API takes', async () => {
 
   assert.equal(
     (
-      await call(env, 'PUT', `/v1/moments/${dockMoment.uid}/media/${item.uid}/image`, {
+      await call(env, 'PUT', `/v2/entries/${dockMoment.uid}/media/${item.uid}/image`, {
         auth: null,
         body: photo,
         headers: { 'Content-Type': 'image/jpeg' },
@@ -444,25 +442,25 @@ test('the records are read, not written, one by one', async () => {
   const [place] = Object.keys(snapshot.places)
 
   assert.equal(
-    (await call(env, 'PUT', `/v1/moments/${ferryMoment.uid}`, { ...owner, body: ferryMoment }))
+    (await call(env, 'PUT', `/v2/entries/${ferryMoment.uid}`, { ...owner, body: ferryMoment }))
       .status,
     405,
   )
   assert.equal(
-    (await call(env, 'DELETE', `/v1/moments/${snapshot.moments[0].uid}`, owner)).status,
+    (await call(env, 'DELETE', `/v2/entries/${snapshot.moments[0].uid}`, owner)).status,
     405,
   )
   assert.equal(
-    (await call(env, 'POST', `/v1/moments/${ferryMoment.uid}/publish`, owner)).status,
+    (await call(env, 'POST', `/v2/entries/${ferryMoment.uid}/publish`, owner)).status,
     404,
   )
   assert.equal(
-    (await call(env, 'PUT', `/v1/places/${place}`, { ...owner, body: dock })).status,
+    (await call(env, 'PUT', `/v2/places/${place}`, { ...owner, body: dock })).status,
     405,
   )
   assert.equal(
     (
-      await call(env, 'PUT', `/v1/trips/${snapshot.trips[0].id}`, {
+      await call(env, 'PUT', `/v2/collections/${snapshot.trips[0].id}`, {
         ...owner,
         body: snapshot.trips[0],
       })
@@ -505,20 +503,20 @@ test('a Moment sent as it is stored writes nothing and builds nothing', async ()
       moments: [published],
     },
   } = await publishDock(env)
-  const before = (await get(env, '/v1/changes?limit=1')).body.revision
+  const before = (await get(env, '/v2/changes?limit=1')).body.revision
   const again = await commit(env, { moments: [published] }, { context })
 
   assert.equal(again.status, 200)
   assert.deepEqual(again.body.moments, [published])
   assert.ok(!('revision' in again.body), 'and takes no revision')
-  assert.equal((await get(env, '/v1/changes?limit=1')).body.revision, before)
+  assert.equal((await get(env, '/v2/changes?limit=1')).body.revision, before)
   assert.equal(pending.length, 0)
 })
 
 test('HEAD on an original says whether it is uploaded, and its MD5', async () => {
   const { env } = setUpWithData()
   const [item] = dockMoment.media
-  const path = `/v1/moments/${dockMoment.uid}/media/${item.uid}/image`
+  const path = `/v2/entries/${dockMoment.uid}/media/${item.uid}/image`
 
   assert.equal((await call(env, 'HEAD', path, { auth: null })).status, 401)
 

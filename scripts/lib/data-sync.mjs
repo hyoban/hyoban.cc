@@ -203,12 +203,12 @@ export async function pushData(
 }
 
 /**
- * Has the API call the site's deploy hook (`POST /v1/build`), for a write that went past
+ * Has the API call the site's deploy hook (`POST /v2/build`), for a write that went past
  * the Worker; whether a build started. A failure is only reported: the write stands.
  */
 export async function startBuild(root) {
   try {
-    const response = await fetch(new URL('/v1/build', apiUrl()), {
+    const response = await fetch(new URL('/v2/build', apiUrl()), {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiToken(root)}` },
       signal: AbortSignal.timeout(30_000),
@@ -228,7 +228,7 @@ export async function startBuild(root) {
 
 /** Has the API fetch the routes the trips are missing, and returns what it did. */
 async function fillRoutes(root) {
-  const response = await fetch(new URL('/v1/routes', apiUrl()), {
+  const response = await fetch(new URL('/v2/routes', apiUrl()), {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiToken(root)}` },
     signal: AbortSignal.timeout(60_000),

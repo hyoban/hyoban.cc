@@ -80,6 +80,16 @@ class SpecRoundTripTest {
     }
 
     @Test
+    fun `a collection and its marks make the trip the spec's collectionToTrip makes`() {
+        // The collection and entries, and what packages/data-spec's collectionToTrip makes of them.
+        val collection = Spec.json.parseToJsonElement("""{"uid": "01M62F9N00NPJ5VGYWT8JNZWX0", "slug": "test-trip", "kind": "trip", "title": "测试", "span": {"start": "2026-10-01", "end": "2026-10-03"}, "include": [], "exclude": ["01M62F9N00NPJ5VGYWT8JNZWX3"], "covers": [{"entry": "01M62F9N00NPJ5VGYWT8JNZWX1", "media": "01M62F9N00NPJ5VGYWT8JNZWX2"}], "route": {"straightLegs": [{"from": "a", "to": "b", "by": "train"}], "sameWayBack": []}, "createdAt": "2026-10-01T00:00:00Z", "updatedAt": "2026-10-04T00:00:00Z", "mood": "x"}""") as JsonObject
+        val entries = (Spec.json.parseToJsonElement("""[{"uid": "01M62F9N00NPJ5VGYWT8JNZWX4", "at": "2026-10-02", "place": "c", "parts": {}, "createdAt": "2026-10-01T00:00:00Z", "updatedAt": "2026-10-01T00:00:00Z"}, {"uid": "01M62F9N00NPJ5VGYWT8JNZWX5", "at": "2026-10-02T09:00:00+08:00", "place": "b", "parts": {}, "createdAt": "2026-10-01T00:00:00Z", "updatedAt": "2026-10-01T00:00:00Z"}, {"uid": "01M62F9N00NPJ5VGYWT8JNZWX6", "at": "2026-10-01T08:00:00+08:00", "place": "a", "parts": {}, "createdAt": "2026-10-01T00:00:00Z", "updatedAt": "2026-10-01T00:00:00Z"}, {"uid": "01M62F9N00NPJ5VGYWT8JNZWX3", "at": "2026-10-02T10:00:00+08:00", "place": "x", "parts": {}, "createdAt": "2026-10-01T00:00:00Z", "updatedAt": "2026-10-01T00:00:00Z"}, {"uid": "01M62F9N00NPJ5VGYWT8JNZWX7", "at": "2026-10-05T10:00:00+08:00", "place": "y", "parts": {}, "createdAt": "2026-10-01T00:00:00Z", "updatedAt": "2026-10-01T00:00:00Z"}, {"uid": "01M62F9N00NPJ5VGYWT8JNZWX8", "at": "2026-10-02T11:00:00+08:00", "place": "z", "parts": {"text": {"v": 1, "text": "hi"}}, "createdAt": "2026-10-01T00:00:00Z", "updatedAt": "2026-10-01T00:00:00Z"}]""") as JsonArray).map { it as JsonObject }
+        val expected = Spec.json.parseToJsonElement("""{"mood":"x","id":"test-trip","title":"测试","start":"2026-10-01","end":"2026-10-03","waypoints":[{"at":"2026-10-01T08:00:00+08:00","place":"a"},{"at":"2026-10-02","place":"c"},{"at":"2026-10-02T09:00:00+08:00","place":"b"}],"straightLegs":[{"from":"a","to":"b","by":"train"}],"sameWayBack":[],"covers":[{"moment":"01M62F9N00NPJ5VGYWT8JNZWX1","media":"01M62F9N00NPJ5VGYWT8JNZWX2"}],"createdAt":"2026-10-01T00:00:00Z","updatedAt":"2026-10-04T00:00:00Z"}""") as JsonObject
+        val trip = Spec.json.encodeToJsonElement(TripRecord.serializer(), Entries.toTrip(collection, entries)) as JsonObject
+        assertEquivalent(expected, trip, "toTrip")
+    }
+
+    @Test
     fun `stable ULIDs are the spec's`() {
         // The same as packages/data-spec's getStableUlid gives.
         assertEquals("01M5N5TZ2GDW69JGJRAH18Q5JS", Entries.stableUlid("2026-10-24T04:04:34+08:00", "trip:2025-first-road-trip"))

@@ -1,17 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
-import {
-  collectionToTrip,
-  entryToMoment,
-  getStableUlid,
-  momentToEntry,
-  tripToCollection,
-} from '@hyoban/data-spec/entry'
-import { call, get, setUp, snapshot, token } from './setup.mjs'
+import { getStableUlid, momentToEntry, tripToCollection } from '@hyoban/data-spec/entry'
+import { call, get, getMoment, momentsOf, setUp, snapshot, token } from './setup.mjs'
 
-// The second shape, /v2: entries, collections and public tracks over the same rows, all of
-// them the owner's to read; and /v1 still serving the app installed before.
+// The entries, collections and public tracks, as /v2 reads and writes them, all of them the
+// owner's to read.
 
 const owner = { auth: token }
 const at = '2026-10-29T12:30:00+08:00'
@@ -58,24 +52,21 @@ test('the first layout imported reads back in the second shape, marks and all', 
   assert.equal(body.entries.length, snapshot.moments.length + marks)
   assert.equal(body.collections.length, snapshot.trips.length)
   assert.ok(body.collections.every((collection) => collection.slug && collection.kind === 'trip'))
-  assert.equal((await get(env, '/v1/export', owner)).body.moments.length, snapshot.moments.length)
+  assert.equal(momentsOf(body.entries).length, snapshot.moments.length)
 })
 
-test('importing the moved layout serves the first shape as before', async () => {
+test('the moved layout imports as the first one does', async () => {
   const first = setUpWithData()
   const second = setUp()
 
   second.importSnapshot(movedSnapshot())
 
-  const before = (await get(first.env, '/v1/export', owner)).body
-  const after = (await get(second.env, '/v1/export', owner)).body
+  const before = (await get(first.env, '/v2/export', owner)).body
+  const after = (await get(second.env, '/v2/export', owner)).body
 
-  assert.deepEqual(after.moments, before.moments)
-  assert.deepEqual(after.trips, before.trips)
-  assert.deepEqual(
-    (await get(second.env, '/v2/export', owner)).body.entries.length,
-    snapshot.moments.length + marks,
-  )
+  assert.deepEqual(after.entries, before.entries)
+  assert.deepEqual(after.collections, before.collections)
+  assert.equal(after.entries.length, snapshot.moments.length + marks)
 })
 
 test('the feed hands out every entry, private ones too', async () => {
@@ -149,45 +140,15 @@ test('a bill comes back whole, and a private one alone never comes', async () =>
     kind: 'expense',
   })
 
-  // The first shape sees the meal as a Moment, its bill as the meal's cost.
-  const moment = (await get(env, `/v1/moments/${meal.uid}`)).body
+  // As a Moment, the meal's bill is its cost.
+  const moment = (await getMoment(env, meal.uid)).body
 
   assert.equal(moment.text, '吃了一碗面')
   assert.deepEqual(moment.food.bill, { amount: 18 })
-  assert.equal((await get(env, `/v1/moments/${alone.uid}`, owner)).status, 404)
+  assert.deepEqual((await get(env, `/v2/entries/${alone.uid}`)).body.parts, {})
 })
 
-test('a Moment written in the first shape keeps the parts it knows nothing of', async () => {
-  const { env } = setUpWithData()
-  const entry = {
-    uid: uid('keep'),
-    at,
-    parts: {
-      text: { v: 1, text: '充电' },
-      charge: { v: 1, type: 'DC', energyWh: 30000, cost: 20 },
-    },
-    createdAt: at,
-    updatedAt: at,
-  }
-
-  await commit(env, { entries: [entry] })
-
-  const moment = (await get(env, `/v1/moments/${entry.uid}`, owner)).body
-  const { status } = await call(env, 'POST', '/v1/changes', {
-    ...owner,
-    body: { moments: [{ ...moment, text: '充了电' }] },
-  })
-
-  assert.equal(status, 200)
-
-  const after = (await get(env, `/v2/entries/${entry.uid}`, owner)).body
-
-  assert.equal(after.parts.text.text, '充了电')
-  assert.equal(after.parts.charge.energyWh, 30000)
-  assert.equal(entryToMoment(after).text, '充了电')
-})
-
-test('a collection and its marks write the trip the first shape reads', async () => {
+test('a collection and its marks are kept, and go when it is deleted', async () => {
   const { env } = setUpWithData()
   const collection = {
     uid: uid('trip'),
@@ -211,20 +172,22 @@ test('a collection and its marks write the trip the first shape reads', async ()
 
   assert.equal(status, 200)
 
-  const trip = (await get(env, '/v1/trips/test-trip')).body
-
-  assert.deepEqual(trip.waypoints, [{ at, place: 'nanjing' }])
-  assert.equal((await get(env, '/v2/collections/test-trip')).body.uid, collection.uid)
-  assert.deepEqual(
-    trip,
-    collectionToTrip({ include: [], exclude: [], covers: [], ...collection }, [mark]),
-  )
+  assert.deepEqual((await get(env, '/v2/collections/test-trip')).body, {
+    include: [],
+    exclude: [],
+    covers: [],
+    ...collection,
+  })
+  assert.deepEqual((await get(env, `/v2/entries/${mark.uid}`)).body, {
+    ...mark,
+    published: { at: (await get(env, `/v2/entries/${mark.uid}`)).body.published.at },
+  })
 
   await commit(env, { collections: [{ ...collection, visibility: 'private' }] })
   assert.equal((await get(env, '/v2/collections/test-trip', owner)).body.visibility, 'private')
 
   await commit(env, { deletedCollections: ['test-trip'] })
-  assert.equal((await get(env, '/v1/trips/test-trip')).status, 404)
+  assert.equal((await get(env, '/v2/collections/test-trip')).status, 404)
 })
 
 test('a public span of footprints is kept and read, and goes when deleted', async () => {
@@ -270,7 +233,7 @@ test('an entry made private comes back on the feed as private, its Moment hidden
     feed.entries.map((changed) => [changed.uid, changed.visibility]),
     [[shown.uid, 'private']],
   )
-  assert.equal((await get(env, `/v1/moments/${shown.uid}`, owner)).body.hidden, true)
+  assert.equal((await getMoment(env, shown.uid)).body.hidden, true)
 })
 
 test('a subscription comes back with what pays for it', async () => {

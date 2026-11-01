@@ -2,150 +2,165 @@ import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
 import { handle } from '../src/index.ts'
-import { get, setUp, snapshot, token } from './setup.mjs'
+import { entrySnapshot, get, setUp, token } from './setup.mjs'
 
 // The reads: an import of the made-up data/, and what a client with the token reads afterwards.
 
+const byUid = (first, second) => first.uid.localeCompare(second.uid)
+const moments = entrySnapshot.entries.filter((entry) => entry.parts.text)
+
+/** An entry with more words. */
+function withWords(entry, more) {
+  return {
+    ...entry,
+    parts: {
+      ...entry.parts,
+      text: { ...entry.parts.text, text: `${entry.parts.text.text}${more}` },
+    },
+  }
+}
+
 /** Every page of the change feed from a revision on. */
-async function readFeed(env, { auth, since = 0, limit = 100 } = {}) {
-  const moments = []
+async function readFeed(env, { since = 0, limit = 100 } = {}) {
+  const entries = []
   const deleted = []
-  let places
-  let trips
-  let path = `/v1/changes?since=${since}&limit=${limit}`
-  let revision
+  let first
+  let path = `/v2/changes?since=${since}&limit=${limit}`
 
   for (;;) {
-    const { status, body } = await get(env, path, { auth })
+    const { status, body } = await get(env, path)
 
     assert.equal(status, 200)
-    revision ??= body.revision
-    assert.equal(body.revision, revision, 'every page is of the first one’s revision')
-    places ??= { places: body.places, deleted: body.deletedPlaces }
-    trips ??= { trips: body.trips, deleted: body.deletedTrips }
-    moments.push(...body.moments)
+    first ??= body
+    assert.equal(body.revision, first.revision, 'every page is of the first one’s revision')
+    entries.push(...body.entries)
     deleted.push(...body.deleted)
 
     if (!body.next) {
-      return { moments, deleted, revision, places, trips }
+      return {
+        entries,
+        deleted,
+        revision: first.revision,
+        places: { places: first.places, deleted: first.deletedPlaces },
+        collections: { collections: first.collections, deleted: first.deletedCollections },
+      }
     }
 
-    path = `/v1/changes?cursor=${body.next}&limit=${limit}`
+    path = `/v2/changes?cursor=${body.next}&limit=${limit}`
   }
 }
 
 test('an import comes back out of the export exactly as written', async () => {
   const { env, importSnapshot } = setUp()
 
-  importSnapshot(snapshot)
+  importSnapshot(entrySnapshot)
 
-  const { status, body } = await get(env, '/v1/export', { auth: token })
+  const { status, body } = await get(env, '/v2/export')
 
   assert.equal(status, 200)
   assert.equal(body.revision, 1)
-  assert.deepEqual(body.manifest, snapshot.manifest)
-  assert.deepEqual(body.places, snapshot.places)
-  assert.deepEqual(
-    body.trips,
-    [...snapshot.trips].sort(
-      (first, second) =>
-        first.start.localeCompare(second.start) || first.id.localeCompare(second.id),
-    ),
-  )
-  assert.deepEqual(
-    body.moments,
-    [...snapshot.moments].sort((first, second) => first.uid.localeCompare(second.uid)),
-  )
+  assert.deepEqual(body.manifest, entrySnapshot.manifest)
+  assert.deepEqual(body.places, entrySnapshot.places)
+  assert.deepEqual(body.entries, [...entrySnapshot.entries].sort(byUid))
+  assert.deepEqual([...body.collections].sort(byUid), [...entrySnapshot.collections].sort(byUid))
+  assert.deepEqual(body.routes, entrySnapshot.routes)
 })
 
-test('the feed pages through every Moment, drafts included', async () => {
+test('the feed pages through every entry, drafts included', async () => {
   const { env, importSnapshot } = setUp()
-  const [first, ...rest] = snapshot.moments
+  const [first, second] = moments
   const { published: _, ...draft } = first
 
-  importSnapshot({ ...snapshot, moments: [draft, ...rest] })
+  importSnapshot({
+    ...entrySnapshot,
+    entries: entrySnapshot.entries.map((entry) => (entry.uid === draft.uid ? draft : entry)),
+  })
 
   const feed = await readFeed(env, { limit: 5 })
 
-  assert.equal(feed.moments.length, snapshot.moments.length)
-  assert.ok(feed.moments.some((moment) => moment.uid === draft.uid))
-  assert.deepEqual((await get(env, `/v1/moments/${draft.uid}`)).body, draft)
-  assert.deepEqual((await get(env, `/v1/moments/${rest[0].uid}`)).body, rest[0])
+  assert.equal(feed.entries.length, entrySnapshot.entries.length)
+  assert.ok(feed.entries.some((entry) => entry.uid === draft.uid))
+  assert.deepEqual((await get(env, `/v2/entries/${draft.uid}`)).body, draft)
+  assert.deepEqual((await get(env, `/v2/entries/${second.uid}`)).body, second)
 })
 
 test('importing again hands a client that synced only what changed', async () => {
   const { env, importSnapshot } = setUp()
 
-  importSnapshot(snapshot)
+  importSnapshot(entrySnapshot)
 
   const { revision } = await readFeed(env)
-  const [removed, edited, ...rest] = snapshot.moments
-  const changed = { ...edited, text: `${edited.text}\n\n补一句。` }
+  const [removed, edited] = moments
+  const changed = withWords(edited, '\n\n补一句。')
+  const entries = entrySnapshot.entries
+    .filter((entry) => entry.uid !== removed.uid)
+    .map((entry) => (entry.uid === edited.uid ? changed : entry))
 
-  importSnapshot({ ...snapshot, moments: [changed, ...rest] }, '2026-10-20T08:00:00Z')
+  importSnapshot({ ...entrySnapshot, entries }, '2026-10-20T08:00:00Z')
 
   const since = await readFeed(env, { since: revision })
 
-  assert.deepEqual(since.moments, [changed])
+  assert.deepEqual(since.entries, [changed])
   assert.deepEqual(since.deleted, [removed.uid])
-  assert.equal((await get(env, `/v1/moments/${removed.uid}`)).status, 404)
+  assert.equal((await get(env, `/v2/entries/${removed.uid}`)).status, 404)
 
-  importSnapshot({ ...snapshot, moments: [changed, ...rest] }, '2026-10-21T08:00:00Z')
+  importSnapshot({ ...entrySnapshot, entries }, '2026-10-21T08:00:00Z')
 
   const unchanged = await readFeed(env, { since: since.revision })
 
   assert.deepEqual(unchanged, {
-    moments: [],
+    entries: [],
     deleted: [],
     revision: since.revision + 1,
     places: { places: {}, deleted: [] },
-    trips: { trips: [], deleted: [] },
+    collections: { collections: [], deleted: [] },
   })
 })
 
 test('a feed from the start, page after page, leaves out what was removed', async () => {
   const { env, importSnapshot } = setUp()
-  const [removed, ...rest] = snapshot.moments
-  const [placeId] = Object.keys(snapshot.places)
-  const { [placeId]: _, ...places } = snapshot.places
-  const [goneTrip, ...trips] = snapshot.trips
+  const [removed] = moments
+  const [placeId] = Object.keys(entrySnapshot.places)
+  const { [placeId]: _, ...places } = entrySnapshot.places
+  const [gone, ...collections] = entrySnapshot.collections
+  const entries = entrySnapshot.entries.filter((entry) => entry.uid !== removed.uid)
 
-  importSnapshot(snapshot)
-  importSnapshot({ ...snapshot, places, trips, moments: rest }, '2026-10-20T08:00:00Z')
+  importSnapshot(entrySnapshot)
+  importSnapshot({ ...entrySnapshot, places, collections, entries }, '2026-10-20T08:00:00Z')
 
   const fresh = await readFeed(env, { limit: 3 })
 
-  assert.equal(fresh.moments.length, rest.length)
+  assert.equal(fresh.entries.length, entries.length)
   assert.deepEqual(fresh.deleted, [])
   assert.deepEqual(fresh.places.deleted, [])
-  assert.deepEqual(fresh.trips.deleted, [])
+  assert.deepEqual(fresh.collections.deleted, [])
   assert.ok(!(placeId in fresh.places.places))
-  assert.ok(!fresh.trips.trips.some((trip) => trip.id === goneTrip.id))
+  assert.ok(!fresh.collections.collections.some((collection) => collection.uid === gone.uid))
 
   const since = await readFeed(env, { since: 1 })
 
   assert.deepEqual(since.deleted, [removed.uid], 'a feed after a revision still has them')
 })
 
-test('the feed hands out the places and trips whole from the start, then only what changed', async () => {
+test('the feed hands out the places and collections whole from the start, then only what changed', async () => {
   const { env, importSnapshot } = setUp()
 
-  importSnapshot(snapshot)
+  importSnapshot(entrySnapshot)
 
   const all = await readFeed(env, { limit: 4 })
 
-  assert.deepEqual(all.places.places, snapshot.places)
-  assert.equal(all.trips.trips.length, snapshot.trips.length)
+  assert.deepEqual(all.places.places, entrySnapshot.places)
+  assert.equal(all.collections.collections.length, entrySnapshot.collections.length)
 
-  const [placeId, place] = Object.entries(snapshot.places)[0]
-  const [gone, moved, ...trips] = snapshot.trips
-  const changedTrip = { ...moved, title: `${moved.title}（改）` }
+  const [placeId, place] = Object.entries(entrySnapshot.places)[0]
+  const [gone, moved] = entrySnapshot.collections
+  const changedCollection = { ...moved, title: `${moved.title}（改）` }
 
   importSnapshot(
     {
-      ...snapshot,
-      places: { ...snapshot.places, [placeId]: { ...place, name: `${place.name}２` } },
-      trips: [changedTrip, ...trips],
+      ...entrySnapshot,
+      places: { ...entrySnapshot.places, [placeId]: { ...place, name: `${place.name}２` } },
+      collections: [changedCollection],
     },
     '2026-10-20T08:00:00Z',
   )
@@ -156,83 +171,85 @@ test('the feed hands out the places and trips whole from the start, then only wh
     places: { [placeId]: { ...place, name: `${place.name}２` } },
     deleted: [],
   })
-  assert.deepEqual(since.trips, { trips: [changedTrip], deleted: [gone.id] })
+  assert.deepEqual(since.collections, { collections: [changedCollection], deleted: [gone.slug] })
 })
 
 test('a feed read a page at a time stays at its first page’s revision', async () => {
   const { env, importSnapshot } = setUp()
 
-  importSnapshot(snapshot)
+  importSnapshot(entrySnapshot)
 
-  const first = (await get(env, '/v1/changes?limit=4')).body
-  const [edited, ...rest] = snapshot.moments
-  const changed = { ...edited, text: `${edited.text}！` }
+  const first = (await get(env, '/v2/changes?limit=4')).body
+  const [edited] = moments
+  const changed = withWords(edited, '！')
 
-  importSnapshot({ ...snapshot, moments: [...rest, changed] }, '2026-10-20T08:00:00Z')
+  importSnapshot(
+    {
+      ...entrySnapshot,
+      entries: entrySnapshot.entries.map((entry) => (entry.uid === edited.uid ? changed : entry)),
+    },
+    '2026-10-20T08:00:00Z',
+  )
 
-  const second = (await get(env, `/v1/changes?cursor=${first.next}&limit=4`)).body
+  const second = (await get(env, `/v2/changes?cursor=${first.next}&limit=4`)).body
 
   assert.equal(second.revision, first.revision)
   assert.deepEqual(second.places, {})
-  assert.ok(!second.moments.some((moment) => moment.text === changed.text))
+  assert.ok(!second.entries.some((entry) => entry.parts.text?.text === changed.parts.text.text))
 })
 
-test('places and trips are read whole or one at a time', async () => {
+test('places and collections are read whole or one at a time', async () => {
   const { env, importSnapshot } = setUp()
 
-  importSnapshot(snapshot)
+  importSnapshot(entrySnapshot)
 
-  const [placeId, place] = Object.entries(snapshot.places)[0]
-  const trip = snapshot.trips[0]
+  const [placeId, place] = Object.entries(entrySnapshot.places)[0]
+  const [collection] = entrySnapshot.collections
 
-  assert.deepEqual((await get(env, '/v1/places')).body.places, snapshot.places)
-  assert.deepEqual((await get(env, `/v1/places/${placeId}`)).body, place)
-  assert.equal((await get(env, '/v1/trips')).body.trips.length, snapshot.trips.length)
-  assert.deepEqual((await get(env, `/v1/trips/${trip.id}`)).body, trip)
-  assert.equal((await get(env, '/v1/places/nowhere-at-all')).status, 404)
+  assert.deepEqual((await get(env, '/v2/places')).body.places, entrySnapshot.places)
+  assert.deepEqual((await get(env, `/v2/places/${placeId}`)).body, place)
+  assert.equal(
+    (await get(env, '/v2/collections')).body.collections.length,
+    entrySnapshot.collections.length,
+  )
+  assert.deepEqual((await get(env, `/v2/collections/${collection.slug}`)).body, collection)
+  assert.equal((await get(env, '/v2/places/nowhere-at-all')).status, 404)
 })
 
-test('every request needs a token, and methods and queries are checked', async () => {
+test('every request needs a token, and methods, paths and queries are checked', async () => {
   const { env, importSnapshot } = setUp()
 
-  importSnapshot(snapshot)
+  importSnapshot(entrySnapshot)
 
-  for (const path of [
-    '/',
-    '/v1/export',
-    '/v1/changes',
-    '/v1/places',
-    '/v2/changes',
-    '/v2/tracks',
-  ]) {
+  for (const path of ['/', '/v2/export', '/v2/changes', '/v2/places', '/v2/tracks']) {
     const { status, body } = await get(env, path, { auth: null })
 
     assert.equal(status, 401, path)
     assert.match(body.error, /needs a token/)
   }
 
-  assert.equal((await get(env, '/v1/changes', { auth: 'wrong' })).status, 401)
+  assert.equal((await get(env, '/v2/changes', { auth: 'wrong' })).status, 401)
   assert.equal(
     (
       await handle(
-        new Request('https://api.test/v1/changes', { headers: { Authorization: 'Basic x' } }),
+        new Request('https://api.test/v2/changes', { headers: { Authorization: 'Basic x' } }),
         env,
       )
     ).status,
     401,
   )
-  assert.equal((await get(env, '/v1/moments')).status, 404)
-  assert.equal((await get(env, '/v1/changes?limit=0')).status, 400)
-  assert.equal((await get(env, '/v1/changes?cursor=nope')).status, 400)
-  assert.equal((await get(env, '/v2/moments')).status, 404)
-  assert.equal(
-    (await handle(new Request('https://api.test/v1/moments', { method: 'POST' }), env)).status,
-    401,
-  )
+
+  for (const path of ['/v1/changes', '/v1/export', '/v1/places', '/v2/moments', '/v2/trips']) {
+    assert.equal((await get(env, path)).status, 404, path)
+  }
+
+  assert.equal((await get(env, '/v2/entries')).status, 404)
+  assert.equal((await get(env, '/v2/changes?limit=0')).status, 400)
+  assert.equal((await get(env, '/v2/changes?cursor=nope')).status, 400)
   assert.equal(
     (
       await handle(
-        new Request('https://api.test/v1/places', {
+        new Request('https://api.test/v2/places', {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
         }),
@@ -244,12 +261,12 @@ test('every request needs a token, and methods and queries are checked', async (
   assert.deepEqual((await get(env, '/')).body, { name: 'hyoban.cc', revision: 1 })
 })
 
-test('POST /v1/build has the site built again, with a token', async () => {
+test('POST /v2/build has the site built again', async () => {
   const { env } = setUp()
   const realFetch = globalThis.fetch
   const calls = []
   const build = (headers = {}) =>
-    handle(new Request('https://api.test/v1/build', { method: 'POST', headers }), env)
+    handle(new Request('https://api.test/v2/build', { method: 'POST', headers }), env)
 
   globalThis.fetch = async (url, init) => {
     calls.push([url, init?.method])

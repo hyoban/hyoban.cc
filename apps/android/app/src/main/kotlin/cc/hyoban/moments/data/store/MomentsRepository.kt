@@ -142,59 +142,93 @@ class MomentsRepository(
     }
 
     /**
-     * Brings the copy up to the API: what changed since the last refresh, the Moments page
-     * by page and the places and trips with the first. A database restored to an earlier
-     * revision than the copy's is read again from the start. Gives the API's revision.
+     * Brings the copy up to the API's change feed, `/v2/changes`: what changed since the last
+     * refresh, the entries page by page and the places, collections and the rest with the
+     * first. The entries with words are kept as Moments, and the trips worked out from the
+     * collections and their marks. A database restored to an earlier revision than the
+     * copy's is read again from the start. Gives the API's revision.
      */
     suspend fun refresh(): Result<Long> = lock.withLock {
         _syncing.value = true
         try {
             val revision = withContext(io) {
-                var since = store.readRevision()
-                var page = source.changes(since, cursor = null)
+                var current = store.readSecond()
+                var page = source.entryChanges(current.revision, cursor = null)
 
-                if (page.revision < since) {
+                if (page.revision < current.revision) {
                     store.clearMoments()
                     all = emptyMap()
-                    since = 0
-                    page = source.changes(since, cursor = null)
+                    current = SecondShape()
+                    page = source.entryChanges(0, cursor = null)
                 }
 
+                val since = current.revision
                 val first = page
-                val revision = page.revision
                 val moments = all.toMutableMap()
 
-                while (true) {
-                    for (uid in page.deleted) {
-                        moments.remove(uid)?.let(store::deleteMoment)
-                    }
-                    for (moment in page.moments) {
-                        // A Moment moved to another day lives in another month's directory.
-                        moments[moment.uid]?.let { previous ->
-                            if (store.fileOf(previous) != store.fileOf(moment)) store.deleteMoment(previous)
+                // The same revision, so everything is as the copy has it.
+                if (first.revision != since) {
+                    val entries = current.entries.toMutableMap()
+                    while (true) {
+                        for (uid in page.deleted) {
+                            entries.remove(uid)
+                            moments.remove(uid)?.let(store::deleteMoment)
                         }
-                        moments[moment.uid] = moment
-                        store.writeMoment(moment)
+                        for (entry in page.entries) {
+                            val uid = entry.entryUid
+                            if (beyondFirstShape(entry)) entries[uid] = entry else entries.remove(uid)
+                            val moment = Entries.toMoment(entry)
+                            if (moment == null) {
+                                moments.remove(uid)?.let(store::deleteMoment)
+                                continue
+                            }
+                            // A Moment moved to another day lives in another month's directory.
+                            moments[uid]?.let { previous ->
+                                if (store.fileOf(previous) != store.fileOf(moment)) store.deleteMoment(previous)
+                            }
+                            moments[uid] = moment
+                        }
+                        page = source.entryChanges(since, page.next ?: break)
                     }
-                    page = source.changes(since, page.next ?: break)
-                }
 
-                // The same revision, so the places and trips are as the copy has them.
-                if (revision != since) {
-                    // From the start the feed has every place and trip; after a revision, what changed.
+                    // From the start the feed has every place, collection and the rest; after a revision, what changed.
                     val fresh = since == 0L
-                    val gone = first.deletedTrips.toSet() + first.trips.map { it.id }
                     val places = (if (fresh) emptyMap() else apiPlaces - first.deletedPlaces.toSet()) + first.places
-                    val trips = (if (fresh) emptyList() else apiTrips.filter { it.id !in gone }) + first.trips
+                    val collections = (if (fresh) emptyMap() else current.collections - first.deletedCollections.toSet()) +
+                        first.collections.associateBy { Entries.collectionKey(it) }
+                    val tracks = (if (fresh) emptyMap() else current.tracks - first.deletedTracks.toSet()) + first.tracks.associateBy { it.entryUid }
+                    val months = (if (fresh) emptyMap() else current.vehicleMonths - first.deletedVehicleMonths.toSet()) +
+                        first.vehicleMonths.associateBy { "${it.text("deviceId")}/${it.text("month")}" }
+                    val assisted = (if (fresh) emptyMap() else current.vehicleAssisted - first.deletedVehicleAssisted.toSet()) +
+                        first.vehicleAssisted.associateBy { "${it.text("deviceId")}/${it.text("capturedAt")}" }
+                    val next = SecondShape(first.revision, entries, collections, tracks, months, assisted)
+                    val trips = collections.values.map { Entries.toTrip(it, entries.values) }.sortedWith(compareBy({ it.start }, { it.id }))
 
-                    if (fresh || first.places.isNotEmpty() || first.deletedPlaces.isNotEmpty()) store.writePlaces(places)
-                    if (fresh || first.trips.isNotEmpty() || first.deletedTrips.isNotEmpty()) store.replaceTrips(trips)
-                    store.writeRevision(revision)
+                    // A Moment a trip takes in from outside its days names that trip, as the spec's entryToMoment has it.
+                    for ((uid, moment) in moments) {
+                        val trip = collections.values.firstOrNull { uid in Entries.strings(it, "include") && uid !in Entries.strings(it, "exclude") }
+                            ?.let(Entries::collectionKey)
+                        val named = if (moment.trip == trip) moment else moment.copy(trip = trip)
+                        moments[uid] = named
+                        if (all[uid] != named) store.writeMoment(named)
+                    }
+
+                    if (places != apiPlaces) store.writePlaces(places)
+                    store.replaceTrips(trips)
+                    store.writeSecond(next)
+                    store.writeRevision(next.revision)
                     apiPlaces = places
                     apiTrips = trips
+                    _second.value = next
+                    // An entry the site now has as the phone changed it is the site's.
+                    val settled = changedEntries.filter { (uid, entry) -> entries[uid] == entry }.keys
+                    if (settled.isNotEmpty()) {
+                        changedEntries = changedEntries - settled
+                        local?.writeChangedEntries(changedEntries, removedEntries)
+                    }
+                    showEntries()
                 }
 
-                syncSecond()
                 showTrips()
                 all = moments
                 // A deletion of a Moment the site no longer has is done already.
@@ -204,7 +238,7 @@ class MomentsRepository(
                 }
                 publishPlaces()
                 publish()
-                revision
+                first.revision
             }
             _error.value = null
             Result.success(revision)
@@ -214,49 +248,6 @@ class MomentsRepository(
         } finally {
             _syncing.value = false
         }
-    }
-
-    /**
-     * Brings the second shape's copy up to the API's `/v2` feed, keeping of the entries only what
-     * the first shape's Moments don't hold; nothing from an API without it.
-     */
-    private suspend fun syncSecond() {
-        var current = store.readSecond()
-        var page = source.entryChanges(current.revision, cursor = null) ?: return
-        if (page.revision < current.revision) {
-            current = SecondShape()
-            page = source.entryChanges(0, cursor = null) ?: return
-        }
-        if (page.revision == current.revision) return
-        val since = current.revision
-        val entries = current.entries.toMutableMap()
-        val first = page
-        while (true) {
-            page.deleted.forEach(entries::remove)
-            for (entry in page.entries) {
-                val uid = entry.entryUid
-                if (beyondFirstShape(entry)) entries[uid] = entry else entries.remove(uid)
-            }
-            page = source.entryChanges(since, page.next ?: break) ?: break
-        }
-        val fresh = since == 0L
-        val collections = (if (fresh) emptyMap() else current.collections - first.deletedCollections.toSet()) +
-            first.collections.associateBy { Entries.collectionKey(it) }
-        val tracks = (if (fresh) emptyMap() else current.tracks - first.deletedTracks.toSet()) + first.tracks.associateBy { it.entryUid }
-        val months = (if (fresh) emptyMap() else current.vehicleMonths - first.deletedVehicleMonths.toSet()) +
-            first.vehicleMonths.associateBy { "${it.text("deviceId")}/${it.text("month")}" }
-        val assisted = (if (fresh) emptyMap() else current.vehicleAssisted - first.deletedVehicleAssisted.toSet()) +
-            first.vehicleAssisted.associateBy { "${it.text("deviceId")}/${it.text("capturedAt")}" }
-        val next = SecondShape(first.revision, entries, collections, tracks, months, assisted)
-        store.writeSecond(next)
-        _second.value = next
-        // An entry the site now has as the phone changed it is the site's.
-        val settled = changedEntries.filter { (uid, entry) -> entries[uid] == entry }.keys
-        if (settled.isNotEmpty()) {
-            changedEntries = changedEntries - settled
-            local?.writeChangedEntries(changedEntries, removedEntries)
-        }
-        showEntries()
     }
 
     private fun kotlinx.serialization.json.JsonObject.text(key: String) =
@@ -665,11 +656,6 @@ class MomentsRepository(
                 removed = removed - deletions.toSet()
                 local?.writeRemoved(removed)
                 adoptPlaces(applied.places)
-                // The write came right after the copy's revision, so the copy is now of the
-                // write's: the next sync doesn't hand the same Moments back.
-                if (applied.revision != null && applied.revision == store.readRevision() + 1) {
-                    store.writeRevision(applied.revision)
-                }
                 publishPlaces()
                 publish()
             }

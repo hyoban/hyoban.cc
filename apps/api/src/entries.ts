@@ -45,8 +45,8 @@ import {
 } from './writes.ts'
 
 // The second shape's side of the API, `/v2`: entries, collections and public tracks, read
-// and written as one change set like the first. Every row holds both shapes (rows.ts), so
-// `/v1` keeps serving the app installed before this. Every read is the owner's and sees
+// and written as one change set. Every row still holds the first shape too (rows.ts), which
+// the routes and the channel are worked out from. Every read is the owner's and sees
 // everything kept here; the site trims what it shows to what is public itself. What stays
 // on the phone (a private bill, the raw footprints) never comes here: a private part of a
 // plugin that keeps to the phone is dropped even if it is sent.
@@ -112,9 +112,11 @@ const VEHICLE_TABLES = [
 const COLLECTION_COLUMNS = 'id, rev, deleted_at, record, collection'
 
 /**
- * What changed after a revision, as `/v1/changes` but in the second shape: the entries a page
- * at a time, and on the first page the places, collections and tracks. For the public, an
- * entry that stopped being public is in `deleted`, as one that was deleted.
+ * What changed after a revision, as JSON text: the entries a page at a time, oldest change
+ * first, and on the first page the places, collections, tracks and the car's statistics, all
+ * of them on a feed from the start. What was removed comes back by key, except on a feed from
+ * the start, which has nothing to remove. Every page is of the revision the first was read
+ * at, so an entry never names a place the feed hasn't handed out.
  */
 export async function readEntryChanges(
   db: Database,
@@ -265,6 +267,22 @@ export async function readEntrySnapshot(db: Database) {
   return `{"revision":${toRevision(revision)},"manifest":${manifestRow?.value ?? 'null'},"places":${keyed(places)},"entries":${arrayText((entries as EntryRow[]).map((row) => readEntryRow(row)))},"collections":${arrayText((collections as CollectionRow[]).map((row) => readCollectionRow(row)))},"tracks":${arrayText((tracks as { record: string }[]).map((row) => ({ text: row.record })))},"routes":${keyed(routes)}${vehicleText}}`
 }
 
+/**
+ * What of an entry the trips' routes are built from, as text to compare: a mark whole, and a
+ * Moment's time and place while it is published and not private; nothing of any other.
+ */
+function routeView(entry: Entry | undefined) {
+  const kind = entry && getEntryKind(entry)
+
+  if (kind === 'mark') {
+    return JSON.stringify(entry)
+  }
+
+  return kind === 'moment' && entry!.published && entry!.visibility !== 'private'
+    ? JSON.stringify([entry!.at, entry!.place])
+    : null
+}
+
 /** What `POST /v2/changes` did. */
 export interface AppliedEntryChanges {
   places: Record<string, string>
@@ -279,7 +297,7 @@ export interface AppliedEntryChanges {
 
 /**
  * A change set in the second shape, as one write: `{ places, entries, deleted, collections,
- * deletedCollections, tracks, deletedTracks }`. As `/v1/changes`: the places are named first,
+ * deletedCollections, tracks, deletedTracks }`: the places are named first,
  * each entry is published (its media's originals uploaded first) and checked, and all of it is
  * committed in one transaction or none of it is. A collection is known by its slug, else its
  * uid in lowercase; the trips the first shape reads are worked out again whenever a collection
@@ -446,10 +464,7 @@ export async function applyEntryChanges(
             entryRow(record, trip ? { trip: getCollectionKey(trip) } : {}),
           ),
         )
-        changesRoutes ||=
-          getEntryKind(record) !== 'entry' ||
-          prior?.entry.place !== record.place ||
-          prior?.entry.at !== record.at
+        changesRoutes ||= routeView(prior?.deleted ? undefined : prior?.entry) !== routeView(record)
       }
     }
 
