@@ -81,6 +81,24 @@
     ],
     "width": 1920
   },
+  "posts/here/app-landscape-map-3.webp": {
+    "height": 882,
+    "variants": [
+      {
+        "key": "posts/here/app-landscape-map-3-640w.webp",
+        "width": 640
+      },
+      {
+        "key": "posts/here/app-landscape-map-3-960w.webp",
+        "width": 960
+      },
+      {
+        "key": "posts/here/app-landscape-map-3-1280w.webp",
+        "width": 1280
+      }
+    ],
+    "width": 1920
+  },
   "posts/here/app-landscape-map.webp": {
     "height": 855,
     "variants": [
