@@ -66,13 +66,14 @@ export function buildImportSql(snapshot: ImportSnapshot, now: string): string {
     BUMP_REVISION,
     `INSERT INTO meta (key, value) VALUES ('manifest', ${quote(JSON.stringify(snapshot.manifest))})
   ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+    `CREATE TABLE IF NOT EXISTS ${KEPT} (key TEXT PRIMARY KEY)`,
   ]
 
   for (const [id, place] of Object.entries(snapshot.places)) {
     statements.push(upsert('places', placeRow(id, place)))
   }
 
-  statements.push(remove('places', Object.keys(snapshot.places), now))
+  statements.push(...remove('places', Object.keys(snapshot.places), now))
 
   const rows = toRows(snapshot)
 
@@ -81,7 +82,7 @@ export function buildImportSql(snapshot: ImportSnapshot, now: string): string {
 
     if (kept) {
       statements.push(...kept.map((row) => upsert(table, row)))
-      statements.push(remove(table, keysOf(kept), now))
+      statements.push(...remove(table, keysOf(kept), now))
     }
   }
 
@@ -92,15 +93,17 @@ export function buildImportSql(snapshot: ImportSnapshot, now: string): string {
       statements.push(upsert('routes', routeRow(key, route)))
     }
 
-    statements.push(remove('routes', Object.keys(snapshot.routes), now))
+    statements.push(...remove('routes', Object.keys(snapshot.routes), now))
   }
 
   for (const { table, rows } of toVehicleRows(snapshot)) {
     statements.push(...rows.map((row) => upsert(table, row)))
-    statements.push(remove(table, keysOf(rows), now))
+    statements.push(...remove(table, keysOf(rows), now))
   }
 
-  return `${statements.join(';\n')};\n`
+  statements.push(`DROP TABLE ${KEPT}`)
+
+  return script(statements)
 }
 
 export interface MergeRecords {
@@ -134,7 +137,7 @@ export function buildMergeSql(records: MergeRecords, now: string, generator: str
     ...toVehicleRows(records).flatMap(({ table, rows }) => rows.map((row) => upsert(table, row))),
   ]
 
-  return `${statements.join(';\n')};\n`
+  return script(statements)
 }
 
 /** The entries, collections and public tracks of either shape's records. */
@@ -211,12 +214,59 @@ function keysOf(rows: readonly Row[]) {
   return rows.map((row) => row.key)
 }
 
-/** Marks deleted the rows of a table whose keys aren't in the snapshot. */
-function remove(table: Table, keys: string[], now: string) {
-  const kept = keys.length > 0 ? ` AND key NOT IN (${keys.map(quote).join(', ')})` : ''
+/** D1 turns down a statement longer than this, in bytes. */
+export const MAX_STATEMENT = 100_000
 
-  return `UPDATE ${table} SET deleted_at = ${quote(now)}, rev = ${REVISION}
-  WHERE deleted_at IS NULL${kept}`
+/** Where the keys a table keeps are put a part at a time, for no statement to list them all. */
+const KEPT = 'import_kept'
+
+/**
+ * Marks deleted the rows of a table whose keys aren't in the snapshot: the keys go into
+ * `import_kept` a statement's worth at a time, and the rows whose key isn't there go.
+ */
+function remove(table: Table, keys: string[], now: string) {
+  const statements = [`DELETE FROM ${KEPT}`]
+  let values: string[] = []
+  let length = 0
+  const flush = () => {
+    if (values.length > 0) {
+      statements.push(`INSERT OR IGNORE INTO ${KEPT} (key) VALUES ${values.join(', ')}`)
+      values = []
+      length = 0
+    }
+  }
+
+  for (const key of keys) {
+    const value = `(${quote(key)})`
+
+    if (length + value.length + 2 > MAX_STATEMENT / 2) {
+      flush()
+    }
+
+    values.push(value)
+    length += value.length + 2
+  }
+
+  flush()
+  statements.push(`UPDATE ${table} SET deleted_at = ${quote(now)}, rev = ${REVISION}
+  WHERE deleted_at IS NULL AND key NOT IN (SELECT key FROM ${KEPT})`)
+
+  return statements
+}
+
+/** The statements as one script, each checked to fit in D1's. */
+function script(statements: string[]) {
+  for (const statement of statements) {
+    const bytes = new TextEncoder().encode(statement).length
+
+    if (bytes > MAX_STATEMENT) {
+      throw new Error(
+        `A statement of ${bytes} bytes is longer than D1 takes (${MAX_STATEMENT}): ${statement.slice(0, 80)}…`,
+      )
+    }
+  }
+
+  return `${statements.join(';\n')};\n`
 }
 
 function quote(value: string) {

@@ -21,7 +21,7 @@ import { BUMP_REVISION, placeRow, upsertSql, type Row, type Table } from './rows
 
 // The write side, as the recording app commits what it kept on the phone: the originals
 // uploaded one by one, then everything else as one change set, checked whole and written
-// in one transaction that bumps the revision, so the change feed hands it out once. A
+// in one transaction that bumps the revision, so `GET /v2/rows` hands it out once. A
 // Moment's published block and every media item's are the server's: they're set when it
 // publishes, never taken from a request, and never changed afterwards. Nothing in them
 // names the Moment, which is its uid, so a published one can move to another day.

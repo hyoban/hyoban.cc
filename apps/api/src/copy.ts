@@ -7,7 +7,8 @@ import { REVISION } from './rows.ts'
 // `GET /v2/routes`; for the app to keep a copy of D1 row for row: its key, the revision it last
 // changed at, when it was deleted and its record. Deleted rows come too, from the start as
 // after a revision, so the copy has every row D1 has. Every page is of the revision the
-// first was read at; a row changed since is left for the next read after it.
+// first was read at; a row changed since is left for the next read after it. Each page says
+// which database it is of, so a copy of one since put back or made again is read anew.
 
 /** Where a read of the rows got to: after this row of this table, of revisions after `since` up to `upto`. */
 export interface RowsCursor {
@@ -82,7 +83,11 @@ export async function readRows(
       )
       .bind(since, cursor?.rev ?? 0, cursor?.key ?? '', limit + 1)
   })
-  const [revision, ...rows] = await readAll(db, [revisionQuery(db), ...selects])
+  const [revision, database, ...rows] = await readAll(db, [
+    revisionQuery(db),
+    db.prepare(`SELECT value FROM meta WHERE key = 'database'`),
+    ...selects,
+  ])
   const of = cursor ? cursor.upto : toRevision(revision)
   const results = (rows as SourceRow[][]).flat().slice(0, limit + 1)
   const page = results.slice(0, limit)
@@ -97,5 +102,5 @@ export async function readRows(
     return `{"table":${JSON.stringify(table)},"key":${JSON.stringify(row.key)},"rev":${row.rev},"deletedAt":${JSON.stringify(row.deleted_at)},"record":${row.record}}`
   }
 
-  return `{"revision":${of},"rows":[${page.map(rowText).join(',')}],"next":${JSON.stringify(next)}}`
+  return `{"revision":${of},"database":${(database as { value: string }[])[0]?.value ?? 0},"rows":[${page.map(rowText).join(',')}],"next":${JSON.stringify(next)}}`
 }

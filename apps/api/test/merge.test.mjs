@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
-import { buildMergeSql } from '../src/import.ts'
+import { buildImportSql, buildMergeSql, MAX_STATEMENT } from '../src/import.ts'
 import { get, momentsOf, readChanges, setUp, snapshot } from './setup.mjs'
 
 // A merge writes only the records it is given, over what the database has, and removes
@@ -44,4 +44,29 @@ test('a merge writes its records and leaves every other one alone', async () => 
     generator: 'hyoban.cc data:push',
     updatedAt: '2026-10-20T10:00:00Z',
   })
+})
+
+test('an import keeps more keys than one statement could list, and drops the rest', () => {
+  const { sqlite, importSnapshot } = setUp()
+  const many = Object.fromEntries(
+    Array.from({ length: 6000 }, (_, index) => [
+      `made-up-place-with-a-long-id-${index}`,
+      { name: `地点 ${index}`, latitude: 30, longitude: 120 },
+    ]),
+  )
+  const sql = buildImportSql(
+    { ...snapshot, places: { ...snapshot.places, ...many } },
+    '2026-10-19T12:00:00Z',
+  )
+
+  assert.ok(sql.length > MAX_STATEMENT, 'more keys than a statement takes')
+  assert.ok(sql.split(';\n').every((statement) => Buffer.byteLength(statement) <= MAX_STATEMENT))
+  sqlite.exec(sql)
+  importSnapshot()
+
+  const live = sqlite.prepare(`SELECT count(*) AS n FROM places WHERE deleted_at IS NULL`).get().n
+  const tables = sqlite.prepare(`SELECT name FROM sqlite_master WHERE name = 'import_kept'`).all()
+
+  assert.equal(live, Object.keys(snapshot.places).length)
+  assert.deepEqual(tables, [], 'and leaves nothing behind')
 })

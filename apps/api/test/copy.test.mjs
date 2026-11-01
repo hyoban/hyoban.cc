@@ -15,6 +15,7 @@ async function readAllRows(env, since, limit = 3) {
   const rows = []
   let path = `/v2/rows?since=${since}&limit=${limit}`
   let revision
+  let database
 
   while (path) {
     const { status, body } = await get(env, path)
@@ -23,11 +24,14 @@ async function readAllRows(env, since, limit = 3) {
     assert.ok(body.rows.length <= limit)
     revision ??= body.revision
     assert.equal(body.revision, revision, 'every page is of the first page’s revision')
+    database ??= body.database
+    assert.ok(Number.isSafeInteger(database) && database >= 0, 'and says which database it is')
+    assert.equal(body.database, database)
     rows.push(...body.rows)
     path = body.next && `/v2/rows?cursor=${body.next}&limit=${limit}`
   }
 
-  return { revision, rows }
+  return { revision, database, rows }
 }
 
 test('the rows from the start are every row, a table at a time, in the spec’s tables', async () => {
@@ -84,6 +88,7 @@ test('after a revision only what changed comes, deleted rows with when', async (
   const deleted = after.rows.find((row) => row.key === gone.key)
 
   assert.ok(after.revision > revision)
+  assert.equal(after.database, (await readAllRows(env, 0)).database, 'the same database')
   assert.ok(after.rows.every((row) => row.rev > revision))
   assert.equal(deleted.table, 'entries')
   assert.ok(deleted.deletedAt)

@@ -27,7 +27,7 @@ import java.io.File
 import java.io.IOException
 
 // The API (apps/api in the repository), with the owner's token, which every request needs:
-// the change feed of entries, collections and the places beside them, a page at a time;
+// every row D1 keeps, entries, collections and the places beside them, a page at a time;
 // a photo's original; then everything the phone changed as one.
 
 /**
@@ -109,10 +109,11 @@ class NoTokenException : IOException("No API token")
 
 /**
  * A page of the rows (`GET /v2/rows`): every row D1 keeps that changed after a revision,
- * deleted ones too, table by table, and where the next page starts.
+ * deleted ones too, table by table, and where the next page starts; and which database they
+ * are of, none from an API from before it said.
  */
 @Serializable
-data class RowsPage(val revision: Long, val rows: List<RowsPageRow>, val next: String? = null)
+data class RowsPage(val revision: Long, val rows: List<RowsPageRow>, val next: String? = null, val database: Long? = null)
 
 /** One row of a [RowsPage], its record as D1 keeps it. */
 @Serializable

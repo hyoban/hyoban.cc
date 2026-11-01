@@ -145,7 +145,8 @@ class MomentsRepository(
     /**
      * Brings the copy up to the API's rows, `/v2/rows`: every row that changed since the last
      * refresh, page by page, written over the copy's at once. A database restored to an
-     * earlier revision than the copy's is read again from the start. Gives the API's revision.
+     * earlier revision than the copy's, or another than the copy's, is read again from the start.
+     * Gives the API's revision.
      */
     suspend fun refresh(): Result<Long> = lock.withLock {
         _syncing.value = true
@@ -154,7 +155,10 @@ class MomentsRepository(
                 val known = copy.revision()
                 var since = known
                 var page = source.rows(since, cursor = null)
-                if (page.revision < known) {
+                val database = copy.database()
+                // Another database, one since put back or made again, even at a later revision.
+                val another = database != null && page.database != null && page.database != database
+                if (page.revision < known || another) {
                     since = 0
                     page = source.rows(0, cursor = null)
                 }
@@ -168,7 +172,7 @@ class MomentsRepository(
                     }
                     // A table the copy doesn't keep, as one the API has come to serve since, is left out.
                     val copied = rows.filter { it.table in CopyTables.names }.map { it.toCopyRow() }
-                    copy.apply(copied, first.revision, fresh = since == 0L)
+                    copy.apply(copied, first.revision, fresh = since == 0L, database = first.database)
                     // From the start the copy is new, read whole; after a revision only its rows changed.
                     if (since == 0L) readCopy() else takeRows(copied, first.revision)
                     // An entry the site now has as the phone changed it is the site's.
@@ -179,6 +183,9 @@ class MomentsRepository(
                         local?.writeChangedEntries(changedEntries, removedEntries)
                     }
                     showEntries()
+                } else if (database == null && first.database != null) {
+                    // A copy from before the API said which database it is, kept as of this one.
+                    copy.apply(emptyList(), known, database = first.database)
                 }
 
                 showTrips()

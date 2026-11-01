@@ -34,7 +34,7 @@ export function renderKotlin() {
     '',
     "/** The tables the copy keeps the API's records in, as D1 keeps them. */",
     'object CopyTables {',
-    '    /** Every table, in the order the change feed hands them out. */',
+    '    /** Every table, in the order `GET /v2/rows` hands them out. */',
     `    val names = listOf(${copiedTables.map((table) => JSON.stringify(table.name)).join(', ')})`,
     '',
     '    /** The statements that make them, one per table and index. */',

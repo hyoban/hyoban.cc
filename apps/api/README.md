@@ -39,7 +39,8 @@ record }` of the tables in `@hyoban/data-spec/tables` but the routes (served as
 `GET /v2/routes`), a table at a time in its order, places before the entries that name them,
 all of them read in one D1 batch. Follow `next` with `?cursor=<next>` until it is null, then
 keep `revision` for the next `since`. Every page is of the revision the first was read at; a
-row changed since is left for the next read. `since=0` is every row; nothing is dropped from
+row changed since is left for the next read. `database` says which database the rows are of
+(`meta`'s `database`, a number at random): a copy that kept another reads every row again. `since=0` is every row; nothing is dropped from
 the database, only marked deleted, so the app can keep the same tables D1 does.
 
 ## Writing
