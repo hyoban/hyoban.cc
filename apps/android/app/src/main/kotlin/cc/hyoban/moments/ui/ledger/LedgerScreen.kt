@@ -138,8 +138,6 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
         } else {
             null
         },
-        // The month's amounts hidden or shown beside them.
-        subtitleAction = { HideAmountsButton() },
         actions = {
             Tooltip(stringResource(R.string.action_search), below = true) {
                 IconButton(onClick = { nav.list(LedgerFilter(book = book?.id.takeIf { !ledger.allBooks }, search = true)) }, modifier = Modifier.testTag("ledger_search")) {
@@ -197,9 +195,9 @@ private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, c
     }
 }
 
-/** Hides the ledger's amounts, or shows them again: an eye beside the month's sums. */
+/** Hides the ledger's amounts, or shows them again: an eye beside the month's sums under 我. */
 @Composable
-private fun HideAmountsButton() {
+fun HideAmountsButton() {
     val settings = LocalSettings.current
     val label = stringResource(if (settings.ledgerHidden) R.string.ledger_show_amounts else R.string.ledger_hide_amounts)
     Tooltip(label, below = true) {

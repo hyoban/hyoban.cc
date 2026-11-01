@@ -84,6 +84,9 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
     private fun bundledRates(): Map<String, Map<LocalDate, Double>> =
         runCatching { context.assets.open("ledger-rates.json").bufferedReader().use { Rates.parseSeries(it.readText()) } }.getOrDefault(emptyMap())
 
+    /** Every book shown, as the app starts each time; one chosen lasts until it closes. */
+    @Volatile private var allBooks = true
+
     private fun publish() {
         _ledger.value = read()
     }
@@ -110,8 +113,7 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
             Rates(out)
         }
         val current = db.rawQuery("SELECT value FROM meta WHERE key='book'", null).use { if (it.moveToFirst()) it.getString(0) else null }
-        val all = db.rawQuery("SELECT value FROM meta WHERE key='all'", null).use { it.moveToFirst() && it.getString(0) == "1" }
-        return Ledger(books, accounts, categories, txns, rates, current, all)
+        return Ledger(books, accounts, categories, txns, rates, current, allBooks)
     }
 
     private suspend fun write(block: (SQLiteDatabase) -> Unit) = withContext(Dispatchers.IO) {
@@ -154,7 +156,6 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
                         db.replace("books", book.values())
                         defaultCategories(book.id, chinese).forEach { db.replace("categories", it.values()) }
                         db.replace("meta", ContentValues().apply { put("key", "book"); put("value", book.id) })
-                        db.replace("meta", ContentValues().apply { put("key", "all"); put("value", "0") })
                     }
                     publish()
                     book
@@ -171,12 +172,12 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
     }
 
     suspend fun setCurrentBook(id: String) = write {
+        allBooks = false
         it.replace("meta", ContentValues().apply { put("key", "book"); put("value", id) })
-        it.replace("meta", ContentValues().apply { put("key", "all"); put("value", "0") })
     }
 
     /** Shows every book at once, a new bill still going to the one chosen last. */
-    suspend fun showAllBooks() = write { it.replace("meta", ContentValues().apply { put("key", "all"); put("value", "1") }) }
+    suspend fun showAllBooks() = write { allBooks = true }
 
     suspend fun saveCategory(category: Category) = write { it.replace("categories", category.values()) }
 
