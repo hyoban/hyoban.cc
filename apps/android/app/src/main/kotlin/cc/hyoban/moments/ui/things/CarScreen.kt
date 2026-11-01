@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.things
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -80,12 +81,14 @@ fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Un
                 stats.beatsPercent?.let { stringResource(R.string.car_assisted_beats, it.toInt()) },
             ).joinToString(APART).ifEmpty { null }
         },
+        underBar = true,
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
+                    .padding(top = LocalTopClearance.current)
                     .navigationBarsPadding()
                     .padding(horizontal = columns.margin)
                     .padding(bottom = Space.xl),

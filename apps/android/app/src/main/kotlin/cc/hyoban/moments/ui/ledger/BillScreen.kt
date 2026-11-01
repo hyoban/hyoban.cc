@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.data.store.isPublic
 import cc.hyoban.moments.ui.theme.tokens
@@ -96,10 +97,11 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                 }
             }
         },
+        underBar = true,
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).navigationBarsPadding()
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current).navigationBarsPadding()
                     .padding(start = columns.margin, end = columns.margin, bottom = Space.xl),
             ) {
                 Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.s).semantics(mergeDescendants = true) {}) {

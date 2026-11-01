@@ -1,7 +1,9 @@
 package cc.hyoban.moments.ui
 
+import cc.hyoban.moments.ui.design.edgeBlur
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import android.annotation.SuppressLint
-import androidx.compose.ui.graphics.Brush
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
@@ -600,6 +602,8 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     // Its test tags are resource ids too, so `uiautomator dump` names the buttons, tabs and cards it finds.
     Surface(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }, color = AppColors.page) {
         // A traversal group, so the tabs below can come first to a screen reader.
+        // What the tabs soften as the page passes under them.
+        val pageHaze = rememberHazeState()
         Box(Modifier.fillMaxSize().semantics { isTraversalGroup = true }) {
             CompositionLocalProvider(
                 LocalBottomClearance provides clearance,
@@ -613,7 +617,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 LocalReducedMotion provides rememberReducedMotion(),
                 LocalMediaMaxHeight provides if (landscape) windowHeight * 0.6f else Dp.Infinity,
             ) {
-                SharedTransitionLayout(Modifier.fillMaxSize()) {
+                SharedTransitionLayout(Modifier.fillMaxSize().hazeSource(pageHaze).background(AppColors.page)) {
                     CompositionLocalProvider(
                         LocalSharedTransitionScope provides this,
                         LocalCardOpening provides cardOpening,
@@ -903,12 +907,11 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 modifier = navigation.align(Alignment.BottomCenter).fillMaxWidth(),
             ) {
                 // The tabs and the tab's button beside them, floating over the page together in the
-                // middle, over a fade of the page from clear to whole, which the page passes under and
-                // which comes and goes with them.
-                val page = AppColors.page
+                // middle, over the scroll edge softening the page that passes under, which comes and
+                // goes with them.
                 Box(
                     Modifier.fillMaxWidth()
-                        .background(Brush.verticalGradient(0f to page.copy(alpha = 0f), 0.7f to page))
+                        .edgeBlur(pageHaze, top = false)
                         .onSizeChanged { barHeight = with(density) { it.height.toDp() } }
                         .navigationBarsPadding()
                         .padding(start = Space.gutter, end = Space.gutter, bottom = Space.s, top = Space.s),

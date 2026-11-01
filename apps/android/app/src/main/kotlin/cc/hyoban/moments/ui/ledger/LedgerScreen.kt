@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.TextButton
 import cc.hyoban.moments.ui.format.formatDay
@@ -145,11 +146,11 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
                 }
             }
         },
-    ) {
-        Column(Modifier.fillMaxSize()) {
-            // Clear of the tabs down the side on a phone on its side, as the lists under it are.
-            // Its bills, sums and accounts, one of three in a segmented control under the bar,
-            // clear of the tabs down the side on a phone on its side as the lists under it are.
+        underBar = true,
+        // Its bills, sums and accounts, one of three in a segmented control staying under the
+        // bar, the lists passing under it, clear of the tabs down the side on a phone on its side
+        // as the lists are.
+        accessory = {
             SingleChoiceSegmentedButtonRow(Modifier.railPadding().fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s)) {
                 LedgerTab.entries.forEachIndexed { index, entry ->
                     SegmentedButton(selected = tab == index, onClick = { tab = index }, modifier = Modifier.testTag(entry.tag)) {
@@ -157,6 +158,9 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
                     }
                 }
             }
+        },
+    ) {
+        Column(Modifier.fillMaxSize()) {
             when {
                 !loaded -> Unit
                 LedgerTab.entries[tab] == LedgerTab.ASSETS -> AssetsView(ledger, currency, nav)
@@ -216,7 +220,7 @@ fun HideAmountsButton() {
 @Composable
 private fun EmptyLedger(onImport: () -> Unit, onNew: () -> Unit) {
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Space.gutter, vertical = Space.xl),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current).padding(horizontal = Space.gutter, vertical = Space.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Space.l),
     ) {
@@ -299,7 +303,7 @@ fun BillList(
         LazyColumn(
             Modifier.fillMaxSize(),
             state = state,
-            contentPadding = PaddingValues(start = columns.margin, end = columns.margin, bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl),
+            contentPadding = PaddingValues(start = columns.margin, top = LocalTopClearance.current, end = columns.margin, bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl),
         ) {
             if (header != null) item(key = "header") { header() }
             items(lines, key = { it.key }, contentType = { it::class }) { line ->
@@ -361,7 +365,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
     PageWidth(maxColumns = 1) { columns ->
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                .padding(start = columns.margin, end = columns.margin, bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl),
+                .padding(start = columns.margin, top = LocalTopClearance.current, end = columns.margin, bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl),
         ) {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.xl).semantics(mergeDescendants = true) {}) {
                 Text(stringResource(R.string.ledger_net_assets), style = AppTheme.typography.label, color = tokens.tx2)

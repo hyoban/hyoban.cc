@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.layout.Arrangement
@@ -84,6 +85,7 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
                 }
             }
         },
+        underBar = true,
     ) {
         BillList(ledger, bills, account.currency, nav, header = {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.s, bottom = Space.s)) {
@@ -178,10 +180,11 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
         nav.back,
         close = true,
         actions = { TextButton(onClick = ::save, enabled = name.isNotBlank(), modifier = Modifier.testTag("save_account")) { Text(stringResource(R.string.action_save)) } },
+        underBar = true,
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).imePadding().navigationBarsPadding()
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current).imePadding().navigationBarsPadding()
                     .padding(start = columns.margin, end = columns.margin, bottom = Space.xl),
             ) {
                 Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), verticalArrangement = Arrangement.spacedBy(Space.m)) {

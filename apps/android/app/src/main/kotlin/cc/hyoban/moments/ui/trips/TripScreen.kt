@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
@@ -199,7 +200,7 @@ fun TripScreen(
             }
         }
     }
-    SubPage(trip.title, onBack, Modifier.background(AppColors.page), actions = actions) {
+    SubPage(trip.title, onBack, Modifier.background(AppColors.page), actions = actions, underBar = true) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             if (landscape) {
                 // On its side, the route stays on the start side, as tall as the space under
@@ -208,7 +209,7 @@ fun TripScreen(
                 Row(Modifier.fillMaxSize()) {
                     Column(
                         Modifier.weight(0.42f).fillMaxHeight().sideInsetsPadding(WindowInsetsSides.Start)
-                            .navigationBarsPadding().padding(top = Space.xs, bottom = Space.l),
+                            .navigationBarsPadding().padding(top = LocalTopClearance.current + Space.xs, bottom = Space.l),
                     ) {
                         routeCard(Modifier.weight(1f), Modifier.weight(1f))
                     }

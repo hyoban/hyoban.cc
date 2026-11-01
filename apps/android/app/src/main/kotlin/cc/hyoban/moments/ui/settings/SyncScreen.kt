@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.Spinner
@@ -79,12 +80,13 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
         Row(settings.mapStyleDark, R.string.setting_map_style_dark, AppIcons.Moon) { settings.mapStyleDark.set(it) },
     )
 
-    SubPage(stringResource(R.string.sync_title), onBack, Modifier.background(AppColors.page)) {
+    SubPage(stringResource(R.string.sync_title), onBack, Modifier.background(AppColors.page), underBar = true) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
+                    .padding(top = LocalTopClearance.current)
                     .navigationBarsPadding()
                     .padding(horizontal = columns.margin)
                     .padding(bottom = Space.xl),

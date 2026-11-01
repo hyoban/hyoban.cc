@@ -102,6 +102,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Keep only what is used: two buttons (`Button` for the page's one main action, `TextButton`
   for everything else), one chip look (`FilterChip` to choose, `AssistChip` to act, drawn the
   same), and no icon that nothing draws.
+- The scroll edges (what passes under the status bar, the top bar's circles and the tab bar) are
+  `edgeBlur`, Haze's progressive blur over a `hazeSource` that draws the page's colour itself, or
+  the blur is only of the text, over the text. A page whose list runs up under its bar is
+  `SubPage(underBar = true)` (or `TabPage`), its scroll padded at the top by `LocalTopClearance`;
+  a control that stays under the circles with them (the ledger's segments) is its `accessory`.
 - Top bars switch between what the page is one of with `TitleMenu` and put a control over the
   subtitle's figures in `subtitleAction`. Settings are `SegmentedGroup` with `SwitchRow` and
   `ActionRow`, switches `AppSwitch`. What floats over a photo or the map is `FloatingButton`.

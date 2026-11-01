@@ -1,11 +1,14 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.design.edgeBlur
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.LocalTabsHidden
 import androidx.compose.foundation.layout.wrapContentHeight
 import cc.hyoban.moments.ui.components.FloatingButton
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
@@ -244,7 +247,9 @@ fun FeedScreen(
                 // No bar: the title, its counts and search head the timeline and scroll away with
                 // it, the page running up under the status bar, which a short fade of the page
                 // keeps the system's icons clear on.
+                val haze = rememberHazeState()
                 Box(Modifier.fillMaxSize().background(AppColors.page)) {
+                    Box(Modifier.fillMaxSize().hazeSource(haze).background(AppColors.page)) {
                     TabRefreshBox(pull) {
                         LoadedContent(moments.isEmpty() || !tracks.ready, loading = !loaded || syncing || !tracks.ready, message = R.string.empty_moments, hint = R.string.empty_moments_hint) {
                             // The rows over the Moments, the changes, list or calendar and the
@@ -280,9 +285,10 @@ fun FeedScreen(
                             }
                         }
                     }
-                    // Immersive: the Moments run up under the status bar, a short fade of the page
-                    // there keeping its icons clear of what passes under.
-                    StatusBarFade()
+                    }
+                    // Immersive: the Moments run up under the status bar, softened there as a
+                    // scroll edge, keeping its icons clear of what passes under.
+                    StatusBarFade(haze)
                 }
             }
         }
@@ -371,15 +377,14 @@ class HeaderScroll {
     }
 }
 
-/** A fade of the page from behind the status bar to a little below it, which the Moments pass under. */
+/** The scroll edge from behind the status bar to a little below it, softening the Moments that pass under. */
 @Composable
-private fun StatusBarFade() {
-    val page = AppColors.page
+private fun StatusBarFade(haze: HazeState) {
     Box(
         Modifier
             .fillMaxWidth()
             .windowInsetsTopHeight(WindowInsets.statusBars.add(WindowInsets(top = Space.l)))
-            .background(Brush.verticalGradient(0f to page.copy(alpha = 0.95f), 0.6f to page.copy(alpha = 0.7f), 1f to page.copy(alpha = 0f))),
+            .edgeBlur(haze, top = true),
     )
 }
 
@@ -622,6 +627,7 @@ fun PlaceScreen(
                 }
             }
         },
+        underBar = true,
     ) {
         // The place is the page's title, so its cards name only the other places they were at.
         val ledgerNav = LocalLedgerNav.current

@@ -130,6 +130,11 @@ object Radius {
 /** The one shadow, as the level softShadow draws: a blur of 6× it, 1.5× it down, 10% black. */
 val ShadowElevation = 2.dp
 
+/** How far the page is blurred under what is fixed over it. */
+object Blur {
+    val edge = 28.dp
+}
+
 /** How strong a wash or a fade is. */
 object Opacity {
     const val disabled = 0.38f

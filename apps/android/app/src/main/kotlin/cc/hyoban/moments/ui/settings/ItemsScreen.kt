@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,12 +44,13 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
         value = withContext(Dispatchers.IO) { container.footprints.shares().count { !it.removed } }
     }
     val scope = rememberCoroutineScope()
-    SubPage(stringResource(R.string.items_title), onBack, Modifier.background(AppColors.page)) {
+    SubPage(stringResource(R.string.items_title), onBack, Modifier.background(AppColors.page), underBar = true) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
+                    .padding(top = LocalTopClearance.current)
                     .navigationBarsPadding()
                     .padding(horizontal = columns.margin)
                     .padding(bottom = Space.xl),

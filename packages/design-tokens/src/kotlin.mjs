@@ -1,5 +1,5 @@
 // Renders the design tokens as the Android app's ui/theme/Tokens.kt: the colours in light and
-// dark, the 4dp steps, the corners, the shadow, the opacities, the six text styles and the
+// dark, the 4dp steps, the corners, the shadow, the blur, the opacities, the six text styles and the
 // springs. The app reads these by the tokens' own names, in camel case.
 
 const FILE_NOTE =
@@ -125,6 +125,13 @@ export function renderKotlin(tokens, motion) {
     '/** The one shadow, as the level softShadow draws: a blur of 6× it, 1.5× it down, 10% black. */',
   )
   out.push(`val ShadowElevation = ${Number(match[2]) / 6}.dp`, '')
+
+  // The one blur, by its name without the family's prefix.
+  out.push('/** How far the page is blurred under what is fixed over it. */', 'object Blur {')
+  for (const token of tokens.blur.tokens) {
+    out.push(`    val ${camel(token.name.replace(/^blur-/, ''))} = ${px(token.value)}.dp`)
+  }
+  out.push('}', '')
 
   out.push('/** How strong a wash or a fade is. */', 'object Opacity {')
   for (const token of tokens.opacity.tokens) {

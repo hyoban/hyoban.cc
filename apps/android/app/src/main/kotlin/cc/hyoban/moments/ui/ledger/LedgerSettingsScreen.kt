@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.OutlinedTextField
@@ -135,10 +136,10 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
     val shared by container.sharedExport.collectAsStateWithLifecycle()
     LaunchedEffect(shared) { if (shared != null) container.takeSharedExport()?.let(importer.read) }
 
-    SubPage(stringResource(R.string.ledger_settings_title), nav.back) {
+    SubPage(stringResource(R.string.ledger_settings_title), nav.back, underBar = true) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).navigationBarsPadding()
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current).navigationBarsPadding()
                     .padding(start = columns.margin, end = columns.margin, bottom = Space.xl)
                     .semantics { testTagsAsResourceId = true },
             ) {

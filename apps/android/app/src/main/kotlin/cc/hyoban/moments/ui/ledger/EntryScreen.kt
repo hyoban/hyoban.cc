@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.ListItemShapes
@@ -197,6 +198,7 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
         close = true,
         small = keypad,
         actions = { TextButton(onClick = ::save, modifier = Modifier.testTag("save_bill")) { Text(stringResource(R.string.action_save)) } },
+        underBar = true,
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
@@ -204,7 +206,7 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
                     .padding(start = columns.margin, end = columns.margin)
                     .semantics { testTagsAsResourceId = true },
             ) {
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = if (keypad) Space.s else Space.xl)) {
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current, bottom = if (keypad) Space.s else Space.xl)) {
                     BillFields(container, ledger, draft, at, fixedKind, related, keypad = keypad)
                 }
                 if (keypad) BillKeypad(container, ledger, draft, at, fixedKind, onSave = ::save)
