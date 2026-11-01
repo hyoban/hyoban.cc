@@ -5,6 +5,7 @@ import {
   collectionToTrip,
   entrySchema,
   entryToMoment,
+  getPublicEntry,
   isInCollection,
   isMomentEntry,
   momentToEntry,
@@ -12,6 +13,7 @@ import {
   tripToCollection,
   type Collection,
   type Entry,
+  type EntryParts,
   type PublicTrack,
 } from '@hyoban/data-spec/entry'
 import {
@@ -73,8 +75,62 @@ export function readRoutes(root = getDataRoot()): Routes {
   )
 }
 
-export function readDevices(root = dataRoot): Devices {
-  return devicesSchema.parse(readJson('devices.json', root))
+/**
+ * The devices the public sees, by id, from the entries of the days they were bought: each a
+ * span from that day to the one it sold on.
+ */
+export function readDevices(root = getDataRoot()): Devices {
+  return devicesSchema.parse(
+    Object.fromEntries(
+      readPublicParts('device', root).map(({ entry, part }) => [
+        part.id,
+        {
+          name: part.name,
+          category: part.category,
+          bought: { on: entry.at.slice(0, 10), price: part.price },
+          ...(part.sold ? { sold: part.sold } : {}),
+          idle: part.idle ?? false,
+          ...(part.image ? { image: part.image } : {}),
+          ...(part.note ? { note: part.note } : {}),
+        },
+      ]),
+    ),
+  )
+}
+
+/** Every device's id, private ones too, for what checks a record names a known device. */
+export function readDeviceIds(root = getDataRoot()): Set<string> {
+  return new Set(
+    readEntries(root).flatMap(({ record }) =>
+      record.parts.device ? [record.parts.device.id] : [],
+    ),
+  )
+}
+
+export type SubscriptionPart = NonNullable<EntryParts['subscription']>
+
+/**
+ * The subscriptions and software bought once the public sees, each with the day it was last
+ * paid (or first written down), in the order the use page lists them.
+ */
+export function readSubscriptions(root = getDataRoot()): (SubscriptionPart & { at: string })[] {
+  return readPublicParts('subscription', root)
+    .sort(
+      (first, second) =>
+        (first.entry.order ?? 0) - (second.entry.order ?? 0) ||
+        first.entry.at.localeCompare(second.entry.at),
+    )
+    .map(({ entry, part }) => ({ ...part, at: entry.at }))
+}
+
+/** The public entries with a part of this plugin, and that part as the public sees it. */
+function readPublicParts<K extends 'device' | 'subscription'>(plugin: K, root: string) {
+  return readEntries(root).flatMap(({ record }) => {
+    const shown = getPublicEntry(record)
+    const part = shown?.parts[plugin]
+
+    return shown && part ? [{ entry: shown, part: part as NonNullable<EntryParts[K]> }] : []
+  })
 }
 
 /** Every entry, with the file it came from: those under `entries/`, and the first layout's as entries. */

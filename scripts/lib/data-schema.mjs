@@ -2,7 +2,6 @@ import { z } from 'zod'
 
 import {
   SCHEMA_VERSION,
-  devicesSchema,
   manifestSchema,
   momentRecordSchema,
   placesSchema,
@@ -24,7 +23,6 @@ import {
 export function getDataSchemas() {
   return {
     collection: collectionSchema,
-    devices: devicesSchema,
     entry: entrySchema,
     manifest: manifestSchema,
     moment: momentRecordSchema,

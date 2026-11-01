@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url'
 
 import { buildImportSql } from '../apps/api/src/import.ts'
 import { listJsonFiles, readJson } from '../apps/web/src/data/store.ts'
-import { startBuild } from './lib/data-sync.mjs'
+import { readVehicle, startBuild } from './lib/data-sync.mjs'
 import { executeSql } from './lib/d1.mjs'
 
 // pnpm data:import [--remote] [--dry-run]
@@ -33,6 +33,12 @@ const sql = buildImportSql(
     collections: listJsonFiles('collections', dataRoot).map((file) => readJson(file, dataRoot)),
     tracks: listJsonFiles('tracks', dataRoot).map((file) => readJson(file, dataRoot)),
     routes: /** @type {Record<string, unknown>} */ (readJson('routes.json', dataRoot)),
+    ...readVehicle(
+      ['zeekr/months', 'zeekr/assisted-driving', 'zeekr/captures'].flatMap((directory) =>
+        listJsonFiles(directory, dataRoot),
+      ),
+      dataRoot,
+    ),
   },
   new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
 )

@@ -1,0 +1,20 @@
+{
+  "uid": "01KHCQ4Y00DS74XCYXNX4MV1V3",
+  "at": "2026-02-14",
+  "parts": {
+    "subscription": {
+      "v": 1,
+      "name": "OpenRouter",
+      "price": 105.93,
+      "currency": "USD",
+      "period": "once",
+      "paidWith": "B"
+    }
+  },
+  "order": 19,
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}

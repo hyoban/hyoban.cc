@@ -1,0 +1,24 @@
+{
+  "uid": "01JFE3DM003904PNERSQGWSQ83",
+  "at": "2024-12-19",
+  "parts": {
+    "device": {
+      "v": 1,
+      "id": "playstation-5",
+      "name": "PlayStation 5",
+      "category": "游戏机",
+      "price": 3361.51,
+      "sold": {
+        "on": "2026-07-22",
+        "price": 2981.01
+      },
+      "image": "devices/playstation-5.webp",
+      "note": "吃灰"
+    }
+  },
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}

@@ -7,12 +7,18 @@
       "v": 1,
       "type": "AC",
       "energyWh": 200,
-      "durationMin": 2
+      "durationMin": 2,
+      "vehicle": "zeekr-007gt",
+      "source": {
+        "captureId": "b470d708c6428af199e380661915c3b7ace8ec812fb0a66ebb4c8c14d37dab50",
+        "pointer": "/charging/sessions/1",
+        "method": "screen"
+      }
     }
   },
   "published": {
     "at": "2026-10-07T07:38+08:00"
   },
   "createdAt": "2026-10-07T07:38+08:00",
-  "updatedAt": "2026-10-07T07:38+08:00"
+  "updatedAt": "2026-11-01T00:21:00Z"
 }

@@ -1,0 +1,20 @@
+{
+  "uid": "01J8E2V3006SK8SWZ0SE474QYX",
+  "at": "2024-09-23",
+  "parts": {
+    "device": {
+      "v": 1,
+      "id": "airpods-4",
+      "name": "AirPods 4",
+      "category": "耳机",
+      "price": 1399,
+      "image": "devices/airpods-4.webp",
+      "note": "我习惯不了入耳式的"
+    }
+  },
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}

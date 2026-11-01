@@ -2,6 +2,7 @@ import { readFile, mkdir, writeFile, rename } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { dataRoot, readDeviceIds } from '../apps/web/src/data/store.ts'
 import { canonicalJson, hashBytes } from './lib/zeekr-data.mjs'
 import { redactZeekrCapture } from './lib/zeekr-privacy.mjs'
 
@@ -9,8 +10,7 @@ const [input, deviceId] = process.argv.slice(2)
 if (!input || !deviceId || process.argv.length !== 4)
   throw new Error('Usage: prepare-zeekr-data.mjs <private-capture.json> <device-id>')
 const root = fileURLToPath(new URL('../data/zeekr/', import.meta.url))
-const devices = JSON.parse(await readFile(new URL('../data/devices.json', import.meta.url), 'utf8'))
-if (!devices[deviceId]) throw new Error('Unknown device id')
+if (!readDeviceIds(dataRoot).has(deviceId)) throw new Error('Unknown device id')
 const raw = JSON.parse(await readFile(input, 'utf8'))
 const text = canonicalJson(redactZeekrCapture(raw))
 const file = `sources/${basename(input)}`

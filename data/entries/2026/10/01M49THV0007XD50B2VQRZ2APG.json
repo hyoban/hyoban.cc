@@ -1,0 +1,23 @@
+{
+  "uid": "01M49THV0007XD50B2VQRZ2APG",
+  "at": "2026-10-07",
+  "parts": {
+    "subscription": {
+      "v": 1,
+      "name": "GitHub Sponsor",
+      "price": 15,
+      "currency": "USD",
+      "period": "month",
+      "renews": "2026-11-07",
+      "autoRenew": true,
+      "paidWith": "A",
+      "note": "按月赞助"
+    }
+  },
+  "order": 12,
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}

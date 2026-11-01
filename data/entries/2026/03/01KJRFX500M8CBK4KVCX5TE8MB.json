@@ -1,0 +1,23 @@
+{
+  "uid": "01KJRFX500M8CBK4KVCX5TE8MB",
+  "at": "2026-03-03",
+  "parts": {
+    "subscription": {
+      "v": 1,
+      "name": "flzt",
+      "price": 250.4,
+      "currency": "CNY",
+      "period": "year",
+      "renews": "2027-03-03",
+      "autoRenew": true,
+      "paidWith": "A",
+      "note": "代理"
+    }
+  },
+  "order": 8,
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}

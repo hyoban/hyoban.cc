@@ -17,6 +17,9 @@ data class SecondShape(
     val entries: Map<String, JsonObject> = emptyMap(),
     val collections: Map<String, JsonObject> = emptyMap(),
     val tracks: Map<String, JsonObject> = emptyMap(),
+    /** The car's statistics by their keys: a month, `<device>/<YYYY-MM>`, and an assisted-driving observation, `<device>/<captured at>`. */
+    val vehicleMonths: Map<String, JsonObject> = emptyMap(),
+    val vehicleAssisted: Map<String, JsonObject> = emptyMap(),
 )
 
 /**
@@ -86,13 +89,41 @@ class DataStore(val root: File) {
         val entries: Map<String, JsonObject> = emptyMap(),
         val collections: Map<String, JsonObject> = emptyMap(),
         val tracks: Map<String, JsonObject> = emptyMap(),
+        val vehicleMonths: Map<String, JsonObject> = emptyMap(),
+        val vehicleAssisted: Map<String, JsonObject> = emptyMap(),
     )
 
     /** What of the second shape the copy keeps beside the Moments and trips, and its revision. */
-    fun readSecond(): SecondShape = read("second.json", Second.serializer())?.let { SecondShape(it.revision, it.entries, it.collections, it.tracks) } ?: SecondShape()
+    fun readSecond(): SecondShape = read("second.json", Second.serializer())?.let {
+        SecondShape(it.revision, it.entries, it.collections, it.tracks, it.vehicleMonths, it.vehicleAssisted)
+    } ?: SecondShape()
 
     fun writeSecond(second: SecondShape) =
-        write("second.json", Second.serializer(), Second(second.revision, second.entries.toSortedMap(), second.collections.toSortedMap(), second.tracks.toSortedMap()))
+        write(
+            "second.json",
+            Second.serializer(),
+            Second(
+                second.revision,
+                second.entries.toSortedMap(),
+                second.collections.toSortedMap(),
+                second.tracks.toSortedMap(),
+                second.vehicleMonths.toSortedMap(),
+                second.vehicleAssisted.toSortedMap(),
+            ),
+        )
+
+    @Serializable
+    private data class ChangedEntries(val entries: Map<String, JsonObject> = emptyMap(), val removed: List<String> = emptyList())
+
+    /**
+     * The entries changed on the phone that aren't Moments (a device, a subscription), by uid,
+     * and those deleted, until published: the app's own note.
+     */
+    fun readChangedEntries(): Pair<Map<String, JsonObject>, Set<String>> =
+        read("changed-entries.json", ChangedEntries.serializer())?.let { it.entries to it.removed.toSet() } ?: (emptyMap<String, JsonObject>() to emptySet())
+
+    fun writeChangedEntries(entries: Map<String, JsonObject>, removed: Set<String>) =
+        write("changed-entries.json", ChangedEntries.serializer(), ChangedEntries(entries.toSortedMap(), removed.sorted()))
 
     fun readTrips(): List<TripRecord> = list("trips").map { file -> decode(file, TripRecord.serializer()) }
 

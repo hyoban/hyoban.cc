@@ -11,19 +11,19 @@ Without a token everything but drafts, private records and the export is public.
 with `Authorization: Bearer <token>` must carry one of the `API_TOKENS` (comma-separated),
 and then sees everything; any other token is a 401.
 
-| Path                                          | Returns                                                                                  |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `GET /`                                       | `{ name, revision }`                                                                     |
-| `GET /v2/changes?since=&limit=`               | the change feed: `entries`, `deleted`, `places`, `collections`, `tracks` and theirs gone |
-| `GET /v2/entries/:uid`                        | one entry                                                                                |
-| `GET /v2/collections`, `/v2/collections/:key` | `{ revision, collections }` by start date, or one by its slug (else its uid)             |
-| `GET /v2/tracks`                              | `{ revision, tracks }`, the spans of footprints made public                              |
-| `GET /v2/export`                              | `{ revision, manifest, places, entries, collections, tracks, routes }`; needs a token    |
-| `GET /v1/changes?since=&limit=`               | the same feed in the first shape: `moments`, `places`, `trips` and theirs gone           |
-| `GET /v1/moments/:uid`, `/v1/trips[/:id]`     | Moments and trips in the first shape                                                     |
-| `GET /v1/places[/:id]`                        | `{ revision, places }` by id, or one place                                               |
-| `GET /v1/routes`                              | `{ revision, trips }`, each published trip's route as stretches, with an `ETag`          |
-| `GET /v1/export`                              | the export in the first shape; needs a token                                             |
+| Path                                          | Returns                                                                                                                                |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /`                                       | `{ name, revision }`                                                                                                                   |
+| `GET /v2/changes?since=&limit=`               | the change feed: `entries`, `deleted`, `places`, `collections`, `tracks`, the car's statistics and theirs gone                         |
+| `GET /v2/entries/:uid`                        | one entry                                                                                                                              |
+| `GET /v2/collections`, `/v2/collections/:key` | `{ revision, collections }` by start date, or one by its slug (else its uid)                                                           |
+| `GET /v2/tracks`                              | `{ revision, tracks }`, the spans of footprints made public                                                                            |
+| `GET /v2/export`                              | `{ revision, manifest, places, entries, collections, tracks, routes, vehicleMonths, vehicleAssisted, vehicleCaptures }`; needs a token |
+| `GET /v1/changes?since=&limit=`               | the same feed in the first shape: `moments`, `places`, `trips` and theirs gone                                                         |
+| `GET /v1/moments/:uid`, `/v1/trips[/:id]`     | Moments and trips in the first shape                                                                                                   |
+| `GET /v1/places[/:id]`                        | `{ revision, places }` by id, or one place                                                                                             |
+| `GET /v1/routes`                              | `{ revision, trips }`, each published trip's route as stretches, with an `ETag`                                                        |
+| `GET /v1/export`                              | the export in the first shape; needs a token                                                                                           |
 
 ### Two shapes
 
@@ -50,14 +50,14 @@ database, only marked deleted.
 
 Writes need a token.
 
-| Path                                                      | Does                                                                                                        |
-| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `PUT /v2/entries/:uid/media/:mediaUid/:part`              | keeps an original, `image` or `video`, until its entry publishes                                            |
-| `HEAD` on the same path                                   | 200 with the original's MD5 as its `ETag` once uploaded, else 404                                           |
-| `POST /v2/changes`                                        | applies `{ places, entries, deleted, collections, deletedCollections, tracks, deletedTracks }` as one write |
-| `PUT`/`HEAD /v1/moments/:uid/media/…`, `POST /v1/changes` | the same in the first shape (`{ places, moments, deleted }`)                                                |
-| `POST /v1/build`                                          | calls the site's deploy hook and posts to the channel; `{ started }`                                        |
-| `POST /v1/routes`                                         | fetches missing routes; `{ fetched, removed, failed, left }`                                                |
+| Path                                                      | Does                                                                                                                                       |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PUT /v2/entries/:uid/media/:mediaUid/:part`              | keeps an original, `image` or `video`, until its entry publishes                                                                           |
+| `HEAD` on the same path                                   | 200 with the original's MD5 as its `ETag` once uploaded, else 404                                                                          |
+| `POST /v2/changes`                                        | applies `{ places, entries, deleted, collections, deletedCollections, tracks, deletedTracks }` as one write; an imported charge is refused |
+| `PUT`/`HEAD /v1/moments/:uid/media/…`, `POST /v1/changes` | the same in the first shape (`{ places, moments, deleted }`)                                                                               |
+| `POST /v1/build`                                          | calls the site's deploy hook and posts to the channel; `{ started }`                                                                       |
+| `POST /v1/routes`                                         | fetches missing routes; `{ fetched, removed, failed, left }`                                                                               |
 
 A change set is checked whole, then written in one transaction that bumps the revision and
 stamps the manifest's `updatedAt`; one that doesn't fit changes nothing (a 422 names every

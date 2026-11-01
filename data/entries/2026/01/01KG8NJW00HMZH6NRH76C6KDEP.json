@@ -1,0 +1,22 @@
+{
+  "uid": "01KG8NJW00HMZH6NRH76C6KDEP",
+  "at": "2026-01-31",
+  "parts": {
+    "subscription": {
+      "v": 1,
+      "name": "Raycast Pro",
+      "price": 96,
+      "currency": "USD",
+      "period": "year",
+      "renews": "2027-01-31",
+      "paidWith": "B",
+      "note": "多设备同步"
+    }
+  },
+  "order": 5,
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}

@@ -4,6 +4,9 @@ import {
   placesSchema,
   routesSchema,
   tripRecordSchema,
+  vehicleAssistedDrivingCaptureSchema,
+  vehicleCaptureSchema,
+  vehicleMonthSchema,
 } from '@hyoban/data-spec'
 import {
   collectionSchema,
@@ -27,6 +30,9 @@ import {
   routeRow,
   trackRow,
   upsertSql,
+  vehicleAssistedRow,
+  vehicleCaptureRow,
+  vehicleMonthRow,
   type Table,
   type Value,
 } from './rows.ts'
@@ -52,6 +58,10 @@ export interface ImportSnapshot {
   tracks?: unknown[]
   /** The legs' routes; a backup from before they were kept leaves the database's alone. */
   routes?: Record<string, unknown>
+  /** The car's statistics; a backup without them leaves the database's alone. */
+  vehicleMonths?: unknown[]
+  vehicleAssisted?: unknown[]
+  vehicleCaptures?: unknown[]
 }
 
 export function buildImportSql(snapshot: ImportSnapshot, now: string): string {
@@ -110,6 +120,17 @@ export function buildImportSql(snapshot: ImportSnapshot, now: string): string {
     statements.push(remove('routes', Object.keys(snapshot.routes), now))
   }
 
+  for (const { table, rows } of toVehicleRows(snapshot)) {
+    statements.push(...rows.map((row) => upsert(table, row)))
+    statements.push(
+      remove(
+        table,
+        rows.map((row) => String(row[KEYS[table]])),
+        now,
+      ),
+    )
+  }
+
   return `${statements.join(';\n')};\n`
 }
 
@@ -120,6 +141,9 @@ export interface MergeRecords {
   entries?: unknown[]
   collections?: unknown[]
   tracks?: unknown[]
+  vehicleMonths?: unknown[]
+  vehicleAssisted?: unknown[]
+  vehicleCaptures?: unknown[]
 }
 
 /**
@@ -138,6 +162,7 @@ export function buildMergeSql(records: MergeRecords, now: string, generator: str
     ...rows.trips.map((row) => upsert('trips', row)),
     ...rows.moments.map((row) => upsert('moments', row)),
     ...(rows.tracks ?? []).map((row) => upsert('tracks', row)),
+    ...toVehicleRows(records).flatMap(({ table, rows }) => rows.map((row) => upsert(table, row))),
   ]
 
   return `${statements.join(';\n')};\n`
@@ -196,6 +221,49 @@ function toRows(records: Omit<MergeRecords, 'places'>) {
     ),
     tracks: records.tracks?.map((raw) => trackRow(publicTrackSchema.parse(raw))),
   }
+}
+
+/** The car's statistics given, by table; a kind left out isn't touched. */
+function toVehicleRows(records: {
+  vehicleMonths?: unknown[]
+  vehicleAssisted?: unknown[]
+  vehicleCaptures?: unknown[]
+}) {
+  const tables: { table: Table; rows: Record<string, Value>[] }[] = []
+
+  if (records.vehicleMonths) {
+    tables.push({
+      table: 'vehicle_months',
+      rows: records.vehicleMonths.map((raw) => vehicleMonthRow(checked(vehicleMonthSchema, raw))),
+    })
+  }
+
+  if (records.vehicleAssisted) {
+    tables.push({
+      table: 'vehicle_assisted',
+      rows: records.vehicleAssisted.map((raw) =>
+        vehicleAssistedRow(checked(vehicleAssistedDrivingCaptureSchema, raw)),
+      ),
+    })
+  }
+
+  if (records.vehicleCaptures) {
+    tables.push({
+      table: 'vehicle_captures',
+      rows: records.vehicleCaptures.map((raw) =>
+        vehicleCaptureRow(checked(vehicleCaptureSchema, raw)),
+      ),
+    })
+  }
+
+  return tables
+}
+
+/** A record validated, and kept as written, so the backup reads back byte for byte. */
+function checked<T>(schema: { parse(value: unknown): T }, raw: unknown): T {
+  schema.parse(raw)
+
+  return raw as T
 }
 
 function upsert(table: Table, row: Record<string, Value>) {

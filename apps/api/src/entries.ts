@@ -6,6 +6,7 @@ import {
   getCollectionKey,
   getPublicEntry,
   getUploadEntry,
+  isImportedCharge,
   isInCollection,
   isMarkEntry,
   publicTrackSchema,
@@ -112,6 +113,21 @@ function jsonOrNull(value: unknown) {
 }
 
 const ENTRY_COLUMNS = 'uid, kind, rev, deleted_at, published, record, entry, shown'
+
+/**
+ * The car's statistics, all public, as the export and the feed's first page name them: a
+ * month, a cumulative assisted-driving observation, and a source capture.
+ */
+const VEHICLE_TABLES = [
+  { table: 'vehicle_months', key: 'key', name: 'vehicleMonths', gone: 'deletedVehicleMonths' },
+  {
+    table: 'vehicle_assisted',
+    key: 'key',
+    name: 'vehicleAssisted',
+    gone: 'deletedVehicleAssisted',
+  },
+  { table: 'vehicle_captures', key: 'id', name: 'vehicleCaptures', gone: 'deletedVehicleCaptures' },
+] as const
 const COLLECTION_COLUMNS = 'id, rev, deleted_at, record, collection, shown'
 
 /**
@@ -131,7 +147,7 @@ export async function readEntryChanges(
   const upto = first ? REVISION : String(query.cursor.upto)
   const changed = (table: string, key: string, columns: string) =>
     db.prepare(`SELECT ${columns} FROM ${table} WHERE rev > ?1 ORDER BY ${key}`).bind(since)
-  const [revision, rows, places, collections, tracks] = await readAll(db, [
+  const [revision, rows, places, collections, tracks, ...vehicle] = await readAll(db, [
     revisionQuery(db),
     db
       .prepare(
@@ -146,6 +162,9 @@ export async function readEntryChanges(
           changed('places', 'id', 'id AS key, rev, deleted_at, record'),
           changed('trips', 'id', COLLECTION_COLUMNS),
           changed('tracks', 'uid', 'uid, rev, deleted_at, record'),
+          ...VEHICLE_TABLES.map(({ table, key }) =>
+            changed(table, key, `${key} AS key, rev, deleted_at, record`),
+          ),
         ]
       : []),
   ])
@@ -173,8 +192,18 @@ export async function readEntryChanges(
   const [livePlaces, gonePlaces] = split(placeRows, live)
   const [liveCollections, goneCollections] = split(collectionRows, live)
   const [liveTracks, goneTracks] = split(trackRows, live)
+  const vehicleText = VEHICLE_TABLES.map(({ name, gone }, index) => {
+    const [liveRows, goneRows] = split(
+      ((vehicle[index] ?? []) as { key: string; deleted_at: string | null; record: string }[]).map(
+        (row) => ({ key: row.key, text: row.record, gone: row.deleted_at !== null }),
+      ),
+      live,
+    )
 
-  return `{"revision":${of},"entries":${arrayText(liveEntries)},"deleted":${keysText(goneEntries)},"places":{${livePlaces.map((row) => `${JSON.stringify(row.key)}:${row.text}`).join(',')}},"deletedPlaces":${keysText(gonePlaces)},"collections":${arrayText(liveCollections)},"deletedCollections":${keysText(goneCollections)},"tracks":${arrayText(liveTracks)},"deletedTracks":${keysText(goneTracks)},"next":${JSON.stringify(next)}}`
+    return `${JSON.stringify(name)}:${arrayText(liveRows)},${JSON.stringify(gone)}:${keysText(goneRows)},`
+  }).join('')
+
+  return `{"revision":${of},"entries":${arrayText(liveEntries)},"deleted":${keysText(goneEntries)},"places":{${livePlaces.map((row) => `${JSON.stringify(row.key)}:${row.text}`).join(',')}},"deletedPlaces":${keysText(gonePlaces)},"collections":${arrayText(liveCollections)},"deletedCollections":${keysText(goneCollections)},"tracks":${arrayText(liveTracks)},"deletedTracks":${keysText(goneTracks)},${first ? vehicleText : ''}"next":${JSON.stringify(next)}}`
 }
 
 /** One entry as its reader may see it, or null. */
@@ -225,25 +254,34 @@ export async function readTracks(db: Database) {
 
 /**
  * Everything kept here, drafts included, in the shape `data/` keeps it:
- * `{ revision, manifest, places, entries, collections, tracks, routes }`.
+ * `{ revision, manifest, places, entries, collections, tracks, routes }`, and the car's
+ * statistics as `vehicleMonths`, `vehicleAssisted` and `vehicleCaptures`.
  */
 export async function readEntrySnapshot(db: Database) {
-  const [revision, manifest, places, entries, collections, tracks, routes] = await readAll(db, [
-    revisionQuery(db),
-    db.prepare(`SELECT value FROM meta WHERE key = 'manifest'`),
-    db.prepare(`SELECT id AS key, record FROM places WHERE deleted_at IS NULL ORDER BY id`),
-    db.prepare(`SELECT ${ENTRY_COLUMNS} FROM moments WHERE deleted_at IS NULL ORDER BY uid`),
-    db.prepare(
-      `SELECT ${COLLECTION_COLUMNS} FROM trips WHERE deleted_at IS NULL ORDER BY start_date, id`,
-    ),
-    db.prepare(`SELECT record FROM tracks WHERE deleted_at IS NULL ORDER BY start_at, uid`),
-    routesQuery(db),
-  ])
+  const [revision, manifest, places, entries, collections, tracks, routes, ...vehicle] =
+    await readAll(db, [
+      revisionQuery(db),
+      db.prepare(`SELECT value FROM meta WHERE key = 'manifest'`),
+      db.prepare(`SELECT id AS key, record FROM places WHERE deleted_at IS NULL ORDER BY id`),
+      db.prepare(`SELECT ${ENTRY_COLUMNS} FROM moments WHERE deleted_at IS NULL ORDER BY uid`),
+      db.prepare(
+        `SELECT ${COLLECTION_COLUMNS} FROM trips WHERE deleted_at IS NULL ORDER BY start_date, id`,
+      ),
+      db.prepare(`SELECT record FROM tracks WHERE deleted_at IS NULL ORDER BY start_at, uid`),
+      routesQuery(db),
+      ...VEHICLE_TABLES.map(({ table, key }) =>
+        db.prepare(`SELECT record FROM ${table} WHERE deleted_at IS NULL ORDER BY ${key}`),
+      ),
+    ])
   const [manifestRow] = manifest as { value: string }[]
+  const vehicleText = VEHICLE_TABLES.map(
+    ({ name }, index) =>
+      `,${JSON.stringify(name)}:${arrayText((vehicle[index] as { record: string }[]).map((row) => ({ text: row.record })))}`,
+  ).join('')
   const keyed = (rows: unknown[]) =>
     `{${(rows as { key: string; record: string }[]).map((row) => `${JSON.stringify(row.key)}:${row.record}`).join(',')}}`
 
-  return `{"revision":${toRevision(revision)},"manifest":${manifestRow?.value ?? 'null'},"places":${keyed(places)},"entries":${arrayText((entries as EntryRow[]).map((row) => readEntryRow(row, true)))},"collections":${arrayText((collections as CollectionRow[]).map((row) => readCollectionRow(row, true)))},"tracks":${arrayText((tracks as { record: string }[]).map((row) => ({ text: row.record })))},"routes":${keyed(routes)}}`
+  return `{"revision":${toRevision(revision)},"manifest":${manifestRow?.value ?? 'null'},"places":${keyed(places)},"entries":${arrayText((entries as EntryRow[]).map((row) => readEntryRow(row, true)))},"collections":${arrayText((collections as CollectionRow[]).map((row) => readCollectionRow(row, true)))},"tracks":${arrayText((tracks as { record: string }[]).map((row) => ({ text: row.record })))},"routes":${keyed(routes)}${vehicleText}}`
 }
 
 /** What `POST /v2/changes` did. */
@@ -311,6 +349,12 @@ export async function applyEntryChanges(
   }
 
   const deletedUids = strings('deleted')
+  const imported = inputs.find(isImportedCharge)
+
+  if (imported) {
+    throw new HttpError(422, `${imported.uid} is an imported charge; only an import changes it.`)
+  }
+
   const both = deletedUids.find((uid) => inputs.some((input) => input.uid === uid))
 
   if (both) {
@@ -325,6 +369,16 @@ export async function applyEntryChanges(
     ...inputs.map((input) => input.uid),
     ...deletedUids,
   ])
+  const importedStored = [...inputs.map((input) => input.uid), ...deletedUids].find((uid) => {
+    const stored = state.stored.get(uid)
+
+    return stored && !stored.deleted && isImportedCharge(stored.entry)
+  })
+
+  if (importedStored) {
+    throw new HttpError(422, `${importedStored} is an imported charge; only an import changes it.`)
+  }
+
   const statements: Statement[] = []
   const placeIds = await namePlaces(context, givenPlaces, state.places, statements)
   const records = inputs.map((input) => {

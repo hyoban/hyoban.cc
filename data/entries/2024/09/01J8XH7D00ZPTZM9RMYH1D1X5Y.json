@@ -1,0 +1,20 @@
+{
+  "uid": "01J8XH7D00ZPTZM9RMYH1D1X5Y",
+  "at": "2024-09-29",
+  "parts": {
+    "device": {
+      "v": 1,
+      "id": "nuphy-air60-v2",
+      "name": "Nuphy Air60 v2",
+      "category": "键盘",
+      "price": 562.38,
+      "image": "devices/nuphy-air60-v2.webp",
+      "note": "代替笔记本的内置键盘"
+    }
+  },
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}

@@ -1,0 +1,22 @@
+{
+  "uid": "01K43VJB002FPCPJH4FH838AB8",
+  "at": "2025-09-02",
+  "parts": {
+    "subscription": {
+      "v": 1,
+      "name": "88 VIP",
+      "price": 88,
+      "currency": "CNY",
+      "period": "year",
+      "renews": "2026-09-02",
+      "paidWith": "A",
+      "note": "网易云音乐 夸克网盘"
+    }
+  },
+  "order": 2,
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}

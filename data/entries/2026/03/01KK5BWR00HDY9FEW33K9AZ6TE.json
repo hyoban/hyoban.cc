@@ -1,0 +1,21 @@
+{
+  "uid": "01KK5BWR00HDY9FEW33K9AZ6TE",
+  "at": "2026-03-08",
+  "parts": {
+    "subscription": {
+      "v": 1,
+      "name": "京东 plus",
+      "price": 58,
+      "currency": "CNY",
+      "period": "year",
+      "renews": "2027-03-08",
+      "paidWith": "A"
+    }
+  },
+  "order": 7,
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}

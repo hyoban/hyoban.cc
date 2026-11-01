@@ -1,0 +1,23 @@
+{
+  "uid": "01M4CCYJ00AKPR9GFBFW0QM6PC",
+  "at": "2026-10-08",
+  "parts": {
+    "subscription": {
+      "v": 1,
+      "name": "1password",
+      "price": 35.88,
+      "currency": "USD",
+      "period": "year",
+      "renews": "2027-10-08",
+      "autoRenew": true,
+      "paidWith": "B",
+      "note": "离不开的"
+    }
+  },
+  "order": 10,
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}

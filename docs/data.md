@@ -4,8 +4,9 @@ The Moments, places and trips live in the API's D1 database (`apps/api`), which 
 Android app writes and the site's build reads. `data/` keeps a backup of them as JSON
 records in the shape `packages/data-spec` defines: the data-backup workflow writes the
 API's export into it every six hours and commits what changed, so edit records through
-the API rather than here. `devices.json` and the Zeekr statistics in `data/zeekr/` (see
-[its README](../data/zeekr/README.md)) live only in the repository.
+the API rather than here. So are the car's statistics in `data/zeekr/` (see
+[its README](../data/zeekr/README.md)); its expenses and the redacted sources live only in
+the repository.
 
 ```
 data/
@@ -15,11 +16,15 @@ data/
 ├─ tracks/<ulid>.json            a public span of the footprints
 ├─ places.json                   places by id
 ├─ routes.json                   each trip leg's route by its key, as the API fetched it
+├─ zeekr/                        the car's statistics, expenses and sources
 └─ schema/*.schema.json          generated from the spec by `vp run data:schema`
 ```
 
 - An **entry** (`packages/data-spec/src/entry.ts`) is a moment and an optional point, with
-  its words, photos, meal, bill or charge as parts by plugin. It is named by its uid alone:
+  its words, photos, meal, bill, charge, device or subscription as parts by plugin. A device
+  is on the day it was bought, what it sold for written on it once sold; a subscription on
+  the day it was last paid, or for software bought once the day it was first written down.
+  The use page lists both from these entries. It is named by its uid alone:
   its page is `/m/<uid>/` and its media sit under `moments/<uid>/` in R2, so its day, place
   and words can change after it is published. One without `published` is a draft the site
   skips; `published` blocks, the entry's and each media item's, never change.

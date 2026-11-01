@@ -87,6 +87,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
+import cc.hyoban.moments.data.spec.entryUid
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
@@ -200,6 +201,28 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                             formatDate(start) + " – " + formatDate(end),
                             null,
                             stringResource(if (private) R.string.visibility_private else R.string.visibility_public),
+                            revert,
+                        )
+                    }
+                }
+                section(R.string.section_changed_things, pending.entries, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
+                    val entry = (change.after ?: change.before)!!
+                    val revert = { container.scope.launch { container.repository.revertEntry(entry.entryUid) }; Unit }.takeUnless { busy }
+                    val device = cc.hyoban.moments.data.things.Things.device(entry)
+                    val subscription = cc.hyoban.moments.data.things.Things.subscription(entry)
+                    SwipeToRevert(revert) {
+                        OutsideCard(
+                            device?.name ?: subscription?.name ?: entry.entryUid,
+                            null,
+                            device?.let { cc.hyoban.moments.ui.things.yuan(it.price) }
+                                ?: subscription?.let { cc.hyoban.moments.ui.things.priceOf(it.price, it.currency) },
+                            stringResource(
+                                when {
+                                    change.after == null -> R.string.thing_deleted
+                                    change.before == null -> R.string.thing_new
+                                    else -> R.string.thing_changed
+                                },
+                            ),
                             revert,
                         )
                     }

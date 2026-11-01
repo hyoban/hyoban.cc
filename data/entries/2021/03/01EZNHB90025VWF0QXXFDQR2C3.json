@@ -1,0 +1,20 @@
+{
+  "uid": "01EZNHB90025VWF0QXXFDQR2C3",
+  "at": "2021-03-01",
+  "parts": {
+    "device": {
+      "v": 1,
+      "id": "xiaomi-10",
+      "name": "小米 10 6+128GB",
+      "category": "手机",
+      "price": 3999,
+      "image": "devices/xiaomi-10.webp",
+      "note": "15 卖出后短暂当回主力机，现在又回到备用机"
+    }
+  },
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}

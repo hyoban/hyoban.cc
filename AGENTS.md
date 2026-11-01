@@ -75,9 +75,11 @@ even when starting from the repository root.
   `/v1` serves the first, `/v2` the second, trimmed to what is public for anyone without a
   token. `vp run data:migrate` moves `data/` between the layouts (dry run by default,
   `--rollback` back); `vp run data:import` then moves D1. Ask before either touches live data.
-- D1 holds entries, places, collections, public tracks and routes. `data/` is their canonical JSON backup,
-  refreshed by the data-backup workflow and `vp run data:export`. Devices and redacted
-  Zeekr statistics live only in the repository. The formatter leaves `data/` alone.
+- D1 holds entries, places, collections, public tracks, routes and the car's statistics. A
+  device or a subscription is an entry with its plugin's part, not a record of its own.
+  `data/` is their canonical JSON backup, refreshed by the data-backup workflow and
+  `vp run data:export`. The car's expenses and redacted Zeekr sources live only in the
+  repository. The formatter leaves `data/` alone.
 - Android keeps edits locally until the user reviews and publishes one change set
   through `POST /v2/changes` (`/v1` on an API without it). Upload originals first; do not bypass this publishing
   boundary with individual writes. The API fetches missing trip routes after writes.

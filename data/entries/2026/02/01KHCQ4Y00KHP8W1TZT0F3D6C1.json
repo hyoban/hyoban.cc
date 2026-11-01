@@ -1,0 +1,21 @@
+{
+  "uid": "01KHCQ4Y00KHP8W1TZT0F3D6C1",
+  "at": "2026-02-14",
+  "parts": {
+    "subscription": {
+      "v": 1,
+      "name": "Supercharge",
+      "link": "https://sindresorhus.com/supercharge",
+      "price": 18,
+      "currency": "USD",
+      "period": "once",
+      "paidWith": "A"
+    }
+  },
+  "order": 21,
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}

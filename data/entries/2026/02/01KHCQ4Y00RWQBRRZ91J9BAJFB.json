@@ -1,0 +1,22 @@
+{
+  "uid": "01KHCQ4Y00RWQBRRZ91J9BAJFB",
+  "at": "2026-02-14",
+  "parts": {
+    "subscription": {
+      "v": 1,
+      "name": "MonoLisa",
+      "link": "https://monolisa.dev",
+      "price": 249,
+      "currency": "USD",
+      "period": "once",
+      "paidWith": "A",
+      "note": "至今没有看腻"
+    }
+  },
+  "order": 22,
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}

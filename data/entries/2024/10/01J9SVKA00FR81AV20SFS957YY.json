@@ -1,0 +1,20 @@
+{
+  "uid": "01J9SVKA00FR81AV20SFS957YY",
+  "at": "2024-10-10",
+  "parts": {
+    "device": {
+      "v": 1,
+      "id": "vxe-r1-se",
+      "name": "VXE 蜻蜓 R1 SE",
+      "category": "鼠标",
+      "price": 88.68,
+      "image": "devices/vxe-r1-se.webp",
+      "note": "很便宜很好用"
+    }
+  },
+  "published": {
+    "at": "2026-11-01T00:30:00Z"
+  },
+  "createdAt": "2026-11-01T00:30:00Z",
+  "updatedAt": "2026-11-01T00:30:00Z"
+}
