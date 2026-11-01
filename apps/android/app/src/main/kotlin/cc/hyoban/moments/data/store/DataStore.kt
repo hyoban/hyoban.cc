@@ -3,7 +3,6 @@ package cc.hyoban.moments.data.store
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.Spec
-import cc.hyoban.moments.data.spec.TripRecord
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
@@ -11,7 +10,7 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonObject
 import java.io.File
 
-/** The second shape's records the copy keeps: entries by uid, collections by their key (slug, else uid in lowercase), public tracks by uid. */
+/** The second shape's records the copy holds beside the Moments and trips: entries by uid, collections by their key (slug, else uid in lowercase), public tracks by uid. */
 data class SecondShape(
     val revision: Long = 0,
     val entries: Map<String, JsonObject> = emptyMap(),
@@ -23,20 +22,12 @@ data class SecondShape(
 )
 
 /**
- * The app's copy of what the API serves, as files in the spec's layout under one
- * directory, with the revision it was last brought up to. The API is the truth; this is
- * what the screens show when it can't be reached.
+ * What the phone keeps of its own as files in the spec's layout under one directory: the
+ * Moments written on it and the places they made, and its notes of what it changed of the
+ * site's until that is published. The copy of what the API serves is [cc.hyoban.moments.data.copy.CopyStore].
  */
 class DataStore(val root: File) {
     private val placesSerializer = MapSerializer(String.serializer(), Place.serializer())
-
-    @Serializable
-    private data class SyncState(val revision: Long)
-
-    /** The API's revision the copy was last brought up to; 0 before the first sync. */
-    fun readRevision(): Long = read("sync.json", SyncState.serializer())?.revision ?: 0
-
-    fun writeRevision(revision: Long) = write("sync.json", SyncState.serializer(), SyncState(revision))
 
     fun readPlaces(): Map<String, Place> = read("places.json", placesSerializer) ?: emptyMap()
 
@@ -83,36 +74,6 @@ class DataStore(val root: File) {
         write("held.json", Held.serializer(), Held(deleting.sorted(), reverting.sorted()))
 
     @Serializable
-    private data class Second(
-        val revision: Long = 0,
-        /** The entries with no Moment in the first shape (a bill, a charge, a mark), and the parts a Moment has beyond it, by uid. */
-        val entries: Map<String, JsonObject> = emptyMap(),
-        val collections: Map<String, JsonObject> = emptyMap(),
-        val tracks: Map<String, JsonObject> = emptyMap(),
-        val vehicleMonths: Map<String, JsonObject> = emptyMap(),
-        val vehicleAssisted: Map<String, JsonObject> = emptyMap(),
-    )
-
-    /** What of the second shape the copy keeps beside the Moments and trips, and its revision. */
-    fun readSecond(): SecondShape = read("second.json", Second.serializer())?.let {
-        SecondShape(it.revision, it.entries, it.collections, it.tracks, it.vehicleMonths, it.vehicleAssisted)
-    } ?: SecondShape()
-
-    fun writeSecond(second: SecondShape) =
-        write(
-            "second.json",
-            Second.serializer(),
-            Second(
-                second.revision,
-                second.entries.toSortedMap(),
-                second.collections.toSortedMap(),
-                second.tracks.toSortedMap(),
-                second.vehicleMonths.toSortedMap(),
-                second.vehicleAssisted.toSortedMap(),
-            ),
-        )
-
-    @Serializable
     private data class ChangedEntries(val entries: Map<String, JsonObject> = emptyMap(), val removed: List<String> = emptyList())
 
     /**
@@ -125,15 +86,6 @@ class DataStore(val root: File) {
     fun writeChangedEntries(entries: Map<String, JsonObject>, removed: Set<String>) =
         write("changed-entries.json", ChangedEntries.serializer(), ChangedEntries(entries.toSortedMap(), removed.sorted()))
 
-    fun readTrips(): List<TripRecord> = list("trips").map { file -> decode(file, TripRecord.serializer()) }
-
-    /** Makes the trips on disk exactly these. */
-    fun replaceTrips(trips: List<TripRecord>) {
-        val kept = trips.map { "${it.id}.json" }.toSet()
-        list("trips").filter { it.name !in kept }.forEach(File::delete)
-        trips.forEach { write("trips/${it.id}.json", TripRecord.serializer(), it) }
-    }
-
     fun readMoments(): List<MomentRecord> = list("moments").map { file -> decode(file, MomentRecord.serializer()) }
 
     fun writeMoment(moment: MomentRecord) = write(fileOf(moment), MomentRecord.serializer(), moment)
@@ -145,10 +97,6 @@ class DataStore(val root: File) {
     /** Drops the whole copy, revision and all. */
     fun clear() {
         root.deleteRecursively()
-    }
-
-    fun clearMoments() {
-        File(root, "moments").deleteRecursively()
     }
 
     /** `moments/YYYY/MM/<uid>.json`, as the spec places it. */

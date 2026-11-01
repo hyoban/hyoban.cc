@@ -59,13 +59,14 @@ class AppContainer(context: Context) {
     /** The ledger stays on this phone, outside API sync and Android's backup; only its public bills publish. */
     val ledger = cc.hyoban.moments.ledger.LedgerStore(context)
 
-    // Directories of their own: `api/` the copy of what the API serves, `local/` the
-    // Moments written on this phone, their photos and places, which no sync touches. `data/`
-    // may still hold what the app recorded before it only showed the site's records, and
-    // that is left as it was.
+    // Each its own: `copy.db` the copy of what the API serves, row for row as D1 keeps it,
+    // out of the backup since a sync brings it again; `local/` the Moments written on this
+    // phone, their photos and places, which no sync touches. `api/` may still hold the copy
+    // as it was kept before, as JSON files, and `data/` what the app recorded before it only
+    // showed the site's records; both are left as they were.
     val localStore = DataStore(File(context.filesDir, "local"))
     private val api = MomentsApi(baseUrl = { settings.apiUrl.value }, token = { settings.apiToken.value })
-    val repository = MomentsRepository(DataStore(File(context.filesDir, "api")), api, local = localStore, writer = api,
+    val repository = MomentsRepository(cc.hyoban.moments.data.copy.CopyStore(File(context.noBackupFilesDir, "copy.db")), api, local = localStore, writer = api,
         outside = cc.hyoban.moments.data.store.PhoneOutside(ledger, footprints),
     )
     val mediaUrls = MediaUrls { settings.assetOrigin.value }
@@ -292,6 +293,8 @@ class AppContainer(context: Context) {
                 _publishing.value = it
                 onProgress(it)
             }
+            // The copy takes what was published from the rows, as D1 now has it.
+            refreshAll()
         } finally {
             _publishing.value = null
             Widgets.update(appContext)

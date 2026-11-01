@@ -2,10 +2,14 @@ package cc.hyoban.moments
 
 import cc.hyoban.moments.data.api.AppliedChanges
 import cc.hyoban.moments.data.api.ChangeSet
-import cc.hyoban.moments.data.api.EntryChanges
 import cc.hyoban.moments.data.api.MomentsSource
 import cc.hyoban.moments.data.api.MomentsWriter
+import cc.hyoban.moments.data.api.RowsPage
+import cc.hyoban.moments.data.api.RowsPageRow
 import cc.hyoban.moments.data.api.UploadPart
+import cc.hyoban.moments.data.copy.CopyRow
+import cc.hyoban.moments.data.copy.CopyStore
+import cc.hyoban.moments.data.copy.CopyTables
 import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.LocalMedia
 import cc.hyoban.moments.data.spec.MediaType
@@ -14,6 +18,7 @@ import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.PublishedMedia
 import cc.hyoban.moments.data.spec.PublishedMoment
+import cc.hyoban.moments.data.spec.Spec
 import cc.hyoban.moments.data.store.DataStore
 import cc.hyoban.moments.data.store.MomentsRepository
 import cc.hyoban.moments.data.store.PublishProgress
@@ -25,43 +30,55 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** The copy on the phone follows the API's change feed, page by page, and survives a restart. */
+/** The copy on the phone follows the API's rows, page by page, and survives a restart. */
 class MomentsRepositoryTest {
     /** The API's feed, as a list of changes each at its own revision, the places' among them. */
     private class FakeApi : MomentsSource {
-        val changes = mutableListOf<Pair<Long, Any>>()
+        /** Every row, by table and key, as D1 keeps it. */
+        val rows = mutableMapOf<Pair<String, String>, CopyRow>()
         var revision = 0L
-        /** Each place with the revision it last changed at. */
-        val places = mutableMapOf("nanjing" to (0L to Place("南京", 32.06, 118.79)))
         var calls = 0
-        /** How many places the feed handed out, all told. */
+        /** How many places the rows handed out, all told. */
         var placesSent = 0
 
-        fun put(moment: MomentRecord) = changes.add(++revision to moment)
-        fun delete(uid: String) = changes.add(++revision to uid)
-        fun putPlace(id: String, place: Place) {
-            places[id] = ++revision to place
+        init {
+            rows["places" to "nanjing"] = CopyRow("places", "nanjing", 0, null, Spec.json.encodeToString(Place.serializer(), Place("南京", 32.06, 118.79)))
         }
 
-        override suspend fun entryChanges(since: Long, cursor: String?): EntryChanges {
+        fun put(moment: MomentRecord) {
+            rows["entries" to moment.uid] = CopyRow("entries", moment.uid, ++revision, null, Entries.fromMoment(moment).toString())
+        }
+
+        fun delete(uid: String) {
+            val row = rows.getValue("entries" to uid)
+            rows["entries" to uid] = row.copy(rev = ++revision, deletedAt = "2026-10-20T00:00:00Z")
+        }
+
+        fun putPlace(id: String, place: Place) {
+            rows["places" to id] = CopyRow("places", id, ++revision, null, Spec.json.encodeToString(Place.serializer(), place))
+        }
+
+        /** Two rows a page, table by table as D1 hands them out. */
+        override suspend fun rows(since: Long, cursor: String?): RowsPage {
             calls++
-            val after = cursor?.toLong() ?: since
-            val page = changes.filter { it.first > after }.take(2)
-            val more = changes.count { it.first > after } > 2
-            val changedPlaces = if (cursor == null) places.filterValues { (rev) -> rev > since || since == 0L }.mapValues { it.value.second } else emptyMap()
-            placesSent += changedPlaces.size
-            return EntryChanges(
-                revision = revision,
-                entries = page.mapNotNull { (it.second as? MomentRecord)?.let { moment -> Entries.fromMoment(moment) } },
-                deleted = page.mapNotNull { it.second as? String },
-                places = changedPlaces,
-                next = if (more) page.last().first.toString() else null,
+            val changed = rows.values.filter { it.rev > since || since == 0L }
+                .sortedWith(compareBy({ CopyTables.names.indexOf(it.table) }, { it.rev }, { it.key }))
+            val start = cursor?.toInt() ?: 0
+            val page = changed.drop(start).take(2)
+            placesSent += page.count { it.table == "places" }
+            return RowsPage(
+                revision,
+                page.map { RowsPageRow(it.table, it.key, it.rev, it.deletedAt, Spec.json.parseToJsonElement(it.record)) },
+                next = if (changed.size > start + 2) "${start + 2}" else null,
             )
         }
     }
 
     /** The API's writes, as the Worker answers them: photos kept, places named, drafts published, all of a change set at once. */
-    private class FakeWriter : MomentsWriter {
+    private class FakeWriter(
+        /** The API whose rows take what is written, when the test reads them back. */
+        private val api: FakeApi? = null,
+    ) : MomentsWriter {
         val calls = mutableListOf<String>()
         val uploads = mutableMapOf<String, String>()
         /** How many uploads to drop, as a proxy closes a connection, before they go through. */
@@ -98,7 +115,13 @@ class MomentsRepositoryTest {
                     media = moment.media.map { it.copy(local = null, published = it.published ?: PublishedMedia("moments/x/${it.uid}.jpg", "image/jpeg", 5, "etag")) },
                 )
             }
-            return AppliedChanges(places, moments, changes.deleted.filter { it != "GONE" }, revision)
+            val deleted = changes.deleted.filter { it != "GONE" }
+            if (api != null) {
+                changes.places.forEach { (given, place) -> api.putPlace(places.getValue(given), place) }
+                moments.forEach(api::put)
+                deleted.forEach(api::delete)
+            }
+            return AppliedChanges(places, moments, deleted, revision)
         }
     }
 
@@ -107,7 +130,10 @@ class MomentsRepositoryTest {
 
     private val localDirectory: File = Files.createTempDirectory("moments-local").toFile()
 
-    private fun repository() = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory))
+    /** The copy as the app keeps it, opened again for each repository as after a restart. */
+    private fun copy() = CopyStore(File(directory, "copy.db"), JdbcSQLiteDriver())
+
+    private fun repository() = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory))
 
     @Test
     fun `the first refresh reads every page, later ones only what changed`() = runBlocking {
@@ -130,9 +156,9 @@ class MomentsRepositoryTest {
         assertEquals("moved to another month", repository.moment("C")?.text)
         assertEquals(2, api.calls, "four changes come in two pages")
         assertEquals(
-            listOf("moments/2026/10/A.json", "moments/2026/10/D.json", "moments/2026/10/E.json", "moments/2026/10/F.json", "moments/2026/10/G.json", "moments/2026/11/C.json"),
-            File(directory, "moments").walkTopDown().filter { it.isFile }.map { it.relativeTo(directory).path }.sorted().toList(),
-            "a removed Moment's file goes, and a moved one leaves its old month",
+            api.rows.values.filter { it.table == "entries" }.sortedBy { it.key },
+            copy().rows("entries"),
+            "the copy keeps the rows as the API does, the removed one deleted",
         )
 
         val restarted = repository()
@@ -185,7 +211,7 @@ class MomentsRepositoryTest {
         repository.load()
         repository.refresh()
 
-        api.changes.clear()
+        api.rows.clear()
         api.revision = 0
         api.put(moment("Z", "2026-10-05"))
         repository.refresh()
@@ -200,8 +226,8 @@ class MomentsRepositoryTest {
         repository.load()
         repository.refresh()
 
-        val failing = MomentsRepository(DataStore(directory), object : MomentsSource by api {
-            override suspend fun entryChanges(since: Long, cursor: String?): EntryChanges = error("offline")
+        val failing = MomentsRepository(copy(), object : MomentsSource by api {
+            override suspend fun rows(since: Long, cursor: String?): RowsPage = error("offline")
         }, Dispatchers.Unconfined)
         failing.load()
 
@@ -284,8 +310,8 @@ class MomentsRepositoryTest {
 
     @Test
     fun `nothing reaches the API until the changes are published, all of them at once`() = runBlocking {
-        val writer = FakeWriter()
-        fun repository() = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        val writer = FakeWriter(api)
+        fun repository() = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
         val repository = repository()
         api.put(moment("S", "2026-10-01"))
         api.put(moment("T", "2026-10-04", text = "the site's"))
@@ -347,14 +373,15 @@ class MomentsRepositoryTest {
 
         val again = repository()
         again.load()
-        assertEquals(listOf("U", "T", "M", "L"), again.moments.value.map { it.uid }, "the copy on the phone has it too")
+        again.refresh()
+        assertEquals(listOf("U", "T", "M", "L"), again.moments.value.map { it.uid }, "the copy on the phone has it too, once the rows bring it")
         assertEquals(0, again.pending.value.size)
     }
 
     @Test
     fun `a site's place's kind changes on the phone and goes with the changes, under its own id`() = runBlocking {
         val writer = FakeWriter()
-        fun repository() = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        fun repository() = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
         val repository = repository()
         api.put(moment("S", "2026-10-01"))
         repository.load()
@@ -418,27 +445,27 @@ class MomentsRepositoryTest {
     @Test
     fun `a write leaves the copy at its revision, for the next sync to bring what it changed`() = runBlocking {
         val writer = FakeWriter()
-        val store = DataStore(directory)
+        val store = copy()
         val repository = MomentsRepository(store, api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
         api.put(moment("A", "2026-10-01"))
         repository.load()
         repository.refresh()
-        assertEquals(1, store.readSecond().revision)
+        assertEquals(1, store.revision())
 
         repository.addLocal(moment("L", "2026-10-02", published = false).copy(places = listOf("nanjing")))
         writer.revision = 2
         repository.publishPending()
-        assertEquals(1, store.readSecond().revision, "the collections the write changed come with the feed")
+        assertEquals(1, store.revision(), "what the write changed comes with the rows")
 
         api.put(moment("L", "2026-10-02"))
         repository.refresh()
-        assertEquals(2, store.readSecond().revision)
+        assertEquals(2, store.revision())
     }
 
     @Test
     fun `a photo the API already has, as after a publish that failed, isn't sent again`() = runBlocking {
         val writer = FakeWriter()
-        val repository = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        val repository = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
         api.put(moment("A", "2026-10-01"))
         repository.load()
         repository.refresh()
@@ -464,7 +491,7 @@ class MomentsRepositoryTest {
     @Test
     fun `an upload whose connection drops is tried again, its bytes counted once`() = runBlocking {
         val writer = FakeWriter().apply { drops = 1 }
-        val repository = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        val repository = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
         repository.load()
         val copy = File(localDirectory, "media/D.jpg").apply { parentFile.mkdirs(); writeText("photo") }
         repository.addLocal(
@@ -484,7 +511,7 @@ class MomentsRepositoryTest {
     @Test
     fun `a live photo sends its still and its motion, and both copies go once published`() = runBlocking {
         val writer = FakeWriter()
-        val repository = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        val repository = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
         repository.load()
         val still = File(localDirectory, "media/V.jpg").apply { parentFile.mkdirs(); writeText("still") }
         val motion = File(localDirectory, "media/V.mp4").apply { writeText("motion") }
@@ -509,7 +536,7 @@ class MomentsRepositoryTest {
     @Test
     fun `a video sends only itself, its poster staying on the phone until it goes`() = runBlocking {
         val writer = FakeWriter()
-        val repository = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        val repository = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
         repository.load()
         val poster = File(localDirectory, "media/W-poster.jpg").apply { parentFile.mkdirs(); writeText("poster") }
         val video = File(localDirectory, "media/W.mov").apply { writeText("video") }
@@ -534,7 +561,7 @@ class MomentsRepositoryTest {
     @Test
     fun `a deletion the API no longer has the Moment for is done already`() = runBlocking {
         val writer = FakeWriter()
-        val repository = MomentsRepository(DataStore(directory), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        val repository = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
         api.put(moment("GONE", "2026-10-01"))
         repository.load()
         repository.refresh()

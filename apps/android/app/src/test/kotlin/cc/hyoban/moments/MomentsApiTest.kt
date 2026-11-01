@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
 /** Every request to the API carries the owner's token, reads too: it answers none without one. */
 class MomentsApiTest {
     private val answers = mapOf(
-        "/v2/changes" to """{"revision":1,"entries":[],"deleted":[]}""",
+        "/v2/rows" to """{"revision":1,"rows":[]}""",
         "/v2/routes" to """{"revision":1,"trips":{}}""",
     )
     private val seen = ConcurrentHashMap<String, String>()
@@ -34,14 +34,14 @@ class MomentsApiTest {
     fun stop() = server.stop(0)
 
     @Test
-    fun `the feed and the routes are read with the token`() = runBlocking {
+    fun `the rows and the routes are read with the token`() = runBlocking {
         val api = MomentsApi(baseUrl = { url }, token = { "secret" })
-        api.entryChanges(0, cursor = null)
+        api.rows(0, cursor = null)
         TripRoutes({ url }, File.createTempFile("routes", ".json").apply { deleteOnExit() }, token = { "secret" })
             .refresh(apiRevision = 1)
 
         assertEquals(
-            mapOf("/v2/changes" to "Bearer secret", "/v2/routes" to "Bearer secret"),
+            mapOf("/v2/rows" to "Bearer secret", "/v2/routes" to "Bearer secret"),
             seen.toMap(),
         )
     }
