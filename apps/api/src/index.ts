@@ -1,6 +1,7 @@
 import type { Place } from '@hyoban/data-spec'
 import { createDataVChildren, locateDivision } from '@hyoban/data-spec/division'
 import { authorize } from './auth.ts'
+import { parseRowsCursor, readRows } from './copy.ts'
 import type { Bucket, UploadPart } from './bucket.ts'
 import { parseCursor, readPlace, readPlaces, readRevision, type Database } from './database.ts'
 import {
@@ -193,6 +194,19 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
       return method === 'GET' ? found(await readPlace(db, key)) : notAllowed('GET')
     }
+    case 'rows': {
+      if (key !== undefined) {
+        return notFound()
+      }
+
+      if (method !== 'GET') {
+        return notAllowed('GET')
+      }
+
+      const query = readFeedQuery(url.searchParams, parseRowsCursor)
+
+      return 'error' in query ? error(400, query.error) : jsonText(await readRows(db, query))
+    }
     case 'changes': {
       if (key !== undefined) {
         return notFound()
@@ -200,7 +214,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
       switch (method) {
         case 'GET': {
-          const query = readFeedQuery(url.searchParams)
+          const query = readFeedQuery(url.searchParams, parseCursor)
 
           return 'error' in query
             ? error(400, query.error)
@@ -357,8 +371,8 @@ export async function postToChannel(env: Env) {
   }
 }
 
-/** `?since=<revision>` or `?cursor=<next>`, and `?limit=`, for the change feed. */
-function readFeedQuery(params: URLSearchParams) {
+/** `?since=<revision>` or `?cursor=<next>`, and `?limit=`, for a feed whose cursors `parse` reads. */
+function readFeedQuery<Cursor>(params: URLSearchParams, parse: (value: string) => Cursor | null) {
   const limit = Number(params.get('limit') ?? DEFAULT_LIMIT)
 
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT) {
@@ -368,7 +382,7 @@ function readFeedQuery(params: URLSearchParams) {
   const cursorParam = params.get('cursor')
 
   if (cursorParam !== null) {
-    const cursor = parseCursor(cursorParam)
+    const cursor = parse(cursorParam)
 
     return cursor ? { cursor, limit } : { error: 'cursor is the next value of a page.' }
   }

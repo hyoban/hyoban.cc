@@ -9,6 +9,7 @@
     "./division": "./src/division.ts",
     "./entry": "./src/entry.ts",
     "./publish": "./src/publish.ts",
+    "./tables": "./src/tables.ts",
     "./package.json": "./package.json"
   },
   "dependencies": {

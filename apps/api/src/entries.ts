@@ -45,8 +45,8 @@ import {
 } from './writes.ts'
 
 // The second shape's side of the API, `/v2`: entries, collections and public tracks, read
-// and written as one change set. Every row still holds the first shape too (rows.ts), which
-// the routes and the channel are worked out from. Every read is the owner's and sees
+// and written as one change set. Every row still holds the first shape too (rows.ts), read
+// only for a row written before it had the second. Every read is the owner's and sees
 // everything kept here; the site trims what it shows to what is public itself. What stays
 // on the phone (a private bill, the raw footprints) never comes here: a private part of a
 // plugin that keeps to the phone is dropped even if it is sent.
@@ -81,7 +81,7 @@ function readEntryRow(row: EntryRow) {
 }
 
 /** A collection row as a reader sees it, the trip it was worked out from before it had one. */
-function readCollectionRow(row: CollectionRow) {
+export function readCollectionRow(row: CollectionRow) {
   const text = row.collection
     ? row.collection
     : JSON.stringify(

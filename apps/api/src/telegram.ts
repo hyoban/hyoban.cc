@@ -1,6 +1,8 @@
-import { isMomentShown, momentRecordSchema, type MomentRecord } from '@hyoban/data-spec'
+import { isMomentShown, type MomentRecord } from '@hyoban/data-spec'
+import { entryToMoment } from '@hyoban/data-spec/entry'
 import type { Bucket } from './bucket.ts'
 import { readAll, revisionQuery, toRevision, type Database } from './database.ts'
+import { toEntry } from './writes.ts'
 
 // The Moments the site shows, posted to the Telegram channel as they publish: the words
 // with the place, a meal's share and verdict, and a link to the Moment's page, under its
@@ -139,6 +141,7 @@ interface ChangedRow {
   uid: string
   deleted_at: string | null
   record: string
+  entry: string | null
 }
 
 async function postChanges(context: ChannelContext) {
@@ -155,7 +158,7 @@ async function postChanges(context: ChannelContext) {
   const [changed, posts, places] = await readAll(db, [
     db
       .prepare(
-        `SELECT uid, deleted_at, record FROM moments
+        `SELECT uid, deleted_at, record, entry FROM moments
          WHERE rev > ?1 AND rev <= ?2 AND kind = 'moment' ORDER BY occurred_at, uid`,
       )
       .bind(done, revision),
@@ -179,7 +182,7 @@ async function postChanges(context: ChannelContext) {
   const result = { posted: 0, edited: 0, deleted: 0 }
 
   for (const row of changed as ChangedRow[]) {
-    const moment = row.deleted_at ? null : momentRecordSchema.parse(JSON.parse(row.record))
+    const moment = row.deleted_at ? null : entryToMoment(toEntry(row))
     const posted = postedBy.get(row.uid)
     const post = moment && isMomentShown(moment) ? toPost(moment, placeNames) : null
 
