@@ -111,6 +111,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   bar, the large title (`TopBarLargeTitle`) in the page's own layer, and pads its scroll at the
   top by `LocalTopClearance`; a control that stays under the circles with them (the ledger's
   segments) is its `accessory`.
+- The continuous corners are paths, which the graphics pipeline draws and clips by a mask made in
+  software every frame: `clip` to one masks every word and photo inside it. Where what a shape
+  holds keeps clear of its corners, draw the shape behind it (`background(colour, shape)`) rather
+  than clipping to it, and a large surface round at its top (a sheet) with `sheetSurface`.
 - Top bars switch between what the page is one of with `TitleMenu` and put a control over the
   subtitle's figures in `subtitleAction`. Settings are `SegmentedGroup` with `SwitchRow` and
   `ActionRow`, switches `AppSwitch`. What floats over a photo or the map is `FloatingButton`.

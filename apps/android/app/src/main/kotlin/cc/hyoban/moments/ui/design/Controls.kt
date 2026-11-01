@@ -315,7 +315,7 @@ fun MultiChoiceSegmentedButtonRow(modifier: Modifier = Modifier, content: @Compo
 private fun SegmentTrack(modifier: Modifier, content: @Composable RowScope.() -> Unit) {
     Row(
         // A fixed height, so its segments fill it rather than whatever room the page has.
-        modifier.height(44.dp).clip(Corners.full).background(tokens.fill).padding(3.dp),
+        modifier.height(44.dp).background(tokens.fill, Corners.full).padding(3.dp),
         verticalAlignment = Alignment.CenterVertically,
         content = content,
     )

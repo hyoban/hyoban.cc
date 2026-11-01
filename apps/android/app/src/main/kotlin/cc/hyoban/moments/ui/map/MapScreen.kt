@@ -141,7 +141,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -575,7 +574,7 @@ private fun PlaceSheet(
                     if (media != null) {
                         Thumbnail(media, urls, size = 56)
                     } else {
-                        Box(Modifier.size(56.dp).clip(AppTheme.shapes.medium).background(tokens.fill))
+                        Box(Modifier.size(56.dp).background(tokens.fill, AppTheme.shapes.medium))
                     }
                     Column(Modifier.weight(1f)) {
                         Text(
@@ -699,7 +698,7 @@ private fun TripRow(
 ) {
     val days = daysBetween(trip.start, trip.end)
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
-        Box(Modifier.size(64.dp).clip(AppTheme.shapes.medium).background(tokens.fill)) {
+        Box(Modifier.size(64.dp).background(tokens.fill, AppTheme.shapes.medium)) {
             if (cover != null) Thumbnail(cover, urls, size = 64)
             if (year != null) {
                 Box(

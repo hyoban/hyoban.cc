@@ -59,6 +59,7 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.feed.bubbleWidth
+import cc.hyoban.moments.ui.design.sheetSurface
 
 /**
  * A Moment in a list, on the page itself rather than in a card: its photos in rounded corners,
@@ -319,10 +320,10 @@ val FLOATING_BAR = FLOATING_HEIGHT + Space.s * 2
 /** Card-coloured sheet that rises over a photo or a map at the top of a page. */
 @Composable
 fun RisingSheet(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    // What it holds keeps clear of its corners, below the page's top padding.
     Surface(
-        shape = AppTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize),
-        color = AppColors.page,
-        modifier = modifier.fillMaxWidth(),
+        color = Color.Transparent,
+        modifier = modifier.fillMaxWidth().sheetSurface(AppColors.page, AppTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)),
         content = content,
     )
 }

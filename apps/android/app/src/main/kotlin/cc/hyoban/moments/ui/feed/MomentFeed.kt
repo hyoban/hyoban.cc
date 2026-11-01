@@ -563,9 +563,9 @@ private fun SkeletonCards() {
                     verticalArrangement = Arrangement.spacedBy(Space.m),
                 ) {
                     Box(Modifier.fillMaxWidth().aspectRatio(4f / 3f).background(bone))
-                    Box(Modifier.padding(horizontal = Space.l).fillMaxWidth(0.45f).height(14.dp).clip(Corners.full).background(bone))
-                    Box(Modifier.padding(horizontal = Space.l).fillMaxWidth().height(16.dp).clip(Corners.full).background(bone))
-                    Box(Modifier.padding(horizontal = Space.l).fillMaxWidth(0.7f).height(16.dp).clip(Corners.full).background(bone))
+                    Box(Modifier.padding(horizontal = Space.l).fillMaxWidth(0.45f).height(14.dp).background(bone, Corners.full))
+                    Box(Modifier.padding(horizontal = Space.l).fillMaxWidth().height(16.dp).background(bone, Corners.full))
+                    Box(Modifier.padding(horizontal = Space.l).fillMaxWidth(0.7f).height(16.dp).background(bone, Corners.full))
                 }
             }
         }
