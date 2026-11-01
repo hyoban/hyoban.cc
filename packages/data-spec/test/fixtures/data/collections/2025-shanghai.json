@@ -1,0 +1,35 @@
+{
+  "uid": "01M3TSWZG0SF3V4K4DF5SG38RG",
+  "slug": "2025-shanghai",
+  "kind": "trip",
+  "title": "上海两日",
+  "span": {
+    "start": "2025-05-01",
+    "end": "2025-05-02"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [
+    {
+      "entry": "01JT5BEW80MM072R5KF2QG2X8J",
+      "media": "01JT5BEW80T1NSBEV96HC4WNAQ"
+    }
+  ],
+  "route": {
+    "straightLegs": [
+      {
+        "from": "nanjing",
+        "to": "shanghai",
+        "by": "train"
+      },
+      {
+        "from": "shanghai",
+        "to": "nanjing",
+        "by": "train"
+      }
+    ],
+    "sameWayBack": []
+  },
+  "createdAt": "2026-10-01T12:00:00+08:00",
+  "updatedAt": "2026-10-01T12:00:00+08:00"
+}

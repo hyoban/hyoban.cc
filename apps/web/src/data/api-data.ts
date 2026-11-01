@@ -5,26 +5,32 @@ import { loadEnv } from 'vite-plus'
 import { DEFAULT_API_URL, fetchSnapshot, writeSnapshot } from './snapshot.ts'
 import { DATA_ROOT_VARIABLE } from './store.ts'
 
-// With MOMENTS_API_TOKEN set, in the environment or the repository's .env, the site is built from the
-// API rather than data/: before anything reads a record, this fetches the API's export
-// once and writes it under .artifacts/api-data in data/'s layout, and points the store
-// and the Moments collection there. Without a token everything reads data/, as the
-// scripts always do. A token that fails to fetch fails the build instead of quietly
-// falling back to the committed copy.
+// The site is built from the API, which needs MOMENTS_API_TOKEN, in the environment or the
+// repository's .env: before anything reads a record, this fetches the API's export once
+// and writes it under .artifacts/api-data in data/'s layout, and points the store and the
+// Moments collection there. Without a token, or with one the API turns down, the build
+// fails: the repository keeps no copy of the records to fall back on. A build given
+// HYOBAN_DATA_ROOT already, as the tests give it a made-up data/, reads that instead.
 
 export function apiData(): AstroIntegration {
   return {
     name: 'hyoban:api-data',
     hooks: {
       'astro:config:setup': async ({ command, config, logger }) => {
+        if (process.env[DATA_ROOT_VARIABLE]) {
+          logger.info(`Reading ${process.env[DATA_ROOT_VARIABLE]}`)
+          return
+        }
+
         const root = fileURLToPath(config.root)
         const envDir = typeof config.vite.envDir === 'string' ? config.vite.envDir : root
         const env = loadEnv(command === 'dev' ? 'development' : 'production', envDir, '')
         const token = env['MOMENTS_API_TOKEN']
 
         if (!token) {
-          logger.info('No MOMENTS_API_TOKEN, reading data/')
-          return
+          throw new Error(
+            'The site is built from the API: set MOMENTS_API_TOKEN, in the environment or .env.',
+          )
         }
 
         const url = env['MOMENTS_API_URL'] || DEFAULT_API_URL

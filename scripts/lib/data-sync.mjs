@@ -1,5 +1,7 @@
 import { execFile as execFileCallback } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { existsSync, readFileSync } from 'node:fs'
+import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 
@@ -10,47 +12,101 @@ import { DEFAULT_API_URL, fetchSnapshot, writeSnapshot } from '../../apps/web/sr
 import { listJsonFiles, readJson } from '../../apps/web/src/data/store.ts'
 import { executeSql } from './d1.mjs'
 
-// The API holds the records and data/ backs them up, so a script that writes data/
-// itself, like the create-moment skill, first refreshes data/ from the
-// API and afterwards pushes what it wrote back; so does the Zeekr import, with the car's
-// statistics. Pushing merges: it writes only the
-// records it names, and the places they name, and never removes anything.
+// The API holds the records, and data/ is a working copy of them that git leaves out but
+// for the car's: a script that writes data/ itself, like the create-moment skill, first
+// refreshes data/ from the API and afterwards pushes what it wrote back; so does the Zeekr
+// import, with the car's statistics. Pushing merges: it writes only the records it names,
+// and the places they name, and never removes anything.
 
 const execFile = promisify(execFileCallback)
 
-/** The records the API holds, which a refresh would overwrite. */
-const API_PATHS = [
-  'data/manifest.json',
-  'data/places.json',
-  'data/trips',
-  'data/moments',
-  'data/entries',
-  'data/collections',
-  'data/tracks',
+/** The records the API holds that git leaves out, which a refresh would overwrite. */
+const API_FILES = ['manifest.json', 'places.json', 'routes.json']
+const API_DIRECTORIES = ['trips', 'moments', 'entries', 'collections', 'tracks']
+
+/** The car's statistics, which git keeps and a refresh would overwrite too. */
+const TRACKED_API_PATHS = [
   'data/zeekr/months',
   'data/zeekr/assisted-driving',
   'data/zeekr/captures',
 ]
 
 /**
- * Writes the API's records into data/, unless data/ has changes Git hasn't committed:
- * those may not be in the API yet, and a refresh would lose them.
+ * Each of the API's records in data/ by its digest, as the last export or push left it, so
+ * a refresh can tell one written since; git can't, as it leaves them out. A record is its
+ * file, a place `places.json#<id>`.
+ */
+const SYNCED_FILE = '.synced.json'
+
+/**
+ * Writes the API's records into data/, unless data/ has records written since the last
+ * export or push, or changes to the car's git hasn't committed: those may not be in the
+ * API yet, and a refresh would lose them.
  */
 export async function refreshData(root) {
-  const { stdout } = await execFile('git', ['status', '--porcelain', '--', ...API_PATHS], {
+  const dataRoot = join(root, 'data')
+  const { stdout } = await execFile('git', ['status', '--porcelain', '--', ...TRACKED_API_PATHS], {
     cwd: root,
   })
+  const synced = readSynced(dataRoot)
+  const unsynced = Object.entries(readRecordDigests(dataRoot))
+    .filter(([record, value]) => synced[record] !== value)
+    .map(([record]) => ` ? data/${record}`)
+  const changes = [...stdout.trim().split('\n').filter(Boolean), ...unsynced]
 
-  if (stdout.trim()) {
+  if (changes.length > 0) {
     throw new Error(
-      `data/ has changes the API may not have yet; push them with pnpm data:push or discard them first:\n${stdout}`,
+      `data/ has changes the API may not have yet; push them with pnpm data:push or remove them first:\n${changes.join('\n')}`,
     )
   }
 
   const snapshot = await fetchSnapshot(apiUrl(), apiToken(root))
-  const changed = await writeSnapshot(snapshot, join(root, 'data'))
+  const changed = await writeSnapshot(snapshot, dataRoot)
+
+  await writeSynced(dataRoot, readRecordDigests(dataRoot))
 
   return { changed, snapshot }
+}
+
+/** The digest of each of the API's records in data/ that git leaves out, by record. */
+function readRecordDigests(dataRoot) {
+  const digests = {}
+
+  for (const file of API_FILES.filter((file) => existsSync(join(dataRoot, file)))) {
+    if (file === 'places.json') {
+      for (const [id, place] of Object.entries(readJson(file, dataRoot))) {
+        digests[`places.json#${id}`] = digest(JSON.stringify(place))
+      }
+    } else {
+      digests[file] = digest(readFileSync(join(dataRoot, file)))
+    }
+  }
+
+  for (const file of API_DIRECTORIES.flatMap((directory) => listJsonFiles(directory, dataRoot))) {
+    digests[file] = digest(readFileSync(join(dataRoot, file)))
+  }
+
+  return digests
+}
+
+function readSynced(dataRoot) {
+  const path = join(dataRoot, SYNCED_FILE)
+
+  return /** @type {Record<string, string>} */ (
+    existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {}
+  )
+}
+
+async function writeSynced(dataRoot, synced) {
+  const sorted = Object.fromEntries(
+    Object.entries(synced).sort(([first], [second]) => first.localeCompare(second)),
+  )
+
+  await writeFile(join(dataRoot, SYNCED_FILE), `${JSON.stringify(sorted, null, 2)}\n`)
+}
+
+function digest(contents) {
+  return createHash('sha256').update(contents).digest('hex')
 }
 
 /**
@@ -113,6 +169,23 @@ export async function pushData(
   )
 
   await executeSql(sql, { label: 'push', remote, dryRun })
+
+  // What the API now has as data/ has it, so the next refresh may overwrite it.
+  if (remote && !dryRun) {
+    const digests = readRecordDigests(dataRoot)
+    const pushed = [
+      ...moments,
+      ...trips,
+      ...entries,
+      ...collections,
+      ...[...placeIds].map((id) => `places.json#${id}`),
+    ]
+
+    await writeSynced(dataRoot, {
+      ...readSynced(dataRoot),
+      ...Object.fromEntries(pushed.map((record) => [record, digests[record]])),
+    })
+  }
 
   // Written past the Worker, so the routes the new legs need are fetched now, and then
   // the site is built again with them, as the Worker's own writes have it.

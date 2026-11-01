@@ -7,8 +7,8 @@ import { handle } from '../src/index.ts'
 import { call, get, setUp, snapshot, token } from './setup.mjs'
 
 // The writes, as the recording app commits what it kept on the phone: the originals
-// uploaded first, then everything else as one POST /v1/changes; over the repository's
-// data/, so they meet the Moments already there.
+// uploaded first, then everything else as one POST /v1/changes; over the made-up data/,
+// so they meet the Moments already there.
 
 const fixture = (file) => JSON.parse(readFileSync(new URL(`fixtures/${file}`, import.meta.url)))
 const dockMoment = fixture('dock-moment.json')
@@ -408,7 +408,10 @@ test('changes that don’t fit are turned down whole', async () => {
   )
   assert.equal(await status({ moments: [words, words] }), 422, 'one Moment twice')
   assert.equal(await status({ moments: [words], deleted: [words.uid] }), 422, 'saved and deleted')
-  assert.equal((await call(env, 'POST', '/v1/changes', { body: { moments: [words] } })).status, 401)
+  assert.equal(
+    (await call(env, 'POST', '/v1/changes', { auth: null, body: { moments: [words] } })).status,
+    401,
+  )
   assert.equal((await get(env, `/v1/moments/${words.uid}`, owner)).status, 404)
 })
 
@@ -419,6 +422,7 @@ test('an original needs the token and a type the API takes', async () => {
   assert.equal(
     (
       await call(env, 'PUT', `/v1/moments/${dockMoment.uid}/media/${item.uid}/image`, {
+        auth: null,
         body: photo,
         headers: { 'Content-Type': 'image/jpeg' },
       })
@@ -516,7 +520,7 @@ test('HEAD on an original says whether it is uploaded, and its MD5', async () =>
   const [item] = dockMoment.media
   const path = `/v1/moments/${dockMoment.uid}/media/${item.uid}/image`
 
-  assert.equal((await call(env, 'HEAD', path)).status, 401)
+  assert.equal((await call(env, 'HEAD', path, { auth: null })).status, 401)
 
   const missing = await handle(
     new Request(`https://api.test${path}`, {

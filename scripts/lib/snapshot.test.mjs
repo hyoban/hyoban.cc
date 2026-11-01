@@ -1,34 +1,41 @@
 import assert from 'node:assert/strict'
-import { cp, mkdtemp, readFile, writeFile } from 'node:fs/promises'
+import { cp, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { test } from 'vite-plus/test'
 
 import { writeSnapshot } from '../../apps/web/src/data/snapshot.ts'
 import { listJsonFiles, readJson } from '../../apps/web/src/data/store.ts'
 
-// The backup writes the API's export over data/: what is already there stays byte for
-// byte, what the API no longer has goes, and what isn't the API's stays.
+// `pnpm data:export` writes the API's export over data/: what is already there stays byte
+// for byte, what the API no longer has goes, and what isn't the API's stays. Over a copy of
+// the made-up fixture, with a ledger of the car's beside it.
 
+const fixtureRoot = fileURLToPath(
+  new URL('../../packages/data-spec/test/fixtures/data/', import.meta.url),
+)
 const snapshot = {
   revision: 1,
-  manifest: readJson('manifest.json'),
-  places: readJson('places.json'),
-  entries: listJsonFiles('entries').map((file) => readJson(file)),
-  collections: listJsonFiles('collections').map((file) => readJson(file)),
-  tracks: listJsonFiles('tracks').map((file) => readJson(file)),
-  routes: readJson('routes.json'),
+  manifest: readJson('manifest.json', fixtureRoot),
+  places: readJson('places.json', fixtureRoot),
+  entries: listJsonFiles('entries', fixtureRoot).map((file) => readJson(file, fixtureRoot)),
+  collections: listJsonFiles('collections', fixtureRoot).map((file) => readJson(file, fixtureRoot)),
+  tracks: listJsonFiles('tracks', fixtureRoot).map((file) => readJson(file, fixtureRoot)),
+  routes: readJson('routes.json', fixtureRoot),
 }
 
 async function copyOfData() {
   const root = await mkdtemp(join(tmpdir(), 'hyoban-snapshot-test-'))
 
-  await cp('data', root, { recursive: true })
+  await cp(fixtureRoot, root, { recursive: true })
+  await mkdir(join(root, 'zeekr/expenses'), { recursive: true })
+  await writeFile(join(root, 'zeekr/expenses/zeekr-007gt.json'), '{ "expenses": [] }\n')
 
   return root
 }
 
-test('writing data/ back over itself changes nothing', async () => {
+test('writing the export back over itself changes nothing', async () => {
   assert.deepEqual(await writeSnapshot(snapshot, await copyOfData()), [])
 })
 

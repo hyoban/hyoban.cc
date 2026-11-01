@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { readdirSync, readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
+import { fileURLToPath } from 'node:url'
 
 import { readJson, readMomentRecords, readTripRecords } from '../../web/src/data/store.ts'
 import { buildImportSql } from '../src/import.ts'
@@ -13,13 +14,18 @@ const migrations = new URL('../migrations/', import.meta.url)
 
 export const token = 'test-token'
 
-/** The repository's data/, in the first shape whichever layout it is in, as the import takes it. */
+/** A made-up data/, in data/'s layout, for the tests that need records. */
+export const fixtureRoot = fileURLToPath(
+  new URL('../../../packages/data-spec/test/fixtures/data/', import.meta.url),
+)
+
+/** The fixture, in the first shape, as the import takes it. */
 export const snapshot = {
-  manifest: readJson('manifest.json'),
-  places: readJson('places.json'),
-  trips: readTripRecords(),
-  moments: readMomentRecords().map(({ record }) => record),
-  routes: readJson('routes.json'),
+  manifest: readJson('manifest.json', fixtureRoot),
+  places: readJson('places.json', fixtureRoot),
+  trips: readTripRecords(fixtureRoot),
+  moments: readMomentRecords(fixtureRoot).map(({ record }) => record),
+  routes: readJson('routes.json', fixtureRoot),
 }
 
 export function setUp() {
@@ -106,8 +112,8 @@ export function setUp() {
   return { bucket, env, importSnapshot, sqlite }
 }
 
-/** A request to the Worker, with the token when `auth` names one, and its JSON reply. */
-export async function call(env, method, path, { auth, body, headers = {}, context } = {}) {
+/** A request to the Worker, with the token unless `auth` names another or is null, and its JSON reply. */
+export async function call(env, method, path, { auth = token, body, headers = {}, context } = {}) {
   const json = body !== undefined && !(body instanceof Uint8Array)
   const response = await handle(
     new Request(`https://api.test${path}`, {

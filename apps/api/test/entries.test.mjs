@@ -10,8 +10,8 @@ import {
 } from '@hyoban/data-spec/entry'
 import { call, get, setUp, snapshot, token } from './setup.mjs'
 
-// The second shape, /v2: entries, collections and public tracks over the same rows, and what
-// the public sees of them; and /v1 still serving the app installed before.
+// The second shape, /v2: entries, collections and public tracks over the same rows, all of
+// them the owner's to read; and /v1 still serving the app installed before.
 
 const owner = { auth: token }
 const at = '2026-10-29T12:30:00+08:00'
@@ -25,7 +25,7 @@ function setUpWithData() {
   return setup
 }
 
-/** The repository's data/ moved over, as `data:migrate` writes it. */
+/** The fixture moved over, as `data:migrate` writes it. */
 function movedSnapshot() {
   const entries = snapshot.moments.map((moment) => momentToEntry(moment))
   const collections = snapshot.trips.map((trip) => {
@@ -61,7 +61,7 @@ test('the first layout imported reads back in the second shape, marks and all', 
   assert.equal((await get(env, '/v1/export', owner)).body.moments.length, snapshot.moments.length)
 })
 
-test('importing the moved data/ serves the first shape as before', async () => {
+test('importing the moved layout serves the first shape as before', async () => {
   const first = setUpWithData()
   const second = setUp()
 
@@ -78,37 +78,30 @@ test('importing the moved data/ serves the first shape as before', async () => {
   )
 })
 
-test('the public sees no private entry, the owner all of them', async () => {
+test('the feed hands out every entry, private ones too', async () => {
   const { env } = setUpWithData()
-  const read = async (auth) => {
-    const entries = []
-    let path = '/v2/changes?since=0&limit=500'
+  const entries = []
+  let path = '/v2/changes?since=0&limit=5'
 
-    for (;;) {
-      const { body } = await get(env, path, { auth })
+  for (;;) {
+    const { body } = await get(env, path, owner)
 
-      entries.push(...body.entries)
+    entries.push(...body.entries)
 
-      if (!body.next) return entries
+    if (!body.next) break
 
-      path = `/v2/changes?cursor=${body.next}&limit=500`
-    }
+    path = `/v2/changes?cursor=${body.next}&limit=5`
   }
-  const shown = await read()
-  const all = await read(token)
-  const privateCount = snapshot.moments.filter((moment) => moment.hidden).length
-
-  assert.equal(all.length, snapshot.moments.length + marks)
-  assert.equal(shown.length, all.length - privateCount)
-  assert.ok(shown.every((entry) => entry.visibility !== 'private'))
 
   const hidden = snapshot.moments.find((moment) => moment.hidden)
 
-  assert.equal((await get(env, `/v2/entries/${hidden.uid}`)).status, 404)
+  assert.equal(entries.length, snapshot.moments.length + marks)
+  assert.equal(entries.find((entry) => entry.uid === hidden.uid).visibility, 'private')
   assert.equal((await get(env, `/v2/entries/${hidden.uid}`, owner)).body.uid, hidden.uid)
+  assert.equal((await get(env, `/v2/entries/${hidden.uid}`, { auth: null })).status, 401)
 })
 
-test('a bill goes public by its amount, category and note alone, and a private one never comes', async () => {
+test('a bill comes back whole, and a private one alone never comes', async () => {
   const { env } = setUpWithData()
   const meal = {
     uid: uid('meal'),
@@ -145,17 +138,16 @@ test('a bill goes public by its amount, category and note alone, and a private o
   // The private bill alone stayed on the phone: the entry came with no parts.
   assert.deepEqual(body.entries[1].parts, {})
 
-  const publicMeal = (await get(env, `/v2/entries/${meal.uid}`)).body
-
-  assert.deepEqual(publicMeal.parts.bill, {
+  assert.deepEqual((await get(env, `/v2/entries/${meal.uid}`, owner)).body.parts.bill, {
     v: 1,
     visibility: 'public',
     amount: 18,
     currency: 'CNY',
     category: '餐饮',
+    account: 'acct',
+    book: 'book',
     kind: 'expense',
   })
-  assert.equal((await get(env, `/v2/entries/${meal.uid}`, owner)).body.parts.bill.account, 'acct')
 
   // The first shape sees the meal as a Moment, its bill as the meal's cost.
   const moment = (await get(env, `/v1/moments/${meal.uid}`)).body
@@ -229,14 +221,13 @@ test('a collection and its marks write the trip the first shape reads', async ()
   )
 
   await commit(env, { collections: [{ ...collection, visibility: 'private' }] })
-  assert.equal((await get(env, '/v2/collections/test-trip')).status, 404)
-  assert.equal((await get(env, '/v2/collections/test-trip', owner)).status, 200)
+  assert.equal((await get(env, '/v2/collections/test-trip', owner)).body.visibility, 'private')
 
   await commit(env, { deletedCollections: ['test-trip'] })
   assert.equal((await get(env, '/v1/trips/test-trip')).status, 404)
 })
 
-test('a public span of footprints is kept and read by anyone, and goes when deleted', async () => {
+test('a public span of footprints is kept and read, and goes when deleted', async () => {
   const { env } = setUpWithData()
   const track = {
     uid: uid('track'),
@@ -267,18 +258,22 @@ test('a public span of footprints is kept and read by anyone, and goes when dele
   assert.deepEqual((await get(env, '/v2/changes?since=2')).body.deletedTracks, [track.uid])
 })
 
-test('making an entry private takes it from the public feed', async () => {
+test('an entry made private comes back on the feed as private, its Moment hidden', async () => {
   const { env } = setUpWithData()
   const shown = snapshot.moments.find((moment) => !moment.hidden)
   const entry = (await get(env, `/v2/entries/${shown.uid}`, owner)).body
   const { body } = await commit(env, { entries: [{ ...entry, visibility: 'private' }] })
-  const feed = (await get(env, `/v2/changes?since=${body.revision - 1}`)).body
+  const feed = (await get(env, `/v2/changes?since=${body.revision - 1}`, owner)).body
 
-  assert.deepEqual(feed.deleted, [shown.uid])
-  assert.equal((await get(env, `/v1/moments/${shown.uid}`)).body.hidden, true)
+  assert.deepEqual(feed.deleted, [])
+  assert.deepEqual(
+    feed.entries.map((changed) => [changed.uid, changed.visibility]),
+    [[shown.uid, 'private']],
+  )
+  assert.equal((await get(env, `/v1/moments/${shown.uid}`, owner)).body.hidden, true)
 })
 
-test('a subscription goes public without what pays for it', async () => {
+test('a subscription comes back with what pays for it', async () => {
   const { env } = setUpWithData()
   const subscription = {
     uid: uid('subscription'),
@@ -300,14 +295,10 @@ test('a subscription goes public without what pays for it', async () => {
 
   assert.equal((await commit(env, { entries: [subscription] })).status, 200)
 
-  const shown = (await get(env, `/v2/entries/${subscription.uid}`)).body.parts.subscription
+  const read = (await get(env, `/v2/entries/${subscription.uid}`, owner)).body.parts.subscription
 
-  assert.equal(shown.name, 'Folo Plus')
-  assert.equal(shown.paidWith, undefined)
-  assert.equal(
-    (await get(env, `/v2/entries/${subscription.uid}`, owner)).body.parts.subscription.paidWith,
-    'A',
-  )
+  assert.equal(read.name, 'Folo Plus')
+  assert.equal(read.paidWith, 'A')
 })
 
 test('an imported charge is changed only by an import', async () => {

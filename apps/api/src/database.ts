@@ -105,16 +105,16 @@ export function carryTripRoutes(db: Database) {
 /**
  * What changed after a revision, as JSON text: the Moments a page at a time, oldest
  * change first, and on the first page the places and trips, all of them on a feed from
- * the start. Drafts are left out unless `drafts` is set; what was removed comes back by
+ * the start, drafts included; what was removed comes back by
  * key in `deleted`, `deletedPlaces` and `deletedTrips`, except on a feed from the start,
  * which has nothing to remove. Every page is of the revision the first was read at, so a
  * Moment never names a place the feed hasn't handed out.
  */
 export async function readChanges(
   db: Database,
-  query: ({ since: number } | { cursor: Cursor }) & { limit: number; drafts: boolean },
+  query: ({ since: number } | { cursor: Cursor }) & { limit: number },
 ): Promise<string> {
-  const { limit, drafts } = query
+  const { limit } = query
   const first = 'since' in query
   const since = first ? query.since : 0
   const after = first ? { rev: since + 1, uid: '' } : query.cursor
@@ -132,7 +132,7 @@ export async function readChanges(
     db
       .prepare(
         `SELECT uid AS key, rev, deleted_at, record FROM moments
-         WHERE (rev > ?1 OR (rev = ?1 AND uid > ?2)) AND rev <= ${upto} AND kind = 'moment'${onlyLive}${drafts ? '' : ' AND published = 1'}
+         WHERE (rev > ?1 OR (rev = ?1 AND uid > ?2)) AND rev <= ${upto} AND kind = 'moment'${onlyLive}
          ORDER BY rev, uid
          LIMIT ?3`,
       )
@@ -161,11 +161,10 @@ async function readOne(db: Database, query: string, key: string) {
   return row?.record ?? null
 }
 
-export function readMoment(db: Database, uid: string, { drafts }: { drafts: boolean }) {
+export function readMoment(db: Database, uid: string) {
   return readOne(
     db,
-    `SELECT record FROM moments
-     WHERE uid = ?1 AND kind = 'moment' AND deleted_at IS NULL${drafts ? '' : ' AND published = 1'}`,
+    `SELECT record FROM moments WHERE uid = ?1 AND kind = 'moment' AND deleted_at IS NULL`,
     uid,
   )
 }

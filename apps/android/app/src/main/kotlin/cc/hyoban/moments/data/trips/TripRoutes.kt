@@ -47,11 +47,13 @@ private fun parseAnswer(text: String): Pair<Long, Map<String, List<RouteSegment>
 
 /**
  * The routes, kept in [file] as the API served them, with their ETag beside it, and asked
- * for again from [apiUrl] once its revision moves on: only when they changed do they come.
+ * for again from [apiUrl] with the owner's [token] once its revision moves on: only when
+ * they changed do they come.
  */
 class TripRoutes(
     private val apiUrl: () -> String,
     private val file: File,
+    private val token: () -> String? = { null },
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val _routes = MutableStateFlow<Map<String, List<RouteSegment>>>(emptyMap())
@@ -88,7 +90,7 @@ class TripRoutes(
         if (apiRevision == revision) return@withContext
         val kept = etagFile.takeIf { revision != null && it.exists() }?.readText()
         val answer = try {
-            Http.getIfChanged("${apiUrl()}/v1/routes", kept, io = io)
+            Http.getIfChanged("${apiUrl()}/v1/routes", kept, io = io, token = token())
         } catch (_: IOException) {
             return@withContext
         }

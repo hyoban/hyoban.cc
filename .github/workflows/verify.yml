@@ -27,13 +27,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm check
+      # The records are the API's alone: the audit reads its export, and the build fetches it.
+      - name: Export the API into data/
+        env:
+          MOMENTS_API_TOKEN: ${{ secrets.MOMENTS_API_TOKEN }}
+        run: pnpm data:export
       - name: Audit Moments
-        if: github.event_name != 'pull_request'
         run: pnpm moments:audit
-      - name: Audit changed Moment alt text
-        if: github.event_name == 'pull_request'
-        run: pnpm moments:audit --changed-from ${{ github.event.pull_request.base.sha }}
       - run: pnpm build
+        env:
+          MOMENTS_API_TOKEN: ${{ secrets.MOMENTS_API_TOKEN }}
       - name: Audit remote Moment assets
         if: github.event_name == 'schedule'
         run: pnpm moments:audit --remote

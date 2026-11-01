@@ -12,6 +12,8 @@ import { readMomentRecords } from '../../apps/web/src/data/store.ts'
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const site = join(root, 'apps/web')
+// The build reads the made-up data/ rather than the API's export.
+const fixtureRoot = join(root, 'packages/data-spec/test/fixtures/data')
 const assetConfig = JSON.parse(
   await readFile(join(root, 'apps/web/src/data/asset-config.json'), 'utf8'),
 )
@@ -33,7 +35,7 @@ test(
       // on would otherwise run on, orphaned.
       await execFile(join(site, 'node_modules/.bin/astro'), ['build', '--outDir', outputRoot], {
         cwd: site,
-        env: { ...process.env, CI: '', SKIP_PAGE_OG_IMAGES: '1' },
+        env: { ...process.env, CI: '', SKIP_PAGE_OG_IMAGES: '1', HYOBAN_DATA_ROOT: fixtureRoot },
         maxBuffer: 10 * 1024 * 1024,
         signal: AbortSignal.timeout(175_000),
         killSignal: 'SIGKILL',
@@ -71,7 +73,7 @@ test(
 async function collectMomentMediaUrls() {
   const mediaUrls = { hidden: [], visible: [] }
 
-  for (const { record } of readMomentRecords()) {
+  for (const { record } of readMomentRecords(fixtureRoot)) {
     const key = record.media[0]?.published?.key
 
     if (!key) {

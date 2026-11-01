@@ -72,22 +72,24 @@ even when starting from the repository root.
   record a moment and an optional point with parts by plugin, a trip a collection, each
   thing public or private by its own say, its container's, its plugin's, else private.
   D1 keeps each row in both shapes while an app that reads Moments and trips is installed:
-  `/v1` serves the first, `/v2` the second, trimmed to what is public for anyone without a
-  token. `vp run data:migrate` moves `data/` between the layouts (dry run by default,
+  `/v1` serves the first, `/v2` the second. Every API request needs a token and sees
+  everything; the site trims what it shows to what is public. `vp run data:migrate` moves `data/` between the layouts (dry run by default,
   `--rollback` back); `vp run data:import` then moves D1. Ask before either touches live data.
 - D1 holds entries, places, collections, public tracks, routes and the car's statistics. A
   device or a subscription is an entry with its plugin's part, not a record of its own.
-  `data/` is their canonical JSON backup, refreshed by the data-backup workflow and
-  `vp run data:export`. The car's expenses and redacted Zeekr sources live only in the
-  repository. The formatter leaves `data/` alone.
+  Git keeps no copy of them and nothing backs them up to GitHub: `data/` is a local working
+  copy in canonical JSON that `vp run data:export` writes and git ignores, except
+  `data/zeekr/` and `data/schema/`. The car's expenses and redacted Zeekr sources live only
+  there in the repository. Tests read the made-up `packages/data-spec/test/fixtures/data/`,
+  never real records. The formatter leaves `data/` alone.
 - Android keeps edits locally until the user reviews and publishes one change set
   through `POST /v2/changes` (`/v1` on an API without it). Upload originals first; do not bypass this publishing
   boundary with individual writes. The API fetches missing trip routes after writes.
-- Scripts that write backup records first export the latest data, then push the
+- Scripts that write records first export the latest data, then push the
   changed records with `vp run data:push`. `vp run data:import` restores an entire
-  backup; it is not the normal editing workflow. See `docs/data.md` for side effects.
-- The site build uses the API export when `MOMENTS_API_TOKEN` is set, otherwise the
-  committed backup. A failed authenticated export must fail the build.
+  exported copy; it is not the normal editing workflow. See `docs/data.md` for side effects.
+- The site build reads only the API export, with `MOMENTS_API_TOKEN`; without a token, or
+  when the export fails, the build fails.
 - Keep API/schema changes compatible with the installed app. If a required field
   must be removed or renamed, update and install the app before pushing the API
   change: pushes to `main` deploy it.

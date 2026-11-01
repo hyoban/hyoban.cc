@@ -7,34 +7,33 @@ secrets and bindings are in [docs/deploy.md](../../docs/deploy.md).
 
 ## Reading
 
-Without a token everything but drafts, private records and the export is public. A request
-with `Authorization: Bearer <token>` must carry one of the `API_TOKENS` (comma-separated),
-and then sees everything; any other token is a 401.
+Every request, `GET /` included, needs `Authorization: Bearer <token>` with one of the
+`API_TOKENS` (comma-separated), and then sees everything, drafts and private records
+included; without one, or with any other, it is a 401. The site trims what it shows to what
+is public itself, as `getPublicEntry` does.
 
-| Path                                          | Returns                                                                                                                                |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /`                                       | `{ name, revision }`                                                                                                                   |
-| `GET /v2/changes?since=&limit=`               | the change feed: `entries`, `deleted`, `places`, `collections`, `tracks`, the car's statistics and theirs gone                         |
-| `GET /v2/entries/:uid`                        | one entry                                                                                                                              |
-| `GET /v2/collections`, `/v2/collections/:key` | `{ revision, collections }` by start date, or one by its slug (else its uid)                                                           |
-| `GET /v2/tracks`                              | `{ revision, tracks }`, the spans of footprints made public                                                                            |
-| `GET /v2/export`                              | `{ revision, manifest, places, entries, collections, tracks, routes, vehicleMonths, vehicleAssisted, vehicleCaptures }`; needs a token |
-| `GET /v1/changes?since=&limit=`               | the same feed in the first shape: `moments`, `places`, `trips` and theirs gone                                                         |
-| `GET /v1/moments/:uid`, `/v1/trips[/:id]`     | Moments and trips in the first shape                                                                                                   |
-| `GET /v1/places[/:id]`                        | `{ revision, places }` by id, or one place                                                                                             |
-| `GET /v1/routes`                              | `{ revision, trips }`, each published trip's route as stretches, with an `ETag`                                                        |
-| `GET /v1/export`                              | the export in the first shape; needs a token                                                                                           |
+| Path                                          | Returns                                                                                                                 |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `GET /`                                       | `{ name, revision }`                                                                                                    |
+| `GET /v2/changes?since=&limit=`               | the change feed: `entries`, `deleted`, `places`, `collections`, `tracks`, the car's statistics and theirs gone          |
+| `GET /v2/entries/:uid`                        | one entry                                                                                                               |
+| `GET /v2/collections`, `/v2/collections/:key` | `{ revision, collections }` by start date, or one by its slug (else its uid)                                            |
+| `GET /v2/tracks`                              | `{ revision, tracks }`, the spans of footprints made public                                                             |
+| `GET /v2/export`                              | `{ revision, manifest, places, entries, collections, tracks, routes, vehicleMonths, vehicleAssisted, vehicleCaptures }` |
+| `GET /v1/changes?since=&limit=`               | the same feed in the first shape: `moments`, `places`, `trips` and theirs gone                                          |
+| `GET /v1/moments/:uid`, `/v1/trips[/:id]`     | Moments and trips in the first shape                                                                                    |
+| `GET /v1/places[/:id]`                        | `{ revision, places }` by id, or one place                                                                              |
+| `GET /v1/routes`                              | `{ revision, trips }`, each published trip's route as stretches, with an `ETag`                                         |
+| `GET /v1/export`                              | the export in the first shape                                                                                           |
 
 ### Two shapes
 
 The records are entries, collections and public tracks (`@hyoban/data-spec/entry`), served
 by `/v2`. `/v1` keeps serving Moments and trips while an app that reads them is installed.
 Each row holds both (`migrations/0006_entries.sql`): `record` as first written, `entry` or
-`collection`, and `shown`, what the public sees. An entry with no words (a bill alone, a
-mark) has no Moment and is left out of `/v1`; a trip's waypoints come from its collection's
-marks. Without a token `/v2` trims each entry as `getPublicEntry` does: no private entry or
-part, a bill by its kind, amount, currency, category and note alone, and an entry made
-private comes back in `deleted`.
+`collection`, and `shown`, what of it is public, which no read serves any more. An entry
+with no words (a bill alone, a mark) has no Moment and is left out of `/v1`; a trip's
+waypoints come from its collection's marks.
 
 ### The change feed
 
@@ -47,8 +46,6 @@ place the feed hasn't handed out. `since=0` is everything; nothing is dropped fr
 database, only marked deleted.
 
 ## Writing
-
-Writes need a token.
 
 | Path                                                      | Does                                                                                                                                       |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -122,7 +119,8 @@ vp run data:import            # migrations and data/ into the local database
 vp run --filter @hyoban/api dev
 ```
 
-Put `API_TOKENS=<token>` in `apps/api/.dev.vars` to try the token-only reads locally.
+Put `API_TOKENS=<token>` in `apps/api/.dev.vars`: the local API, like the deployed one,
+answers nothing without it. `data:import` needs an exported `data/` (see docs/data.md).
 
 ## Layout
 

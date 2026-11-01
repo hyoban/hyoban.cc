@@ -8,7 +8,7 @@ description: Create a hyoban.cc Moment from exact user text and media. Use when 
 Create one Moment as an entry under `data/entries` (the shape is in
 `packages/data-spec/src/entry.ts`: its words in `parts.text.text`, its photos in
 `parts.media.items`, its place in `place`), then push it into the API, which holds the records;
-`data/` is their backup. Never deploy the site or publish the Moment to a social
+`data/` is a working copy of them that git leaves out. Never deploy the site or publish the Moment to a social
 network. Uploading its media to the configured R2 bucket is part of preparing
 the local Moment.
 
@@ -55,8 +55,7 @@ vp run data:push data/entries/<YYYY>/<MM>/<uid>.json [data/collections/<slug>.js
 Add `--place <id>` for a place you moved that the entry doesn't name. A trip is a
 collection: its waypoints are entries with a `place` and no parts, its legs not driven in
 `route.straightLegs`; push a collection with the entries it changed. Until
-it is pushed the Moment isn't on the site, and the next backup would remove
-it from `data/`.
+it is pushed the Moment isn't on the site, and `data:export` refuses to overwrite it.
 
 ## Coordinates
 

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { test } from 'vite-plus/test'
 
 import { tripVideoMusic } from '../../apps/web/src/data/music.ts'
@@ -17,15 +18,19 @@ import {
 import { getDataSchemas, getSchemaFile, renderSchema } from './data-schema.mjs'
 import { getUlidTime, ulid } from './ulid.mjs'
 
-// data/ is what the recording app writes and the site reads; these keep it whole.
+// data/ is what the recording app writes and the site reads; these keep the store's reading
+// of it whole, over the made-up fixture in its layout. `pnpm moments:audit` checks the real one.
 
-const manifest = readManifest()
-const places = readPlaces()
-const trips = readTripRecords()
-const moments = readMomentRecords()
-const devices = readDevices()
+const fixtureRoot = fileURLToPath(
+  new URL('../../packages/data-spec/test/fixtures/data/', import.meta.url),
+)
+const manifest = readManifest(fixtureRoot)
+const places = readPlaces(fixtureRoot)
+const trips = readTripRecords(fixtureRoot)
+const moments = readMomentRecords(fixtureRoot)
+const devices = readDevices(fixtureRoot)
 
-test('every record under data/ fits the spec and sits where its name says', () => {
+test('every record of the fixture fits the spec and sits where its name says', () => {
   assert.ok([2, 3].includes(manifest.schemaVersion))
   assert.ok(Object.keys(places).length > 0)
   assert.ok(trips.length > 0)

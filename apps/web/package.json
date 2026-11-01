@@ -2,7 +2,7 @@
   "name": "@hyoban/web",
   "version": "0.1.0",
   "private": true,
-  "description": "The site at hyoban.cc: posts, Moments, the calendar, the map and the trips, built by Astro from the API or data/.",
+  "description": "The site at hyoban.cc: posts, Moments, the calendar, the map and the trips, built by Astro from the API.",
   "type": "module",
   "scripts": {
     "dev": "astro dev --force",

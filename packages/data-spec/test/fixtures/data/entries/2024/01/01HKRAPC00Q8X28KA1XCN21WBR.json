@@ -1,0 +1,22 @@
+{
+  "uid": "01HKRAPC00Q8X28KA1XCN21WBR",
+  "at": "2024-01-10",
+  "parts": {
+    "device": {
+      "v": 1,
+      "id": "test-phone",
+      "name": "测试手机",
+      "category": "手机",
+      "price": 3999,
+      "sold": {
+        "on": "2025-12-01",
+        "price": 1500
+      }
+    }
+  },
+  "published": {
+    "at": "2026-10-01T12:00:00+08:00"
+  },
+  "createdAt": "2026-10-01T12:00:00+08:00",
+  "updatedAt": "2026-10-01T12:00:00+08:00"
+}

@@ -74,7 +74,7 @@ class AppContainer(context: Context) {
     /** Where each bill was paid, by the footprints. */
     val billPlaces = cc.hyoban.moments.footprints.BillPlaces(footprints, placeSearch)
     /** The trips' routes along the roads, from the API. */
-    val routes = TripRoutes({ settings.apiUrl.value }, File(context.filesDir, "routes.json"))
+    val routes = TripRoutes({ settings.apiUrl.value }, File(context.filesDir, "routes.json"), token = { settings.apiToken.value })
 
     /**
      * Each trip's route as the screens draw and play it: the footprints recorded on it where a

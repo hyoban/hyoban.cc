@@ -11,8 +11,8 @@ serving `./dist`), deployed by **Workers Builds**:
 
 - root directory `apps/web`, installing from the repository root, build command
   `pnpm build`, deploy command `npx wrangler deploy`;
-- build variables: `MOMENTS_API_TOKEN`, so the build reads the API rather than
-  `data/`, `VITE_MAPBOX_TOKEN`, and `MAPBOX_STATIC_TOKEN`, a token without URL
+- build variables: `MOMENTS_API_TOKEN`, which the build needs to read the API,
+  `VITE_MAPBOX_TOKEN`, and `MAPBOX_STATIC_TOKEN`, a token without URL
   restrictions that draws the map pages' placeholders (without it they're left out);
   Workers Builds sets `CI`, which turns on the Moments' share cards;
 - share cards are cached between builds under `apps/web/node_modules/.astro/share-cards`,
@@ -21,8 +21,8 @@ serving `./dist`), deployed by **Workers Builds**:
 
 It builds on every push to `main`, and again whenever the API takes a write the site
 shows: the API calls the build's **deploy hook**, kept in the API's `DEPLOY_HOOK_URL`
-secret. A token that can't fetch the export fails the build rather than falling back
-to `data/`.
+secret. Without a token, or with one that can't fetch the export, the build fails: the
+repository keeps no copy of the records.
 
 The custom domain `hyoban.cc` and the image origin `image.hyoban.cc` (the R2 bucket)
 are on the same zone, which needs **Images transformations** enabled: the site asks it
@@ -60,28 +60,27 @@ dashboard; they stream with `npx wrangler tail hyoban-cc-api`.
 
 ## GitHub Actions
 
-| Workflow          | When                        | Does                                                                                                 |
-| ----------------- | --------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `verify.yml`      | push to `main`, PRs, weekly | `pnpm test`, `pnpm check`, Moment audits, `pnpm build`; the Android app's unit tests and debug build |
-| `data-backup.yml` | every six hours, by hand    | the API's export into `data/`, committed to `main` when it changed                                   |
-| `r2-backup.yml`   | push to `main`, by hand     | a snapshot of the R2 bucket, in Git LFS on the `r2-backup` branch                                    |
+| Workflow        | When                        | Does                                                                                                 |
+| --------------- | --------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `verify.yml`    | push to `main`, PRs, weekly | `pnpm test`, `pnpm check`, Moment audits, `pnpm build`; the Android app's unit tests and debug build |
+| `r2-backup.yml` | push to `main`, by hand     | a snapshot of the R2 bucket, in Git LFS on the `r2-backup` branch                                    |
 
-`verify.yml` audits every Moment on a push, only the changed Moments' alt text on a
-PR, and on its weekly run also checks every referenced R2 object (`moments:audit
---remote`). The workflows run Node 24; the repository pins no Node version, so Workers
+`verify.yml` exports the API into `data/` to audit every Moment, builds the site from the
+API, and on its weekly run also checks every referenced R2 object (`moments:audit
+--remote`). The records aren't backed up to GitHub. The workflows run Node 24; the repository pins no Node version, so Workers
 Builds uses its own default.
 
 `r2-backup.yml` checks out the existing `r2-backup` branch and commits to it, so that
 branch has to exist, and the snapshot counts against the repository's Git LFS storage.
 
-Repository secrets: `MOMENTS_API_TOKEN` (one of the API's `API_TOKENS`) for the data
-backup, and `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` for the R2 backup.
+Repository secrets: `MOMENTS_API_TOKEN` (one of the API's `API_TOKENS`) for the export
+and the build in `verify.yml`, and `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` for the R2 backup.
 
 ## Recovering from a bad write
 
-The data backup in `data/`, the R2 snapshot on the `r2-backup` branch and D1's 30 days
-of Time Travel are the way back. `vp run data:import --remote` restores `data/` over
-the deployed database ([data.md](data.md)).
+D1's 30 days of Time Travel and the R2 snapshot on the `r2-backup` branch are the way
+back; the records have no copy in git. A `data/` exported earlier can be restored over the
+deployed database with `vp run data:import --remote` ([data.md](data.md)).
 
 ## Setting it up from nothing
 
@@ -95,7 +94,8 @@ hook, which exists only once the site's build does.
 3. Create the Telegram bot and make it an admin of the channel.
 4. Set the API's secrets, all but `DEPLOY_HOOK_URL`, connect `apps/api` to Workers
    Builds as above and push to `main`.
-5. Restore the records with `vp run data:import --remote` ([data.md](data.md)).
+5. Restore the records from an exported `data/` with `vp run data:import --remote`
+   ([data.md](data.md)).
 6. Connect `apps/web` to Workers Builds as the `hyoban-cc` Worker, with
    `MOMENTS_API_TOKEN` set to one of the API's tokens and the Mapbox variables, add
    the custom domain `hyoban.cc`, and enable Images transformations on its zone.

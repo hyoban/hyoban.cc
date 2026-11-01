@@ -1,0 +1,63 @@
+{
+  "uid": "01JT5R1PW0NG5E9BJRF8SHQGG5",
+  "at": "2025-05-01T19:00:00+08:00",
+  "place": "xiao-mian-guan",
+  "parts": {
+    "text": {
+      "v": 1,
+      "text": "一碗葱油拌面。"
+    },
+    "media": {
+      "v": 1,
+      "items": [
+        {
+          "uid": "01JT5R1PW0B215HTCTE0TJ9TW9",
+          "alt": "白瓷碗里的葱油拌面",
+          "type": "image",
+          "width": 1600,
+          "height": 1200,
+          "published": {
+            "key": "moments/01jt5r1pw0ng5e9bjrf8shqgg5/01jt5r1pw0b215htcte0tj9tw9.jpg",
+            "contentType": "image/jpeg",
+            "bytes": 200000,
+            "etag": "d7eba311421bbc9d3ada44709dd61534",
+            "width": 1600,
+            "height": 1200,
+            "variants": [
+              {
+                "key": "moments/01jt5r1pw0ng5e9bjrf8shqgg5/01jt5r1pw0b215htcte0tj9tw9-480w.webp",
+                "contentType": "image/webp",
+                "bytes": 1480,
+                "etag": "42c2ba96daa396e7a626ee69d59ac52b",
+                "width": 480,
+                "height": 360
+              },
+              {
+                "key": "moments/01jt5r1pw0ng5e9bjrf8shqgg5/01jt5r1pw0b215htcte0tj9tw9-960w.webp",
+                "contentType": "image/webp",
+                "bytes": 1960,
+                "etag": "0900dc050401ce47a2583c4907b980b1",
+                "width": 960,
+                "height": 720
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "food": {
+      "v": 1,
+      "dishes": [
+        "葱油拌面"
+      ],
+      "verdict": "good",
+      "cost": 26,
+      "people": 1
+    }
+  },
+  "published": {
+    "at": "2025-05-01T19:00:00+08:00"
+  },
+  "createdAt": "2025-05-01T19:00:00+08:00",
+  "updatedAt": "2025-05-01T19:00:00+08:00"
+}
