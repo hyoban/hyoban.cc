@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.publish
 
+import androidx.compose.foundation.layout.WindowInsetsSides
+import cc.hyoban.moments.ui.components.sideInsetsPadding
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.heading
 import cc.hyoban.moments.ui.components.SideBySide
@@ -325,7 +327,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
             publishShown,
             enter = scaleIn(motion.fastSpatialSpec()) + fadeIn(motion.fastEffectsSpec()),
             exit = scaleOut(motion.fastSpatialSpec()) + fadeOut(motion.fastEffectsSpec()),
-            modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(Space.gutter),
+            modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().sideInsetsPadding(WindowInsetsSides.End).padding(Space.gutter),
         ) {
             val progress = shownProgress
             ExtendedFloatingActionButton(

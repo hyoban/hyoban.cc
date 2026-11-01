@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.design
 
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.background
@@ -156,8 +158,10 @@ private val TopBarStateSaver = listSaver<TopBarState, Float>(
 private const val RUBBER_BAND = 0.55f
 
 /** The bar's insets: clear of the status bar and of the sides' cutouts. */
+// The camera's cutout too: on a phone on its side, its bars put away, the cutout alone keeps the
+// circles clear of the camera down that side (H00).
 val TopBarWindowInsets: WindowInsets
-    @Composable get() = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+    @Composable get() = WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
 
 /**
  * The top bar: [navigationIcon] and [actions] as circles floating over the page, and between
