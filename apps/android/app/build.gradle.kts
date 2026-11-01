@@ -58,6 +58,10 @@ android {
         }
     }
 
+    // The app speaks Chinese and English, so the libraries' strings in other languages are left
+    // out. Chinese takes its regions: the libraries keep theirs as zh-rCN and the like, not zh.
+    androidResources { localeFilters += listOf("en", "zh-rCN", "zh-rHK", "zh-rTW") }
+
     // The map's native library compressed in the APK, a third of its size, and the code to half
     // of its, both unpacked on install: a smaller APK to pass around for a little more on the phone.
     packaging {
