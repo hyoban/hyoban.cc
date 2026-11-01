@@ -120,6 +120,8 @@ dependencies {
     implementation(libs.media3.session)
     implementation(libs.telephoto.zoomable)
     implementation(libs.capsule)
+    implementation(libs.haze)
+    implementation(libs.haze.blur)
     implementation(libs.glance.appwidget)
     implementation(libs.work.runtime)
     implementation(libs.exifinterface)

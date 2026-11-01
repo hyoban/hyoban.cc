@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.design
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -81,10 +83,16 @@ class TopBarScroll(val state: TopBarState, val pinned: Boolean) {
 
 @Composable
 fun rememberTopBarScroll(pinned: Boolean = false): TopBarScroll {
-    val offset = rememberSaveable { floatArrayOf(0f) }
-    val state = remember { TopBarState(offset[0]) }
+    // Kept with how far the page under it has scrolled, which is kept too, so the two agree
+    // again when the page is made anew (a theme or a window changed).
+    val state = rememberSaveable(saver = TopBarStateSaver) { TopBarState() }
     return remember(pinned) { TopBarScroll(state, pinned) }
 }
+
+private val TopBarStateSaver = listSaver<TopBarState, Float>(
+    save = { listOf(it.heightOffset, it.contentOffset) },
+    restore = { (height, content) -> TopBarState(height).apply { contentOffset = content } },
+)
 
 /** The bar's insets: clear of the status bar and of the sides' cutouts. */
 val TopBarWindowInsets: WindowInsets
@@ -127,7 +135,7 @@ fun TopBar(
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(BAR_HEIGHT).padding(horizontal = 4.dp),
+                modifier = Modifier.fillMaxWidth().height(TopBarRowHeight).padding(horizontal = 4.dp),
             ) { measurables, constraints ->
                 // The small title centred on the page, as wide as is left between the wider side
                 // and its mirror, so it stays in the middle whichever side has more buttons.
@@ -161,7 +169,9 @@ fun TopBar(
                         }
                     }
                 },
-                modifier = Modifier.clipToBounds(),
+                // On the page's colour: a page that runs up under the bar has nothing of it show
+                // through the title while it is open.
+                modifier = Modifier.clipToBounds().background(tokens.bg),
             ) { measurables, constraints ->
                 val placeable = measurables.first().measure(constraints.copy(minHeight = 0, maxHeight = Int.MAX_VALUE))
                 val full = placeable.height.toFloat()
@@ -177,4 +187,4 @@ fun TopBar(
 }
 
 /** How tall the row of floating circles stands, 40dp circles with 8dp above and below. */
-private val BAR_HEIGHT = 56.dp
+val TopBarRowHeight = 56.dp

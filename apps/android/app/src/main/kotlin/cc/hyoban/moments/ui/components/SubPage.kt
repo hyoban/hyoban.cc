@@ -4,6 +4,15 @@ import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.TopBarWindowInsets
 import cc.hyoban.moments.ui.design.rememberTopBarScroll
 import cc.hyoban.moments.ui.design.TopBar
+import cc.hyoban.moments.ui.design.TopBarRowHeight
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import cc.hyoban.moments.ui.design.edgeBlur
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.graphicsLayer
@@ -70,8 +79,12 @@ fun SubPage(
     subtitleAction: (@Composable () -> Unit)? = null,
     /** What the small bar holds in the middle in place of [title], which then names the page to a screen reader alone. */
     centre: (@Composable () -> Unit)? = null,
+    /** Whether [content] runs up under the bar, its list [LocalTopClearance] down. */
+    underBar: Boolean = false,
+    /** What stays under the bar's circles with them, a control over the whole page, the page passing under it too. */
+    accessory: (@Composable () -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
-) = BarPage(title, subtitle, onBack, large = false, modifier, actions, content, close = close, small = small, titleMenu = titleMenu, subtitleAction = subtitleAction, centre = centre)
+) = BarPage(title, subtitle, onBack, large = false, modifier, actions, content, close = close, small = small, titleMenu = titleMenu, subtitleAction = subtitleAction, centre = centre, underBar = underBar, accessory = accessory)
 
 /**
  * A tab's page: the top bar, its title large, with no back
@@ -89,8 +102,10 @@ fun TabPage(
     refresh: (() -> Unit)? = null,
     titleMenu: TitleMenu? = null,
     subtitleAction: (@Composable () -> Unit)? = null,
+    /** Whether [content] runs up under the bar, its list [LocalTopClearance] down. */
+    underBar: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
-) = BarPage(title, subtitle, onBack = null, large = true, modifier, actions, content, tab, refresh = refresh, titleMenu = titleMenu, subtitleAction = subtitleAction)
+) = BarPage(title, subtitle, onBack = null, large = true, modifier, actions, content, tab, refresh = refresh, titleMenu = titleMenu, subtitleAction = subtitleAction, underBar = underBar)
 
 /**
  * A menu the page's title opens, named [label], as a page that is one of several (a ledger's
@@ -115,6 +130,8 @@ private fun BarPage(
     titleMenu: TitleMenu? = null,
     subtitleAction: (@Composable () -> Unit)? = null,
     centre: (@Composable () -> Unit)? = null,
+    underBar: Boolean = false,
+    accessory: (@Composable () -> Unit)? = null,
 ) {
     // A dialog's bar, on a window too short to open it out, stays put rather than scrolling away,
     // so its X and its confirming action are always there.
@@ -194,37 +211,66 @@ private fun BarPage(
     val rail = LocalRailSpace.current
     val margin = Space.gutter - BAR_TITLE_INSET
     val insets = TopBarWindowInsets.add(WindowInsets(left = rail.left + margin, right = rail.right + margin))
-    Column(modifier.fillMaxSize().nestedScroll(scroll.nestedScrollConnection)) {
-        // On a window too short for it, a phone on its side, the bar starts small, its title
-        // beside the back button, rather than taking half the screen until scrolled away; so
-        // does a page whose own bottom half is taken, the bill's keypad. Its subtitle too small
-        // to act on beside, what it would there joins the bar's actions.
-        val startsSmall = isCompactHeight() || small || centre != null
-        TopBar(
-            titleText,
-            scroll,
-            subtitle = subtitleText,
-            navigationIcon = back,
-            actions = if (startsSmall) { { subtitleAction?.invoke(); actions() } } else actions,
-            windowInsets = insets,
-            large = large,
-            small = startsSmall,
-        )
-        // No hairline under it: once something has scrolled up to the circles, a short fade of the
-        // page from them, which the content passes under.
-        val scrolled = scroll.state.overlappedFraction > 0.01f || scroll.state.collapsedFraction > 0.99f
-        val fade by androidx.compose.animation.core.animateFloatAsState(if (scrolled) 1f else 0f, AppTheme.motionScheme.fastEffectsSpec(), label = "fade")
-        Box(Modifier.weight(1f)) {
-            content()
-            val page = AppColors.page
-            Box(
-                Modifier.fillMaxWidth().height(Space.l)
-                    .graphicsLayer { alpha = fade }
-                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(page, page.copy(alpha = 0f)))),
+    // No hairline under the bar: once something has scrolled up to the circles, the scroll edge
+    // softens what passes under. A page [underBar] runs up under the status bar and the circles,
+    // its list starting [LocalTopClearance] down, and the edge softens all of it; any other stops
+    // under the circles, and the edge is a short one below them. What stays under the circles
+    // with them, [accessory], lies over the page as they do, the edge reaching down past it.
+    val scrolled = scroll.state.overlappedFraction > 0.01f || scroll.state.collapsedFraction > 0.99f
+    val fade by androidx.compose.animation.core.animateFloatAsState(if (scrolled) 1f else 0f, AppTheme.motionScheme.fastEffectsSpec(), label = "fade")
+    val haze = rememberHazeState()
+    val density = LocalDensity.current
+    val row = with(density) { insets.getTop(density).toDp() } + TopBarRowHeight
+    var below by remember { mutableStateOf(0.dp) }
+    val edge = if (underBar) row + below + Space.l else Space.xl
+    Layout(
+        content = {
+            Box(Modifier.fillMaxSize().hazeSource(haze).background(AppColors.page)) {
+                CompositionLocalProvider(LocalTopClearance provides if (underBar) row + below else 0.dp) { content() }
+            }
+            Box(Modifier.fillMaxWidth().height(edge).graphicsLayer { alpha = fade }.edgeBlur(haze, top = true))
+            Box(Modifier.fillMaxWidth().onSizeChanged { below = with(density) { it.height.toDp() } }) { accessory?.invoke() }
+            // On a window too short for it, a phone on its side, the bar starts small, its title
+            // beside the back button, rather than taking half the screen until scrolled away; so
+            // does a page whose own bottom half is taken, the bill's keypad. Its subtitle too small
+            // to act on beside, what it would there joins the bar's actions.
+            val startsSmall = isCompactHeight() || small || centre != null
+            TopBar(
+                titleText,
+                scroll,
+                subtitle = subtitleText,
+                navigationIcon = back,
+                actions = if (startsSmall) { { subtitleAction?.invoke(); actions() } } else actions,
+                windowInsets = insets,
+                large = large,
+                small = startsSmall,
             )
+        },
+        modifier = modifier.fillMaxSize().nestedScroll(scroll.nestedScrollConnection),
+    ) { measurables, constraints ->
+        // The bar first, at the height it has folded to; the page under it from its foot, or,
+        // [underBar], from the foot of its large title, as the row of circles lies over the page.
+        val loose = constraints.copy(minHeight = 0)
+        val bar = measurables[3].measure(loose)
+        val under = measurables[2].measure(loose)
+        val top = if (underBar) (bar.height - row.roundToPx()).coerceAtLeast(0) else bar.height + under.height
+        val height = (constraints.maxHeight - top).coerceAtLeast(0)
+        val page = measurables[0].measure(constraints.copy(minHeight = height, maxHeight = height))
+        val blur = measurables[1].measure(loose)
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            page.place(0, top)
+            blur.place(0, if (underBar) 0 else bar.height + under.height)
+            under.place(0, bar.height)
+            bar.place(0, 0)
         }
     }
 }
+
+/**
+ * How far down a page that runs up under its top bar starts its list, clear of the status bar
+ * and the row of circles: its scrolling content's top padding, so what scrolls passes under them.
+ */
+val LocalTopClearance = staticCompositionLocalOf { 0.dp }
 
 /** How far in from its edge the top bar sets its title, the compact window's margin. */
 private val BAR_TITLE_INSET = 16.dp

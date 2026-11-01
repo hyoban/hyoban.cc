@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.ui.platform.LocalConfiguration
 import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.ui.format.formatDay
@@ -212,7 +213,7 @@ fun MomentFeed(
                 StaggeredGridCells.Fixed(columns.count),
                 Modifier.fillMaxSize(),
                 state = gridState,
-                contentPadding = PaddingValues(start = columns.margin + Space.gutter, end = columns.margin + Space.gutter, bottom = bottom),
+                contentPadding = PaddingValues(start = columns.margin + Space.gutter, top = LocalTopClearance.current, end = columns.margin + Space.gutter, bottom = bottom),
                 // Material 3's gap between cards, 8dp at most.
                 horizontalArrangement = Arrangement.spacedBy(Space.s),
                 verticalItemSpacing = Space.s,
@@ -247,7 +248,7 @@ fun MomentFeed(
             LazyColumn(
                 Modifier.fillMaxSize(),
                 state = state,
-                contentPadding = PaddingValues(start = columns.margin, end = columns.margin, bottom = bottom),
+                contentPadding = PaddingValues(start = columns.margin, top = LocalTopClearance.current, end = columns.margin, bottom = bottom),
             ) {
                 leadingRows(leading)
                 var month: String? = null

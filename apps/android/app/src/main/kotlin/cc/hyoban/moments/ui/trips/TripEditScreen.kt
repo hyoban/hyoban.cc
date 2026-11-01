@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -77,12 +78,13 @@ fun TripEditScreen(container: AppContainer, id: String, onBack: () -> Unit) {
     }
     val scope = rememberCoroutineScope()
     val valid = title.isNotBlank() && start <= end
-    SubPage(stringResource(R.string.trip_edit_title), onBack, Modifier.background(AppColors.page)) {
+    SubPage(stringResource(R.string.trip_edit_title), onBack, Modifier.background(AppColors.page), underBar = true) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
+                    .padding(top = LocalTopClearance.current)
                     .imePadding()
                     .navigationBarsPadding()
                     .padding(horizontal = columns.margin)

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.compose
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.core.net.toUri
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AssistChip
@@ -462,6 +463,7 @@ fun NewMomentScreen(
                     modifier = Modifier.padding(end = Space.xs).testTag("save"),
                 ) { Text(stringResource(R.string.action_save)) }
             },
+            underBar = true,
         ) {
             PageWidth(maxColumns = 1) { columns ->
                 Column(Modifier.fillMaxSize().imePadding().navigationBarsPadding().padding(horizontal = columns.margin)) {
@@ -469,7 +471,7 @@ fun NewMomentScreen(
                     Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState())
-                        .padding(bottom = if (keypad) Space.s else Space.xl),
+                        .padding(top = LocalTopClearance.current, bottom = if (keypad) Space.s else Space.xl),
                 ) {
                     val focus = remember { FocusRequester() }
                     // A new Moment starts at its words; one being changed waits to be told what to change.

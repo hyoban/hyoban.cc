@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.ui.platform.LocalConfiguration
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
@@ -158,7 +159,7 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
     PageWidth(maxColumns = 1) { columns ->
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                .padding(start = columns.margin, end = columns.margin, bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl),
+                .padding(start = columns.margin, top = LocalTopClearance.current, end = columns.margin, bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl),
         ) {
             // One row for the stretch: the period between its arrows, and tapped, a menu of month,
             // year and all, rather than a segmented control over another row of the same.

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -99,14 +100,14 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
     val autoBill by AutoBill.enabledFlow(context).collectAsStateWithLifecycle()
     val sideKey by SideKeys.state.collectAsStateWithLifecycle()
     val books = ledger.books.filter { !it.archived }
-    TabPage(stringResource(R.string.tab_me), tab = Preferences) {
+    TabPage(stringResource(R.string.tab_me), tab = Preferences, underBar = true) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = columns.margin)
-                    .padding(bottom = LocalBottomClearance.current + Space.xl),
+                    .padding(top = LocalTopClearance.current, bottom = LocalBottomClearance.current + Space.xl),
             ) {
                 // With no API to publish to, what is kept here is simply the phone's.
                 if (pending.size > 0 && container.canPublish) PublishCard(pending.size, routes.changes)

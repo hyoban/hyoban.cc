@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.things
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -115,6 +116,7 @@ private fun PageColumn(content: @Composable () -> Unit) {
             Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(top = LocalTopClearance.current)
                 .navigationBarsPadding()
                 .padding(horizontal = columns.margin)
                 .padding(bottom = Space.xl),
@@ -141,6 +143,7 @@ fun DevicesScreen(container: AppContainer, onBack: () -> Unit, open: String? = n
                 Icon(AppIcons.Plus, contentDescription = stringResource(R.string.device_add))
             }
         },
+        underBar = true,
     ) {
         PageColumn {
             if (devices.isEmpty()) {
@@ -323,6 +326,7 @@ fun SubscriptionsScreen(container: AppContainer, onBack: () -> Unit, open: Strin
                 Icon(AppIcons.Plus, contentDescription = stringResource(R.string.subscription_add))
             }
         },
+        underBar = true,
     ) {
         PageColumn {
             if (all.isEmpty()) {
