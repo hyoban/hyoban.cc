@@ -306,6 +306,10 @@ object Entries {
     /** Whether a collection is private by its own say. */
     fun isPrivate(collection: JsonObject): Boolean = collection.visibility() == Visibility.PRIVATE
 
+    /** Whether a Moment's part of this plugin is private: the Moment is, or the part says so on its own. */
+    fun isPartPrivate(moment: MomentRecord, plugin: String): Boolean =
+        moment.hidden || ((moment.extra[PART_VISIBILITY] as? JsonObject)?.get(plugin) as? JsonPrimitive)?.contentOrNull == Visibility.PRIVATE.value
+
     /** What a collection is known by: its slug, else its uid in lowercase, as the spec's `getCollectionKey`. */
     fun collectionKey(collection: JsonObject): String =
         (collection["slug"] as? JsonPrimitive)?.contentOrNull ?: collection.string("uid").lowercase()
