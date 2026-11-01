@@ -138,10 +138,11 @@ private fun lineOf(line: List<Pair<Double, Double>>) =
 
 /**
  * [controller]'s trip on the map, stepped a frame at a time from here, kept clear of [clear],
- * the screen's own controls over the map, as start, top, end and bottom.
+ * the screen's own controls over the map, as start, top, end and bottom; its credit, when
+ * [credit] says, that many pixels in from the left, top, right and bottom, clear of a card.
  */
 @Composable
-fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modifier = Modifier) {
+fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modifier = Modifier, credit: IntArray? = null) {
     var ready by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
     val ink = tokens.tx
     val paper = tokens.bg
@@ -158,7 +159,7 @@ fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modif
 
     Box(modifier) {
         // Panned and pinched as any map is; the camera lets go then, until the next shot.
-        MapLibreView(Modifier.matchParentSize(), interactive = true, compass = false) { map, style, _ ->
+        MapLibreView(Modifier.matchParentSize(), interactive = true, attributionPadding = credit, compass = false) { map, style, _ ->
             // Turned, it would turn back north at the next shot; it stays north.
             map.uiSettings.isRotateGesturesEnabled = false
             val route = controller.playback.route
@@ -432,7 +433,8 @@ private class PlaybackCamera {
         if (abs(x.first - goalCenter.first) < pixel && abs(y.first - goalCenter.second) < pixel && abs(z.first - goal.second) < 0.002 &&
             hypot(x.second, y.second) * step < pixel && abs(z.second) * step < 0.002
         ) {
-            if (abs(map.cameraPosition.zoom - goal.second) < 0.002) return
+            // ...unless what it keeps clear of has moved, the card having changed sides as the phone turned.
+            if (abs(map.cameraPosition.zoom - goal.second) < 0.002 && padding.contentEquals(applied)) return
             center = goalCenter
             zoom = goal.second
         }
@@ -475,7 +477,11 @@ private class PlaybackCamera {
         return Triple(key, zoom, center).also { target = it }
     }
 
+    /** The padding the camera was last set with. */
+    private var applied: IntArray? = null
+
     private fun apply(map: MapLibreMap, center: Pair<Double, Double>, zoom: Double, padding: IntArray) {
+        applied = padding
         val position = CameraPosition.Builder().target(fromMercator(center).latLng()).zoom(zoom).bearing(0.0).tilt(0.0)
             .padding(padding[0].toDouble(), padding[1].toDouble(), padding[2].toDouble(), padding[3].toDouble()).build()
         map.moveCamera(CameraUpdateFactory.newCameraPosition(position))

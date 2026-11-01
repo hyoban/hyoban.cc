@@ -248,8 +248,18 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
             else -> null
         }
         val routeMap = if (here != null) stringResource(R.string.playback_map_at, trip.title, here) else stringResource(R.string.playback_map, trip.title)
-        PlaybackMap(controller, clear, Modifier.fillMaxSize().semantics { contentDescription = routeMap })
-        FloatingBack(onBack, Modifier.align(Alignment.TopStart))
+        // On its side, the map's credit stands in the open map beside the card, never under it.
+        val credit = if (landscape) {
+            with(density) {
+                val left = (if (cardLeft) card.first else cutLeft) + Space.s
+                intArrayOf(left.roundToPx(), 0, 0, Space.s.roundToPx())
+            }
+        } else {
+            null
+        }
+        PlaybackMap(controller, clear, Modifier.fillMaxSize().semantics { contentDescription = routeMap }, credit)
+        // With the card down the left, back stands in its corner instead, so the card has the height.
+        if (!cardLeft) FloatingBack(onBack, Modifier.align(Alignment.TopStart))
 
         // Snackbars stand above the card and its toolbar while it is at the foot of the screen.
         val lift = LocalSnackbarLift.current
@@ -290,21 +300,23 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
                 .onSizeChanged { with(density) { card = it.width.toDp() to it.height.toDp() } }
                 .navigationBarsPadding()
                 .sideInsetsPadding(if (cardLeft) WindowInsetsSides.Left else if (landscape) WindowInsetsSides.Right else WindowInsetsSides.End)
-                // On its side, the card takes the whole height under the status bar, from under back
-                // when it stands at the left (H12).
+                // On its side, the card takes the whole height under the status bar, as close to the
+                // edges as back stands (H12).
                 .then(if (landscape) Modifier.statusBarsPadding() else Modifier)
-                .then(if (cardLeft) Modifier.padding(start = Space.gutter, end = Space.gutter, bottom = Space.gutter, top = FLOATING_BAR) else Modifier.padding(Space.gutter))
+                .then(if (landscape) Modifier.padding(horizontal = Space.m, vertical = Space.s) else Modifier.padding(Space.gutter))
                 .then(if (landscape) Modifier.fillMaxHeight() else Modifier)
                 // Beside the map on its side, as Material 3 has a supporting pane at 360dp.
                 // Across the foot no wider than Material 3 has a bottom sheet, 640dp.
                 .then(if (landscape) Modifier.width(360.dp + Space.gutter * 2) else Modifier.widthIn(max = 640.dp).fillMaxWidth()),
-            photoHeight = if (landscape) 140.dp else 220.dp,
+            // On its side the photos take the height the words leave instead.
+            photoHeight = 220.dp,
             slide = slide,
             index = index,
             // On its side it is always open, the height its own, with nothing to fold.
             expanded = expanded || landscape,
             onExpanded = { expanded = it },
             fill = landscape,
+            back = onBack.takeIf { cardLeft },
             // On its side, the toolbar stands under the map instead, so the card has the height.
             toolbar = !landscape,
         )
@@ -312,7 +324,7 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
             Box(
                 // In the middle of the map beside the card, clear of the cutout.
                 Modifier.fillMaxSize().navigationBarsPadding()
-                    .absolutePadding(left = if (cardLeft) card.first else cutLeft, right = if (cardLeft) cutRight else card.first, bottom = Space.gutter),
+                    .absolutePadding(left = if (cardLeft) card.first else cutLeft, right = if (cardLeft) cutRight else card.first, bottom = Space.s),
                 contentAlignment = Alignment.BottomCenter,
             ) { PlaybackControls(controller, playFocus) }
         }
@@ -360,6 +372,8 @@ private fun PlayerCard(
     toolbar: Boolean,
     /** On a phone on its side: the card fills the height it is given, with no handle, its progress at its foot. */
     fill: Boolean = false,
+    /** Back, in the card's corner with the progress beside it, when the card stands where back would. */
+    back: (() -> Unit)? = null,
 ) {
     val count = controller.playback.slides.size
     val playing = controller.playing
@@ -462,9 +476,20 @@ private fun PlayerCard(
             Column(Modifier.animateContentSize(motion.defaultSpatialSpec()).then(if (fill) Modifier.fillMaxHeight() else Modifier)) {
             // The handle across the card's top 48dp, as a sheet's; none on its side, where it doesn't fold.
             if (!fill) DragHandle(expanded, onExpanded)
+            // Back in the card's corner, the progress beside it rather than at the foot.
+            if (back != null) {
+                Row(Modifier.padding(start = Space.xs, end = Space.m, top = Space.xs), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                    IconButton(onClick = back, modifier = Modifier.testTag("back")) {
+                        Icon(AppIcons.ArrowLeft, contentDescription = stringResource(R.string.action_back))
+                    }
+                    Box(Modifier.weight(1f)) { progressRow() }
+                }
+            }
             Column(
-                Modifier.then(if (fill) Modifier.weight(1f) else Modifier).verticalScroll(rememberScrollState())
-                    .padding(start = Space.m, end = Space.m, top = if (fill) Space.m else 0.dp, bottom = Space.m),
+                // On its side the card's height is fixed and its photos take what the words leave, so
+                // nothing scrolls; otherwise it is as tall as it needs, up to the room there is.
+                (if (fill) Modifier.weight(1f) else Modifier.verticalScroll(rememberScrollState()))
+                    .padding(start = Space.m, end = Space.m, top = if (back != null) 0.dp else if (fill) Space.m else 0.dp, bottom = Space.m),
                 verticalArrangement = Arrangement.spacedBy(Space.m),
             ) {
                 AnimatedContent(
@@ -472,19 +497,19 @@ private fun PlayerCard(
                     transitionSpec = lateral { it.first },
                     label = "player card",
                     // Playing on its own it stays quiet, as a carousel does; stepped through by hand, each card is read.
-                    modifier = Modifier.semantics { if (!playing) liveRegion = LiveRegionMode.Polite },
+                    modifier = Modifier.semantics { if (!playing) liveRegion = LiveRegionMode.Polite }.then(if (fill) Modifier.weight(1f) else Modifier),
                 ) { (_, shown) ->
                     when (shown) {
-                        PlaybackSlide.Intro -> IntroCard(trip, controller.playback, covers, urls, photoHeight, expanded)
+                        PlaybackSlide.Intro -> IntroCard(trip, controller.playback, covers, urls, photoHeight, expanded, fill)
                         is PlaybackSlide.Day -> DayCard(shown)
-                        is PlaybackSlide.Stop -> StopCard(shown, controller, urls, photoHeight, expanded, onMoment)
-                        PlaybackSlide.Summary -> SummaryCard(trip, controller.playback, covers, urls, expanded)
+                        is PlaybackSlide.Stop -> StopCard(shown, controller, urls, photoHeight, expanded, onMoment, fill)
+                        PlaybackSlide.Summary -> SummaryCard(trip, controller.playback, covers, urls, expanded, fill)
                     }
                 }
                 if (!fill) progressRow()
             }
             // On its side, held at the card's foot under what scrolls.
-            if (fill) Box(Modifier.padding(start = Space.m, end = Space.m, bottom = Space.m)) { progressRow() }
+            if (fill && back == null) Box(Modifier.padding(start = Space.m, end = Space.m, bottom = Space.m)) { progressRow() }
             }
         }
         if (toolbar) PlaybackControls(controller, playFocus)
@@ -493,8 +518,9 @@ private fun PlayerCard(
 
 /** The trip's title, its dates, days and Moments, and its covers. */
 @Composable
-private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, photoHeight: Dp, expanded: Boolean) {
-    Column(verticalArrangement = Arrangement.spacedBy(Space.m)) {
+private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, photoHeight: Dp, expanded: Boolean, fill: Boolean) {
+    // Filling the card's height, its covers take what the words leave.
+    Column(if (fill) Modifier.fillMaxHeight() else Modifier, verticalArrangement = Arrangement.spacedBy(Space.m)) {
         Column(Modifier.padding(horizontal = Space.xs)) {
             Text(trip.title, style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
             TripSubhead(trip, playback.stops.size)
@@ -502,7 +528,7 @@ private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<Mom
         // A mosaic of the covers, the first larger, as the site's intro has.
         if (covers.isNotEmpty() && expanded) {
             // Decorative: the same photos show, described, on their Moments' cards.
-            Row(Modifier.fillMaxWidth().height(photoHeight).clip(AppTheme.shapes.large).clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+            Row(Modifier.fillMaxWidth().then(if (fill) Modifier.weight(1f) else Modifier.height(photoHeight)).clip(AppTheme.shapes.large).clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                 MediaStill(covers[0], urls, Modifier.weight(2f).fillMaxHeight())
                 if (covers.size > 1) {
                     Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
@@ -535,7 +561,7 @@ private fun DayCard(slide: PlaybackSlide.Day) {
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, urls: MediaUrls, photoHeight: Dp, expanded: Boolean, onMoment: (String) -> Unit) {
+private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, urls: MediaUrls, photoHeight: Dp, expanded: Boolean, onMoment: (String) -> Unit, fill: Boolean) {
     val stop = slide.stop
     val moment = stop.moment
     val photos = stop.photos
@@ -547,7 +573,8 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
     ).joinToString(" ") + " " + stop.places.joinToString("、") { it.name }
     val open = stringResource(R.string.action_open_moment)
     Column(
-        Modifier.fillMaxWidth().semantics {
+        // Filling the card's height, its photos take what its words leave.
+        Modifier.fillMaxWidth().then(if (fill) Modifier.fillMaxHeight() else Modifier).semantics {
             contentDescription = heading
             heading()
         }.testTag("player_moment_${moment.uid}"),
@@ -568,7 +595,7 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
             }
             val view = stringResource(R.string.action_view_photo)
             val clause = stringResource(R.string.separator_clause)
-            BoxWithConstraints(Modifier.fillMaxWidth().height(photoHeight)) {
+            BoxWithConstraints(Modifier.fillMaxWidth().then(if (fill) Modifier.weight(1f) else Modifier.height(photoHeight))) {
                 val width = if (photos.size == 1) maxWidth else maxWidth - PEEK - Space.s
                 LazyRow(
                     Modifier.fillMaxSize(),
@@ -635,8 +662,8 @@ private val PEEK = 56.dp
  * shapes, the trip's last aesthetic moment.
  */
 @Composable
-private fun SummaryCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, expanded: Boolean) {
-    Column(Modifier.padding(horizontal = Space.xs), verticalArrangement = Arrangement.spacedBy(Space.m)) {
+private fun SummaryCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, expanded: Boolean, fill: Boolean) {
+    Column(Modifier.padding(horizontal = Space.xs).then(if (fill) Modifier.fillMaxHeight() else Modifier), verticalArrangement = Arrangement.spacedBy(Space.m)) {
         Column {
             Text(stringResource(R.string.playback_look_back), style = AppTheme.typography.label, color = tokens.accent)
             Text(trip.title, style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
@@ -656,9 +683,10 @@ private fun SummaryCard(trip: TripRecord, playback: TripPlayback, covers: List<M
         }
         if (expanded && covers.isNotEmpty()) {
             val shapes = List(3) { AppTheme.shapes.large }
-            Row(Modifier.clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
+            // Filling the card's height, as large as the room the words leave allows.
+            Row(Modifier.clearAndSetSemantics { }.then(if (fill) Modifier.weight(1f, fill = false) else Modifier), horizontalArrangement = Arrangement.spacedBy(Space.m)) {
                 covers.take(shapes.size).forEachIndexed { n, cover ->
-                    MediaStill(cover, urls, Modifier.weight(1f).aspectRatio(1f).clip(shapes[n]))
+                    MediaStill(cover, urls, Modifier.weight(1f).aspectRatio(1f, matchHeightConstraintsFirst = fill).clip(shapes[n]))
                 }
             }
         }
