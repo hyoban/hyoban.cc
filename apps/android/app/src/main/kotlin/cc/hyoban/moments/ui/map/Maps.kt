@@ -1335,36 +1335,45 @@ private fun PointsMap(
     val gap = gapColor.toArgb()
     val ring = tokens.bg.toArgb()
     val inset = edges(padding, padding + topInset, padding, padding)
+    // What it shows can change while it stays, the timeline's map moving from one day to the next:
+    // the map is built once, and only its lines, dots and framing follow, so it never goes blank.
+    val shown = PointsShown(points, lines, rings)
+    var map by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
+    val drawn = remember { arrayOfNulls<PointsShown>(1) }
+    val latest by rememberUpdatedState(shown)
+    val fill: (MapLibreMap, Style, PointsShown) -> Unit = { ready, style, data ->
+        style.getSourceAs<GeoJsonSource>(ROUTE)?.setGeoJson(
+            FeatureCollection.fromFeatures(
+                data.lines.map { segment -> Feature.fromGeometry(segment.lineString).apply { addBooleanProperty("straight", segment.straight) } },
+            ),
+        )
+        style.getSourceAs<GeoJsonSource>(STOPS)?.setGeoJson(FeatureCollection.fromFeatures(data.points.map { Feature.fromGeometry(it.point) }))
+        style.getSourceAs<GeoJsonSource>(RINGS)?.setGeoJson(FeatureCollection.fromFeatures(data.rings.map { Feature.fromGeometry(it.point) }))
+        val framed = data.points + data.rings + data.lines.flatMap { segment -> segment.line.map { (longitude, latitude) -> LatLng(latitude, longitude) } }
+        if (framed.isNotEmpty()) ready.frame(framed, inset, closest)
+        drawn[0] = data
+    }
 
-    MapLibreView(modifier, interactive) { map, style, _ ->
-        if (lines.isNotEmpty()) {
-            style.addSource(
-                GeoJsonSource(
-                    ROUTE,
-                    FeatureCollection.fromFeatures(
-                        lines.map { segment -> Feature.fromGeometry(segment.lineString).apply { addBooleanProperty("straight", segment.straight) } },
-                    ),
-                ),
-            )
-            style.addLayer(
-                LineLayer(ROUTE, ROUTE).withFilter(not(get("straight"))).withProperties(
-                    lineColor(line),
-                    lineWidth(width),
-                    lineOpacity(0.8f),
-                    lineCap(Property.LINE_CAP_ROUND),
-                    lineJoin(Property.LINE_JOIN_ROUND),
-                ),
-            )
-            style.addLayer(
-                LineLayer(ROUTES_DASHED, ROUTE).withFilter(get("straight")).withProperties(
-                    lineColor(gap),
-                    lineWidth(2.5f),
-                    lineOpacity(0.8f),
-                    lineDasharray(arrayOf(2f, 2f)),
-                ),
-            )
-        }
-        style.addSource(GeoJsonSource(STOPS, FeatureCollection.fromFeatures(points.map { Feature.fromGeometry(it.point) })))
+    MapLibreView(modifier, interactive) { ready, style, _ ->
+        style.addSource(GeoJsonSource(ROUTE))
+        style.addLayer(
+            LineLayer(ROUTE, ROUTE).withFilter(not(get("straight"))).withProperties(
+                lineColor(line),
+                lineWidth(width),
+                lineOpacity(0.8f),
+                lineCap(Property.LINE_CAP_ROUND),
+                lineJoin(Property.LINE_JOIN_ROUND),
+            ),
+        )
+        style.addLayer(
+            LineLayer(ROUTES_DASHED, ROUTE).withFilter(get("straight")).withProperties(
+                lineColor(gap),
+                lineWidth(2.5f),
+                lineOpacity(0.8f),
+                lineDasharray(arrayOf(2f, 2f)),
+            ),
+        )
+        style.addSource(GeoJsonSource(STOPS))
         style.addLayer(
             CircleLayer(STOPS, STOPS).withProperties(
                 circleRadius(dot),
@@ -1373,21 +1382,28 @@ private fun PointsMap(
                 circleStrokeColor(ring),
             ),
         )
-        if (rings.isNotEmpty()) {
-            style.addSource(GeoJsonSource(RINGS, FeatureCollection.fromFeatures(rings.map { Feature.fromGeometry(it.point) })))
-            style.addLayer(
-                CircleLayer(RINGS, RINGS).withProperties(
-                    circleRadius(dot),
-                    circleColor(ring),
-                    circleStrokeWidth(2f),
-                    circleStrokeColor(line),
-                ),
-            )
-        }
-        val framed = points + rings + lines.flatMap { segment -> segment.line.map { (longitude, latitude) -> LatLng(latitude, longitude) } }
-        if (framed.isNotEmpty()) map.frame(framed, inset, closest)
+        style.addSource(GeoJsonSource(RINGS))
+        style.addLayer(
+            CircleLayer(RINGS, RINGS).withProperties(
+                circleRadius(dot),
+                circleColor(ring),
+                circleStrokeWidth(2f),
+                circleStrokeColor(line),
+            ),
+        )
+        // Drawn before the first frame, so a new map opens already showing them.
+        fill(ready, style, latest)
+        map = ready to style
+    }
+
+    LaunchedEffect(map, shown) {
+        val (ready, style) = map?.live ?: return@LaunchedEffect
+        if (drawn[0] != shown) fill(ready, style, shown)
     }
 }
+
+/** What a [PointsMap] shows: its dots, its lines and its rings. */
+private data class PointsShown(val points: List<LatLng>, val lines: List<RouteSegment>, val rings: List<LatLng>)
 
 /**
  * A day's recorded track: each unbroken stretch a solid line in the track's colour, the gaps
