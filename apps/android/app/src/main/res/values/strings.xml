@@ -167,6 +167,22 @@
     <string name="widget_preview_trip_eyebrow">第 2 天 共 5 天</string>
     <string name="widget_preview_trip_title">东北自驾</string>
     <string name="widget_preview_trip_subtitle">15 个时刻</string>
+    <string name="widget_heatmap_name">热力图</string>
+    <string name="widget_heatmap_description">每天一格：记录、支出或足迹，越深越多</string>
+    <string name="widget_heatmap_moments">记录</string>
+    <string name="widget_heatmap_spending">支出</string>
+    <string name="widget_heatmap_footprints">足迹</string>
+    <string name="widget_heatmap_moments_note">每天写了几个时刻，只算公开的</string>
+    <string name="widget_heatmap_spending_note">每天花了多少，只有深浅，不写金额</string>
+    <string name="widget_heatmap_footprints_note">每天走了多远</string>
+    <string name="widget_heatmap_settings_note">每天一格，越深越多。</string>
+    <string name="widget_heatmap_show">显示</string>
+    <string name="widget_heatmap_settings_hint">点一项就换上；点小组件上的名字可以再来这里改。</string>
+    <string name="widget_heatmap_year">近 12 个月</string>
+    <string name="widget_heatmap_km">%1$s 公里</string>
+    <!-- The range, then the days or the distance: 近 26 周 84 天. -->
+    <string name="widget_heatmap_summary">%1$s %2$s</string>
+    <string name="widget_preview_heatmap_summary">近 26 周 84 天</string>
     <!-- Between clauses read out together, and between the items of a list. -->
     <string name="separator_clause">，</string>
     <string name="separator_list">、</string>
@@ -211,6 +227,12 @@
     </plurals>
     <plurals name="widget_trip_in_days">
         <item quantity="other">%1$d 天后出发</item>
+    </plurals>
+    <plurals name="widget_heatmap_weeks">
+        <item quantity="other">近 %1$d 周</item>
+    </plurals>
+    <plurals name="widget_heatmap_days">
+        <item quantity="other">%1$d 天</item>
     </plurals>
     <string name="title_new_moment">新时刻</string>
     <string name="section_bill">账单</string>

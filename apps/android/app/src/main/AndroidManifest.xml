@@ -171,7 +171,7 @@
             </intent-filter>
         </activity-alias>
 
-        <!-- The home screen's widgets: a Moment from this day in an earlier year, and the trip. -->
+        <!-- The home screen's widgets: a Moment from this day in an earlier year, the trip, and the heatmap. -->
         <receiver
             android:name=".widget.MemoryWidgetReceiver"
             android:label="@string/widget_memory_name"
@@ -194,6 +194,27 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_trip" />
         </receiver>
+        <receiver
+            android:name=".widget.HeatmapWidgetReceiver"
+            android:label="@string/widget_heatmap_name"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_heatmap" />
+        </receiver>
+        <!-- What the heatmap widget shows, chosen as it is added and again from the home screen. -->
+        <activity
+            android:name=".widget.HeatmapSettingsActivity"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
         <!-- Serves the photo or video the viewer shares to the app it is shared with, and the
              file the camera app writes a photo taken for a new Moment to. -->
         <provider
