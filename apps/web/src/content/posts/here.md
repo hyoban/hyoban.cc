@@ -4,7 +4,7 @@ link: here
 ogImage: https://image.hyoban.cc/posts/here/cover.jpg
 ogDescription: 我为自己写的人生记录 app。
 description: 从删记录的强迫症到想留下一切，我写了 Here：记录 Moment、记账、轨迹和用车数据，再把它们放到时间线和地图上。
-pubDate: '2026-11-01T08:00:00.000Z'
+pubDate: '2026-11-01T17:35:20.000Z'
 ---
 
 ## 前言
