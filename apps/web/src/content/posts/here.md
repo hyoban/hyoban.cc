@@ -1,6 +1,7 @@
 ---
 title: Here
 link: here
+ogImage: https://image.hyoban.cc/posts/here/cover.jpg
 ogDescription: 我为自己写的人生记录 app。
 description: 从删记录的强迫症到想留下一切，我写了 Here：记录 Moment、记账、轨迹和用车数据，再把它们放到时间线和地图上。
 pubDate: '2026-11-01T08:00:00.000Z'
@@ -38,11 +39,21 @@ iCost 是我用了两年的记账软件，我十分喜欢。所以我软件中�
 
 用车数据可以从汽车的 app 中导出，[极氪](/20-000-km/)的不仅记录的少（没有轨迹数据），导出还麻烦。只能写个脚本用 adb 按月导出了。但作为补充数据价值很高，帮我纠正了很多历史旅程。
 
+![Here 的单日页面、车的月报和「我」页面](https://image.hyoban.cc/posts/here/app-day-car-me.webp)
+
 ## 展示也可以更好
 
 这些宝贵的数据都有了，你很难不想在手机上浏览一下！我设计了以时间线和地图两种视图为核心的展示，完全适配了横屏的体验，让自己经常把玩一下。
 
+![横屏的旅程页面，地图在左，旅程信息在右](https://image.hyoban.cc/posts/here/app-landscape-trip.webp)
+
+![深色模式下横屏回放旅程，路线一边走一边翻到千岛湖的照片](https://image.hyoban.cc/posts/here/app-landscape-playback-dark.webp)
+
 由于我们数据类型很多，所以它不能是简单的 timeline 展示形式，我把它做成了聊天对话的形式。日常触发的在左边，自己的 moment 在右边。地图的话则没有太多可以聊的，基本上是你现在在网页上所看到的展示简化版，只是你可以看到你本地记录的轨迹。是的，我划分了一下 public 和 private 的数据，毕竟你肯定不想毫无隐私。
+
+![对话形式的时间线：账单、充电和轨迹在左边，Moment 在右边](https://image.hyoban.cc/posts/here/app-timeline.webp)
+
+![横屏的地图页面，旅程列表在左，地图上是旅程路线和去过的地点](https://image.hyoban.cc/posts/here/app-landscape-map.webp)
 
 网站这边我也利用新的数据更新了很多页面。比如为了配合我的用车数据，我找了个车的 3D 模型，做了点[自认为炫酷的动画](/20-000-km/)。[旅途回放](/trip/2026-national-day-road-trip/play/)做了 3D 模式和侧栏滚动播放。[地图](/map/)的迷雾模式来展示自己对于地球的探索范围。更完善更多连接的 [moment](/map/2026/) 展示浏览体验。按年统计的[年度回顾](/2025/)数据展示。等等等等。
 
