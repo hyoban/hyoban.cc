@@ -10,7 +10,8 @@ import { dataRoot } from '../apps/web/src/data/store.ts'
 // Each charging session of the car's months (data/zeekr) as an entry with a `charge` part,
 // at when it started and ending when it stopped, naming the car and where in the capture it
 // came from, its uid made from that time. Running it again after a new capture adds the new
-// sessions and brings the rest up to date, as only this import changes a charge it made. It
+// sessions and brings the rest up to date, as only this import changes a charge it made; one
+// whose figures did not change keeps its source. It
 // writes them under data/entries; `vp run data:push` then sends them to the API. Without
 // --write it only says what it would write.
 
@@ -47,12 +48,16 @@ for (const charge of charges) {
   let next = entry
 
   if (existing !== null) {
-    // Kept as published, with the charge as this import now has it.
+    // Kept as published, with the charge as this import now has it; a charge whose figures
+    // are the same keeps the capture it was first read from, so a new capture rewrites none.
     const prior = entrySchema.parse(JSON.parse(existing))
+    const { source: priorSource, ...priorCharge } = prior.parts.charge ?? {}
+    const { source: _source, ...charge } = entry.parts.charge
+    const same = priorSource && JSON.stringify(priorCharge) === JSON.stringify(charge)
     const merged = {
       ...prior,
       end: entry.end,
-      parts: { ...prior.parts, charge: entry.parts.charge },
+      parts: { ...prior.parts, charge: same ? prior.parts.charge : entry.parts.charge },
     }
 
     next = JSON.stringify(merged) === JSON.stringify(prior) ? prior : { ...merged, updatedAt: now }

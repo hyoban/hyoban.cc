@@ -1,0 +1,29 @@
+{
+  "deviceId": "zeekr-007gt",
+  "capturedAt": "2026-11-01T08:49:32+08:00",
+  "statistics": {
+    "distanceMeters": 19688000,
+    "durationSeconds": 756000,
+    "nzp": {
+      "distanceMeters": 19632000,
+      "durationSeconds": 752400,
+      "reportedDistancePercent": 99,
+      "reportedDurationPercent": 99
+    },
+    "accLcc": {
+      "distanceMeters": 56000,
+      "durationSeconds": 3600,
+      "reportedDistancePercent": 1,
+      "reportedDurationPercent": 1
+    },
+    "parkingCount": 413,
+    "parkingAverageSeconds": 35,
+    "daysOwned": 441,
+    "beatsPercent": 98
+  },
+  "source": {
+    "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+    "pointer": "/assisted_driving/periods/0",
+    "method": "screen"
+  }
+}
