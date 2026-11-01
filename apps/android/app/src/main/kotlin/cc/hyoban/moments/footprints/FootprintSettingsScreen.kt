@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.AppColors
+import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.settings.SegmentedGroup
@@ -65,6 +66,7 @@ fun FootprintSettingsScreen(container: AppContainer, onBack: () -> Unit) {
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
+                    .padding(top = LocalTopClearance.current)
                     .navigationBarsPadding()
                     .padding(horizontal = columns.margin)
                     .padding(bottom = Space.xl)
