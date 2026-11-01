@@ -3,7 +3,6 @@ package cc.hyoban.moments.data.media
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
-import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import cc.hyoban.moments.data.spec.MediaType
@@ -11,7 +10,6 @@ import cc.hyoban.moments.data.spec.MomentMedia
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
-import java.io.File
 
 /** A dedicated album, kept for the user and for drafts after the handoff finishes. */
 data class ShareAlbum(val name: String, val count: Int)
@@ -36,22 +34,13 @@ suspend fun saveShareAlbum(context: Context, photos: List<MomentMedia>, urls: Me
                     put(MediaStore.Images.Media.MIME_TYPE, type)
                     put(MediaStore.Images.Media.DATE_TAKEN, now - index * 1000L)
                     put(MediaStore.Images.Media.DATE_MODIFIED, now / 1000 - index)
-                    if (Build.VERSION.SDK_INT >= 29) {
-                        put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$name")
-                        put(MediaStore.Images.Media.IS_PENDING, 1)
-                    } else {
-                        @Suppress("DEPRECATION")
-                        val directory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), name).apply { mkdirs() }
-                        @Suppress("DEPRECATION")
-                        put(MediaStore.Images.Media.DATA, File(directory, filename).absolutePath)
-                    }
+                    put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$name")
+                    put(MediaStore.Images.Media.IS_PENDING, 1)
                 }
                 val uri = checkNotNull(resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values))
                 saved += uri
                 checkNotNull(resolver.openOutputStream(uri)).use { output -> file.inputStream().use { it.copyTo(output) } }
-                if (Build.VERSION.SDK_INT >= 29) {
-                    resolver.update(uri, ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) }, null, null)
-                }
+                resolver.update(uri, ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) }, null, null)
             }
             ensureActive()
             ShareAlbum(name, photos.size)

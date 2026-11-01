@@ -158,16 +158,6 @@ class ConnectionReminderService : Service() {
         if (value.wifi.isNotEmpty()) {
             initialNetworks += connectivity.allNetworks.filter { connectivity.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true }
             transitions.wifi(emptySet(), seed = true)
-            val caps: (Network, NetworkCapabilities) -> Unit = { network, capabilities ->
-                post(generation) {
-                    if (!wifiAllowed(background = true)) { configure(rules); return@post }
-                    val ssid = connectedSsid(capabilities)
-                    if (network in networks && networks[network] == ssid) return@post
-                    networks[network] = ssid
-                    val initial = if (ssid != null) initialNetworks.remove(network) else network in initialNetworks
-                    updateWifi(initial)
-                }
-            }
             val lost: (Network) -> Unit = { network ->
                 post(generation) {
                     val known = networks.containsKey(network)
@@ -182,7 +172,7 @@ class ConnectionReminderService : Service() {
                     }
                 }
             }
-            callback = if (Build.VERSION.SDK_INT >= 31) object : ConnectivityManager.NetworkCallback() {
+            callback = object : ConnectivityManager.NetworkCallback() {
                 // Persistent callbacks deliberately omit location info: RSSI/validation changes
                 // must not keep accessing location after an SSID has already been identified.
                 override fun onAvailable(network: Network) = post(generation) {
@@ -192,9 +182,6 @@ class ConnectionReminderService : Service() {
                     transitions.resolvingWifi(true)
                     startIdentityLookup(generation)
                 }
-                override fun onLost(network: Network) = lost(network)
-            } else object : ConnectivityManager.NetworkCallback() {
-                override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) = caps(network, capabilities)
                 override fun onLost(network: Network) = lost(network)
             }
             connectivity.registerNetworkCallback(NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(), callback!!)
@@ -210,7 +197,6 @@ class ConnectionReminderService : Service() {
         changed()
     }
 
-    @androidx.annotation.RequiresApi(31)
     private fun startIdentityLookup(generation: Int) {
         if (identityCallback != null) return
         val lookup = object : ConnectivityManager.NetworkCallback(FLAG_INCLUDE_LOCATION_INFO) {

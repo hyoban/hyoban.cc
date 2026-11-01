@@ -57,7 +57,6 @@ import cc.hyoban.moments.ui.format.daysBetween
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatRange
 import cc.hyoban.moments.ui.theme.MediaOverlay
-import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.appTokens
 import coil3.SingletonImageLoader
@@ -196,10 +195,8 @@ private val SIZES = SizeMode.Responsive(setOf(STRIP, SMALL, WIDE, LARGE))
 
 @Composable
 private fun WidgetCard(card: Card) {
-    // The launcher's own corner on Android 12 and later, so the card rounds as the system's do.
-    val base = GlanceModifier.fillMaxSize().appWidgetBackground().let {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) it.cornerRadius(android.R.dimen.system_app_widget_background_radius) else it.cornerRadius(CORNER)
-    }
+    // The launcher's own corner, so the card rounds as the system's do.
+    val base = GlanceModifier.fillMaxSize().appWidgetBackground().cornerRadius(android.R.dimen.system_app_widget_background_radius)
     when (card) {
         is Card.Empty -> Box(
             base.background(GlanceTheme.colors.surface).padding(PADDING).clickable(open("moments")),
@@ -353,7 +350,6 @@ private suspend fun photo(context: Context, container: AppContainer, media: Mome
 }
 
 private const val PHOTO_WIDTH = 720
-private val CORNER = Radius.large
 private val PADDING = Space.l
 private val PADDING_LARGE = Space.xl
 

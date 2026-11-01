@@ -2,7 +2,6 @@ package cc.hyoban.moments.footprints
 
 import cc.hyoban.moments.ui.design.AppIcons
 import android.Manifest
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
@@ -50,7 +49,7 @@ internal fun ActivityRecognitionSettings() {
                 }),
                 enabled = available || enabled,
             ) {
-                if (!enabled && Build.VERSION.SDK_INT >= 29 && !permitted) permission.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+                if (!enabled && !permitted) permission.launch(Manifest.permission.ACTIVITY_RECOGNITION)
                 else change(!enabled)
             }
         },

@@ -1,7 +1,6 @@
 package cc.hyoban.moments.footprints
 
 import cc.hyoban.moments.ui.design.AppIcons
-import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Build
@@ -128,25 +127,19 @@ private fun StatusBarSettings() {
     ) { explaining = false }
 }
 
-/** What keeps recording going in the background: the app's system settings, and on Android 10 coming back after a restart. */
+/** What keeps recording going in the background: the app's system settings. */
 @Composable
 private fun BackgroundSettings() {
     val context = LocalContext.current
-    val background = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     SegmentedGroup(
         stringResource(R.string.footprints_background_options),
         stringResource(R.string.footprints_background_note),
-        listOfNotNull(
+        listOf(
             { shapes ->
                 ActionRow(AppIcons.BatteryCharging, stringResource(R.string.footprints_settings), shapes, external = true) {
                     context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
                 }
             },
-            if (Build.VERSION.SDK_INT == 29) { shapes ->
-                ActionRow(AppIcons.Refresh, stringResource(R.string.footprints_background_permission), shapes) {
-                    background.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                }
-            } else null,
         ),
     )
 }

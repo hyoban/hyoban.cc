@@ -1,9 +1,7 @@
 package cc.hyoban.moments.ui.viewer
 
-import android.app.Activity
 import android.app.PictureInPictureParams
 import android.content.pm.PackageManager
-import android.os.Build
 import android.util.Rational
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
@@ -18,9 +16,8 @@ import androidx.core.app.PictureInPictureModeChangedInfo
 import androidx.core.util.Consumer
 
 // A video playing in the viewer goes on in a small window of its own when the app is left,
-// as a gallery's does: on Android 12 and later the system takes it there itself as the
-// app goes to the background, before that the activity asks as the user leaves it. In that
-// window the viewer shows only the video, and the system's own play and pause come from
+// as a gallery's does: the system takes it there itself as the app goes to the background.
+// In that window the viewer shows only the video, and the system's own play and pause come from
 // the video's media session.
 
 /** Whether the app's window is a picture-in-picture one. */
@@ -39,17 +36,7 @@ fun rememberInPictureInPicture(): Boolean {
     return inPip
 }
 
-/** What the activity asks for as the user leaves it, before Android 12: the window of the video playing, if one is. */
 object PictureInPicture {
-    var params: PictureInPictureParams? = null
-        private set
-
-    /** Before Android 12, from the activity as the user leaves it: goes into the video's window if one is playing. */
-    fun enterOnLeave(activity: Activity) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) return
-        params?.let { runCatching { activity.enterPictureInPictureMode(it) } }
-    }
-
     /**
      * Offers a window of [width] by [height] to the system while [playing]: the app's
      * window turns into it as the app is left, and stops doing so once the video stops.
@@ -63,15 +50,11 @@ object PictureInPicture {
         DisposableEffect(activity, playing, width, height) {
             val built = PictureInPictureParams.Builder()
                 .setAspectRatio(aspectOf(width, height))
-                .apply { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) setAutoEnterEnabled(playing) }
+                .setAutoEnterEnabled(playing)
                 .build()
-            params = built.takeIf { playing }
             runCatching { activity.setPictureInPictureParams(built) }
             onDispose {
-                params = null
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    runCatching { activity.setPictureInPictureParams(PictureInPictureParams.Builder().setAutoEnterEnabled(false).build()) }
-                }
+                runCatching { activity.setPictureInPictureParams(PictureInPictureParams.Builder().setAutoEnterEnabled(false).build()) }
             }
         }
     }

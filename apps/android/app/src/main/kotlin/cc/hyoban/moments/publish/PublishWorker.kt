@@ -137,11 +137,7 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                 .setSilent(true)
                 .setCategory(NotificationCompat.CATEGORY_PROGRESS)
                 .build()
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                ForegroundInfo(PROGRESS_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-            } else {
-                ForegroundInfo(PROGRESS_ID, notification)
-            }
+            return ForegroundInfo(PROGRESS_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         }
 
         /** How it went, left in the shade, when the app may post there. */

@@ -106,7 +106,7 @@ fun ConnectionAutomationSettings(container: AppContainer) {
                 needed += Manifest.permission.ACCESS_COARSE_LOCATION
             }
         }
-        if (Build.VERSION.SDK_INT >= 31 && (action == "bluetooth" || (action == "enable" && rules.bluetooth.isNotEmpty())) && !context.bluetoothAllowed()) {
+        if ((action == "bluetooth" || (action == "enable" && rules.bluetooth.isNotEmpty())) && !context.bluetoothAllowed()) {
             needed += Manifest.permission.BLUETOOTH_CONNECT
         }
         if (action == "enable" && Build.VERSION.SDK_INT >= 33 && !context.granted(Manifest.permission.POST_NOTIFICATIONS)) {
@@ -164,11 +164,10 @@ fun ConnectionAutomationSettings(container: AppContainer) {
     )
     CompanionConnectionSettings(rules)
     if (permissionHelp || (rules.enabled && status == R.string.connection_automation_permissions)) {
-        val background = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
         SegmentedGroup(
             stringResource(R.string.connection_automation_permission_title),
             stringResource(R.string.connection_automation_permission_help),
-            listOfNotNull(
+            listOf(
                 { shapes ->
                     ActionRow(AppIcons.Settings, stringResource(R.string.footprints_settings), shapes, external = true) {
                         context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
@@ -179,11 +178,6 @@ fun ConnectionAutomationSettings(container: AppContainer) {
                         context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                     }
                 },
-                if (Build.VERSION.SDK_INT == 29) { shapes ->
-                    ActionRow(AppIcons.Refresh, stringResource(R.string.footprints_background_permission), shapes) {
-                        background.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                    }
-                } else null,
             ),
         )
     }
