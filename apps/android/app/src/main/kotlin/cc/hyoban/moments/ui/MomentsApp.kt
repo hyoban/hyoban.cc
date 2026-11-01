@@ -901,9 +901,12 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                 // the same floating capsule, centred in the height, the tab's button under it; no
                 // strip behind it, so the page shows round it.
                 Column(
-                    Modifier.fillMaxHeight().width(RAIL_WIDTH)
-                        .onSizeChanged { railWidth = with(density) { it.width.toDp() } }
-                        .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)),
+                    // Past the camera's cutout when it is on this side, its own 80 beyond; what the pages keep
+                    // clear of is that 80, as they keep clear of the cutout themselves.
+                    Modifier.fillMaxHeight()
+                        .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Vertical + WindowInsetsSides.Start))
+                        .width(RAIL_WIDTH)
+                        .onSizeChanged { railWidth = with(density) { it.width.toDp() } },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(Space.m, Alignment.CenterVertically),
                 ) {

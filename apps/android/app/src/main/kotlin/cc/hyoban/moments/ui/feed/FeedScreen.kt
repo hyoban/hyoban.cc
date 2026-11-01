@@ -267,8 +267,17 @@ fun FeedScreen(
                                 // As wide as the Moments under them and as far in, clear of the rail
                                 // and the cutout as they are.
                                 CollapsingHeader(headerScroll) {
-                                    PageWidth(maxColumns = 1) { columns ->
-                                        Column(Modifier.padding(horizontal = columns.margin)) { FeedLeading().apply(header).rows.forEach { (_, row) -> row() } }
+                                    // The title and search as a top bar has them, across the whole width beside the
+                                    // tabs, search in the corner (it keeps clear of the cutout itself); the rows under
+                                    // them as wide as the Moments.
+                                    val rows = FeedLeading().apply(header).rows
+                                    Column {
+                                        rows.filter { it.first == "title" }.forEach { (_, row) ->
+                                            Box(Modifier.padding(start = LocalRailSpace.current.left, end = LocalRailSpace.current.right)) { row() }
+                                        }
+                                        PageWidth(maxColumns = 1) { columns ->
+                                            Column(Modifier.padding(horizontal = columns.margin)) { rows.filter { it.first != "title" }.forEach { (_, row) -> row() } }
+                                        }
                                     }
                                 }
                                 MomentFeed(

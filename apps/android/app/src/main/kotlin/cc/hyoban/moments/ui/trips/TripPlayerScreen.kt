@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.trips
 
+import androidx.compose.foundation.layout.WindowInsetsSides
+import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.design.emphasized
 
 import cc.hyoban.moments.ui.design.AppIcons
@@ -263,6 +265,7 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
                 // The room it takes from the map, its margin and the navigation bar's included.
                 .onSizeChanged { with(density) { card = it.width.toDp() to it.height.toDp() } }
                 .navigationBarsPadding()
+                .sideInsetsPadding(WindowInsetsSides.End)
                 // On its side, the card and its toolbar share the height under the status bar.
                 .then(if (landscape) Modifier.statusBarsPadding() else Modifier)
                 .padding(Space.gutter)
