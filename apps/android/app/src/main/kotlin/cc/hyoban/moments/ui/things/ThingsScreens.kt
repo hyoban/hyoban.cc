@@ -143,7 +143,6 @@ fun DevicesScreen(container: AppContainer, onBack: () -> Unit, open: String? = n
                 Icon(AppIcons.Plus, contentDescription = stringResource(R.string.device_add))
             }
         },
-        underBar = true,
     ) {
         PageColumn {
             if (devices.isEmpty()) {
@@ -326,7 +325,6 @@ fun SubscriptionsScreen(container: AppContainer, onBack: () -> Unit, open: Strin
                 Icon(AppIcons.Plus, contentDescription = stringResource(R.string.subscription_add))
             }
         },
-        underBar = true,
     ) {
         PageColumn {
             if (all.isEmpty()) {

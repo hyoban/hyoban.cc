@@ -78,7 +78,7 @@ fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerN
         ?: filter.day?.let { formatDay(it) }
         ?: stringResource(R.string.action_search)
 
-    SubPage(title, nav.back, subtitle = pluralStringResource(R.plurals.ledger_count_bills, bills.size, bills.size), underBar = true) {
+    SubPage(title, nav.back, subtitle = pluralStringResource(R.plurals.ledger_count_bills, bills.size, bills.size)) {
         BillList(ledger, bills, currency, nav, header = {
             Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s)) {
                 if (filter.search) {

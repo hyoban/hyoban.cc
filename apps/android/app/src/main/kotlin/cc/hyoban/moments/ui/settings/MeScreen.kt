@@ -100,7 +100,7 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
     val autoBill by AutoBill.enabledFlow(context).collectAsStateWithLifecycle()
     val sideKey by SideKeys.state.collectAsStateWithLifecycle()
     val books = ledger.books.filter { !it.archived }
-    TabPage(stringResource(R.string.tab_me), tab = Preferences, underBar = true) {
+    TabPage(stringResource(R.string.tab_me), tab = Preferences) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier

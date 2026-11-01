@@ -4,6 +4,8 @@ import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.TopBarWindowInsets
 import cc.hyoban.moments.ui.design.rememberTopBarScroll
 import cc.hyoban.moments.ui.design.TopBar
+import cc.hyoban.moments.ui.design.TopBarLargeTitle
+import kotlin.math.roundToInt
 import cc.hyoban.moments.ui.design.TopBarRowHeight
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -60,9 +62,8 @@ import cc.hyoban.moments.ui.theme.fill
 
 /**
  * A pushed page: the top bar over [content], its back button and actions floating circles,
- * its title large under them while the page is at its top, folding away as the content
- * scrolls up and fading in small between the circles, a short fade of the page under them once
- * it has. A
+ * its title large under them, the page's first thing, scrolling away under the circles with the
+ * content and fading in small between them, the scroll edge softening what passes under. A
  * page that is a full-screen dialog, done by its action or left without saving, [close]s
  * with an X rather than going back.
  */
@@ -79,12 +80,10 @@ fun SubPage(
     subtitleAction: (@Composable () -> Unit)? = null,
     /** What the small bar holds in the middle in place of [title], which then names the page to a screen reader alone. */
     centre: (@Composable () -> Unit)? = null,
-    /** Whether [content] runs up under the bar, its list [LocalTopClearance] down. */
-    underBar: Boolean = false,
     /** What stays under the bar's circles with them, a control over the whole page, the page passing under it too. */
     accessory: (@Composable () -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
-) = BarPage(title, subtitle, onBack, large = false, modifier, actions, content, close = close, small = small, titleMenu = titleMenu, subtitleAction = subtitleAction, centre = centre, underBar = underBar, accessory = accessory)
+) = BarPage(title, subtitle, onBack, large = false, modifier, actions, content, close = close, small = small, titleMenu = titleMenu, subtitleAction = subtitleAction, centre = centre, accessory = accessory)
 
 /**
  * A tab's page: the top bar, its title large, with no back
@@ -102,10 +101,8 @@ fun TabPage(
     refresh: (() -> Unit)? = null,
     titleMenu: TitleMenu? = null,
     subtitleAction: (@Composable () -> Unit)? = null,
-    /** Whether [content] runs up under the bar, its list [LocalTopClearance] down. */
-    underBar: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
-) = BarPage(title, subtitle, onBack = null, large = true, modifier, actions, content, tab, refresh = refresh, titleMenu = titleMenu, subtitleAction = subtitleAction, underBar = underBar)
+) = BarPage(title, subtitle, onBack = null, large = true, modifier, actions, content, tab, refresh = refresh, titleMenu = titleMenu, subtitleAction = subtitleAction)
 
 /**
  * A menu the page's title opens, named [label], as a page that is one of several (a ledger's
@@ -130,7 +127,6 @@ private fun BarPage(
     titleMenu: TitleMenu? = null,
     subtitleAction: (@Composable () -> Unit)? = null,
     centre: (@Composable () -> Unit)? = null,
-    underBar: Boolean = false,
     accessory: (@Composable () -> Unit)? = null,
 ) {
     // A dialog's bar, on a window too short to open it out, stays put rather than scrolling away,
@@ -189,7 +185,7 @@ private fun BarPage(
                     subtitleAction()
                 }
             } else {
-                Text(it, maxLines = 1)
+                Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -211,30 +207,46 @@ private fun BarPage(
     val rail = LocalRailSpace.current
     val margin = Space.gutter - BAR_TITLE_INSET
     val insets = TopBarWindowInsets.add(WindowInsets(left = rail.left + margin, right = rail.right + margin))
-    // No hairline under the bar: once something has scrolled up to the circles, the scroll edge
-    // softens what passes under. A page [underBar] runs up under the status bar and the circles,
-    // its list starting [LocalTopClearance] down, and the edge softens all of it; any other stops
-    // under the circles, and the edge is a short one below them. What stays under the circles
-    // with them, [accessory], lies over the page as they do, the edge reaching down past it.
-    val scrolled = scroll.state.overlappedFraction > 0.01f || scroll.state.collapsedFraction > 0.99f
+    // No hairline under the bar: the page runs up under the status bar and the circles, its list
+    // starting [LocalTopClearance] down under its title, and once something has gone up under the
+    // circles, its title as the bar folds included, the scroll edge softens it. What stays under
+    // the circles with them, [accessory], lies over the page as they do, the edge reaching past it.
+    val scrolled = scroll.state.overlappedFraction > 0.01f || scroll.state.collapsedFraction > 0.01f
     val fade by androidx.compose.animation.core.animateFloatAsState(if (scrolled) 1f else 0f, AppTheme.motionScheme.fastEffectsSpec(), label = "fade")
     val haze = rememberHazeState()
     val density = LocalDensity.current
     val row = with(density) { insets.getTop(density).toDp() } + TopBarRowHeight
     var below by remember { mutableStateOf(0.dp) }
-    val edge = if (underBar) row + below + Space.l else Space.xl
+    // On a window too short for it, a phone on its side, the bar starts small, its title beside
+    // the back button, rather than taking half the screen until scrolled away; so does a page
+    // whose own bottom half is taken, the bill's keypad. Its subtitle too small to act on beside,
+    // what it would there joins the bar's actions.
+    val startsSmall = isCompactHeight() || small || centre != null
     Layout(
         content = {
-            Box(Modifier.fillMaxSize().hazeSource(haze).background(AppColors.page)) {
-                CompositionLocalProvider(LocalTopClearance provides if (underBar) row + below else 0.dp) { content() }
+            Layout(
+                content = {
+                    Box(Modifier.fillMaxSize()) {
+                        CompositionLocalProvider(LocalTopClearance provides row + below) { content() }
+                    }
+                    if (!startsSmall) TopBarLargeTitle(titleText, scroll, subtitle = subtitleText, windowInsets = insets, large = large)
+                },
+                modifier = Modifier.fillMaxSize().hazeSource(haze).background(AppColors.page),
+            ) { measurables, constraints ->
+                // The page from the foot of its large title, as tall as is left of it, the title
+                // under the circles and the page's list under both.
+                val loose = constraints.copy(minHeight = 0)
+                val title = measurables.getOrNull(1)?.measure(loose)
+                val top = title?.height ?: 0
+                val height = (constraints.maxHeight - top).coerceAtLeast(0)
+                val page = measurables[0].measure(constraints.copy(minHeight = height, maxHeight = height))
+                layout(constraints.maxWidth, constraints.maxHeight) {
+                    page.place(0, top)
+                    title?.place(0, row.roundToPx())
+                }
             }
-            Box(Modifier.fillMaxWidth().height(edge).graphicsLayer { alpha = fade }.edgeBlur(haze, top = true))
+            Box(Modifier.fillMaxWidth().height(row + below + Space.l).graphicsLayer { alpha = fade }.edgeBlur(haze, top = true))
             Box(Modifier.fillMaxWidth().onSizeChanged { below = with(density) { it.height.toDp() } }) { accessory?.invoke() }
-            // On a window too short for it, a phone on its side, the bar starts small, its title
-            // beside the back button, rather than taking half the screen until scrolled away; so
-            // does a page whose own bottom half is taken, the bill's keypad. Its subtitle too small
-            // to act on beside, what it would there joins the bar's actions.
-            val startsSmall = isCompactHeight() || small || centre != null
             TopBar(
                 titleText,
                 scroll,
@@ -242,25 +254,24 @@ private fun BarPage(
                 navigationIcon = back,
                 actions = if (startsSmall) { { subtitleAction?.invoke(); actions() } } else actions,
                 windowInsets = insets,
-                large = large,
                 small = startsSmall,
             )
         },
         modifier = modifier.fillMaxSize().nestedScroll(scroll.nestedScrollConnection),
     ) { measurables, constraints ->
-        // The bar first, at the height it has folded to; the page under it from its foot, or,
-        // [underBar], from the foot of its large title, as the row of circles lies over the page.
+        // The page under all of it; the row of circles over it, and under them, what stays with
+        // them, below the large title while it shows.
         val loose = constraints.copy(minHeight = 0)
-        val bar = measurables[3].measure(loose)
-        val under = measurables[2].measure(loose)
-        val top = if (underBar) (bar.height - row.roundToPx()).coerceAtLeast(0) else bar.height + under.height
-        val height = (constraints.maxHeight - top).coerceAtLeast(0)
-        val page = measurables[0].measure(constraints.copy(minHeight = height, maxHeight = height))
+        val page = measurables[0].measure(constraints)
         val blur = measurables[1].measure(loose)
+        val under = measurables[2].measure(loose)
+        val bar = measurables[3].measure(loose)
+        val state = scroll.state
+        val title = if (startsSmall || state.heightOffsetLimit == -Float.MAX_VALUE) 0f else -state.heightOffsetLimit + state.heightOffset + state.stretch
         layout(constraints.maxWidth, constraints.maxHeight) {
-            page.place(0, top)
-            blur.place(0, if (underBar) 0 else bar.height + under.height)
-            under.place(0, bar.height)
+            page.place(0, 0)
+            blur.place(0, 0)
+            under.place(0, bar.height + title.roundToInt().coerceAtLeast(0))
             bar.place(0, 0)
         }
     }

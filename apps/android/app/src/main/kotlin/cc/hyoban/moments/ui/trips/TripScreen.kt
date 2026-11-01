@@ -200,7 +200,7 @@ fun TripScreen(
             }
         }
     }
-    SubPage(trip.title, onBack, Modifier.background(AppColors.page), actions = actions, underBar = true) {
+    SubPage(trip.title, onBack, Modifier.background(AppColors.page), actions = actions) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             if (landscape) {
                 // On its side, the route stays on the start side, as tall as the space under

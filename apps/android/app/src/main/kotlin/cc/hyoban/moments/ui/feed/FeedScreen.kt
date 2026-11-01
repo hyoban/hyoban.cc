@@ -627,7 +627,6 @@ fun PlaceScreen(
                 }
             }
         },
-        underBar = true,
     ) {
         // The place is the page's title, so its cards name only the other places they were at.
         val ledgerNav = LocalLedgerNav.current

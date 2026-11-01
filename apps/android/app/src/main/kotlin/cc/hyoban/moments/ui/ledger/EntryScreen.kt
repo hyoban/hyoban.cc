@@ -198,7 +198,6 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
         close = true,
         small = keypad,
         actions = { TextButton(onClick = ::save, modifier = Modifier.testTag("save_bill")) { Text(stringResource(R.string.action_save)) } },
-        underBar = true,
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(

@@ -463,7 +463,6 @@ fun NewMomentScreen(
                     modifier = Modifier.padding(end = Space.xs).testTag("save"),
                 ) { Text(stringResource(R.string.action_save)) }
             },
-            underBar = true,
         ) {
             PageWidth(maxColumns = 1) { columns ->
                 Column(Modifier.fillMaxSize().imePadding().navigationBarsPadding().padding(horizontal = columns.margin)) {
