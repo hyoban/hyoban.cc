@@ -54,6 +54,11 @@ class MomentsRepositoryTest {
             rows["entries" to uid] = row.copy(rev = ++revision, deletedAt = "2026-10-20T00:00:00Z")
         }
 
+        /** Any row, its record as JSON text, as D1 keeps it. */
+        fun putRow(table: String, key: String, record: String) {
+            rows[table to key] = CopyRow(table, key, ++revision, null, record)
+        }
+
         fun putPlace(id: String, place: Place) {
             rows["places" to id] = CopyRow("places", id, ++revision, null, Spec.json.encodeToString(Place.serializer(), place))
         }
@@ -165,6 +170,43 @@ class MomentsRepositoryTest {
         restarted.load()
         assertEquals(listOf("C", "F", "E", "D", "A"), restarted.moments.value.map { it.uid })
         assertEquals("南京", restarted.places.value["nanjing"]?.name)
+    }
+
+    @Test
+    fun `a sync takes only the rows it brought, and ends where reading the whole copy would`() = runBlocking {
+        listOf("A", "B", "C").forEach { api.put(moment(it, "2026-10-0${it[0] - 'A' + 1}")) }
+        val repository = repository()
+        repository.load()
+        repository.refresh()
+
+        // A trip of the 2nd and 3rd that takes in A from outside its days, with a mark on the 2nd.
+        fun trip(title: String) =
+            """{"uid":"01KTRIP0000000000000000000","slug":"2026-test","kind":"trip","title":"$title","span":{"start":"2026-10-02","end":"2026-10-03"},"include":["A"],"exclude":[],"covers":[],"createdAt":"2026-10-01T00:00:00Z","updatedAt":"2026-10-01T00:00:00Z"}"""
+        api.putRow("collections", "2026-test", trip("测试"))
+        api.putRow("entries", "MARK", """{"uid":"MARK","at":"2026-10-02","place":"nanjing","parts":{},"createdAt":"2026-10-01T00:00:00Z","updatedAt":"2026-10-01T00:00:00Z"}""")
+        repository.refresh()
+        assertEquals("2026-test", repository.moment("A")?.trip, "a trip names the Moment it takes in")
+        assertEquals(listOf("nanjing"), repository.trips.value.single().waypoints.map { it.place })
+
+        api.put(moment("B", "2026-10-02", text = "changed"))
+        api.delete("C")
+        api.put(moment("D", "2026-10-04"))
+        repository.refresh()
+        api.putRow("collections", "2026-test", trip("改过的"))
+        repository.refresh()
+
+        // A table the copy doesn't keep, as the API's routes, is left out rather than failing the sync.
+        api.putRow("routes", "a;b", """{"coordinates":[[1,2],[3,4]]}""")
+        assertTrue(repository.refresh().isSuccess)
+
+        val whole = repository()
+        whole.load()
+        assertEquals(whole.moments.value, repository.moments.value)
+        assertEquals(whole.trips.value, repository.trips.value)
+        assertEquals(whole.places.value, repository.places.value)
+        assertEquals(whole.second.value, repository.second.value)
+        assertEquals(listOf("D", "B", "A"), repository.moments.value.map { it.uid })
+        assertEquals("改过的", repository.trips.value.single().title)
     }
 
     @Test

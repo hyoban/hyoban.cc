@@ -7,6 +7,7 @@ import cc.hyoban.moments.data.api.MomentsWriter
 import cc.hyoban.moments.data.api.NoTokenException
 import cc.hyoban.moments.data.api.UploadPart
 import cc.hyoban.moments.data.copy.CopyStore
+import cc.hyoban.moments.data.copy.CopyTables
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
@@ -165,8 +166,11 @@ class MomentsRepository(
                         page = source.rows(since, page.next ?: break)
                         rows += page.rows
                     }
-                    copy.apply(rows.map { it.toCopyRow() }, first.revision, fresh = since == 0L)
-                    readCopy()
+                    // A table the copy doesn't keep, as one the API has come to serve since, is left out.
+                    val copied = rows.filter { it.table in CopyTables.names }.map { it.toCopyRow() }
+                    copy.apply(copied, first.revision, fresh = since == 0L)
+                    // From the start the copy is new, read whole; after a revision only its rows changed.
+                    if (since == 0L) readCopy() else takeRows(copied, first.revision)
                     // An entry the site now has as the phone changed it is the site's.
                     val entries = _second.value.entries
                     val settled = changedEntries.filter { (uid, entry) -> entries[uid] == entry }.keys
@@ -197,35 +201,80 @@ class MomentsRepository(
         }
     }
 
+    /** The copy's entries, read once, so a sync parses only the rows it brought. */
+    private var copyEntries: Map<String, kotlinx.serialization.json.JsonObject> = emptyMap()
+
     /**
      * What the screens are built from, read from the copy: the places, the entries with words
      * as Moments, the trips worked out from the collections and their marks, and the second
      * shape's records beside them.
      */
     private fun readCopy() {
-        fun objects(table: String) = copy.live(table).mapValues { Spec.json.parseToJsonElement(it.value).jsonObject }
-        val entries = objects("entries")
-        val collections = objects("collections")
-        val trips = collections.values.map { Entries.toTrip(it, entries.values) }.sortedWith(compareBy({ it.start }, { it.id }))
-        // A Moment a trip takes in from outside its days names that trip, as the spec's entryToMoment has it.
-        all = entries.values.mapNotNull { entry ->
-            val moment = Entries.toMoment(entry) ?: return@mapNotNull null
-            val trip = collections.entries.firstOrNull { (_, collection) ->
-                moment.uid in Entries.strings(collection, "include") && moment.uid !in Entries.strings(collection, "exclude")
-            }?.key
-            if (moment.trip == trip) moment else moment.copy(trip = trip)
-        }.associateBy { it.uid }
+        fun objects(table: String) = copy.live(table).mapValues { parse(it.value) }
+        copyEntries = objects("entries")
         apiPlaces = copy.live("places").mapValues { Spec.json.decodeFromString(Place.serializer(), it.value) }
-        apiTrips = trips
         _second.value = SecondShape(
             copy.revision(),
-            entries.filterValues(::beyondFirstShape),
-            collections,
+            copyEntries.filterValues(::beyondFirstShape),
+            objects("collections"),
             objects("tracks"),
             objects("vehicle_months"),
             objects("vehicle_assisted"),
         )
+        all = copyEntries.values.mapNotNull(::momentOf).associateBy { it.uid }
+        apiTrips = tripsOf()
     }
+
+    /**
+     * Takes the [rows] a sync brought over what the screens are built from, rebuilding only
+     * what they touch: the Moments of the entries that changed, every one only when a
+     * collection did (it may name their trip), and the trips when a collection or a mark did.
+     */
+    private fun takeRows(rows: List<cc.hyoban.moments.data.copy.CopyRow>, revision: Long) {
+        val byTable = rows.groupBy { it.table }
+        fun <T> merge(current: Map<String, T>, table: String, read: (String) -> T): Map<String, T> {
+            val changed = byTable[table] ?: return current
+            return current.toMutableMap().apply {
+                for (row in changed) if (row.deletedAt == null) put(row.key, read(row.record)) else remove(row.key)
+            }
+        }
+        val touched = byTable["entries"].orEmpty().map { it.key }.toSet()
+        val before = copyEntries
+        copyEntries = merge(copyEntries, "entries", ::parse)
+        val marksMoved = touched.any { uid -> listOfNotNull(before[uid], copyEntries[uid]).any(Entries::isMark) }
+        apiPlaces = merge(apiPlaces, "places") { Spec.json.decodeFromString(Place.serializer(), it) }
+        val second = _second.value
+        _second.value = SecondShape(
+            revision,
+            second.entries - touched + touched.mapNotNull { uid -> copyEntries[uid]?.takeIf(::beyondFirstShape)?.let { uid to it } },
+            merge(second.collections, "collections", ::parse),
+            merge(second.tracks, "tracks", ::parse),
+            merge(second.vehicleMonths, "vehicle_months", ::parse),
+            merge(second.vehicleAssisted, "vehicle_assisted", ::parse),
+        )
+        val collectionsMoved = "collections" in byTable
+        all = if (collectionsMoved) {
+            copyEntries.values.mapNotNull(::momentOf).associateBy { it.uid }
+        } else {
+            all - touched + touched.mapNotNull { copyEntries[it]?.let(::momentOf) }.associateBy { it.uid }
+        }
+        if (collectionsMoved || marksMoved) apiTrips = tripsOf()
+    }
+
+    private fun parse(text: String) = Spec.json.parseToJsonElement(text).jsonObject
+
+    /** An entry's Moment if it has words; a Moment a trip takes in from outside its days names that trip, as the spec's entryToMoment has it. */
+    private fun momentOf(entry: kotlinx.serialization.json.JsonObject): MomentRecord? {
+        val moment = Entries.toMoment(entry) ?: return null
+        val trip = _second.value.collections.entries.firstOrNull { (_, collection) ->
+            moment.uid in Entries.strings(collection, "include") && moment.uid !in Entries.strings(collection, "exclude")
+        }?.key
+        return if (moment.trip == trip) moment else moment.copy(trip = trip)
+    }
+
+    /** The trips, worked out from the collections and their marks. */
+    private fun tripsOf(): List<TripRecord> =
+        _second.value.collections.values.map { Entries.toTrip(it, copyEntries.values) }.sortedWith(compareBy({ it.start }, { it.id }))
 
     private fun kotlinx.serialization.json.JsonObject.text(key: String) =
         (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.content
@@ -286,6 +335,7 @@ class MomentsRepository(
     suspend fun clear() = lock.withLock {
         withContext(io) {
             copy.clear()
+            copyEntries = emptyMap()
             phone.values.filter { it.published != null }.forEach(::forgetLocal)
             removed = emptySet()
             local?.writeRemoved(removed)
