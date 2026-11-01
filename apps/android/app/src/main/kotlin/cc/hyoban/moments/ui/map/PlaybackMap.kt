@@ -264,6 +264,9 @@ fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modif
             val seconds = (now - last) / 1e9
             last = now
             controller.tick(delta)
+            // A newer style taking this one's place (the map shown again, light and dark switched)
+            // can't be written to; this effect starts over with that one.
+            if (!style.isFullyLoaded) continue
 
             val route = controller.playback.route
             if (controller.drawnPointCount != drawnCount) {

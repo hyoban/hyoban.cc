@@ -1,5 +1,14 @@
 package cc.hyoban.moments.ui.design
 
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import cc.hyoban.moments.ui.theme.Space
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -107,48 +116,80 @@ fun ModalBottomSheet(
 ) {
     val scope = rememberCoroutineScope()
     val offset = remember { Animatable(Float.MAX_VALUE) }
-    var height by remember { mutableFloatStateOf(0f) }
+    // How far it travels out: its height from the foot, or on its side its width out to the end.
+    var travel by remember { mutableFloatStateOf(0f) }
     val leave: () -> Unit = {
         scope.launch {
-            offset.animateTo(height, spring(stiffness = 1500f))
+            offset.animateTo(travel, spring(stiffness = 1500f))
             onDismissRequest()
         }
     }
-    // On a window 840 wide or more the panel is a dialog in the middle, rounded all round (L01).
+    // On a window 840 wide or more the panel is a dialog in the middle, rounded all round (L01);
+    // on a phone on its side it slides in from the end, the whole height and 360 wide (H00).
     val wide = cc.hyoban.moments.ui.components.isExpandedWidth()
+    val side = !wide && cc.hyoban.moments.ui.components.hidesSystemBars()
+    val ltr = LocalLayoutDirection.current == LayoutDirection.Ltr
+    val noSystemBars = cc.hyoban.moments.ui.components.hidesSystemBars()
     Dialog(onDismissRequest = leave, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        Box(Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = leave), contentAlignment = if (wide) Alignment.Center else Alignment.BottomCenter) {
-            val shape = if (wide) AppTheme.shapes.large else AppTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
+        cc.hyoban.moments.ui.components.DialogSystemBars(noSystemBars)
+        val alignment = when {
+            wide -> Alignment.Center
+            side -> Alignment.CenterEnd
+            else -> Alignment.BottomCenter
+        }
+        Box(Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = leave), contentAlignment = alignment) {
+            val shape = when {
+                wide -> AppTheme.shapes.large
+                side -> AppTheme.shapes.large.copy(topEnd = ZeroCornerSize, bottomEnd = ZeroCornerSize)
+                else -> AppTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
+            }
+            val settle = { velocity: Float ->
+                scope.launch {
+                    if (offset.value > travel / 3 || velocity > 2000f) leave() else offset.animateTo(0f, spring(dampingRatio = 1f, stiffness = 500f))
+                }
+            }
             Column(
                 modifier
-                    .statusBarsPadding()
-                    .widthIn(max = if (wide) 560.dp else 640.dp)
-                    .fillMaxWidth()
+                    .then(
+                        if (side) {
+                            Modifier.fillMaxHeight().width(SIDE_SHEET_WIDTH)
+                        } else {
+                            Modifier.statusBarsPadding().widthIn(max = if (wide) 560.dp else 640.dp).fillMaxWidth()
+                        },
+                    )
                     .onSizeChanged {
-                        val first = height == 0f
-                        height = it.height.toFloat()
-                        if (first) scope.launch { offset.snapTo(height); offset.animateTo(0f, spring(dampingRatio = 1f, stiffness = 500f)) }
+                        val first = travel == 0f
+                        travel = (if (side) it.width else it.height).toFloat()
+                        if (first) scope.launch { offset.snapTo(travel); offset.animateTo(0f, spring(dampingRatio = 1f, stiffness = 500f)) }
                     }
-                    .offset { IntOffset(0, offset.value.coerceIn(0f, height.coerceAtLeast(0f)).roundToInt()) }
+                    .offset {
+                        val shift = offset.value.coerceIn(0f, travel.coerceAtLeast(0f)).roundToInt()
+                        if (side) IntOffset(if (ltr) shift else -shift, 0) else IntOffset(0, shift)
+                    }
                     .clip(shape)
                     .background(containerColor)
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
                     .draggable(
-                        rememberDraggableState { delta -> scope.launch { offset.snapTo((offset.value + delta).coerceIn(0f, height)) } },
-                        Orientation.Vertical,
-                        onDragStopped = { velocity ->
-                            if (offset.value > height / 3 || velocity > 2000f) leave() else offset.animateTo(0f, spring(dampingRatio = 1f, stiffness = 500f))
+                        rememberDraggableState { delta ->
+                            val out = if (side && !ltr) -delta else delta
+                            scope.launch { offset.snapTo((offset.value + out).coerceIn(0f, travel)) }
                         },
+                        if (side) Orientation.Horizontal else Orientation.Vertical,
+                        onDragStopped = { velocity -> settle(if (side && !ltr) -velocity else velocity) },
                     )
-                    .navigationBarsPadding()
+                    .then(if (side) Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End + WindowInsetsSides.Vertical)).padding(top = Space.l) else Modifier.navigationBarsPadding())
                     .imePadding(),
             ) {
-                SheetHandle(Modifier.align(Alignment.CenterHorizontally))
+                // Dragged sideways on its side, it has no handle to show which way.
+                if (!side) SheetHandle(Modifier.align(Alignment.CenterHorizontally))
                 CompositionLocalProvider(LocalContentColor provides tokens.tx) { content() }
             }
         }
     }
 }
+
+/** How wide a sheet is on a phone on its side, sliding in from the end. */
+private val SIDE_SHEET_WIDTH = 360.dp
 
 /** Where a standard sheet rests: away, peeking, or as tall as it can be. */
 enum class SheetValue { Hidden, PartiallyExpanded, Expanded }

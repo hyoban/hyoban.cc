@@ -1,5 +1,10 @@
 package cc.hyoban.moments.ui.ledger
 
+import androidx.compose.foundation.layout.Box
+import cc.hyoban.moments.ui.components.SIDE_COLUMN
+import cc.hyoban.moments.ui.components.SideBySide
+import cc.hyoban.moments.ui.components.isPhoneLandscape
+import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.data.store.isPublic
@@ -98,11 +103,10 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
             }
         },
     ) {
-        PageWidth(maxColumns = 1) { columns ->
-            Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current).navigationBarsPadding()
-                    .padding(start = columns.margin, end = columns.margin, bottom = Space.xl),
-            ) {
+        // On a phone on its side what it was and how much stand in a column at the start, the rest
+        // beside them (H20).
+        val sideways = isPhoneLandscape()
+        val header: @Composable () -> Unit = {
                 Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.s).semantics(mergeDescendants = true) {}) {
                     Text(
                         if (txn.kind == TxnKind.TRANSFER) transferLabel(txn.transfer) else kindLabel(txn.kind),
@@ -123,6 +127,13 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                         )
                     }
                 }
+        }
+        val page: @Composable () -> Unit = { PageWidth(maxColumns = 1) { columns ->
+            Column(
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current).navigationBarsPadding()
+                    .padding(start = columns.margin, end = columns.margin, bottom = Space.xl),
+            ) {
+                if (!sideways) header()
 
                 val details = buildList<@Composable (ListItemShapes) -> Unit> {
                     add { shapes -> InfoRow(shapes, AppIcons.Calendar, stringResource(R.string.ledger_time), formatDay(txn.dateKey) + " " + txn.local.format(DateTimeFormatter.ofPattern("HH:mm"))) }
@@ -231,6 +242,16 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                     }
                 }
             }
+        } }
+        if (sideways) {
+            SideBySide(
+                Modifier.fillMaxSize(),
+                sideWidth = SIDE_COLUMN + Space.gutter,
+                sideInset = 0.dp,
+                side = { Column(Modifier.padding(top = LocalTopClearance.current)) { header() } },
+            ) { Box(Modifier.weight(1f)) { page() } }
+        } else {
+            page()
         }
     }
 

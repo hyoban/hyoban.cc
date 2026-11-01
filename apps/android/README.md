@@ -24,7 +24,13 @@ on. A new API, set in 同步与来源, drops the copy and reads everything again
 ## Pages
 
 Three tabs float at the foot of the screen, with 记录 beside them; on a window 840dp wide
-or more, or a phone on its side, they stand down a rail instead.
+or more, or a phone on its side, the same capsule stands on its end down the side, 记录 under
+it. On a phone on its side the status and navigation bars are put away (a swipe from the edge
+shows them), the timeline stays one conversation down the middle, the map's trips float in a
+card beside the tabs, and sheets slide in from the side. A Moment's photo, a day's footprints
+and a trip's route take the left half; the ledger, 发布更改, a bill, 设备, 订阅 and 车 keep their
+figures in a column at the left beside their list, the ledger's segments in the bar; 我 is two
+columns; 记一笔's keys take the right half; 记录 is a page rather than a dialog.
 
 - **时间线** is everything newest first, as a conversation with oneself: each day opens
   with its date in a capsule, Moments are bubbles from the right with their photos across

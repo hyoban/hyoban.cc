@@ -84,7 +84,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.AbsoluteAlignment
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -298,10 +298,13 @@ private fun MapContent(
         }
     }
 
-    // On a wide window the panel is a column standing at the start, the map beside it (L01);
-    // on a phone on its side the tabs stand down a rail and the panel stays at the foot.
-    val wide = cc.hyoban.moments.ui.components.isExpandedWidth()
-    val railed = wide || cc.hyoban.moments.ui.components.isLandscape()
+    // On a wide window the panel is a column standing at the start, the map beside it (L01); on a
+    // phone on its side, a card floating beside the tabs instead, the map round it (H09).
+    val expanded = cc.hyoban.moments.ui.components.isExpandedWidth()
+    val wide = expanded || cc.hyoban.moments.ui.components.isLandscape()
+    val floatingPanel = !expanded
+    val panelWidth = if (floatingPanel) FLOATING_PANEL else WIDE_PANEL
+    val railed = wide
     val rail = LocalRailSpace.current
     val clearance = LocalBottomClearance.current
     val toggleFog: () -> Unit = {
@@ -346,6 +349,7 @@ private fun MapContent(
                 locating = false
                 if (!found) show(resources.getString(R.string.error_location))
             },
+            panel = if (wide) panelWidth + Space.m else 0.dp,
         )
         // At the top: the search and the fog's switch on one line, the legend under them and,
         // while the fog is on, how much of it is lit. On a wide window the search is the panel's
@@ -355,14 +359,11 @@ private fun MapContent(
             Modifier
                 .align(
                     when {
-                        !railed || wide -> Alignment.TopStart
-                        rail.left > 0.dp -> AbsoluteAlignment.TopRight
-                        else -> AbsoluteAlignment.TopLeft
+                        else -> Alignment.TopStart
                     },
                 )
                 .statusBarsPadding().sideInsetsPadding()
-                .padding(top = Space.s, start = if (wide) rail.left + WIDE_PANEL + MAP_EDGE else MAP_EDGE, end = MAP_EDGE)
-                .then(if (railed && !wide) Modifier.widthIn(max = SIDE_CONTROLS) else Modifier),
+                .padding(top = Space.s, start = if (wide) rail.left + panelWidth + MAP_EDGE else MAP_EDGE, end = MAP_EDGE),
             verticalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
@@ -426,7 +427,7 @@ private fun MapContent(
             exit = fadeOut(motion.defaultEffectsSpec()) + slideOutVertically(motion.defaultSpatialSpec()) { it / 2 },
             // 12 above the panel's top, as the buttons are.
             modifier = Modifier.align(Alignment.BottomCenter).then(if (wide) Modifier.navigationBarsPadding() else Modifier).sideInsetsPadding()
-                .padding(start = if (wide) rail.left + WIDE_PANEL + MAP_EDGE else MAP_EDGE, end = MAP_EDGE, bottom = if (wide) foot else Space.m)
+                .padding(start = if (wide) rail.left + panelWidth + MAP_EDGE else MAP_EDGE, end = MAP_EDGE, bottom = if (wide) foot else Space.m)
                 .offset { IntOffset(0, sheetTop()?.let { (it - screenHeight).roundToInt() } ?: -(clearance + TRIPS_PEEK).roundToPx()) }
                 .widthIn(max = READABLE_WIDTH)
                 .onSizeChanged { card = with(density) { it.height.toDp() } },
@@ -480,19 +481,26 @@ private fun MapContent(
         }
     }
     if (wide) {
-        Column(
-            Modifier
-                .fillMaxHeight()
-                .padding(start = rail.left)
-                .width(WIDE_PANEL)
-                .background(AppColors.sheet)
-                .statusBarsPadding()
-                .padding(top = Space.l)
-                .testTag("map_panel"),
-        ) {
-            SearchPill(onSearch, Modifier.padding(horizontal = MAP_EDGE).fillMaxWidth(), floating = false)
-            Spacer(Modifier.height(Space.l))
-            sheetContent()
+        val panel: @Composable () -> Unit = {
+            Column(Modifier.fillMaxHeight().statusBarsPadding().padding(top = if (floatingPanel) Space.m else Space.l)) {
+                SearchPill(onSearch, Modifier.padding(horizontal = if (floatingPanel) Space.m else MAP_EDGE).fillMaxWidth(), floating = false)
+                Spacer(Modifier.height(if (floatingPanel) Space.s else Space.l))
+                sheetContent()
+            }
+        }
+        if (floatingPanel) {
+            Surface(
+                Modifier.fillMaxHeight().sideInsetsPadding(WindowInsetsSides.Start).navigationBarsPadding()
+                    .padding(start = rail.left, top = Space.m, bottom = Space.m)
+                    .width(panelWidth)
+                    .testTag("map_panel"),
+                shape = AppTheme.shapes.large,
+                color = AppColors.sheet,
+                border = cardBorder(),
+                shadowElevation = ShadowElevation,
+            ) { panel() }
+        } else {
+            Box(Modifier.fillMaxHeight().padding(start = rail.left).width(panelWidth).background(AppColors.sheet).testTag("map_panel")) { panel() }
         }
         return
     }
@@ -615,8 +623,8 @@ private const val TRIPS_REVEAL = 4f
 /** How much of the panel of trips shows while it rests, above the tabs: its handle and its title line. */
 private val TRIPS_PEEK = 68.dp
 
-/** How wide the controls at the top stand on a phone on its side, clear of the map's middle. */
-private val SIDE_CONTROLS = 400.dp
+/** How wide the trips' card is on a phone on its side, floating beside the tabs. */
+private val FLOATING_PANEL = 320.dp
 
 /** How far the map's controls stand from the screen's edges. */
 private val MAP_EDGE = 16.dp

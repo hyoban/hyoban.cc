@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.feed
 
+import androidx.compose.ui.unit.Dp
+import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.design.edgeBlur
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
@@ -265,7 +267,7 @@ fun FeedScreen(
                                 // As wide as the Moments under them and as far in, clear of the rail
                                 // and the cutout as they are.
                                 CollapsingHeader(headerScroll) {
-                                    PageWidth { columns ->
+                                    PageWidth(maxColumns = 1) { columns ->
                                         Column(Modifier.padding(horizontal = columns.margin)) { FeedLeading().apply(header).rows.forEach { (_, row) -> row() } }
                                     }
                                 }
@@ -486,9 +488,14 @@ fun DayScreen(
     // The trip goes unsaid on the cards when all of them were on it: its row heads the day.
     val oneTrip = trip != null && moments.all { tripOf(it, trips)?.id == trip.id }
 
-    Box(Modifier.fillMaxSize().background(AppColors.page)) {
+    // On a phone on its side, a day that moved has its map down the start half, the whole height,
+    // and the day beside it (H05).
+    val points = track
+    val sideways = isPhoneLandscape() && points != null && points.size > 1
+    val feed: @Composable (Modifier) -> Unit = { feedModifier ->
         MomentFeed(
             moments, places, trips, container.mediaUrls, onMoment,
+            feedModifier,
             months = false,
             showTrip = !oneTrip,
             dayPills = false,
@@ -498,7 +505,19 @@ fun DayScreen(
             oldestFirst = true,
             allMoments = all,
         ) {
-            item("head") { DayHead(date, track, moments, places, bills, recording) }
+            item("head") { DayHead(date, track, moments, places, bills, recording, withMap = !sideways) }
+        }
+    }
+    Box(Modifier.fillMaxSize().background(AppColors.page)) {
+        if (sideways && points != null) {
+            Row(Modifier.fillMaxSize()) {
+                DayMap(date, points, moments, places, bills, Modifier.weight(1f).fillMaxHeight(), topInset = FLOATING_BAR)
+                Box(Modifier.weight(1f).fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End))) {
+                    CompositionLocalProvider(LocalRailSpace provides RailSpace(0.dp, 0.dp, clearOfInsets = true)) { feed(Modifier.fillMaxSize()) }
+                }
+            }
+        } else {
+            feed(Modifier)
         }
         FloatingBack(onBack, Modifier.align(Alignment.TopStart))
     }
@@ -519,6 +538,8 @@ private fun DayHead(
     bills: TimelineBills,
     /** Today, with the footprints still recording: its line ends where the phone is now. */
     recording: Boolean = false,
+    /** Whether the map heads it; on a phone on its side the map stands beside the day instead. */
+    withMap: Boolean = true,
 ) {
     val points = track.orEmpty()
     // While they are read, the timeline's word on them keeps room for the map and gives the
@@ -528,26 +549,14 @@ private fun DayHead(
     // No more than half the screen, so a phone on its side still shows the day under it.
     val height = minOf(DAY_MAP, cc.hyoban.moments.ui.components.windowHeight() / 2)
     Column(Modifier.fillMaxWidth()) {
-        if (moving && track == null) {
+        if (!withMap) {
+            Spacer(Modifier.height(FLOATING_BAR))
+        } else if (moving && track == null) {
             Spacer(Modifier.fillMaxWidth().height(height))
         } else if (moving) {
-            val stretches = remember(points) {
-                cc.hyoban.moments.footprints.trackSegments(points, budget = 2000).filter { it.size > 1 }.map { stretch -> stretch.map { it.longitude to it.latitude } }
-            }
-            val dots = remember(moments, places) { moments.flatMap { it.places }.mapNotNull { places[it] }.map { org.maplibre.android.geometry.LatLng(it.latitude, it.longitude) } }
-            // Each bill where the footprints were when it was paid, within a few minutes.
-            val rings = remember(points, bills) {
-                bills.loose[date].orEmpty().mapNotNull { txn ->
-                    points.minByOrNull { kotlin.math.abs(it.time - txn.time) }
-                        ?.takeIf { kotlin.math.abs(it.time - txn.time) <= BILL_NEAR_MS }
-                        ?.let { org.maplibre.android.geometry.LatLng(it.latitude, it.longitude) }
-                }
-            }
-            cc.hyoban.moments.ui.map.DayTrackMap(
-                stretches,
-                dots,
-                Modifier.fillMaxWidth().height(height).testTag("day_track"),
-                rings = rings,
+            DayMap(
+                date, points, moments, places, bills,
+                Modifier.fillMaxWidth().height(height),
                 // Clear of the status bar and back over its top, as far as a short map can spare.
                 topInset = minOf(WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + FLOATING_BAR, height / 4),
             )
@@ -583,6 +592,32 @@ private fun DayHead(
             }
         }
     }
+}
+
+/** The day's footprints on a map, the places it was at and each bill where it was paid. */
+@Composable
+private fun DayMap(
+    date: String,
+    points: List<cc.hyoban.moments.footprints.TrackPoint>,
+    moments: List<cc.hyoban.moments.data.spec.MomentRecord>,
+    places: Map<String, cc.hyoban.moments.data.spec.Place>,
+    bills: TimelineBills,
+    modifier: Modifier,
+    topInset: Dp,
+) {
+    val stretches = remember(points) {
+        cc.hyoban.moments.footprints.trackSegments(points, budget = 2000).filter { it.size > 1 }.map { stretch -> stretch.map { it.longitude to it.latitude } }
+    }
+    val dots = remember(moments, places) { moments.flatMap { it.places }.mapNotNull { places[it] }.map { org.maplibre.android.geometry.LatLng(it.latitude, it.longitude) } }
+    // Each bill where the footprints were when it was paid, within a few minutes.
+    val rings = remember(points, bills) {
+        bills.loose[date].orEmpty().mapNotNull { txn ->
+            points.minByOrNull { kotlin.math.abs(it.time - txn.time) }
+                ?.takeIf { kotlin.math.abs(it.time - txn.time) <= BILL_NEAR_MS }
+                ?.let { org.maplibre.android.geometry.LatLng(it.latitude, it.longitude) }
+        }
+    }
+    cc.hyoban.moments.ui.map.DayTrackMap(stretches, dots, modifier.testTag("day_track"), rings = rings, topInset = topInset)
 }
 
 /** How tall a day's map is, its top under the status bar. */

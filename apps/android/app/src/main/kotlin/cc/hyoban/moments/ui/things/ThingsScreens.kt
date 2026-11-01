@@ -1,5 +1,8 @@
 package cc.hyoban.moments.ui.things
 
+import cc.hyoban.moments.ui.components.SIDE_COLUMN
+import cc.hyoban.moments.ui.components.SideBySide
+import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -109,18 +112,37 @@ private fun ThingRow(title: String, supporting: String, figure: String, tag: Str
     )
 }
 
+/**
+ * The page's one scrolling column, [figures] heading it; on a phone on its side the figures stand
+ * still in a column at the start instead, the rest scrolling beside them (H29–H31).
+ */
 @Composable
-private fun PageColumn(content: @Composable () -> Unit) {
-    PageWidth(maxColumns = 1) { columns ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(top = LocalTopClearance.current)
-                .navigationBarsPadding()
-                .padding(horizontal = columns.margin)
-                .padding(bottom = Space.xl),
-        ) { content() }
+internal fun PageColumn(figures: (@Composable () -> Unit)? = null, content: @Composable () -> Unit) {
+    val list: @Composable (Boolean) -> Unit = { withFigures ->
+        PageWidth(maxColumns = 1) { columns ->
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = LocalTopClearance.current)
+                    .navigationBarsPadding()
+                    .padding(horizontal = columns.margin)
+                    .padding(bottom = Space.xl),
+            ) {
+                if (withFigures) figures?.invoke()
+                content()
+            }
+        }
+    }
+    if (figures != null && isPhoneLandscape()) {
+        SideBySide(
+            Modifier.fillMaxSize(),
+            sideWidth = SIDE_COLUMN + Space.gutter,
+            sideInset = 0.dp,
+            side = { Column(Modifier.padding(top = LocalTopClearance.current + Space.s)) { figures() } },
+        ) { Box(Modifier.weight(1f)) { list(false) } }
+    } else {
+        list(true)
     }
 }
 
@@ -144,17 +166,20 @@ fun DevicesScreen(container: AppContainer, onBack: () -> Unit, open: String? = n
             }
         },
     ) {
-        PageColumn {
+        PageColumn(
+            figures = if (devices.isEmpty()) null else { {
+                Figures(
+                    Triple(stringResource(R.string.devices_in_use), owned.size.toString(), null),
+                    Triple(stringResource(R.string.devices_daily), yuan(owned.sumOf { it.dailyCost(today) }), null),
+                    Triple(stringResource(R.string.devices_sold), sold.size.toString(), stringResource(R.string.devices_returned, yuan(sold.sumOf { it.soldPrice ?: 0.0 }))),
+                    modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s),
+                )
+            } },
+        ) {
             if (devices.isEmpty()) {
                 Text(stringResource(R.string.devices_empty), color = tokens.tx2, modifier = Modifier.padding(Space.gutter))
                 return@PageColumn
             }
-            Figures(
-                Triple(stringResource(R.string.devices_in_use), owned.size.toString(), null),
-                Triple(stringResource(R.string.devices_daily), yuan(owned.sumOf { it.dailyCost(today) }), null),
-                Triple(stringResource(R.string.devices_sold), sold.size.toString(), stringResource(R.string.devices_returned, yuan(sold.sumOf { it.soldPrice ?: 0.0 }))),
-                modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s),
-            )
             PageCaption(stringResource(R.string.devices_in_use))
             owned.forEach { device ->
                 val status = Things.status(device, devices)
@@ -326,17 +351,20 @@ fun SubscriptionsScreen(container: AppContainer, onBack: () -> Unit, open: Strin
             }
         },
     ) {
-        PageColumn {
+        PageColumn(
+            figures = if (all.isEmpty()) null else { {
+                Figures(
+                    Triple(stringResource(R.string.subscriptions_monthly), sums(monthly).firstOrNull().orEmpty(), sums(monthly).drop(1).takeIf { it.isNotEmpty() }?.let { stringResource(R.string.subscriptions_other, it.joinToString(" ")) }),
+                    Triple(stringResource(R.string.subscriptions_yearly), sums(yearly).firstOrNull().orEmpty(), sums(yearly).drop(1).takeIf { it.isNotEmpty() }?.let { stringResource(R.string.subscriptions_other, it.joinToString(" ")) }),
+                    Triple(stringResource(R.string.subscriptions_once), once.size.toString(), sums(once).joinToString(" ").ifEmpty { null }),
+                    modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s),
+                )
+            } },
+        ) {
             if (all.isEmpty()) {
                 Text(stringResource(R.string.subscriptions_empty), color = tokens.tx2, modifier = Modifier.padding(Space.gutter))
                 return@PageColumn
             }
-            Figures(
-                Triple(stringResource(R.string.subscriptions_monthly), sums(monthly).firstOrNull().orEmpty(), sums(monthly).drop(1).takeIf { it.isNotEmpty() }?.let { stringResource(R.string.subscriptions_other, it.joinToString(" ")) }),
-                Triple(stringResource(R.string.subscriptions_yearly), sums(yearly).firstOrNull().orEmpty(), sums(yearly).drop(1).takeIf { it.isNotEmpty() }?.let { stringResource(R.string.subscriptions_other, it.joinToString(" ")) }),
-                Triple(stringResource(R.string.subscriptions_once), once.size.toString(), sums(once).joinToString(" ").ifEmpty { null }),
-                modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s),
-            )
             listOf(R.string.subscriptions_monthly to monthly, R.string.subscriptions_yearly to yearly).forEach { (title, rows) ->
                 if (rows.isEmpty()) return@forEach
                 PageCaption(stringResource(title))

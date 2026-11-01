@@ -69,7 +69,9 @@ fun FullScreenDialog(onDismiss: () -> Unit, actions: @Composable RowScope.() -> 
         snapshotFlow { shown.isIdle && !shown.currentState && !shown.targetState }.collect { if (it) dismiss() }
     }
     // Edge to edge, its own colour under the status and navigation bars, as the pages are.
+    val noSystemBars = hidesSystemBars()
     Dialog(onDismissRequest = close, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        DialogSystemBars(noSystemBars)
         val motion = AppTheme.motionScheme
         AnimatedVisibility(
             shown,

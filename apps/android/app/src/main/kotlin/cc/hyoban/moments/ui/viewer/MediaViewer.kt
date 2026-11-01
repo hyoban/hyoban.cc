@@ -46,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -502,6 +503,8 @@ private fun ViewerSystemBars(hidden: Boolean) {
     val view = LocalView.current
     val window = (view.context as? Activity)?.window ?: return
     val controller = remember(window, view) { WindowCompat.getInsetsController(window, view) }
+    // On its side the system's bars stay put away after the viewer closes, as the app has them there.
+    val landscape by rememberUpdatedState(cc.hyoban.moments.ui.components.hidesSystemBars())
 
     DisposableEffect(controller) {
         // The status bar's icons follow what is under them, white over the black.
@@ -510,11 +513,11 @@ private fun ViewerSystemBars(hidden: Boolean) {
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         onDispose {
             controller.isAppearanceLightNavigationBars = navigation
-            controller.show(WindowInsetsCompat.Type.systemBars())
+            if (!landscape) controller.show(WindowInsetsCompat.Type.systemBars())
         }
     }
 
     LaunchedEffect(hidden) {
-        if (hidden) controller.hide(WindowInsetsCompat.Type.systemBars()) else controller.show(WindowInsetsCompat.Type.systemBars())
+        if (hidden || landscape) controller.hide(WindowInsetsCompat.Type.systemBars()) else controller.show(WindowInsetsCompat.Type.systemBars())
     }
 }

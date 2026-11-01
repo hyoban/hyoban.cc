@@ -1,5 +1,9 @@
 package cc.hyoban.moments.ui.ledger
 
+import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.layout.fillMaxHeight
+import cc.hyoban.moments.ui.components.railPadding
+import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
@@ -191,24 +195,41 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
         }
     }
 
-    val keypad = keypadFits()
+    // On a phone on its side the keys take the end half, the whole height, and the bill's other
+    // fields scroll beside them (H21).
+    val sideways = isPhoneLandscape()
+    val keypad = keypadFits() || sideways
     SubPage(
         title,
         nav.back,
         close = true,
         small = keypad,
-        actions = { TextButton(onClick = ::save, modifier = Modifier.testTag("save_bill")) { Text(stringResource(R.string.action_save)) } },
+        // On its side the keypad's own 保存 is always in sight, so the bar needn't hold another.
+        actions = { if (!sideways) TextButton(onClick = ::save, modifier = Modifier.testTag("save_bill")) { Text(stringResource(R.string.action_save)) } },
     ) {
-        PageWidth(maxColumns = 1) { columns ->
-            Column(
-                Modifier.fillMaxSize().imePadding().navigationBarsPadding()
-                    .padding(start = columns.margin, end = columns.margin)
-                    .semantics { testTagsAsResourceId = true },
-            ) {
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current, bottom = if (keypad) Space.s else Space.xl)) {
-                    BillFields(container, ledger, draft, at, fixedKind, related, keypad = keypad)
+        if (sideways) {
+            Row(Modifier.fillMaxSize().railPadding().imePadding().semantics { testTagsAsResourceId = true }) {
+                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current, bottom = Space.s)) {
+                    BillFields(container, ledger, draft, at, fixedKind, related, keypad = true)
+                    // Its options' chips under the fields here, leaving the end half to the amount and the keys.
+                    BillOptions(container, ledger, draft, at, fixedKind, withMoment = false, keypad = true)
                 }
-                if (keypad) BillKeypad(container, ledger, draft, at, fixedKind, onSave = ::save)
+                Column(Modifier.weight(1f).fillMaxHeight().padding(top = Space.s), verticalArrangement = Arrangement.Bottom) {
+                    BillKeypad(container, ledger, draft, at, fixedKind, onSave = ::save, keyHeight = SIDEWAYS_KEY_HEIGHT, withOptions = false)
+                }
+            }
+        } else {
+            PageWidth(maxColumns = 1) { columns ->
+                Column(
+                    Modifier.fillMaxSize().imePadding().navigationBarsPadding()
+                        .padding(start = columns.margin, end = columns.margin)
+                        .semantics { testTagsAsResourceId = true },
+                ) {
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current, bottom = if (keypad) Space.s else Space.xl)) {
+                        BillFields(container, ledger, draft, at, fixedKind, related, keypad = keypad)
+                    }
+                    if (keypad) BillKeypad(container, ledger, draft, at, fixedKind, onSave = ::save)
+                }
             }
         }
     }
@@ -950,12 +971,23 @@ internal fun keypadFits(): Boolean = windowHeight() >= 600.dp
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraft, at: OffsetDateTime, fixedKind: TxnKind?, onSave: () -> Unit, modifier: Modifier = Modifier) {
+internal fun BillKeypad(
+    container: AppContainer,
+    ledger: Ledger,
+    draft: BillDraft,
+    at: OffsetDateTime,
+    fixedKind: TxnKind?,
+    onSave: () -> Unit,
+    modifier: Modifier = Modifier,
+    keyHeight: Dp = KeyHeight,
+    /** Whether its options' chips head it, as they do upright; on its side they stand with the other fields. */
+    withOptions: Boolean = true,
+) {
     val currency = draft.shownCurrency(ledger)
     val cents = parseAmount(draft.amount)
     var currencies by remember { mutableStateOf(false) }
     val colors = tokens
-    BillOptions(container, ledger, draft, at, fixedKind, withMoment = false, keypad = true)
+    if (withOptions) BillOptions(container, ledger, draft, at, fixedKind, withMoment = false, keypad = true)
     Column(modifier.padding(horizontal = Space.gutter).padding(top = Space.s, bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
         Column(Modifier.fillMaxWidth().clip(AppTheme.shapes.large).background(colors.surface).border(cardBorder(), AppTheme.shapes.large)) {
             Row(Modifier.fillMaxWidth().padding(start = Space.xs, end = Space.l, top = Space.xs), verticalAlignment = Alignment.CenterVertically) {
@@ -1008,15 +1040,15 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
             )
             keys.forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                    row.forEach { key -> Key(key, Modifier.weight(1f)) { if (key == BACKSPACE) draft.amount = draft.amount.dropLast(1) else type(key) } }
+                    row.forEach { key -> Key(key, Modifier.weight(1f), keyHeight) { if (key == BACKSPACE) draft.amount = draft.amount.dropLast(1) else type(key) } }
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                Key('.', Modifier.weight(1f)) { type('.') }
-                Key('0', Modifier.weight(1f)) { type('0') }
+                Key('.', Modifier.weight(1f), keyHeight) { type('.') }
+                Key('0', Modifier.weight(1f), keyHeight) { type('0') }
                 Button(
                     onClick = onSave,
-                    modifier = Modifier.weight(2f).height(KeyHeight).testTag("keypad_save"),
+                    modifier = Modifier.weight(2f).height(keyHeight).testTag("keypad_save"),
                 ) { Text(stringResource(R.string.action_save), style = AppTheme.typography.body.strong) }
             }
         }
@@ -1026,15 +1058,18 @@ internal fun BillKeypad(container: AppContainer, ledger: Ledger, draft: BillDraf
 private const val BACKSPACE = '\b'
 private val KeyHeight = 48.dp
 
+/** A key's height on a phone on its side, so the amount and four rows of keys fit the height under the bar. */
+private val SIDEWAYS_KEY_HEIGHT = 40.dp
+
 /** A key of the keypad, on the fill. */
 @Composable
-private fun Key(key: Char, modifier: Modifier, onClick: () -> Unit) {
+private fun Key(key: Char, modifier: Modifier, height: Dp = KeyHeight, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         shape = AppTheme.shapes.medium,
         colors = ButtonDefaults.buttonColors(containerColor = tokens.fill, contentColor = tokens.tx),
         contentPadding = PaddingValues(0.dp),
-        modifier = modifier.height(KeyHeight).testTag("key_${if (key == BACKSPACE) "back" else key.toString()}"),
+        modifier = modifier.height(height).testTag("key_${if (key == BACKSPACE) "back" else key.toString()}"),
     ) {
         when (key) {
             BACKSPACE -> Icon(AppIcons.Backspace, contentDescription = stringResource(R.string.action_backspace))

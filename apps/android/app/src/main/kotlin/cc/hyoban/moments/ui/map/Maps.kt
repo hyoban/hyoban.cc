@@ -675,7 +675,7 @@ private object MainMap {
     var style: Style? = null
 
     /** The screen's shape the places were last framed for: on its side or not, and which side the tabs stood down. */
-    var framedFor: Pair<Boolean, Boolean>? = null
+    var framedFor: Triple<Boolean, Boolean, Dp>? = null
 
     /** Whether the fog has been shown since the app started; left on, it sweeps in the first time. */
     var fogOpened = false
@@ -807,6 +807,8 @@ fun PlacesMap(
     frameFootprints: Boolean = false,
     onFootprintsFramed: () -> Unit = {},
     onFootprint: () -> Unit = {},
+    /** How much of the map's leading side a panel beside the tabs covers, which the places are framed clear of. */
+    panel: Dp = 0.dp,
 ) {
     val reduced = LocalReducedMotion.current
     val tapPlace by rememberUpdatedState(onPlace)
@@ -854,7 +856,7 @@ fun PlacesMap(
     // on a phone on its side, down a side.
     val landscape = isLandscape()
     val frame = if (landscape) {
-        absoluteEdges(bars[0] + rail.left + 24.dp, bars[1] + 56.dp, bars[2] + rail.right + 24.dp, bars[3] + clearance + 16.dp)
+        absoluteEdges(bars[0] + rail.left + panel + 24.dp, bars[1] + 56.dp, bars[2] + rail.right + 24.dp, bars[3] + clearance + 16.dp)
     } else {
         edges(bars[0] + 32.dp, bars[1] + 96.dp, bars[2] + 32.dp, bars[3] + clearance + 16.dp)
     }
@@ -1017,7 +1019,7 @@ fun PlacesMap(
         if (allLocations.isNotEmpty()) ready.flyToFrame(allLocations, frame, reduced)
     }
 
-    val shape = landscape to (rail.left > 0.dp)
+    val shape = Triple(landscape, rail.left > 0.dp, panel)
     LaunchedEffect(map, places, shape, allLocations) {
         val (ready, style) = map?.live ?: return@LaunchedEffect
         val features = places.map { place ->

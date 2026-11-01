@@ -203,7 +203,8 @@ fun MomentFeed(
         )
     }
 
-    PageWidth(modifier) { columns ->
+    // A conversation stays one column at any width, as the design has the timeline on its side (H01).
+    PageWidth(modifier, maxColumns = if (chat) 1 else 2) { columns ->
         if (columns.count > 1) {
             OnTabReselect(tab) { gridState.animateScrollToItem(0) }
             val rows = remember(leading) { FeedLeading().apply(leading).rows }
