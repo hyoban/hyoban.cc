@@ -80,7 +80,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
         Row(settings.mapStyleDark, R.string.setting_map_style_dark, AppIcons.Moon) { settings.mapStyleDark.set(it) },
     )
 
-    SubPage(stringResource(R.string.sync_title), onBack, Modifier.background(AppColors.page), underBar = true) {
+    SubPage(stringResource(R.string.sync_title), onBack, Modifier.background(AppColors.page)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier

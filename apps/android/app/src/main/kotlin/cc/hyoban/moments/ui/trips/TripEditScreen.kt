@@ -78,7 +78,7 @@ fun TripEditScreen(container: AppContainer, id: String, onBack: () -> Unit) {
     }
     val scope = rememberCoroutineScope()
     val valid = title.isNotBlank() && start <= end
-    SubPage(stringResource(R.string.trip_edit_title), onBack, Modifier.background(AppColors.page), underBar = true) {
+    SubPage(stringResource(R.string.trip_edit_title), onBack, Modifier.background(AppColors.page)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier

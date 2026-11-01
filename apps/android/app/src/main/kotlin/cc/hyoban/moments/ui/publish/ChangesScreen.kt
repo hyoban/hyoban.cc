@@ -146,7 +146,6 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
         onBack,
         Modifier.background(AppColors.page),
         subtitle = if (pending.size == 0) null else pluralStringResource(R.plurals.count_changes, pending.size, pending.size),
-        underBar = true,
     ) {
         PageWidth(maxColumns = 1) { columns ->
             // A lazy list, so a change taken back folds away and one brought back by its

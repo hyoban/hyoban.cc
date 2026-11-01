@@ -81,7 +81,6 @@ fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Un
                 stats.beatsPercent?.let { stringResource(R.string.car_assisted_beats, it.toInt()) },
             ).joinToString(APART).ifEmpty { null }
         },
-        underBar = true,
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(

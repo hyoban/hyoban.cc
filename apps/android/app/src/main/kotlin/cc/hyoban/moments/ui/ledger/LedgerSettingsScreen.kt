@@ -136,7 +136,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
     val shared by container.sharedExport.collectAsStateWithLifecycle()
     LaunchedEffect(shared) { if (shared != null) container.takeSharedExport()?.let(importer.read) }
 
-    SubPage(stringResource(R.string.ledger_settings_title), nav.back, underBar = true) {
+    SubPage(stringResource(R.string.ledger_settings_title), nav.back) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current).navigationBarsPadding()

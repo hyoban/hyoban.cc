@@ -97,7 +97,6 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                 }
             }
         },
-        underBar = true,
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(

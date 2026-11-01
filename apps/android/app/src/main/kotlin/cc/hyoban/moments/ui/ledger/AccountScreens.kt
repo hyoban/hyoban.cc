@@ -85,7 +85,6 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
                 }
             }
         },
-        underBar = true,
     ) {
         BillList(ledger, bills, account.currency, nav, header = {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.s, bottom = Space.s)) {
@@ -180,7 +179,6 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
         nav.back,
         close = true,
         actions = { TextButton(onClick = ::save, enabled = name.isNotBlank(), modifier = Modifier.testTag("save_account")) { Text(stringResource(R.string.action_save)) } },
-        underBar = true,
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(

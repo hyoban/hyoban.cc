@@ -146,7 +146,6 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
                 }
             }
         },
-        underBar = true,
         // Its bills, sums and accounts, one of three in a segmented control staying under the
         // bar, the lists passing under it, clear of the tabs down the side on a phone on its side
         // as the lists are.

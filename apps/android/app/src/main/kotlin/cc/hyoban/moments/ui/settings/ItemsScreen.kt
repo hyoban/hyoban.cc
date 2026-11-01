@@ -44,7 +44,7 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
         value = withContext(Dispatchers.IO) { container.footprints.shares().count { !it.removed } }
     }
     val scope = rememberCoroutineScope()
-    SubPage(stringResource(R.string.items_title), onBack, Modifier.background(AppColors.page), underBar = true) {
+    SubPage(stringResource(R.string.items_title), onBack, Modifier.background(AppColors.page)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
