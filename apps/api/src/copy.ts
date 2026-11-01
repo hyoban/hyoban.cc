@@ -67,36 +67,23 @@ export async function readRows(
   const since = 'cursor' in query ? query.cursor.since : query.since
   const upto = cursor ? String(cursor.upto) : REVISION
   const start = cursor?.table ?? 0
-  // A table at a time until the page is full: D1 takes no compound SELECT of every table.
-  // What a table read after the first misses, having changed since, has a revision past
-  // `upto`, so it is left for the next read as anything changed since is.
-  const select = (index: number) => {
+  // Every table from where the read got to, each a statement of its own (D1 takes no compound
+  // SELECT of them all) in one batch: one round trip, and one transaction, so the first page's
+  // revision is the one its rows are read at. A table gives at most a page, the rest left.
+  const selects = tables.slice(start).map(({ name }, offset) => {
+    const index = start + offset
     const after = cursor && index === start ? ' AND (rev > ?2 OR (rev = ?2 AND key > ?3))' : ''
 
     return db
       .prepare(
-        `SELECT ${index} AS t, key, rev, deleted_at, record FROM ${tables[index]!.name}
+        `SELECT ${index} AS t, key, rev, deleted_at, record FROM ${name}
          WHERE rev > ?1 AND rev <= ${upto}${after} ORDER BY rev, key LIMIT ?4`,
       )
       .bind(since, cursor?.rev ?? 0, cursor?.key ?? '', limit + 1)
-  }
-  const [revision, first] = await readAll(db, [revisionQuery(db), select(start)])
+  })
+  const [revision, ...rows] = await readAll(db, [revisionQuery(db), ...selects])
   const of = cursor ? cursor.upto : toRevision(revision)
-  const results = first as SourceRow[]
-
-  // Past the first page, `upto` is the number the cursor holds; on it, the revision just read.
-  for (let index = start + 1; index < tables.length && results.length <= limit; index++) {
-    const rows = await db
-      .prepare(
-        `SELECT ${index} AS t, key, rev, deleted_at, record FROM ${tables[index]!.name}
-         WHERE rev > ?1 AND rev <= ?2 ORDER BY rev, key LIMIT ?3`,
-      )
-      .bind(since, of, limit + 1 - results.length)
-      .all<SourceRow>()
-
-    results.push(...rows.results)
-  }
-
+  const results = (rows as SourceRow[][]).flat().slice(0, limit + 1)
   const page = results.slice(0, limit)
   const last = page.at(-1)
   const next =
