@@ -131,7 +131,8 @@ class NoTokenException : IOException("No API token")
 
 /**
  * A page of the second shape's feed (`GET /v2/changes`): the entries, collections and public
- * tracks that changed after a revision, the collections and tracks on the first page only.
+ * tracks that changed after a revision, the collections, tracks and the car's statistics on the
+ * first page only.
  */
 @Serializable
 data class EntryChanges(
@@ -142,6 +143,11 @@ data class EntryChanges(
     val deletedCollections: List<String> = emptyList(),
     val tracks: List<JsonObject> = emptyList(),
     val deletedTracks: List<String> = emptyList(),
+    /** The car's statistics, from an import only: a month by `<device>/<YYYY-MM>`, an assisted-driving observation by `<device>/<captured at>`. */
+    val vehicleMonths: List<JsonObject> = emptyList(),
+    val deletedVehicleMonths: List<String> = emptyList(),
+    val vehicleAssisted: List<JsonObject> = emptyList(),
+    val deletedVehicleAssisted: List<String> = emptyList(),
     val next: String? = null,
 )
 

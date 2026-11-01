@@ -12,7 +12,8 @@ import { executeSql } from './d1.mjs'
 
 // The API holds the records and data/ backs them up, so a script that writes data/
 // itself, like the create-moment skill, first refreshes data/ from the
-// API and afterwards pushes what it wrote back. Pushing merges: it writes only the
+// API and afterwards pushes what it wrote back; so does the Zeekr import, with the car's
+// statistics. Pushing merges: it writes only the
 // records it names, and the places they name, and never removes anything.
 
 const execFile = promisify(execFileCallback)
@@ -26,6 +27,9 @@ const API_PATHS = [
   'data/entries',
   'data/collections',
   'data/tracks',
+  'data/zeekr/months',
+  'data/zeekr/assisted-driving',
+  'data/zeekr/captures',
 ]
 
 /**
@@ -56,7 +60,7 @@ export async function refreshData(root) {
  */
 export async function pushData(
   root,
-  { moments = [], trips = [], entries = [], collections = [], places = [] },
+  { moments = [], trips = [], entries = [], collections = [], places = [], vehicle = [] },
   { generator, remote = true, dryRun = false },
 ) {
   const dataRoot = join(root, 'data')
@@ -102,6 +106,7 @@ export async function pushData(
         ...collectionMarks.filter((mark) => !entryRecords.some((entry) => entry.uid === mark.uid)),
       ],
       collections: collections.map((file) => readJson(file, dataRoot)),
+      ...readVehicle(vehicle, dataRoot),
     },
     new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
     generator,
@@ -118,6 +123,7 @@ export async function pushData(
     moments: momentRecords.length + entryRecords.length,
     trips: tripRecords.length + collectionRecords.length,
     places: placeIds.size,
+    vehicle: vehicle.length,
     routes,
     built,
   }
@@ -165,6 +171,20 @@ async function fillRoutes(root) {
   return /** @type {{ fetched: number, removed: number, failed: number, left: number }} */ (
     await response.json()
   )
+}
+
+/** The car's statistics among these files under data/, by kind, as the import takes them. */
+export function readVehicle(files, dataRoot) {
+  const of = (directory) =>
+    files
+      .filter((file) => file.startsWith(`zeekr/${directory}/`))
+      .map((file) => readJson(file, dataRoot))
+
+  return {
+    vehicleMonths: of('months'),
+    vehicleAssisted: of('assisted-driving'),
+    vehicleCaptures: of('captures'),
+  }
 }
 
 /** Every mark under data/entries, what the collections' trips in the first shape are made from. */

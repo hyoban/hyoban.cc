@@ -36,6 +36,12 @@ or more, or a phone on its side, they stand down a rail instead.
   There is no settings page over them, and under 我 there is one level of pages: what goes
   deeper, such as a book, the exchange rates or a side key gesture's action, opens over its
   page as a sheet or a dialog. Theme and language have no setting; they follow the phone.
+- **东西** in 我 opens three pages. 设备 (`moments://devices`) lists what is owned and what was
+  sold, each with what it costs a day; 订阅 (`moments://subscriptions`) what is paid by the
+  month, by the year and once. Each device and subscription is an entry with its plugin's
+  part, edited in a sheet and published with the rest from 发布更改. 车 (`moments://car`)
+  shows a month of the Zeekr import at a time, its days, charges and assisted driving, and
+  is read-only: only an import changes the car's data.
 
 The pages lead to each other wherever they can: a place or a trip to the map, a day's pill
 to the day, a Moment's menu to its place, trip and day. A day's page opens on that day's

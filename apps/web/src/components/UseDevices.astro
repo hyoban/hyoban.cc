@@ -18,7 +18,7 @@ const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai' }).fo
 const spans = getDeviceSpans(readDevices(), today)
 const events = getDeviceEvents(spans)
 
-const firstYear = Number(spans[0]!.start.slice(0, 4))
+const firstYear = Number((spans[0]?.start ?? today).slice(0, 4))
 const lastYear = Number(today.slice(0, 4)) + 1
 const years = Array.from({ length: lastYear - firstYear }, (_, index) => firstYear + index)
 const origin = getDayNumber(`${firstYear}-01-01`)

@@ -2,6 +2,7 @@ import { readFile, readdir, mkdir, writeFile, rename } from 'node:fs/promises'
 import { dirname, join, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { dataRoot, readDeviceIds } from '../apps/web/src/data/store.ts'
 import { canonicalJson, convertZeekrCaptures, hashBytes } from './lib/zeekr-data.mjs'
 import { assertPublicZeekrCapture } from './lib/zeekr-privacy.mjs'
 
@@ -10,10 +11,10 @@ const checkOnly = process.argv.includes('--check')
 if (process.argv.slice(2).some((arg) => arg !== '--check'))
   throw new Error('Usage: convert-zeekr-data.mjs [--check]')
 const imports = JSON.parse(await readFile(join(root, 'imports.json'), 'utf8'))
-const devices = JSON.parse(await readFile(new URL('../data/devices.json', import.meta.url), 'utf8'))
+const devices = readDeviceIds(dataRoot)
 const inputs = await Promise.all(
   imports.map(async (input) => {
-    if (!devices[input.deviceId]) throw new Error(`Unknown device: ${input.deviceId}`)
+    if (!devices.has(input.deviceId)) throw new Error(`Unknown device: ${input.deviceId}`)
     const path = resolve(root, input.file)
     if (!path.startsWith(resolve(root) + sep))
       throw new Error(`Source outside archive: ${input.file}`)

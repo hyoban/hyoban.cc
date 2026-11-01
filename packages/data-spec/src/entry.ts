@@ -4,6 +4,7 @@ import {
   ID_PATTERN,
   momentMediaSchema,
   foodVerdictSchema,
+  vehicleSourceSchema,
   type MomentRecord,
   type TripRecord,
 } from './index.ts'
@@ -108,6 +109,56 @@ export const chargePartSchema = z.looseObject({
   station: z.string().optional(),
   socFrom: z.number().min(0).max(100).optional(),
   socTo: z.number().min(0).max(100).optional(),
+  /** The car that charged, a device's id. */
+  vehicle: id.optional(),
+  /**
+   * Where in the car's captured statistics it came from. A charge with one was imported, and
+   * only a new import changes it: never published, and the API turns away an edit of it.
+   */
+  source: vehicleSourceSchema.optional(),
+})
+
+/**
+ * A device, on the entry of the day it was bought: what it is and cost, and what it sold for
+ * once sold. Its `id` names its picture and what the car's statistics belong to.
+ */
+export const devicePartSchema = z.looseObject({
+  ...partBase,
+  id,
+  name: z.string().min(1),
+  /** What kind of thing it is, like 手机 or 电脑; the use page gives each its own lane. */
+  category: z.string().min(1),
+  price,
+  sold: z.looseObject({ on: dateKey, price }).optional(),
+  /** Still owned but no longer used. */
+  idle: z.boolean().optional(),
+  /** A picture of it on a clear background, its key in the bucket, like `devices/<id>.webp`. */
+  image: z.string().min(1).optional(),
+  note: z.string().optional(),
+})
+
+/**
+ * A subscription, or software bought once, on the entry of the day it started. `paidWith`,
+ * the owner's name for what pays for it, is never published.
+ */
+export const subscriptionPartSchema = z.looseObject({
+  ...partBase,
+  name: z.string().min(1),
+  link: z.url({ protocol: /^https?$/ }).optional(),
+  price,
+  currency: z.string().regex(/^[A-Z]{3}$/),
+  /** How often it is paid: each year, each month, or once. */
+  period: z.enum(['year', 'month', 'once']),
+  /**
+   * When it next renews or runs out. One that renews by itself keeps the day of a renewal:
+   * the next is that day on, a year or a month at a time.
+   */
+  renews: dateKey.optional(),
+  autoRenew: z.boolean().optional(),
+  paidWith: z.string().min(1).optional(),
+  /** The day it stopped, once cancelled. */
+  ended: dateKey.optional(),
+  note: z.string().optional(),
 })
 
 /** The parts by plugin; one this version doesn't know is kept as it is. */
@@ -117,6 +168,8 @@ export const entryPartsSchema = z.looseObject({
   food: foodPartSchema.optional(),
   bill: billPartSchema.optional(),
   charge: chargePartSchema.optional(),
+  device: devicePartSchema.optional(),
+  subscription: subscriptionPartSchema.optional(),
 })
 
 export const entryLinkSchema = z.looseObject({ rel: z.string().min(1), to: ulid })
@@ -249,7 +302,7 @@ export function definePlugin<Part>(plugin: Plugin<Part>) {
 }
 
 type Parts = {
-  [K in 'text' | 'media' | 'food' | 'bill' | 'charge']: NonNullable<
+  [K in 'text' | 'media' | 'food' | 'bill' | 'charge' | 'device' | 'subscription']: NonNullable<
     z.output<typeof entryPartsSchema>[K]
   >
 }
@@ -293,6 +346,31 @@ export const plugins = {
     searchText: (part) => part.station ?? '',
     fallback: (part) =>
       `充电 ${part.energyWh === undefined ? '' : `${part.energyWh / 1000} kWh`}`.trim(),
+  }),
+  device: definePlugin<Parts['device']>({
+    id: 'device',
+    version: 1,
+    defaultVisibility: 'inherit',
+    searchText: (part) => [part.name, part.category, part.note].filter(Boolean).join(' '),
+    fallback: (part) => `买了 ${part.name}`,
+  }),
+  subscription: definePlugin<Parts['subscription']>({
+    id: 'subscription',
+    version: 1,
+    defaultVisibility: 'inherit',
+    publicFields: [
+      'name',
+      'link',
+      'price',
+      'currency',
+      'period',
+      'renews',
+      'autoRenew',
+      'ended',
+      'note',
+    ],
+    searchText: (part) => [part.name, part.note].filter(Boolean).join(' '),
+    fallback: (part) => `订阅 ${part.name}`,
   }),
 } satisfies Record<string, Plugin<never>>
 
@@ -854,4 +932,9 @@ export function getCollectionKey(collection: Pick<Collection, 'slug' | 'uid'>) {
 /** A public track's file under `data/`. */
 export function getPublicTrackFile(track: Pick<PublicTrack, 'uid'>) {
   return `tracks/${track.uid}.json`
+}
+
+/** Whether an entry is a charge imported from the car's statistics, which only an import changes. */
+export function isImportedCharge(entry: Pick<Entry, 'parts'>) {
+  return entry.parts.charge?.source !== undefined
 }

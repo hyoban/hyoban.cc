@@ -277,3 +277,99 @@ test('making an entry private takes it from the public feed', async () => {
   assert.deepEqual(feed.deleted, [shown.uid])
   assert.equal((await get(env, `/v1/moments/${shown.uid}`)).body.hidden, true)
 })
+
+test('a subscription goes public without what pays for it', async () => {
+  const { env } = setUpWithData()
+  const subscription = {
+    uid: uid('subscription'),
+    at: '2025-11-14',
+    parts: {
+      subscription: {
+        v: 1,
+        name: 'Folo Plus',
+        price: 79.99,
+        currency: 'USD',
+        period: 'year',
+        renews: '2026-11-14',
+        paidWith: 'A',
+      },
+    },
+    createdAt: at,
+    updatedAt: at,
+  }
+
+  assert.equal((await commit(env, { entries: [subscription] })).status, 200)
+
+  const shown = (await get(env, `/v2/entries/${subscription.uid}`)).body.parts.subscription
+
+  assert.equal(shown.name, 'Folo Plus')
+  assert.equal(shown.paidWith, undefined)
+  assert.equal(
+    (await get(env, `/v2/entries/${subscription.uid}`, owner)).body.parts.subscription.paidWith,
+    'A',
+  )
+})
+
+test('an imported charge is changed only by an import', async () => {
+  const { env, importSnapshot } = setUpWithData()
+  const charge = {
+    uid: uid('charge'),
+    at,
+    parts: {
+      charge: {
+        v: 1,
+        type: 'AC',
+        energyWh: 7800,
+        vehicle: 'zeekr-007gt',
+        source: { captureId: 'a'.repeat(64), pointer: '/charges/0', method: 'screen' },
+      },
+    },
+    published: { at },
+    createdAt: at,
+    updatedAt: at,
+  }
+  const sent = await commit(env, { entries: [charge] })
+
+  assert.equal(sent.status, 422)
+  assert.match(sent.body.error, /imported charge/)
+
+  importSnapshot({ ...movedSnapshot(), entries: [...movedSnapshot().entries, charge] })
+
+  const { source: _source, ...edited } = charge.parts.charge
+  const changed = await commit(env, { entries: [{ ...charge, parts: { charge: edited } }] })
+
+  assert.equal(changed.status, 422)
+  assert.equal((await commit(env, { deleted: [charge.uid] })).status, 422)
+})
+
+test("the car's statistics come back in the export and on the feed's first page", async () => {
+  const { env, importSnapshot } = setUpWithData()
+  const capture = {
+    id: 'b'.repeat(64),
+    deviceId: 'zeekr-007gt',
+    capturedAt: '2026-10-24T03:10:00+08:00',
+    timezone: 'Asia/Shanghai',
+    raw: { file: 'sources/x.json', sha256: 'b'.repeat(64), redacted: true },
+  }
+  const source = { captureId: capture.id, pointer: '/report', method: 'screen' }
+  const month = {
+    deviceId: 'zeekr-007gt',
+    month: '2026-09',
+    capturedAt: capture.capturedAt,
+    report: { distanceMeters: 1895000 },
+    sources: [source],
+  }
+
+  importSnapshot({ ...movedSnapshot(), vehicleMonths: [month], vehicleCaptures: [capture] })
+
+  const exported = (await get(env, '/v2/export', owner)).body
+
+  assert.deepEqual(exported.vehicleMonths, [month])
+  assert.deepEqual(exported.vehicleCaptures, [capture])
+  assert.deepEqual(exported.vehicleAssisted, [])
+
+  const feed = (await get(env, '/v2/changes?since=0')).body
+
+  assert.deepEqual(feed.vehicleMonths, [month])
+  assert.deepEqual(feed.deletedVehicleMonths, [])
+})

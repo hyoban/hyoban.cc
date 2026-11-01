@@ -36,7 +36,14 @@ import cc.hyoban.moments.BuildConfig
 import cc.hyoban.moments.R
 import cc.hyoban.moments.ledger.AutoBill
 import cc.hyoban.moments.ledger.summarize
+import cc.hyoban.moments.data.things.Period
+import cc.hyoban.moments.data.things.Things
+import cc.hyoban.moments.data.things.Vehicle
 import cc.hyoban.moments.sidekey.SideKeys
+import cc.hyoban.moments.ui.things.APART
+import cc.hyoban.moments.ui.things.CAR_ID
+import cc.hyoban.moments.ui.things.priceOf
+import cc.hyoban.moments.ui.things.yuan
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.Preferences
 import cc.hyoban.moments.ui.components.PageWidth
@@ -67,6 +74,9 @@ class MeRoutes(
     val ledgerSettings: () -> Unit,
     val footprintSettings: () -> Unit,
     val sideKey: () -> Unit,
+    val devices: () -> Unit,
+    val subscriptions: () -> Unit,
+    val car: () -> Unit,
 )
 
 /**
@@ -103,6 +113,7 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
                     MeRow(AppIcons.Wallet, stringResource(R.string.me_ledger), "me_ledger", shapes) { routes.ledger(0) }
                     MeRow(AppIcons.Footprints, stringResource(R.string.footprints_title), "me_footprints", shapes, onClick = routes.footprints)
                 }
+                Things(container, routes)
                 PageCaption(stringResource(R.string.me_general))
                 PageRows { shapes ->
                     MeRow(
@@ -224,6 +235,44 @@ private fun MonthSpending(container: AppContainer, onOpen: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+/**
+ * 东西: the devices and what they cost a day, the subscriptions and what they cost a month, and
+ * the car's last month, each a page.
+ */
+@Composable
+private fun Things(container: AppContainer, routes: MeRoutes) {
+    val entries by container.repository.entries.collectAsStateWithLifecycle()
+    val second by container.repository.second.collectAsStateWithLifecycle()
+    val today = LocalDate.now()
+    val devices = remember(entries) { Things.devices(entries.values) }
+    val subscriptions = remember(entries) { Things.subscriptions(entries.values) }
+    val month = remember(second) { Vehicle.months(second.vehicleMonths.values, CAR_ID).firstOrNull { it.distanceMeters != null } }
+    val owned = devices.filter { it.soldOn == null }
+    val monthly = subscriptions.filter { it.ended == null && it.period == Period.MONTH }
+    PageCaption(stringResource(R.string.me_things))
+    PageRows { shapes ->
+        MeRow(
+            AppIcons.Laptop, stringResource(R.string.devices_title), "me_devices", shapes,
+            supporting = stringResource(R.string.me_devices_summary, owned.size, yuan(owned.sumOf { it.dailyCost(today) })).takeIf { devices.isNotEmpty() },
+            onClick = routes.devices,
+        )
+        MeRow(
+            AppIcons.Subscription, stringResource(R.string.subscriptions_title), "me_subscriptions", shapes,
+            supporting = monthly.groupBy { it.currency }.entries.joinToString(" ") { (currency, rows) -> priceOf(rows.sumOf { it.price }, currency) }
+                .takeIf { it.isNotEmpty() }?.let { stringResource(R.string.me_subscriptions_summary, it) },
+            onClick = routes.subscriptions,
+        )
+        MeRow(
+            AppIcons.Car, stringResource(R.string.car_title), "me_car", shapes,
+            supporting = listOfNotNull(
+                devices.firstOrNull { it.id == CAR_ID }?.name,
+                month?.distanceMeters?.let { stringResource(R.string.me_car_summary, month.month.monthValue, "${it / 1000} km") },
+            ).joinToString(APART),
+            onClick = routes.car,
+        )
     }
 }
 

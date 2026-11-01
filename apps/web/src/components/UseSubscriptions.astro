@@ -1,0 +1,73 @@
+---
+import { readSubscriptions, type SubscriptionPart } from '@/data/store'
+
+// What digital life costs, on the use page: the subscriptions and the software bought once,
+// from their entries, as the table the page always had. What pays for each is never public,
+// so it has no column.
+
+const SYMBOLS: Record<string, string> = { CNY: '¥', USD: '$' }
+const PERIODS = { year: '/年', month: '/月', once: '' } as const
+
+function formatPrice(part: SubscriptionPart) {
+  return `${SYMBOLS[part.currency] ?? `${part.currency} `}${part.price}${PERIODS[part.period]}`
+}
+
+/** When it renews or runs out: the day it comes round on for one that renews by itself. */
+function formatRenews(part: SubscriptionPart) {
+  if (!part.renews) {
+    return '-'
+  }
+
+  const month = Number(part.renews.slice(5, 7))
+  const day = Number(part.renews.slice(8, 10))
+
+  if (part.autoRenew && part.period === 'year') {
+    return `每年${month}月${day}日`
+  }
+
+  return part.autoRenew && part.period === 'month' ? `每月${day}日` : part.renews
+}
+
+const rows = readSubscriptions().map((part) => ({
+  name: part.name,
+  link: part.link,
+  ended: part.ended !== undefined,
+  price: formatPrice(part),
+  renews: formatRenews(part),
+  note: part.note ?? '',
+  autoRenew: part.autoRenew ? '是' : '否',
+}))
+---
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align:center">名称</th>
+      <th style="text-align:center">价格</th>
+      <th style="text-align:center">到期 / 续费日期</th>
+      <th style="text-align:center">描述</th>
+      <th style="text-align:center">自动续费</th>
+    </tr>
+  </thead>
+  <tbody>
+    {
+      rows.map((row) => (
+        <tr>
+          <td style="text-align:center">
+            {row.ended ? (
+              <del>{row.link ? <a href={row.link}>{row.name}</a> : row.name}</del>
+            ) : row.link ? (
+              <a href={row.link}>{row.name}</a>
+            ) : (
+              row.name
+            )}
+          </td>
+          <td style="text-align:center">{row.price}</td>
+          <td style="text-align:center">{row.renews}</td>
+          <td style="text-align:center">{row.note}</td>
+          <td style="text-align:center">{row.autoRenew}</td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>

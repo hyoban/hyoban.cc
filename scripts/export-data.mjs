@@ -6,8 +6,8 @@ import { refreshData } from './lib/data-sync.mjs'
 //
 // Backs the API's records up into data/: fetches the export with MOMENTS_API_TOKEN, from
 // the environment or .env, and writes it in data/'s layout and canonical JSON, removing
-// the Moments and trips the API no longer has. devices.json and schema/ stay as they
-// are. It stops when data/ has uncommitted changes the API may not have yet. Nothing is
+// the records the API no longer has. The car's expenses and sources, and schema/, stay as
+// they are. It stops when data/ has uncommitted changes the API may not have yet. Nothing is
 // committed; the data-backup workflow does that.
 
 const root = fileURLToPath(new URL('../', import.meta.url))

@@ -1,4 +1,10 @@
-import type { MomentRecord, TripRecord } from '@hyoban/data-spec'
+import type {
+  MomentRecord,
+  TripRecord,
+  VehicleAssistedDrivingCapture,
+  VehicleCapture,
+  VehicleMonth,
+} from '@hyoban/data-spec'
 import {
   entryToMoment,
   getCollectionKey,
@@ -22,7 +28,15 @@ export const REVISION = `(SELECT CAST(value AS INTEGER) FROM meta WHERE key = 'r
 export const BUMP_REVISION = `UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`
 
 export type Value = string | number | null
-export type Table = 'moments' | 'places' | 'trips' | 'routes' | 'tracks'
+export type Table =
+  | 'moments'
+  | 'places'
+  | 'trips'
+  | 'routes'
+  | 'tracks'
+  | 'vehicle_months'
+  | 'vehicle_assisted'
+  | 'vehicle_captures'
 
 export const KEYS: Record<Table, string> = {
   moments: 'uid',
@@ -30,6 +44,9 @@ export const KEYS: Record<Table, string> = {
   trips: 'id',
   routes: 'key',
   tracks: 'uid',
+  vehicle_months: 'key',
+  vehicle_assisted: 'key',
+  vehicle_captures: 'id',
 }
 
 /** What sort of entry a row holds: a Moment the first shape has, a mark, or the rest. */
@@ -103,6 +120,33 @@ export function placeRow(id: string, record: unknown): Record<string, Value> {
 
 export function routeRow(key: string, record: unknown): Record<string, Value> {
   return { key, record: JSON.stringify(record) }
+}
+
+// The car's statistics, as the Zeekr import normalised them: a month, a cumulative
+// assisted-driving observation, and a source capture they point into.
+
+export function vehicleMonthRow(month: VehicleMonth): Record<string, Value> {
+  return {
+    key: `${month.deviceId}/${month.month}`,
+    device_id: month.deviceId,
+    month: month.month,
+    record: JSON.stringify(month),
+  }
+}
+
+export function vehicleAssistedRow(
+  observation: VehicleAssistedDrivingCapture,
+): Record<string, Value> {
+  return {
+    key: `${observation.deviceId}/${observation.capturedAt}`,
+    device_id: observation.deviceId,
+    captured_at: observation.capturedAt,
+    record: JSON.stringify(observation),
+  }
+}
+
+export function vehicleCaptureRow(capture: VehicleCapture): Record<string, Value> {
+  return { id: capture.id, record: JSON.stringify(capture) }
 }
 
 /**

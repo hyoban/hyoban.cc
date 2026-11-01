@@ -1,8 +1,9 @@
 # Zeekr statistics
 
-Repository-only vehicle statistics captured from the owner's Zeekr app. The API
-backup leaves this directory alone. Schemas live in
-`packages/data-spec/src/vehicle.ts`.
+Vehicle statistics captured from the owner's Zeekr app. The months, assisted-driving
+observations and captures are kept in the API's D1 too, and the backup writes them back
+here; the expenses, sources and validation stay only in the repository. Only an import
+changes any of it, the app included. Schemas live in `packages/data-spec/src/vehicle.ts`.
 
 ## Public and private data
 
@@ -98,8 +99,10 @@ vp run zeekr:entries --write
 ```
 
 `zeekr:entries` turns each charging session into an entry with a `charge` part under
-`data/entries` (no place, its uid made from when it started), adding only the new ones;
-send them with `vp run data:push <the new files>` after `vp run data:export`.
+`data/entries` (no place, its uid made from when it started, naming the car and its
+source), adding the new ones and bringing the rest up to date; the API turns away any
+other edit of them. After `vp run data:export`, send the new and changed entries and the
+statistics with `vp run data:push <the files>`.
 
 Preparation only retains known statistical fields and screen text; unexpected text
 inside retained fields causes an error. Conversion and checking refuse unredacted

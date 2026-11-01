@@ -1,24 +1,36 @@
 ---
 import SitePage from '@/components/SitePage.astro'
 import UseDevices from '@/components/UseDevices.astro'
+import UseSubscriptions from '@/components/UseSubscriptions.astro'
 import Layout from '@/layouts/Layout.astro'
 import { getPageTitle } from '@/page-cards'
 import { getPostCardPath } from '@/post-cards'
 import { getEntry } from 'astro:content'
 
-// The use page is markdown with the devices timeline in the middle: the markdown marks
-// the spot with an HTML comment starting `<!-- devices`.
+// The use page is markdown with the devices timeline and the subscriptions table in it: the
+// markdown marks each spot with an HTML comment, `<!-- devices` and `<!-- subscriptions`.
 
 const entry = (await getEntry('pages', 'use'))!
 const html = entry.rendered?.html ?? ''
-const marker = html.match(/<!--\s*devices\b[\s\S]*?-->/)
+const [before, middle, after] = splitAt(html, ['devices', 'subscriptions'])
 
-if (!marker) {
-  throw new Error('src/content/pages/use.md has no <!-- devices --> marker.')
+function splitAt(text: string, markers: string[]) {
+  const parts: string[] = []
+  let rest = text
+
+  for (const name of markers) {
+    const marker = rest.match(new RegExp(`<!--\\s*${name}\\b[\\s\\S]*?-->`))
+
+    if (!marker) {
+      throw new Error(`src/content/pages/use.md has no <!-- ${name} --> marker.`)
+    }
+
+    parts.push(rest.slice(0, marker.index))
+    rest = rest.slice(marker.index! + marker[0].length)
+  }
+
+  return [...parts, rest]
 }
-
-const before = html.slice(0, marker.index)
-const after = html.slice(marker.index! + marker[0].length)
 ---
 
 <Layout title={getPageTitle({ heading: entry.data.title })} shareTitle={entry.data.title} description={entry.data.description} image={getPostCardPath(entry)}>
@@ -26,6 +38,8 @@ const after = html.slice(marker.index! + marker[0].length)
     <article class="prose">
       <Fragment set:html={before} />
       <UseDevices />
+      <Fragment set:html={middle} />
+      <UseSubscriptions />
       <Fragment set:html={after} />
     </article>
   </SitePage>

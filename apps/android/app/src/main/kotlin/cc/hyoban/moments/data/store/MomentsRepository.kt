@@ -65,6 +65,10 @@ class MomentsRepository(
     private var changedTrips: Map<String, kotlinx.serialization.json.JsonObject> = emptyMap()
     /** The trips as the API has them, before the phone's changes. */
     private var apiTrips: List<TripRecord> = emptyList()
+    /** The entries changed on the phone that aren't Moments (a device, a subscription), by uid, until published. */
+    private var changedEntries: Map<String, kotlinx.serialization.json.JsonObject> = emptyMap()
+    /** Those entries deleted on the phone, by uid, until published. */
+    private var removedEntries: Set<String> = emptySet()
 
     /** Moments set aside while their deletion can still be undone: out of sight, not yet deleted. */
     private var setAside: Set<String> = emptySet()
@@ -99,6 +103,11 @@ class MomentsRepository(
      */
     val second: StateFlow<SecondShape> = _second.asStateFlow()
 
+    private val _entries = MutableStateFlow<Map<String, kotlinx.serialization.json.JsonObject>>(emptyMap())
+
+    /** The entries beyond the Moments, by uid, with the phone's changes to them: what the 设备, 订阅 and 车 pages read. */
+    val entries: StateFlow<Map<String, kotlinx.serialization.json.JsonObject>> = _entries.asStateFlow()
+
     /** Reads the copy on the phone. */
     suspend fun load() = lock.withLock {
         withContext(io) {
@@ -111,6 +120,10 @@ class MomentsRepository(
                 changedPlaces = local.readChangedPlaces()
                 removed = local.readRemoved()
                 changedTrips = local.readChangedTrips()
+                local.readChangedEntries().let { (entries, gone) ->
+                    changedEntries = entries
+                    removedEntries = gone
+                }
                 // What a snackbar was still offering to undo when the app was last closed: done
                 // now, as the snackbar going without its undo would have done it.
                 val (deleting, reverting) = local.readHeld()
@@ -121,6 +134,7 @@ class MomentsRepository(
             publishPlaces()
             apiTrips = store.readTrips()
             _second.value = store.readSecond()
+            showEntries()
             showTrips()
             publish()
             _loaded.value = true
@@ -229,9 +243,65 @@ class MomentsRepository(
         val collections = (if (fresh) emptyMap() else current.collections - first.deletedCollections.toSet()) +
             first.collections.associateBy { Entries.collectionKey(it) }
         val tracks = (if (fresh) emptyMap() else current.tracks - first.deletedTracks.toSet()) + first.tracks.associateBy { it.entryUid }
-        val next = SecondShape(first.revision, entries, collections, tracks)
+        val months = (if (fresh) emptyMap() else current.vehicleMonths - first.deletedVehicleMonths.toSet()) +
+            first.vehicleMonths.associateBy { "${it.text("deviceId")}/${it.text("month")}" }
+        val assisted = (if (fresh) emptyMap() else current.vehicleAssisted - first.deletedVehicleAssisted.toSet()) +
+            first.vehicleAssisted.associateBy { "${it.text("deviceId")}/${it.text("capturedAt")}" }
+        val next = SecondShape(first.revision, entries, collections, tracks, months, assisted)
         store.writeSecond(next)
         _second.value = next
+        // An entry the site now has as the phone changed it is the site's.
+        val settled = changedEntries.filter { (uid, entry) -> entries[uid] == entry }.keys
+        if (settled.isNotEmpty()) {
+            changedEntries = changedEntries - settled
+            local?.writeChangedEntries(changedEntries, removedEntries)
+        }
+        showEntries()
+    }
+
+    private fun kotlinx.serialization.json.JsonObject.text(key: String) =
+        (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.content
+
+    /** The entries the pages read: the copy's, with the phone's changes and deletions. */
+    private fun showEntries() {
+        _entries.value = _second.value.entries - removedEntries + changedEntries
+    }
+
+    /** Keeps a device or subscription, written on the phone or changed there, until it is published. */
+    suspend fun saveEntry(entry: kotlinx.serialization.json.JsonObject) = lock.withLock {
+        val local = checkNotNull(local) { "No store for the phone's changes" }
+        withContext(io) {
+            val uid = entry.entryUid
+            val stored = _second.value.entries[uid]
+            changedEntries = if (stored != null && JsonObjectsEqualApartFrom(stored, entry, "updatedAt")) changedEntries - uid else changedEntries + (uid to entry)
+            removedEntries = removedEntries - uid
+            local.writeChangedEntries(changedEntries, removedEntries)
+            showEntries()
+            publish()
+        }
+    }
+
+    /** Deletes a device or subscription: one only on the phone at once, one the site has once published. */
+    suspend fun deleteEntry(uid: String) = lock.withLock {
+        val local = checkNotNull(local) { "No store for the phone's changes" }
+        withContext(io) {
+            changedEntries = changedEntries - uid
+            if (uid in _second.value.entries) removedEntries = removedEntries + uid
+            local.writeChangedEntries(changedEntries, removedEntries)
+            showEntries()
+            publish()
+        }
+    }
+
+    /** Takes back the phone's change to an entry, or its deletion. */
+    suspend fun revertEntry(uid: String) = lock.withLock {
+        withContext(io) {
+            changedEntries = changedEntries - uid
+            removedEntries = removedEntries - uid
+            local?.writeChangedEntries(changedEntries, removedEntries)
+            showEntries()
+            publish()
+        }
     }
 
     /** Whether an entry holds what the first shape's Moment of it doesn't: it is none, or has other parts. */
@@ -470,7 +540,8 @@ class MomentsRepository(
         }
         val extra = outside?.pending() ?: Outside()
         val trips = lock.withLock { changedTrips }
-        if (written.isEmpty() && deletions.isEmpty() && kinds.isEmpty() && extra.size == 0 && trips.isEmpty()) return
+        val (things, goneThings) = lock.withLock { changedEntries to removedEntries }
+        if (written.isEmpty() && deletions.isEmpty() && kinds.isEmpty() && extra.size == 0 && trips.isEmpty() && things.isEmpty() && goneThings.isEmpty()) return
         // A bill of a Moment goes as a part of it, the Moment sent again with it (or without it,
         // taken off) when it isn't among the changes already; a bill alone is an entry of its own.
         val (ofMoments, alone) = lock.withLock {
@@ -549,8 +620,8 @@ class MomentsRepository(
                 ChangeSet(
                     places,
                     moments,
-                    deletions + alone.filter { it.part == null }.map { it.uid },
-                    entries = alone.filter { it.part != null }.map { it.entry() },
+                    deletions + alone.filter { it.part == null }.map { it.uid } + goneThings,
+                    entries = alone.filter { it.part != null }.map { it.entry() } + things.values,
                     parts = parts,
                     tracks = extra.tracks.mapNotNull { it.line },
                     deletedTracks = extra.tracks.filter { it.line == null }.map { it.share.uid },
@@ -564,6 +635,15 @@ class MomentsRepository(
                 // A trip changed again while this was sent stays to be published.
                 changedTrips = changedTrips.filter { (id, collection) -> trips[id] != collection }
                 local?.writeChangedTrips(changedTrips)
+                // The site has the entries as sent; one changed again while this was sent stays to be published.
+                val second = _second.value
+                val kept = second.copy(entries = second.entries - goneThings + things)
+                store.writeSecond(kept)
+                _second.value = kept
+                changedEntries = changedEntries.filter { (uid, entry) -> things[uid] != entry }
+                removedEntries = removedEntries - goneThings
+                local?.writeChangedEntries(changedEntries, removedEntries)
+                showEntries()
             }
         }
         lock.withLock {
@@ -665,6 +745,8 @@ class MomentsRepository(
             changedPlaces.mapNotNull { (id, place) -> apiPlaces[id]?.let { PlaceChange(id, it, place) } }.sortedBy { it.after.name },
             outside?.pending() ?: Outside(),
             changedTrips.mapNotNull { (id, collection) -> apiTrips.firstOrNull { it.id == id }?.let { TripChange(it, collection) } },
+            changedEntries.map { (uid, entry) -> EntryChange(_second.value.entries[uid], entry) } +
+                removedEntries.mapNotNull { uid -> _second.value.entries[uid]?.let { EntryChange(it, null) } },
         )
     }
 
@@ -813,9 +895,14 @@ data class PendingChanges(
     val outside: Outside = Outside(),
     /** The trips changed on the phone. */
     val trips: List<TripChange> = emptyList(),
+    /** The devices and subscriptions written, changed or deleted on the phone. */
+    val entries: List<EntryChange> = emptyList(),
 ) {
-    val size get() = added.size + changed.size + removed.size + places.size + outside.size + trips.size
+    val size get() = added.size + changed.size + removed.size + places.size + outside.size + trips.size + entries.size
 }
+
+/** An entry that isn't a Moment as the site has it, [before] (null when new), and as it will be, [after] (null when deleted). */
+data class EntryChange(val before: kotlinx.serialization.json.JsonObject?, val after: kotlinx.serialization.json.JsonObject?)
 
 /** A trip as the site has it, [before], and the collection it is changed to. */
 data class TripChange(val before: TripRecord, val after: kotlinx.serialization.json.JsonObject)

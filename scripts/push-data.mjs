@@ -8,7 +8,8 @@ import { pushData } from './lib/data-sync.mjs'
 // Writes records from data/ into the API's database without removing anything: each
 // Moment, trip, entry or collection file given (data/moments/…/<uid>.json,
 // data/trips/<id>.json, data/entries/…/<uid>.json, data/collections/<key>.json), the
-// places they name, and any --place. For what was written outside the API, like a Moment
+// places they name, any --place, and the car's statistics (data/zeekr/months/…,
+// data/zeekr/assisted-driving/…, data/zeekr/captures/…). For what was written outside the API, like a Moment
 // from the create-moment skill. The deployed database by default; --local writes the
 // one `wrangler dev` uses, and --dry-run only writes the SQL under .artifacts/import.
 
@@ -21,7 +22,7 @@ const pushed = await pushData(root, options, {
 })
 
 console.log(
-  `${options.dryRun ? 'Would push' : 'Pushed'} ${pushed.moments} record(s), ${pushed.trips} trip(s) and ${pushed.places} place(s) ${options.local ? 'locally' : 'to the API'}.`,
+  `${options.dryRun ? 'Would push' : 'Pushed'} ${pushed.moments} record(s), ${pushed.trips} trip(s), ${pushed.places} place(s) and ${pushed.vehicle} of the car's statistics ${options.local ? 'locally' : 'to the API'}.`,
 )
 
 if (pushed.routes) {
@@ -41,6 +42,7 @@ function parseArguments(argv) {
     entries: [],
     collections: [],
     places: [],
+    vehicle: [],
     local: false,
     dryRun: false,
   }
@@ -66,8 +68,15 @@ function parseArguments(argv) {
         options.entries.push(file)
       } else if (/^collections\/[a-z0-9-]+\.json$/.test(file)) {
         options.collections.push(file)
+      } else if (
+        /^zeekr\/(months|assisted-driving)\/[a-z0-9-]+\/[\w-]+\.json$/.test(file) ||
+        /^zeekr\/captures\/[a-f0-9]{64}\.json$/.test(file)
+      ) {
+        options.vehicle.push(file)
       } else {
-        throw new Error(`Not a Moment, trip, entry or collection under data/: ${argument}`)
+        throw new Error(
+          `Not a Moment, trip, entry, collection or the car's statistics under data/: ${argument}`,
+        )
       }
     }
   }
@@ -77,11 +86,12 @@ function parseArguments(argv) {
       options.trips.length +
       options.entries.length +
       options.collections.length +
-      options.places.length ===
+      options.places.length +
+      options.vehicle.length ===
     0
   ) {
     throw new Error(
-      'Usage: pnpm data:push [--local] [--dry-run] [--place <id>]... <data/moments/…/<uid>.json | data/trips/<id>.json | data/entries/…/<uid>.json | data/collections/<key>.json>...',
+      'Usage: pnpm data:push [--local] [--dry-run] [--place <id>]... <data/moments/…/<uid>.json | data/trips/<id>.json | data/entries/…/<uid>.json | data/collections/<key>.json | data/zeekr/{months,assisted-driving,captures}/….json>...',
     )
   }
 

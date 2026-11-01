@@ -32,7 +32,7 @@ test('writing data/ back over itself changes nothing', async () => {
   assert.deepEqual(await writeSnapshot(snapshot, await copyOfData()), [])
 })
 
-test('what the API no longer has is removed, and devices.json is left alone', async () => {
+test("what the API no longer has is removed, and the car's expenses are left alone", async () => {
   const root = await copyOfData()
   const moments = snapshot.entries.filter((entry) => entry.parts.text)
   const [gone, edited] = moments
@@ -40,7 +40,7 @@ test('what the API no longer has is removed, and devices.json is left alone', as
     ...edited,
     parts: { ...edited.parts, text: { ...edited.parts.text, text: `${edited.parts.text.text}!` } },
   }
-  const devices = await readFile(join(root, 'devices.json'), 'utf8')
+  const expenses = await readFile(join(root, 'zeekr/expenses/zeekr-007gt.json'), 'utf8')
   const fileOf = (uid) =>
     listJsonFiles('entries', root).find((file) => file.endsWith(`${uid}.json`))
   const goneFile = fileOf(gone.uid)
@@ -67,6 +67,6 @@ test('what the API no longer has is removed, and devices.json is left alone', as
     ),
   )
   assert.deepEqual(readJson(editedFile, root), changed)
-  assert.equal(await readFile(join(root, 'devices.json'), 'utf8'), devices)
+  assert.equal(await readFile(join(root, 'zeekr/expenses/zeekr-007gt.json'), 'utf8'), expenses)
   assert.equal(await readFile(join(root, 'stray.txt'), 'utf8'), 'not a record')
 })

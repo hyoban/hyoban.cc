@@ -245,6 +245,18 @@ object SideKeySettings
 @Serializable
 object Items
 
+/** 设备: what is owned and what it costs a day. */
+@Serializable
+object Devices
+
+/** 订阅: what digital life costs. */
+@Serializable
+object Subscriptions
+
+/** 车: the car's statistics from the Zeekr import. */
+@Serializable
+object Car
+
 /** A Moment to write, kept on the phone, with a bill or the [bill] alone. */
 @Serializable
 data class NewMoment(val bill: Boolean = false)
@@ -700,6 +712,9 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                                         ledgerSettings = { navController.navigate(LedgerSettings()) },
                                         footprintSettings = { navController.navigate(FootprintSettings) },
                                         sideKey = { navController.navigate(SideKeySettings) },
+                                        devices = { navController.navigate(Devices) },
+                                        subscriptions = { navController.navigate(Subscriptions) },
+                                        car = { navController.navigate(Car) },
                                     ),
                                 )
                             }
@@ -711,6 +726,15 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             }
                             screen<Items>(link = "items") {
                                 cc.hyoban.moments.ui.settings.ItemsScreen(container, onBack = back)
+                            }
+                            screen<Devices>(link = "devices") {
+                                cc.hyoban.moments.ui.things.DevicesScreen(container, onBack = back)
+                            }
+                            screen<Subscriptions>(link = "subscriptions") {
+                                cc.hyoban.moments.ui.things.SubscriptionsScreen(container, onBack = back)
+                            }
+                            screen<Car>(link = "car") {
+                                cc.hyoban.moments.ui.things.CarScreen(container, onBack = back, onDay = openDay)
                             }
                             screen<FootprintSettings>(link = "footprint-settings") {
                                 FootprintSettingsScreen(container, onBack = back)
