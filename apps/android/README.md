@@ -95,8 +95,9 @@ trip itself and photos private on their own as well.
   photo marked 不用作封面 never becomes a cover, widget or share card.
 - **Time.** The earliest photo's EXIF time and offset, else a video's creation time, else
   the files' dates, else now.
-- **Place.** Where the first photo was taken, else where the phone is: the known place
-  within 2 km, else a new place named through Photon (`BuildConfig.PLACE_SEARCH_URL`)
+- **Place.** Where the first photo was taken, else none until one is chosen: the page
+  never locates the phone on its own, only the map's locate button does. A photo's place
+  is the known place within 2 km, else a new place named through Photon (`BuildConfig.PLACE_SEARCH_URL`)
   after the nearest park, sight, shop or street, with the system's geocoder as fallback.
   It can be moved on a map with a pin. Its kind follows OpenStreetMap and can be changed,
   for a known place too. A place shared from Amap (Here (作为时刻的地点), or 保存为地点 to

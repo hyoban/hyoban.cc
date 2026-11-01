@@ -258,11 +258,8 @@
     <string name="food_share">每人 ¥%1$s</string>
     <string name="source_photo">来自照片</string>
     <string name="source_now">现在</string>
-    <string name="source_location">当前位置</string>
     <string name="source_chosen">手动选择</string>
-    <string name="place_locating">正在定位…</string>
-    <string name="place_no_permission">没有定位权限，点按选择地点</string>
-    <string name="place_unknown">没能定位，点按选择地点</string>
+    <string name="place_unchosen">点按选择地点</string>
     <string name="place_none">不加地点</string>
     <string name="place_name">地点名称</string>
     <string name="distance_metres">%1$d 米</string>

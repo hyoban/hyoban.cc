@@ -276,11 +276,8 @@
     <string name="food_share">¥%1$s each</string>
     <string name="source_photo">From the photo</string>
     <string name="source_now">Now</string>
-    <string name="source_location">Where you are</string>
     <string name="source_chosen">Chosen</string>
-    <string name="place_locating">Locating…</string>
-    <string name="place_no_permission">No location access; tap to choose a place</string>
-    <string name="place_unknown">Couldn’t find where you are; tap to choose a place</string>
+    <string name="place_unchosen">Tap to choose a place</string>
     <string name="place_none">No place</string>
     <string name="place_name">Place name</string>
     <string name="distance_metres">%1$d m</string>

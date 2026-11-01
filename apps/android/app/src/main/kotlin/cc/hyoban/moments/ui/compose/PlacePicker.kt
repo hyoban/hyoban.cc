@@ -27,6 +27,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import android.Manifest
 import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -152,6 +155,24 @@ internal fun PlacePicker(
     }
     var target by remember { mutableStateOf(opening?.let { MapTarget(it.latitude, it.longitude, PICK_ZOOM) }) }
     var locating by remember { mutableStateOf(false) }
+    // Just where the phone is becomes the choice, a new place named after what is around it;
+    // a known place nearby is a chip away. Asked for only here, never on opening the page.
+    val locate: () -> Unit = {
+        locating = true
+        scope.launch {
+            currentLocation(context)?.let { location ->
+                val here = Fix(location.latitude, location.longitude)
+                named = false
+                kindChosen = false
+                pick = PlaceChoice.New(name, here)
+                target = MapTarget(here.latitude, here.longitude, PICK_ZOOM)
+            }
+            locating = false
+        }
+    }
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
+        if (granted.values.any { it }) locate() else Toast.makeText(context, R.string.error_location_permission, Toast.LENGTH_SHORT).show()
+    }
     val fly = { to: Fix -> target = MapTarget(to.latitude, to.longitude, PICK_ZOOM) }
     val choose: (String) -> Unit = { id ->
         pick = PlaceChoice.Known(id)
@@ -267,46 +288,35 @@ internal fun PlacePicker(
                 }
             }
             FloatingBack(onDismiss, Modifier.align(Alignment.TopStart))
-            val granted = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
-            if (granted) {
-                // At the map's bottom end, clear of the sheet's corners; a box of its own places
-                // it, as the tooltip's box doesn't pass an alignment on.
-                Box(Modifier.align(if (sideways) Alignment.TopEnd else Alignment.BottomEnd).padding(bottom = if (sideways) 0.dp else SHEET_CORNER).padding(Space.l)) {
-                    val locateLabel = stringResource(R.string.action_locate)
-                    Tooltip(locateLabel) {
-                        FloatingActionButton(
-                            onClick = {
-                                if (!locating) {
-                                    locating = true
-                                    scope.launch {
-                                        // Just where the phone is becomes the choice, a new place named
-                                        // after what is around it; a known place nearby is a chip away.
-                                        currentLocation(context)?.let { location ->
-                                            val here = Fix(location.latitude, location.longitude)
-                                            named = false
-                                            kindChosen = false
-                                            pick = PlaceChoice.New(name, here)
-                                            fly(here)
-                                        }
-                                        locating = false
-                                    }
-                                }
-                            },
-                            // Round on the floating surface, as the map's own controls are, quieter
-                            // than the sheet's one action.
-                            containerColor = SurfaceLevel.Floating.fill(),
-                            contentColor = tokens.tx,
-                            shape = Corners.full,
-                            // Named on the button, so it keeps its name while the indicator stands in for the icon.
-                            modifier = Modifier.semantics { contentDescription = locateLabel }.testTag("locate"),
-                        ) {
-                            // A loading indicator while it finds where the phone is, as the map tab's button has.
-                            Crossfade(locating, animationSpec = AppTheme.motionScheme.fastEffectsSpec(), label = "locating") { busy ->
-                                if (busy) {
-                                    Spinner(Modifier.size(32.dp), color = LocalContentColor.current)
+            // At the map's bottom end, clear of the sheet's corners; a box of its own places
+            // it, as the tooltip's box doesn't pass an alignment on.
+            Box(Modifier.align(if (sideways) Alignment.TopEnd else Alignment.BottomEnd).padding(bottom = if (sideways) 0.dp else SHEET_CORNER).padding(Space.l)) {
+                val locateLabel = stringResource(R.string.action_locate)
+                Tooltip(locateLabel) {
+                    FloatingActionButton(
+                        onClick = {
+                            if (!locating) {
+                                if (LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
+                                    locate()
                                 } else {
-                                    Icon(AppIcons.Locate, contentDescription = null)
+                                    permission.launch(LOCATION_PERMISSIONS)
                                 }
+                            }
+                        },
+                        // Round on the floating surface, as the map's own controls are, quieter
+                        // than the sheet's one action.
+                        containerColor = SurfaceLevel.Floating.fill(),
+                        contentColor = tokens.tx,
+                        shape = Corners.full,
+                        // Named on the button, so it keeps its name while the indicator stands in for the icon.
+                        modifier = Modifier.semantics { contentDescription = locateLabel }.testTag("locate"),
+                    ) {
+                        // A loading indicator while it finds where the phone is, as the map tab's button has.
+                        Crossfade(locating, animationSpec = AppTheme.motionScheme.fastEffectsSpec(), label = "locating") { busy ->
+                            if (busy) {
+                                Spinner(Modifier.size(32.dp), color = LocalContentColor.current)
+                            } else {
+                                Icon(AppIcons.Locate, contentDescription = null)
                             }
                         }
                     }
