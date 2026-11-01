@@ -106,6 +106,20 @@ the new originals a few at a time, then sends everything else as one `POST /v2/c
 which the API takes whole or not at all. What is published
 leaves the phone's store for the site's.
 
+## Backup
+
+备份, under 我 → 同步与来源, puts the phone's databases in a WebDAV directory of the owner's:
+its address, user name and password are set in one dialog (the password in a file Android's
+backup leaves out). `backup/BackupArchive` writes one zip, `here-backup-<yyyyMMdd-HHmmss>.zip`:
+under `databases/` the ledger, the footprints and the copy of the API's records, each a
+consistent copy made by SQLite's `VACUUM INTO`, with the footprints' reminders and companions;
+under `local/` the unpublished Moments and places, without `local/media/`. Photos, videos and
+the tokens stay out. 每天自动备份, on until turned off, backs up once a day as WorkManager's
+periodic work on a network with the battery not low; 立即备份 backs up at once. After each
+backup the directory keeps the newest seven and deletes the rest, leaving other files alone.
+Restoring is by hand: the files go back where the zip's paths say, `databases/` into
+`noBackupFilesDir` and `local/` into `filesDir`.
+
 ## Sharing
 
 A Moment's share sheet hands a copy of its words and a choice of photos to another app,
