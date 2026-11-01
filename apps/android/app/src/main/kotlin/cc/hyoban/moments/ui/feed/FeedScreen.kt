@@ -1,5 +1,16 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.components.LocalTopClearance
+import androidx.compose.foundation.layout.navigationBarsPadding
+import cc.hyoban.moments.ui.design.Surface
+import cc.hyoban.moments.ui.theme.SurfaceLevel
+import cc.hyoban.moments.ui.theme.ShadowElevation
+import cc.hyoban.moments.ui.theme.cardBorder
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.design.edgeBlur
@@ -146,6 +157,9 @@ fun FeedScreen(
     // pane beside the Moments rather than as a page over them. Turned upright with one chosen,
     // it goes on as its page; back clears the pane first.
     val twoPane = isExpandedWidth()
+    // On a phone on its side, the conversation a column beside the tabs and the day it has
+    // scrolled to on a map filling the rest (H01).
+    val dayMap = isPhoneLandscape() && !twoPane
     var chosen by rememberSaveable { mutableStateOf<String?>(null) }
     val details = rememberSaveableStateHolder()
     val open: (String) -> Unit = { uid -> if (twoPane) chosen = uid else onMoment(uid) }
@@ -228,7 +242,8 @@ fun FeedScreen(
                     modifier = Modifier.align(Alignment.TopCenter).windowInsetsPadding(WindowInsets.statusBars)
                         .height(FLOATING_BAR).wrapContentHeight().semantics { heading() },
                 )
-                Box(Modifier.align(Alignment.TopEnd)) {
+                // Beside the day's map, search is that map's, in its corner.
+                if (!dayMap) Box(Modifier.align(Alignment.TopEnd)) {
                     FloatingButton(AppIcons.Search, stringResource(R.string.action_search), onSearch, tag = "search")
                 }
             }
@@ -246,11 +261,13 @@ fun FeedScreen(
         val rail = LocalRailSpace.current
         val listPane = if (twoPane) {
             Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)).padding(start = rail.left).width(LIST_PANE_WIDTH + Space.gutter * 2)
+        } else if (dayMap) {
+            Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)).padding(start = rail.left).width(CHAT_COLUMN)
         } else {
             Modifier.weight(1f)
         }
         Box(listPane) {
-            CompositionLocalProvider(LocalRailSpace provides if (twoPane) RailSpace(0.dp, 0.dp, clearOfInsets = true) else rail) {
+            CompositionLocalProvider(LocalRailSpace provides if (twoPane || dayMap) RailSpace(0.dp, 0.dp, clearOfInsets = true) else rail) {
                 // No bar: the title, its counts and search head the timeline and scroll away with
                 // it, the page running up under the status bar, which a short fade of the page
                 // keeps the system's icons clear on.
@@ -307,6 +324,9 @@ fun FeedScreen(
                     StatusBarFade(haze)
                 }
             }
+        }
+        if (dayMap) {
+            TimelineDayMap(container, feedState, moments, places, bills, onDay, onSearch, Modifier.weight(1f).fillMaxHeight())
         }
         if (twoPane) {
             // The detail pane, a container of its own beside the list, clear of the bars.
@@ -629,6 +649,107 @@ private fun DayMap(
     cc.hyoban.moments.ui.map.DayTrackMap(stretches, dots, modifier.testTag("day_track"), rings = rings, topInset = topInset)
 }
 
+/** How wide the conversation stands beside the tabs on a phone on its side, the day's map beside it. */
+private val CHAT_COLUMN = 360.dp
+
+/** What the timeline's map shows: a day that has somewhere to show, its footprints and its Moments. */
+private class MappedDay(val day: String, val points: List<cc.hyoban.moments.footprints.TrackPoint>, val moments: List<cc.hyoban.moments.data.spec.MomentRecord>)
+
+/**
+ * Beside the conversation on a phone on its side, the day it has scrolled to on a map: the day
+ * whose date stands at or above the top of the list, its footprints, places and bills as its own
+ * page has them, and a card saying when, how far and what it spent; tapped, that day's page. A day
+ * with nowhere to show keeps the last one that had, faded, the card saying so. Search in its corner.
+ */
+@Composable
+private fun TimelineDayMap(
+    container: AppContainer,
+    state: androidx.compose.foundation.lazy.LazyListState,
+    moments: List<cc.hyoban.moments.data.spec.MomentRecord>,
+    places: Map<String, cc.hyoban.moments.data.spec.Place>,
+    bills: TimelineBills,
+    onDay: (String) -> Unit,
+    onSearch: () -> Unit,
+    modifier: Modifier,
+) {
+    var day by rememberSaveable { mutableStateOf<String?>(null) }
+    val clearance = with(LocalDensity.current) { LocalTopClearance.current.roundToPx() }
+    LaunchedEffect(state) {
+        // Where each day's capsule stands in the list, as they come into view; a list that changes
+        // length is numbered again.
+        val heads = mutableMapOf<Int, String>()
+        var count = -1
+        snapshotFlow { state.layoutInfo }.collect { info ->
+            if (info.totalItemsCount != count) {
+                heads.clear()
+                count = info.totalItemsCount
+            }
+            info.visibleItemsInfo.forEach { item ->
+                (item.key as? String)?.takeIf { it.startsWith(DAY_HEAD) }?.let { heads[item.index] = it.removePrefix(DAY_HEAD) }
+            }
+            // The first thing showing under the bar, and the last capsule at or above it.
+            val top = info.visibleItemsInfo.firstOrNull { it.offset + it.size > info.viewportStartOffset + clearance } ?: return@collect
+            val above = heads.keys.filter { it <= top.index }.maxOrNull()
+            (above?.let(heads::get) ?: heads.entries.minByOrNull { it.key }?.value)?.let { day = it }
+        }
+    }
+    var mapped by remember { mutableStateOf<MappedDay?>(null) }
+    var nowhere by remember { mutableStateOf(false) }
+    LaunchedEffect(day, moments) {
+        val shown = day ?: return@LaunchedEffect
+        val points = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            container.footprints.points(cc.hyoban.moments.footprints.TrackSelection(day = shown))
+        }
+        val dayMoments = moments.filter { it.occurredAt.startsWith(shown) }
+        val somewhere = points.size > 1 || dayMoments.any { moment -> moment.places.any { it in places } }
+        nowhere = !somewhere
+        if (somewhere) mapped = MappedDay(shown, points, dayMoments)
+    }
+    val openDay = stringResource(R.string.label_whole_day)
+    Box(modifier.background(AppColors.page)) {
+        mapped?.let { shown ->
+            Box(Modifier.fillMaxSize().graphicsLayer { alpha = if (nowhere) 0.4f else 1f }) {
+                // A map of its own for each day, framed on that day's footprints as its page frames them.
+                androidx.compose.runtime.key(shown.day) {
+                    DayMap(shown.day, shown.points, shown.moments, places, bills, Modifier.fillMaxSize(), topInset = FLOATING_BAR)
+                }
+            }
+        }
+        // The whole map opens the day, as its card does.
+        Box(Modifier.fillMaxSize().clickable(onClickLabel = openDay) { day?.let(onDay) }.testTag("timeline_day_map"))
+        day?.let { shown ->
+            val stats = remember(mapped, nowhere) { mapped?.takeIf { !nowhere }?.let { cc.hyoban.moments.footprints.trackStats(it.points) } }
+            val line = if (nowhere) {
+                stringResource(R.string.timeline_day_no_places)
+            } else {
+                listOfNotNull(
+                    stats?.takeIf { (mapped?.points?.size ?: 0) > 1 }?.let { stringResource(R.string.day_track_stats, it.metres / 1000, (it.recordedMillis / 60_000).toInt()) },
+                    daySpent(bills, shown)?.let { stringResource(R.string.ledger_expense_short, it) },
+                ).joinToString(" ")
+            }
+            Surface(
+                onClick = { onDay(shown) },
+                modifier = Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(Space.m).widthIn(max = 280.dp),
+                shape = AppTheme.shapes.large,
+                color = SurfaceLevel.Floating.fill(),
+                border = cardBorder(),
+                shadowElevation = ShadowElevation,
+            ) {
+                Column(Modifier.padding(horizontal = Space.m, vertical = Space.s)) {
+                    Text(formatDay(shown), style = AppTheme.typography.label)
+                    if (line.isNotEmpty()) Text(line, style = AppTheme.typography.caption, color = tokens.tx2)
+                }
+            }
+        }
+        Box(Modifier.align(Alignment.TopEnd)) {
+            FloatingButton(AppIcons.Search, stringResource(R.string.action_search), onSearch, tag = "search")
+        }
+    }
+}
+
+/** How the list keys a day's capsule. */
+private const val DAY_HEAD = "dayhead-"
+
 /** How tall a day's map is, its top under the status bar. */
 private val DAY_MAP = 320.dp
 
@@ -651,12 +772,17 @@ fun PlaceScreen(
     val moments = remember(all, id) { all.filter { id in it.places } }
 
     val place = places[id]
+    // On a phone on its side, the place on a map down the start half and its Moments beside it,
+    // its name heading them rather than standing over the map's edge (H10).
+    val sideways = isPhoneLandscape() && place != null
+    // What sort of place, where it is, then how many Moments are there.
+    val about = listOfNotNull(PlaceKind.of(place?.kind)?.let { stringResource(it.label) }, place?.division?.label(), pluralStringResource(R.plurals.count_moments, moments.size, moments.size)).joinToString(" ")
     SubPage(
         place?.name ?: id,
         onBack,
         Modifier.background(AppColors.page),
-        // What sort of place, where it is, then how many Moments are there.
-        subtitle = listOfNotNull(PlaceKind.of(place?.kind)?.let { stringResource(it.label) }, place?.division?.label(), pluralStringResource(R.plurals.count_moments, moments.size, moments.size)).joinToString(" "),
+        subtitle = about.takeUnless { sideways },
+        centre = if (sideways) { {} } else null,
         actions = {
             // On the map tab, its panel up, and the way there, as from that panel.
             if (place != null) {
@@ -679,11 +805,29 @@ fun PlaceScreen(
     ) {
         // The place is the page's title, so its cards name only the other places they were at.
         val ledgerNav = LocalLedgerNav.current
-        MomentFeed(moments, places, trips, container.mediaUrls, onMoment, onDay = onDay, hidePlace = id) {
-            // What was spent there, from the ledger kept on the phone.
-            item("spending") {
-                SpendingCard(container, SpendingOf.Place(id), onOpen = { ledgerNav?.list(LedgerFilter(place = id)) }, Modifier.padding(top = Space.s, bottom = Space.s))
+        val feed: @Composable (Modifier) -> Unit = { feedModifier ->
+            MomentFeed(moments, places, trips, container.mediaUrls, onMoment, feedModifier, onDay = onDay, hidePlace = id) {
+                if (sideways) item("name") {
+                    Column(Modifier.padding(horizontal = Space.gutter).padding(bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+                        Text(place?.name ?: id, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
+                        Text(about, style = AppTheme.typography.caption, color = tokens.tx2)
+                    }
+                }
+                // What was spent there, from the ledger kept on the phone.
+                item("spending") {
+                    SpendingCard(container, SpendingOf.Place(id), onOpen = { ledgerNav?.list(LedgerFilter(place = id)) }, Modifier.padding(top = Space.s, bottom = Space.s))
+                }
             }
+        }
+        if (sideways && place != null) {
+            Row(Modifier.fillMaxSize()) {
+                cc.hyoban.moments.ui.map.PlaceMap(place, Modifier.weight(1f).fillMaxHeight(), topInset = FLOATING_BAR)
+                Box(Modifier.weight(1f).fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End))) {
+                    CompositionLocalProvider(LocalRailSpace provides RailSpace(0.dp, 0.dp, clearOfInsets = true)) { feed(Modifier.fillMaxSize()) }
+                }
+            }
+        } else {
+            feed(Modifier)
         }
     }
 }

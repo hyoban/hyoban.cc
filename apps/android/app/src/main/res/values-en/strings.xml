@@ -821,6 +821,7 @@
     <string name="footprints_make_public">Make this span public</string>
     <string name="day_track_stats">%1$.1f km moving %2$d min</string>
     <string name="day_still_recording">Still recording</string>
+    <string name="timeline_day_no_places">No places that day</string>
     <string name="timeline_more_records" tools:ignore="PluralsCandidate">%1$d more</string>
     <string name="timeline_track">Track</string>
     <plurals name="timeline_track_moving">

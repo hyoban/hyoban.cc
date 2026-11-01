@@ -788,6 +788,7 @@
     <string name="footprints_make_public">公开这一段</string>
     <string name="day_track_stats">%1$.1f 公里 在移动 %2$d 分钟</string>
     <string name="day_still_recording">还在记录</string>
+    <string name="timeline_day_no_places">这一天没有地点</string>
     <string name="timeline_more_records">还有 %1$d 条</string>
     <string name="timeline_track">轨迹</string>
     <plurals name="timeline_track_moving">
