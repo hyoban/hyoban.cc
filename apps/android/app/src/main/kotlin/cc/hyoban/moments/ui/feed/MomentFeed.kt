@@ -630,6 +630,8 @@ fun rememberPulledRefresh(container: AppContainer): PulledRefresh {
     // Over once the refresh it started is.
     LaunchedEffect(syncing) { if (!syncing) pulled = false }
     return PulledRefresh(pulled) {
+        // With no API to read, there is nothing to wait for.
+        if (!container.settings.connected) return@PulledRefresh
         pulled = true
         container.refresh()
     }

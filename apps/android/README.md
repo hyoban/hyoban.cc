@@ -6,8 +6,9 @@ is the app's design system (the 「这里 App 设计系统」 artifact, mirrored
 
 ## Reading
 
-It reads the API (`apps/api`) with its token, which every request needs, set under
-我 → 同步与来源, and keeps a copy under the app's `api/`
+It works on the phone alone: the build names no API, so until an API's address and its
+token, which every request needs, are set under 我 → 同步与来源, it asks nothing of one and
+everything written stays on the phone. With them it reads the API (`apps/api`) and keeps a copy under the app's `api/`
 directory in the layout `packages/data-spec` defines, so it opens at once and works
 offline. Each start, each pull down on a list, and 刷新 in 我 → 同步与来源 ask only for what
 changed since, from `/v2/changes`: the entries, kept as Moments when they have words and as
@@ -90,8 +91,9 @@ places with provisional ids (`p-<ulid>`), marked 未发布 until published.
 
 ## Publishing
 
-With the API's token, set under 我 → 同步与来源 (in a file backups leave out), the site's
-Moments can be changed and deleted too. Nothing reaches the site as it is saved: new,
+Publishing needs an API: its address and token, set under 我 → 同步与来源 (the token in a
+file backups leave out). Without them there is nothing to publish to, and the card for it
+stays away. With them the site's Moments can be changed and deleted too. Nothing reaches the site as it is saved: new,
 changed and deleted Moments, changed places, public bills, trips and footprint spans wait
 on the phone, past a restart. 发布更改, from the card at the top of 我, lists them, shows
 what changed and takes a change back. 全部发布到网站 runs as WorkManager work in a
@@ -324,8 +326,9 @@ are `noBackupFilesDir/connection-reminders.json` and `companion-connections.json
 - **Video.** The viewer goes picture-in-picture when the app is left while a video plays.
   A photo that can't be fetched there says so, with 重试.
 - **Language and appearance.** Always the phone's: Chinese, or English when the phone speaks
-  it, and light or dark as the system is. The API, the media origin and the map's styles
-  default to `BuildConfig` and can be changed in 我 → 同步与来源.
+  it, and light or dark as the system is. The API and the media origin have no default
+  and are set in 我 → 同步与来源; the map's styles default to `BuildConfig` and can be
+  changed there too.
 - **Maps.** OpenFreeMap's vector tiles drawn by MapLibre, needing no key.
 - **Name and icon.** Here, in English whatever the phone speaks: a white cat with a grey cap
   peeking in from the lower left on blue, an adaptive icon with a monochrome layer.

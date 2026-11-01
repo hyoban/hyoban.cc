@@ -101,13 +101,17 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                 }
                 // Reading from the API again with a tap, as a refresh pulled for on the tabs is had without the gesture too.
                 val syncing by container.repository.syncing.collectAsStateWithLifecycle()
+                val connected = settings.connected
                 val refresh: Segment = { shapes ->
                     SegmentedListItem(
                         onClick = { if (!syncing) container.refresh() },
+                        enabled = connected,
                         shapes = shapes,
                         colors = segmentColors(),
                         leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
-                        supportingContent = { Text(stringResource(if (syncing) R.string.refreshing else R.string.refresh_note)) },
+                        supportingContent = {
+                            Text(stringResource(if (syncing) R.string.refreshing else if (connected) R.string.refresh_note else R.string.refresh_needs_api))
+                        },
                         trailingContent = if (syncing) {
                             { Spinner(Modifier.size(24.dp)) }
                         } else {
@@ -157,10 +161,10 @@ private fun SettingRow(row: Row, shapes: ListItemShapes, onClick: () -> Unit) {
         colors = segmentColors(),
         supportingContent = {
             // The scheme said by the dialog; the row has room only for where it points.
-            Text(setting.value.substringAfter("://"), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(if (setting.isSet) setting.value.substringAfter("://") else stringResource(R.string.setting_unset), maxLines = 1, overflow = TextOverflow.Ellipsis)
         },
         leadingContent = { Icon(row.icon, contentDescription = null) },
-        trailingContent = if (setting.isDefault) {
+        trailingContent = if (setting.isDefault && setting.isSet) {
             { Text(stringResource(R.string.setting_is_default), style = AppTheme.typography.caption) }
         } else {
             null
@@ -168,7 +172,7 @@ private fun SettingRow(row: Row, shapes: ListItemShapes, onClick: () -> Unit) {
     ) { Text(stringResource(row.title)) }
 }
 
-/** Blank is the build's own; anything else an http or https address. */
+/** Blank is the build's own, or none; anything else an http or https address. */
 private fun valid(text: String) = text.isBlank() || Setting.normalize(text).toHttpUrlOrNull() != null
 
 /**
@@ -191,21 +195,27 @@ private fun AddressDialog(setting: Setting, title: String, onDismiss: () -> Unit
                 OutlinedTextField(
                     value = field,
                     onValueChange = { field = it },
-                    placeholder = { Text(setting.default) },
+                    placeholder = { Text(setting.default.ifEmpty { "https://" }) },
                     isError = !ok,
                     // The error marked by an icon as well as the colour, as Material 3 asks of a field in error.
                     trailingIcon = if (ok) null else {
                         { Icon(AppIcons.Alert, contentDescription = null) }
                     },
                     supportingText = {
-                        Text(if (ok) stringResource(R.string.setting_default, setting.default) else stringResource(R.string.error_address))
+                        Text(
+                            when {
+                                !ok -> stringResource(R.string.error_address)
+                                setting.default.isEmpty() -> stringResource(R.string.setting_blank_none)
+                                else -> stringResource(R.string.setting_default, setting.default)
+                            },
+                        )
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
                     // Done on the keyboard, or Enter on one plugged in, saves as confirm does.
                     keyboardActions = KeyboardActions(onDone = { if (ok) onSave(field.text) }),
                     modifier = Modifier.fillMaxWidth().focusRequester(focus),
                 )
-                if (Setting.normalize(field.text) != setting.default) {
+                if (setting.default.isNotEmpty() && Setting.normalize(field.text) != setting.default) {
                     TextButton(onClick = { onSave(setting.default) }, modifier = Modifier.testTag("restore_default")) {
                         Text(stringResource(R.string.action_restore_default))
                     }
