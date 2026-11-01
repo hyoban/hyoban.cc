@@ -3,10 +3,10 @@
   "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
   "bucket": "blog-images",
   "origin": "https://image.hyoban.cc",
-  "createdAt": "2026-11-01T17:36:32.404Z",
-  "inventorySha256": "c496ffc3ae7f6164670e070ef36537842e9cf87f77c2a5a1849c5286aaeb5a2a",
-  "objectCount": 5418,
-  "totalBytes": 1613585744,
+  "createdAt": "2026-11-01T17:52:06.661Z",
+  "inventorySha256": "230768e3410e69d6a0bd1810681992ab2eb44f9efd78631972eb77732c910935",
+  "objectCount": 5422,
+  "totalBytes": 1613682318,
   "objects": [
     {
       "key": "devices/airpods-4.webp",
@@ -42198,6 +42198,38 @@
       "contentType": "image/webp",
       "etag": "8c75b9b736690c3b5efca433544a395c",
       "lastModified": "2026-11-01T16:51:50.125Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "posts/here/app-landscape-map-2-1280w.webp",
+      "bytes": 21860,
+      "contentType": "image/webp",
+      "etag": "4ccf22210f037067fee1bd44a6ccaa7b",
+      "lastModified": "2026-11-01T17:49:19.361Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "posts/here/app-landscape-map-2-640w.webp",
+      "bytes": 8610,
+      "contentType": "image/webp",
+      "etag": "370db7e92973a2e9e4807ce675860c38",
+      "lastModified": "2026-11-01T17:49:12.731Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "posts/here/app-landscape-map-2-960w.webp",
+      "bytes": 14958,
+      "contentType": "image/webp",
+      "etag": "b75896a7527c60394c34f3adcd3f54d3",
+      "lastModified": "2026-11-01T17:49:15.882Z",
+      "storageClass": "Standard"
+    },
+    {
+      "key": "posts/here/app-landscape-map-2.webp",
+      "bytes": 51146,
+      "contentType": "image/webp",
+      "etag": "245fa373302a7b330199043909474856",
+      "lastModified": "2026-11-01T17:49:08.163Z",
       "storageClass": "Standard"
     },
     {
