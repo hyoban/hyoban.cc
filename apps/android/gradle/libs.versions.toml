@@ -60,7 +60,9 @@ coil-video = { group = "io.coil-kt.coil3", name = "coil-video", version.ref = "c
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
-maplibre = { group = "org.maplibre.gl", name = "android-sdk", version.ref = "maplibre" }
+# The OpenGL ES build: the default draws with Vulkan, whose arm64 library is 2 MB larger,
+# 0.7 MB in the APK.
+maplibre = { group = "org.maplibre.gl", name = "android-sdk-opengl", version.ref = "maplibre" }
 media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
 media3-datasource-okhttp = { group = "androidx.media3", name = "media3-datasource-okhttp", version.ref = "media3" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
