@@ -37,8 +37,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   to host", restart the server and connect again.
 - Publishing is tried with a test Moment written on the phone (text "test", 不加地点 so
   no place of the user's reaches the site), published, then deleted and the deletion
-  published. The place row defaults to where the phone is: close the keyboard before
-  tapping it, or the tap types into the text.
+  published. A new Moment has no place unless a photo gives one, and never locates the
+  phone on its own: close the keyboard before tapping the place row, or the tap types
+  into the text.
 - A `DropdownMenu` or dialog is a window of its own, where `ui.py` can't see test tags:
   tap its items by their words.
 - The new Moment page opens with the keyboard up, and `ui.py dump` still lists what is

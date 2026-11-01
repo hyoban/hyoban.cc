@@ -127,7 +127,6 @@ import cc.hyoban.moments.data.local.SAME_PLACE_METRES
 import cc.hyoban.moments.data.local.SharedPlace
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.data.local.coordinatesName
-import cc.hyoban.moments.data.local.currentLocation
 import cc.hyoban.moments.data.local.fix
 import cc.hyoban.moments.data.local.nearestPlaces
 import cc.hyoban.moments.data.local.newPlaceId
@@ -249,9 +248,6 @@ fun NewMomentScreen(
     var chosenPlace by remember { mutableStateOf(originalPlace) }
     // The place last shared in, to say where the place came from while it is still that one.
     var sharedFrom by remember { mutableStateOf<PlaceChoice?>(null) }
-    var deviceFix by remember { mutableStateOf<Fix?>(null) }
-    var locating by remember { mutableStateOf(false) }
-    var locationDenied by remember { mutableStateOf(false) }
     var geocoded by remember { mutableStateOf<Pair<Fix, Around>?>(null) }
     var saving by remember { mutableStateOf(false) }
     var editingTime by remember { mutableStateOf(false) }
@@ -296,10 +292,10 @@ fun NewMomentScreen(
         else -> R.string.source_now
     }
 
-    // Where: just where the first photo that says was taken, else where the phone is, as a
-    // new place named after what is around it; a known place nearby is chosen on the map.
+    // Where: just where the first photo that says was taken, as a new place named after what
+    // is around it, else none until one is chosen; the map finds the phone when asked.
     val photoFix = photos.firstNotNullOfOrNull { infos[it]?.fix }
-    val fix = photoFix ?: deviceFix
+    val fix = photoFix
     LaunchedEffect(fix) {
         if (fix != null && geocoded?.first != fix) geocoded = fix to container.placeSearch.around(context, fix)
     }
@@ -323,27 +319,6 @@ fun NewMomentScreen(
     LaunchedEffect(sharedPhotos) {
         if (original != null || sharedPhotos.isEmpty()) return@LaunchedEffect
         photos = (photos + container.takeSharedPhotos()).distinct().take(MAX_PHOTOS)
-    }
-
-    val locate: () -> Unit = {
-        locating = true
-        scope.launch {
-            deviceFix = currentLocation(context)?.let { Fix(it.latitude, it.longitude) }
-            locating = false
-        }
-    }
-    val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
-        if (granted.values.any { it }) locate() else locationDenied = true
-    }
-    LaunchedEffect(withMoment) {
-        // A Moment being changed has its place; the map finds the phone when asked. A bill
-        // alone leaves it until the Moment is to be written too.
-        if (original != null || !withMoment || deviceFix != null || locating) return@LaunchedEffect
-        if (LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
-            locate()
-        } else {
-            locationPermission.launch(LOCATION_PERMISSIONS)
-        }
     }
 
     // The documents picker rather than the photo picker: only what it hands over keeps where
@@ -539,10 +514,7 @@ fun NewMomentScreen(
                                         chosenPlace != null && chosenPlace == sharedFrom -> R.string.source_shared
                                         chosenPlace != null -> R.string.source_chosen
                                         photoFix != null -> R.string.source_photo
-                                        fix != null -> R.string.source_location
-                                        locating -> R.string.place_locating
-                                        locationDenied -> R.string.place_no_permission
-                                        else -> R.string.place_unknown
+                                        else -> R.string.place_unchosen
                                     },
                                 )).joinToString(" "),
                             )
