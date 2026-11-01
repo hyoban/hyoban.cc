@@ -53,7 +53,7 @@ iCost 是我用了两年的记账软件，我十分喜欢。所以我软件中�
 
 ![对话形式的时间线：账单、充电和轨迹在左边，Moment 在右边](https://image.hyoban.cc/posts/here/app-timeline.webp)
 
-![横屏的地图页面，旅程列表在左，地图上是旅程路线和去过的地点](https://image.hyoban.cc/posts/here/app-landscape-map.webp)
+![横屏的地图页面，旅程列表在左，地图上是旅程路线和去过的地点](https://image.hyoban.cc/posts/here/app-landscape-map-2.webp)
 
 网站这边我也利用新的数据更新了很多页面。比如为了配合我的用车数据，我找了个车的 3D 模型，做了点[自认为炫酷的动画](/20-000-km/)。[旅途回放](/trip/2026-national-day-road-trip/play/)做了 3D 模式和侧栏滚动播放。[地图](/map/)的迷雾模式来展示自己对于地球的探索范围。更完善更多连接的 [moment](/map/2026/) 展示浏览体验。按年统计的[年度回顾](/2025/)数据展示。等等等等。
 
