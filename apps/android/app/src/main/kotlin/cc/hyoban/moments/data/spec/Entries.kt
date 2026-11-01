@@ -13,10 +13,10 @@ import kotlinx.serialization.json.put
 
 // The spec's second shape (packages/data-spec/src/entry.ts): every record an entry, a moment
 // and an optional point, what it holds parts by plugin (words, photos, a meal, a bill, a
-// charge), a trip a collection, and public spans of the footprints. The app keeps its Moments
-// in the first shape and writes them as entries when it publishes (`POST /v2/changes`), the
-// API keeping both; these are the same mappings as the spec's, kept as JSON so a part or a
-// field this version doesn't know goes through as it came.
+// charge), a trip a collection, and public spans of the footprints. The app reads entries and
+// collections (`GET /v2/changes`), keeps its Moments and trips in the first shape, and writes
+// them as entries when it publishes (`POST /v2/changes`); these are the same mappings as the
+// spec's, kept as JSON so a part or a field this version doesn't know goes through as it came.
 
 /** Who sees something. Two for now; written as the spec's `visibility`, to widen to an audience. */
 enum class Visibility(val value: String) {
@@ -225,6 +225,74 @@ object Entries {
             val media = (item["media"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
             entry to media
         }
+
+    /**
+     * A collection as a trip, as the spec's `collectionToTrip`: its marks with a place, in its
+     * span, become the waypoints, one on the day of the waypoint before it following that one.
+     */
+    fun toTrip(collection: JsonObject, entries: Collection<JsonObject>): TripRecord {
+        val marks = entries
+            .filter { isMark(it) && it["place"] is JsonPrimitive && isInCollection(collection, it) }
+            .sortedWith(compareBy<JsonObject> { (it["order"] as? JsonPrimitive)?.contentOrNull?.toLongOrNull() ?: 0 }.thenBy { it.string("at") })
+        var previous: String? = null
+        val waypoints = marks.map { mark ->
+            val at = mark.string("at")
+            val follows = at.length == 10 && previous != null && previous!!.take(10) == at
+            if (!follows) previous = at
+            buildJsonObject {
+                if (!follows) put("at", at)
+                put("place", mark.string("place"))
+            }
+        }
+        val span = collection.getValue("span").jsonObject
+        val route = collection["route"] as? JsonObject
+        val record = buildJsonObject {
+            collection.filterKeys { it !in collectionKeys }.forEach { (key, value) -> put(key, value) }
+            put("id", collectionKey(collection))
+            put("title", collection.getValue("title"))
+            put("start", span.string("start").take(10))
+            put("end", span.string("end").take(10))
+            collection["music"]?.let { put("music", it) }
+            collection["note"]?.let { put("note", it) }
+            put("waypoints", JsonArray(waypoints))
+            put("straightLegs", route?.get("straightLegs") ?: JsonArray(emptyList()))
+            put("sameWayBack", route?.get("sameWayBack") ?: JsonArray(emptyList()))
+            put("covers", JsonArray(coversOf(collection).map { (entry, media) -> buildJsonObject { put("moment", entry); put("media", media) } }))
+            put("createdAt", collection.getValue("createdAt"))
+            put("updatedAt", collection.getValue("updatedAt"))
+        }
+        return Spec.json.decodeFromJsonElement(TripRecord.serializer(), record)
+    }
+
+    /** Whether a collection holds an entry, as the spec's `isInCollection`: in its span, or included, and not excluded. */
+    fun isInCollection(collection: JsonObject, entry: JsonObject): Boolean {
+        val uid = entry.string("uid")
+        if (uid in strings(collection, "exclude")) return false
+        if (uid in strings(collection, "include")) return true
+        val span = collection.getValue("span").jsonObject
+        return isWithin(entry.string("at"), span.string("start"), span.string("end"))
+    }
+
+    /** Whether a moment falls in a span whose ends are timestamps or whole days, as the spec's `isWithin`. */
+    private fun isWithin(at: String, start: String, end: String): Boolean {
+        val day = at.take(10)
+        if (start.length == 10 || at.length == 10) {
+            if (day < start.take(10)) return false
+        } else if (instant(at) < instant(start)) {
+            return false
+        }
+        return if (end.length == 10 || at.length == 10) day <= end.take(10) else instant(at) <= instant(end)
+    }
+
+    private fun instant(time: String) = java.time.OffsetDateTime.parse(time).toInstant()
+
+    /** Whether an entry is a mark: no parts at all, as the spec's `isMarkEntry`. */
+    fun isMark(entry: JsonObject): Boolean = (entry["parts"] as? JsonObject)?.isEmpty() ?: true
+
+    private val collectionKeys = setOf(
+        "uid", "slug", "kind", "title", "span", "include", "exclude", "covers", "visibility",
+        "facets", "route", "music", "note", "createdAt", "updatedAt",
+    )
 
     /** Whether a collection is private by its own say. */
     fun isPrivate(collection: JsonObject): Boolean = collection.visibility() == Visibility.PRIVATE

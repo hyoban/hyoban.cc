@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { test } from 'vite-plus/test'
 
 import { syncChannel, TelegramError } from '../src/telegram.ts'
-import { call, setUp, snapshot, token } from './setup.mjs'
+import { call, publishMoments, setUp, snapshot, token } from './setup.mjs'
 
 // The Telegram channel, brought up to date with the Moments as they publish, change and
 // go, against a bot that keeps the calls it is sent.
@@ -59,16 +59,13 @@ function setUpChannel() {
 async function publish(env, changes = {}) {
   const moment = { ...dockMoment, places: ['nanjing'], ...changes }
 
-  await call(env, 'PUT', `/v1/moments/${moment.uid}/media/${moment.media[0]?.uid}/image`, {
+  await call(env, 'PUT', `/v2/entries/${moment.uid}/media/${moment.media[0]?.uid}/image`, {
     ...owner,
     body: photo,
     headers: { 'Content-Type': 'image/jpeg' },
   })
 
-  const { status } = await call(env, 'POST', '/v1/changes', {
-    ...owner,
-    body: { moments: [moment] },
-  })
+  const { status } = await publishMoments(env, { moments: [moment] })
 
   assert.equal(status, 200)
 }

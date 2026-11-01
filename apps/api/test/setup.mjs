@@ -3,7 +3,13 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { fileURLToPath } from 'node:url'
 
-import { readJson, readMomentRecords, readTripRecords } from '../../web/src/data/store.ts'
+import { entryToMoment, isMomentEntry, momentToEntry } from '@hyoban/data-spec/entry'
+import {
+  listJsonFiles,
+  readJson,
+  readMomentRecords,
+  readTripRecords,
+} from '../../web/src/data/store.ts'
 import { buildImportSql } from '../src/import.ts'
 import { handle } from '../src/index.ts'
 
@@ -19,7 +25,17 @@ export const fixtureRoot = fileURLToPath(
   new URL('../../../packages/data-spec/test/fixtures/data/', import.meta.url),
 )
 
-/** The fixture, in the first shape, as the import takes it. */
+/** The fixture as it is kept: entries, collections and the places beside them. */
+export const entrySnapshot = {
+  manifest: readJson('manifest.json', fixtureRoot),
+  places: readJson('places.json', fixtureRoot),
+  entries: listJsonFiles('entries', fixtureRoot).map((file) => readJson(file, fixtureRoot)),
+  collections: listJsonFiles('collections', fixtureRoot).map((file) => readJson(file, fixtureRoot)),
+  tracks: [],
+  routes: readJson('routes.json', fixtureRoot),
+}
+
+/** The fixture as Moments and trips, what the tests that write Moments take it as; the import takes either. */
 export const snapshot = {
   manifest: readJson('manifest.json', fixtureRoot),
   places: readJson('places.json', fixtureRoot),
@@ -135,4 +151,31 @@ export async function call(env, method, path, { auth = token, body, headers = {}
 
 export function get(env, path, options) {
   return call(env, 'GET', path, options)
+}
+
+/**
+ * `POST /v2/changes` with Moments, as the app sends them, each as its entry; its reply, with
+ * the Moments it published worked out from their entries.
+ */
+export async function publishMoments(env, { moments = [], ...changes }, options = {}) {
+  const reply = await call(env, 'POST', '/v2/changes', {
+    ...options,
+    body: { ...changes, entries: [...(changes.entries ?? []), ...moments.map(momentToEntry)] },
+  })
+
+  return Array.isArray(reply.body?.entries)
+    ? { ...reply, body: { ...reply.body, moments: momentsOf(reply.body.entries) } }
+    : reply
+}
+
+/** A Moment as `GET /v2/entries/:uid` has it. */
+export async function getMoment(env, uid, options) {
+  const reply = await get(env, `/v2/entries/${uid}`, options)
+
+  return reply.status === 200 ? { ...reply, body: entryToMoment(reply.body) } : reply
+}
+
+/** The entries with words, as Moments. */
+export function momentsOf(entries) {
+  return entries.filter(isMomentEntry).map((entry) => entryToMoment(entry))
 }

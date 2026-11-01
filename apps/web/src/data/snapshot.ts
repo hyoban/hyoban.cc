@@ -16,10 +16,9 @@ import {
 } from '@hyoban/data-spec/entry'
 import { listJsonFiles } from './store.ts'
 
-// The API's export, `GET /v2/export` (entries, collections and public tracks), or
-// `GET /v1/export` (Moments and trips) from an API that doesn't have it yet, and how it
-// lands on disk in data/'s layout: for the site's build (api-data.ts) and for the backup
-// into data/ (`pnpm data:export`).
+// The API's export, `GET /v2/export` (entries, collections and public tracks), and how it
+// lands on disk in data/'s layout: for the site's build (api-data.ts) and for the copy in
+// data/ (`pnpm data:export`).
 
 export const DEFAULT_API_URL = 'https://hyoban-cc-api.hyoban.workers.dev'
 
@@ -27,7 +26,7 @@ export interface Snapshot {
   revision: number
   manifest: unknown
   places: Record<string, unknown>
-  /** The first shape's, from `/v1/export`. */
+  /** The first shape's, as an export from before entries had them. */
   trips?: { id: string }[]
   moments?: { uid: string; occurredAt: string }[]
   /** The second shape's, from `/v2/export`. */
@@ -47,17 +46,10 @@ const VEHICLE_DIRECTORIES = ['zeekr/months', 'zeekr/assisted-driving', 'zeekr/ca
 
 export async function fetchSnapshot(url: string, token: string): Promise<Snapshot> {
   const headers = { Authorization: `Bearer ${token}` }
-  let response = await fetch(new URL('/v2/export', url), {
+  const response = await fetch(new URL('/v2/export', url), {
     headers,
     signal: AbortSignal.timeout(60_000),
   })
-
-  if (response.status === 404) {
-    response = await fetch(new URL('/v1/export', url), {
-      headers,
-      signal: AbortSignal.timeout(60_000),
-    })
-  }
 
   if (!response.ok) {
     throw new Error(`The API's export failed: ${response.status} ${await response.text()}`)

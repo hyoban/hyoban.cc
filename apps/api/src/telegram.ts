@@ -7,7 +7,7 @@ import { readAll, revisionQuery, toRevision, type Database } from './database.ts
 // photos and videos. A Moment that changes edits its post, or posts again when its media
 // changed; one the site no longer shows has its post deleted. Only Moments published since
 // the channel was first synced are posted, so a restore of the backup never floods it. Runs
-// after a write the site shows, after `POST /v1/build` and on the Worker's schedule, which
+// after a write the site shows, after `POST /v2/build` and on the Worker's schedule, which
 // picks up whatever an earlier run left.
 
 const SITE_URL = 'https://hyoban.cc'

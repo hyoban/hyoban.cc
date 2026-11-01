@@ -6,7 +6,6 @@ import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.Spec
-import cc.hyoban.moments.data.spec.TripRecord
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -25,29 +24,9 @@ import okio.source
 import java.io.File
 import java.io.IOException
 
-// The API (apps/api in the repository). Its public read: the change feed, the published
-// Moments a page at a time and the places and trips beside them, with no token, so no
-// drafts. Its writes, with the owner's token: a photo's original, then everything the
-// phone changed as one.
-
-/**
- * A page of the change feed: what changed after a revision, and where the next page
- * starts. The places and trips come on the first page only, every one of them on a feed
- * from the start.
- */
-@Serializable
-data class Changes(
-    val revision: Long,
-    val moments: List<MomentRecord>,
-    /** Moments removed since, by uid. */
-    val deleted: List<String>,
-    val places: Map<String, Place> = emptyMap(),
-    val deletedPlaces: List<String> = emptyList(),
-    val trips: List<TripRecord> = emptyList(),
-    val deletedTrips: List<String> = emptyList(),
-    /** Pass as `cursor` for the next page; null on the last one. */
-    val next: String? = null,
-)
+// The API (apps/api in the repository), with the owner's token, which every request needs:
+// the change feed of entries, collections and the places beside them, a page at a time;
+// a photo's original; then everything the phone changed as one.
 
 /**
  * Everything the phone changed: the places only it knows, the Moments to publish, the uids to
@@ -66,10 +45,7 @@ data class ChangeSet(
     val deletedTracks: List<String> = emptyList(),
     /** Trips changed on the phone, as collections. */
     val collections: List<JsonObject> = emptyList(),
-) {
-    /** Whether it holds anything the first shape can't send. */
-    val needsSecondShape: Boolean get() = entries.isNotEmpty() || parts.isNotEmpty() || tracks.isNotEmpty() || deletedTracks.isNotEmpty() || collections.isNotEmpty()
-}
+)
 
 /** A [ChangeSet] as `POST /v2/changes` takes it. */
 @Serializable
@@ -130,15 +106,18 @@ class ApiException(code: Int, message: String) : HttpException(code, message)
 class NoTokenException : IOException("No API token")
 
 /**
- * A page of the second shape's feed (`GET /v2/changes`): the entries, collections and public
- * tracks that changed after a revision, the collections, tracks and the car's statistics on the
- * first page only.
+ * A page of the change feed (`GET /v2/changes`): the entries that changed after a revision,
+ * and where the next page starts; the places, collections, tracks and the car's statistics
+ * on the first page only, every one of them on a feed from the start.
  */
 @Serializable
 data class EntryChanges(
     val revision: Long,
     val entries: List<JsonObject>,
+    /** Entries removed since, by uid. */
     val deleted: List<String>,
+    val places: Map<String, Place> = emptyMap(),
+    val deletedPlaces: List<String> = emptyList(),
     val collections: List<JsonObject> = emptyList(),
     val deletedCollections: List<String> = emptyList(),
     val tracks: List<JsonObject> = emptyList(),
@@ -154,10 +133,7 @@ data class EntryChanges(
 /** What the app reads the records from; the tests stand in for the API with their own. */
 interface MomentsSource {
     /** What changed after revision [since], or from [cursor] when it continues a feed. */
-    suspend fun changes(since: Long, cursor: String?): Changes
-
-    /** The second shape's feed, or null from an API without it. */
-    suspend fun entryChanges(since: Long, cursor: String?): EntryChanges? = null
+    suspend fun entryChanges(since: Long, cursor: String?): EntryChanges
 }
 
 /**
@@ -170,26 +146,11 @@ class MomentsApi(
     private val client: OkHttpClient = Http.client,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : MomentsSource, MomentsWriter {
-    override suspend fun changes(since: Long, cursor: String?): Changes =
-        get(if (cursor != null) "/v1/changes?cursor=$cursor&limit=500" else "/v1/changes?since=$since&limit=500", Changes.serializer())
-
-    /** With the token: the API answers nothing without one. */
-    override suspend fun entryChanges(since: Long, cursor: String?): EntryChanges? = withContext(io) {
-        val path = if (cursor != null) "/v2/changes?cursor=$cursor&limit=500" else "/v2/changes?since=$since&limit=500"
-        val request = Request.Builder().url(baseUrl() + path).apply {
-            token()?.takeIf { it.isNotBlank() }?.let { header("Authorization", "Bearer $it") }
-        }.build()
-        client.newCall(request).execute().use { response ->
-            when {
-                response.code == 404 -> null
-                !response.isSuccessful -> throw ApiException(response.code, "GET $path answered ${response.code}")
-                else -> decode(response.body!!.string(), EntryChanges.serializer())
-            }
-        }
-    }
+    override suspend fun entryChanges(since: Long, cursor: String?): EntryChanges =
+        get(if (cursor != null) "/v2/changes?cursor=$cursor&limit=500" else "/v2/changes?since=$since&limit=500", EntryChanges.serializer())
 
     override suspend fun uploaded(momentUid: String, mediaUid: String, part: UploadPart): String? = withContext(io) {
-        val path = "/v1/moments/$momentUid/media/$mediaUid/${part.path}"
+        val path = "/v2/entries/$momentUid/media/$mediaUid/${part.path}"
         client.newCall(authorized(path).head().build()).execute().use { response ->
             when {
                 response.code == 404 -> null
@@ -200,7 +161,7 @@ class MomentsApi(
     }
 
     override suspend fun upload(momentUid: String, mediaUid: String, part: UploadPart, file: File, contentType: String, onSent: (Long) -> Unit) {
-        write("PUT", "/v1/moments/$momentUid/media/$mediaUid/${part.path}", CountedFileBody(file, contentType.toMediaType(), onSent), uploads)
+        write("PUT", "/v2/entries/$momentUid/media/$mediaUid/${part.path}", CountedFileBody(file, contentType.toMediaType(), onSent), uploads)
     }
 
     /**
@@ -212,10 +173,7 @@ class MomentsApi(
     /** The client for the change set, whose answer waits on the API copying every original into place. */
     private val publishing by lazy { client.newBuilder().readTimeout(PUBLISH_TIMEOUT).build() }
 
-    /**
-     * Sends the change set in the second shape, the Moments as entries; an API from before it
-     * (a 404) takes the first, unless the set holds what only the second can carry.
-     */
+    /** Sends the change set as `POST /v2/changes` takes it, the Moments as entries. */
     override suspend fun applyChanges(changes: ChangeSet): AppliedChanges {
         val second = EntryChangeSet(
             places = changes.places,
@@ -225,13 +183,7 @@ class MomentsApi(
             deletedTracks = changes.deletedTracks,
             collections = changes.collections,
         )
-        val text = try {
-            write("POST", "/v2/changes", encode(EntryChangeSet.serializer(), second), publishing)
-        } catch (error: ApiException) {
-            if (error.code != 404 || changes.needsSecondShape) throw error
-            val first = ChangeSet(changes.places, changes.moments, changes.deleted)
-            return decode(write("POST", "/v1/changes", encode(ChangeSet.serializer(), first), publishing), AppliedChanges.serializer())
-        }
+        val text = write("POST", "/v2/changes", encode(EntryChangeSet.serializer(), second), publishing)
         val applied = decode(text, AppliedEntryChanges.serializer())
         return AppliedChanges(applied.places, applied.entries.mapNotNull(Entries::toMoment), applied.deleted, applied.revision)
     }

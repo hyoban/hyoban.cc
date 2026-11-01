@@ -139,8 +139,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 ## What the app is
 
 - Nothing reaches the site until 全部发布到网站, after the changes waiting have been
-  reviewed: one change set, like a commit, sent as entries to `POST /v2/changes` (the first
-  shape to `/v1` on an API without it). Don't add writes that bypass it.
+  reviewed: one change set, like a commit, sent as entries to `POST /v2/changes`. Don't add
+  writes that bypass it.
 - The ledger and the footprints follow the shared guide's privacy rules and publish only
   through 全部发布到网站 (`data/store/Outside.kt`). Their only other requests are exchange
   rates, when asked, and Photon naming a bill's footprint point (`footprints/BillPlaces`),

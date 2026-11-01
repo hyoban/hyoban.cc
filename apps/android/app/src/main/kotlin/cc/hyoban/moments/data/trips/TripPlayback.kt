@@ -27,7 +27,7 @@ import kotlin.math.tan
 
 /**
  * The route as one line, walked along by its length as the map draws it: the trip's
- * stretches as `GET /v1/routes` serves them, one after another. A ferry or a flight taken
+ * stretches as `GET /v2/routes` serves them, one after another. A ferry or a flight taken
  * both ways is served once, so where one stretch doesn't start where the last ended, the
  * way between is taken straight, as that crossing was.
  */

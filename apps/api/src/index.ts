@@ -2,18 +2,7 @@ import type { Place } from '@hyoban/data-spec'
 import { createDataVChildren, locateDivision } from '@hyoban/data-spec/division'
 import { authorize } from './auth.ts'
 import type { Bucket, UploadPart } from './bucket.ts'
-import {
-  parseCursor,
-  readChanges,
-  readMoment,
-  readPlace,
-  readPlaces,
-  readRevision,
-  readSnapshot,
-  readTrip,
-  readTrips,
-  type Database,
-} from './database.ts'
+import { parseCursor, readPlace, readPlaces, readRevision, type Database } from './database.ts'
 import {
   applyEntryChanges,
   readCollection,
@@ -26,17 +15,11 @@ import {
 import { error, HttpError, json, jsonText, readBody } from './http.ts'
 import { createRouteFetcher, fillRoutes, readTripRoutes } from './routes.ts'
 import { createTelegram, syncChannel } from './telegram.ts'
-import {
-  applyChanges,
-  readUpload,
-  uploadMedia,
-  type WriteContext,
-  type WriteResult,
-} from './writes.ts'
+import { readUpload, uploadMedia, type WriteContext, type WriteResult } from './writes.ts'
 
 // The API, the owner's alone: every request needs a token, and reads see everything,
-// drafts and private records included. `/v1` serves Moments and trips, `/v2` entries,
-// collections and public tracks (entries.ts). Records come back exactly as stored, in the shape
+// drafts and private records included. `/v2` serves entries, collections and public tracks
+// (entries.ts) and the places beside them. Records come back exactly as stored, in the shape
 // @hyoban/data-spec defines. A write the site shows first brings the trips' routes up to
 // date, when MAPBOX_TOKEN is set and the write changed what the trips are built from,
 // then calls DEPLOY_HOOK_URL, when there is one, so the site builds again with them, and
@@ -113,7 +96,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       : notAllowed('GET')
   }
 
-  if (version !== 'v1' && version !== 'v2') {
+  if (version !== 'v2') {
     return notFound()
   }
 
@@ -137,88 +120,14 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       : json(result.body, result.status)
   }
 
-  if (version === 'v2') {
-    switch (collection) {
-      case 'entries': {
-        if (key === undefined || !ULID.test(key)) {
-          return notFound()
-        }
-
-        if (rest.length === 0) {
-          return method === 'GET' ? found(await readEntry(db, key)) : notAllowed('GET')
-        }
-
-        // An entry's media uploads as a Moment's does, under the same keys.
-        break
-      }
-      case 'collections': {
-        if (rest.length > 0) {
-          return notFound()
-        }
-
-        if (key === undefined) {
-          return method === 'GET' ? jsonText(await readCollections(db)) : notAllowed('GET')
-        }
-
-        return method === 'GET' ? found(await readCollection(db, key)) : notAllowed('GET')
-      }
-      case 'tracks': {
-        if (key !== undefined) {
-          return notFound()
-        }
-
-        return method === 'GET' ? jsonText(await readTracks(db)) : notAllowed('GET')
-      }
-      case 'changes': {
-        if (key !== undefined) {
-          return notFound()
-        }
-
-        switch (method) {
-          case 'GET': {
-            const query = readFeedQuery(url.searchParams)
-
-            return 'error' in query
-              ? error(400, query.error)
-              : jsonText(await readEntryChanges(db, query))
-          }
-          case 'POST': {
-            const body = await readBody(request)
-
-            return write((context) => applyEntryChanges(context, body))
-          }
-          default:
-            return notAllowed('GET, POST')
-        }
-      }
-      case 'export': {
-        if (key !== undefined) {
-          return notFound()
-        }
-
-        if (method !== 'GET') {
-          return notAllowed('GET')
-        }
-
-        return jsonText(await readEntrySnapshot(db))
-      }
-      case 'places':
-      case 'routes':
-      case 'build':
-        break
-      default:
-        return notFound()
-    }
-  }
-
-  switch (version === 'v2' && collection === 'entries' ? 'moments' : collection) {
-    case 'moments': {
+  switch (collection) {
+    case 'entries': {
       if (key === undefined || !ULID.test(key)) {
         return notFound()
       }
 
       if (rest.length === 0) {
-        return method === 'GET' ? found(await readMoment(db, key)) : notAllowed('GET')
+        return method === 'GET' ? found(await readEntry(db, key)) : notAllowed('GET')
       }
 
       const [media, mediaUid, part, ...more] = rest
@@ -251,6 +160,24 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
       return notFound()
     }
+    case 'collections': {
+      if (rest.length > 0) {
+        return notFound()
+      }
+
+      if (key === undefined) {
+        return method === 'GET' ? jsonText(await readCollections(db)) : notAllowed('GET')
+      }
+
+      return method === 'GET' ? found(await readCollection(db, key)) : notAllowed('GET')
+    }
+    case 'tracks': {
+      if (key !== undefined) {
+        return notFound()
+      }
+
+      return method === 'GET' ? jsonText(await readTracks(db)) : notAllowed('GET')
+    }
     case 'places': {
       if (rest.length > 0) {
         return notFound()
@@ -266,20 +193,38 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
       return method === 'GET' ? found(await readPlace(db, key)) : notAllowed('GET')
     }
-    case 'trips': {
-      if (rest.length > 0) {
+    case 'changes': {
+      if (key !== undefined) {
         return notFound()
       }
 
-      if (key === undefined) {
-        return method === 'GET' ? jsonText(await readTrips(db)) : notAllowed('GET')
-      }
+      switch (method) {
+        case 'GET': {
+          const query = readFeedQuery(url.searchParams)
 
-      if (!ID.test(key)) {
+          return 'error' in query
+            ? error(400, query.error)
+            : jsonText(await readEntryChanges(db, query))
+        }
+        case 'POST': {
+          const body = await readBody(request)
+
+          return write((context) => applyEntryChanges(context, body))
+        }
+        default:
+          return notAllowed('GET, POST')
+      }
+    }
+    case 'export': {
+      if (key !== undefined) {
         return notFound()
       }
 
-      return method === 'GET' ? found(await readTrip(db, key)) : notAllowed('GET')
+      if (method !== 'GET') {
+        return notAllowed('GET')
+      }
+
+      return jsonText(await readEntrySnapshot(db))
     }
     case 'routes': {
       if (key !== undefined) {
@@ -326,37 +271,6 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
       return json({ started: await callDeployHook(env) }, 202)
     }
-    case 'changes': {
-      if (key !== undefined) {
-        return notFound()
-      }
-
-      switch (method) {
-        case 'GET': {
-          const query = readFeedQuery(url.searchParams)
-
-          return 'error' in query ? error(400, query.error) : jsonText(await readChanges(db, query))
-        }
-        case 'POST': {
-          const body = await readBody(request)
-
-          return write((context) => applyChanges(context, body))
-        }
-        default:
-          return notAllowed('GET, POST')
-      }
-    }
-    case 'export': {
-      if (key !== undefined) {
-        return notFound()
-      }
-
-      if (method !== 'GET') {
-        return notAllowed('GET')
-      }
-
-      return jsonText(await readSnapshot(db))
-    }
     default:
       return notFound()
   }
@@ -364,7 +278,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
 /**
  * After a write the site shows: the trips' routes first, when the write changed what they
- * are built from, so the build the deploy hook starts has them, with what `GET /v1/routes`
+ * are built from, so the build the deploy hook starts has them, with what `GET /v2/routes`
  * answers worked out ahead of the app's next sync from the same read, then the hook. A
  * write the trips don't see carried that answer on itself. None of them failing undoes
  * the write.

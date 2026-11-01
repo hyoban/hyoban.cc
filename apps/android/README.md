@@ -10,9 +10,10 @@ It reads the API (`apps/api`) with its token, which every request needs, set und
 我 → 同步与来源, and keeps a copy under the app's `api/`
 directory in the layout `packages/data-spec` defines, so it opens at once and works
 offline. Each start, each pull down on a list, and 刷新 in 我 → 同步与来源 ask only for what
-changed since: the Moments, places and trips from `/v1/changes`, and what only the second
-shape has (charges, public bills and marks, collections, public tracks) from `/v2/changes`.
-The routes (`GET /v1/routes`) are asked for again only when the API's revision has moved
+changed since, from `/v2/changes`: the entries, kept as Moments when they have words and as
+they are otherwise (charges, public bills, marks), and the places, collections and public
+tracks; the trips are worked out from the collections and their marks, as the spec's
+`collectionToTrip` does. The routes (`GET /v2/routes`) are asked for again only when the API's revision has moved
 on. A new API, set in 同步与来源, drops the copy and reads everything again.
 
 ## Pages
@@ -95,8 +96,8 @@ changed and deleted Moments, changed places, public bills, trips and footprint s
 on the phone, past a restart. 发布更改, from the card at the top of 我, lists them, shows
 what changed and takes a change back. 全部发布到网站 runs as WorkManager work in a
 foreground service with a progress notification, waiting out a dropped link: it uploads
-the new originals a few at a time, then sends everything else as one `POST /v2/changes`
-(`/v1` on an API without it), which the API takes whole or not at all. What is published
+the new originals a few at a time, then sends everything else as one `POST /v2/changes`,
+which the API takes whole or not at all. What is published
 leaves the phone's store for the site's.
 
 ## Sharing

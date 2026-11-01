@@ -1,25 +1,16 @@
 import {
   getMediaKey,
-  isMomentShown,
   momentRecordSchema,
   placeSchema,
   type MomentMedia,
-  type MomentRecord,
   type Place,
   type Places,
 } from '@hyoban/data-spec'
 import type { Division } from '@hyoban/data-spec/division'
 import { entrySchema, momentToEntry, type Entry } from '@hyoban/data-spec/entry'
-import pLimit, { type LimitFunction } from 'p-limit'
+import { type LimitFunction } from 'p-limit'
 import { getUploadKey, type Bucket, type UploadPart } from './bucket.ts'
-import {
-  carryTripRoutes,
-  readAll,
-  revisionQuery,
-  toRevision,
-  type Database,
-  type Statement,
-} from './database.ts'
+import { revisionQuery, toRevision, type Database, type Statement } from './database.ts'
 import { HttpError, validate } from './http.ts'
 import {
   PROVISIONAL_PLACE_PATTERN,
@@ -27,16 +18,7 @@ import {
   getPlaceId,
   matchPlace,
 } from '@hyoban/data-spec/publish'
-import {
-  BUMP_REVISION,
-  REVISION,
-  momentRow,
-  placeRow,
-  placeholders,
-  upsertSql,
-  type Table,
-  type Value,
-} from './rows.ts'
+import { BUMP_REVISION, placeRow, placeholders, upsertSql, type Table, type Value } from './rows.ts'
 
 // The write side, as the recording app commits what it kept on the phone: the originals
 // uploaded one by one, then everything else as one change set, checked whole and written
@@ -64,154 +46,6 @@ export interface WriteResult<T> {
   changesSite: boolean
   /** Whether it changed what the trips are built from, so their routes need working out again. */
   changesRoutes?: boolean
-}
-
-/**
- * What `POST /v1/changes` did: the id each place sent is known by, the Moments saved, the
- * uids deleted, and the revision the write took, when it changed anything.
- */
-export interface AppliedChanges {
-  places: Record<string, string>
-  moments: MomentRecord[]
-  deleted: string[]
-  revision?: number
-}
-
-/**
- * Everything the app kept on the phone, applied as one write: the places it made, the
- * Moments it wrote or changed, each published, and the Moments it deleted. The Moments
- * name a place by the id it is known by; a Moment's originals must be uploaded first.
- * All of it is checked before anything is written, then committed in one transaction,
- * so the site has all of it or none. A Moment already gone is left out of `deleted`.
- */
-export async function applyChanges(
-  context: WriteContext,
-  body: unknown,
-): Promise<WriteResult<AppliedChanges>> {
-  const sent: Record<string, unknown> = isObject(body) ? body : { moments: null }
-  const givenPlaces = sent['places'] ?? {}
-  const givenMoments = sent['moments'] ?? []
-  const givenDeleted = sent['deleted'] ?? []
-
-  if (
-    !isObject(givenPlaces) ||
-    !Array.isArray(givenMoments) ||
-    !Array.isArray(givenDeleted) ||
-    !givenDeleted.every((uid) => typeof uid === 'string')
-  ) {
-    throw new HttpError(
-      422,
-      'Send { places, moments, deleted }: places by id, Moment records, and the uids of those deleted.',
-    )
-  }
-
-  const inputs: MomentRecord[] = []
-
-  for (const value of givenMoments) {
-    const input = validate(momentRecordSchema, withoutServerFields(value))
-
-    if (inputs.some((other) => other.uid === input.uid)) {
-      throw new HttpError(422, `${input.uid} is sent twice.`)
-    }
-
-    inputs.push(input)
-  }
-
-  const deletedUids = [...new Set(givenDeleted)]
-  const both = deletedUids.find((uid) => inputs.some((input) => input.uid === uid))
-
-  if (both) {
-    throw new HttpError(422, `${both} is both saved and deleted.`)
-  }
-
-  const { places, stored } = await readWriteState(context.db, [
-    ...inputs.map((input) => input.uid),
-    ...deletedUids,
-  ])
-  const statements: Statement[] = []
-  const placeIds = await namePlaces(context, givenPlaces, places, statements)
-
-  const records = inputs.map((input) => {
-    const named = { ...input, places: input.places.map((id) => placeIds[id] ?? id) }
-    const missing = [...new Set(named.places)].filter((id) => !places[id])
-
-    if (missing.length > 0) {
-      throw new HttpError(422, `Unknown places: ${missing.join(', ')}. Send them too.`)
-    }
-
-    const record = withPublished(named, stored.get(input.uid)?.record)
-
-    record.published ??= { at: context.now }
-
-    return record
-  })
-
-  const deleted = deletedUids.filter((uid) => {
-    const existing = stored.get(uid)
-
-    return existing && !existing.deleted
-  })
-
-  statements.push(...deleted.map((uid) => deleteStatement(context, uid)))
-
-  // What a publish copied, removed again when the write doesn't go through.
-  const copied: string[] = []
-  const missingUploads: string[] = []
-  let saved: MomentRecord[]
-  let uploads: string[]
-  let changesRoutes = deleted.some((uid) => tripView(live(stored.get(uid))) !== null)
-  let revision: number | undefined
-
-  // Every copy holds two connections, its read and its write, and a Worker has six.
-  const copying = pLimit(COPIES_AT_ONCE)
-
-  try {
-    uploads = (
-      await settle(
-        records.map((record) =>
-          publishMedia(context.bucket, record, copied, missingUploads, copying),
-        ),
-      )
-    ).flat()
-
-    if (missingUploads.length > 0) {
-      throw new HttpError(422, `Upload the media first: ${missingUploads.join(', ')}.`)
-    }
-
-    saved = records.map((record) => validate(momentRecordSchema, record))
-
-    // A Moment sent as it is stored isn't written again, so it takes no new revision.
-    for (const record of saved) {
-      const prior = stored.get(record.uid)
-
-      if (!prior || prior.deleted || prior.text !== JSON.stringify(record)) {
-        statements.push(upsert(context.db, 'moments', momentRow(record, record, prior?.entry)))
-        changesRoutes ||= tripView(live(prior)) !== tripView(record)
-      }
-    }
-
-    if (statements.length > 0) {
-      // A write the trips don't see keeps the routes' answer, at the revision it takes.
-      revision = await commit(context, [
-        ...statements,
-        ...(changesRoutes ? [] : [carryTripRoutes(context.db)]),
-      ])
-    }
-  } catch (caught) {
-    await deleteUploads(context.bucket, copied).catch((cleanup) =>
-      console.error('Removing the copies of a write that failed failed', cleanup),
-    )
-    throw caught
-  }
-
-  await deleteUploads(context.bucket, uploads)
-
-  return {
-    body: { places: placeIds, moments: saved, deleted, ...(revision ? { revision } : {}) },
-    status: 200,
-    changesSite: statements.length > 0,
-    changesRoutes,
-  }
 }
 
 /**
@@ -256,21 +90,6 @@ export async function namePlaces(
   return placeIds
 }
 
-/** A Moment as stored, unless it is marked deleted. */
-function live(stored: ReturnType<typeof toStored> | undefined) {
-  return stored && !stored.deleted ? stored.record : undefined
-}
-
-/**
- * What of a Moment the trips are built from, as text to compare, or null when they don't
- * take it: its day and time and its places, while it is published and shown.
- */
-export function tripView(record: MomentRecord | undefined) {
-  return record?.published && isMomentShown(record)
-    ? JSON.stringify([record.occurredAt, record.places])
-    : null
-}
-
 /** A place with another kind, the kind where the spec orders it, after the point. */
 function withKind(place: Place, kind: NonNullable<Place['kind']>): Place {
   if (place.kind) {
@@ -313,51 +132,6 @@ async function withDivision(context: WriteContext, place: Place): Promise<Place>
   entries.splice(at, 0, ['division', division])
 
   return Object.fromEntries(entries) as Place
-}
-
-/**
- * What a change set is checked against, in one read: the places, and the Moments it
- * names as stored, removed or not.
- */
-async function readWriteState(db: Database, uids: string[]) {
-  const [places, moments] = await readAll(db, [
-    db.prepare(`SELECT id, record FROM places WHERE deleted_at IS NULL`),
-    db
-      .prepare(
-        `SELECT uid, kind, record, entry, deleted_at FROM moments
-         WHERE uid IN (SELECT value FROM json_each(?1))`,
-      )
-      .bind(JSON.stringify(uids)),
-  ])
-
-  return {
-    places: Object.fromEntries(
-      (places as { id: string; record: string }[]).map((row) => [
-        row.id,
-        placeSchema.parse(JSON.parse(row.record)),
-      ]),
-    ) as Places,
-    stored: new Map((moments as MomentRow[]).map((row) => [row.uid, toStored(row)])),
-  }
-}
-
-/** A Moment as sent, with the published blocks it and its media already have. */
-function withPublished(input: MomentRecord, prior: MomentRecord | undefined): MomentRecord {
-  return {
-    ...input,
-    media: input.media.map((item) => {
-      const published = prior?.media.find((candidate) => candidate.uid === item.uid)?.published
-
-      return (published ? { ...item, published } : item) as MomentMedia
-    }),
-    ...(prior?.published ? { published: prior.published } : {}),
-  }
-}
-
-function deleteStatement(context: WriteContext, uid: string) {
-  return context.db
-    .prepare(`UPDATE moments SET deleted_at = ?1, rev = ${REVISION} WHERE uid = ?2`)
-    .bind(context.now, uid)
 }
 
 /** Keeps an original until its Moment publishes. */
@@ -508,34 +282,6 @@ export async function publishMedia(
   return uploads
 }
 
-/**
- * A Moment as sent, without what only the server sets: its published block, and each
- * media item's published block and phone-only `local`. A copy the app kept from an
- * earlier reply, or one it changed, is then neither checked nor taken.
- */
-function withoutServerFields(body: unknown): unknown {
-  if (!isObject(body)) {
-    return body
-  }
-
-  const { published: _published, ...moment } = body
-
-  return Array.isArray(moment['media'])
-    ? {
-        ...moment,
-        media: moment['media'].map((item: unknown) => {
-          if (!isObject(item)) {
-            return item
-          }
-
-          const { published: _itemPublished, local: _local, ...rest } = item
-
-          return rest
-        }),
-      }
-    : moment
-}
-
 export function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -608,23 +354,6 @@ export interface MomentRow {
   record: string
   entry: string | null
   deleted_at: string | null
-}
-
-/**
- * A Moment as stored, removed or not, the text it is stored as, and the entry it is; an
- * entry the first shape has no Moment for is, to a Moment's write, one not there.
- */
-function toStored(row: MomentRow) {
-  const entry = toEntry(row)
-
-  return row.kind === 'moment'
-    ? {
-        record: momentRecordSchema.parse(JSON.parse(row.record)),
-        text: row.record,
-        deleted: row.deleted_at !== null,
-        entry,
-      }
-    : { record: undefined, text: '', deleted: true, entry }
 }
 
 /** A row's entry: as stored, or from its Moment when written before the data moved over. */

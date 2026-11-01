@@ -6,7 +6,7 @@ import { getStableUlid } from '@hyoban/data-spec/entry'
 import { getLegKey } from '@hyoban/trip-map'
 
 import { fillRoutes, FETCHES_PER_RUN } from '../src/routes.ts'
-import { call, get, setUp, snapshot, token } from './setup.mjs'
+import { call, get, publishMoments, setUp, snapshot, token } from './setup.mjs'
 
 // The trips' routes: worked out from the trips and Moments in the database the way the
 // routes script worked them out, fetched when missing, and served as the site draws them.
@@ -22,7 +22,7 @@ function setUpWithData() {
   return setup
 }
 
-/** What `meta` keeps of `GET /v1/routes`, as it answers it. */
+/** What `meta` keeps of `GET /v2/routes`, as it answers it. */
 function readKept(sqlite) {
   const value = (key) => sqlite.prepare(`SELECT value FROM meta WHERE key = ?`).get(key)?.value
 
@@ -75,7 +75,7 @@ test('a missing leg is fetched once, a train leg between the places’ stations'
       !places.some((place) => place.station && place.name === train.from.name),
   )
 
-  const { body } = await get(env, '/v1/export', owner)
+  const { body } = await get(env, '/v2/export', owner)
 
   assert.ok(trainKey in body.routes && driveKey in body.routes)
   assert.deepEqual(await fillRoutes({ db: env.DB, bucket: env.BUCKET, now }, refuse), {
@@ -203,13 +203,13 @@ test('a route no trip needs any more is marked deleted', async () => {
 
   assert.equal(removed.removed, 1)
   assert.ok(
-    !('1.00000,1.00000;2.00000,2.00000' in (await get(fresh.env, '/v1/export', owner)).body.routes),
+    !('1.00000,1.00000;2.00000,2.00000' in (await get(fresh.env, '/v2/export', owner)).body.routes),
   )
 })
 
-test('GET /v1/routes gives every trip with Moments its stretches, drives solid and the rest dashed', async () => {
+test('GET /v2/routes gives every trip with Moments its stretches, drives solid and the rest dashed', async () => {
   const { env } = setUpWithData()
-  const { status, body } = await get(env, '/v1/routes')
+  const { status, body } = await get(env, '/v2/routes')
 
   assert.equal(status, 200)
   assert.ok(body.revision > 0)
@@ -231,10 +231,10 @@ test('GET /v1/routes gives every trip with Moments its stretches, drives solid a
   assert.ok(body.trips['2025-shanghai'].some((segment) => segment.straight))
 })
 
-test('GET /v1/routes is worked out once per revision, and again once the revision moves on', async () => {
+test('GET /v2/routes is worked out once per revision, and again once the revision moves on', async () => {
   const { env, sqlite } = setUpWithData()
   const kept = () => readKept(sqlite)
-  const first = (await get(env, '/v1/routes')).body
+  const first = (await get(env, '/v2/routes')).body
 
   assert.deepEqual(kept(), first)
 
@@ -242,17 +242,17 @@ test('GET /v1/routes is worked out once per revision, and again once the revisio
   sqlite.exec(`UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`)
   sqlite.exec(`UPDATE trips SET deleted_at = '${now}' WHERE id = '2025-shanghai'`)
 
-  const second = (await get(env, '/v1/routes')).body
+  const second = (await get(env, '/v2/routes')).body
 
   assert.equal(second.revision, first.revision + 1)
   assert.ok(!('2025-shanghai' in second.trips))
   assert.deepEqual(kept(), second)
 })
 
-test('GET /v1/routes has an ETag of its routes, which a new revision with the same routes keeps', async () => {
+test('GET /v2/routes has an ETag of its routes, which a new revision with the same routes keeps', async () => {
   const { env, sqlite } = setUpWithData()
   const first = await handle(
-    new Request('https://api.test/v1/routes', { headers: { Authorization: `Bearer ${token}` } }),
+    new Request('https://api.test/v2/routes', { headers: { Authorization: `Bearer ${token}` } }),
     env,
   )
   const etag = first.headers.get('ETag')
@@ -263,7 +263,7 @@ test('GET /v1/routes has an ETag of its routes, which a new revision with the sa
   sqlite.exec(`UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`)
 
   const unchanged = await handle(
-    new Request('https://api.test/v1/routes', {
+    new Request('https://api.test/v2/routes', {
       headers: { Authorization: `Bearer ${token}`, 'If-None-Match': etag },
     }),
     env,
@@ -277,7 +277,7 @@ test('GET /v1/routes has an ETag of its routes, which a new revision with the sa
   sqlite.exec(`UPDATE trips SET deleted_at = '${now}' WHERE id = '2025-shanghai'`)
 
   const changed = await handle(
-    new Request('https://api.test/v1/routes', {
+    new Request('https://api.test/v2/routes', {
       headers: { Authorization: `Bearer ${token}`, 'If-None-Match': etag },
     }),
     env,
@@ -287,7 +287,7 @@ test('GET /v1/routes has an ETag of its routes, which a new revision with the sa
   assert.notEqual(changed.headers.get('ETag'), etag)
 })
 
-test('a fill keeps what GET /v1/routes answers, of the revision its own write took', async () => {
+test('a fill keeps what GET /v2/routes answers, of the revision its own write took', async () => {
   const { env, sqlite } = setUpWithData()
   const driveKey = Object.keys(snapshot.routes).find((key) => !key.startsWith('train:'))
 
@@ -302,19 +302,19 @@ test('a fill keeps what GET /v1/routes answers, of the revision its own write to
 
   assert.equal(result.fetched, 1)
   assert.equal(kept.revision, revision)
-  assert.deepEqual((await get(env, '/v1/routes')).body, kept)
+  assert.deepEqual((await get(env, '/v2/routes')).body, kept)
 })
 
-test('POST /v1/routes is the owner’s and needs the Mapbox token', async () => {
+test('POST /v2/routes is the owner’s and needs the Mapbox token', async () => {
   const { env } = setUpWithData()
 
-  assert.equal((await call(env, 'POST', '/v1/routes', { auth: null })).status, 401)
-  assert.equal((await call(env, 'POST', '/v1/routes', owner)).status, 503)
+  assert.equal((await call(env, 'POST', '/v2/routes', { auth: null })).status, 401)
+  assert.equal((await call(env, 'POST', '/v2/routes', owner)).status, 503)
 
   const { status, body } = await call(
     { ...env, MAPBOX_TOKEN: 'pk.test' },
     'POST',
-    '/v1/routes',
+    '/v2/routes',
     owner,
   )
 
@@ -333,7 +333,7 @@ test('a write the site shows brings the routes up to date before calling the dep
   }
 
   try {
-    const before = (await get(env, '/v1/routes')).body
+    const before = (await get(env, '/v2/routes')).body
     const moment = snapshot.moments.find(
       (record) => record.published && !record.hidden && record.places.length > 0,
     )
@@ -341,15 +341,10 @@ test('a write the site shows brings the routes up to date before calling the dep
       const pending = []
 
       order.length = 0
-      await call(
+      await publishMoments(
         { ...env, MAPBOX_TOKEN: 'pk.test', DEPLOY_HOOK_URL: 'https://deploy.test/hook' },
-        'POST',
-        '/v1/changes',
-        {
-          ...owner,
-          body: { moments: [changed] },
-          context: { waitUntil: (promise) => pending.push(promise) },
-        },
+        { moments: [changed] },
+        { context: { waitUntil: (promise) => pending.push(promise) } },
       )
       await Promise.all(pending)
     }

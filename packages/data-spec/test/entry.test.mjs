@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { fileURLToPath } from 'node:url'
 import { test } from 'vite-plus/test'
 
 import {
@@ -20,9 +21,10 @@ import {
 import { momentRecordSchema, tripRecordSchema } from '../src/index.ts'
 import { readMomentRecords, readTripRecords } from '../../../apps/web/src/data/store.ts'
 
-// The repository's data/ in the first shape, whichever layout it is in.
-const moments = readMomentRecords().map(({ record }) => record)
-const trips = readTripRecords()
+// The made-up data/ the tests read, in the first shape.
+const fixtureRoot = fileURLToPath(new URL('fixtures/data/', import.meta.url))
+const moments = readMomentRecords(fixtureRoot).map(({ record }) => record)
+const trips = readTripRecords(fixtureRoot)
 
 const at = '2026-10-29T12:00:00+08:00'
 const base = { uid: getStableUlid(at, 'base'), at, createdAt: at, updatedAt: at }

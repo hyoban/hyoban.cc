@@ -165,7 +165,7 @@ export function getNeededLegs(trips: ReturnType<typeof buildTrips>, places: Plac
 /**
  * Brings the routes up to date with the trips: fetches the legs missing, up to
  * `FETCHES_PER_RUN`, and marks deleted the ones no trip needs, in one transaction and
- * none when nothing changed, and keeps what `GET /v1/routes` answers from what it read,
+ * none when nothing changed, and keeps what `GET /v2/routes` answers from what it read,
  * so the trips aren't read again for it. A leg with no route is remembered, and one that
  * failed is asked for again the next time. Returns what it did.
  */
@@ -242,13 +242,13 @@ export async function fillRoutes(context: WriteContext, fetchRoute: RouteFetcher
   }
 }
 
-/** `GET /v1/routes`: the JSON text it answers, and an ETag of the routes in it. */
+/** `GET /v2/routes`: the JSON text it answers, and an ETag of the routes in it. */
 export interface TripRoutes {
   text: string
   etag: string
 }
 
-/** What `meta` keeps of `GET /v1/routes`: the trips as JSON text, and their ETag. */
+/** What `meta` keeps of `GET /v2/routes`: the trips as JSON text, and their ETag. */
 interface KeptRoutes {
   trips: string
   etag: string
