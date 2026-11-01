@@ -468,6 +468,7 @@ private fun MapContent(
         if (id == null || place == null) {
             TripsSheet(
                 trips, moments, colors, kilometres, container.mediaUrls, bottom = if (wide) Space.l else clearance,
+                inCard = wide && floatingPanel,
                 // Resting, only its title line shows above the tabs; its rows come in as it's drawn up.
                 shown = { if (wide) 1f else (sheetState.raised * TRIPS_REVEAL).coerceAtMost(1f) },
                 onTrip = onTrip,
@@ -488,7 +489,7 @@ private fun MapContent(
         val panel: @Composable () -> Unit = {
             Column(Modifier.fillMaxHeight().statusBarsPadding().padding(top = if (floatingPanel) Space.m else Space.l)) {
                 SearchPill(onSearch, Modifier.padding(horizontal = if (floatingPanel) Space.m else MAP_EDGE).fillMaxWidth(), floating = false)
-                Spacer(Modifier.height(if (floatingPanel) Space.s else Space.l))
+                Spacer(Modifier.height(if (floatingPanel) Space.m else Space.l))
                 sheetContent()
             }
         }
@@ -658,13 +659,15 @@ private fun TripsSheet(
     bottom: Dp,
     shown: () -> Float,
     onTrip: (String) -> Unit,
+    /** In the card floating beside the tabs on a phone on its side (H09): its title 16 in, its rows 12, their covers 56. */
+    inCard: Boolean = false,
 ) {
     val total = remember(kilometres) { kilometres.values.sum() }
     // Hidden while the panel rests, its rows take no taps.
     val open by remember { derivedStateOf { shown() > 0.5f } }
     Column(Modifier.fillMaxHeight()) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = Space.gutter).padding(bottom = Space.s),
+            Modifier.fillMaxWidth().padding(horizontal = if (inCard) Space.l else Space.gutter).padding(bottom = if (inCard) Space.xs else Space.s),
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {
@@ -691,8 +694,9 @@ private fun TripsSheet(
                 val covers = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1) }
                 TripRow(
                     trip, covers.firstOrNull(), tripColor(trip, colors), kilometres[trip.id], urls,
+                    coverSize = if (inCard) 56 else 64,
                     modifier = Modifier.fillMaxWidth().clickable(enabled = open) { onTrip(trip.id) }
-                        .padding(horizontal = Space.gutter, vertical = Space.s).testTag("trip_${trip.id}"),
+                        .padding(horizontal = if (inCard) Space.m else Space.gutter, vertical = Space.s).testTag("trip_${trip.id}"),
                 ) { Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(20.dp)) }
             }
         }
@@ -711,12 +715,13 @@ private fun TripRow(
     km: Double?,
     urls: MediaUrls,
     modifier: Modifier = Modifier,
+    coverSize: Int = 64,
     trailing: @Composable RowScope.() -> Unit,
 ) {
     val days = daysBetween(trip.start, trip.end)
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
-        Box(Modifier.size(64.dp).background(tokens.fill, AppTheme.shapes.medium)) {
-            if (cover != null) Thumbnail(cover, urls, size = 64)
+        Box(Modifier.size(coverSize.dp).background(tokens.fill, AppTheme.shapes.medium)) {
+            if (cover != null) Thumbnail(cover, urls, size = coverSize)
             if (year != null) {
                 Box(
                     Modifier.padding(6.dp).size(10.dp).border(1.5.dp, Color.White, CircleShape).padding(1.5.dp).background(year, CircleShape),
