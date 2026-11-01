@@ -71,6 +71,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
     // The setting whose dialog is open, by its place in the list, so it stays open across a rotation.
     var editing by rememberSaveable { mutableStateOf<Int?>(null) }
     var editingToken by rememberSaveable { mutableStateOf(false) }
+    var editingBackup by rememberSaveable { mutableStateOf(false) }
     val rows = listOf(
         Row(settings.apiUrl, R.string.setting_api_url, AppIcons.Cloud) { container.changeApi(it) },
         Row(settings.assetOrigin, R.string.setting_asset_origin, AppIcons.Image) { settings.assetOrigin.set(it) },
@@ -121,6 +122,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                     ) { Text(stringResource(R.string.action_refresh)) }
                 }
                 Section(stringResource(R.string.section_site), rows.subList(0, 1), 0, stringResource(R.string.settings_api_note), extra = listOf(token, refresh)) { editing = it }
+                BackupSection(container.backup) { editingBackup = true }
                 Section(stringResource(R.string.section_media), rows.subList(1, 2), 1, null) { editing = it }
                 Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
             }
@@ -131,6 +133,21 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
         TokenDialog(settings.apiToken, onDismiss = { editingToken = false }) { text ->
             settings.apiToken.set(text)
             editingToken = false
+        }
+    }
+
+    if (editingBackup) {
+        val backup = container.backup
+        WebDavDialog(
+            backup,
+            onDismiss = { editingBackup = false },
+            onForget = {
+                backup.forget()
+                editingBackup = false
+            },
+        ) { url, user, password ->
+            backup.change(url, user, password)
+            editingBackup = false
         }
     }
 

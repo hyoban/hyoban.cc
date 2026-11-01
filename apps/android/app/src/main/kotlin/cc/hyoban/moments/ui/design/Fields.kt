@@ -282,6 +282,7 @@ fun OutlinedTextField(
 fun OutlinedSecureTextField(
     state: TextFieldState,
     modifier: Modifier = Modifier,
+    label: (@Composable () -> Unit)? = null,
     placeholder: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     textObfuscationMode: TextObfuscationMode = TextObfuscationMode.RevealLastTyped,
@@ -301,7 +302,7 @@ fun OutlinedSecureTextField(
         interactionSource = interaction,
         cursorBrush = SolidColor(tokens.tx),
         decorator = TextFieldDecorator { inner ->
-            Decoration(inner, state.text.isEmpty(), focused, true, true, style, true, false, null, placeholder, null, trailingIcon, null, null, null)
+            Decoration(inner, state.text.isEmpty(), focused, true, true, style, true, false, label, placeholder, null, trailingIcon, null, null, null)
         },
     )
 }

@@ -104,7 +104,8 @@ even when starting from the repository root.
   must be removed or renamed, update and install the app before pushing the API
   change: pushes to `main` deploy it.
 - Android's ledger and GPS footprints are private by default and stay on the phone, out of
-  Android's backup. A book can make its new bills public and each bill can say otherwise; a
+  Android's backup; the one copy that leaves it is the opt-in WebDAV backup, to the owner's
+  own server, of every database but photos and videos. A book can make its new bills public and each bill can say otherwise; a
   public bill publishes its kind, amount, currency, category and note alone, never its account or
   balance. Spans of the footprints can be made public (a trip's page has a switch), and
   only their line, simplified, is published; the raw samples never leave the phone. Raw Zeekr captures and report links stay under `.private/`;

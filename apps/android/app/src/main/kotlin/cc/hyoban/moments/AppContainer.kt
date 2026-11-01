@@ -58,6 +58,8 @@ class AppContainer(context: Context) {
     val connectionRules = cc.hyoban.moments.footprints.ConnectionRulesStore(context)
     /** The ledger stays on this phone, outside API sync and Android's backup; only its public bills publish. */
     val ledger = cc.hyoban.moments.ledger.LedgerStore(context)
+    /** The databases backed up to the owner's WebDAV directory, when one is set. */
+    val backup = cc.hyoban.moments.backup.Backup(context)
 
     // Each its own: `copy.db` the copy of what the API serves, row for row as D1 keeps it,
     // out of the backup since a sync brings it again; `local/` the Moments written on this
@@ -112,6 +114,7 @@ class AppContainer(context: Context) {
         // Routes were once kept per trip from the site's trip pages, under routes/.
         File(context.filesDir, "routes").takeIf { it.isDirectory }?.deleteRecursively()
         scope.launch { ledger.load() }
+        cc.hyoban.moments.backup.BackupWorker.schedule(appContext, backup, replace = false)
         // A bill or a span going public, or private again, is a change to publish too.
         scope.launch {
             kotlinx.coroutines.flow.combine(ledger.ledger, footprints.revision) { _, _ -> }.collect {
