@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Drawn again after each sync and every three hours, so a new day gets its square.
+     Four cells by two to begin with, as small as a row of four and as large as four by four.
+     What it shows is chosen as it is added, or left as Moments, and again from the home screen. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_heatmap_description"
+    android:previewLayout="@layout/widget_preview_heatmap"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:configure="cc.hyoban.moments.widget.HeatmapSettingsActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional"
+    android:minWidth="110dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:maxResizeWidth="530dp"
+    android:maxResizeHeight="530dp"
+    android:minResizeHeight="60dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="10800000"
+    android:widgetCategory="home_screen" />

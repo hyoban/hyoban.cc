@@ -8,6 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Build
+import android.util.Log
+import kotlin.reflect.KClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpSize
@@ -68,7 +70,7 @@ import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 
 // The home screen's widgets: a Moment from this day in an earlier year, and the trip
-// under way or the last one. Each is a photo with its words over a shade at the bottom,
+// under way or the last one (the heatmap is in HeatmapWidget.kt). Each is a photo with its words over a shade at the bottom,
 // and opens its page in the app when tapped. They read the copy on the phone, so they
 // draw without a network, and are drawn again after each sync and every few hours.
 
@@ -162,7 +164,8 @@ class TripWidgetReceiver : GlanceAppWidgetReceiver() {
 }
 
 object Widgets {
-    private var previewsSet = false
+    /** The widgets whose picker preview the system has taken this run. */
+    private val previewsSet = mutableSetOf<KClass<out GlanceAppWidgetReceiver>>()
 
     /**
      * Draws every widget on the home screen again from the copy on the phone, and, once a
@@ -171,14 +174,17 @@ object Widgets {
     suspend fun update(context: Context) {
         MemoryWidget().updateAll(context)
         TripWidget().updateAll(context)
-        if (!previewsSet && Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            previewsSet = true
+        HeatmapWidget().updateAll(context)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             val manager = GlanceAppWidgetManager(context)
-            // The system allows only a few a day; one turned down is tried next run.
-            val results = runCatching {
-                listOf(manager.setWidgetPreviews(MemoryWidgetReceiver::class), manager.setWidgetPreviews(TripWidgetReceiver::class))
+            // The system allows only a few a day; one turned down is tried again at the next update.
+            for (receiver in listOf(MemoryWidgetReceiver::class, TripWidgetReceiver::class, HeatmapWidgetReceiver::class)) {
+                if (receiver in previewsSet) continue
+                val result = runCatching { manager.setWidgetPreviews(receiver) }
+                    .onFailure { Log.w("Moments", "Widget preview for ${receiver.simpleName} not set", it) }.getOrNull()
+                if (result == GlanceAppWidgetManager.SET_WIDGET_PREVIEWS_RESULT_SUCCESS) previewsSet += receiver
+                Log.i("Moments", "Widget preview for ${receiver.simpleName}: $result")
             }
-            previewsSet = results.getOrNull()?.all { it == GlanceAppWidgetManager.SET_WIDGET_PREVIEWS_RESULT_SUCCESS } == true
         }
     }
 }
@@ -194,9 +200,9 @@ private sealed interface Card {
 // (2×2), a wide card (4×2) and a large one (4×4). The launcher takes the largest that fits.
 private val STRIP = DpSize(160.dp, 50.dp)
 private val SMALL = DpSize(110.dp, 110.dp)
-private val WIDE = DpSize(220.dp, 100.dp)
+internal val WIDE = DpSize(220.dp, 100.dp)
 private val LARGE = DpSize(220.dp, 220.dp)
-private val SIZES = SizeMode.Responsive(setOf(STRIP, SMALL, WIDE, LARGE))
+internal val SIZES = SizeMode.Responsive(setOf(STRIP, SMALL, WIDE, LARGE))
 
 @Composable
 private fun WidgetCard(card: Card) {
@@ -302,7 +308,7 @@ private fun Words(
 
 /** The app's own colours, light or dark as the system is: each role the token that plays its part, by day and by night. */
 @Composable
-private fun WidgetTheme(context: Context, content: @Composable () -> Unit) {
+internal fun WidgetTheme(context: Context, content: @Composable () -> Unit) {
     val day = appTokens(false)
     val night = appTokens(true)
     fun role(pick: (Tokens) -> Color) = ColorProvider(day = pick(day), night = pick(night))
@@ -339,12 +345,12 @@ private fun WidgetTheme(context: Context, content: @Composable () -> Unit) {
 }
 
 /** Opens a page of the app by its link, as `moments://moment/{uid}`. */
-private fun open(link: String) = actionStartActivity(
+internal fun open(link: String) = actionStartActivity(
     Intent(Intent.ACTION_VIEW, "$DEEP_LINK_SCHEME://$link".toUri()).setClassName("cc.hyoban.moments", LinkActivity::class.java.name),
 )
 
 /** The app's container, its copy of the records read before anything is picked from it. */
-private suspend fun container(context: Context): AppContainer =
+internal suspend fun container(context: Context): AppContainer =
     (context.applicationContext as MomentsApplication).container.also { it.repository.loaded.first { loaded -> loaded } }
 
 /** A media item's still, from Coil's cache when it has it, small enough for a widget to carry. */
@@ -359,7 +365,7 @@ private val PADDING = Space.l
 private val PADDING_LARGE = Space.xl
 
 /** Material 3's type scale for the widgets, which Glance has no theme typography for: its sizes and weights as they are. */
-private enum class WidgetType(val size: TextUnit, val weight: FontWeight) {
+internal enum class WidgetType(val size: TextUnit, val weight: FontWeight) {
     TitleMedium(16.sp, FontWeight.Medium),
     TitleSmall(14.sp, FontWeight.Medium),
     LabelLarge(14.sp, FontWeight.Medium),

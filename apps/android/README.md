@@ -351,7 +351,10 @@ are `noBackupFilesDir/connection-reminders.json` and `companion-connections.json
 
 - **Widgets.** 那年今天 (a Moment from this day in an earlier year) and 旅程 (the trip under
   way, else the last or next), in ColorOS's card sizes, drawn from the copy after each sync
-  and every three hours.
+  and every three hours. 热力图 is a square a day, as many weeks as fit, a year by months at
+  four by four and a row of days as a strip, of the public Moments, the spending (shades only,
+  never an amount) or how far the footprints went; it is chosen as the widget is added and
+  again by tapping its name, as ColorOS's long press has no way to set a widget up again.
 - **Video.** The viewer goes picture-in-picture when the app is left while a video plays.
   A photo that can't be fetched there says so, with 重试.
 - **Language and appearance.** Always the phone's: Chinese, or English when the phone speaks

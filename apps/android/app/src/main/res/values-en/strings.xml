@@ -170,6 +170,22 @@
     <string name="widget_preview_trip_eyebrow">Day 2 of 5</string>
     <string name="widget_preview_trip_title">Road trip to the northeast</string>
     <string name="widget_preview_trip_subtitle">15 Moments</string>
+    <string name="widget_heatmap_name">Heatmap</string>
+    <string name="widget_heatmap_description">A square a day: Moments, spending or footprints, deeper for more</string>
+    <string name="widget_heatmap_moments">Moments</string>
+    <string name="widget_heatmap_spending">Spending</string>
+    <string name="widget_heatmap_footprints">Footprints</string>
+    <string name="widget_heatmap_moments_note">How many Moments each day, public ones only</string>
+    <string name="widget_heatmap_spending_note">How much each day, as shades only, no amounts</string>
+    <string name="widget_heatmap_footprints_note">How far each day went</string>
+    <string name="widget_heatmap_settings_note">A square a day, deeper for more.</string>
+    <string name="widget_heatmap_show">Show</string>
+    <string name="widget_heatmap_settings_hint">Tap one to show it; tap the widget\'s name to come back here.</string>
+    <string name="widget_heatmap_year">Last 12 months</string>
+    <string name="widget_heatmap_km">%1$s km</string>
+    <!-- The range, then the days or the distance: Last 26 weeks · 84 days. -->
+    <string name="widget_heatmap_summary">%1$s · %2$s</string>
+    <string name="widget_preview_heatmap_summary">Last 26 weeks · 84 days</string>
     <string name="separator_clause">, </string>
     <string name="separator_list">, </string>
     <plurals name="count_food_people">
@@ -227,6 +243,14 @@
     <plurals name="widget_trip_in_days">
         <item quantity="one">Leaving in %1$d day</item>
         <item quantity="other">Leaving in %1$d days</item>
+    </plurals>
+    <plurals name="widget_heatmap_weeks">
+        <item quantity="one">Last week</item>
+        <item quantity="other">Last %1$d weeks</item>
+    </plurals>
+    <plurals name="widget_heatmap_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
     </plurals>
     <string name="title_new_moment">New Moment</string>
     <string name="section_bill">Bill</string>
