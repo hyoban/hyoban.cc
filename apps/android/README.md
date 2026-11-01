@@ -25,7 +25,8 @@ on. A new API, set in 同步与来源, drops the copy and reads everything again
 
 Three tabs float at the foot of the screen, with 记录 beside them; on a window 840dp wide
 or more, or a phone on its side, the same capsule stands on its end down the side, 记录 under
-it. On a phone on its side the status and navigation bars are put away (a swipe from the edge
+it: on a phone on its side, down the side away from the camera, so it reads the same turned
+either way, with the rest of the page in the same order. On a phone on its side the status and navigation bars are put away (a swipe from the edge
 shows them), the timeline is a conversation beside the tabs with the day it has scrolled to on a map
 filling the rest, the map's trips float in a card beside the tabs, and sheets slide in from
 the side. A Moment's photo, a day's footprints, a trip's route and a place's map take the left

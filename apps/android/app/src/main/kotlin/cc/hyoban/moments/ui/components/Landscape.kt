@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
@@ -13,6 +15,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.RailSpace
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.ui.theme.Space
@@ -23,6 +28,23 @@ import cc.hyoban.moments.ui.theme.Space
  */
 @Composable
 fun isPhoneLandscape(): Boolean = hidesSystemBars()
+
+/**
+ * Whether the tabs stand down the left on their side (H00): down the side away from the camera's
+ * cutout, so the phone reads the same turned either way; the leading side where there is none.
+ */
+@Composable
+fun railOnLeft(): Boolean {
+    val cutout = WindowInsets.displayCutout
+    val density = LocalDensity.current
+    val left = cutout.getLeft(density, LayoutDirection.Ltr)
+    val right = cutout.getRight(density, LayoutDirection.Ltr)
+    return when {
+        left > right -> false
+        right > left -> true
+        else -> LocalLayoutDirection.current == LayoutDirection.Ltr
+    }
+}
 
 /** How wide the column of a page's figures stands at its start on a phone on its side, its list beside it. */
 val SIDE_COLUMN = 264.dp

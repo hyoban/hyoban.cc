@@ -532,9 +532,9 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
     // comes and goes, so a tab's list doesn't shift under a card growing out of it.
     val tabClearance = if (railed) navBottom else barHeight
     val clearance = if (current == null) 0.dp else tabClearance
-    // Down the leading side, as Material 3 places a navigation rail, whichever way the phone
-    // is turned; the system's insets keep it clear of the camera's cutout there.
-    val railLeft = LocalLayoutDirection.current == LayoutDirection.Ltr
+    // Down the side away from the camera's cutout, so either way the phone is turned the tabs
+    // and the camera stand apart; the leading side on a screen without one.
+    val railLeft = cc.hyoban.moments.ui.components.railOnLeft()
     val rail = when {
         current == null || !railed -> RailSpace(0.dp, 0.dp)
         railLeft -> RailSpace(left = railWidth, right = 0.dp)
@@ -901,10 +901,10 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                 // the same floating capsule, centred in the height, the tab's button under it; no
                 // strip behind it, so the page shows round it.
                 Column(
-                    // Past the camera's cutout when it is on this side, its own 80 beyond; what the pages keep
-                    // clear of is that 80, as they keep clear of the cutout themselves.
+                    // Past the system's bars on this side, its own 80 beyond; what the pages keep clear
+                    // of is that 80, as they keep clear of the cutout across from it themselves.
                     Modifier.fillMaxHeight()
-                        .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Vertical + WindowInsetsSides.Start))
+                        .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Vertical + if (railLeft) WindowInsetsSides.Left else WindowInsetsSides.Right))
                         .width(RAIL_WIDTH)
                         .onSizeChanged { railWidth = with(density) { it.width.toDp() } },
                     horizontalAlignment = Alignment.CenterHorizontally,

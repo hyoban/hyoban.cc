@@ -333,7 +333,7 @@ fun FeedScreen(
             Box(
                 Modifier.weight(1f).fillMaxHeight()
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom))
-                    .padding(top = Space.s, end = Space.gutter, bottom = Space.s)
+                    .padding(top = Space.s, end = rail.right + Space.gutter, bottom = Space.s)
                     .clip(AppTheme.shapes.large),
             ) {
                 // One Moment giving way to another, or to the placeholder, as a fade through: the
@@ -717,6 +717,8 @@ private fun TimelineDayMap(
         }
         // The whole map opens the day, as its card does.
         Box(Modifier.fillMaxSize().clickable(onClickLabel = openDay) { day?.let(onDay) }.testTag("timeline_day_map"))
+        // Its card and search clear of the tabs when they stand down this side, the map running under them.
+        val controls = Modifier.matchParentSize().padding(end = LocalRailSpace.current.right)
         day?.let { shown ->
             val stats = remember(mapped, nowhere) { mapped?.takeIf { !nowhere }?.let { cc.hyoban.moments.footprints.trackStats(it.points) } }
             val line = if (nowhere) {
@@ -727,7 +729,7 @@ private fun TimelineDayMap(
                     daySpent(bills, shown)?.let { stringResource(R.string.ledger_expense_short, it) },
                 ).joinToString(" ")
             }
-            Surface(
+            Box(controls) { Surface(
                 onClick = { onDay(shown) },
                 modifier = Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(Space.m).widthIn(max = 280.dp),
                 shape = AppTheme.shapes.large,
@@ -739,9 +741,9 @@ private fun TimelineDayMap(
                     Text(formatDay(shown), style = AppTheme.typography.label)
                     if (line.isNotEmpty()) Text(line, style = AppTheme.typography.caption, color = tokens.tx2)
                 }
-            }
+            } }
         }
-        Box(Modifier.align(Alignment.TopEnd)) {
+        Box(controls, contentAlignment = Alignment.TopEnd) {
             FloatingButton(AppIcons.Search, stringResource(R.string.action_search), onSearch, tag = "search")
         }
     }
