@@ -720,10 +720,9 @@ private fun TimelineDayMap(
     Box(modifier.background(AppColors.page)) {
         mapped?.let { shown ->
             Box(Modifier.fillMaxSize().graphicsLayer { alpha = if (nowhere) 0.4f else 1f }) {
-                // A map of its own for each day, framed on that day's footprints as its page frames them.
-                androidx.compose.runtime.key(shown.day) {
-                    DayMap(shown.day, shown.points, shown.moments, places, bills, Modifier.fillMaxSize(), topInset = FLOATING_BAR)
-                }
+                // One map that moves from day to day, framed on each day's footprints as its page frames
+                // them, its lines and dots changed in place rather than a new map drawn each time.
+                DayMap(shown.day, shown.points, shown.moments, places, bills, Modifier.fillMaxSize(), topInset = FLOATING_BAR)
             }
         }
         // The whole map opens the day, as its card does.
