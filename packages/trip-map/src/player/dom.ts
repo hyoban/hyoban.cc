@@ -45,16 +45,6 @@ export function createPopupContent({
   return content
 }
 
-export function queryRequired<T extends Element>(root: ParentNode, selector: string) {
-  const element = root.querySelector<T>(selector)
-
-  if (!element) {
-    throw new Error(`Missing required trip map element: ${selector}`)
-  }
-
-  return element
-}
-
 /** Reads JSON the page inlined in a `<script type="application/json">`. */
 export function parseJson<T>(root: ParentNode, selector: string, fallback: T): T {
   const text = root.querySelector(selector)?.textContent

@@ -602,7 +602,6 @@
     <string name="ledger_from_account">转出账户</string>
     <string name="ledger_to_account">转入账户</string>
     <string name="ledger_time">时间</string>
-    <string name="ledger_book">账本</string>
     <string name="ledger_to_amount">到账金额</string>
     <string name="ledger_at_rate">按当天汇率约 %1$s</string>
     <string name="ledger_fee_note">从转出账户扣除，计入支出</string>
@@ -832,8 +831,6 @@
     <string name="side_key_error">侧键连接失败，请检查 Shizuku 和设备支持后重新开启</string>
     <string name="side_key_restore_pending">系统原动作待恢复；启动并授权 Shizuku 后会重试</string>
     <string name="side_key_grant">授权 Shizuku</string>
-    <string name="side_key_open_shizuku">打开 Shizuku</string>
-    <string name="side_key_accessibility">开启无障碍服务</string>
     <string name="side_key_shizuku_missing">请先安装并启动 Shizuku</string>
     <string name="side_key_gestures">按键动作</string>
     <string name="side_key_single">单击</string>
@@ -854,7 +851,6 @@
     <string name="side_key_notifications">通知栏</string>
     <string name="side_key_quick_settings">快捷设置</string>
     <string name="side_key_lock">锁屏</string>
-    <string name="side_key_pick">选择动作</string>
     <string name="side_key_search_apps">搜索应用</string>
     <string name="side_key_uri_label">链接或应用 URI</string>
     <string name="side_key_invalid_uri">请输入有效的链接或应用 URI</string>
@@ -930,7 +926,6 @@
     <string name="device_idle_note">还在手上，但不用了</string>
     <string name="device_public_note">出现在网站 Use 页</string>
     <string name="device_note">备注</string>
-    <string name="device_delete">删除设备</string>
     <string name="subscriptions_monthly">每月</string>
     <string name="subscriptions_yearly">每年</string>
     <string name="subscriptions_once">买断</string>
@@ -946,8 +941,6 @@
     <string name="subscription_add">添加订阅</string>
     <string name="subscription_name">名称</string>
     <string name="subscription_price">价格</string>
-    <string name="subscription_currency">币种</string>
-    <string name="subscription_period">周期</string>
     <string name="subscription_period_year">每年</string>
     <string name="subscription_period_month">每月</string>
     <string name="subscription_period_once">买断</string>
@@ -959,7 +952,6 @@
     <string name="subscription_paid_with_note">只有自己看得到</string>
     <string name="subscription_ended">已经停了</string>
     <string name="subscription_note">描述</string>
-    <string name="subscription_delete">删除订阅</string>
     <string name="subscriptions_empty">还没有订阅</string>
     <string name="car_report">%d 月月报</string>
     <string name="car_distance">里程</string>

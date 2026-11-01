@@ -23,7 +23,6 @@ import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -48,12 +47,6 @@ data class TimeFilter(val year: Int? = null, val month: Int? = null) {
             (month == null || date.substring(5, 7).toInt() == month)
     }
 }
-
-/** Keeps a [TimeFilter] across a rotation, as its two numbers. */
-val TimeFilterSaver = listSaver<TimeFilter, Int?>(
-    save = { listOf(it.year, it.month) },
-    restore = { TimeFilter(it[0], it[1]) },
-)
 
 /** The Moments [filter] lets through. */
 fun List<MomentRecord>.filtered(filter: TimeFilter): List<MomentRecord> =

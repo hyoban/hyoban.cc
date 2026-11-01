@@ -86,9 +86,6 @@ class VideoState {
         internal set
 }
 
-@Composable
-fun rememberVideoState(key: Any): VideoState = remember(key) { VideoState() }
-
 /**
  * The video at [url] over its poster while its page is [active]: it loads on arriving
  * at the page and plays when it can; leaving the page lets it go.

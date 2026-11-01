@@ -5,12 +5,8 @@ import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import cc.hyoban.moments.ui.design.Icon
@@ -26,8 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.R
@@ -45,7 +39,6 @@ import cc.hyoban.moments.ledger.currencySymbol
 import cc.hyoban.moments.ledger.formatMoney
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.format.formatDay
-import cc.hyoban.moments.ui.theme.Space
 import java.time.format.DateTimeFormatter
 
 /** Where the ledger's pages lead, to each other and to the Moments' own. */
@@ -401,26 +394,6 @@ fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = M
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         modifier = modifier.clickableRow(onClick).testTag("bill_${txn.id}"),
     )
-}
-
-/** A day over its bills: the day, and what it spent and earned. */
-@Composable
-fun DayTotals(dateKey: String, expense: Long, income: Long, currency: String, modifier: Modifier = Modifier) {
-    Row(
-        modifier.fillMaxWidth().padding(start = Space.l + Space.xs, end = Space.l + Space.xs, top = Space.l, bottom = Space.xs).semantics(mergeDescendants = true) { heading() },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.m),
-    ) {
-        Text(formatDay(dateKey), style = AppTheme.typography.body.strong, modifier = Modifier.weight(1f))
-        Text(
-            listOfNotNull(
-                if (expense != 0L) stringResource(R.string.ledger_expense_short, money(expense, currency)) else null,
-                if (income != 0L) stringResource(R.string.ledger_income_short, money(income, currency)) else null,
-            ).joinToString(" "),
-            style = AppTheme.typography.caption,
-            color = tokens.tx2,
-        )
-    }
 }
 
 /** A row tapped as a whole, with Material 3's ripple across it. */

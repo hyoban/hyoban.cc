@@ -1300,13 +1300,6 @@ fun TripMap(stops: List<Stop>, segments: List<RouteSegment>, modifier: Modifier 
     PointsMap(points, lines, dot = 5f, padding = 40.dp, modifier = modifier, interactive = interactive)
 }
 
-/** A still map of [places], each a dot: one place close up, several framed together. */
-@Composable
-fun PlacesStill(places: List<Place>, modifier: Modifier = Modifier) {
-    val points = remember(places) { places.map { it.latLng } }
-    PointsMap(points, emptyList(), dot = 6f, padding = 32.dp, modifier = modifier, interactive = false)
-}
-
 @Composable
 private fun PointsMap(
     points: List<LatLng>,

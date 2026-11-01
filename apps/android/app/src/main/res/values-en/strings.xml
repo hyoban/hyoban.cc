@@ -622,7 +622,6 @@
     <string name="ledger_from_account">From</string>
     <string name="ledger_to_account">To</string>
     <string name="ledger_time">Time</string>
-    <string name="ledger_book">Book</string>
     <string name="ledger_to_amount">Amount received</string>
     <string name="ledger_at_rate">About %1$s at that day\'s rate</string>
     <string name="ledger_fee_note">Taken from the source account, counted as an expense</string>
@@ -867,8 +866,6 @@
     <string name="side_key_error">Side key connection failed. Check Shizuku and device support, then enable again</string>
     <string name="side_key_restore_pending">The original system action still needs restoring. Start and authorize Shizuku to retry</string>
     <string name="side_key_grant">Authorize Shizuku</string>
-    <string name="side_key_open_shizuku">Open Shizuku</string>
-    <string name="side_key_accessibility">Enable accessibility service</string>
     <string name="side_key_shizuku_missing">Install and start Shizuku first</string>
     <string name="side_key_gestures">Gestures</string>
     <string name="side_key_single">Single press</string>
@@ -889,7 +886,6 @@
     <string name="side_key_notifications">Notifications</string>
     <string name="side_key_quick_settings">Quick settings</string>
     <string name="side_key_lock">Lock screen</string>
-    <string name="side_key_pick">Choose action</string>
     <string name="side_key_search_apps">Search apps</string>
     <string name="side_key_uri_label">Link or app URI</string>
     <string name="side_key_invalid_uri">Enter a valid link or app URI</string>
@@ -965,7 +961,6 @@
     <string name="device_idle_note">Still owned, no longer used</string>
     <string name="device_public_note">Shown on the site\'s use page</string>
     <string name="device_note">Note</string>
-    <string name="device_delete">Delete device</string>
     <string name="subscriptions_monthly">Monthly</string>
     <string name="subscriptions_yearly">Yearly</string>
     <string name="subscriptions_once">Bought once</string>
@@ -981,8 +976,6 @@
     <string name="subscription_add">Add a subscription</string>
     <string name="subscription_name">Name</string>
     <string name="subscription_price">Price</string>
-    <string name="subscription_currency">Currency</string>
-    <string name="subscription_period">Period</string>
     <string name="subscription_period_year">Yearly</string>
     <string name="subscription_period_month">Monthly</string>
     <string name="subscription_period_once">Once</string>
@@ -994,7 +987,6 @@
     <string name="subscription_paid_with_note">Only you see it</string>
     <string name="subscription_ended">Stopped</string>
     <string name="subscription_note">Note</string>
-    <string name="subscription_delete">Delete subscription</string>
     <string name="subscriptions_empty">No subscriptions yet</string>
     <string name="car_report">Report for month %d</string>
     <string name="car_distance">Distance</string>

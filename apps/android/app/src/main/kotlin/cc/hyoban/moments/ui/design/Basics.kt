@@ -286,8 +286,6 @@ class CardColors(val containerColor: Color, val contentColor: Color)
 object CardDefaults {
     @Composable
     fun cardColors(containerColor: Color = tokens.surface, contentColor: Color = tokens.tx) = CardColors(containerColor, contentColor)
-
-    fun cardElevation(defaultElevation: Dp = 0.dp): Dp = defaultElevation
 }
 
 // ---------------------------------------------------------------- icon buttons
