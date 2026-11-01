@@ -1,13 +1,12 @@
 import {
   getMediaKey,
-  momentRecordSchema,
   placeSchema,
   type MomentMedia,
   type Place,
   type Places,
 } from '@hyoban/data-spec'
 import type { Division } from '@hyoban/data-spec/division'
-import { entrySchema, momentToEntry, type Entry } from '@hyoban/data-spec/entry'
+import { entrySchema, type Entry } from '@hyoban/data-spec/entry'
 import { type LimitFunction } from 'p-limit'
 import { getUploadKey, type Bucket, type UploadPart } from './bucket.ts'
 import { revisionQuery, toRevision, type Database, type Statement } from './database.ts'
@@ -18,7 +17,7 @@ import {
   getPlaceId,
   matchPlace,
 } from '@hyoban/data-spec/publish'
-import { BUMP_REVISION, placeRow, placeholders, upsertSql, type Table, type Value } from './rows.ts'
+import { BUMP_REVISION, placeRow, upsertSql, type Row, type Table } from './rows.ts'
 
 // The write side, as the recording app commits what it kept on the phone: the originals
 // uploaded one by one, then everything else as one change set, checked whole and written
@@ -151,9 +150,9 @@ export async function uploadMedia(
   }
 
   const row = await context.db
-    .prepare(`SELECT uid, kind, record, entry, deleted_at FROM moments WHERE uid = ?1`)
+    .prepare(`SELECT key, record, deleted_at FROM entries WHERE key = ?1`)
     .bind(momentUid)
-    .first<MomentRow>()
+    .first<StoredRow>()
 
   if (row && toEntry(row).parts.media?.items.find((item) => item.uid === mediaUid)?.published) {
     throw new HttpError(409, 'That media item is already published.')
@@ -344,23 +343,18 @@ export async function settle<const T extends readonly Promise<unknown>[]>(
   }
 }
 
-export function upsert(db: Database, table: Table, row: Record<string, Value>) {
-  return db.prepare(upsertSql(table, placeholders(row))).bind(...Object.values(row))
+export function upsert(db: Database, table: Table, row: Row) {
+  return db.prepare(upsertSql(table, { key: '?1', record: '?2' })).bind(row.key, row.record)
 }
 
-export interface MomentRow {
-  uid: string
-  kind: string
+/** A row as stored, deleted or not. */
+export interface StoredRow {
+  key: string
   record: string
-  entry: string | null
   deleted_at: string | null
 }
 
-/** A row's entry: as stored, or from its Moment when written before the data moved over. */
-export function toEntry(row: Pick<MomentRow, 'record' | 'entry'>): Entry {
-  return entrySchema.parse(
-    row.entry
-      ? JSON.parse(row.entry)
-      : momentToEntry(momentRecordSchema.parse(JSON.parse(row.record))),
-  )
+/** An entries row's entry. */
+export function toEntry(row: Pick<StoredRow, 'record'>): Entry {
+  return entrySchema.parse(JSON.parse(row.record))
 }

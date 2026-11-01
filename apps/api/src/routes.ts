@@ -38,7 +38,6 @@ import {
   type Database,
 } from './database.ts'
 import { REVISION, routeRow } from './rows.ts'
-import { readCollectionRow } from './entries.ts'
 import { commit, toEntry, upsert, type WriteContext } from './writes.ts'
 
 // The trips' routes. Each leg between two consecutive places of a trip is driven along
@@ -81,26 +80,23 @@ export async function readTripInputs(db: Database) {
   const [revision, places, collections, entryRows, routes, none] = await readAll(db, [
     revisionQuery(db),
     placesQuery(db),
-    db.prepare(
-      `SELECT id, rev, deleted_at, record, collection FROM trips
-       WHERE deleted_at IS NULL ORDER BY start_date, id`,
-    ),
+    db.prepare(`SELECT record FROM collections WHERE deleted_at IS NULL ORDER BY start_day, key`),
     // Moments for the stops, and marks for the waypoints.
     db.prepare(
-      `SELECT record, entry FROM moments WHERE deleted_at IS NULL AND kind IN ('moment', 'mark')`,
+      `SELECT record FROM entries WHERE deleted_at IS NULL AND kind IN ('moment', 'mark')`,
     ),
     routesQuery(db),
     db.prepare(`SELECT value FROM meta WHERE key = ?1`).bind(NO_ROUTE),
   ])
   const [noRoute] = none as { value: string }[]
-  const entries = (entryRows as Parameters<typeof toEntry>[0][]).map((row) => toEntry(row))
+  const entries = (entryRows as { record: string }[]).map((row) => toEntry(row))
 
   return {
     revision: toRevision(revision),
     places: placesSchema.parse(toRecordsByKey(places)),
-    trips: (collections as Parameters<typeof readCollectionRow>[0][]).map((row) =>
+    trips: (collections as { record: string }[]).map((row) =>
       tripRecordSchema.parse(
-        collectionToTrip(collectionSchema.parse(JSON.parse(readCollectionRow(row).text)), entries),
+        collectionToTrip(collectionSchema.parse(JSON.parse(row.record)), entries),
       ),
     ),
     // As the site takes them: Moments published and not private.
