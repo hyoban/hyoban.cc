@@ -9,6 +9,9 @@ tooltip the chart shows on tap.
 Usage:
   zeekr_capture.py [--out DIR] [--sections car,energy,charging,trips,assist]
                    [--months N] [--serial SERIAL]
+
+With --months N only the N newest complete months are read, and only the pages the
+published statistics come from (charging, trips, assisted driving) unless --sections says.
 """
 
 import argparse
@@ -268,7 +271,8 @@ def parse_duration_min(s):
 MONTH_ROW = re.compile(r"^(\d{2})月 充电(\d+)次 共([\d.]+)kWh$")
 
 
-def capture_charging(energy_nodes, result=None, checkpoint=lambda: None):
+def capture_charging(energy_nodes, result=None, checkpoint=lambda: None, max_months=None):
+    """Read the complete months' charges, newest first, at most `max_months` of them."""
     result = {} if result is None else result
     result["months"] = []
     n = find(energy_nodes, "充电记录", exact=True)
@@ -308,6 +312,8 @@ def capture_charging(energy_nodes, result=None, checkpoint=lambda: None):
         result["months"] = [value for _, value in sorted(months.items(), reverse=True)]
         checkpoint()
         log(f"charging: {year}-{mm} ({len(months[(year, mm)]['sessions'])} sessions)")
+        if max_months is not None and len(months) >= max_months:
+            break
         # Fold it back so the next month's row stays put.
         again = find(expanded, f"^{mm}月 充电")
         if again and px(300) < again.cy < H - px(300):
@@ -827,7 +833,8 @@ def parse_assist(t):
     return a
 
 
-def capture_assist():
+def capture_assist(max_months=None):
+    """自提车至今 and the months the app offers, newest first, at most `max_months` of them."""
     nodes = open_trip_page()
     card = next((n for n in nodes if n.text.startswith("drive.")), None)
     if card:
@@ -838,7 +845,7 @@ def capture_assist():
     nodes = settle("辅助驾驶行车数据")
     periods = []
     seen = set()
-    for k in range(30):
+    for k in range(30 if max_months is None else max_months + 1):
         if k:
             dd = find(dump(), r"^(自提车至今|\d{4}年\d+月)$")
             picker_select(dd, k, "自提车至今")
@@ -866,8 +873,11 @@ def main():
     os.umask(0o077)
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=".private/zeekr/captures")
-    ap.add_argument("--sections", default="car,energy,charging,trips,assist")
-    ap.add_argument("--months", type=int, default=25, help="most complete trip months to read, newest first")
+    ap.add_argument("--sections", help="car,energy,charging,trips,assist; all of them by default, "
+                    "and with --months only what the published statistics come from: charging,trips,assist")
+    ap.add_argument("--months", type=int,
+                    help="read only the N newest complete months of trips, charging and assisted driving "
+                    "(all the app keeps by default)")
     ap.add_argument("--serial")
     ap.add_argument("--profile", action="store_true", help="print where the time went")
     ap.add_argument("--refresh-reports", action="store_true",
@@ -884,7 +894,9 @@ def main():
         sys.exit("no device: check `adb devices`")
     W, H = int(m.group(1)), int(m.group(2))
     adb("shell", "svc", "power", "stayon", "true")
-    sections = args.sections.split(",")
+    # A run for the latest months reads only what the published statistics come from: the
+    # car and energy pages hold the car's state, which preparing a capture drops anyway.
+    sections = (args.sections or ("charging,trips,assist" if args.months else "car,energy,charging,trips,assist")).split(",")
     snap = {"captured_at": dt.datetime.now().isoformat(timespec="seconds"), "app": PACKAGE}
 
     def save_snapshot():
@@ -907,16 +919,16 @@ def main():
             if "charging" in sections:
                 log("charging records")
                 snap["charging"] = {}
-                capture_charging(nodes, snap["charging"], save_snapshot)
+                capture_charging(nodes, snap["charging"], save_snapshot, args.months)
             save_snapshot()
             back()
         if "trips" in sections:
             snap["trips"] = {}
-            capture_trips(snap["trips"], args.months,
+            capture_trips(snap["trips"], args.months or 25,
                           os.path.join(args.out, "share-links.json"), not args.no_share,
                           save_snapshot, args.refresh_reports)
         if "assist" in sections:
-            snap["assisted_driving"] = capture_assist()
+            snap["assisted_driving"] = capture_assist(args.months)
             save_snapshot()
     finally:
         adb("shell", "svc", "power", "stayon", "false")

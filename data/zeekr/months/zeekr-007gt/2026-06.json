@@ -1,7 +1,7 @@
 {
   "deviceId": "zeekr-007gt",
   "month": "2026-06",
-  "capturedAt": "2026-10-24T03:10:00+08:00",
+  "capturedAt": "2026-11-01T08:49:32+08:00",
   "report": {
     "distanceMeters": 2964000,
     "durationSeconds": 159120,
@@ -226,8 +226,8 @@
         "energyWh": 5300,
         "durationSeconds": 2760,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/0",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/0",
           "method": "screen"
         }
       },
@@ -237,8 +237,8 @@
         "energyWh": 68100,
         "durationSeconds": 35760,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/1",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/1",
           "method": "screen"
         }
       },
@@ -248,8 +248,8 @@
         "energyWh": 17800,
         "durationSeconds": 360,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/2",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/2",
           "method": "screen"
         }
       },
@@ -259,8 +259,8 @@
         "energyWh": 70500,
         "durationSeconds": 1860,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/3",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/3",
           "method": "screen"
         }
       },
@@ -270,8 +270,8 @@
         "energyWh": 17400,
         "durationSeconds": 2160,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/4",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/4",
           "method": "screen"
         }
       },
@@ -281,8 +281,8 @@
         "energyWh": 17400,
         "durationSeconds": 2160,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/5",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/5",
           "method": "screen"
         }
       },
@@ -292,8 +292,8 @@
         "energyWh": 500,
         "durationSeconds": 60,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/6",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/6",
           "method": "screen"
         }
       },
@@ -303,8 +303,8 @@
         "energyWh": 52900,
         "durationSeconds": 1680,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/7",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/7",
           "method": "screen"
         }
       },
@@ -314,8 +314,8 @@
         "energyWh": 45400,
         "durationSeconds": 1080,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/8",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/8",
           "method": "screen"
         }
       },
@@ -325,8 +325,8 @@
         "energyWh": 10500,
         "durationSeconds": 960,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/9",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/9",
           "method": "screen"
         }
       },
@@ -336,8 +336,8 @@
         "energyWh": 21900,
         "durationSeconds": 480,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/10",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/10",
           "method": "screen"
         }
       },
@@ -347,8 +347,8 @@
         "energyWh": 23800,
         "durationSeconds": 2520,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/11",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/11",
           "method": "screen"
         }
       },
@@ -358,8 +358,8 @@
         "energyWh": 31100,
         "durationSeconds": 1020,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/12",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/12",
           "method": "screen"
         }
       },
@@ -369,8 +369,8 @@
         "energyWh": 23400,
         "durationSeconds": 12060,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/13",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/13",
           "method": "screen"
         }
       },
@@ -380,8 +380,8 @@
         "energyWh": 69500,
         "durationSeconds": 35760,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/14",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/14",
           "method": "screen"
         }
       },
@@ -391,8 +391,8 @@
         "energyWh": 59200,
         "durationSeconds": 720,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/15",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/15",
           "method": "screen"
         }
       },
@@ -402,8 +402,8 @@
         "energyWh": 24700,
         "durationSeconds": 360,
         "source": {
-          "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-          "pointer": "/charging/months/3/sessions/16",
+          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "pointer": "/charging/months/4/sessions/16",
           "method": "screen"
         }
       }
@@ -426,8 +426,8 @@
       "method": "share_report"
     },
     {
-      "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-      "pointer": "/charging/months/3",
+      "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+      "pointer": "/charging/months/4",
       "method": "screen"
     }
   ]

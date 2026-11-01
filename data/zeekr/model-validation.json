@@ -9,17 +9,22 @@
       "id": "b470d708c6428af199e380661915c3b7ace8ec812fb0a66ebb4c8c14d37dab50",
       "file": "sources/current-2026-10-20261024-032204.json",
       "sha256": "b470d708c6428af199e380661915c3b7ace8ec812fb0a66ebb4c8c14d37dab50"
+    },
+    {
+      "id": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+      "file": "sources/zeekr-2026-11-01-084929.json",
+      "sha256": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9"
     }
   ],
   "counts": {
-    "captures": 2,
+    "captures": 3,
     "months": 15,
-    "days": 264,
+    "days": 266,
     "chargingSessions": 94,
-    "monthlyAssistance": 3,
-    "cumulativeAssistance": 1
+    "monthlyAssistance": 4,
+    "cumulativeAssistance": 2
   },
-  "checksPassed": 1965,
+  "checksPassed": 2047,
   "warnings": [
     {
       "scope": "zeekr-007gt/2025-11",
@@ -62,13 +67,13 @@
       "scope": "zeekr-007gt/2026-04",
       "message": "Identical source charging rows retained.",
       "first": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/charging/months/5/sessions/4",
+        "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+        "pointer": "/charging/months/6/sessions/4",
         "method": "screen"
       },
       "duplicate": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/charging/months/5/sessions/5",
+        "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+        "pointer": "/charging/months/6/sessions/5",
         "method": "screen"
       }
     },
@@ -110,8 +115,7 @@
       "zeekr-007gt/2026-03",
       "zeekr-007gt/2026-04",
       "zeekr-007gt/2026-05",
-      "zeekr-007gt/2026-06",
-      "zeekr-007gt/2026-10"
+      "zeekr-007gt/2026-06"
     ]
   }
 }

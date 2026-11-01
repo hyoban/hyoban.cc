@@ -73,7 +73,10 @@ Original private files are not modified. Do not commit private exports or logs.
    ```
 
    - `--sections car,energy,charging,trips,assist` captures only some pages.
-   - `--months N` limits trips to the N newest complete months. The app keeps about two years.
+   - `--months N` reads only the N newest complete months of trips, charging and assisted
+     driving, and only those pages: the car and energy pages hold the car's state, which
+     preparing the capture drops anyway. `--sections` still picks pages explicitly.
+     Without it every month the app keeps (about two years) and every page are read.
    - `--no-share` sends nothing to WeChat. Months without a saved link are then
      read by tapping every chart bar, which takes 4–5 minutes per month instead of seconds.
    - `--profile` prints where the time went. `--serial` picks a phone when more than one is connected.
@@ -95,7 +98,8 @@ Original private files are not modified. Do not commit private exports or logs.
    - A first full run (about 14 months) takes roughly half an hour.
    - Later runs share only the newly finished month and skip saved monthly report
      pages. They still read the current odometer and discover the oldest month.
-     Use `--months 1` to record just the latest month.
+     Use `--months 1` to record just the latest month: its trip report, its charges,
+     自提车至今 and its assisted driving, in a few minutes.
 3. Tell the user that the phone will be tapped through the Zeekr app and WeChat
    while this runs, so they shouldn't use it until the capture is done.
 
