@@ -17,8 +17,8 @@ and 刷新 in 我 → 同步与来源, and each publish ask only for the rows ch
 `/v2/rows`. The screens take the entries as Moments when they have words and as they are
 otherwise (charges, public bills, marks), with the places, collections and public tracks; the
 trips are worked out from the collections and their marks, as the spec's `collectionToTrip`
-does. SQLite is bundled (`androidx.sqlite`'s), as the tables' generated columns need a newer
-one than Android before 11 has. The routes (`GET /v2/routes`) are asked for again only when the API's revision has moved
+does. It is the platform's SQLite, through `androidx.sqlite`'s driver: from Android 12, the
+oldest the app runs on, it has the tables' generated columns. The routes (`GET /v2/routes`) are asked for again only when the API's revision has moved
 on. A new API, set in 同步与来源, drops the copy and reads everything again.
 
 ## Pages

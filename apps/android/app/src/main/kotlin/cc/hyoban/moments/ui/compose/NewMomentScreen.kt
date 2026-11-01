@@ -23,7 +23,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.provider.MediaStore
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -351,7 +350,7 @@ fun NewMomentScreen(
     // the first pick ever; declined, the photos still give their time and the phone its place.
     val mediaLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { pickPhotos() }
     val addPhotos = {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !container.settings.askedMediaLocation &&
+        if (!container.settings.askedMediaLocation &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_MEDIA_LOCATION) != PackageManager.PERMISSION_GRANTED
         ) {
             container.settings.askedMediaLocation = true

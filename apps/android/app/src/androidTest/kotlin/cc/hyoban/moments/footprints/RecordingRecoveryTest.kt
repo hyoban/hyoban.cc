@@ -36,7 +36,7 @@ class RecordingRecoveryTest {
         original = store.state()
         activityEnabled = ActivityTransitions.enabled(app)
         for (permission in listOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION) +
-            (if (Build.VERSION.SDK_INT >= 29) listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION, Manifest.permission.ACTIVITY_RECOGNITION) else emptyList()) +
+            listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION, Manifest.permission.ACTIVITY_RECOGNITION) +
             (if (Build.VERSION.SDK_INT >= 33) listOf(Manifest.permission.POST_NOTIFICATIONS) else emptyList())) {
             instrumentation.uiAutomation.grantRuntimePermission(app.packageName, permission)
         }
@@ -96,7 +96,6 @@ class RecordingRecoveryTest {
 
     @Suppress("DEPRECATION")
     @Test fun freshInaccurateDeliveryDoesNotBackOffBatching() {
-        assumeTrue(Build.VERSION.SDK_INT >= 31)
         val manager = app.getSystemService(LocationManager::class.java)
         val start = System.currentTimeMillis()
         shell("appops set ${app.packageName} android:mock_location allow")

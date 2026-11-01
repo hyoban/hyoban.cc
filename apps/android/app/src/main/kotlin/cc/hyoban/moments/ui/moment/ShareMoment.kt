@@ -3,15 +3,10 @@ package cc.hyoban.moments.ui.moment
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.Spinner
-import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -63,7 +58,6 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.R
@@ -211,9 +205,6 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
     }
     var prepared by remember { mutableStateOf(false) }
     var album by remember { mutableStateOf<ShareAlbum?>(null) }
-    val storagePermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (!granted) error = R.string.share_storage_permission
-    }
 
     if (prepared) {
         AlertDialog(
@@ -262,11 +253,6 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     }
                     if (text.isBlank() && chosen.isEmpty()) {
                         error = R.string.error_empty_moment
-                        return@TextButton
-                    }
-                    if (prepareByHand && chosen.isNotEmpty() && Build.VERSION.SDK_INT < 29 &&
-                        ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                        storagePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         return@TextButton
                     }
                     busy = true

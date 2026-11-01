@@ -10,7 +10,6 @@ import cc.hyoban.moments.ui.LedgerSettings
 import cc.hyoban.moments.ui.NewMoment
 import cc.hyoban.moments.ui.MomentsApp
 import cc.hyoban.moments.ui.theme.MomentsTheme
-import cc.hyoban.moments.ui.viewer.PictureInPicture
 import kotlinx.coroutines.channels.Channel
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.Lifecycle
@@ -67,17 +66,11 @@ open class MainActivity : ComponentActivity() {
         else -> Feed
     }
 
-    // Before Android 12 a playing video goes into its own window as the app is left; later the system takes it there itself.
     companion object {
         /** Opens a new Moment, or goes back to the one being written, for a place shared into the app. */
         const val ACTION_NEW_MOMENT = "cc.hyoban.moments.action.NEW_MOMENT"
 
         /** Opens the ledger's settings on the import of an iCost export shared into the app. */
         const val ACTION_LEDGER_IMPORT = "cc.hyoban.moments.action.LEDGER_IMPORT"
-    }
-
-    override fun onUserLeaveHint() {
-        super.onUserLeaveHint()
-        PictureInPicture.enterOnLeave(this)
     }
 }

@@ -1,7 +1,6 @@
 package cc.hyoban.moments.footprints
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.*
 import android.content.*
 import android.content.pm.PackageManager
@@ -16,7 +15,6 @@ import android.hardware.TriggerEvent
 import android.hardware.TriggerEventListener
 import android.os.*
 import androidx.core.content.edit
-import androidx.core.location.LocationManagerCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import cc.hyoban.moments.BuildConfig
@@ -113,7 +111,7 @@ class RecordingService : Service() {
         try {
             val message = if (intent?.action == ACTIVITY_WAKE && configured) _status.value ?: R.string.footprints_waiting else R.string.footprints_waiting
             ServiceCompat.startForeground(this, RecordingNotifications.ID, RecordingNotifications.build(this, message),
-                if (Build.VERSION.SDK_INT >= 29) ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION else 0)
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
         } catch (e: Exception) {
             startFailed(e)
             return START_NOT_STICKY
@@ -193,7 +191,7 @@ class RecordingService : Service() {
         }
         val interval = if (trip) 5_000L else LocationDeliveryPolicy.DAILY_INTERVAL_MS
         val distance = if (trip) 5f else 0f
-        val batched = !trip && batch && Build.VERSION.SDK_INT >= 31 && batchHealth.canBatch(SystemClock.elapsedRealtime())
+        val batched = !trip && batch && batchHealth.canBatch(SystemClock.elapsedRealtime())
         batching = batched
         acquiring = !trip && !batch
         val version = ++generation
@@ -212,17 +210,15 @@ class RecordingService : Service() {
         }
         try {
             listener = updates
-            if (Build.VERSION.SDK_INT >= 31) {
-                val request = LocationRequest.Builder(interval)
-                    .setQuality(LocationRequest.QUALITY_HIGH_ACCURACY)
-                    .setMinUpdateIntervalMillis(interval)
-                    .setMinUpdateDistanceMeters(distance)
-                    .setMaxUpdateDelayMillis(if (batched) LocationDeliveryPolicy.BATCH_DELAY_MS else 0)
-                    // First fix / stationary probes stop at the system even if our process sleeps.
-                    .setDurationMillis(if (acquiring) DailyRecordingPolicy.FIX_TIMEOUT else Long.MAX_VALUE)
-                    .build()
-                manager.requestLocationUpdates(provider, request, mainExecutor, updates)
-            } else manager.requestLocationUpdates(provider, interval, distance, updates, Looper.getMainLooper())
+            val request = LocationRequest.Builder(interval)
+                .setQuality(LocationRequest.QUALITY_HIGH_ACCURACY)
+                .setMinUpdateIntervalMillis(interval)
+                .setMinUpdateDistanceMeters(distance)
+                .setMaxUpdateDelayMillis(if (batched) LocationDeliveryPolicy.BATCH_DELAY_MS else 0)
+                // First fix / stationary probes stop at the system even if our process sleeps.
+                .setDurationMillis(if (acquiring) DailyRecordingPolicy.FIX_TIMEOUT else Long.MAX_VALUE)
+                .build()
+            manager.requestLocationUpdates(provider, request, mainExecutor, updates)
             subscribed = true
             if (provider == LocationManager.GPS_PROVIDER && !gnssRegistered) {
                 gnss.reset()
@@ -232,7 +228,7 @@ class RecordingService : Service() {
             diagnostic("location_request_start", "provider" to provider, "interval_ms" to interval,
                 "distance_m" to distance, "trip" to trip, "activity_moving" to daily?.activityMoving, "segment_break" to newSegment,
                 "batch_delay_ms" to if (batched) LocationDeliveryPolicy.BATCH_DELAY_MS else 0,
-                "system_timeout_ms" to if (acquiring && Build.VERSION.SDK_INT >= 31) DailyRecordingPolicy.FIX_TIMEOUT else null)
+                "system_timeout_ms" to if (acquiring) DailyRecordingPolicy.FIX_TIMEOUT else null)
             if (newSegment) {
                 lastFix = SystemClock.elapsedRealtime()
                 updateStatus(R.string.footprints_waiting)
@@ -307,7 +303,7 @@ class RecordingService : Service() {
                 stopUpdates()
                 startUpdates(trip = false, newSegment = false, batch = true)
             } else if (daily?.phase == DailyRecordingPolicy.Phase.ACTIVE && !batching && !acquiring &&
-                Build.VERSION.SDK_INT >= 31 && batchHealth.canBatch(deliveryTime)) {
+                batchHealth.canBatch(deliveryTime)) {
                 // Retry only on a good active fix, never by waking GPS out of stationary rest.
                 diagnostic("batching_retry")
                 stopUpdates()
@@ -439,15 +435,10 @@ class RecordingService : Service() {
             }
         }
         try {
-            if (Build.VERSION.SDK_INT >= 31) {
-                manager.getCurrentLocation(provider, LocationRequest.Builder(0)
-                    .setQuality(LocationRequest.QUALITY_LOW_POWER)
-                    .setDurationMillis(LocationDeliveryPolicy.FALLBACK_DURATION_MS).build(),
-                    cancellation, mainExecutor, accept)
-            } else {
-                LocationManagerCompat.getCurrentLocation(manager, provider, cancellation,
-                    ContextCompat.getMainExecutor(this), accept)
-            }
+            manager.getCurrentLocation(provider, LocationRequest.Builder(0)
+                .setQuality(LocationRequest.QUALITY_LOW_POWER)
+                .setDurationMillis(LocationDeliveryPolicy.FALLBACK_DURATION_MS).build(),
+                cancellation, mainExecutor, accept)
         } catch (e: SecurityException) {
             fallback = null
             diagnostic("fallback_failed", "exception" to e.javaClass.simpleName, "reason" to "permission_denied")
@@ -590,8 +581,7 @@ class RecordingService : Service() {
             "power_save" to power.isPowerSaveMode, "device_idle" to power.isDeviceIdleMode,
             "interactive" to power.isInteractive, "location_enabled" to manager.isLocationEnabled,
             "precise_permission" to hasPreciseLocation(this),
-            "background_permission" to (Build.VERSION.SDK_INT < 29 || ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED),
+            "background_permission" to granted(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
             "notifications_enabled" to getSystemService(NotificationManager::class.java).areNotificationsEnabled(),
         )
     }
@@ -638,11 +628,9 @@ class RecordingService : Service() {
             app.container.scope.launch { ActivityTransitions.sync(app) }
         }
 
-        // Lint takes [ActivityTransitions.permitted] for proof the phone is under Android 10; it isn't.
-        @SuppressLint("ObsoleteSdkInt")
         private fun activityRecoveryAllowed(context: Context) = ActivityTransitions.enabled(context) &&
             ActivityTransitions.permitted(context) && hasPreciseLocation(context) &&
-            (Build.VERSION.SDK_INT < 29 || context.granted(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
+            context.granted(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
 
         internal suspend fun activityTransition(context: Context, motion: ActivityMotion) {
             val (elapsedNanos, moving, activity) = motion

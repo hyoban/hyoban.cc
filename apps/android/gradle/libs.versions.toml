@@ -36,8 +36,8 @@ gson = "2.10.1"
 zip4j = "2.11.5"
 # Lets the ledger's tests read an iCost backup's database on the JVM, where Android's SQLite isn't.
 sqliteJdbc = "3.46.1.3"
-# The copy of the API's records keeps D1's tables, whose generated columns the platform's
-# SQLite before Android 11 lacks; 2.5.0 is the androidx.sqlite WorkManager's Room brings.
+# The copy of the API's records reads the platform's SQLite through androidx.sqlite's driver;
+# 2.5.0 is the androidx.sqlite WorkManager's Room brings.
 sqlite = "2.5.0"
 
 [libraries]
@@ -73,7 +73,7 @@ exifinterface = { group = "androidx.exifinterface", name = "exifinterface", vers
 work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 zip4j = { group = "net.lingala.zip4j", name = "zip4j", version.ref = "zip4j" }
 sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqliteJdbc" }
-sqlite-bundled = { group = "androidx.sqlite", name = "sqlite-bundled", version.ref = "sqlite" }
+sqlite-framework = { group = "androidx.sqlite", name = "sqlite-framework", version.ref = "sqlite" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "testRunner" }
 kotlin-test-junit = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit", version.ref = "kotlin" }

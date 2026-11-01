@@ -15,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId = "cc.hyoban.moments"
-        minSdk = 28
+        minSdk = 31
         targetSdk = 37
         versionCode = 1
         versionName = "0.1.0"
@@ -122,7 +122,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.gson)
     implementation(libs.zip4j)
-    implementation(libs.sqlite.bundled)
+    implementation(libs.sqlite.framework)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
     androidTestImplementation(libs.junit)

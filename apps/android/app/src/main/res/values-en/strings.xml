@@ -60,7 +60,6 @@
     <string name="share_save_and_copy">Save photos and copy text</string>
     <string name="share_save_photos">Save photos</string>
     <string name="share_copy_text">Copy text</string>
-    <string name="share_storage_permission">Storage permission is needed to save photos to an album</string>
     <string name="share_prepared">Ready</string>
     <plurals name="share_album_saved">
         <item quantity="one">%1$d photo saved to “%2$s.” The album is kept.</item>
@@ -414,7 +413,6 @@
     <string name="footprints_error">Operation failed. Check permissions and available storage, then retry.</string>
     <string name="footprints_background_note">Background recording uses a persistent notification. Allow location all the time to resume after a reboot. If your phone restricts background activity, allow it in battery settings. Reopen the app after force stopping it.</string>
     <string name="footprints_settings">Open app settings</string>
-    <string name="footprints_background_permission">Allow recording after reboot</string>
     <string name="footprints_active_trip">In progress</string>
     <string name="footprints_stats">%1$.2f km %2$s %3$d min of connected track</string>
     <string name="footprints_last_fix">Last sample: %1$s</string>

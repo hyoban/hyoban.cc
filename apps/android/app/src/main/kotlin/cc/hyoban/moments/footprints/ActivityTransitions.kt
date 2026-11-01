@@ -5,7 +5,6 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.SystemClock
 import androidx.core.content.edit
 import cc.hyoban.moments.MomentsApplication
@@ -42,11 +41,11 @@ internal object ActivityTransitions {
         RecordingService.refreshActivityRecognition(context)
     }
     fun available(context: Context) = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
-    fun permitted(context: Context) = Build.VERSION.SDK_INT < 29 || context.granted(Manifest.permission.ACTIVITY_RECOGNITION)
+    fun permitted(context: Context) = context.granted(Manifest.permission.ACTIVITY_RECOGNITION)
 
     private fun pending(context: Context) = PendingIntent.getBroadcast(context, 2401,
         Intent(context, ActivityTransitionReceiver::class.java).setAction("cc.hyoban.moments.ACTIVITY_TRANSITION"),
-        PendingIntent.FLAG_UPDATE_CURRENT or if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
 
     suspend fun sync(context: Context) = lock.withLock {
         val container = (context.applicationContext as MomentsApplication).container
