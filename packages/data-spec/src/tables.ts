@@ -14,7 +14,7 @@ export interface Table {
   /** What the key is: an entry's uid, a collection's key, a place's id… */
   key: string
   columns: readonly TableColumn[]
-  /** Indexes beyond `(rev, key)`, which every table has for the change feed. */
+  /** Indexes beyond `(rev, key)`, which every table has for `GET /v2/rows`. */
   indexes: readonly (readonly string[])[]
 }
 
@@ -24,7 +24,7 @@ const day = (path: string) => `substr(${field(path)}, 1, 10)`
 /** The columns every row has, before those worked out from its record. */
 export const ROW_COLUMNS = ['key', 'rev', 'deleted_at', 'record'] as const
 
-/** Every table, in the order the change feed hands them out: what others name comes first. */
+/** Every table, in the order `GET /v2/rows` hands them out: what others name comes first. */
 export const tables = [
   { name: 'places', key: 'a place id', columns: [], indexes: [] },
   { name: 'routes', key: 'a leg key', columns: [], indexes: [] },

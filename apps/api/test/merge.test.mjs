@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
 import { buildMergeSql } from '../src/import.ts'
-import { get, momentsOf, setUp, snapshot } from './setup.mjs'
+import { get, momentsOf, readChanges, setUp, snapshot } from './setup.mjs'
 
 // A merge writes only the records it is given, over what the database has, and removes
 // nothing: what the scripts publish outside the API lands next to what the app wrote.
@@ -15,7 +15,7 @@ test('a merge writes its records and leaves every other one alone', async () => 
   const [first, second] = snapshot.moments
   const changed = { ...first, text: `${first.text}（补）` }
   const place = { name: '新地方', latitude: 1, longitude: 2 }
-  const { revision } = (await get(env, '/v2/changes?limit=1')).body
+  const { revision } = (await get(env, '/v2/rows?limit=1')).body
 
   sqlite.exec(
     buildMergeSql(
@@ -25,7 +25,7 @@ test('a merge writes its records and leaves every other one alone', async () => 
     ),
   )
 
-  const since = (await get(env, `/v2/changes?since=${revision}`)).body
+  const since = await readChanges(env, revision)
   const exported = (await get(env, '/v2/export')).body
   const moments = momentsOf(exported.entries)
 

@@ -12,16 +12,14 @@ import {
 import pLimit from 'p-limit'
 import {
   carryTripRoutes,
-  formatCursor,
   readAll,
   revisionQuery,
   toRevision,
-  type Cursor,
   type Database,
   type Statement,
 } from './database.ts'
 import { HttpError, validate } from './http.ts'
-import { REVISION, collectionRow, deleteSql, entryRow, getEntryKind, trackRow } from './rows.ts'
+import { collectionRow, deleteSql, entryRow, getEntryKind, trackRow } from './rows.ts'
 import {
   COPIES_AT_ONCE,
   commit,
@@ -43,10 +41,6 @@ import {
 // public itself. What stays on the phone (a private bill, the raw footprints) never comes
 // here: a private part of a plugin that keeps to the phone is dropped even if it is sent.
 
-interface FeedRow extends StoredRow {
-  rev: number
-}
-
 /** What a row is to a reader: its record, and whether it is gone. */
 export function readRow(row: StoredRow) {
   return { key: row.key, text: row.record, gone: row.deleted_at !== null }
@@ -63,66 +57,6 @@ const VEHICLE_TABLES = [
   { table: 'vehicle_assisted', name: 'vehicleAssisted', gone: 'deletedVehicleAssisted' },
   { table: 'vehicle_captures', name: 'vehicleCaptures', gone: 'deletedVehicleCaptures' },
 ] as const
-
-/**
- * What changed after a revision, as JSON text: the entries a page at a time, oldest change
- * first, and on the first page the places, collections, tracks and the car's statistics, all
- * of them on a feed from the start. What was removed comes back by key, except on a feed from
- * the start, which has nothing to remove. Every page is of the revision the first was read
- * at, so an entry never names a place the feed hasn't handed out.
- */
-export async function readEntryChanges(
-  db: Database,
-  query: ({ since: number } | { cursor: Cursor }) & { limit: number },
-): Promise<string> {
-  const { limit } = query
-  const first = 'since' in query
-  const since = first ? query.since : 0
-  const after = first ? { rev: since + 1, uid: '' } : query.cursor
-  const live = first ? since === 0 : query.cursor.live
-  const upto = first ? REVISION : String(query.cursor.upto)
-  const changed = (table: string) =>
-    db.prepare(`SELECT ${COLUMNS} FROM ${table} WHERE rev > ?1 ORDER BY key`).bind(since)
-  const [revision, rows, places, collections, tracks, ...vehicle] = await readAll(db, [
-    revisionQuery(db),
-    db
-      .prepare(
-        `SELECT ${COLUMNS} FROM entries
-         WHERE (rev > ?1 OR (rev = ?1 AND key > ?2)) AND rev <= ${upto}
-         ORDER BY rev, key
-         LIMIT ?3`,
-      )
-      .bind(after.rev, after.uid, limit + 1),
-    ...(first
-      ? [
-          changed('places'),
-          changed('collections'),
-          changed('tracks'),
-          ...VEHICLE_TABLES.map(({ table }) => changed(table)),
-        ]
-      : []),
-  ])
-  const results = rows as FeedRow[]
-  const page = results.slice(0, limit)
-  const last = page.at(-1)
-  const of = first ? toRevision(revision) : query.cursor.upto
-  const next =
-    results.length > limit && last
-      ? formatCursor({ upto: of, rev: last.rev, uid: last.key, live })
-      : null
-  const read = (rows: unknown[] | undefined) => ((rows ?? []) as StoredRow[]).map(readRow)
-  const [liveEntries, goneEntries] = split(page.map(readRow), live)
-  const [livePlaces, gonePlaces] = split(read(places), live)
-  const [liveCollections, goneCollections] = split(read(collections), live)
-  const [liveTracks, goneTracks] = split(read(tracks), live)
-  const vehicleText = VEHICLE_TABLES.map(({ name, gone }, index) => {
-    const [liveRows, goneRows] = split(read(vehicle[index]), live)
-
-    return `${JSON.stringify(name)}:${arrayText(liveRows)},${JSON.stringify(gone)}:${keysText(goneRows)},`
-  }).join('')
-
-  return `{"revision":${of},"entries":${arrayText(liveEntries)},"deleted":${keysText(goneEntries)},"places":${keyedText(livePlaces)},"deletedPlaces":${keysText(gonePlaces)},"collections":${arrayText(liveCollections)},"deletedCollections":${keysText(goneCollections)},"tracks":${arrayText(liveTracks)},"deletedTracks":${keysText(goneTracks)},${first ? vehicleText : ''}"next":${JSON.stringify(next)}}`
-}
 
 /** One row's record, or null when there is none or it is deleted. */
 async function readOne(db: Database, table: string, key: string) {
@@ -495,17 +429,8 @@ function withoutServerFields(body: unknown): unknown {
   }
 }
 
-/** The rows still there, and those gone; a feed from the start leaves the gone out. */
-function split<T extends { gone: boolean }>(rows: T[], live: boolean) {
-  return [rows.filter((row) => !row.gone), live ? [] : rows.filter((row) => row.gone)] as const
-}
-
 function arrayText(rows: readonly { text: string | null }[]) {
   return `[${rows.map((row) => row.text).join(',')}]`
-}
-
-function keysText(rows: readonly { key: string }[]) {
-  return JSON.stringify(rows.map((row) => row.key))
 }
 
 /** Records by key, as `data/places.json` and `data/routes.json` keep them. */

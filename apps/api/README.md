@@ -15,7 +15,6 @@ is public itself, as `getPublicEntry` does.
 | Path                                          | Returns                                                                                                                 |
 | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `GET /`                                       | `{ name, revision }`                                                                                                    |
-| `GET /v2/changes?since=&limit=`               | the change feed: `entries`, `deleted`, `places`, `collections`, `tracks`, the car's statistics and theirs gone          |
 | `GET /v2/rows?since=&limit=`                  | every row of every table, deleted ones too, for a copy of D1 row for row                                                |
 | `GET /v2/entries/:uid`                        | one entry                                                                                                               |
 | `GET /v2/collections`, `/v2/collections/:key` | `{ revision, collections }` by start date, or one by its slug (else its uid)                                            |
@@ -31,20 +30,16 @@ them (`migrations/0008_shared_tables.sql`). Every table is one of `@hyoban/data-
 the revision it last changed at, when it was deleted and the record's JSON, with the columns
 SQLite works out from the record. The app's copy keeps the same tables.
 
-### The change feed
+### The rows
 
 Every write bumps the database's revision, and each row keeps the revision it last changed
-at. `GET /v2/changes?since=<revision>` lists what changed after it, oldest first, `limit` at a
-time (100 by default, at most 500), with the places and collections on the first page.
-Follow `next` with `?cursor=<next>` until it is null, then keep `revision` for the next
-`since`. Every page is of the revision the first was read at, so an entry never names a
-place the feed hasn't handed out. `since=0` is everything; nothing is dropped from the
-database, only marked deleted.
-
-`GET /v2/rows` pages the same way, `500` at most, but hands out rows rather than records:
-each `{ table, key, rev, deletedAt, record }` of the tables in
-`@hyoban/data-spec/tables`, a table at a time in its order, deleted rows included from the
-start too, so the app can keep the same tables D1 does. Its cursor is its own.
+at. `GET /v2/rows?since=<revision>` hands out the rows that changed after it, deleted ones
+too, `limit` at a time (100 by default, at most 500): each `{ table, key, rev, deletedAt,
+record }` of the tables in `@hyoban/data-spec/tables`, a table at a time in its order, places
+before the entries that name them. Follow `next` with `?cursor=<next>` until it is null, then
+keep `revision` for the next `since`. Every page is of the revision the first was read at; a
+row changed since is left for the next read. `since=0` is every row; nothing is dropped from
+the database, only marked deleted, so the app can keep the same tables D1 does.
 
 ## Writing
 

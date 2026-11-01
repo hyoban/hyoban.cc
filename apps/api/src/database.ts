@@ -27,16 +27,6 @@ interface KeyedRow extends RecordRow {
   key: string
 }
 
-/** A position in the change feed: after this revision, and after this uid within it, up to `upto`. */
-export interface Cursor {
-  /** The database's revision when the feed's first page was read; no page goes past it. */
-  upto: number
-  rev: number
-  uid: string
-  /** Whether the feed is from the start, which leaves out what was removed. */
-  live: boolean
-}
-
 /**
  * Runs reads in one round trip and one transaction, so what they read is of the same
  * revision, and gives each one's rows.
@@ -110,19 +100,6 @@ export async function readPlaces(db: Database) {
 
 export function readPlace(db: Database, id: string) {
   return readOne(db, `SELECT record FROM places WHERE key = ?1 AND deleted_at IS NULL`, id)
-}
-
-export function formatCursor({ upto, rev, uid, live }: Cursor) {
-  return `${upto}.${rev}.${uid}${live ? '.live' : ''}`
-}
-
-/** A cursor from `formatCursor`, or null when it isn't one. */
-export function parseCursor(value: string): Cursor | null {
-  const match = value.match(/^(\d+)\.(\d+)\.([0-9A-HJKMNP-TV-Z]{26})(\.live)?$/)
-
-  return match
-    ? { upto: Number(match[1]), rev: Number(match[2]), uid: match[3]!, live: Boolean(match[4]) }
-    : null
 }
 
 export function parseRecord(row: RecordRow): unknown {

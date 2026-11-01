@@ -10,6 +10,7 @@ import {
   getMoment,
   momentsOf,
   publishMoments,
+  readChanges,
   setUp,
   snapshot,
   token,
@@ -352,7 +353,7 @@ test('the changes go as one write: places, Moments published, deletions, the sit
 
     await upload(env, draft.uid, draft.media[0].uid, 'image', photo, 'image/jpeg')
 
-    const before = (await get(env, '/v2/changes?limit=1')).body.revision
+    const before = (await get(env, '/v2/rows?limit=1')).body.revision
     const applied = await commit(env, changes, { context })
 
     await Promise.all(pending)
@@ -372,7 +373,7 @@ test('the changes go as one write: places, Moments published, deletions, the sit
     assert.deepEqual(calls, [['https://deploy.test/hook', 'POST']], 'the site is built again once')
     assert.equal((await getMoment(env, target.uid)).status, 404)
 
-    const { body: after } = await get(env, `/v2/changes?since=${before}`)
+    const after = await readChanges(env, before)
 
     assert.deepEqual(after.deleted, [target.uid])
     assert.deepEqual(
@@ -503,13 +504,13 @@ test('a Moment sent as it is stored writes nothing and builds nothing', async ()
       moments: [published],
     },
   } = await publishDock(env)
-  const before = (await get(env, '/v2/changes?limit=1')).body.revision
+  const before = (await get(env, '/v2/rows?limit=1')).body.revision
   const again = await commit(env, { moments: [published] }, { context })
 
   assert.equal(again.status, 200)
   assert.deepEqual(again.body.moments, [published])
   assert.ok(!('revision' in again.body), 'and takes no revision')
-  assert.equal((await get(env, '/v2/changes?limit=1')).body.revision, before)
+  assert.equal((await get(env, '/v2/rows?limit=1')).body.revision, before)
   assert.equal(pending.length, 0)
 })
 
