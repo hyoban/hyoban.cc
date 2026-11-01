@@ -2,6 +2,8 @@ package cc.hyoban.moments
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -48,6 +50,7 @@ open class MainActivity : ComponentActivity() {
             }
         }
         val pages = startPages(restored = savedInstanceState != null)
+        if (pages == listOf(Feed)) holdSplashUntilDrawn()
         setContent {
             MomentsTheme {
                 MomentsApp(container = container, pages = pages)
@@ -56,6 +59,26 @@ open class MainActivity : ComponentActivity() {
         // Compose paints the whole window, so the window's own background would only be
         // painted over on every frame.
         window.setBackgroundDrawable(null)
+    }
+
+    /**
+     * Keeps the system's splash, the app's icon, up until the timeline has read what is on the
+     * phone and reported itself drawn, so the app opens on its Moments rather than a skeleton.
+     * The page is composed and laid out behind it meanwhile, only not drawn; past
+     * [SPLASH_LIMIT_MS] it shows whatever it has.
+     */
+    private fun holdSplashUntilDrawn() {
+        var held = true
+        fullyDrawnReporter.addOnReportDrawnListener { held = false }
+        val content = findViewById<View>(android.R.id.content)
+        content.postDelayed({ held = false }, SPLASH_LIMIT_MS)
+        content.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                if (held) return false
+                content.viewTreeObserver.removeOnPreDrawListener(this)
+                return true
+            }
+        })
     }
 
     /** Whether this activity has handed its work to others and finished, so it draws nothing. */
@@ -77,6 +100,8 @@ open class MainActivity : ComponentActivity() {
     }
 
     companion object {
+        private const val SPLASH_LIMIT_MS = 2000L
+
         /** Opens a new Moment, or goes back to the one being written, for a place shared into the app. */
         const val ACTION_NEW_MOMENT = "cc.hyoban.moments.action.NEW_MOMENT"
 
