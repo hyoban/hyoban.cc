@@ -153,6 +153,62 @@ export function get(env, path, options) {
   return call(env, 'GET', path, options)
 }
 
+/** The tables `GET /v2/rows` hands out, by what each is called in a change. */
+const KINDS = {
+  entries: ['entries', 'deleted'],
+  places: ['places', 'deletedPlaces'],
+  collections: ['collections', 'deletedCollections'],
+  tracks: ['tracks', 'deletedTracks'],
+  vehicle_months: ['vehicleMonths', 'deletedVehicleMonths'],
+  vehicle_assisted: ['vehicleAssisted', 'deletedVehicleAssisted'],
+  vehicle_captures: ['vehicleCaptures', 'deletedVehicleCaptures'],
+}
+
+/**
+ * What changed after `since`, every page of `GET /v2/rows` read: the records still there by
+ * kind, places by id, and the keys of those deleted, as `{ revision, entries, deleted, places,
+ * deletedPlaces, collections, … }`.
+ */
+export async function readChanges(env, since = 0, { limit = 500, auth } = {}) {
+  const changes = Object.fromEntries(
+    Object.entries(KINDS).flatMap(([table, [live, gone]]) => [
+      [live, table === 'places' ? {} : []],
+      [gone, []],
+    ]),
+  )
+  let path = `/v2/rows?since=${since}&limit=${limit}`
+
+  while (path) {
+    const { status, body } = await call(env, 'GET', path, auth ? { auth } : {})
+
+    if (status !== 200) {
+      throw new Error(`${path}: ${status}`)
+    }
+
+    changes.revision ??= body.revision
+
+    for (const row of body.rows) {
+      const [live, gone] = KINDS[row.table] ?? []
+
+      if (!live) {
+        continue
+      }
+
+      if (row.deletedAt) {
+        changes[gone].push(row.key)
+      } else if (row.table === 'places') {
+        changes.places[row.key] = row.record
+      } else {
+        changes[live].push(row.record)
+      }
+    }
+
+    path = body.next && `/v2/rows?cursor=${body.next}&limit=${limit}`
+  }
+
+  return changes
+}
+
 /**
  * `POST /v2/changes` with Moments, as the app sends them, each as its entry; its reply, with
  * the Moments it published worked out from their entries.

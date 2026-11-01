@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
 import { getStableUlid, momentToEntry, tripToCollection } from '@hyoban/data-spec/entry'
-import { call, get, getMoment, momentsOf, setUp, snapshot, token } from './setup.mjs'
+import { call, get, getMoment, momentsOf, readChanges, setUp, snapshot, token } from './setup.mjs'
 
 // The entries, collections and public tracks, as /v2 reads and writes them, all of them the
 // owner's to read.
@@ -71,18 +71,7 @@ test('the moved layout imports as the first one does', async () => {
 
 test('the feed hands out every entry, private ones too', async () => {
   const { env } = setUpWithData()
-  const entries = []
-  let path = '/v2/changes?since=0&limit=5'
-
-  for (;;) {
-    const { body } = await get(env, path, owner)
-
-    entries.push(...body.entries)
-
-    if (!body.next) break
-
-    path = `/v2/changes?cursor=${body.next}&limit=5`
-  }
+  const { entries } = await readChanges(env, 0, { limit: 5 })
 
   const hidden = snapshot.moments.find((moment) => moment.hidden)
 
@@ -212,13 +201,13 @@ test('a public span of footprints is kept and read, and goes when deleted', asyn
   assert.equal((await commit(env, { tracks: [track] })).status, 200)
   assert.deepEqual((await get(env, '/v2/tracks')).body.tracks, [track])
 
-  const feed = (await get(env, '/v2/changes?since=1')).body
+  const feed = await readChanges(env, 1)
 
   assert.deepEqual(feed.tracks, [track])
 
   await commit(env, { deletedTracks: [track.uid] })
   assert.deepEqual((await get(env, '/v2/tracks')).body.tracks, [])
-  assert.deepEqual((await get(env, '/v2/changes?since=2')).body.deletedTracks, [track.uid])
+  assert.deepEqual((await readChanges(env, 2)).deletedTracks, [track.uid])
 })
 
 test('an entry made private comes back on the feed as private, its Moment hidden', async () => {
@@ -226,7 +215,7 @@ test('an entry made private comes back on the feed as private, its Moment hidden
   const shown = snapshot.moments.find((moment) => !moment.hidden)
   const entry = (await get(env, `/v2/entries/${shown.uid}`, owner)).body
   const { body } = await commit(env, { entries: [{ ...entry, visibility: 'private' }] })
-  const feed = (await get(env, `/v2/changes?since=${body.revision - 1}`, owner)).body
+  const feed = await readChanges(env, body.revision - 1)
 
   assert.deepEqual(feed.deleted, [])
   assert.deepEqual(
@@ -322,7 +311,7 @@ test("the car's statistics come back in the export and on the feed's first page"
   assert.deepEqual(exported.vehicleCaptures, [capture])
   assert.deepEqual(exported.vehicleAssisted, [])
 
-  const feed = (await get(env, '/v2/changes?since=0')).body
+  const feed = await readChanges(env)
 
   assert.deepEqual(feed.vehicleMonths, [month])
   assert.deepEqual(feed.deletedVehicleMonths, [])

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 
 import { handle } from '../src/index.ts'
-import { entrySnapshot, get, setUp, token } from './setup.mjs'
+import { entrySnapshot, get, readChanges, setUp, token } from './setup.mjs'
 
 // The reads: an import of the made-up data/, and what a client with the token reads afterwards.
 
@@ -20,33 +20,16 @@ function withWords(entry, more) {
   }
 }
 
-/** Every page of the change feed from a revision on. */
+/** What changed from a revision on, every page of the rows read, by kind. */
 async function readFeed(env, { since = 0, limit = 100 } = {}) {
-  const entries = []
-  const deleted = []
-  let first
-  let path = `/v2/changes?since=${since}&limit=${limit}`
+  const changes = await readChanges(env, since, { limit })
 
-  for (;;) {
-    const { status, body } = await get(env, path)
-
-    assert.equal(status, 200)
-    first ??= body
-    assert.equal(body.revision, first.revision, 'every page is of the first one’s revision')
-    entries.push(...body.entries)
-    deleted.push(...body.deleted)
-
-    if (!body.next) {
-      return {
-        entries,
-        deleted,
-        revision: first.revision,
-        places: { places: first.places, deleted: first.deletedPlaces },
-        collections: { collections: first.collections, deleted: first.deletedCollections },
-      }
-    }
-
-    path = `/v2/changes?cursor=${body.next}&limit=${limit}`
+  return {
+    entries: changes.entries,
+    deleted: changes.deleted,
+    revision: changes.revision,
+    places: { places: changes.places, deleted: changes.deletedPlaces },
+    collections: { collections: changes.collections, deleted: changes.deletedCollections },
   }
 }
 
@@ -117,7 +100,7 @@ test('importing again hands a client that synced only what changed', async () =>
   })
 })
 
-test('a feed from the start, page after page, leaves out what was removed', async () => {
+test('rows from the start, page after page, have what was removed as deleted', async () => {
   const { env, importSnapshot } = setUp()
   const [removed] = moments
   const [placeId] = Object.keys(entrySnapshot.places)
@@ -131,9 +114,9 @@ test('a feed from the start, page after page, leaves out what was removed', asyn
   const fresh = await readFeed(env, { limit: 3 })
 
   assert.equal(fresh.entries.length, entries.length)
-  assert.deepEqual(fresh.deleted, [])
-  assert.deepEqual(fresh.places.deleted, [])
-  assert.deepEqual(fresh.collections.deleted, [])
+  assert.deepEqual(fresh.deleted, [removed.uid])
+  assert.deepEqual(fresh.places.deleted, [placeId])
+  assert.deepEqual(fresh.collections.deleted, [gone.slug])
   assert.ok(!(placeId in fresh.places.places))
   assert.ok(!fresh.collections.collections.some((collection) => collection.uid === gone.uid))
 
@@ -174,12 +157,12 @@ test('the feed hands out the places and collections whole from the start, then o
   assert.deepEqual(since.collections, { collections: [changedCollection], deleted: [gone.slug] })
 })
 
-test('a feed read a page at a time stays at its first page’s revision', async () => {
+test('rows read a page at a time stay at their first page’s revision', async () => {
   const { env, importSnapshot } = setUp()
 
   importSnapshot(entrySnapshot)
 
-  const first = (await get(env, '/v2/changes?limit=4')).body
+  const first = (await get(env, '/v2/rows?limit=4')).body
   const [edited] = moments
   const changed = withWords(edited, '！')
 
@@ -191,11 +174,19 @@ test('a feed read a page at a time stays at its first page’s revision', async 
     '2026-10-20T08:00:00Z',
   )
 
-  const second = (await get(env, `/v2/changes?cursor=${first.next}&limit=4`)).body
+  const rows = []
+  let path = `/v2/rows?cursor=${first.next}&limit=4`
 
-  assert.equal(second.revision, first.revision)
-  assert.deepEqual(second.places, {})
-  assert.ok(!second.entries.some((entry) => entry.parts.text?.text === changed.parts.text.text))
+  while (path) {
+    const { body } = await get(env, path)
+
+    assert.equal(body.revision, first.revision)
+    rows.push(...body.rows)
+    path = body.next && `/v2/rows?cursor=${body.next}&limit=4`
+  }
+
+  assert.ok(rows.every((row) => row.rev <= first.revision))
+  assert.ok(!rows.some((row) => row.record.parts?.text?.text === changed.parts.text.text))
 })
 
 test('places and collections are read whole or one at a time', async () => {
@@ -221,18 +212,18 @@ test('every request needs a token, and methods, paths and queries are checked', 
 
   importSnapshot(entrySnapshot)
 
-  for (const path of ['/', '/v2/export', '/v2/changes', '/v2/places', '/v2/tracks']) {
+  for (const path of ['/', '/v2/export', '/v2/rows', '/v2/places', '/v2/tracks']) {
     const { status, body } = await get(env, path, { auth: null })
 
     assert.equal(status, 401, path)
     assert.match(body.error, /needs a token/)
   }
 
-  assert.equal((await get(env, '/v2/changes', { auth: 'wrong' })).status, 401)
+  assert.equal((await get(env, '/v2/rows', { auth: 'wrong' })).status, 401)
   assert.equal(
     (
       await handle(
-        new Request('https://api.test/v2/changes', { headers: { Authorization: 'Basic x' } }),
+        new Request('https://api.test/v2/rows', { headers: { Authorization: 'Basic x' } }),
         env,
       )
     ).status,
@@ -244,8 +235,9 @@ test('every request needs a token, and methods, paths and queries are checked', 
   }
 
   assert.equal((await get(env, '/v2/entries')).status, 404)
-  assert.equal((await get(env, '/v2/changes?limit=0')).status, 400)
-  assert.equal((await get(env, '/v2/changes?cursor=nope')).status, 400)
+  assert.equal((await get(env, '/v2/rows?limit=0')).status, 400)
+  assert.equal((await get(env, '/v2/rows?cursor=nope')).status, 400)
+  assert.equal((await get(env, '/v2/changes')).status, 405, 'the change feed is read as rows')
   assert.equal(
     (
       await handle(

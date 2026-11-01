@@ -3,13 +3,12 @@ import { createDataVChildren, locateDivision } from '@hyoban/data-spec/division'
 import { authorize } from './auth.ts'
 import { parseRowsCursor, readRows } from './copy.ts'
 import type { Bucket, UploadPart } from './bucket.ts'
-import { parseCursor, readPlace, readPlaces, readRevision, type Database } from './database.ts'
+import { readPlace, readPlaces, readRevision, type Database } from './database.ts'
 import {
   applyEntryChanges,
   readCollection,
   readCollections,
   readEntry,
-  readEntryChanges,
   readEntrySnapshot,
   readTracks,
 } from './entries.ts'
@@ -203,7 +202,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
         return notAllowed('GET')
       }
 
-      const query = readFeedQuery(url.searchParams, parseRowsCursor)
+      const query = readRowsQuery(url.searchParams)
 
       return 'error' in query ? error(400, query.error) : jsonText(await readRows(db, query))
     }
@@ -212,22 +211,13 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
         return notFound()
       }
 
-      switch (method) {
-        case 'GET': {
-          const query = readFeedQuery(url.searchParams, parseCursor)
-
-          return 'error' in query
-            ? error(400, query.error)
-            : jsonText(await readEntryChanges(db, query))
-        }
-        case 'POST': {
-          const body = await readBody(request)
-
-          return write((context) => applyEntryChanges(context, body))
-        }
-        default:
-          return notAllowed('GET, POST')
+      if (method !== 'POST') {
+        return notAllowed('POST')
       }
+
+      const body = await readBody(request)
+
+      return write((context) => applyEntryChanges(context, body))
     }
     case 'export': {
       if (key !== undefined) {
@@ -371,8 +361,8 @@ export async function postToChannel(env: Env) {
   }
 }
 
-/** `?since=<revision>` or `?cursor=<next>`, and `?limit=`, for a feed whose cursors `parse` reads. */
-function readFeedQuery<Cursor>(params: URLSearchParams, parse: (value: string) => Cursor | null) {
+/** `?since=<revision>` or `?cursor=<next>`, and `?limit=`, for the rows. */
+function readRowsQuery(params: URLSearchParams) {
   const limit = Number(params.get('limit') ?? DEFAULT_LIMIT)
 
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT) {
@@ -382,7 +372,7 @@ function readFeedQuery<Cursor>(params: URLSearchParams, parse: (value: string) =
   const cursorParam = params.get('cursor')
 
   if (cursorParam !== null) {
-    const cursor = parse(cursorParam)
+    const cursor = parseRowsCursor(cursorParam)
 
     return cursor ? { cursor, limit } : { error: 'cursor is the next value of a page.' }
   }
