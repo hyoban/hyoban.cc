@@ -128,7 +128,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navDeepLink
+import androidx.navigation.createGraph
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.toRoute
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.MainActivity
@@ -396,8 +397,9 @@ private enum class Tab(val route: Any, val type: KClass<*>, val label: Int, val 
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun MomentsApp(container: AppContainer, start: Any = Feed) {
+fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
     val navController = rememberNavController()
+    val activity = LocalActivity.current as? MainActivity
     // The page shown, under a dialog over it, as the editor is on a wide window: the tabs stay
     // with that page rather than going as the dialog opens.
     val stack by navController.backStack.collectAsStateWithLifecycle()
@@ -405,16 +407,31 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
     val current = Tab.entries.firstOrNull { tab -> entry?.destination?.hasRoute(tab.type) == true }
     // Writing or changing a Moment: a page on a compact window, a dialog from the medium breakpoint on.
     val wide by rememberUpdatedState(isMediumWidth())
-    val openEditor: (String?, Boolean) -> Unit = { uid, bill ->
-        navController.navigate(
-            when {
-                wide -> EditorDialog(uid, bill)
-                uid != null -> EditMoment(uid)
-                else -> NewMoment(bill)
-            },
-        )
+    val opened: (Any) -> Any = { route ->
+        when {
+            !wide -> route
+            route is NewMoment -> EditorDialog(bill = route.bill)
+            route is EditMoment -> EditorDialog(route.uid)
+            else -> route
+        }
     }
-    val back: () -> Unit = { navController.popBackStack() }
+    val openEditor: (String?, Boolean) -> Unit = { uid, bill ->
+        navController.navigate(opened(if (uid != null) EditMoment(uid) else NewMoment(bill)))
+    }
+    // Back from a page with none under it, the one a widget opened over the app, closes it as
+    // the system's back does, rather than leaving nothing on screen.
+    val back: () -> Unit = {
+        if (navController.previousBackStackEntry == null) activity?.finish() else navController.popBackStack()
+    }
+    // A Moment deleted from its edit page leaves its own page too, when it is there.
+    val leaveMoment: () -> Unit = {
+        val pages = navController.backStack.value.filter { it.destination !is NavGraph }
+        when (pages.indexOfLast { it.destination.hasRoute(Moment::class) }) {
+            -1 -> back()
+            0 -> activity?.finish()
+            else -> navController.popBackStack<Moment>(inclusive = true)
+        }
+    }
     val openMoment: (String) -> Unit = { navController.goTo(Moment(it)) }
     // The viewer opens over the page it was opened from rather than as a page of its own,
     // so the page stays under it: a drag down to close shows it through the thinning black.
@@ -465,7 +482,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
             place = { navController.goTo(PlaceMoments(it)) },
             trip = { navController.goTo(Trip(it)) },
             day = { navController.goTo(Day(it)) },
-            back = { navController.popBackStack() },
+            back = back,
         )
     }
 
@@ -568,9 +585,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
 
     // A link opened while the app is already open, `adb shell am start -d moments://…` among
     // them, goes to its page over the one shown, so back leads to that one; the viewer, if
-    // open, closes first. Not through the navigation's own deep links, which leave the page
-    // alone on the back stack, with nothing for its back button to go to.
-    val activity = LocalActivity.current as? MainActivity
+    // open, closes first. The app's links are all read by [routeOf], none by the navigation.
     LaunchedEffect(activity, navController) {
         activity?.newIntents?.receiveAsFlow()?.collect { intent ->
             if (intent.action == MainActivity.ACTION_NEW_MOMENT) {
@@ -588,12 +603,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                 val route = intent.data?.let(::routeOf) ?: return@collect
                 viewer = null
                 val tab = Tab.entries.indexOfFirst { it.route == route }
-                when {
-                    tab >= 0 -> selectTab(tab)
-                    route is NewMoment -> openEditor(null, route.bill)
-                    route is EditMoment -> openEditor(route.uid, false)
-                    else -> navController.goTo(route)
-                }
+                if (tab >= 0) selectTab(tab) else navController.goTo(opened(route))
             }
         }
     }
@@ -630,9 +640,208 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                         LocalLedgerNav provides ledgerNav,
                         cc.hyoban.moments.ui.feed.LocalThingNav provides thingNav,
                     ) {
+                        // The pages, made once, and a link's page put over its tab before the first
+                        // frame, as the NavHost below would set them up: the app opens on it
+                        // rather than sliding it in, and back, the top bar's and the system's, and
+                        // the tabs lead on from there as they would had it been opened in the app.
+                        val graph = remember(navController) {
+                            navController.createGraph(startDestination = pages.first()) {
+                                screen<Feed> {
+                                    FeedScreen(
+                                        container,
+                                        onMoment = openMoment,
+                                        onDay = openDay,
+                                        onNew = { openEditor(null, false) },
+                                        onChanges = { navController.navigate(Changes) },
+                                        onSearch = { navController.navigate(Search) },
+                                        onMedia = openMedia,
+                                        onPlace = openPlace,
+                                        onTrip = openTrip,
+                                        onEdit = { openEditor(it, false) },
+                                    )
+                                }
+                                screen<Atlas> {
+                                    MapScreen(
+                                        container,
+                                        onMoment = openMoment,
+                                        onPlace = openPlace,
+                                        onTrip = openTrip,
+                                        onPlay = { navController.navigate(TripPlay(it)) },
+                                        onSearch = { navController.navigate(Search) },
+                                        focus = mapFocus,
+                                        onFocused = { mapFocus = null },
+                                        onFootprintSettings = { navController.navigate(FootprintSettings) },
+                                    )
+                                }
+                                screen<Moment> { entry ->
+                                    MomentScreen(
+                                        container,
+                                        entry.toRoute<Moment>().uid,
+                                        onMedia = openMedia,
+                                        onPlace = openPlace,
+                                        onTrip = openTrip,
+                                        onBack = back,
+                                        onEdit = { openEditor(it, false) },
+                                        onDay = openDay,
+                                        onChanges = { navController.navigate(Changes) },
+                                    )
+                                }
+                                screen<Trip> { entry ->
+                                    TripScreen(
+                                        container,
+                                        entry.toRoute<Trip>().id,
+                                        onMoment = openMoment,
+                                        onPlay = { navController.navigate(TripPlay(it)) },
+                                        onBack = back,
+                                        onDay = openDay,
+                                        onMap = { showOnMap(MapFocus.Trip(it)) },
+                                        onEdit = { navController.navigate(TripEdit(it)) },
+                                    )
+                                }
+                                screen<TripEdit> { entry ->
+                                    cc.hyoban.moments.ui.trips.TripEditScreen(container, entry.toRoute<TripEdit>().id, onBack = back)
+                                }
+                                screen<TripPlay> { entry ->
+                                    TripPlayerScreen(container, entry.toRoute<TripPlay>().id, onMoment = openMoment, onBack = back)
+                                }
+                                screen<Day> { entry ->
+                                    val day = entry.toRoute<Day>()
+                                    DayScreen(container, day.date, onMoment = openMoment, onBack = back, onTrip = openTrip)
+                                }
+                                screen<PlaceMoments> { entry ->
+                                    PlaceScreen(
+                                        container,
+                                        entry.toRoute<PlaceMoments>().id,
+                                        onMoment = openMoment,
+                                        onBack = back,
+                                        onDay = openDay,
+                                        onMap = { showOnMap(MapFocus.Place(it)) },
+                                    )
+                                }
+                                screen<Preferences> {
+                                    MeScreen(
+                                        container,
+                                        MeRoutes(
+                                            changes = { navController.navigate(Changes) },
+                                            ledger = { navController.goTo(LedgerHome(it)) },
+                                            footprints = { showOnMap(MapFocus.Footprints) },
+                                            items = { navController.navigate(Items) },
+                                            sync = { navController.navigate(SyncSettings) },
+                                            ledgerSettings = { navController.navigate(LedgerSettings()) },
+                                            footprintSettings = { navController.navigate(FootprintSettings) },
+                                            sideKey = { navController.navigate(SideKeySettings) },
+                                            devices = { navController.navigate(Devices()) },
+                                            subscriptions = { navController.navigate(Subscriptions()) },
+                                            car = { navController.navigate(Car) },
+                                        ),
+                                    )
+                                }
+                                screen<SyncSettings> {
+                                    SyncScreen(container, onBack = back)
+                                }
+                                screen<SideKeySettings> {
+                                    cc.hyoban.moments.sidekey.SideKeySettingsScreen(onBack = back)
+                                }
+                                screen<Items> {
+                                    cc.hyoban.moments.ui.settings.ItemsScreen(container, onBack = back)
+                                }
+                                screen<Devices> { entry ->
+                                    cc.hyoban.moments.ui.things.DevicesScreen(container, onBack = back, open = entry.toRoute<Devices>().open)
+                                }
+                                screen<Subscriptions> { entry ->
+                                    cc.hyoban.moments.ui.things.SubscriptionsScreen(container, onBack = back, open = entry.toRoute<Subscriptions>().open)
+                                }
+                                screen<Car> {
+                                    cc.hyoban.moments.ui.things.CarScreen(container, onBack = back, onDay = openDay)
+                                }
+                                screen<FootprintSettings> {
+                                    FootprintSettingsScreen(container, onBack = back)
+                                }
+                                screen<NewMoment> { entry ->
+                                    NewMomentScreen(container, onBack = back, onSaved = back, startWithBill = entry.toRoute<NewMoment>().bill)
+                                }
+                                screen<EditMoment> { entry ->
+                                    NewMomentScreen(
+                                        container,
+                                        onBack = back,
+                                        onSaved = back,
+                                        edit = entry.toRoute<EditMoment>().uid,
+                                        // Deleted, the Moment's page under the edit page goes too, when it is there.
+                                        onDeleted = leaveMoment,
+                                    )
+                                }
+                                dialog<EditorDialog>(
+                                    // Its window edge to edge, as the pages are; a tap on the scrim doesn't throw away
+                                    // what is written, which only its X or back, with their question, do.
+                                    dialogProperties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false, dismissOnClickOutside = false),
+                                ) { entry ->
+                                    val route = entry.toRoute<EditorDialog>()
+                                    val edit = route.uid
+                                    CompositionLocalProvider(LocalRailSpace provides RailSpace(0.dp, 0.dp, clearOfInsets = isMediumWidth())) {
+                                        DialogPane {
+                                            NewMomentScreen(
+                                                container,
+                                                onBack = back,
+                                                onSaved = back,
+                                                edit = edit,
+                                                onDeleted = leaveMoment,
+                                                startWithBill = route.bill,
+                                            )
+                                        }
+                                    }
+                                }
+                                screen<Search> {
+                                    SearchScreen(container, onMoment = openMoment, onBack = back, onBill = { ledgerNav.bill(it) })
+                                }
+                                screen<Changes> {
+                                    ChangesScreen(container, onMoment = openMoment, onBack = back)
+                                }
+                                screen<LedgerHome> { entry ->
+                                    LedgerScreen(container, ledgerNav, startTab = entry.toRoute<LedgerHome>().tab)
+                                }
+                                // A payment's from 自动记账's notification opening the app, with what it read.
+                                screen<LedgerEntry> { entry ->
+                                    val route = entry.toRoute<LedgerEntry>()
+                                    EntryScreen(
+                                        container,
+                                        LedgerEntryArgs(
+                                            route.edit, route.kind?.let(TxnKind::of), route.related, route.moment, route.date, route.account, route.trip,
+                                            route.amount?.toLongOrNull(), route.time?.toLongOrNull(), route.note, route.category,
+                                        ),
+                                        ledgerNav,
+                                    )
+                                }
+                                screen<LedgerBill> { entry ->
+                                    BillScreen(container, entry.toRoute<LedgerBill>().id, ledgerNav)
+                                }
+                                screen<LedgerAccount> { entry ->
+                                    AccountScreen(container, entry.toRoute<LedgerAccount>().id, ledgerNav)
+                                }
+                                screen<LedgerAccountEdit> { entry ->
+                                    AccountEditScreen(container, entry.toRoute<LedgerAccountEdit>().id, ledgerNav)
+                                }
+                                screen<LedgerSettings> { entry ->
+                                    LedgerSettingsScreen(container, ledgerNav, startImport = entry.toRoute<LedgerSettings>().import)
+                                }
+                                screen<LedgerList> { entry ->
+                                    val route = entry.toRoute<LedgerList>()
+                                    LedgerListScreen(
+                                        container,
+                                        LedgerFilter(route.title, route.book, route.account, route.category, route.categoryName, route.trip, route.place, route.day, route.period, route.search),
+                                        ledgerNav,
+                                    )
+                                }
+                            }
+                        }
+                        val viewModelStore = checkNotNull(LocalViewModelStoreOwner.current).viewModelStore
+                        remember(graph) {
+                            navController.setViewModelStore(viewModelStore)
+                            navController.graph = graph
+                            pages.drop(1).forEach { navController.navigate(opened(it)) }
+                        }
                         NavHost(
                             navController = navController,
-                            startDestination = start,
+                            graph = graph,
                             // A back swipe plays going back as it came, under the finger: a Moment
                             // shrinks into its card, a pushed page slides back.
                             predictivePopEnterTransition = { _ -> enter(forward = false, transitions) },
@@ -642,198 +851,7 @@ fun MomentsApp(container: AppContainer, start: Any = Feed) {
                             exitTransition = { exit(forward = true, transitions) },
                             popEnterTransition = { enter(forward = false, transitions) },
                             popExitTransition = { exit(forward = false, transitions) },
-                        ) {
-                            screen<Feed>(link = "moments") {
-                                FeedScreen(
-                                    container,
-                                    onMoment = openMoment,
-                                    onDay = openDay,
-                                    onNew = { openEditor(null, false) },
-                                    onChanges = { navController.navigate(Changes) },
-                                    onSearch = { navController.navigate(Search) },
-                                    onMedia = openMedia,
-                                    onPlace = openPlace,
-                                    onTrip = openTrip,
-                                    onEdit = { openEditor(it, false) },
-                                )
-                            }
-                            screen<Atlas>(link = "map", aliases = listOf("footprints")) {
-                                MapScreen(
-                                    container,
-                                    onMoment = openMoment,
-                                    onPlace = openPlace,
-                                    onTrip = openTrip,
-                                    onPlay = { navController.navigate(TripPlay(it)) },
-                                    onSearch = { navController.navigate(Search) },
-                                    focus = mapFocus,
-                                    onFocused = { mapFocus = null },
-                                    onFootprintSettings = { navController.navigate(FootprintSettings) },
-                                )
-                            }
-                            screen<Moment>(link = "moment/{uid}") { entry ->
-                                MomentScreen(
-                                    container,
-                                    entry.toRoute<Moment>().uid,
-                                    onMedia = openMedia,
-                                    onPlace = openPlace,
-                                    onTrip = openTrip,
-                                    onBack = back,
-                                    onEdit = { openEditor(it, false) },
-                                    onDay = openDay,
-                                    onChanges = { navController.navigate(Changes) },
-                                )
-                            }
-                            screen<Trip>(link = "trip/{id}") { entry ->
-                                TripScreen(
-                                    container,
-                                    entry.toRoute<Trip>().id,
-                                    onMoment = openMoment,
-                                    onPlay = { navController.navigate(TripPlay(it)) },
-                                    onBack = back,
-                                    onDay = openDay,
-                                    onMap = { showOnMap(MapFocus.Trip(it)) },
-                                    onEdit = { navController.navigate(TripEdit(it)) },
-                                )
-                            }
-                            screen<TripEdit>(link = "trip-edit/{id}") { entry ->
-                                cc.hyoban.moments.ui.trips.TripEditScreen(container, entry.toRoute<TripEdit>().id, onBack = back)
-                            }
-                            screen<TripPlay>(link = "play/{id}") { entry ->
-                                TripPlayerScreen(container, entry.toRoute<TripPlay>().id, onMoment = openMoment, onBack = back)
-                            }
-                            screen<Day>(link = "day/{date}") { entry ->
-                                val day = entry.toRoute<Day>()
-                                DayScreen(container, day.date, onMoment = openMoment, onBack = back, onTrip = openTrip)
-                            }
-                            screen<PlaceMoments>(link = "place/{id}") { entry ->
-                                PlaceScreen(
-                                    container,
-                                    entry.toRoute<PlaceMoments>().id,
-                                    onMoment = openMoment,
-                                    onBack = back,
-                                    onDay = openDay,
-                                    onMap = { showOnMap(MapFocus.Place(it)) },
-                                )
-                            }
-                            screen<Preferences>(link = "settings") {
-                                MeScreen(
-                                    container,
-                                    MeRoutes(
-                                        changes = { navController.navigate(Changes) },
-                                        ledger = { navController.goTo(LedgerHome(it)) },
-                                        footprints = { showOnMap(MapFocus.Footprints) },
-                                        items = { navController.navigate(Items) },
-                                        sync = { navController.navigate(SyncSettings) },
-                                        ledgerSettings = { navController.navigate(LedgerSettings()) },
-                                        footprintSettings = { navController.navigate(FootprintSettings) },
-                                        sideKey = { navController.navigate(SideKeySettings) },
-                                        devices = { navController.navigate(Devices()) },
-                                        subscriptions = { navController.navigate(Subscriptions()) },
-                                        car = { navController.navigate(Car) },
-                                    ),
-                                )
-                            }
-                            screen<SyncSettings>(link = "sync") {
-                                SyncScreen(container, onBack = back)
-                            }
-                            screen<SideKeySettings>(link = "side-key") {
-                                cc.hyoban.moments.sidekey.SideKeySettingsScreen(onBack = back)
-                            }
-                            screen<Items>(link = "items") {
-                                cc.hyoban.moments.ui.settings.ItemsScreen(container, onBack = back)
-                            }
-                            screen<Devices>(link = "devices") { entry ->
-                                cc.hyoban.moments.ui.things.DevicesScreen(container, onBack = back, open = entry.toRoute<Devices>().open)
-                            }
-                            screen<Subscriptions>(link = "subscriptions") { entry ->
-                                cc.hyoban.moments.ui.things.SubscriptionsScreen(container, onBack = back, open = entry.toRoute<Subscriptions>().open)
-                            }
-                            screen<Car>(link = "car") {
-                                cc.hyoban.moments.ui.things.CarScreen(container, onBack = back, onDay = openDay)
-                            }
-                            screen<FootprintSettings>(link = "footprint-settings") {
-                                FootprintSettingsScreen(container, onBack = back)
-                            }
-                            screen<NewMoment>(link = "new") { entry ->
-                                NewMomentScreen(container, onBack = back, onSaved = back, startWithBill = entry.toRoute<NewMoment>().bill)
-                            }
-                            screen<EditMoment>(link = "edit/{uid}") { entry ->
-                                NewMomentScreen(
-                                    container,
-                                    onBack = back,
-                                    onSaved = back,
-                                    edit = entry.toRoute<EditMoment>().uid,
-                                    // Deleted, the Moment's page under the edit page goes too, when it is there.
-                                    onDeleted = { if (!navController.popBackStack<Moment>(inclusive = true)) back() },
-                                )
-                            }
-                            dialog<EditorDialog>(
-                                // Its window edge to edge, as the pages are; a tap on the scrim doesn't throw away
-                                // what is written, which only its X or back, with their question, do.
-                                dialogProperties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false, dismissOnClickOutside = false),
-                            ) { entry ->
-                                val route = entry.toRoute<EditorDialog>()
-                                val edit = route.uid
-                                CompositionLocalProvider(LocalRailSpace provides RailSpace(0.dp, 0.dp, clearOfInsets = isMediumWidth())) {
-                                    DialogPane {
-                                        NewMomentScreen(
-                                            container,
-                                            onBack = back,
-                                            onSaved = back,
-                                            edit = edit,
-                                            onDeleted = { if (!navController.popBackStack<Moment>(inclusive = true)) back() },
-                                            startWithBill = route.bill,
-                                        )
-                                    }
-                                }
-                            }
-                            screen<Search>(link = "search") {
-                                SearchScreen(container, onMoment = openMoment, onBack = back, onBill = { ledgerNav.bill(it) })
-                            }
-                            screen<Changes>(link = "changes") {
-                                ChangesScreen(container, onMoment = openMoment, onBack = back)
-                            }
-                            screen<LedgerHome>(link = "ledger") { entry ->
-                                LedgerScreen(container, ledgerNav, startTab = entry.toRoute<LedgerHome>().tab)
-                            }
-                            // A payment's from 自动记账's notification opening the app, with what it read.
-                            screen<LedgerEntry>(link = "new-bill", aliases = listOf(PAYMENT_LINK)) { entry ->
-                                val route = entry.toRoute<LedgerEntry>()
-                                // The link opening the app: a bill of its own, written where a Moment can be too.
-                                if (route == LedgerEntry()) {
-                                    NewMomentScreen(container, onBack = back, onSaved = back, startWithBill = true)
-                                    return@screen
-                                }
-                                EntryScreen(
-                                    container,
-                                    LedgerEntryArgs(
-                                        route.edit, route.kind?.let(TxnKind::of), route.related, route.moment, route.date, route.account, route.trip,
-                                        route.amount?.toLongOrNull(), route.time?.toLongOrNull(), route.note, route.category,
-                                    ),
-                                    ledgerNav,
-                                )
-                            }
-                            screen<LedgerBill>(link = "bill/{id}") { entry ->
-                                BillScreen(container, entry.toRoute<LedgerBill>().id, ledgerNav)
-                            }
-                            screen<LedgerAccount>(link = "account/{id}") { entry ->
-                                AccountScreen(container, entry.toRoute<LedgerAccount>().id, ledgerNav)
-                            }
-                            screen<LedgerAccountEdit> { entry ->
-                                AccountEditScreen(container, entry.toRoute<LedgerAccountEdit>().id, ledgerNav)
-                            }
-                            screen<LedgerSettings>(link = "ledger-settings") { entry ->
-                                LedgerSettingsScreen(container, ledgerNav, startImport = entry.toRoute<LedgerSettings>().import)
-                            }
-                            screen<LedgerList> { entry ->
-                                val route = entry.toRoute<LedgerList>()
-                                LedgerListScreen(
-                                    container,
-                                    LedgerFilter(route.title, route.book, route.account, route.category, route.categoryName, route.trip, route.place, route.day, route.period, route.search),
-                                    ledgerNav,
-                                )
-                            }
-                        }
+                        )
                         // Kept while it fades out.
                         var shown by remember { mutableStateOf(viewer) }
                         if (viewer != null) shown = viewer
@@ -1140,13 +1158,30 @@ private const val DIALOG_NAVIGATOR = "dialog"
  */
 const val DEEP_LINK_SCHEME = "moments"
 
-/** 自动记账's link to a payment's bill, what it read in its query, as `ledger/AutoBill` writes it. */
-private const val PAYMENT_LINK = "payment?amount={amount}&time={time}&note={note}&account={account}&category={category}"
 
 /** A bill's form for [this], as a route. */
 private fun LedgerEntryArgs.route() = LedgerEntry(
     edit, kind?.value, related, moment, date, account, trip, amount?.toString(), time?.toString(), note, category,
 )
+
+/**
+ * The pages a link or a share opens the app on: the tab [route] is under, then its page over
+ * it, so back leads to that tab and the tabs go on from there as they do in the app.
+ */
+fun pagesOf(route: Any): List<Any> {
+    val tab = tabOf(route)
+    return if (tab == route) listOf(tab) else listOf(tab, route)
+}
+
+/** The tab a page is reached from: the map's trips and places, 我's settings, the ledger and the changes, the Moments' the rest. */
+private fun tabOf(route: Any): Any = when (route) {
+    Feed, Atlas, Preferences -> route
+    is Trip, is TripEdit, is TripPlay, is PlaceMoments -> Atlas
+    SyncSettings, FootprintSettings, SideKeySettings, Items, Car, Changes, is Devices, is Subscriptions,
+    is LedgerHome, is LedgerEntry, is LedgerBill, is LedgerAccount, is LedgerAccountEdit, is LedgerSettings, is LedgerList,
+    -> Preferences
+    else -> Feed
+}
 
 /** The page a link opens, `moments://moment/{uid}` and the rest; null for one the app has no page for. */
 fun routeOf(link: Uri): Any? {
@@ -1163,6 +1198,9 @@ fun routeOf(link: Uri): Any? {
         "footprint-settings" -> FootprintSettings
         "items" -> Items
         "side-key" -> SideKeySettings
+        "devices" -> Devices()
+        "subscriptions" -> Subscriptions()
+        "car" -> Car
         "new" -> NewMoment()
         "edit" -> id?.let(::EditMoment)
         "changes" -> Changes
@@ -1197,14 +1235,9 @@ private val LocalNavController = staticCompositionLocalOf<NavController?> { null
 private val NavController.backStack: StateFlow<List<NavBackStackEntry>>
     @SuppressLint("RestrictedApi") get() = currentBackStack
 
-/** The page's own entry on the back stack. */
-
-private inline fun <reified T : Any> NavGraphBuilder.screen(
-    link: String? = null,
-    aliases: List<String> = emptyList(),
-    noinline content: @Composable (NavBackStackEntry) -> Unit,
-) {
-    composable<T>(deepLinks = (listOfNotNull(link) + aliases).map { navDeepLink { uriPattern = "$DEEP_LINK_SCHEME://$it" } }) { entry ->
+/** A page, with what the tabs cover of it when it is a tab's. */
+private inline fun <reified T : Any> NavGraphBuilder.screen(noinline content: @Composable (NavBackStackEntry) -> Unit) {
+    composable<T> { entry ->
         val tab = Tab.entries.any { entry.destination.hasRoute(it.type) }
         val room = LocalTabClearance.current
         CompositionLocalProvider(

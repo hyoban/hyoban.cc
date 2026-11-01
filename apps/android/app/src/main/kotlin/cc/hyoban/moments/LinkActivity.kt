@@ -1,7 +1,6 @@
 package cc.hyoban.moments
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import cc.hyoban.moments.ui.Feed
 import cc.hyoban.moments.ui.routeOf
@@ -30,16 +29,10 @@ class LinkActivity : MainActivity() {
         return true
     }
 
-    override fun startRoute(): Any {
-        val link = intent.data ?: intent.getStringExtra(EXTRA_LINK)?.let(Uri::parse)
-        // Kept aside rather than in the intent, so the navigation doesn't open the page a
-        // second time over itself, and found again when the page is made again.
-        intent = Intent(intent).setData(null).putExtra(EXTRA_LINK, link?.toString())
-        return link?.let(::routeOf) ?: Feed
-    }
+    /** The link's page alone, over the app: back, the top bar's or the system's, closes it onto the app. */
+    override fun startPages(restored: Boolean): List<Any> = listOf(intent.data?.let(::routeOf) ?: Feed)
 
     companion object {
-        private const val EXTRA_LINK = "link"
         private const val EXTRA_OVER_APP = "over_app"
     }
 }
