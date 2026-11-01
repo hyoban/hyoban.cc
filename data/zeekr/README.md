@@ -102,7 +102,10 @@ vp run zeekr:entries --write
 `zeekr:entries` turns each charging session into an entry with a `charge` part under
 `data/entries` (no place, its uid made from when it started, naming the car and its
 source), adding the new ones and bringing the rest up to date; the API turns away any
-other edit of them. After `vp run data:export`, send the new and changed entries and the
+other edit of them. A charge whose figures didn't change keeps the capture it was first
+read from. The car's app sometimes lists one session twice, with the same start, energy
+and time: the months keep both rows as captured, and `zeekr:entries` makes one entry of
+them and names them; two rows that start together with different figures stop it. After `vp run data:export`, send the new and changed entries and the
 statistics with `vp run data:push <the files>`.
 
 Preparation only retains known statistical fields and screen text; unexpected text

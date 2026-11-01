@@ -127,6 +127,7 @@ import cc.hyoban.moments.data.local.fix
 import cc.hyoban.moments.data.local.nearestPlaces
 import cc.hyoban.moments.data.local.newPlaceId
 import cc.hyoban.moments.data.local.parseStamp
+import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.local.stamp
 import cc.hyoban.moments.data.spec.FoodBill
 import cc.hyoban.moments.data.spec.FoodVerdict
@@ -1092,7 +1093,7 @@ private suspend fun buildMoment(
     original: MomentRecord? = null,
     originalMedia: Map<Uri, MomentMedia> = emptyMap(),
 ): Pair<MomentRecord, Pair<String, Place>?> {
-    val now = stamp(OffsetDateTime.now())
+    val now = recordTime()
     val directory = File(container.localStore.root, "media")
     val media = photos.map { uri ->
         val kept = (uri in utility).takeIf { it }

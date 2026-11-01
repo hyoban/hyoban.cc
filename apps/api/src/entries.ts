@@ -2,6 +2,7 @@ import { placeSchema, type MomentMedia, type Places } from '@hyoban/data-spec'
 import {
   collectionSchema,
   entrySchema,
+  getDeviceIssues,
   getUploadEntry,
   isImportedCharge,
   publicTrackSchema,
@@ -237,6 +238,21 @@ export async function applyEntryChanges(
     throw new HttpError(422, `${importedStored} is an imported charge; only an import changes it.`)
   }
 
+  const sending = new Set(inputs.map((input) => input.uid))
+  const [deviceIssue] = getDeviceIssues(
+    [
+      ...inputs,
+      ...state.devices.filter(
+        (entry) => !sending.has(entry.uid) && !deletedUids.includes(entry.uid),
+      ),
+    ],
+    sending,
+  )
+
+  if (deviceIssue) {
+    throw new HttpError(422, `${deviceIssue.uid}: ${deviceIssue.message}`)
+  }
+
   const statements: Statement[] = []
   const placeIds = await namePlaces(context, givenPlaces, state.places, statements)
   const records = inputs.map((input) => {
@@ -347,13 +363,17 @@ export async function applyEntryChanges(
   }
 }
 
-/** What a change set is checked against: the places, and the entries it names. */
+/** What a change set is checked against: the places, the entries it names, and the devices. */
 async function readEntryWriteState(db: Database, uids: string[]) {
-  const [places, entries] = await readAll(db, [
+  const [places, entries, devices] = await readAll(db, [
     db.prepare(`SELECT key, record FROM places WHERE deleted_at IS NULL`),
     db
       .prepare(`SELECT ${COLUMNS} FROM entries WHERE key IN (SELECT value FROM json_each(?1))`)
       .bind(JSON.stringify(uids)),
+    db.prepare(
+      `SELECT key, record FROM entries
+       WHERE deleted_at IS NULL AND json_type(record, '$.parts.device') IS NOT NULL`,
+    ),
   ])
 
   return {
@@ -366,6 +386,7 @@ async function readEntryWriteState(db: Database, uids: string[]) {
         { entry: toEntry(row), text: row.record, deleted: row.deleted_at !== null },
       ]),
     ),
+    devices: (devices as StoredRow[]).map(toEntry),
   }
 }
 

@@ -562,7 +562,7 @@ private fun chargeTitle(charge: kotlinx.serialization.json.JsonObject): String {
 
 /** How long it charged and what it cost, in figures. */
 private fun chargeLine(charge: kotlinx.serialization.json.JsonObject): String? {
-    val minutes = (charge["durationMin"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()
+    val minutes = cc.hyoban.moments.data.spec.Entries.chargeMinutes(charge)
     val cost = (charge["cost"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()
     return listOfNotNull(minutes?.let { "${it.toInt()} min" }, cost?.let { "¥%.2f".format(it) }).joinToString(" ").ifEmpty { null }
 }

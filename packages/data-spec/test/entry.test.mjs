@@ -8,10 +8,12 @@ import {
   entrySchema,
   entryToMoment,
   getCollectionFacets,
+  getDeviceIssues,
   getEntryAudience,
   getPartAudience,
   getPublicEntry,
   getStableUlid,
+  getUnknownFields,
   getUploadEntry,
   isInCollection,
   isMarkEntry,
@@ -169,4 +171,48 @@ test('a collection adds up what its members spent, charged and ate', () => {
     places: { count: 1 },
     distance: { metres: 1235 },
   })
+})
+
+test('a device id names one device, and a charge names a device that is', () => {
+  const device = (seed, id) =>
+    entrySchema.parse({
+      ...base,
+      uid: getStableUlid(at, seed),
+      parts: { device: { v: 1, id, name: 'Car', category: '汽车', price: 1 } },
+    })
+  const charge = (seed, vehicle) =>
+    entrySchema.parse({
+      ...base,
+      uid: getStableUlid(at, seed),
+      parts: { charge: { v: 1, energyWh: 1000, vehicle } },
+    })
+  const car = device('car', 'car')
+  const again = device('again', 'car')
+  const charged = charge('charged', 'car')
+  const lost = charge('lost', 'bike')
+
+  assert.deepEqual(getDeviceIssues([car, charged]), [])
+  assert.deepEqual(
+    getDeviceIssues([car, again, charged, lost]).map((issue) => issue.uid),
+    [car.uid, again.uid, lost.uid],
+  )
+  assert.deepEqual(
+    getDeviceIssues([car, again, lost], new Set([lost.uid])).map((issue) => issue.uid),
+    [lost.uid],
+  )
+})
+
+test('fields the spec does not name are found, in the parts it knows', () => {
+  const entry = {
+    ...base,
+    visibilty: 'private',
+    parts: {
+      text: { v: 1, text: 'Hi', visibility: 'public' },
+      charge: { v: 1, energyWh: 1000, durationMinutes: 9 },
+      later: { v: 1, anything: true },
+    },
+  }
+
+  assert.deepEqual(getUnknownFields(entry), ['visibilty', 'parts.charge.durationMinutes'])
+  assert.deepEqual(getUnknownFields({ ...base, parts: {} }), [])
 })

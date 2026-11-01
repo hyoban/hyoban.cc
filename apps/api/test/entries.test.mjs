@@ -253,6 +253,37 @@ test('a subscription comes back with what pays for it', async () => {
   assert.equal(read.paidWith, 'A')
 })
 
+test('a device id names one device, and a charge a device there is', async () => {
+  const { env } = setUpWithData()
+  const device = (seed, id) => ({
+    uid: uid(seed),
+    at: '2025-08-01',
+    parts: { device: { v: 1, id, name: 'Car', category: '汽车', price: 1 } },
+    createdAt: at,
+    updatedAt: at,
+  })
+  const charge = (vehicle) => ({
+    uid: uid('charged'),
+    at,
+    parts: { charge: { v: 1, energyWh: 7800, vehicle } },
+    createdAt: at,
+    updatedAt: at,
+  })
+
+  assert.equal((await commit(env, { entries: [device('car', 'car')] })).status, 200)
+
+  const again = await commit(env, { entries: [device('again', 'car')] })
+
+  assert.equal(again.status, 422)
+  assert.match(again.body.error, /device id car/)
+  assert.equal((await commit(env, { entries: [charge('car')] })).status, 200)
+  assert.match((await commit(env, { entries: [charge('bike')] })).body.error, /no device/)
+  assert.equal(
+    (await commit(env, { entries: [device('again', 'car')], deleted: [uid('car')] })).status,
+    200,
+  )
+})
+
 test('an imported charge is changed only by an import', async () => {
   const { env, importSnapshot } = setUpWithData()
   const charge = {

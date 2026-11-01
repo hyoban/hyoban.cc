@@ -294,6 +294,15 @@ object Entries {
         "facets", "route", "music", "note", "createdAt", "updatedAt",
     )
 
+    /**
+     * How long a charge part says it took, in minutes: its `durationSeconds`, else the
+     * `durationMin` the spec wrote before it.
+     */
+    fun chargeMinutes(charge: JsonObject): Double? {
+        val number = { key: String -> (charge[key] as? JsonPrimitive)?.contentOrNull?.toDoubleOrNull() }
+        return number("durationSeconds")?.div(60) ?: number("durationMin")
+    }
+
     /** Whether a collection is private by its own say. */
     fun isPrivate(collection: JsonObject): Boolean = collection.visibility() == Visibility.PRIVATE
 

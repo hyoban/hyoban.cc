@@ -806,7 +806,7 @@ class MomentsRepository(
         withContext(io) {
             val trip = apiTrips.firstOrNull { it.id == id } ?: error("Unknown trip $id")
             val base = Entries.collectionOf(trip, _second.value.collections[id])
-            val now = java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC).withNano(0).toString()
+            val now = cc.hyoban.moments.data.local.recordTime()
             val edited = Entries.editCollection(
                 base, title, start, end, visibility, now,
                 include = include ?: Entries.strings(base, "include"),
