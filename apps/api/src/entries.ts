@@ -1,34 +1,27 @@
 import { placeSchema, type MomentMedia, type Places } from '@hyoban/data-spec'
 import {
   collectionSchema,
-  collectionToTrip,
   entrySchema,
-  getCollectionKey,
   getUploadEntry,
   isImportedCharge,
-  isInCollection,
-  isMarkEntry,
   publicTrackSchema,
-  tripToCollection,
   type Collection,
   type Entry,
   type PublicTrack,
 } from '@hyoban/data-spec/entry'
-import { tripRecordSchema } from '@hyoban/data-spec'
 import pLimit from 'p-limit'
 import {
   carryTripRoutes,
   formatCursor,
   readAll,
   revisionQuery,
-  routesQuery,
   toRevision,
   type Cursor,
   type Database,
   type Statement,
 } from './database.ts'
 import { HttpError, validate } from './http.ts'
-import { REVISION, collectionRow, entryRow, getEntryKind, trackRow } from './rows.ts'
+import { REVISION, collectionRow, deleteSql, entryRow, getEntryKind, trackRow } from './rows.ts'
 import {
   COPIES_AT_ONCE,
   commit,
@@ -39,77 +32,37 @@ import {
   settle,
   toEntry,
   upsert,
-  type MomentRow,
+  type StoredRow,
   type WriteContext,
   type WriteResult,
 } from './writes.ts'
 
 // The second shape's side of the API, `/v2`: entries, collections and public tracks, read
-// and written as one change set. Every row still holds the first shape too (rows.ts), read
-// only for a row written before it had the second. Every read is the owner's and sees
-// everything kept here; the site trims what it shows to what is public itself. What stays
-// on the phone (a private bill, the raw footprints) never comes here: a private part of a
-// plugin that keeps to the phone is dropped even if it is sent.
+// and written as one change set, in the tables @hyoban/data-spec/tables defines. Every read
+// is the owner's and sees everything kept here; the site trims what it shows to what is
+// public itself. What stays on the phone (a private bill, the raw footprints) never comes
+// here: a private part of a plugin that keeps to the phone is dropped even if it is sent.
 
-interface EntryRow extends MomentRow {
+interface FeedRow extends StoredRow {
   rev: number
-  published: number
 }
 
-interface CollectionRow {
-  id: string
-  rev: number
-  deleted_at: string | null
-  record: string
-  collection: string | null
+/** What a row is to a reader: its record, and whether it is gone. */
+export function readRow(row: StoredRow) {
+  return { key: row.key, text: row.record, gone: row.deleted_at !== null }
 }
 
-interface TrackRow {
-  uid: string
-  rev: number
-  deleted_at: string | null
-  record: string
-}
-
-/** What an entry row is to a reader: the entry, and whether it is gone. */
-function readEntryRow(row: EntryRow) {
-  return {
-    key: row.uid,
-    text: row.entry ?? JSON.stringify(toEntry(row)),
-    gone: row.deleted_at !== null,
-  }
-}
-
-/** A collection row as a reader sees it, the trip it was worked out from before it had one. */
-export function readCollectionRow(row: CollectionRow) {
-  const text = row.collection
-    ? row.collection
-    : JSON.stringify(
-        collectionSchema.parse(
-          tripToCollection(tripRecordSchema.parse(JSON.parse(row.record))).collection,
-        ),
-      )
-
-  return { key: row.id, text, gone: row.deleted_at !== null }
-}
-
-const ENTRY_COLUMNS = 'uid, kind, rev, deleted_at, published, record, entry'
+const COLUMNS = 'key, rev, deleted_at, record'
 
 /**
  * The car's statistics, all public, as the export and the feed's first page name them: a
  * month, a cumulative assisted-driving observation, and a source capture.
  */
 const VEHICLE_TABLES = [
-  { table: 'vehicle_months', key: 'key', name: 'vehicleMonths', gone: 'deletedVehicleMonths' },
-  {
-    table: 'vehicle_assisted',
-    key: 'key',
-    name: 'vehicleAssisted',
-    gone: 'deletedVehicleAssisted',
-  },
-  { table: 'vehicle_captures', key: 'id', name: 'vehicleCaptures', gone: 'deletedVehicleCaptures' },
+  { table: 'vehicle_months', name: 'vehicleMonths', gone: 'deletedVehicleMonths' },
+  { table: 'vehicle_assisted', name: 'vehicleAssisted', gone: 'deletedVehicleAssisted' },
+  { table: 'vehicle_captures', name: 'vehicleCaptures', gone: 'deletedVehicleCaptures' },
 ] as const
-const COLLECTION_COLUMNS = 'id, rev, deleted_at, record, collection'
 
 /**
  * What changed after a revision, as JSON text: the entries a page at a time, oldest change
@@ -128,76 +81,62 @@ export async function readEntryChanges(
   const after = first ? { rev: since + 1, uid: '' } : query.cursor
   const live = first ? since === 0 : query.cursor.live
   const upto = first ? REVISION : String(query.cursor.upto)
-  const changed = (table: string, key: string, columns: string) =>
-    db.prepare(`SELECT ${columns} FROM ${table} WHERE rev > ?1 ORDER BY ${key}`).bind(since)
+  const changed = (table: string) =>
+    db.prepare(`SELECT ${COLUMNS} FROM ${table} WHERE rev > ?1 ORDER BY key`).bind(since)
   const [revision, rows, places, collections, tracks, ...vehicle] = await readAll(db, [
     revisionQuery(db),
     db
       .prepare(
-        `SELECT ${ENTRY_COLUMNS} FROM moments
-         WHERE (rev > ?1 OR (rev = ?1 AND uid > ?2)) AND rev <= ${upto}
-         ORDER BY rev, uid
+        `SELECT ${COLUMNS} FROM entries
+         WHERE (rev > ?1 OR (rev = ?1 AND key > ?2)) AND rev <= ${upto}
+         ORDER BY rev, key
          LIMIT ?3`,
       )
       .bind(after.rev, after.uid, limit + 1),
     ...(first
       ? [
-          changed('places', 'id', 'id AS key, rev, deleted_at, record'),
-          changed('trips', 'id', COLLECTION_COLUMNS),
-          changed('tracks', 'uid', 'uid, rev, deleted_at, record'),
-          ...VEHICLE_TABLES.map(({ table, key }) =>
-            changed(table, key, `${key} AS key, rev, deleted_at, record`),
-          ),
+          changed('places'),
+          changed('collections'),
+          changed('tracks'),
+          ...VEHICLE_TABLES.map(({ table }) => changed(table)),
         ]
       : []),
   ])
-  const results = rows as EntryRow[]
+  const results = rows as FeedRow[]
   const page = results.slice(0, limit)
   const last = page.at(-1)
   const of = first ? toRevision(revision) : query.cursor.upto
   const next =
     results.length > limit && last
-      ? formatCursor({ upto: of, rev: last.rev, uid: last.uid, live })
+      ? formatCursor({ upto: of, rev: last.rev, uid: last.key, live })
       : null
-  const entries = page.map((row) => readEntryRow(row))
-  const placeRows = (
-    (places ?? []) as { key: string; deleted_at: string | null; record: string }[]
-  ).map((row) => ({ key: row.key, text: row.record, gone: row.deleted_at !== null }))
-  const collectionRows = ((collections ?? []) as CollectionRow[]).map((row) =>
-    readCollectionRow(row),
-  )
-  const trackRows = ((tracks ?? []) as TrackRow[]).map((row) => ({
-    key: row.uid,
-    text: row.record,
-    gone: row.deleted_at !== null,
-  }))
-  const [liveEntries, goneEntries] = split(entries, live)
-  const [livePlaces, gonePlaces] = split(placeRows, live)
-  const [liveCollections, goneCollections] = split(collectionRows, live)
-  const [liveTracks, goneTracks] = split(trackRows, live)
+  const read = (rows: unknown[] | undefined) => ((rows ?? []) as StoredRow[]).map(readRow)
+  const [liveEntries, goneEntries] = split(page.map(readRow), live)
+  const [livePlaces, gonePlaces] = split(read(places), live)
+  const [liveCollections, goneCollections] = split(read(collections), live)
+  const [liveTracks, goneTracks] = split(read(tracks), live)
   const vehicleText = VEHICLE_TABLES.map(({ name, gone }, index) => {
-    const [liveRows, goneRows] = split(
-      ((vehicle[index] ?? []) as { key: string; deleted_at: string | null; record: string }[]).map(
-        (row) => ({ key: row.key, text: row.record, gone: row.deleted_at !== null }),
-      ),
-      live,
-    )
+    const [liveRows, goneRows] = split(read(vehicle[index]), live)
 
     return `${JSON.stringify(name)}:${arrayText(liveRows)},${JSON.stringify(gone)}:${keysText(goneRows)},`
   }).join('')
 
-  return `{"revision":${of},"entries":${arrayText(liveEntries)},"deleted":${keysText(goneEntries)},"places":{${livePlaces.map((row) => `${JSON.stringify(row.key)}:${row.text}`).join(',')}},"deletedPlaces":${keysText(gonePlaces)},"collections":${arrayText(liveCollections)},"deletedCollections":${keysText(goneCollections)},"tracks":${arrayText(liveTracks)},"deletedTracks":${keysText(goneTracks)},${first ? vehicleText : ''}"next":${JSON.stringify(next)}}`
+  return `{"revision":${of},"entries":${arrayText(liveEntries)},"deleted":${keysText(goneEntries)},"places":${keyedText(livePlaces)},"deletedPlaces":${keysText(gonePlaces)},"collections":${arrayText(liveCollections)},"deletedCollections":${keysText(goneCollections)},"tracks":${arrayText(liveTracks)},"deletedTracks":${keysText(goneTracks)},${first ? vehicleText : ''}"next":${JSON.stringify(next)}}`
+}
+
+/** One row's record, or null when there is none or it is deleted. */
+async function readOne(db: Database, table: string, key: string) {
+  const row = await db
+    .prepare(`SELECT ${COLUMNS} FROM ${table} WHERE key = ?1`)
+    .bind(key)
+    .first<StoredRow>()
+
+  return row && row.deleted_at === null ? row.record : null
 }
 
 /** One entry as stored, or null. */
-export async function readEntry(db: Database, uid: string) {
-  const row = await db
-    .prepare(`SELECT ${ENTRY_COLUMNS} FROM moments WHERE uid = ?1`)
-    .bind(uid)
-    .first<EntryRow>()
-  const read = row && readEntryRow(row)
-
-  return read && !read.gone ? read.text : null
+export function readEntry(db: Database, uid: string) {
+  return readOne(db, 'entries', uid)
 }
 
 /** `{ revision, collections }`, by start date. */
@@ -205,34 +144,25 @@ export async function readCollections(db: Database) {
   const [revision, rows] = await readAll(db, [
     revisionQuery(db),
     db.prepare(
-      `SELECT ${COLLECTION_COLUMNS} FROM trips WHERE deleted_at IS NULL ORDER BY start_date, id`,
+      `SELECT ${COLUMNS} FROM collections WHERE deleted_at IS NULL ORDER BY start_day, key`,
     ),
   ])
-  const live = (rows as CollectionRow[])
-    .map((row) => readCollectionRow(row))
-    .filter((row) => !row.gone)
 
-  return `{"revision":${toRevision(revision)},"collections":${arrayText(live)}}`
+  return `{"revision":${toRevision(revision)},"collections":${arrayText((rows as StoredRow[]).map(readRow))}}`
 }
 
-export async function readCollection(db: Database, key: string) {
-  const row = await db
-    .prepare(`SELECT ${COLLECTION_COLUMNS} FROM trips WHERE id = ?1`)
-    .bind(key)
-    .first<CollectionRow>()
-  const read = row && readCollectionRow(row)
-
-  return read && !read.gone ? read.text : null
+export function readCollection(db: Database, key: string) {
+  return readOne(db, 'collections', key)
 }
+
+const tracksQuery = (db: Database) =>
+  db.prepare(`SELECT ${COLUMNS} FROM tracks WHERE deleted_at IS NULL ORDER BY start_at, key`)
 
 /** `{ revision, tracks }`: the spans of footprints made public, by when they start. */
 export async function readTracks(db: Database) {
-  const [revision, rows] = await readAll(db, [
-    revisionQuery(db),
-    db.prepare(`SELECT record FROM tracks WHERE deleted_at IS NULL ORDER BY start_at, uid`),
-  ])
+  const [revision, rows] = await readAll(db, [revisionQuery(db), tracksQuery(db)])
 
-  return `{"revision":${toRevision(revision)},"tracks":${arrayText((rows as { record: string }[]).map((row) => ({ text: row.record })))}}`
+  return `{"revision":${toRevision(revision)},"tracks":${arrayText((rows as StoredRow[]).map(readRow))}}`
 }
 
 /**
@@ -241,30 +171,26 @@ export async function readTracks(db: Database) {
  * statistics as `vehicleMonths`, `vehicleAssisted` and `vehicleCaptures`.
  */
 export async function readEntrySnapshot(db: Database) {
+  const live = (table: string, order = 'key') =>
+    db.prepare(`SELECT ${COLUMNS} FROM ${table} WHERE deleted_at IS NULL ORDER BY ${order}`)
   const [revision, manifest, places, entries, collections, tracks, routes, ...vehicle] =
     await readAll(db, [
       revisionQuery(db),
       db.prepare(`SELECT value FROM meta WHERE key = 'manifest'`),
-      db.prepare(`SELECT id AS key, record FROM places WHERE deleted_at IS NULL ORDER BY id`),
-      db.prepare(`SELECT ${ENTRY_COLUMNS} FROM moments WHERE deleted_at IS NULL ORDER BY uid`),
-      db.prepare(
-        `SELECT ${COLLECTION_COLUMNS} FROM trips WHERE deleted_at IS NULL ORDER BY start_date, id`,
-      ),
-      db.prepare(`SELECT record FROM tracks WHERE deleted_at IS NULL ORDER BY start_at, uid`),
-      routesQuery(db),
-      ...VEHICLE_TABLES.map(({ table, key }) =>
-        db.prepare(`SELECT record FROM ${table} WHERE deleted_at IS NULL ORDER BY ${key}`),
-      ),
+      live('places'),
+      live('entries'),
+      live('collections', 'start_day, key'),
+      tracksQuery(db),
+      live('routes'),
+      ...VEHICLE_TABLES.map(({ table }) => live(table)),
     ])
   const [manifestRow] = manifest as { value: string }[]
+  const read = (rows: unknown[] | undefined) => ((rows ?? []) as StoredRow[]).map(readRow)
   const vehicleText = VEHICLE_TABLES.map(
-    ({ name }, index) =>
-      `,${JSON.stringify(name)}:${arrayText((vehicle[index] as { record: string }[]).map((row) => ({ text: row.record })))}`,
+    ({ name }, index) => `,${JSON.stringify(name)}:${arrayText(read(vehicle[index]))}`,
   ).join('')
-  const keyed = (rows: unknown[]) =>
-    `{${(rows as { key: string; record: string }[]).map((row) => `${JSON.stringify(row.key)}:${row.record}`).join(',')}}`
 
-  return `{"revision":${toRevision(revision)},"manifest":${manifestRow?.value ?? 'null'},"places":${keyed(places)},"entries":${arrayText((entries as EntryRow[]).map((row) => readEntryRow(row)))},"collections":${arrayText((collections as CollectionRow[]).map((row) => readCollectionRow(row)))},"tracks":${arrayText((tracks as { record: string }[]).map((row) => ({ text: row.record })))},"routes":${keyed(routes)}${vehicleText}}`
+  return `{"revision":${toRevision(revision)},"manifest":${manifestRow?.value ?? 'null'},"places":${keyedText(read(places))},"entries":${arrayText(read(entries))},"collections":${arrayText(read(collections))},"tracks":${arrayText(read(tracks))},"routes":${keyedText(read(routes))}${vehicleText}}`
 }
 
 /**
@@ -300,8 +226,7 @@ export interface AppliedEntryChanges {
  * deletedCollections, tracks, deletedTracks }`: the places are named first,
  * each entry is published (its media's originals uploaded first) and checked, and all of it is
  * committed in one transaction or none of it is. A collection is known by its slug, else its
- * uid in lowercase; the trips the first shape reads are worked out again whenever a collection
- * or a mark changed.
+ * uid in lowercase.
  */
 export async function applyEntryChanges(
   context: WriteContext,
@@ -406,11 +331,7 @@ export async function applyEntryChanges(
     deleted.length > 0 || givenCollections.length > 0 || deletedCollections.length > 0
 
   for (const uid of deleted) {
-    statements.push(
-      context.db
-        .prepare(`UPDATE moments SET deleted_at = ?1, rev = ${REVISION} WHERE uid = ?2`)
-        .bind(context.now, uid),
-    )
+    statements.push(context.db.prepare(deleteSql('entries')).bind(context.now, uid))
   }
 
   try {
@@ -434,71 +355,21 @@ export async function applyEntryChanges(
 
     saved = records.map((record) => validate(entrySchema, record))
 
-    const collections = new Map(
-      state.collections.map((collection) => [getCollectionKey(collection), collection]),
-    )
-
-    for (const collection of givenCollections) {
-      collections.set(getCollectionKey(collection), collection)
-    }
-
-    for (const key of deletedCollections) {
-      collections.delete(key)
-    }
-
-    const tripOf = (entry: Entry) =>
-      [...collections.values()].find(
-        (collection) => collection.include.includes(entry.uid) && isInCollection(collection, entry),
-      )
-
     for (const record of saved) {
       const prior = state.stored.get(record.uid)
 
       if (!prior || prior.deleted || prior.text !== JSON.stringify(record)) {
-        const trip = tripOf(record)
-
-        statements.push(
-          upsert(
-            context.db,
-            'moments',
-            entryRow(record, trip ? { trip: getCollectionKey(trip) } : {}),
-          ),
-        )
+        statements.push(upsert(context.db, 'entries', entryRow(record)))
         changesRoutes ||= routeView(prior?.deleted ? undefined : prior?.entry) !== routeView(record)
       }
     }
 
-    // The trips the first shape reads, worked out again from the marks as they now are.
-    if (
-      givenCollections.length > 0 ||
-      saved.some(isMarkEntry) ||
-      deleted.some((uid) => isMarkEntry(state.stored.get(uid)!.entry))
-    ) {
-      const savedUids = new Set(saved.map((entry) => entry.uid))
-      const marks = [
-        ...state.marks.filter((mark) => !savedUids.has(mark.uid) && !deleted.includes(mark.uid)),
-        ...saved.filter(isMarkEntry),
-      ]
-
-      for (const collection of collections.values()) {
-        statements.push(
-          upsert(
-            context.db,
-            'trips',
-            collectionRow(collection, tripRecordSchema.parse(collectionToTrip(collection, marks))),
-          ),
-        )
-      }
+    for (const collection of givenCollections) {
+      statements.push(upsert(context.db, 'collections', collectionRow(collection)))
     }
 
     for (const key of deletedCollections) {
-      statements.push(
-        context.db
-          .prepare(
-            `UPDATE trips SET deleted_at = ?1, rev = ${REVISION} WHERE id = ?2 AND deleted_at IS NULL`,
-          )
-          .bind(context.now, key),
-      )
+      statements.push(context.db.prepare(deleteSql('collections')).bind(context.now, key))
     }
 
     for (const track of givenTracks) {
@@ -507,13 +378,7 @@ export async function applyEntryChanges(
     }
 
     for (const uid of deletedTracks) {
-      statements.push(
-        context.db
-          .prepare(
-            `UPDATE tracks SET deleted_at = ?1, rev = ${REVISION} WHERE uid = ?2 AND deleted_at IS NULL`,
-          )
-          .bind(context.now, uid),
-      )
+      statements.push(context.db.prepare(deleteSql('tracks')).bind(context.now, uid))
     }
 
     if (statements.length > 0) {
@@ -548,43 +413,25 @@ export async function applyEntryChanges(
   }
 }
 
-/** What a change set is checked against: the places, the entries it names, the collections and the marks. */
+/** What a change set is checked against: the places, and the entries it names. */
 async function readEntryWriteState(db: Database, uids: string[]) {
-  const [places, entries, collections, marks] = await readAll(db, [
-    db.prepare(`SELECT id, record FROM places WHERE deleted_at IS NULL`),
+  const [places, entries] = await readAll(db, [
+    db.prepare(`SELECT key, record FROM places WHERE deleted_at IS NULL`),
     db
-      .prepare(
-        `SELECT uid, kind, record, entry, deleted_at FROM moments
-         WHERE uid IN (SELECT value FROM json_each(?1))`,
-      )
+      .prepare(`SELECT ${COLUMNS} FROM entries WHERE key IN (SELECT value FROM json_each(?1))`)
       .bind(JSON.stringify(uids)),
-    db.prepare(`SELECT ${COLLECTION_COLUMNS} FROM trips WHERE deleted_at IS NULL`),
-    db.prepare(
-      `SELECT uid, kind, record, entry, deleted_at FROM moments WHERE kind = 'mark' AND deleted_at IS NULL`,
-    ),
   ])
 
   return {
     places: Object.fromEntries(
-      (places as { id: string; record: string }[]).map((row) => [
-        row.id,
-        placeSchema.parse(JSON.parse(row.record)),
-      ]),
+      (places as StoredRow[]).map((row) => [row.key, placeSchema.parse(JSON.parse(row.record))]),
     ) as Places,
     stored: new Map(
-      (entries as MomentRow[]).map((row) => {
-        const entry = toEntry(row)
-
-        return [
-          row.uid,
-          { entry, text: row.entry ?? JSON.stringify(entry), deleted: row.deleted_at !== null },
-        ]
-      }),
+      (entries as StoredRow[]).map((row) => [
+        row.key,
+        { entry: toEntry(row), text: row.record, deleted: row.deleted_at !== null },
+      ]),
     ),
-    collections: (collections as CollectionRow[]).map(
-      (row) => JSON.parse(readCollectionRow(row).text!) as Collection,
-    ),
-    marks: (marks as MomentRow[]).map((row) => toEntry(row)),
   }
 }
 
@@ -659,4 +506,9 @@ function arrayText(rows: readonly { text: string | null }[]) {
 
 function keysText(rows: readonly { key: string }[]) {
   return JSON.stringify(rows.map((row) => row.key))
+}
+
+/** Records by key, as `data/places.json` and `data/routes.json` keep them. */
+function keyedText(rows: readonly { key: string; text: string }[]) {
+  return `{${rows.map((row) => `${JSON.stringify(row.key)}:${row.text}`).join(',')}}`
 }

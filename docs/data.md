@@ -39,7 +39,8 @@ data/
 
 Schema version 3 moved `data/` from the first shape (`moments/`, `trips/`) to this one.
 `vp run data:migrate` shows such a move, `--write` makes it and `--rollback --write` undoes
-it byte for byte; the store reads either layout.
+it byte for byte; the store reads either layout. D1 keeps only this shape, so an import of
+the first layout writes it as entries and collections.
 
 ## Building from the API
 

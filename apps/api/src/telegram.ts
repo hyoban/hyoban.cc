@@ -138,10 +138,9 @@ export async function syncChannel(context: ChannelContext) {
 }
 
 interface ChangedRow {
-  uid: string
+  key: string
   deleted_at: string | null
   record: string
-  entry: string | null
 }
 
 async function postChanges(context: ChannelContext) {
@@ -158,17 +157,17 @@ async function postChanges(context: ChannelContext) {
   const [changed, posts, places] = await readAll(db, [
     db
       .prepare(
-        `SELECT uid, deleted_at, record, entry FROM moments
-         WHERE rev > ?1 AND rev <= ?2 AND kind = 'moment' ORDER BY occurred_at, uid`,
+        `SELECT key, deleted_at, record FROM entries
+         WHERE rev > ?1 AND rev <= ?2 AND kind = 'moment' ORDER BY at, key`,
       )
       .bind(done, revision),
     db
       .prepare(
         `SELECT uid, post FROM telegram_posts
-         WHERE uid IN (SELECT uid FROM moments WHERE rev > ?1 AND rev <= ?2)`,
+         WHERE uid IN (SELECT key FROM entries WHERE rev > ?1 AND rev <= ?2)`,
       )
       .bind(done, revision),
-    db.prepare(`SELECT id, json_extract(record, '$.name') AS name FROM places`),
+    db.prepare(`SELECT key AS id, json_extract(record, '$.name') AS name FROM places`),
   ])
   const postedBy = new Map(
     (posts as { uid: string; post: string }[]).map((row) => [
@@ -183,7 +182,7 @@ async function postChanges(context: ChannelContext) {
 
   for (const row of changed as ChangedRow[]) {
     const moment = row.deleted_at ? null : entryToMoment(toEntry(row))
-    const posted = postedBy.get(row.uid)
+    const posted = postedBy.get(row.key)
     const post = moment && isMomentShown(moment) ? toPost(moment, placeNames) : null
 
     if (!posted) {
@@ -191,7 +190,7 @@ async function postChanges(context: ChannelContext) {
       const publishedAt = Date.parse(moment?.published?.at ?? '')
 
       if (post && publishedAt >= since) {
-        await keep(db, row.uid, await send(context, post))
+        await keep(db, row.key, await send(context, post))
         result.posted++
       }
 
@@ -200,7 +199,7 @@ async function postChanges(context: ChannelContext) {
 
     if (!post) {
       await removeMessages(context, posted.messages)
-      await db.prepare(`DELETE FROM telegram_posts WHERE uid = ?1`).bind(row.uid).run()
+      await db.prepare(`DELETE FROM telegram_posts WHERE uid = ?1`).bind(row.key).run()
       result.deleted++
       continue
     }
@@ -211,10 +210,10 @@ async function postChanges(context: ChannelContext) {
 
     if (sameMedia(post, posted) && fitsAsBefore(post, posted)) {
       await editText(context, posted, post.text)
-      await keep(db, row.uid, { ...posted, text: post.text })
+      await keep(db, row.key, { ...posted, text: post.text })
     } else {
       await removeMessages(context, posted.messages)
-      await keep(db, row.uid, await send(context, post))
+      await keep(db, row.key, await send(context, post))
     }
 
     result.edited++

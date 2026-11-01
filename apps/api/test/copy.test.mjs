@@ -44,8 +44,8 @@ test('the rows from the start are every row, a table at a time, in the spec’s 
     rows.map((row) => order.indexOf(row.table)),
     rows.map((row) => order.indexOf(row.table)).toSorted((a, b) => a - b),
   )
-  assert.equal(of('entries').length, count('moments'))
-  assert.equal(of('collections').length, count('trips'))
+  assert.equal(of('entries').length, count('entries'))
+  assert.equal(of('collections').length, count('collections'))
   assert.equal(of('places').length, count('places'))
   assert.equal(of('routes').length, count('routes'))
   of('entries').forEach((row) => assert.equal(entrySchema.parse(row.record).uid, row.key))
@@ -86,29 +86,6 @@ test('after a revision only what changed comes, deleted rows with when', async (
   assert.ok(after.rows.every((row) => row.rev > revision))
   assert.equal(deleted.table, 'entries')
   assert.ok(deleted.deletedAt)
-})
-
-test('a row written before the data moved over comes in the second shape', async () => {
-  const { env, importSnapshot, sqlite } = setUp()
-
-  importSnapshot()
-
-  const before = await readAllRows(env, 0)
-
-  // Only Moments and trips were kept before; every row since keeps its second shape.
-  sqlite.exec(
-    `UPDATE moments SET entry = NULL WHERE kind = 'moment'; UPDATE trips SET collection = NULL`,
-  )
-
-  const after = await readAllRows(env, 0)
-
-  after.rows
-    .filter((row) => row.table === 'collections')
-    .forEach((row) => collectionSchema.parse(row.record))
-  assert.equal(after.rows.length, before.rows.length)
-  after.rows
-    .filter((row) => row.table === 'entries')
-    .forEach((row) => assert.equal(entrySchema.parse(row.record).uid, row.key))
 })
 
 test('a cursor that isn’t one is refused', async () => {

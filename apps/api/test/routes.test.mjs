@@ -240,7 +240,7 @@ test('GET /v2/routes is worked out once per revision, and again once the revisio
 
   // A trip with nothing in it any more, as a write past the Worker (data:push) leaves it.
   sqlite.exec(`UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`)
-  sqlite.exec(`UPDATE trips SET deleted_at = '${now}' WHERE id = '2025-shanghai'`)
+  sqlite.exec(`UPDATE collections SET deleted_at = '${now}' WHERE key = '2025-shanghai'`)
 
   const second = (await get(env, '/v2/routes')).body
 
@@ -274,7 +274,7 @@ test('GET /v2/routes has an ETag of its routes, which a new revision with the sa
   assert.equal(readKept(sqlite).revision, 2, 'worked out again for the new revision')
 
   sqlite.exec(`UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`)
-  sqlite.exec(`UPDATE trips SET deleted_at = '${now}' WHERE id = '2025-shanghai'`)
+  sqlite.exec(`UPDATE collections SET deleted_at = '${now}' WHERE key = '2025-shanghai'`)
 
   const changed = await handle(
     new Request('https://api.test/v2/routes', {

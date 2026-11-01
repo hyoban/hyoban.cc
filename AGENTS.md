@@ -71,11 +71,11 @@ even when starting from the repository root.
 - Records are entries, collections and public tracks (`@hyoban/data-spec/entry`): every
   record a moment and an optional point with parts by plugin, a trip a collection, each
   thing public or private by its own say, its container's, its plugin's, else private.
-  The API serves them as entries and collections, `/v2` alone; D1 still keeps each row's
-  first shape (Moments and trips) beside it, read only for rows written before the second.
+  The API serves them as entries and collections, `/v2` alone, and D1 keeps them only so.
   Every API request needs a token and sees everything; the site trims what it shows to what
   is public. `vp run data:migrate` moves `data/` between the layouts (dry run by default,
-  `--rollback` back); `vp run data:import` then moves D1. Ask before either touches live data.
+  `--rollback` back); `vp run data:import` writes either layout to D1 as entries and
+  collections. Ask before either touches live data.
 - D1 holds entries, places, collections, public tracks, routes and the car's statistics. A
   device or a subscription is an entry with its plugin's part, not a record of its own.
   Git keeps no copy of them and nothing backs them up to GitHub: `data/` is a local working
@@ -90,9 +90,8 @@ even when starting from the repository root.
   `vp run data:tables`, so changing one changes both. The copy only follows `GET /v2/rows`;
   the phone's edits still go through `POST /v2/changes`. The server's own bookkeeping (caches, leases, the channel's
   posts) is not copied. Only what stays on the phone (the ledger, the footprints, the app's
-  unpublished changes and settings) takes a shape of its own. D1 still carries the first
-  shape and the app keeps a partial copy as JSON files; work moves both toward this, never
-  away.
+  unpublished changes and settings) takes a shape of its own. The app still keeps a partial
+  copy as JSON files; work moves it toward this, never away.
 - Android keeps edits locally until the user reviews and publishes one change set
   through `POST /v2/changes`. Upload originals first; do not bypass this publishing
   boundary with individual writes. The API fetches missing trip routes after writes.

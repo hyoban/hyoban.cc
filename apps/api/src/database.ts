@@ -56,10 +56,7 @@ export const revisionQuery = (db: Database) =>
   db.prepare(`SELECT value FROM meta WHERE key = 'revision'`)
 
 export const placesQuery = (db: Database) =>
-  db.prepare(`SELECT id AS key, record FROM places WHERE deleted_at IS NULL ORDER BY id`)
-
-export const tripsQuery = (db: Database) =>
-  db.prepare(`SELECT record FROM trips WHERE deleted_at IS NULL ORDER BY start_date, id`)
+  db.prepare(`SELECT key, record FROM places WHERE deleted_at IS NULL ORDER BY key`)
 
 export const routesQuery = (db: Database) =>
   db.prepare(`SELECT key, record FROM routes WHERE deleted_at IS NULL ORDER BY key`)
@@ -112,7 +109,7 @@ export async function readPlaces(db: Database) {
 }
 
 export function readPlace(db: Database, id: string) {
-  return readOne(db, `SELECT record FROM places WHERE id = ?1 AND deleted_at IS NULL`, id)
+  return readOne(db, `SELECT record FROM places WHERE key = ?1 AND deleted_at IS NULL`, id)
 }
 
 export function formatCursor({ upto, rev, uid, live }: Cursor) {

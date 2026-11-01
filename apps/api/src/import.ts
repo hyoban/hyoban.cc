@@ -10,19 +10,13 @@ import {
 } from '@hyoban/data-spec'
 import {
   collectionSchema,
-  collectionToTrip,
   entrySchema,
-  getCollectionKey,
-  isInCollection,
   momentToEntry,
   publicTrackSchema,
   tripToCollection,
-  type Collection,
-  type Entry,
 } from '@hyoban/data-spec/entry'
 import {
   BUMP_REVISION,
-  KEYS,
   REVISION,
   collectionRow,
   entryRow,
@@ -33,8 +27,8 @@ import {
   vehicleAssistedRow,
   vehicleCaptureRow,
   vehicleMonthRow,
+  type Row,
   type Table,
-  type Value,
 } from './rows.ts'
 
 // Turns records, as `data/` keeps them, into SQL for the database. A snapshot import
@@ -45,8 +39,8 @@ import {
 // client syncing afterwards gets just the difference. Runs in Node, not in the Worker.
 //
 // The records come in either shape: Moments and trips, or entries, collections and public
-// tracks. Each row is written in both (rows.ts), so importing the moved data/ is what moves
-// the database over, and importing the first layout again moves it back.
+// tracks. Either is written as entries and collections, the tables
+// @hyoban/data-spec/tables defines.
 
 export interface ImportSnapshot {
   manifest: unknown
@@ -82,32 +76,13 @@ export function buildImportSql(snapshot: ImportSnapshot, now: string): string {
 
   const rows = toRows(snapshot)
 
-  statements.push(...rows.trips.map((row) => upsert('trips', row)))
-  statements.push(
-    remove(
-      'trips',
-      rows.trips.map((row) => String(row.id)),
-      now,
-    ),
-  )
-  statements.push(...rows.moments.map((row) => upsert('moments', row)))
-  statements.push(
-    remove(
-      'moments',
-      rows.moments.map((row) => String(row.uid)),
-      now,
-    ),
-  )
+  for (const table of ['collections', 'entries', 'tracks'] as const) {
+    const kept = rows[table]
 
-  if (rows.tracks) {
-    statements.push(...rows.tracks.map((row) => upsert('tracks', row)))
-    statements.push(
-      remove(
-        'tracks',
-        rows.tracks.map((row) => String(row.uid)),
-        now,
-      ),
-    )
+    if (kept) {
+      statements.push(...kept.map((row) => upsert(table, row)))
+      statements.push(remove(table, keysOf(kept), now))
+    }
   }
 
   if (snapshot.routes) {
@@ -122,13 +97,7 @@ export function buildImportSql(snapshot: ImportSnapshot, now: string): string {
 
   for (const { table, rows } of toVehicleRows(snapshot)) {
     statements.push(...rows.map((row) => upsert(table, row)))
-    statements.push(
-      remove(
-        table,
-        rows.map((row) => String(row[KEYS[table]])),
-        now,
-      ),
-    )
+    statements.push(remove(table, keysOf(rows), now))
   }
 
   return `${statements.join(';\n')};\n`
@@ -159,8 +128,8 @@ export function buildMergeSql(records: MergeRecords, now: string, generator: str
     BUMP_REVISION,
     `UPDATE meta SET value = json_set(value, '$.generator', ${quote(generator)}, '$.updatedAt', ${quote(now)}) WHERE key = 'manifest'`,
     ...Object.entries(records.places).map(([id, place]) => upsert('places', placeRow(id, place))),
-    ...rows.trips.map((row) => upsert('trips', row)),
-    ...rows.moments.map((row) => upsert('moments', row)),
+    ...rows.collections.map((row) => upsert('collections', row)),
+    ...rows.entries.map((row) => upsert('entries', row)),
     ...(rows.tracks ?? []).map((row) => upsert('tracks', row)),
     ...toVehicleRows(records).flatMap(({ table, rows }) => rows.map((row) => upsert(table, row))),
   ]
@@ -168,57 +137,25 @@ export function buildMergeSql(records: MergeRecords, now: string, generator: str
   return `${statements.join(';\n')};\n`
 }
 
-/** The rows of either shape's records, each row in both shapes. */
+/** The entries, collections and public tracks of either shape's records. */
 function toRows(records: Omit<MergeRecords, 'places'>) {
-  const entries: { entry: Entry; record?: unknown; trip?: string | undefined }[] = []
-  const collections: { collection: Collection; trip: unknown }[] = []
+  // The first shape: Moments, and trips with their waypoints as marks.
+  const moments = (records.moments ?? []).map((raw) => momentRecordSchema.parse(raw))
+  const entries = moments.map((moment) => entrySchema.parse(momentToEntry(moment)))
+  const collections = (records.trips ?? []).map((raw) => {
+    const { collection, marks } = tripToCollection(tripRecordSchema.parse(raw), moments)
 
-  // The first shape: Moments as written, trips as written with their waypoints as marks.
-  const moments = (records.moments ?? []).map((raw) => ({
-    raw,
-    moment: momentRecordSchema.parse(raw),
-  }))
+    entries.push(...marks.map((mark) => entrySchema.parse(mark)))
 
-  for (const { raw, moment } of moments) {
-    entries.push({
-      entry: entrySchema.parse(momentToEntry(moment)),
-      record: raw,
-      trip: moment.trip,
-    })
-  }
+    return collectionSchema.parse(collection)
+  })
 
-  for (const raw of records.trips ?? []) {
-    const trip = tripRecordSchema.parse(raw)
-    const { collection, marks } = tripToCollection(
-      trip,
-      moments.map(({ moment }) => moment),
-    )
-
-    collections.push({ collection: collectionSchema.parse(collection), trip: raw })
-    entries.push(...marks.map((mark) => ({ entry: entrySchema.parse(mark) })))
-  }
-
-  // The second shape: the first shape's view of each worked out from it.
-  const second = (records.entries ?? []).map((raw) => entrySchema.parse(raw))
-  const secondCollections = (records.collections ?? []).map((raw) => collectionSchema.parse(raw))
-
-  for (const collection of secondCollections) {
-    collections.push({ collection, trip: collectionToTrip(collection, second) })
-  }
-
-  for (const entry of second) {
-    const trip = secondCollections.find(
-      (collection) => collection.include.includes(entry.uid) && isInCollection(collection, entry),
-    )
-
-    entries.push({ entry, ...(trip ? { trip: getCollectionKey(trip) } : {}) })
-  }
+  entries.push(...(records.entries ?? []).map((raw) => entrySchema.parse(raw)))
+  collections.push(...(records.collections ?? []).map((raw) => collectionSchema.parse(raw)))
 
   return {
-    moments: entries.map(({ entry, record, trip }) => entryRow(entry, { record, trip })),
-    trips: collections.map(({ collection, trip }) =>
-      collectionRow(collection, tripRecordSchema.parse(trip), trip),
-    ),
+    entries: entries.map(entryRow),
+    collections: collections.map(collectionRow),
     tracks: records.tracks?.map((raw) => trackRow(publicTrackSchema.parse(raw))),
   }
 }
@@ -229,7 +166,7 @@ function toVehicleRows(records: {
   vehicleAssisted?: unknown[]
   vehicleCaptures?: unknown[]
 }) {
-  const tables: { table: Table; rows: Record<string, Value>[] }[] = []
+  const tables: { table: Table; rows: Row[] }[] = []
 
   if (records.vehicleMonths) {
     tables.push({
@@ -266,23 +203,20 @@ function checked<T>(schema: { parse(value: unknown): T }, raw: unknown): T {
   return raw as T
 }
 
-function upsert(table: Table, row: Record<string, Value>) {
-  return upsertSql(
-    table,
-    Object.fromEntries(Object.entries(row).map(([column, value]) => [column, literal(value)])),
-  )
+function upsert(table: Table, row: Row) {
+  return upsertSql(table, { key: quote(row.key), record: quote(row.record) })
+}
+
+function keysOf(rows: readonly Row[]) {
+  return rows.map((row) => row.key)
 }
 
 /** Marks deleted the rows of a table whose keys aren't in the snapshot. */
 function remove(table: Table, keys: string[], now: string) {
-  const kept = keys.length > 0 ? ` AND ${KEYS[table]} NOT IN (${keys.map(quote).join(', ')})` : ''
+  const kept = keys.length > 0 ? ` AND key NOT IN (${keys.map(quote).join(', ')})` : ''
 
   return `UPDATE ${table} SET deleted_at = ${quote(now)}, rev = ${REVISION}
   WHERE deleted_at IS NULL${kept}`
-}
-
-function literal(value: Value) {
-  return value === null ? 'NULL' : typeof value === 'number' ? String(value) : quote(value)
 }
 
 function quote(value: string) {

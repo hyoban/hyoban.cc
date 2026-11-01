@@ -1,25 +1,18 @@
-import type {
-  MomentRecord,
-  TripRecord,
-  VehicleAssistedDrivingCapture,
-  VehicleCapture,
-  VehicleMonth,
-} from '@hyoban/data-spec'
+import type { VehicleAssistedDrivingCapture, VehicleCapture, VehicleMonth } from '@hyoban/data-spec'
 import {
-  entryToMoment,
   getCollectionKey,
-  getPublicEntry,
   isMarkEntry,
   isMomentEntry,
-  mergeMomentIntoEntry,
   type Collection,
   type Entry,
   type PublicTrack,
 } from '@hyoban/data-spec/entry'
+import type { TableName } from '@hyoban/data-spec/tables'
 
-// How a record becomes a row: the columns each table looks things up by, beside the
-// record as written, and the SQL that writes it. Shared by the import, which writes SQL
-// text for wrangler, and the Worker's writes, which bind values to statements.
+// How a record becomes a row of the tables @hyoban/data-spec/tables defines, the same in
+// D1 and in the app's copy: its key and the record as written; SQLite works the other
+// columns out from the record. Shared by the import, which writes SQL text for wrangler,
+// and the Worker's writes, which bind values to statements.
 
 /** The database's revision, inside a statement that bumps it first. */
 export const REVISION = `(SELECT CAST(value AS INTEGER) FROM meta WHERE key = 'revision')`
@@ -28,146 +21,50 @@ export const REVISION = `(SELECT CAST(value AS INTEGER) FROM meta WHERE key = 'r
 export const BUMP_REVISION = `UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision'`
 
 export type Value = string | number | null
-export type Table =
-  | 'moments'
-  | 'places'
-  | 'trips'
-  | 'routes'
-  | 'tracks'
-  | 'vehicle_months'
-  | 'vehicle_assisted'
-  | 'vehicle_captures'
+export type Table = TableName
 
-export const KEYS: Record<Table, string> = {
-  moments: 'uid',
-  places: 'id',
-  trips: 'id',
-  routes: 'key',
-  tracks: 'uid',
-  vehicle_months: 'key',
-  vehicle_assisted: 'key',
-  vehicle_captures: 'id',
+/** A row as written: its key and its record's JSON. */
+export interface Row {
+  key: string
+  record: string
 }
 
-/** What sort of entry a row holds: a Moment the first shape has, a mark, or the rest. */
+/** What sort of entry it is, as the `kind` column says: a Moment the first shape has, a mark, or the rest. */
 export type EntryKind = 'moment' | 'mark' | 'entry'
 
 export function getEntryKind(entry: Entry): EntryKind {
   return isMomentEntry(entry) ? 'moment' : isMarkEntry(entry) ? 'mark' : 'entry'
 }
 
-/**
- * An entry's row, in both shapes: `record` is the Moment the first shape reads (as written,
- * when it came as one), or the entry itself for one the first shape has none for; `shown`
- * what the public sees.
- */
-export function entryRow(
-  entry: Entry,
-  { record, trip }: { record?: unknown; trip?: string | undefined } = {},
-): Record<string, Value> {
-  const kind = getEntryKind(entry)
-  const shown = getPublicEntry(entry)
+const row = (key: string, record: unknown): Row => ({ key, record: JSON.stringify(record) })
 
-  return {
-    uid: entry.uid,
-    occurred_at: entry.at,
-    day: entry.at.slice(0, 10),
-    published: entry.published ? 1 : 0,
-    trip: trip ?? null,
-    hidden: entry.visibility === 'private' ? 1 : 0,
-    kind,
-    record: JSON.stringify(kind === 'moment' ? (record ?? entryToMoment(entry, trip)) : entry),
-    entry: JSON.stringify(entry),
-    shown: shown ? JSON.stringify(shown) : null,
-  }
-}
-
-/** A Moment's row, as the first shape writes one, over the entry it was. */
-export function momentRow(
-  moment: MomentRecord,
-  record: unknown = moment,
-  prior?: Entry,
-): Record<string, Value> {
-  return entryRow(mergeMomentIntoEntry(prior, moment), { record, trip: moment.trip })
-}
-
-/** A collection's row, with the trip the first shape reads; not shown when private. */
-export function collectionRow(collection: Collection, trip: TripRecord, record: unknown = trip) {
-  return {
-    id: getCollectionKey(collection),
-    start_date: collection.span.start.slice(0, 10),
-    end_date: collection.span.end.slice(0, 10),
-    uid: collection.uid,
-    record: JSON.stringify(record),
-    collection: JSON.stringify(collection),
-    shown: collection.visibility === 'private' ? null : JSON.stringify(collection),
-  } satisfies Record<string, Value>
-}
-
-export function trackRow(track: PublicTrack): Record<string, Value> {
-  return {
-    uid: track.uid,
-    start_at: track.start,
-    end_at: track.end,
-    collection: track.collection ?? null,
-    record: JSON.stringify(track),
-  }
-}
-
-export function placeRow(id: string, record: unknown): Record<string, Value> {
-  return { id, record: JSON.stringify(record) }
-}
-
-export function routeRow(key: string, record: unknown): Record<string, Value> {
-  return { key, record: JSON.stringify(record) }
-}
+export const entryRow = (entry: Entry) => row(entry.uid, entry)
+export const collectionRow = (collection: Collection) =>
+  row(getCollectionKey(collection), collection)
+export const trackRow = (track: PublicTrack) => row(track.uid, track)
+export const placeRow = (id: string, record: unknown) => row(id, record)
+export const routeRow = (key: string, record: unknown) => row(key, record)
 
 // The car's statistics, as the Zeekr import normalised them: a month, a cumulative
 // assisted-driving observation, and a source capture they point into.
 
-export function vehicleMonthRow(month: VehicleMonth): Record<string, Value> {
-  return {
-    key: `${month.deviceId}/${month.month}`,
-    device_id: month.deviceId,
-    month: month.month,
-    record: JSON.stringify(month),
-  }
-}
-
-export function vehicleAssistedRow(
-  observation: VehicleAssistedDrivingCapture,
-): Record<string, Value> {
-  return {
-    key: `${observation.deviceId}/${observation.capturedAt}`,
-    device_id: observation.deviceId,
-    captured_at: observation.capturedAt,
-    record: JSON.stringify(observation),
-  }
-}
-
-export function vehicleCaptureRow(capture: VehicleCapture): Record<string, Value> {
-  return { id: capture.id, record: JSON.stringify(capture) }
-}
+export const vehicleMonthRow = (month: VehicleMonth) =>
+  row(`${month.deviceId}/${month.month}`, month)
+export const vehicleAssistedRow = (observation: VehicleAssistedDrivingCapture) =>
+  row(`${observation.deviceId}/${observation.capturedAt}`, observation)
+export const vehicleCaptureRow = (capture: VehicleCapture) => row(capture.id, capture)
 
 /**
- * Writes a row, given its values as SQL expressions, at the current revision; a row whose
- * record didn't change, and isn't coming back from deleted, keeps its revision.
+ * Writes a row, given its key and record as SQL expressions, at the current revision; a row
+ * whose record didn't change, and isn't coming back from deleted, keeps its revision.
  */
-export function upsertSql(table: Table, values: Record<string, string>) {
-  const key = KEYS[table]
-  const columns = { ...values, rev: REVISION, deleted_at: 'NULL' }
-  const updates = Object.keys(columns)
-    .filter((column) => column !== key)
-    .map((column) => `${column} = excluded.${column}`)
-  // Either shape changing is a change.
-  const compared = ['record', 'entry', 'collection'].filter((column) => column in values)
-
-  return `INSERT INTO ${table} (${Object.keys(columns).join(', ')}) VALUES (${Object.values(columns).join(', ')})
-  ON CONFLICT (${key}) DO UPDATE SET ${updates.join(', ')}
-  WHERE ${compared.map((column) => `${table}.${column} IS NOT excluded.${column}`).join(' OR ')} OR ${table}.deleted_at IS NOT NULL`
+export function upsertSql(table: Table, { key, record }: { key: string; record: string }) {
+  return `INSERT INTO ${table} (key, rev, deleted_at, record) VALUES (${key}, ${REVISION}, NULL, ${record})
+  ON CONFLICT (key) DO UPDATE SET rev = excluded.rev, deleted_at = NULL, record = excluded.record
+  WHERE ${table}.record IS NOT excluded.record OR ${table}.deleted_at IS NOT NULL`
 }
 
-/** The placeholders `?1`, `?2`… for a row's values, in order, for `upsertSql`. */
-export function placeholders(row: Record<string, Value>) {
-  return Object.fromEntries(Object.keys(row).map((column, index) => [column, `?${index + 1}`]))
+/** Marks a row deleted at the current revision, if it isn't already. */
+export function deleteSql(table: Table) {
+  return `UPDATE ${table} SET deleted_at = ?1, rev = ${REVISION} WHERE key = ?2 AND deleted_at IS NULL`
 }
