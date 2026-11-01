@@ -431,7 +431,8 @@ class TimelineTracks(
  * and moving its rows as they arrive.
  */
 private object TrackMemory {
-    val cache = java.util.concurrent.ConcurrentHashMap<String, DayTrack?>()
+    /** Each day read, null for one that didn't move, which a ConcurrentHashMap couldn't hold. */
+    val cache: MutableMap<String, DayTrack?> = java.util.Collections.synchronizedMap(HashMap())
     val stale: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
     @Volatile
