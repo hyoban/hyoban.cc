@@ -2,6 +2,7 @@ package cc.hyoban.moments.data.api
 
 import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.HttpException
+import cc.hyoban.moments.data.copy.CopyRow
 import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
@@ -11,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -106,34 +108,22 @@ class ApiException(code: Int, message: String) : HttpException(code, message)
 class NoTokenException : IOException("No API token")
 
 /**
- * A page of the change feed (`GET /v2/changes`): the entries that changed after a revision,
- * and where the next page starts; the places, collections, tracks and the car's statistics
- * on the first page only, every one of them on a feed from the start.
+ * A page of the rows (`GET /v2/rows`): every row D1 keeps that changed after a revision,
+ * deleted ones too, table by table, and where the next page starts.
  */
 @Serializable
-data class EntryChanges(
-    val revision: Long,
-    val entries: List<JsonObject>,
-    /** Entries removed since, by uid. */
-    val deleted: List<String>,
-    val places: Map<String, Place> = emptyMap(),
-    val deletedPlaces: List<String> = emptyList(),
-    val collections: List<JsonObject> = emptyList(),
-    val deletedCollections: List<String> = emptyList(),
-    val tracks: List<JsonObject> = emptyList(),
-    val deletedTracks: List<String> = emptyList(),
-    /** The car's statistics, from an import only: a month by `<device>/<YYYY-MM>`, an assisted-driving observation by `<device>/<captured at>`. */
-    val vehicleMonths: List<JsonObject> = emptyList(),
-    val deletedVehicleMonths: List<String> = emptyList(),
-    val vehicleAssisted: List<JsonObject> = emptyList(),
-    val deletedVehicleAssisted: List<String> = emptyList(),
-    val next: String? = null,
-)
+data class RowsPage(val revision: Long, val rows: List<RowsPageRow>, val next: String? = null)
+
+/** One row of a [RowsPage], its record as D1 keeps it. */
+@Serializable
+data class RowsPageRow(val table: String, val key: String, val rev: Long, val deletedAt: String? = null, val record: JsonElement) {
+    fun toCopyRow() = CopyRow(table, key, rev, deletedAt, record.toString())
+}
 
 /** What the app reads the records from; the tests stand in for the API with their own. */
 interface MomentsSource {
-    /** What changed after revision [since], or from [cursor] when it continues a feed. */
-    suspend fun entryChanges(since: Long, cursor: String?): EntryChanges
+    /** The rows that changed after revision [since], or from [cursor] when it continues a read. */
+    suspend fun rows(since: Long, cursor: String?): RowsPage
 }
 
 /**
@@ -146,8 +136,8 @@ class MomentsApi(
     private val client: OkHttpClient = Http.client,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : MomentsSource, MomentsWriter {
-    override suspend fun entryChanges(since: Long, cursor: String?): EntryChanges =
-        get(if (cursor != null) "/v2/changes?cursor=$cursor&limit=500" else "/v2/changes?since=$since&limit=500", EntryChanges.serializer())
+    override suspend fun rows(since: Long, cursor: String?): RowsPage =
+        get(if (cursor != null) "/v2/rows?cursor=$cursor&limit=500" else "/v2/rows?since=$since&limit=500", RowsPage.serializer())
 
     override suspend fun uploaded(momentUid: String, mediaUid: String, part: UploadPart): String? = withContext(io) {
         val path = "/v2/entries/$momentUid/media/$mediaUid/${part.path}"

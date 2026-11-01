@@ -8,13 +8,16 @@ is the app's design system (the 「这里 App 设计系统」 artifact, mirrored
 
 It works on the phone alone: the build names no API, so until an API's address and its
 token, which every request needs, are set under 我 → 同步与来源, it asks nothing of one and
-everything written stays on the phone. With them it reads the API (`apps/api`) and keeps a copy under the app's `api/`
-directory in the layout `packages/data-spec` defines, so it opens at once and works
-offline. Each start, each pull down on a list, and 刷新 in 我 → 同步与来源 ask only for what
-changed since, from `/v2/changes`: the entries, kept as Moments when they have words and as
-they are otherwise (charges, public bills, marks), and the places, collections and public
-tracks; the trips are worked out from the collections and their marks, as the spec's
-`collectionToTrip` does. The routes (`GET /v2/routes`) are asked for again only when the API's revision has moved
+everything written stays on the phone. With them it reads the API (`apps/api`) and keeps a
+copy of every row D1 has, in the same tables (`copy.db`, out of the backup, its tables
+generated from `@hyoban/data-spec/tables` into `data/copy/CopyTables.kt`), so it opens at
+once and works offline. The copy only follows the API: each start, each pull down on a list,
+and 刷新 in 我 → 同步与来源, and each publish ask only for the rows changed since, from
+`/v2/rows`. The screens take the entries as Moments when they have words and as they are
+otherwise (charges, public bills, marks), with the places, collections and public tracks; the
+trips are worked out from the collections and their marks, as the spec's `collectionToTrip`
+does. SQLite is bundled (`androidx.sqlite`'s), as the tables' generated columns need a newer
+one than Android before 11 has. The routes (`GET /v2/routes`) are asked for again only when the API's revision has moved
 on. A new API, set in 同步与来源, drops the copy and reads everything again.
 
 ## Pages
@@ -375,8 +378,9 @@ scripts/ui.py tap tab_map
 ## Layout
 
 - `data/spec`: the records as Kotlin, each keeping the fields it doesn't know.
-- `data/api`: the API's change feeds and writes.
-- `data/store`: the copy on the phone and what the screens are given from it.
+- `data/api`: the API's rows and writes.
+- `data/copy`: the copy of the API's rows, in D1's tables.
+- `data/store`: what the screens are given from the copy, and the phone's own notes.
 - `data/local`: the Moments written on the phone, their time and place.
 - `data/media`: photo, poster and video URLs, picked as the site picks them.
 - `data/trips`: which trip a Moment is on, its days and stops, and its playback.

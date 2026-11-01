@@ -90,8 +90,7 @@ even when starting from the repository root.
   `vp run data:tables`, so changing one changes both. The copy only follows `GET /v2/rows`;
   the phone's edits still go through `POST /v2/changes`. The server's own bookkeeping (caches, leases, the channel's
   posts) is not copied. Only what stays on the phone (the ledger, the footprints, the app's
-  unpublished changes and settings) takes a shape of its own. The app still keeps a partial
-  copy as JSON files; work moves it toward this, never away.
+  unpublished changes and settings) takes a shape of its own.
 - Android keeps edits locally until the user reviews and publishes one change set
   through `POST /v2/changes`. Upload originals first; do not bypass this publishing
   boundary with individual writes. The API fetches missing trip routes after writes.
