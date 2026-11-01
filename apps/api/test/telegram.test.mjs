@@ -130,6 +130,25 @@ test('changed words edit the caption; a Moment the site no longer shows is delet
   })
 })
 
+test('a Moment posted that loses its words has its post deleted', async () => {
+  const { env, sqlite, calls, sync } = setUpChannel()
+
+  await publish(env)
+  await sync()
+  sqlite.exec(`
+    UPDATE meta SET value = CAST(value AS INTEGER) + 1 WHERE key = 'revision';
+    UPDATE entries SET record = json_remove(record, '$.parts.text'),
+      rev = (SELECT CAST(value AS INTEGER) FROM meta WHERE key = 'revision')
+    WHERE key = '${dockMoment.uid}';
+  `)
+
+  assert.deepEqual(await sync(), { posted: 0, edited: 0, deleted: 1 })
+  assert.deepEqual(calls.at(-1), {
+    method: 'deleteMessages',
+    params: { chat_id: '@channel', message_ids: [100] },
+  })
+})
+
 test('words too long for a caption follow the photos as a message of their own', async () => {
   const { env, calls, sync } = setUpChannel()
   const text = '长'.repeat(1100)

@@ -37,6 +37,8 @@ class MomentsRepositoryTest {
         /** Every row, by table and key, as D1 keeps it. */
         val rows = mutableMapOf<Pair<String, String>, CopyRow>()
         var revision = 0L
+        /** Which database the rows are of. */
+        var database: Long? = 1
         var calls = 0
         /** How many places the rows handed out, all told. */
         var placesSent = 0
@@ -75,6 +77,7 @@ class MomentsRepositoryTest {
                 revision,
                 page.map { RowsPageRow(it.table, it.key, it.rev, it.deletedAt, Spec.json.parseToJsonElement(it.record)) },
                 next = if (changed.size > start + 2) "${start + 2}" else null,
+                database = database,
             )
         }
     }
@@ -259,6 +262,39 @@ class MomentsRepositoryTest {
         repository.refresh()
 
         assertEquals(listOf("Z"), repository.moments.value.map { it.uid })
+    }
+
+    @Test
+    fun `another database is read again from the start, even past the copy's revision`() = runBlocking {
+        listOf("A", "B").forEach { api.put(moment(it, "2026-10-01")) }
+        val repository = repository()
+        repository.load()
+        repository.refresh()
+
+        // Put back to before B, then written past where the copy was.
+        api.rows.remove("entries" to "B")
+        api.database = 2
+        listOf("C", "D").forEach { api.put(moment(it, "2026-10-02")) }
+        repository.refresh()
+
+        assertEquals(listOf("A", "C", "D"), repository.moments.value.map { it.uid }.sorted())
+        assertEquals(2, copy().database())
+    }
+
+    @Test
+    fun `a copy from before the API said which database it is keeps the one it says`() = runBlocking {
+        api.database = null
+        api.put(moment("A", "2026-10-01"))
+        val repository = repository()
+        repository.load()
+        repository.refresh()
+        assertEquals(null, copy().database())
+
+        api.database = 1
+        repository.refresh()
+
+        assertEquals(1, copy().database())
+        assertEquals(listOf("A"), repository.moments.value.map { it.uid })
     }
 
     @Test

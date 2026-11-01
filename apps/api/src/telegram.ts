@@ -1,5 +1,5 @@
 import { isMomentShown, type MomentRecord } from '@hyoban/data-spec'
-import { entryToMoment } from '@hyoban/data-spec/entry'
+import { entryToMoment, isMomentEntry } from '@hyoban/data-spec/entry'
 import type { Bucket } from './bucket.ts'
 import { readAll, revisionQuery, toRevision, type Database } from './database.ts'
 import { toEntry } from './writes.ts'
@@ -154,11 +154,15 @@ async function postChanges(context: ChannelContext) {
   const revision = toRevision(revisionRows)
   const since = Date.parse((sinceRows as { value: string }[])[0]?.value ?? '')
   const done = toRevision(doneRows)
+  // The Moments that changed, and anything posted that changed into what isn't one, its words
+  // gone, so its post goes too.
   const [changed, posts, places] = await readAll(db, [
     db
       .prepare(
         `SELECT key, deleted_at, record FROM entries
-         WHERE rev > ?1 AND rev <= ?2 AND kind = 'moment' ORDER BY at, key`,
+         WHERE rev > ?1 AND rev <= ?2
+           AND (kind = 'moment' OR key IN (SELECT uid FROM telegram_posts))
+         ORDER BY at, key`,
       )
       .bind(done, revision),
     db
@@ -181,7 +185,8 @@ async function postChanges(context: ChannelContext) {
   const result = { posted: 0, edited: 0, deleted: 0 }
 
   for (const row of changed as ChangedRow[]) {
-    const moment = row.deleted_at ? null : entryToMoment(toEntry(row))
+    const entry = row.deleted_at ? null : toEntry(row)
+    const moment = entry && isMomentEntry(entry) ? entryToMoment(entry) : null
     const posted = postedBy.get(row.key)
     const post = moment && isMomentShown(moment) ? toPost(moment, placeNames) : null
 

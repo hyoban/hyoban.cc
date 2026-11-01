@@ -82,6 +82,14 @@ D1's 30 days of Time Travel and the R2 snapshot on the `r2-backup` branch are th
 back; the records have no copy in git. A `data/` exported earlier can be restored over the
 deployed database with `vp run data:import --remote` ([data.md](data.md)).
 
+A restore with Time Travel puts back `meta`'s `database` too, and the app's copy, ahead of the
+restore, would carry on from rows the database no longer has. Give it a new one from `apps/api`, so every copy
+reads all the rows again:
+
+```bash
+npx wrangler d1 execute hyoban-cc --remote --command "UPDATE meta SET value = CAST(abs(random() % 9007199254740991) AS TEXT) WHERE key = 'database'"
+```
+
 ## Setting it up from nothing
 
 The API comes first: the site's build reads it, and the API needs the site's deploy

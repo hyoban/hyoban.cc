@@ -27,12 +27,12 @@ class CopyStore(private val file: File, private val driver: SQLiteDriver = Bundl
         val version = CopyTables.statements.joinToString("\n").hashCode()
         if (connection.single("PRAGMA user_version") != version.toLong()) {
             val tables = connection.strings("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
-            connection.execSQL("BEGIN IMMEDIATE")
-            tables.forEach { connection.execSQL("DROP TABLE \"$it\"") }
-            CopyTables.statements.forEach(connection::execSQL)
-            connection.execSQL("CREATE TABLE copy_state (key TEXT PRIMARY KEY, value INTEGER NOT NULL)")
-            connection.execSQL("PRAGMA user_version = $version")
-            connection.execSQL("COMMIT")
+            connection.transaction {
+                tables.forEach { execSQL("DROP TABLE \"$it\"") }
+                CopyTables.statements.forEach(::execSQL)
+                execSQL("CREATE TABLE copy_state (key TEXT PRIMARY KEY, value INTEGER NOT NULL)")
+                execSQL("PRAGMA user_version = $version")
+            }
         }
         return connection
     }
@@ -40,34 +40,39 @@ class CopyStore(private val file: File, private val driver: SQLiteDriver = Bundl
     /** The API's revision the copy was last brought up to; 0 before the first sync. */
     @Synchronized fun revision(): Long = connection.single("SELECT value FROM copy_state WHERE key = 'revision'") ?: 0
 
+    /** Which of the API's databases the copy is of, null before an API said. */
+    @Synchronized fun database(): Long? = connection.single("SELECT value FROM copy_state WHERE key = 'database'")
+
     /**
-     * Writes [rows] over the copy's and keeps [revision], all at once: after a sync from the
-     * start ([fresh]), the copy holds those rows and no others.
+     * Writes [rows] over the copy's and keeps [revision] and the [database] they are of, all at
+     * once: after a sync from the start ([fresh]), the copy holds those rows and no others.
      */
-    @Synchronized fun apply(rows: List<CopyRow>, revision: Long, fresh: Boolean = false) {
+    @Synchronized fun apply(rows: List<CopyRow>, revision: Long, fresh: Boolean = false, database: Long? = null) {
         val connection = connection
-        connection.execSQL("BEGIN IMMEDIATE")
-        try {
-            if (fresh) CopyTables.names.forEach { connection.execSQL("DELETE FROM $it") }
-            for (row in rows) {
-                require(row.table in CopyTables.names) { "No table ${row.table}" }
-                connection.prepare(
-                    "INSERT INTO ${row.table} (key, rev, deleted_at, record) VALUES (?, ?, ?, ?) " +
+        connection.transaction {
+            if (fresh) {
+                CopyTables.names.forEach { execSQL("DELETE FROM $it") }
+                execSQL("DELETE FROM copy_state WHERE key = 'database'")
+            }
+            for ((table, tableRows) in rows.groupBy { it.table }) {
+                require(table in CopyTables.names) { "No table $table" }
+                // One statement a table, bound again for each row.
+                prepare(
+                    "INSERT INTO $table (key, rev, deleted_at, record) VALUES (?, ?, ?, ?) " +
                         "ON CONFLICT (key) DO UPDATE SET rev = excluded.rev, deleted_at = excluded.deleted_at, record = excluded.record",
                 ).use { statement ->
-                    statement.bindText(1, row.key)
-                    statement.bindLong(2, row.rev)
-                    if (row.deletedAt == null) statement.bindNull(3) else statement.bindText(3, row.deletedAt)
-                    statement.bindText(4, row.record)
-                    statement.step()
+                    for (row in tableRows) {
+                        statement.bindText(1, row.key)
+                        statement.bindLong(2, row.rev)
+                        if (row.deletedAt == null) statement.bindNull(3) else statement.bindText(3, row.deletedAt)
+                        statement.bindText(4, row.record)
+                        statement.step()
+                        statement.reset()
+                    }
                 }
             }
-            connection.prepare("INSERT INTO copy_state (key, value) VALUES ('revision', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value")
-                .use { it.bindLong(1, revision); it.step() }
-            connection.execSQL("COMMIT")
-        } catch (error: Throwable) {
-            connection.execSQL("ROLLBACK")
-            throw error
+            keep("revision", revision)
+            if (database != null) keep("database", database)
         }
     }
 
@@ -97,6 +102,22 @@ class CopyStore(private val file: File, private val driver: SQLiteDriver = Bundl
     @Synchronized fun close() {
         opened?.close()
         opened = null
+    }
+
+    private fun SQLiteConnection.keep(key: String, value: Long) =
+        prepare("INSERT INTO copy_state (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value")
+            .use { it.bindText(1, key); it.bindLong(2, value); it.step() }
+
+    /** Runs [block] in one transaction, rolled back if it throws. */
+    private inline fun SQLiteConnection.transaction(block: SQLiteConnection.() -> Unit) {
+        execSQL("BEGIN IMMEDIATE")
+        try {
+            block()
+            execSQL("COMMIT")
+        } catch (error: Throwable) {
+            execSQL("ROLLBACK")
+            throw error
+        }
     }
 
     private fun SQLiteConnection.single(sql: String): Long? = prepare(sql).use { if (it.step() && !it.isNull(0)) it.getLong(0) else null }
