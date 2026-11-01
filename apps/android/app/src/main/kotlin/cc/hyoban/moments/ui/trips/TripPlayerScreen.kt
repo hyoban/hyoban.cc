@@ -290,19 +290,21 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
                 .onSizeChanged { with(density) { card = it.width.toDp() to it.height.toDp() } }
                 .navigationBarsPadding()
                 .sideInsetsPadding(if (cardLeft) WindowInsetsSides.Left else if (landscape) WindowInsetsSides.Right else WindowInsetsSides.End)
-                // On its side, the card and its toolbar share the height under the status bar, and
-                // at the left it starts under back.
+                // On its side, the card takes the whole height under the status bar, from under back
+                // when it stands at the left (H12).
                 .then(if (landscape) Modifier.statusBarsPadding() else Modifier)
-                .then(if (cardLeft) Modifier.padding(top = FLOATING_BAR) else Modifier)
-                .padding(Space.gutter)
+                .then(if (cardLeft) Modifier.padding(start = Space.gutter, end = Space.gutter, bottom = Space.gutter, top = FLOATING_BAR) else Modifier.padding(Space.gutter))
+                .then(if (landscape) Modifier.fillMaxHeight() else Modifier)
                 // Beside the map on its side, as Material 3 has a supporting pane at 360dp.
                 // Across the foot no wider than Material 3 has a bottom sheet, 640dp.
                 .then(if (landscape) Modifier.width(360.dp + Space.gutter * 2) else Modifier.widthIn(max = 640.dp).fillMaxWidth()),
-            photoHeight = if (landscape) 100.dp else 220.dp,
+            photoHeight = if (landscape) 140.dp else 220.dp,
             slide = slide,
             index = index,
-            expanded = expanded,
+            // On its side it is always open, the height its own, with nothing to fold.
+            expanded = expanded || landscape,
             onExpanded = { expanded = it },
+            fill = landscape,
             // On its side, the toolbar stands under the map instead, so the card has the height.
             toolbar = !landscape,
         )
@@ -356,6 +358,8 @@ private fun PlayerCard(
     expanded: Boolean,
     onExpanded: (Boolean) -> Unit,
     toolbar: Boolean,
+    /** On a phone on its side: the card fills the height it is given, with no handle, its progress at its foot. */
+    fill: Boolean = false,
 ) {
     val count = controller.playback.slides.size
     val playing = controller.playing
@@ -380,6 +384,33 @@ private fun PlayerCard(
         val layer by animateFloatAsState(if (dragging) DRAGGED_LAYER else 0f, AppTheme.motionScheme.fastEffectsSpec(), label = "dragged")
         val layerColor = tokens.tx
         val cardShape = AppTheme.shapes.large
+        // The whole playback's progress along the card's foot, a thin line in the text colour on
+        // the pressed grey; left to right whichever way the words run, as a media player's timeline is.
+        val progressRow: @Composable () -> Unit = {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) { Row(Modifier.padding(horizontal = Space.xs), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
+                // Named, with which card it is on, as the count beside it says to the eye.
+                val label = stringResource(R.string.playback_progress, trip.title)
+                val position = stringResource(R.string.playback_card_of, index + 1, count)
+                LinearProgressIndicator(
+                    progress = progress,
+                    color = tokens.tx,
+                    trackColor = tokens.fill,
+                    strokeCap = StrokeCap.Round,
+                    gapSize = 0.dp,
+                    drawStopIndicator = {},
+                    modifier = Modifier.weight(1f).semantics {
+                        contentDescription = label
+                        stateDescription = position
+                    },
+                )
+                Text(
+                    "${index + 1} / $count",
+                    style = AppTheme.typography.caption.copy(fontFeatureSettings = "tnum"),
+                    color = tokens.tx2,
+                    modifier = Modifier.clearAndSetSemantics { },
+                )
+            } }
+        }
         val letGo = {
             dragging = false
             scope.launch { if (reduced) drag.snapTo(Offset.Zero) else drag.animateTo(Offset.Zero, settle) }
@@ -389,7 +420,7 @@ private fun PlayerCard(
             color = SurfaceLevel.Floating.fill(),
             shadowElevation = lift,
             // No taller than the room the toolbar leaves, so it is always in sight; what doesn't fit scrolls.
-            modifier = Modifier.weight(1f, fill = false).fillMaxWidth()
+            modifier = Modifier.weight(1f, fill = fill).fillMaxWidth()
                 .graphicsLayer {
                     translationX = drag.value.x
                     translationY = drag.value.y
@@ -407,8 +438,8 @@ private fun PlayerCard(
                             when {
                                 abs(x) >= abs(y) && x * forward > swipe -> controller.stepPhoto(1)
                                 abs(x) >= abs(y) && -x * forward > swipe -> controller.stepPhoto(-1)
-                                abs(y) > abs(x) && y > swipe -> onExpanded(false)
-                                abs(y) > abs(x) && -y > swipe -> onExpanded(true)
+                                !fill && abs(y) > abs(x) && y > swipe -> onExpanded(false)
+                                !fill && abs(y) > abs(x) && -y > swipe -> onExpanded(true)
                             }
                             letGo()
                         },
@@ -428,11 +459,12 @@ private fun PlayerCard(
                 .testTag("trip_player"),
         ) {
             val motion = AppTheme.motionScheme
-            Column(Modifier.animateContentSize(motion.defaultSpatialSpec())) {
-            // The handle across the card's top 48dp, as a sheet's.
-            DragHandle(expanded, onExpanded)
+            Column(Modifier.animateContentSize(motion.defaultSpatialSpec()).then(if (fill) Modifier.fillMaxHeight() else Modifier)) {
+            // The handle across the card's top 48dp, as a sheet's; none on its side, where it doesn't fold.
+            if (!fill) DragHandle(expanded, onExpanded)
             Column(
-                Modifier.verticalScroll(rememberScrollState()).padding(start = Space.m, end = Space.m, bottom = Space.m),
+                Modifier.then(if (fill) Modifier.weight(1f) else Modifier).verticalScroll(rememberScrollState())
+                    .padding(start = Space.m, end = Space.m, top = if (fill) Space.m else 0.dp, bottom = Space.m),
                 verticalArrangement = Arrangement.spacedBy(Space.m),
             ) {
                 AnimatedContent(
@@ -449,33 +481,10 @@ private fun PlayerCard(
                         PlaybackSlide.Summary -> SummaryCard(trip, controller.playback, covers, urls, expanded)
                     }
                 }
-                // The whole playback's progress along the card's foot, a thin line in the text
-                // colour on the pressed grey; left to right
-                // whichever way the words run, as a media player's timeline is.
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) { Row(Modifier.padding(horizontal = Space.xs), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
-                    // Named, with which card it is on, as the count beside it says to the eye.
-                    val label = stringResource(R.string.playback_progress, trip.title)
-                    val position = stringResource(R.string.playback_card_of, index + 1, count)
-                    LinearProgressIndicator(
-                        progress = progress,
-                        color = tokens.tx,
-                        trackColor = tokens.fill,
-                        strokeCap = StrokeCap.Round,
-                        gapSize = 0.dp,
-                        drawStopIndicator = {},
-                        modifier = Modifier.weight(1f).semantics {
-                            contentDescription = label
-                            stateDescription = position
-                        },
-                    )
-                    Text(
-                        "${index + 1} / $count",
-                        style = AppTheme.typography.caption.copy(fontFeatureSettings = "tnum"),
-                        color = tokens.tx2,
-                        modifier = Modifier.clearAndSetSemantics { },
-                    )
-                } }
+                if (!fill) progressRow()
             }
+            // On its side, held at the card's foot under what scrolls.
+            if (fill) Box(Modifier.padding(start = Space.m, end = Space.m, bottom = Space.m)) { progressRow() }
             }
         }
         if (toolbar) PlaybackControls(controller, playFocus)
