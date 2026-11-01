@@ -87,10 +87,8 @@ class ButtonColors(val containerColor: Color, val contentColor: Color)
 
 object ButtonDefaults {
     val ContentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
-    val ButtonWithIconContentPadding = PaddingValues(start = 16.dp, end = 20.dp, top = 10.dp, bottom = 10.dp)
     val TextButtonContentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
     val IconSize = 18.dp
-    val IconSpacing = 8.dp
 
     @Composable
     fun buttonColors(containerColor: Color = tokens.tx, contentColor: Color = tokens.bg) = ButtonColors(containerColor, contentColor)

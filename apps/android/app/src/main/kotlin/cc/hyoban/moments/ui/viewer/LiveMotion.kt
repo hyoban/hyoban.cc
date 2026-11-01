@@ -5,7 +5,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.media3.common.Player
@@ -89,7 +88,3 @@ fun LiveMotion(url: String, active: Boolean, state: LiveMotionState, modifier: M
 
     if (player != null) MediaSurface(player, modifier, shown = state.playing)
 }
-
-/** A remembered [LiveMotionState] for one live photo. */
-@Composable
-fun rememberLiveMotionState(key: Any): LiveMotionState = remember(key) { LiveMotionState() }

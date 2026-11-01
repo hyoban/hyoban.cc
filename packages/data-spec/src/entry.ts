@@ -291,8 +291,6 @@ export interface Plugin<Part = Record<string, unknown>> {
   publicFields?: readonly string[]
   /** A private part of it stays on the phone rather than going to the API. */
   staysOnDevice?: boolean
-  /** Words to find it by. */
-  searchText?: (part: Part) => string
   /** Plain words for a reader that doesn't know the plugin. */
   fallback?: (part: Part) => string
 }
@@ -312,21 +310,18 @@ export const plugins = {
     id: 'text',
     version: 1,
     defaultVisibility: 'inherit',
-    searchText: (part) => part.text,
     fallback: (part) => part.text,
   }),
   media: definePlugin<Parts['media']>({
     id: 'media',
     version: 1,
     defaultVisibility: 'inherit',
-    searchText: (part) => part.items.map((item) => item.alt).join(' '),
     fallback: (part) => `${part.items.length} 张照片`,
   }),
   food: definePlugin<Parts['food']>({
     id: 'food',
     version: 1,
     defaultVisibility: 'inherit',
-    searchText: (part) => part.dishes.join(' '),
     fallback: (part) => part.dishes.join('、'),
   }),
   bill: definePlugin<Parts['bill']>({
@@ -335,7 +330,6 @@ export const plugins = {
     defaultVisibility: 'private',
     publicFields: ['kind', 'amount', 'currency', 'category', 'note'],
     staysOnDevice: true,
-    searchText: (part) => [part.category, part.note].filter(Boolean).join(' '),
     fallback: (part) => `${part.category ?? ''} ${part.amount} ${part.currency}`.trim(),
   }),
   charge: definePlugin<Parts['charge']>({
@@ -343,7 +337,6 @@ export const plugins = {
     version: 1,
     defaultVisibility: 'inherit',
     publicFields: ['type', 'energyWh', 'cost', 'durationMin'],
-    searchText: (part) => part.station ?? '',
     fallback: (part) =>
       `充电 ${part.energyWh === undefined ? '' : `${part.energyWh / 1000} kWh`}`.trim(),
   }),
@@ -351,7 +344,6 @@ export const plugins = {
     id: 'device',
     version: 1,
     defaultVisibility: 'inherit',
-    searchText: (part) => [part.name, part.category, part.note].filter(Boolean).join(' '),
     fallback: (part) => `买了 ${part.name}`,
   }),
   subscription: definePlugin<Parts['subscription']>({
@@ -369,7 +361,6 @@ export const plugins = {
       'ended',
       'note',
     ],
-    searchText: (part) => [part.name, part.note].filter(Boolean).join(' '),
     fallback: (part) => `订阅 ${part.name}`,
   }),
 } satisfies Record<string, Plugin<never>>
@@ -474,14 +465,6 @@ export function getUploadEntry<T extends Entry>(
   )
 
   return { ...entry, parts }
-}
-
-/** The words an entry is found by, from every part's plugin. */
-export function getEntrySearchText(entry: Entry) {
-  return Object.entries(entry.parts)
-    .map(([pluginId, part]) => (part ? getPlugin(pluginId)?.searchText?.(part as never) : ''))
-    .filter(Boolean)
-    .join('\n')
 }
 
 /** An entry with nothing but its moment and point: a place passed, a stop confirmed. */
@@ -692,53 +675,6 @@ export function entryToMoment(entry: Entry, trip?: string): MomentRecord {
     ...(entry.published ? { published: entry.published } : {}),
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
-  }
-}
-
-/**
- * A Moment written in the first shape, over the entry it was: its words, photos, meal, time,
- * place and whether it is hidden replace the entry's, and everything the first shape doesn't
- * hold (other parts, points, links) stays. Each photo keeps the point the entry had for it.
- */
-export function mergeMomentIntoEntry(prior: Entry | undefined, moment: MomentRecord): Entry {
-  const next = momentToEntry(moment)
-
-  if (!prior) {
-    return next
-  }
-
-  const points = new Map((prior.parts.media?.items ?? []).map((item) => [item.uid, item.point]))
-  const parts: Record<string, unknown> = {
-    ...prior.parts,
-    text: { ...prior.parts.text, ...next.parts.text },
-  }
-
-  for (const plugin of ['media', 'food'] as const) {
-    if (next.parts[plugin]) {
-      parts[plugin] = { ...prior.parts[plugin], ...next.parts[plugin] }
-    } else {
-      delete parts[plugin]
-    }
-  }
-
-  if (next.parts.media) {
-    parts.media = {
-      ...(parts.media as object),
-      items: next.parts.media.items.map((item) =>
-        points.get(item.uid) ? { ...item, point: points.get(item.uid) } : item,
-      ),
-    }
-  }
-
-  const { visibility: _visibility, place: _place, order: _order, ...kept } = prior
-
-  return {
-    ...kept,
-    ...next,
-    ...(prior.point ? { point: prior.point } : {}),
-    ...(prior.links ? { links: prior.links } : {}),
-    ...(prior.end ? { end: prior.end } : {}),
-    parts: parts as EntryParts,
   }
 }
 

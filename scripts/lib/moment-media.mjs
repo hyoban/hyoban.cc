@@ -91,21 +91,6 @@ export async function prepareVideo({ inputPath, momentId, stem, temporaryPath })
   }
 }
 
-/** A live photo: the still as an image, and its motion transcoded without a poster. */
-export async function prepareLivePhoto({ inputPath, momentId, stem, temporaryPath, videoPath }) {
-  const still = await prepareImage({ inputPath, momentId, stem, temporaryPath })
-  // Beside its still, as `getMediaKey` names a live photo's video.
-  const outputPath = join(temporaryPath, `${stem}-video.mp4`)
-
-  await transcodeVideo(videoPath, outputPath)
-  const video = await describeAsset(outputPath, momentId)
-
-  return {
-    assets: [...still.assets, video],
-    published: { ...still.published, video: video.published },
-  }
-}
-
 /** Uploads prepared assets, reusing identical objects already in the bucket. */
 export async function uploadAssets(assets, { config, root }) {
   const actions = {}

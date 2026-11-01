@@ -21,8 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import cc.hyoban.moments.ui.design.AssistChip
-import cc.hyoban.moments.ui.design.AssistChipDefaults
 import cc.hyoban.moments.ui.design.Card
 import cc.hyoban.moments.ui.design.CardDefaults
 import cc.hyoban.moments.ui.design.Icon
@@ -69,9 +67,6 @@ import cc.hyoban.moments.ui.theme.fill
 object AppColors {
     val page: Color
         @Composable get() = SurfaceLevel.Page.fill()
-
-    /** What is in a sheet over the page sits as on a card: a level up from it, in light and dark alike. */
-    val sheetLevel: SurfaceLevel = SurfaceLevel.Card
 
     /** A sheet's own fill, bottom or side: the surface. */
     val sheet: Color
@@ -154,20 +149,6 @@ fun Pill(text: String, modifier: Modifier = Modifier, icon: ImageVector? = null)
         icon?.let { Icon(it, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(16.dp)) }
         Text(text, style = AppTheme.typography.label, color = tokens.tx2, maxLines = 1)
     }
-}
-
-/**
- * A chip tapped on its own, an [AssistChip] filled a level above what it sits on and
- * without a border: a place to open. A capsule, 48dp to tap.
- */
-@Composable
-fun NeutralChip(label: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    AssistChip(
-        onClick = onClick,
-        label = { Text(label) },
-        leadingIcon = { Icon(icon, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
-        modifier = modifier,
-    )
 }
 
 /** A card's section: a small icon and its name over what follows, both in the secondary text colour. */

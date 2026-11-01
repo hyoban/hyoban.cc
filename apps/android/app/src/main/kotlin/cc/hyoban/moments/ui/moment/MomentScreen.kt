@@ -106,7 +106,6 @@ import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.LocalSnackbarLift
-import cc.hyoban.moments.ui.components.rememberScreenReader
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FLOATING_BAR
 import cc.hyoban.moments.ui.components.FloatingBack
@@ -175,8 +174,6 @@ fun MomentScreen(
 
     // The photos swiped above and the strip under them are one place in the Moment's media.
     val pager = rememberPagerState { moment.media.size }
-
-    val screenReader = rememberScreenReader()
 
     // The whole page is the card it was opened from, grown to the screen.
     // As a pane beside the Moments, it doesn't grow out of a card, the card still in sight.
