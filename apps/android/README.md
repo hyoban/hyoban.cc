@@ -30,7 +30,8 @@ either way. On a phone on its side the status and navigation bars are put away (
 shows them), the timeline is a conversation beside the tabs with the day it has scrolled to on a map
 filling the rest, the map's trips float in a card beside the tabs, and sheets slide in from
 the side. A Moment's photo, a day's footprints, a trip's route and a place's map take the half
-on the camera's side, running under its cutout, as does the timeline's map of the day; 记录, 编辑旅程 and 搜索 (its filters) stand in two columns; the ledger, 发布更改, a bill, 设备, 订阅 and 车 keep their
+on the camera's side, running under its cutout, as does the timeline's map of the day, and
+the playback's card stands across from the camera; 记录, 编辑旅程 and 搜索 (its filters) stand in two columns; the ledger, 发布更改, a bill, 设备, 订阅 and 车 keep their
 figures in a column at the left beside their list, the ledger's segments in the bar; 我 is two
 columns; 记一笔's keys take the right half; 记录 is a page rather than a dialog. Controls keep
 clear of the camera's cutout on whichever side it is.

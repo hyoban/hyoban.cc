@@ -1,5 +1,8 @@
 package cc.hyoban.moments.ui.trips
 
+import androidx.compose.ui.AbsoluteAlignment
+import androidx.compose.foundation.layout.absolutePadding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.WindowInsetsSides
 import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.design.emphasized
@@ -193,8 +196,23 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
     val landscape = isLandscape()
     var card by remember { mutableStateOf(0.dp to 0.dp) }
     val top = with(density) { WindowInsets.statusBars.getTop(this).toDp() } + FLOATING_BAR + Space.l
-    // The site's camera padding on a narrow screen: 40 at the sides, clear of the card below.
-    val clear = if (landscape) listOf(40.dp, top, card.first + 40.dp, 40.dp + TOOLBAR_ROOM) else listOf(40.dp, top, 40.dp, card.second + 16.dp)
+    // On its side the map keeps the camera's side, running under the cutout, and the card stands
+    // across from it (H12); without a cutout, the card at the right.
+    val cardLeft = landscape && !cc.hyoban.moments.ui.components.mediaOnLeft()
+    val safe = WindowInsets.safeDrawing
+    val cutLeft = with(density) { safe.getLeft(this, LayoutDirection.Ltr).toDp() }
+    val cutRight = with(density) { safe.getRight(this, LayoutDirection.Ltr).toDp() }
+    // The site's camera padding on a narrow screen: 40 at the sides, clear of the card below, or
+    // of the card beside it and the cutout on its side.
+    val ltr = LocalLayoutDirection.current == LayoutDirection.Ltr
+    val clear = if (landscape) {
+        val left = if (cardLeft) card.first + 40.dp else cutLeft + 40.dp
+        val right = if (cardLeft) cutRight + 40.dp else card.first + 40.dp
+        val bottom = 40.dp + TOOLBAR_ROOM
+        if (ltr) listOf(left, top, right, bottom) else listOf(right, top, left, bottom)
+    } else {
+        listOf(40.dp, top, 40.dp, card.second + 16.dp)
+    }
 
     // From a keyboard or a remote: play and pause on Space or the media keys, the cards on
     // left and right and the photos on up and down, as on the site, and the media keys' next
@@ -261,13 +279,21 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
                 onMoment(uid)
             },
             modifier = Modifier
-                .align(if (landscape) Alignment.BottomEnd else Alignment.BottomCenter)
+                .align(
+                    when {
+                        !landscape -> Alignment.BottomCenter
+                        cardLeft -> AbsoluteAlignment.BottomLeft
+                        else -> AbsoluteAlignment.BottomRight
+                    },
+                )
                 // The room it takes from the map, its margin and the navigation bar's included.
                 .onSizeChanged { with(density) { card = it.width.toDp() to it.height.toDp() } }
                 .navigationBarsPadding()
-                .sideInsetsPadding(WindowInsetsSides.End)
-                // On its side, the card and its toolbar share the height under the status bar.
+                .sideInsetsPadding(if (cardLeft) WindowInsetsSides.Left else if (landscape) WindowInsetsSides.Right else WindowInsetsSides.End)
+                // On its side, the card and its toolbar share the height under the status bar, and
+                // at the left it starts under back.
                 .then(if (landscape) Modifier.statusBarsPadding() else Modifier)
+                .then(if (cardLeft) Modifier.padding(top = FLOATING_BAR) else Modifier)
                 .padding(Space.gutter)
                 // Beside the map on its side, as Material 3 has a supporting pane at 360dp.
                 // Across the foot no wider than Material 3 has a bottom sheet, 640dp.
@@ -282,7 +308,9 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
         )
         if (landscape) {
             Box(
-                Modifier.fillMaxSize().navigationBarsPadding().padding(end = card.first, bottom = Space.gutter),
+                // In the middle of the map beside the card, clear of the cutout.
+                Modifier.fillMaxSize().navigationBarsPadding()
+                    .absolutePadding(left = if (cardLeft) card.first else cutLeft, right = if (cardLeft) cutRight else card.first, bottom = Space.gutter),
                 contentAlignment = Alignment.BottomCenter,
             ) { PlaybackControls(controller, playFocus) }
         }
