@@ -94,7 +94,9 @@ even when starting from the repository root.
   public bill publishes its kind, amount, currency, category and note alone, never its account or
   balance. Spans of the footprints can be made public (a trip's page has a switch), and
   only their line, simplified, is published; the raw samples never leave the phone. Raw Zeekr captures and report links stay under `.private/`;
-  only the approved statistical projection belongs in `data/zeekr/`.
+  only the approved statistical projection belongs in `data/zeekr/`. The car's data, its
+  statistics and its charges, comes only from that import; nothing edits it by hand, the app
+  included: a wrong value is fixed by capturing and importing again.
 - Map year colors and fog behavior match across Web and App; change both together.
   The app's trip playback follows `packages/trip-map/src/player`, including a route
   that keeps moving during playback.
