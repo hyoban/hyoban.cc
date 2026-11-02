@@ -517,17 +517,7 @@ fun DayScreen(
     // The day's bills, as the timeline has them for its month, kept to this day.
     val month = remember(date) { TimeFilter(date.take(4).toInt(), date.substring(5, 7).toInt()) }
     val monthBills = rememberTimelineBills(container, moments, month)
-    val bills = remember(monthBills, date) {
-        TimelineBills(
-            monthBills.ledger,
-            monthBills.linked,
-            monthBills.loose.filterKeys { it == date },
-            monthBills.spent.filterKeys { it == date },
-            monthBills.currency,
-            monthBills.charges.filterKeys { it == date },
-            monthBills.things.filterKeys { it == date },
-        )
-    }
+    val bills = remember(monthBills, date) { monthBills.onDay(date) }
     // The trip goes unsaid on the cards when all of them were on it: its row heads the day.
     val oneTrip = trip != null && moments.all { tripOf(it, trips)?.id == trip.id }
 
@@ -787,13 +777,20 @@ fun PlaceScreen(
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val moments = remember(all, id) { all.filter { id in it.places } }
+    // Its check-ins alone, among its Moments by their days.
+    val allCheckins by container.repository.checkins.collectAsStateWithLifecycle()
+    val checkins = allCheckins.byPlace[id].orEmpty()
+    val bills = remember(checkins) { TimelineBills(checkins = checkins.groupBy { it.at.take(10) }) }
 
     val place = places[id]
     // On a phone on its side, the place on a map down the start half and its Moments beside it,
     // its name heading them rather than standing over the map's edge (H10).
     val sideways = isPhoneLandscape() && place != null
     // What sort of place, where it is, then how many Moments are there.
-    val about = listOfNotNull(PlaceKind.of(place?.kind)?.let { stringResource(it.label) }, place?.division?.label(), pluralStringResource(R.plurals.count_moments, moments.size, moments.size)).joinToString(" ")
+    val about = listOfNotNull(
+        PlaceKind.of(place?.kind)?.let { stringResource(it.label) },
+        place?.division?.label(),
+    ).plus(placeCounts(moments.size, checkins.size)).joinToString(" ")
     SubPage(
         place?.name ?: id,
         onBack,
@@ -823,7 +820,7 @@ fun PlaceScreen(
         // The place is the page's title, so its cards name only the other places they were at.
         val ledgerNav = LocalLedgerNav.current
         val feed: @Composable (Modifier) -> Unit = { feedModifier ->
-            MomentFeed(moments, places, trips, container.mediaUrls, onMoment, feedModifier, onDay = onDay, hidePlace = id) {
+            MomentFeed(moments, places, trips, container.mediaUrls, onMoment, feedModifier, onDay = onDay, hidePlace = id, bills = bills) {
                 if (sideways) item("name") {
                     Column(Modifier.padding(horizontal = Space.gutter).padding(bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                         Text(place?.name ?: id, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })

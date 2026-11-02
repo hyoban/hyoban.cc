@@ -33,7 +33,7 @@ import kotlin.test.assertTrue
 /** The copy on the phone follows the API's rows, page by page, and survives a restart. */
 class MomentsRepositoryTest {
     /** The API's feed, as a list of changes each at its own revision, the places' among them. */
-    private class FakeApi : MomentsSource {
+    internal class FakeApi : MomentsSource {
         /** Every row, by table and key, as D1 keeps it. */
         val rows = mutableMapOf<Pair<String, String>, CopyRow>()
         var revision = 0L
@@ -83,7 +83,7 @@ class MomentsRepositoryTest {
     }
 
     /** The API's writes, as the Worker answers them: photos kept, places named, drafts published, all of a change set at once. */
-    private class FakeWriter(
+    internal class FakeWriter(
         /** The API whose rows take what is written, when the test reads them back. */
         private val api: FakeApi? = null,
     ) : MomentsWriter {

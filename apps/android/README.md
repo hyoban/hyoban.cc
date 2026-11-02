@@ -133,6 +133,24 @@ backup the directory keeps the newest seven and deletes the rest, leaving other 
 Restoring is by hand: the files go back where the zip's paths say, `databases/` into
 `noBackupFilesDir` and `local/` into `filesDir`.
 
+## Importing from Swarm
+
+从 Swarm 导入, under 我 → 同步与来源, reads the .zip Swarm (Foursquare) exports
+(`data/swarm/Swarm.kt`): its `checkins*.json`, and `photos*.json` with the `pix/` they name;
+the account, friends, devices, visits and comments in it are left alone. Each check-in comes
+in private, at its time in the offset it was made at and its point as Swarm has it (WGS-84),
+with a `checkin` part naming its venue and Swarm's ids. One with words or photos becomes a
+Moment of the phone's, its words as written and its photos copied into `local/media/`; the
+rest are entries of their check-in alone, a line 签到 <venue> in the timeline's records. Each
+venue becomes a place of the phone's, kept on its own, named by its local name where Swarm keeps
+one beside the English it exports, at its most accurate check-in's point, with the venue in its
+`source`; a venue imported before keeps the place it has, the site's once published. The map
+counts a place's check-ins with its Moments, and its sheet and page list them. Their
+uids are made from the time and Swarm's id, so importing the same export again adds only what
+is new and copies no photo twice. All of it waits with the other unpublished changes for
+发布更改. Check a change to the importer against a real export with
+`SWARM_EXPORT=<zip> ./gradlew :app:testDebugUnitTest --tests '*SwarmTest*'`, and never commit it.
+
 ## Sharing
 
 A Moment's share sheet hands a copy of its words and a choice of photos to another app,

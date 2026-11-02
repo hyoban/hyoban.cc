@@ -5,9 +5,6 @@ import type { Place, Places } from './index.ts'
 // The rules for publishing: which place a new one is, and what type of file a media item
 // is stored as; its key is `getMediaKey`'s, by uids alone. The API's.
 
-/** Two places this close, or with the same name, are one place. */
-const NEARBY_KM = 0.2
-
 /** The id the app gives a place it made, `p-<ulid>`, until publishing names it by its pinyin. */
 export const PROVISIONAL_PLACE_PATTERN = /^p-[0-9a-hjkmnp-tv-z]{26}$/
 
@@ -31,8 +28,10 @@ export function getPlaceId(name: string, taken: Record<string, unknown> = {}) {
 }
 
 /**
- * Where a place goes among the known ones: a known id stays as it is, a place within
- * 200 m of a known one or with its name takes that one's id, and anything else is new.
+ * Where a place goes among the known ones: a known id stays as it is, one brought in from
+ * another app's venue takes the id of that venue's place if there is one, and anything else
+ * is new. Places near each other or of the same name stay apart: two shops in one mall are
+ * two places, and choosing a known one is the app's to do as the place is picked.
  */
 export function matchPlace(
   id: string,
@@ -43,28 +42,15 @@ export function matchPlace(
     return { id, status: 'known' }
   }
 
-  const match = Object.entries(places).find(
-    ([, candidate]) =>
-      candidate.name === place.name || getDistanceKm(candidate, place) <= NEARBY_KM,
-  )
+  const source = place.source
+  const same =
+    source &&
+    Object.entries(places).find(
+      ([, candidate]) =>
+        candidate.source?.app === source.app && candidate.source.venue === source.venue,
+    )
 
-  return match ? { id: match[0], status: 'matched' } : { id, status: 'new' }
-}
-
-const EARTH_RADIUS_KM = 6371
-
-/** The great-circle distance between two places, in kilometres. */
-function getDistanceKm(from: Place, to: Place) {
-  const toRadians = (degrees: number) => (degrees * Math.PI) / 180
-  const latitudeDelta = toRadians(to.latitude - from.latitude)
-  const longitudeDelta = toRadians(to.longitude - from.longitude)
-  const a =
-    Math.sin(latitudeDelta / 2) ** 2 +
-    Math.cos(toRadians(from.latitude)) *
-      Math.cos(toRadians(to.latitude)) *
-      Math.sin(longitudeDelta / 2) ** 2
-
-  return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(a))
+  return same ? { id: same[0], status: 'matched' } : { id, status: 'new' }
 }
 
 /** The file extension for a media type the API takes, or undefined for any other. */

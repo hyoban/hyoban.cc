@@ -112,6 +112,11 @@ class MomentsRepository(
     /** The entries beyond the Moments, by uid, with the phone's changes to them: what the 设备, 订阅 and 车 pages read. */
     val entries: StateFlow<Map<String, kotlinx.serialization.json.JsonObject>> = _entries.asStateFlow()
 
+    private val _checkins = MutableStateFlow(cc.hyoban.moments.data.things.Checkins())
+
+    /** The check-ins alone among [entries], by day and by place, worked out as they change rather than by each page. */
+    val checkins: StateFlow<cc.hyoban.moments.data.things.Checkins> = _checkins.asStateFlow()
+
     /** Reads the copy on the phone. */
     suspend fun load() = lock.withLock {
         withContext(io) {
@@ -289,6 +294,7 @@ class MomentsRepository(
     /** The entries the pages read: the copy's, with the phone's changes and deletions. */
     private fun showEntries() {
         _entries.value = _second.value.entries - removedEntries + changedEntries
+        _checkins.value = cc.hyoban.moments.data.things.Checkins.of(_entries.value.values)
     }
 
     /** Keeps a device or subscription, written on the phone or changed there, until it is published. */
@@ -369,6 +375,47 @@ class MomentsRepository(
             local.writeMoment(moment)
             phone = phone + (moment.uid to moment)
             publish()
+        }
+    }
+
+    /** Of [uids], those here already: the site's, or kept, changed or deleted on the phone. */
+    suspend fun known(uids: Collection<String>): Set<String> = lock.withLock { uids.filterTo(HashSet(), ::isKnown) }
+
+    private fun isKnown(uid: String) =
+        uid in copyEntries || uid in phone || uid in changedEntries || uid in removed || uid in removedEntries
+
+    /**
+     * Keeps what an import brought, all at once: [moments] as Moments written on the phone,
+     * [entries] as entries changed on it and [places] as the phone's, kept on their own as an
+     * entry is at one with no Moment, until they are published. Those whose uid is here already
+     * are left as they are; gives how many were kept.
+     */
+    suspend fun addImported(
+        moments: List<MomentRecord>,
+        entries: List<kotlinx.serialization.json.JsonObject>,
+        places: Map<String, Place> = emptyMap(),
+    ): Int = lock.withLock {
+        val local = checkNotNull(local) { "No store for the phone's own Moments" }
+        withContext(io) {
+            val newPlaces = places.filterKeys { it !in phonePlaces && it !in apiPlaces }
+            if (newPlaces.isNotEmpty()) {
+                phonePlaces = phonePlaces + newPlaces
+                keptPlaces = keptPlaces + newPlaces.keys
+                local.writePlaces(phonePlaces)
+                local.writeKeptPlaces(keptPlaces)
+                publishPlaces()
+            }
+            val newMoments = moments.filterNot { isKnown(it.uid) }.distinctBy { it.uid }
+            val newEntries = entries.filterNot { isKnown(it.entryUid) }.distinctBy { it.entryUid }
+            newMoments.forEach(local::writeMoment)
+            phone = phone + newMoments.associateBy { it.uid }
+            if (newEntries.isNotEmpty()) {
+                changedEntries = changedEntries + newEntries.associateBy { it.entryUid }
+                local.writeChangedEntries(changedEntries, removedEntries)
+                showEntries()
+            }
+            publish()
+            newMoments.size + newEntries.size
         }
     }
 
@@ -579,7 +626,9 @@ class MomentsRepository(
         val parts = ofMoments.filter { it.part != null }.groupBy { it.txn.moment!! }
             .mapValues { (_, bills) -> mapOf("bill" to bills.first().part!!) }
         // The site's places with a changed kind go under their own ids, which the API takes the kind of.
-        val places = moments.flatMap { it.places }.distinct().filter { it !in known }
+        // An entry that isn't a Moment, as an import's check-in, may be at one of the phone's places too.
+        val entryPlaces = things.values.mapNotNull { (it["place"] as? kotlinx.serialization.json.JsonPrimitive)?.content }
+        val places = (moments.flatMap { it.places } + entryPlaces).distinct().filter { it !in known }
             .associateWith { id -> own[id] ?: error("Unknown place $id") } + kinds
         // A live photo sends its still and its motion, each an upload of its own; a video only
         // itself, its still on the phone left for the site to take from it.
@@ -715,7 +764,7 @@ class MomentsRepository(
 
     /**
      * The phone's places the API now has, by their ids there: gone from the phone's, and
-     * the phone's other Moments at them moved to the API's ids.
+     * the phone's other Moments and the entries at them moved to the API's ids.
      */
     private fun adoptPlaces(ids: Map<String, String>) {
         val local = local ?: return
@@ -730,6 +779,18 @@ class MomentsRepository(
                 moment.copy(places = moment.places.map { adopted[it] ?: it }).also(local::writeMoment)
             }
         }
+        fun moved(entry: kotlinx.serialization.json.JsonObject): kotlinx.serialization.json.JsonObject {
+            val id = (entry["place"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return entry
+            val to = adopted[id] ?: return entry
+            return kotlinx.serialization.json.JsonObject(entry + ("place" to kotlinx.serialization.json.JsonPrimitive(to)))
+        }
+        val changed = changedEntries.mapValues { (_, entry) -> moved(entry) }
+        if (changed != changedEntries) {
+            changedEntries = changed
+            local.writeChangedEntries(changedEntries, removedEntries)
+        }
+        _second.value = _second.value.let { it.copy(entries = it.entries.mapValues { (_, entry) -> moved(entry) }) }
+        showEntries()
         local.writePlaces(phonePlaces)
         local.writeKeptPlaces(keptPlaces)
     }

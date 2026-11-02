@@ -113,6 +113,9 @@ even when starting from the repository root.
   only the approved statistical projection belongs in `data/zeekr/`. The car's data, its
   statistics and its charges, comes only from that import; nothing edits it by hand, the app
   included: a wrong value is fixed by capturing and importing again.
+- Publishing never merges places by nearness or name: two shops in one mall are two places.
+  A known id is that place, a Swarm venue's place is found by its `source`, and picking a
+  known place is the app's to do when the place is chosen.
 - Map year colors and fog behavior match across Web and App; change both together.
   The app's trip playback follows `packages/trip-map/src/player`, including a route
   that keeps moving during playback.

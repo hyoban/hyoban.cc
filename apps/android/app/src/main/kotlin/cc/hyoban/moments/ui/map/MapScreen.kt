@@ -125,6 +125,9 @@ import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.sideInsetsPadding
+import cc.hyoban.moments.data.things.Checkin
+import cc.hyoban.moments.ui.feed.CheckinRow
+import cc.hyoban.moments.ui.feed.placeCounts
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.rememberShowMessage
@@ -209,8 +212,16 @@ private fun MapContent(
     val byPlace = remember(moments) {
         moments.flatMap { moment -> moment.places.distinct().map { it to moment } }.groupBy({ it.first }, { it.second })
     }
-    val mapPlaces = remember(byPlace, places) {
-        byPlace.mapNotNull { (id, here) -> places[id]?.let { MapPlace(id, it, here.size, here.minOf { moment -> yearOf(moment.occurredAt) }) } }
+    // The check-ins alone at each place, an import's waiting to be published among them.
+    val checkins by container.repository.checkins.collectAsStateWithLifecycle()
+    val checkinsByPlace = checkins.byPlace
+    val mapPlaces = remember(byPlace, checkinsByPlace, places) {
+        (byPlace.keys + checkinsByPlace.keys).mapNotNull { id ->
+            val moments = byPlace[id].orEmpty()
+            val checkins = checkinsByPlace[id].orEmpty()
+            val years = moments.map { yearOf(it.occurredAt) } + checkins.map { yearOf(it.at) }
+            places[id]?.let { MapPlace(id, it, moments.size + checkins.size, years.min()) }
+        }
     }
     // The site's year colours as they are, in either mode, so a place is the same colour on the
     // phone as on the site's map: one of the design's two palette exceptions.
@@ -475,9 +486,10 @@ private fun MapContent(
             )
         } else {
             val here = byPlace[id].orEmpty()
-            val years = remember(here) { here.map { yearOf(it.occurredAt) }.distinct().sortedDescending() }
+            val checkins = checkinsByPlace[id].orEmpty()
+            val years = remember(here, checkins) { (here.map { yearOf(it.occurredAt) } + checkins.map { yearOf(it.at) }).distinct().sortedDescending() }
             PlaceSheet(
-                place, id, here, years, colors, places, container.mediaUrls,
+                place, id, here, checkins, years, colors, places, container.mediaUrls,
                 bottom = if (wide) Space.l else clearance,
                 onNavigate = { if (!navigateTo(context, place)) show(resources.getString(R.string.no_map_app)) },
                 onAll = { selected = null; onPlace(id) },
@@ -540,6 +552,7 @@ private fun PlaceSheet(
     place: Place,
     id: String,
     here: List<MomentRecord>,
+    checkins: List<Checkin>,
     years: List<Int>,
     colors: Map<Int, Color>,
     places: Map<String, Place>,
@@ -560,7 +573,7 @@ private fun PlaceSheet(
             Column(Modifier.weight(1f)) {
                 Text(place.name, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
                 Text(
-                    (listOf(pluralStringResource(R.plurals.count_moments, here.size, here.size)) + years.joinToString(resources.getString(R.string.separator_list)) { resources.getString(R.string.year_item, it) }).joinToString(" "),
+                    (placeCounts(here.size, checkins.size) + years.joinToString(resources.getString(R.string.separator_list)) { resources.getString(R.string.year_item, it) }).joinToString(" "),
                     style = AppTheme.typography.caption,
                     color = tokens.tx2,
                     maxLines = 1,
@@ -608,6 +621,10 @@ private fun PlaceSheet(
                         )
                     }
                 }
+            }
+            // Its check-ins alone after its Moments, newest first, a line each.
+            items(checkins, key = { "checkin-${it.uid}" }) { checkin ->
+                CheckinRow(checkin, Modifier.padding(horizontal = Space.gutter), withDate = true)
             }
             // The place's own page, read on to after its Moments.
             item(key = "all") {

@@ -65,6 +65,11 @@ export const placeSchema = z.looseObject({
    * and a city's centre may be nearer some other track. Without one, the place itself.
    */
   station: z.looseObject({ name: z.string().min(1), ...point }).optional(),
+  /**
+   * The venue in another app it was brought in from, Swarm's for now: it is that place and no
+   * other, so publishing never takes it for one nearby or of the same name.
+   */
+  source: z.looseObject({ app: z.literal('swarm'), venue: z.string().min(1) }).optional(),
   createdAt: timestamp.optional(),
 })
 

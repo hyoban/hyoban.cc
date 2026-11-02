@@ -158,6 +158,23 @@ export const subscriptionPartSchema = z.looseObject({
   note: z.string().optional(),
 })
 
+/**
+ * A check-in brought over from another app, Swarm for now: the venue by its name there, and
+ * where in that app's export it came from, so importing it again finds it rather than adding
+ * it twice. The ids are never published.
+ */
+export const checkinPartSchema = z.looseObject({
+  ...partBase,
+  venue: z.string().min(1),
+  /** The venue's other name there, often the local one, as `面馆` beside `Noodle House`. */
+  alias: z.string().min(1).optional(),
+  source: z.looseObject({
+    app: z.literal('swarm'),
+    checkin: z.string().min(1),
+    venue: z.string().min(1).optional(),
+  }),
+})
+
 /** The parts by plugin; one this version doesn't know is kept as it is. */
 export const entryPartsSchema = z.looseObject({
   text: textPartSchema.optional(),
@@ -167,6 +184,7 @@ export const entryPartsSchema = z.looseObject({
   charge: chargePartSchema.optional(),
   device: devicePartSchema.optional(),
   subscription: subscriptionPartSchema.optional(),
+  checkin: checkinPartSchema.optional(),
 })
 
 export const entryLinkSchema = z.looseObject({ rel: z.string().min(1), to: ulid })
@@ -297,9 +315,9 @@ export function definePlugin<Part>(plugin: Plugin<Part>) {
 }
 
 type Parts = {
-  [K in 'text' | 'media' | 'food' | 'bill' | 'charge' | 'device' | 'subscription']: NonNullable<
-    z.output<typeof entryPartsSchema>[K]
-  >
+  [
+    K in 'text' | 'media' | 'food' | 'bill' | 'charge' | 'device' | 'subscription' | 'checkin'
+  ]: NonNullable<z.output<typeof entryPartsSchema>[K]>
 }
 
 export const plugins = {
@@ -359,6 +377,13 @@ export const plugins = {
       'note',
     ],
     fallback: (part) => `订阅 ${part.name}`,
+  }),
+  checkin: definePlugin<Parts['checkin']>({
+    id: 'checkin',
+    version: 1,
+    defaultVisibility: 'inherit',
+    publicFields: ['venue', 'alias'],
+    fallback: (part) => `在 ${part.venue}`,
   }),
 } satisfies Record<string, Plugin<never>>
 

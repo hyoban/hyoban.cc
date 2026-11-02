@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.geometry.Size
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.data.things.Checkin
 import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ui.design.AppIcons
@@ -45,6 +46,7 @@ import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.format.formatDay
+import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.ledger.TIME
 import cc.hyoban.moments.ui.ledger.amountColor
 import cc.hyoban.moments.ui.ledger.incoming
@@ -90,6 +92,10 @@ sealed interface RecordLine {
         override val key get() = "thing-${thing.uid}"
     }
 
+    data class CheckinLine(val checkin: Checkin) : RecordLine {
+        override val key get() = "checkin-${checkin.uid}"
+    }
+
     data class Track(val day: String) : RecordLine {
         override val key get() = "track-$day"
     }
@@ -116,6 +122,7 @@ fun chatItems(items: List<DayItem>, linked: Map<String, List<Txn>>): List<ChatIt
             is DayItem.Bills -> item.txns.sortedBy { it.time }.forEach { run += RecordLine.Bill(it) }
             is DayItem.ChargeItem -> run += RecordLine.ChargeLine(item.charge)
             is DayItem.ThingItem -> run += RecordLine.ThingLine(item.thing)
+            is DayItem.CheckinItem -> run += RecordLine.CheckinLine(item.checkin)
             is DayItem.Track -> run += RecordLine.Track(item.day)
         }
     }
@@ -250,7 +257,7 @@ fun RecordsBubble(
     val open: (() -> Unit)? = when (val only = shown.singleOrNull()) {
         is RecordLine.Bill -> ({ onBill(only.txn.id) })
         is RecordLine.ThingLine -> openThing?.let { { it(only.thing.uid) } }
-        is RecordLine.Track, is RecordLine.ChargeLine -> onDay
+        is RecordLine.Track, is RecordLine.ChargeLine, is RecordLine.CheckinLine -> onDay
         null -> onDay
     }
     val large = isLargeFont()
@@ -293,6 +300,16 @@ fun RecordsBubble(
                         large = large,
                         timed = timed,
                         tag = "charge_${line.charge.uid}",
+                    )
+                    is RecordLine.CheckinLine -> RecordRow(
+                        icon = { Icon(AppIcons.Pin, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
+                        title = checkinTitle(line.checkin),
+                        time = formatTime(line.checkin.at),
+                        end = "",
+                        endColor = tokens.tx,
+                        large = large,
+                        timed = timed,
+                        tag = "checkin_${line.checkin.uid}",
                     )
                     is RecordLine.ThingLine -> RecordRow(
                         icon = { Icon(if (line.thing.device) AppIcons.Laptop else AppIcons.Subscription, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },

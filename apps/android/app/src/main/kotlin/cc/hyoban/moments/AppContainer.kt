@@ -70,6 +70,13 @@ class AppContainer(context: Context) {
     val repository = MomentsRepository(cc.hyoban.moments.data.copy.CopyStore(File(context.noBackupFilesDir, "copy.db")), api, local = localStore, writer = api,
         outside = cc.hyoban.moments.data.store.PhoneOutside(ledger, footprints),
     )
+    /** Swarm's check-ins brought in from its export, their photos beside the phone's own Moments'. */
+    val swarm = cc.hyoban.moments.data.swarm.SwarmImport(
+        open = { uri -> appContext.contentResolver.openInputStream(uri) ?: error("Can't read $uri") },
+        repository = repository,
+        mediaDirectory = File(localStore.root, "media"),
+        scope = scope,
+    )
     val mediaUrls = MediaUrls { settings.assetOrigin.value }
     /** Places by name and around a point, for a new Moment's place. */
     val placeSearch = PlaceSearch(BuildConfig.PLACE_SEARCH_URL)

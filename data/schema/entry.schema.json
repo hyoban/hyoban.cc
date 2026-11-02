@@ -1085,6 +1085,59 @@
             "period"
           ],
           "additionalProperties": {}
+        },
+        "checkin": {
+          "type": "object",
+          "properties": {
+            "v": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "visibility": {
+              "type": "string",
+              "enum": [
+                "public",
+                "private"
+              ]
+            },
+            "venue": {
+              "type": "string",
+              "minLength": 1
+            },
+            "alias": {
+              "type": "string",
+              "minLength": 1
+            },
+            "source": {
+              "type": "object",
+              "properties": {
+                "app": {
+                  "type": "string",
+                  "const": "swarm"
+                },
+                "checkin": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "venue": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "app",
+                "checkin"
+              ],
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "v",
+            "venue",
+            "source"
+          ],
+          "additionalProperties": {}
         }
       },
       "additionalProperties": {}
