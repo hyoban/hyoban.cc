@@ -184,7 +184,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   `adb shell dumpsys activity service cc.hyoban.moments/.share.TelegramShareService`,
   not `uiautomator dump`, which interrupts the service. Threads shows a single photo
   outside any `IgLazyRow`, and repeated shares stack photos into an open composer.
-- No keys in the app: OpenFreeMap tiles drawn by MapLibre, Photon for place names.
+- No keys in the app: OpenFreeMap tiles drawn by MapLibre, Photon for place names, Valhalla and
+  OpenRailRouting for the routes of trips the API hasn't routed, the trip's stops alone.
   APK size matters, so the release is arm64 only; weigh what a new dependency costs.
 - Pin a newer library version only for a reason, and say why in the comment in
   `gradle/libs.versions.toml`.

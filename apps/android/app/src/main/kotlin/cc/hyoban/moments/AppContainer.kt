@@ -36,6 +36,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -85,14 +87,30 @@ class AppContainer(context: Context) {
     /** The trips' routes along the roads, from the API. */
     val routes = TripRoutes({ settings.apiUrl.value }, File(context.filesDir, "routes.json"), token = { settings.apiToken.value })
 
+    /** The routes of the trips the API hasn't routed, as one made on the phone, worked out here the same way. */
+    val phoneRoutes = cc.hyoban.moments.data.trips.PhoneRoutes(File(context.filesDir, "phone-routes.json"))
+
+    /**
+     * The legs of each trip the API won't route, by trip id: with an API, only one made on the
+     * phone and not yet published, so the site's are never asked for while their routes load.
+     */
+    private val phoneLegs: kotlinx.coroutines.flow.StateFlow<Map<String, List<cc.hyoban.moments.data.trips.TripLeg>>> =
+        kotlinx.coroutines.flow.combine(repository.trips, repository.moments, repository.places, routes.routes) { trips, moments, places, roads ->
+            trips.filter { it.id !in roads && (!settings.connected || repository.isTripNew(it.id)) }.associate { trip ->
+                trip.id to cc.hyoban.moments.data.trips.legsOf(trip, cc.hyoban.moments.data.trips.stopsOf(trip, moments, trips, places))
+            }
+        }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
+
     /**
      * Each trip's route as the screens draw and play it: the footprints recorded on it where a
      * span following the trip is public (each unbroken stretch solid, the gaps between dashed,
-     * never guessed), else the route along the roads.
+     * never guessed), else the route along the roads, the API's or, for a trip it hasn't
+     * routed, the phone's.
      */
     val tripRoutes: kotlinx.coroutines.flow.StateFlow<Map<String, List<cc.hyoban.moments.data.trips.RouteSegment>>> =
-        kotlinx.coroutines.flow.combine(routes.routes, repository.second, repository.trips) { roads, second, trips ->
-            roads + trips.mapNotNull { trip ->
+        kotlinx.coroutines.flow.combine(routes.routes, repository.second, repository.trips, phoneLegs, phoneRoutes.lines) { roads, second, trips, legs, lines ->
+            val own = legs.mapValues { (_, tripLegs) -> cc.hyoban.moments.data.trips.segmentsOf(tripLegs, lines) }.filterValues { it.isNotEmpty() }
+            roads + own + trips.mapNotNull { trip ->
                 val uid = repository.tripUid(trip)
                 val track = second.tracks.values.firstOrNull { (it["collection"] as? kotlinx.serialization.json.JsonPrimitive)?.content == uid }
                     ?: return@mapNotNull null
@@ -120,6 +138,13 @@ class AppContainer(context: Context) {
         // Routes were once kept per trip from the site's trip pages, under routes/.
         File(context.filesDir, "routes").takeIf { it.isDirectory }?.deleteRecursively()
         scope.launch { ledger.load() }
+        // The legs of the trips the API hasn't routed are routed here, once they settle.
+        scope.launch {
+            @OptIn(kotlinx.coroutines.FlowPreview::class)
+            phoneLegs.debounce(ROUTE_SETTLE_MS).collectLatest { legs ->
+                phoneRoutes.fill(legs.values.flatten().mapNotNull { cc.hyoban.moments.data.trips.requestOf(it) })
+            }
+        }
         cc.hyoban.moments.backup.BackupWorker.schedule(appContext, backup, replace = false)
         // A bill or a span going public, or private again, is a change to publish too.
         scope.launch {
@@ -130,6 +155,7 @@ class AppContainer(context: Context) {
         scope.launch {
             repository.load()
             routes.load()
+            phoneRoutes.load()
             refreshAll()
         }
         // The videos' disk cache opens its index and database off the main thread, before a
@@ -390,3 +416,6 @@ class AppContainer(context: Context) {
 }
 
 private const val DAY_MS = 24 * 60 * 60 * 1000L
+
+/** How long a trip's legs stay put before the phone routes them, so an edit in progress asks nothing. */
+private const val ROUTE_SETTLE_MS = 2_000L
