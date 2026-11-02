@@ -32,6 +32,15 @@ ogDescription: A short summary that fits beside the photo.
 `ogDescription` shortens only the text drawn on the card; search, Open Graph and RSS keep
 `description`.
 
+## Xiaohongshu cards
+
+`vp run posts:cards <slug>` lays an article out as 3:4 cards for Xiaohongshu, 1242×1656
+PNGs in `.private/post-cards/<slug>/`. The cover carries the title, `ogDescription`,
+`description` and the `ogImage` (else the first image); the rest flows the article's text and
+images in order, with links reduced to their text, long paragraphs split between sentences
+and the full article's address on the last card. It renders in a local headless Chrome; give
+another one with `--chrome` or `CHROME_PATH`.
+
 ## Moment media
 
 The create-moment skill optimizes images into 480, 960 and 1920 pixel variants, transcodes
