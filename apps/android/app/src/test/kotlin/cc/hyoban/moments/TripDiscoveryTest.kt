@@ -54,6 +54,26 @@ class TripDiscoveryTest {
     }
 
     @Test
+    fun `a name says where it went, in order, and the holiday, day or weekend it took`() {
+        val name = { start: String, end: String, cities: List<String> -> TripDiscovery.nameOf(LocalDate.parse(start), LocalDate.parse(end), cities, "某地") }
+
+        assertEquals("国庆香港", name("2026-09-30", "2026-10-04", listOf("香港", "香港")))
+        assertEquals("春节南平", name("2026-02-15", "2026-02-22", listOf("南平")))
+        assertEquals("五一福州、厦门", name("2026-05-01", "2026-05-04", listOf("福州", "福州", "厦门", "福州", "厦门")))
+        assertEquals("南京一日", name("2025-11-19", "2025-11-19", listOf("南京")))
+        assertEquals("合肥周末", name("2026-07-18", "2026-07-19", listOf("合肥")))
+        assertEquals("苏州", name("2026-07-14", "2026-07-16", listOf("苏州")))
+        // A city a single record passed through, among several, is left out; when each had one, the farthest names it.
+        assertEquals("某地一日", name("2025-11-19", "2025-11-19", listOf("上饶", "金华")))
+        assertEquals("成都、雅安、康定", name("2025-10-20", "2025-10-28", listOf("成都", "成都", "绵阳", "雅安", "雅安", "康定", "康定")))
+        assertEquals("广州、深圳", name("2025-08-11", "2025-08-14", listOf("广州", "广州", "佛山", "佛山", "深圳", "深圳", "深圳", "广州", "珠海市区", "珠海市区")))
+        assertEquals("乌鲁木齐、伊宁等", name("2025-08-11", "2025-08-20", listOf("乌鲁木齐", "乌鲁木齐", "伊宁", "伊宁", "喀什", "喀什", "和田", "和田")))
+        // Stops on the way with a few records each give way to where most of them were.
+        assertEquals("五一福州、厦门", name("2026-05-01", "2026-05-04", listOf("宁波", "宁波", "台州", "台州", "温州", "温州", "福州", "福州", "福州", "福州", "厦门", "厦门", "厦门")))
+        assertEquals("某地一日", name("2025-11-19", "2025-11-19", emptyList()))
+    }
+
+    @Test
     fun `a second home visited over many months is not a trip`() {
         val visits = listOf("2025-02-01", "2025-02-02", "2025-02-03", "2025-05-01", "2025-05-02", "2025-05-03", "2025-08-01", "2025-08-02", "2025-08-03", "2025-11-01", "2025-11-02")
         val sightings = year(visits.toSet()) + visits.map { at(it, family) }

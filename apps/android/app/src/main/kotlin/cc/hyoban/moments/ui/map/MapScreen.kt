@@ -14,6 +14,10 @@ import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.TripDiscovery
 import cc.hyoban.moments.data.trips.TripSuggestion
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import cc.hyoban.moments.data.spec.Visibility
+import kotlinx.coroutines.launch
 import cc.hyoban.moments.ui.trips.TripCard
 import android.Manifest
 import android.content.pm.PackageManager
@@ -270,7 +274,15 @@ private fun MapContent(
             TripDiscovery.discover(sightings, trips) { lat, lng -> regionAt(regions, lng, lat)?.name }
         }
     }
-    val suggestions = remember(discovered, settings.dismissedTrips) { discovered.filter { it.key !in settings.dismissedTrips } }
+    // Those added gone at once, and any a trip now holds, before the next working out catches up.
+    var added by remember { mutableStateOf(emptySet<String>()) }
+    var addedAt by remember { mutableLongStateOf(0L) }
+    val suggestions = remember(discovered, settings.dismissedTrips, added, trips) {
+        discovered.filter { suggestion ->
+            suggestion.key !in settings.dismissedTrips && suggestion.key !in added &&
+                trips.none { it.start <= suggestion.end && it.end >= suggestion.start }
+        }
+    }
     // Each toggle, swept on the map rather than set; a toggle while one sweeps turns it around.
     var fogSweep by remember { mutableIntStateOf(0) }
     LaunchedEffect(settings.mapFog) {
@@ -308,6 +320,7 @@ private fun MapContent(
 
     // Locating: each request asks for the place once more; a ring turns while it waits.
     val show = rememberShowMessage()
+    val scope = rememberCoroutineScope()
     var locate by remember { mutableIntStateOf(0) }
     // Which way the map is turned, and each ask to turn it back to north.
     var bearing by remember { mutableDoubleStateOf(0.0) }
@@ -510,6 +523,20 @@ private fun MapContent(
                 suggestions = suggestions,
                 onSuggestion = onSuggestedTrip,
                 onDismiss = { settings.dismissTrip(it.key) },
+                // Added in one tap, private as the check-ins it was found in, its page there to change it.
+                onAdd = { suggestion ->
+                    // Once each, however many times it's tapped before it goes, and not the next
+                    // one that moves up under the finger as it goes.
+                    val now = android.os.SystemClock.uptimeMillis()
+                    if (suggestion.key !in added && now - addedAt > ADD_PAUSE_MS) {
+                        added = added + suggestion.key
+                        addedAt = now
+                        scope.launch {
+                            container.repository.createTrip(suggestion.name, suggestion.start, suggestion.end, Visibility.PRIVATE)
+                            show(resources.getString(R.string.message_trip_added, suggestion.name))
+                        }
+                    }
+                },
             )
         } else {
             val here = byPlace[id].orEmpty()
@@ -686,6 +713,9 @@ private val MAP_EDGE = 16.dp
 /** How far a 40 button's 48 target reaches past it on each side. */
 private val FLOATING_INSET = 4.dp
 
+/** How long after adding a 可能的旅程 the others' + is still, as the rows move up into its place. */
+private const val ADD_PAUSE_MS = 800L
+
 /** How tall the lifted trip's card stands at least, its words on one line. */
 private val ROUTE_CARD = 88.dp
 
@@ -708,6 +738,7 @@ private fun TripsSheet(
     suggestions: List<TripSuggestion> = emptyList(),
     onSuggestion: (TripSuggestion) -> Unit = {},
     onDismiss: (TripSuggestion) -> Unit = {},
+    onAdd: (TripSuggestion) -> Unit = {},
     /** In the card floating beside the tabs on a phone on its side (H09): its title 16 in, its rows 12, their covers 56. */
     inCard: Boolean = false,
 ) {
@@ -743,16 +774,18 @@ private fun TripsSheet(
             Modifier.weight(1f).graphicsLayer { alpha = shown() },
             contentPadding = PaddingValues(top = Space.xs, bottom = Space.l + bottom),
         ) {
-            if (suggestions.isNotEmpty()) {
-                item(key = "suggested") {
-                    Column(
-                        Modifier.fillMaxWidth().padding(horizontal = if (inCard) Space.l else Space.gutter).padding(top = Space.s, bottom = Space.xs),
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
-                    ) {
-                        Text(stringResource(R.string.trips_suggested), style = AppTheme.typography.label, color = tokens.tx2, modifier = Modifier.semantics { heading() })
-                        Text(stringResource(R.string.trips_suggested_note), style = AppTheme.typography.caption, color = tokens.tx3)
-                    }
+            // Always the list's first item, empty without any, so the list holds to its top while
+            // they're worked out or added rather than to the trip that was first, and they show.
+            item(key = "suggested") {
+                if (suggestions.isNotEmpty()) Column(
+                    Modifier.fillMaxWidth().padding(horizontal = if (inCard) Space.l else Space.gutter).padding(top = Space.s, bottom = Space.xs),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Text(stringResource(R.string.trips_suggested), style = AppTheme.typography.label, color = tokens.tx2, modifier = Modifier.semantics { heading() })
+                    Text(stringResource(R.string.trips_suggested_note), style = AppTheme.typography.caption, color = tokens.tx3)
                 }
+            }
+            if (suggestions.isNotEmpty()) {
                 items(suggestions, key = { "suggested_${it.key}" }) { suggestion ->
                     SuggestionRow(
                         suggestion,
@@ -760,6 +793,7 @@ private fun TripsSheet(
                         modifier = Modifier.fillMaxWidth().clickable(enabled = open) { onSuggestion(suggestion) }
                             .padding(start = if (inCard) Space.m else Space.gutter, end = Space.s).padding(vertical = Space.s).testTag("suggested_${suggestion.start}"),
                         onDismiss = { onDismiss(suggestion) },
+                        onAdd = { onAdd(suggestion) },
                     )
                 }
                 item(key = "suggested_rule") {
@@ -780,11 +814,11 @@ private fun TripsSheet(
 }
 
 /**
- * A trip the records suggest, as a trip's row: a suitcase where the cover would be, the city it
- * went farthest to, and when it began, how many days and how many records, then dismissing it.
+ * A trip the records suggest, as a trip's row: a suitcase where the cover would be, its name, and
+ * when it began, how many days and how many records, then adding it as it is and dismissing it.
  */
 @Composable
-private fun SuggestionRow(suggestion: TripSuggestion, coverSize: Int, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+private fun SuggestionRow(suggestion: TripSuggestion, coverSize: Int, onDismiss: () -> Unit, onAdd: () -> Unit, modifier: Modifier = Modifier) {
     val days = daysBetween(suggestion.start, suggestion.end)
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
         Box(Modifier.size(coverSize.dp).background(tokens.fill, AppTheme.shapes.medium), contentAlignment = Alignment.Center) {
@@ -801,6 +835,9 @@ private fun SuggestionRow(suggestion: TripSuggestion, coverSize: Int, onDismiss:
                 style = AppTheme.typography.caption,
                 color = tokens.tx2,
             )
+        }
+        IconButton(onClick = onAdd, modifier = Modifier.testTag("add_${suggestion.start}")) {
+            Icon(AppIcons.Plus, contentDescription = stringResource(R.string.trip_suggestion_add, suggestion.name), tint = tokens.tx, modifier = Modifier.size(20.dp))
         }
         IconButton(onClick = onDismiss, modifier = Modifier.testTag("dismiss_${suggestion.start}")) {
             Icon(AppIcons.Close, contentDescription = stringResource(R.string.trip_suggestion_dismiss, suggestion.name), tint = tokens.tx2, modifier = Modifier.size(20.dp))

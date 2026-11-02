@@ -89,8 +89,11 @@ or two weeks without any, with two or more records and none of their days in a t
 place lived at is an area of about 20 km with records on eight days or more, in three
 months or more, within a year either side, so a second home (where one works, where one's
 family lives) counts as well. The records are the check-ins and the Moments with places,
-not the footprints, and nothing leaves the phone: each is named after the city its farthest
-record was in, from its place or the fog's city boundaries. One opens 新建旅程 with its days
+not the footprints, and nothing leaves the phone. Each is named as one would name it: the
+cities with the most of its records, from their places or the fog's city boundaries, in the
+order they were reached (a city passed through once left out), with the holiday it spans
+before them (春节, 元旦, 清明, 五一, 国庆: 国庆香港), else 一日 or 周末 after (南京一日). Its +
+adds it as it is, private as the check-ins it came from; opened, it is 新建旅程 with its days
 and name filled in; one dismissed is kept in the settings and doesn't come back.
 
 No page has a bar: its way back and actions float as circles over it, its title large

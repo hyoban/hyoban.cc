@@ -22,7 +22,7 @@ import kotlin.math.sqrt
 /** Somewhere a record says one was: when, on which day where it happened, and where. */
 data class Sighting(val at: Long, val day: String, val lat: Double, val lng: Double, val place: Place? = null)
 
-/** A trip the records suggest, from [start] to [end], `YYYY-MM-DD`, named after the city it went farthest to. */
+/** A trip the records suggest, from [start] to [end], `YYYY-MM-DD`, and a [name] for it made from where and when it went. */
 data class TripSuggestion(val start: String, val end: String, val name: String, val records: Int) {
     /** What dismissing it keeps, so it doesn't come back. */
     val key: String get() = "$start..$end"
@@ -49,7 +49,7 @@ object TripDiscovery {
      * The trips [sightings] suggest, newest first: each run of them away from every place lived
      * at, ending at the next one back at one or after [MAX_GAP_DAYS] without any, with two or more
      * records, and none of its days in one of [trips] or a trip [dismissed] by its key. Each is
-     * named after its farthest place's city, else the city [cityAt] finds there, else the place.
+     * named by [nameOf], its records' cities those of their places, else those [cityAt] finds there.
      */
     fun discover(
         sightings: List<Sighting>,
@@ -86,12 +86,61 @@ object TripDiscovery {
 
         return runs.filter { it.size >= 2 }.map { run ->
             val farthest = run.maxBy { it.second }.first
-            val name = (farthest.place?.division?.city ?: cityAt(farthest.lat, farthest.lng))?.let(::shortCity)
-                ?: farthest.place?.name ?: "%.2f, %.2f".format(farthest.lat, farthest.lng)
-            TripSuggestion(run.first().first.day, run.last().first.day, name, run.size)
+            val cities = run.map { (sighting) -> (sighting.place?.division?.city ?: cityAt(sighting.lat, sighting.lng))?.let(::shortCity) }
+            val start = run.first().first.day
+            val end = run.last().first.day
+            val where = cities[run.indexOfFirst { it.first === farthest }] ?: farthest.place?.name ?: "%.2f, %.2f".format(farthest.lat, farthest.lng)
+            TripSuggestion(start, end, nameOf(LocalDate.parse(start), LocalDate.parse(end), cities.filterNotNull(), where), run.size)
         }.filter { suggestion ->
             suggestion.key !in dismissed && trips.none { it.start <= suggestion.end && it.end >= suggestion.start }
         }.sortedByDescending { it.start }
+    }
+
+    /**
+     * A trip's name, as one would write it: where it went, the [cities] with the most of its records
+     * in the order they were reached, those a single record passed through (a station on the way)
+     * left out among several, or [where], its farthest, when each had one or there are none; and
+     * when, the holiday it spans before it (国庆香港), else 一日 or 周末 after it (南京一日, 合肥周末).
+     */
+    fun nameOf(start: LocalDate, end: LocalDate, cities: List<String>, where: String): String {
+        val counts = cities.groupingBy { it }.eachCount()
+        val reached = cities.distinct().let { all -> if (all.size > 1) all.filter { counts.getValue(it) > 1 } else all }
+        val most = reached.sortedByDescending { counts.getValue(it) }
+        val chosen = if (most.size <= 3 && most.sumOf { it.length } <= 9) most else most.take(2)
+        val place = when {
+            reached.isEmpty() -> where
+            // 等 only for a city left out with as many records as one named.
+            else -> reached.filter { it in chosen }.joinToString("、") +
+                if (most.drop(chosen.size).any { counts.getValue(it) >= counts.getValue(chosen.last()) }) "等" else ""
+        }
+        holidayOf(start, end)?.let { return it + place }
+        val days = generateSequence(start) { it.plusDays(1) }.takeWhile { it <= end }.toList()
+        return when {
+            days.size == 1 -> place + "一日"
+            days.size <= 3 && days.all { it.dayOfWeek.value >= 5 } && days.any { it.dayOfWeek.value >= 6 } -> place + "周末"
+            else -> place
+        }
+    }
+
+    /** The day of the Spring Festival, by year, for the years the records reach. */
+    private val SPRING_FESTIVAL = mapOf(
+        2016 to "02-08", 2017 to "01-28", 2018 to "02-16", 2019 to "02-05", 2020 to "01-25", 2021 to "02-12",
+        2022 to "02-01", 2023 to "01-22", 2024 to "02-10", 2025 to "01-29", 2026 to "02-17", 2027 to "02-06",
+        2028 to "01-26", 2029 to "02-13", 2030 to "02-03",
+    )
+
+    /** The holiday a trip from [start] to [end] spans any of, with a day either side for the travel there and back. */
+    private fun holidayOf(start: LocalDate, end: LocalDate): String? {
+        val spans = buildList {
+            for (year in start.year..end.year) {
+                SPRING_FESTIVAL[year]?.let { LocalDate.parse("$year-$it") }?.let { add("春节" to (it.minusDays(8)..it.plusDays(8))) }
+                add("元旦" to (LocalDate.of(year - 1, 12, 30)..LocalDate.of(year, 1, 2)))
+                add("清明" to (LocalDate.of(year, 4, 3)..LocalDate.of(year, 4, 7)))
+                add("五一" to (LocalDate.of(year, 4, 30)..LocalDate.of(year, 5, 6)))
+                add("国庆" to (LocalDate.of(year, 9, 30)..LocalDate.of(year, 10, 8)))
+            }
+        }
+        return spans.firstOrNull { (_, days) -> start <= days.endInclusive && end >= days.start }?.first
     }
 
     /** The middles of the areas lived at around [day], an epoch day, from each area's [areas] days with records. */
