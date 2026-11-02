@@ -23,7 +23,7 @@ data/
 ```
 
 - An **entry** (`packages/data-spec/src/entry.ts`) is a moment and an optional point, with
-  its words, photos, meal, bill, charge, device or subscription as parts by plugin. A device
+  its words, photos, meal, bill, charge, device, subscription or check-in as parts by plugin. A device
   is on the day it was bought, what it sold for written on it once sold; a subscription on
   the day it was last paid, or for software bought once the day it was first written down.
   The use page lists both from these entries. It is named by its uid alone:
@@ -35,7 +35,9 @@ data/
 - A **trip** is a collection taking the entries in its span (with `include` and
   `exclude`), its waypoints marks of their own (entries with a place and no parts).
 - A **place** has a name, WGS-84 coordinates, a kind, the province, city and district it is
-  in (`vp run places:locate`), an optional note, and for a train's end its `station`.
+  in (`vp run places:locate`), an optional note, for a train's end its `station`, and for one
+  brought in from Swarm the venue it was made for (`source`). Places are never merged for
+  being near each other or sharing a name.
 - Each record is public or private: its own `visibility`, else its container's, else its
   plugin's default (a bill is private), else public.
 - Units are those `packages/data-spec/src/primitives.ts` gives: metres, watt-hours, seconds,

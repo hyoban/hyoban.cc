@@ -32,7 +32,7 @@ object Entries {
     // The `topic` the spec no longer has is among the keys, so a record that still carries one drops it.
     private val momentKeys = setOf(
         "uid", "occurredAt", "places", "text", "hidden", "topic", "media", "food", "trip", "order",
-        "published", "createdAt", "updatedAt", PART_VISIBILITY,
+        "published", "createdAt", "updatedAt", PART_VISIBILITY, OTHER_PARTS,
     )
 
     /**
@@ -40,8 +40,20 @@ object Entries {
      * otherwise than the Moment: the app's own field, written onto the parts as the entry goes.
      */
     const val PART_VISIBILITY = "partVisibility"
+
+    /**
+     * Where a Moment kept on the phone holds its entry's parts the first shape has no field for
+     * (a check-in), by plugin: the app's own field, put back among the parts as the entry goes.
+     * A bill isn't among them, as the ledger sends a Moment's bill itself.
+     */
+    const val OTHER_PARTS = "otherParts"
+
+    /** The parts a Moment has fields of its own for, and the bill the ledger sends with it. */
+    private val momentParts = setOf("text", "media", "food", "bill")
+
+    // `point`, `end` and `links` stay on the Moment as fields it doesn't know, and go back the same.
     private val entryKeys = setOf(
-        "uid", "at", "end", "point", "place", "parts", "links", "visibility", "topic", "order",
+        "uid", "at", "place", "parts", "visibility", "topic", "order",
         "published", "createdAt", "updatedAt",
     )
 
@@ -79,6 +91,7 @@ object Entries {
                         }
                     })
                 }
+                (record[OTHER_PARTS] as? JsonObject)?.forEach { (plugin, part) -> put(plugin, part) }
                 parts.forEach { (plugin, part) -> put(plugin, part) }
             })
             if (moment.hidden) put("visibility", Visibility.PRIVATE.value)
@@ -132,6 +145,7 @@ object Entries {
             put("createdAt", entry.string("createdAt"))
             put("updatedAt", entry.string("updatedAt"))
             if (own.isNotEmpty()) put(PART_VISIBILITY, JsonObject(own))
+            parts.filterKeys { it !in momentParts }.takeIf { it.isNotEmpty() }?.let { put(OTHER_PARTS, JsonObject(it)) }
         }
         return Spec.json.decodeFromJsonElement(MomentRecord.serializer(), record)
     }
@@ -302,6 +316,13 @@ object Entries {
         val number = { key: String -> (charge[key] as? JsonPrimitive)?.contentOrNull?.toDoubleOrNull() }
         return number("durationSeconds")?.div(60) ?: number("durationMin")
     }
+
+    /**
+     * What a check-in part calls its venue: its other name first, as Swarm's export names a
+     * venue in the account's language (English) and keeps its local name beside it.
+     */
+    fun checkinName(checkin: JsonObject): String? =
+        listOf("alias", "venue").firstNotNullOfOrNull { (checkin[it] as? JsonPrimitive)?.contentOrNull?.takeIf(String::isNotBlank) }
 
     /** Whether a collection is private by its own say. */
     fun isPrivate(collection: JsonObject): Boolean = collection.visibility() == Visibility.PRIVATE

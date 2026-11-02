@@ -126,6 +126,27 @@ test('the public sees public parts, a bill only by its amount, category and note
   assert.deepEqual(getPublicEntry(mark), mark)
 })
 
+test('a public check-in shows its venue, never where it came from', () => {
+  const entry = entrySchema.parse({
+    ...base,
+    point: { lat: 30.25, lng: 120.16, accuracy: 12, from: 'device' },
+    parts: {
+      checkin: {
+        v: 1,
+        venue: 'Noodle House',
+        alias: '面馆',
+        source: { app: 'swarm', checkin: 'c1', venue: 'v1' },
+      },
+    },
+  })
+  const shown = getPublicEntry(entry)
+  assert.deepEqual(shown.parts.checkin, { v: 1, venue: 'Noodle House', alias: '面馆' })
+  assert.equal(getPublicEntry({ ...entry, visibility: 'private' }), undefined)
+  assert.throws(() =>
+    entrySchema.parse({ ...base, parts: { checkin: { v: 1, venue: 'x', source: { app: 'x' } } } }),
+  )
+})
+
 test('a private bill stays on the phone, a public one goes', () => {
   const entry = entrySchema.parse({
     ...base,

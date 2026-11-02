@@ -191,6 +191,9 @@
     <plurals name="count_moments">
         <item quantity="other">%1$d 个时刻</item>
     </plurals>
+    <plurals name="count_checkins">
+        <item quantity="other">%1$d 次签到</item>
+    </plurals>
     <plurals name="count_days_total">
         <item quantity="other">共 %1$d 天</item>
     </plurals>
@@ -789,6 +792,8 @@
     <string name="charge_ac">交流充电</string>
     <string name="charge_dc">直流快充</string>
     <string name="timeline_charge">充电</string>
+    <string name="timeline_checkin">签到 %s</string>
+    <string name="timeline_checkin_on">%s 签到</string>
     <plurals name="charge_minutes">
         <item quantity="other">%d 分钟</item>
     </plurals>
@@ -1003,6 +1008,16 @@
     <string name="timeline_bought">买了 %s</string>
     <string name="timeline_renewed">续费 %s</string>
     <string name="section_backup">备份</string>
+    <string name="section_import">导入</string>
+    <string name="swarm_import">从 Swarm 导入</string>
+    <string name="swarm_import_note">Swarm 导出的 .zip</string>
+    <string name="swarm_import_explain">签到都导入成私有的：写了字或带照片的成为时刻，其余只记下签到，每家店成为一个地点。再导入同一份导出，只添上新的。</string>
+    <string name="swarm_reading">正在读取…</string>
+    <string name="swarm_copying">正在复制照片 %1$d / %2$d</string>
+    <string name="swarm_import_summary">%1$d 次签到：%2$d 条成为时刻，%3$d 次只记下签到，新建了 %5$d 个地点，复制了 %4$d 张照片。</string>
+    <string name="swarm_import_known">其中 %d 次之前已经导入过，没有再添。</string>
+    <string name="swarm_import_private">都是私有的，在发布更改里看过再发布。</string>
+    <string name="swarm_import_failed">无法读取这个文件，请选择 Swarm 导出的 .zip</string>
     <string name="setting_webdav">WebDAV</string>
     <string name="webdav_directory">目录地址</string>
     <string name="webdav_directory_note">备份放进这个目录，没有就新建</string>

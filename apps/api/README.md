@@ -58,8 +58,9 @@ stamps the manifest's `updatedAt`; one that doesn't fit changes nothing (a 422 n
 missing original), and one that changes nothing takes no revision. The answer gives the id
 each place is known by, the records as published, the uids deleted and the revision taken.
 
-- **Places.** One within 200 m of a known place, or of its name, is that place; any other
-  is added, a provisional `p-<ulid>` getting an id from its name's pinyin, and its province,
+- **Places.** A known id is that place, and one brought in from a Swarm venue (`source`) is
+  the place of that venue if there is one; places near each other or of one name stay apart.
+  Any other is added, a provisional `p-<ulid>` getting an id from its name's pinyin, and its province,
   city and district looked up from DataV's GeoAtlas (`DIVISIONS_URL`), or left for
   `vp run places:locate` when that fails. An entry names one place at most.
 - **Publishing.** A draft takes a `published` block with the time, and its originals move to

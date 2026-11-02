@@ -191,6 +191,10 @@
         <item quantity="one">%1$d person</item>
         <item quantity="other">%1$d people</item>
     </plurals>
+    <plurals name="count_checkins">
+        <item quantity="one">%1$d check-in</item>
+        <item quantity="other">%1$d check-ins</item>
+    </plurals>
     <plurals name="count_moments">
         <item quantity="one">%1$d Moment</item>
         <item quantity="other">%1$d Moments</item>
@@ -822,6 +826,8 @@
     <string name="charge_ac">AC charge</string>
     <string name="charge_dc">DC fast charge</string>
     <string name="timeline_charge">Charge</string>
+    <string name="timeline_checkin">Checked in at %s</string>
+    <string name="timeline_checkin_on">Checked in %s</string>
     <plurals name="charge_minutes">
         <item quantity="one">%d min</item>
         <item quantity="other">%d min</item>
@@ -1040,6 +1046,16 @@
     <string name="timeline_bought">Bought %s</string>
     <string name="timeline_renewed">Renewed %s</string>
     <string name="section_backup">Backup</string>
+    <string name="section_import">Import</string>
+    <string name="swarm_import">Import from Swarm</string>
+    <string name="swarm_import_note">The .zip Swarm exports</string>
+    <string name="swarm_import_explain">Check-ins come in private: those with words or photos as Moments, the rest as check-ins alone, each venue a place. Importing the same export again adds only what is new.</string>
+    <string name="swarm_reading">Reading…</string>
+    <string name="swarm_copying">Copying photos %1$d / %2$d</string>
+    <string name="swarm_import_summary">%1$d check-ins: %2$d as Moments, %3$d as check-ins alone, %5$d new places, %4$d photos copied.</string>
+    <string name="swarm_import_known">%d of them were imported before and weren\'t added again.</string>
+    <string name="swarm_import_private">All private; review them in the changes before publishing.</string>
+    <string name="swarm_import_failed">Can\'t read this file. Choose the .zip Swarm exports.</string>
     <string name="setting_webdav">WebDAV</string>
     <string name="webdav_directory">Directory address</string>
     <string name="webdav_directory_note">Backups go in this directory, made if it isn’t there</string>

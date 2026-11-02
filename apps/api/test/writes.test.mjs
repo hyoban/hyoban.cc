@@ -67,12 +67,12 @@ async function publishDock(env) {
   return commit(env, { places: { [made]: dock }, moments: [draft] })
 }
 
-test('a place near a known one, or with its name, is that one; one the app made is named by its pinyin', async () => {
+test('a new place stays apart from a known one however near or alike; one the app made is named by its pinyin', async () => {
   const { env } = setUpWithData()
   const nanjing = snapshot.places.nanjing
   const { status, body } = await commit(env, {
     places: {
-      'nanjing-2': { name: '南京', latitude: 32.0607, longitude: 118.7972 },
+      'nanjing-2': { name: '南京', latitude: nanjing.latitude, longitude: nanjing.longitude },
       'somewhere-else': { name: nanjing.name, latitude: 0, longitude: 0 },
       [made]: dock,
     },
@@ -80,17 +80,52 @@ test('a place near a known one, or with its name, is that one; one the app made 
 
   assert.equal(status, 200)
   assert.deepEqual(body.places, {
-    'nanjing-2': 'nanjing',
-    'somewhere-else': 'nanjing',
+    'nanjing-2': 'nanjing-2',
+    'somewhere-else': 'somewhere-else',
     [made]: 'ce-shi-ma-tou',
   })
   assert.deepEqual(
     (await get(env, '/v2/places/nanjing')).body,
     nanjing,
-    'a known place keeps its point',
+    'the known place is as it was',
   )
   assert.equal((await get(env, '/v2/places/ce-shi-ma-tou')).body.name, '测试码头')
-  assert.equal((await get(env, '/v2/places/somewhere-else')).status, 404)
+  assert.equal((await get(env, '/v2/places/somewhere-else')).body.name, nanjing.name)
+})
+
+test('a place from a Swarm venue is that venue’s alone, however near or alike another is', async () => {
+  const { env } = setUpWithData()
+  const nanjing = snapshot.places.nanjing
+  const venue = {
+    name: nanjing.name,
+    latitude: nanjing.latitude,
+    longitude: nanjing.longitude,
+    source: { app: 'swarm', venue: 'v1' },
+  }
+  const first = await commit(env, { places: { 'p-01m2m39jfrtecgk13xngmx8864': venue } })
+
+  assert.equal(first.status, 200)
+  const id = first.body.places['p-01m2m39jfrtecgk13xngmx8864']
+  assert.notEqual(id, 'nanjing', 'not the known place it stands on')
+  assert.deepEqual((await get(env, `/v2/places/${id}`)).body.source, venue.source)
+
+  const again = await commit(env, {
+    places: {
+      'p-01m2m3hw3ry3kwpp7kxsb6gsng': { ...venue, name: '别的名字' },
+      'p-01m2m4tpr8ev0n3n7cr60w8cjg': { ...venue, source: { app: 'swarm', venue: 'v2' } },
+    },
+  })
+
+  assert.equal(
+    again.body.places['p-01m2m3hw3ry3kwpp7kxsb6gsng'],
+    id,
+    'the same venue again is its place',
+  )
+  assert.notEqual(
+    again.body.places['p-01m2m4tpr8ev0n3n7cr60w8cjg'],
+    id,
+    'another venue is another place',
+  )
 })
 
 test('a known place sent under its own id takes the kind it is sent with, and nothing else', async () => {
