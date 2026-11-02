@@ -24,10 +24,18 @@ private const val REACH = 0.1
 private typealias Ring = DoubleArray
 
 /**
- * A region to light: its id, the first two digits its province's, and its polygons, each an outer
- * ring then its holes. Its middle, [cx] and [cy], is where the fog's sweep reaches it.
+ * A region to light: its id, the first two digits its province's, its city's [name], and its
+ * polygons, each an outer ring then its holes. Its middle, [cx] and [cy], is where the fog's sweep
+ * reaches it.
  */
-class FogRegion(val id: String, val fogged: Boolean, val polygons: List<List<Ring>>, cx: Double? = null, cy: Double? = null) {
+class FogRegion(
+    val id: String,
+    val fogged: Boolean,
+    val polygons: List<List<Ring>>,
+    cx: Double? = null,
+    cy: Double? = null,
+    val name: String? = null,
+) {
     /** West, south, east and north. */
     internal val bounds: DoubleArray = DoubleArray(4).apply {
         this[0] = Double.POSITIVE_INFINITY
@@ -84,6 +92,7 @@ fun parseFogRegions(source: Reader): List<FogRegion> = JsonReader(source).use { 
 
 private fun readRegion(reader: JsonReader): FogRegion {
     var id = ""
+    var name: String? = null
     var fogged = false
     var cx: Double? = null
     var cy: Double? = null
@@ -96,6 +105,7 @@ private fun readRegion(reader: JsonReader): FogRegion {
                 while (reader.hasNext()) {
                     when (reader.nextName()) {
                         "id" -> id = reader.nextString()
+                        "name" -> name = reader.nextString()
                         "fogged" -> fogged = reader.nextBoolean()
                         "cx" -> cx = reader.nextDouble()
                         "cy" -> cy = reader.nextDouble()
@@ -115,7 +125,7 @@ private fun readRegion(reader: JsonReader): FogRegion {
         }
     }
     reader.endObject()
-    return FogRegion(id, fogged, polygons, cx, cy)
+    return FogRegion(id, fogged, polygons, cx, cy, name)
 }
 
 /** A point, a ring of them, or a list of either, as nested in GeoJSON's coordinates. */
@@ -177,14 +187,17 @@ fun buildFogOfWar(
     val weighed = places.zip(weights ?: places.map { 1 })
     for ((place, weight) in weighed) {
         val (x, y) = place
-        val found = candidates.firstOrNull { region ->
-            val b = region.bounds
-            x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3] && region.contains(x, y)
-        } ?: nearest(candidates, x, y)
-        found?.let { lit[it.id] = (lit[it.id] ?: 0) + weight }
+        regionAt(candidates, x, y)?.let { lit[it.id] = (lit[it.id] ?: 0) + weight }
     }
     return FogOfWar(lit.keys.toList(), lit.size, lit.keys.map { it.take(2) }.toSet().size, lit.toMap())
 }
+
+/** The city of [regions] at a longitude [x] and latitude [y], or the nearest within reach, never the rest of the world. */
+fun regionAt(regions: List<FogRegion>, x: Double, y: Double): FogRegion? =
+    regions.firstOrNull { region ->
+        val b = region.bounds
+        !region.fogged && x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3] && region.contains(x, y)
+    } ?: nearest(regions, x, y)
 
 /** Inside one of the region's polygons: inside its outer ring and none of its holes. */
 private fun FogRegion.contains(x: Double, y: Double) = polygons.any { polygon ->
@@ -212,6 +225,7 @@ private fun nearest(regions: List<FogRegion>, x: Double, y: Double): FogRegion? 
     var nearest: FogRegion? = null
     var best = REACH
     for (region in regions) {
+        if (region.fogged) continue
         val b = region.bounds
         if (x < b[0] - best || x > b[2] + best || y < b[1] - best || y > b[3] + best) continue
         for (ring in region.polygons.flatten()) for (index in 2 until ring.size step 2) {

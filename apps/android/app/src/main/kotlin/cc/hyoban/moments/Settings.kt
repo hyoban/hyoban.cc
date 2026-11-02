@@ -84,6 +84,15 @@ class Settings(context: Context) {
         prefs.edit { putBoolean("map_fog", on) }
     }
 
+    /** The map's 可能的旅程 dismissed, by their keys, so they don't come back. */
+    var dismissedTrips: Set<String> by mutableStateOf(prefs.getStringSet("dismissed_trips", null).orEmpty().toSet())
+        private set
+
+    fun dismissTrip(key: String) {
+        dismissedTrips = dismissedTrips + key
+        prefs.edit { putStringSet("dismissed_trips", dismissedTrips) }
+    }
+
     /** Whether the ledger's amounts are hidden, for opening it with others looking on. */
     var ledgerHidden: Boolean by mutableStateOf(prefs.getBoolean("ledger_hidden", false))
         private set
