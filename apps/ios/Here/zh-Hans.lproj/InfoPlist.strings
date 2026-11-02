@@ -1,0 +1,4 @@
+"NSLocationWhenInUseUsageDescription" = "在地图上显示你的位置，并记录足迹。";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "在后台继续记录足迹。足迹只保存在这台手机上。";
+"NSPhotoLibraryUsageDescription" = "为时刻选择照片和视频。";
+"NSMotionUsageDescription" = "判断足迹是步行、骑行还是驾车。";

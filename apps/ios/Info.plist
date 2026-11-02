@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>cc.hyoban.moments</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>moments</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>在地图上显示你的位置，并记录足迹。</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>在后台继续记录足迹。足迹只保存在这台手机上。</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>为时刻选择照片和视频。</string>
+	<key>NSMotionUsageDescription</key>
+	<string>判断足迹是步行、骑行还是驾车。</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>zh-Hans</string>
+		<string>en</string>
+	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+</dict>
+</plist>
