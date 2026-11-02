@@ -827,6 +827,10 @@
     <string name="trip_edit_public_note">公开的旅程会出现在网站上。</string>
     <string name="action_edit_trip">编辑旅程</string>
     <string name="section_changed_trips">改过的旅程</string>
+    <string name="section_new_trips">新建的旅程</string>
+    <string name="trip_new_title">新建旅程</string>
+    <string name="trip_delete">删除旅程</string>
+    <string name="trip_delete_confirm">删除这段旅程？里面的时刻不受影响。</string>
     <string name="filter_moments">时刻</string>
     <string name="part_private">%1$s私有</string>
     <string name="trip_edit_members">包含的记录</string>

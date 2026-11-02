@@ -2,6 +2,7 @@ package cc.hyoban.moments.ui.trips
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.CompositionLocalProvider
+import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.RailSpace
 import cc.hyoban.moments.ui.components.isPhoneLandscape
@@ -98,6 +99,7 @@ fun TripScreen(
     val places by container.repository.places.collectAsStateWithLifecycle()
     val routes by container.tripRoutes.collectAsStateWithLifecycle()
     val trip = remember(trips, id) { trips.firstOrNull { it.id == id } } ?: return
+    val connected = LocalSettings.current.connected
     val moments = remember(trip, all) { momentsOf(trip, all, trips) }
     val stops = remember(trip, all, places) { stopsOf(trip, all, trips, places) }
     val resources = LocalResources.current
@@ -232,7 +234,8 @@ fun TripScreen(
                     ) {
                         item(key = "summary") { summary() }
                         item(key = "spending") { spending() }
-                        item(key = "track") { TrackShareRow(container, trip) }
+                        // Public footprints only go out with a publish, so with no API there is no switch.
+                        if (connected) item(key = "track") { TrackShareRow(container, trip) }
                         if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(3) }
                     }
                     }
@@ -256,7 +259,7 @@ fun TripScreen(
                 ) {
                     item(key = "summary") { summary() }
                     item(key = "spending") { spending() }
-                    item(key = "track") { TrackShareRow(container, trip) }
+                    if (connected) item(key = "track") { TrackShareRow(container, trip) }
                     if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(5) }
                     item(key = "map") { routeCard(Modifier, Modifier.height(240.dp)) }
                     item(key = "gap") { Spacer(Modifier.height(Space.s)) }
@@ -273,7 +276,7 @@ fun TripScreen(
 @Composable
 private fun TrackShareRow(container: AppContainer, trip: cc.hyoban.moments.data.spec.TripRecord) {
     val revision by container.footprints.revision.collectAsStateWithLifecycle()
-    val collection = remember(trip) { cc.hyoban.moments.data.spec.Entries.collectionUid(trip) }
+    val collection = remember(trip) { container.repository.tripUid(trip) }
     val share by androidx.compose.runtime.produceState<cc.hyoban.moments.footprints.TrackShare?>(null, revision, collection) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             container.footprints.shares().firstOrNull { it.collection == collection && !it.removed }

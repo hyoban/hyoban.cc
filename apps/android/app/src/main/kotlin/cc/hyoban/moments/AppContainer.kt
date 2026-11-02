@@ -93,7 +93,7 @@ class AppContainer(context: Context) {
     val tripRoutes: kotlinx.coroutines.flow.StateFlow<Map<String, List<cc.hyoban.moments.data.trips.RouteSegment>>> =
         kotlinx.coroutines.flow.combine(routes.routes, repository.second, repository.trips) { roads, second, trips ->
             roads + trips.mapNotNull { trip ->
-                val uid = cc.hyoban.moments.data.spec.Entries.collectionUid(trip)
+                val uid = repository.tripUid(trip)
                 val track = second.tracks.values.firstOrNull { (it["collection"] as? kotlinx.serialization.json.JsonPrimitive)?.content == uid }
                     ?: return@mapNotNull null
                 val stretches = (track["segments"] as? kotlinx.serialization.json.JsonArray).orEmpty().mapNotNull { segment ->

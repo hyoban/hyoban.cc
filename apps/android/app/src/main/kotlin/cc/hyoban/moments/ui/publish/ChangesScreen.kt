@@ -198,13 +198,15 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                     val revert = { container.revertPlace(change.id) }.takeUnless { busy }
                     SwipeToRevert(revert) { PlaceChangeCard(change, revert) }
                 }
-                section(R.string.section_changed_trips, pending.trips, key = { "trip-${it.before.id}" }) { change ->
-                    val revert = { container.scope.launch { container.repository.revertTrip(change.before.id) }; Unit }.takeUnless { busy }
+                // The trips made on the phone, then the site's changed there, each taken back the same way.
+                val (madeTrips, changedTrips) = pending.trips.partition { it.before == null }
+                for ((heading, trips) in listOf(R.string.section_new_trips to madeTrips, R.string.section_changed_trips to changedTrips)) section(heading, trips, key = { "trip-${it.id}" }) { change ->
+                    val revert = { container.scope.launch { container.repository.revertTrip(change.id) }; Unit }.takeUnless { busy }
                     val after = change.after
-                    val title = (after["title"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: change.before.title
+                    val title = (after["title"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: change.before?.title.orEmpty()
                     val span = after["span"] as? kotlinx.serialization.json.JsonObject
-                    val start = (span?.get("start") as? kotlinx.serialization.json.JsonPrimitive)?.content?.take(10) ?: change.before.start
-                    val end = (span?.get("end") as? kotlinx.serialization.json.JsonPrimitive)?.content?.take(10) ?: change.before.end
+                    val start = (span?.get("start") as? kotlinx.serialization.json.JsonPrimitive)?.content?.take(10) ?: change.before?.start.orEmpty()
+                    val end = (span?.get("end") as? kotlinx.serialization.json.JsonPrimitive)?.content?.take(10) ?: change.before?.end.orEmpty()
                     val private = cc.hyoban.moments.data.spec.Entries.isPrivate(after)
                     SwipeToRevert(revert) {
                         OutsideCard(

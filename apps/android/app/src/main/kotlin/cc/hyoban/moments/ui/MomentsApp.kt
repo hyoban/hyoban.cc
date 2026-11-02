@@ -210,9 +210,9 @@ private val ViewerSaver = listSaver<Viewer?, Any>(
 @Serializable
 data class Trip(val id: String)
 
-/** A trip's name, days and who sees it, to change. */
+/** A trip's name, days and who sees it, to change, or with no [id] to make one. */
 @Serializable
-data class TripEdit(val id: String)
+data class TripEdit(val id: String? = null)
 
 /** A trip played back along its route. */
 @Serializable
@@ -673,6 +673,7 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                         focus = mapFocus,
                                         onFocused = { mapFocus = null },
                                         onFootprintSettings = { navController.navigate(FootprintSettings) },
+                                        onNewTrip = { navController.navigate(TripEdit()) },
                                     )
                                 }
                                 screen<Moment> { entry ->
@@ -701,7 +702,15 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                     )
                                 }
                                 screen<TripEdit> { entry ->
-                                    cc.hyoban.moments.ui.trips.TripEditScreen(container, entry.toRoute<TripEdit>().id, onBack = back)
+                                    cc.hyoban.moments.ui.trips.TripEditScreen(
+                                        container,
+                                        entry.toRoute<TripEdit>().id,
+                                        onBack = back,
+                                        // A trip made opens in place of the page that made it.
+                                        onMade = { id -> navController.popBackStack(); openTrip(id) },
+                                        // Its own page goes with it, when it was opened from there.
+                                        onDeleted = { if (!navController.popBackStack<Trip>(inclusive = true)) navController.popBackStack() },
+                                    )
                                 }
                                 screen<TripPlay> { entry ->
                                     TripPlayerScreen(container, entry.toRoute<TripPlay>().id, onMoment = openMoment, onBack = back)
@@ -1221,7 +1230,7 @@ fun routeOf(link: Uri): Any? {
         "moment" -> id?.let(::Moment)
         "trip" -> id?.let(::Trip)
         "play" -> id?.let(::TripPlay)
-        "trip-edit" -> id?.let(::TripEdit)
+        "trip-edit" -> TripEdit(id)
         "day" -> id?.let(::Day)
         "place" -> id?.let(::PlaceMoments)
         else -> null

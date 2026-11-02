@@ -187,9 +187,10 @@ fun MapScreen(
     focus: MapFocus? = null,
     onFocused: () -> Unit = {},
     onFootprintSettings: () -> Unit = {},
+    onNewTrip: () -> Unit = {},
 ) {
     FootprintsOnMap(container, onFootprintSettings) { footprints ->
-        MapContent(container, onMoment, onPlace, onTrip, onPlay, onSearch, focus, onFocused, footprints)
+        MapContent(container, onMoment, onPlace, onTrip, onPlay, onSearch, focus, onFocused, footprints, onNewTrip)
     }
 }
 
@@ -204,6 +205,7 @@ private fun MapContent(
     focus: MapFocus?,
     onFocused: () -> Unit,
     footprints: FootprintsMapState,
+    onNewTrip: () -> Unit,
 ) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -483,6 +485,7 @@ private fun MapContent(
                 // Resting, only its title line shows above the tabs; its rows come in as it's drawn up.
                 shown = { if (wide) 1f else (sheetState.raised * TRIPS_REVEAL).coerceAtMost(1f) },
                 onTrip = onTrip,
+                onNew = onNewTrip,
             )
         } else {
             val here = byPlace[id].orEmpty()
@@ -676,6 +679,7 @@ private fun TripsSheet(
     bottom: Dp,
     shown: () -> Float,
     onTrip: (String) -> Unit,
+    onNew: () -> Unit,
     /** In the card floating beside the tabs on a phone on its side (H09): its title 16 in, its rows 12, their covers 56. */
     inCard: Boolean = false,
 ) {
@@ -700,8 +704,12 @@ private fun TripsSheet(
                 },
                 style = AppTheme.typography.caption,
                 color = tokens.tx2,
-                modifier = Modifier.padding(bottom = 3.dp),
+                modifier = Modifier.padding(bottom = 3.dp).weight(1f),
             )
+            // Making a trip, there whether or not any are.
+            IconButton(onClick = onNew, modifier = Modifier.align(Alignment.CenterVertically).testTag("trip_new")) {
+                Icon(AppIcons.Plus, contentDescription = stringResource(R.string.trip_new_title))
+            }
         }
         LazyColumn(
             Modifier.weight(1f).graphicsLayer { alpha = shown() },

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.foundation.Image
@@ -268,7 +269,7 @@ private fun MonthSpending(container: AppContainer, onOpen: () -> Unit) {
 
 /**
  * 东西: the devices and what they cost a day, the subscriptions and what they cost a month, and
- * the car's last month, each a page.
+ * the car's last month (with an API to have imported it), each a page.
  */
 @Composable
 private fun Things(container: AppContainer, routes: MeRoutes) {
@@ -293,7 +294,8 @@ private fun Things(container: AppContainer, routes: MeRoutes) {
                 .takeIf { it.isNotEmpty() }?.let { stringResource(R.string.me_subscriptions_summary, it) },
             onClick = routes.subscriptions,
         )
-        MeRow(
+        // The car's data comes only from an import into the API, so without one there is none.
+        if (LocalSettings.current.connected) MeRow(
             AppIcons.Car, stringResource(R.string.car_title), "me_car", shapes,
             supporting = listOfNotNull(
                 devices.firstOrNull { it.id == CAR_ID }?.name,

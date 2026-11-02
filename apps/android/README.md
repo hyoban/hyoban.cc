@@ -53,7 +53,7 @@ clear of the camera's cutout on whichever side it is.
   There is no settings page over them, and under 我 there is one level of pages: what goes
   deeper, such as a book, the exchange rates or a side key gesture's action, opens over its
   page as a sheet or a dialog. Theme and language have no setting; they follow the phone.
-- **东西** in 我 opens three pages. 设备 (`moments://devices`) lists what is owned and what was
+- **东西** in 我 opens three pages, 车 only with an API. 设备 (`moments://devices`) lists what is owned and what was
   sold, each with what it costs a day; 订阅 (`moments://subscriptions`) what is paid by the
   month, by the year and once. Each device and subscription is an entry with its plugin's
   part, edited in a sheet and published with the rest from 发布更改. 车 (`moments://car`)
@@ -69,7 +69,11 @@ footprints on a map, its bills and charges read down by their times, and today's
 player does (`packages/trip-map/src/player`): the route never still, a vehicle at its tip,
 a card per Moment stepped through from a toolbar, by a swipe or with a keyboard's arrows
 and Space. 编辑旅程 changes its name, days, public switch, Moments and covers, published
-as a collection.
+as a collection. The + on the map's trips makes one (新建旅程, `moments://trip-edit`) on the
+phone alone: a collection of its own, its id its uid in lowercase as the API will know it,
+shown and played back as the site's are, though with no route along the roads until it is
+published and the API routes it. Until then it can be deleted from its 编辑旅程; once published it is the API's
+like the rest.
 
 No page has a bar: its way back and actions float as circles over it, its title large
 under them. On a wide window the map's trips stand in a column and bottom panels open as

@@ -2,6 +2,7 @@ package cc.hyoban.moments.ui.trips
 
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
+import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.components.railPadding
 import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.components.LocalTopClearance
@@ -54,18 +55,24 @@ import kotlinx.coroutines.launch
 /**
  * 编辑旅程: its name, the days it spans (its Moments are those days', worked out, not listed),
  * and whether it is public. Kept on the phone like any change until 全部发布到网站; the page's
- * one ink button saves it.
+ * one ink button saves it. With no [id] it makes a trip, named by hand and from today to today
+ * until changed, and [onMade] opens it; one not yet published can be deleted from here, [onDeleted]
+ * then leaving its page too.
  */
 @Composable
-fun TripEditScreen(container: AppContainer, id: String, onBack: () -> Unit) {
+fun TripEditScreen(container: AppContainer, id: String?, onBack: () -> Unit, onMade: (String) -> Unit = {}, onDeleted: () -> Unit = onBack) {
     val trips by container.repository.trips.collectAsStateWithLifecycle()
-    val trip = remember(trips, id) { trips.firstOrNull { it.id == id } } ?: return
-    var title by rememberSaveable { mutableStateOf(trip.title) }
-    var start by rememberSaveable { mutableStateOf(trip.start) }
-    var end by rememberSaveable { mutableStateOf(trip.end) }
-    var private by rememberSaveable { mutableStateOf(container.repository.isTripPrivate(id)) }
+    val trip = remember(trips, id) { id?.let { trips.firstOrNull { it.id == id } } }
+    if (id != null && trip == null) return
+    val today = remember { LocalDate.now().toString() }
+    var title by rememberSaveable { mutableStateOf(trip?.title.orEmpty()) }
+    var start by rememberSaveable { mutableStateOf(trip?.start ?: today) }
+    var end by rememberSaveable { mutableStateOf(trip?.end ?: today) }
+    var private by rememberSaveable { mutableStateOf(id != null && container.repository.isTripPrivate(id)) }
     var picking by rememberSaveable { mutableStateOf<String?>(null) }
-    val collection = remember(id) { container.repository.tripCollection(id) }
+    var deleting by rememberSaveable { mutableStateOf(false) }
+    val unpublished = id != null && container.repository.isTripNew(id)
+    val collection = remember(id) { id?.let { container.repository.tripCollection(it) } }
     var include by rememberSaveable { mutableStateOf(collection?.let { cc.hyoban.moments.data.spec.Entries.strings(it, "include") }.orEmpty()) }
     var exclude by rememberSaveable { mutableStateOf(collection?.let { cc.hyoban.moments.data.spec.Entries.strings(it, "exclude") }.orEmpty()) }
     var covers by rememberSaveable { mutableStateOf(collection?.let { cc.hyoban.moments.data.spec.Entries.coversOf(it) }.orEmpty().map { "${it.first}/${it.second}" }) }
@@ -82,7 +89,7 @@ fun TripEditScreen(container: AppContainer, id: String, onBack: () -> Unit) {
     }
     val scope = rememberCoroutineScope()
     val valid = title.isNotBlank() && start <= end
-    SubPage(stringResource(R.string.trip_edit_title), onBack, Modifier.background(AppColors.page)) {
+    SubPage(stringResource(if (id == null) R.string.trip_new_title else R.string.trip_edit_title), onBack, Modifier.background(AppColors.page)) {
         val form: @Composable () -> Unit = {
             OutlinedTextField(
                 title,
@@ -162,22 +169,32 @@ fun TripEditScreen(container: AppContainer, id: String, onBack: () -> Unit) {
             }
             SegmentedGroup(
                 null,
-                stringResource(if (private) R.string.moment_private_note else R.string.trip_edit_public_note),
+                // What reaches the site, said only with an API to publish to.
+                stringResource(if (private) R.string.moment_private_note else R.string.trip_edit_public_note).takeIf { LocalSettings.current.connected },
                 listOf { shapes ->
                     SwitchRow(private, AppIcons.EyeOff, stringResource(R.string.visibility_private), "trip_private", shapes) { private = !private }
                 },
             )
-            Row(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.l), horizontalArrangement = Arrangement.End) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.l),
+                horizontalArrangement = Arrangement.spacedBy(Space.s, androidx.compose.ui.Alignment.End),
+            ) {
+                // Only one not yet published goes from here; the site's trips have no deleting yet.
+                if (unpublished) {
+                    TextButton(onClick = { deleting = true }, modifier = Modifier.testTag("trip_delete")) { Text(stringResource(R.string.trip_delete)) }
+                }
                 Button(
                     enabled = valid,
                     onClick = {
                         scope.launch {
-                            container.repository.editTrip(
-                                id, title.trim(), start, end, if (private) Visibility.PRIVATE else Visibility.PUBLIC,
-                                include = include, exclude = exclude,
-                                covers = covers.map { it.substringBefore('/') to it.substringAfter('/') },
-                            )
-                            onBack()
+                            val visibility = if (private) Visibility.PRIVATE else Visibility.PUBLIC
+                            val chosen = covers.map { it.substringBefore('/') to it.substringAfter('/') }
+                            if (id == null) {
+                                onMade(container.repository.createTrip(title.trim(), start, end, visibility, include, exclude, chosen))
+                            } else {
+                                container.repository.editTrip(id, title.trim(), start, end, visibility, include = include, exclude = exclude, covers = chosen)
+                                onBack()
+                            }
                         }
                     },
                     modifier = Modifier.testTag("trip_save"),
@@ -219,6 +236,22 @@ fun TripEditScreen(container: AppContainer, id: String, onBack: () -> Unit) {
                 }
             }
         }
+    }
+    if (deleting && id != null) {
+        cc.hyoban.moments.ui.design.AlertDialog(
+            onDismissRequest = { deleting = false },
+            title = { Text(stringResource(R.string.trip_delete_confirm)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    deleting = false
+                    scope.launch {
+                        container.repository.revertTrip(id)
+                        onDeleted()
+                    }
+                }) { Text(stringResource(R.string.action_delete)) }
+            },
+            dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } },
+        )
     }
     picking?.let { which ->
         val day = LocalDate.parse(if (which == "start") start else end)
