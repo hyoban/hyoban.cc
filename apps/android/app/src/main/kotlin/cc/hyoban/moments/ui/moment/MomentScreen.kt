@@ -3,6 +3,7 @@ package cc.hyoban.moments.ui.moment
 import androidx.compose.ui.AbsoluteAlignment
 import cc.hyoban.moments.data.store.isPublic
 
+import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.components.floatingElevation
 import cc.hyoban.moments.ui.design.FloatingActionButton
@@ -514,8 +515,10 @@ private fun MomentDetails(
                     }
                 }
             }
-            // Where it stands, only on the phone or changed there, and the way to the changes to publish.
+            // Where it stands, only on the phone or changed there, and the way to the changes to publish;
+            // with no API there is nothing to publish to, so nothing is said.
             val state = when {
+                !LocalSettings.current.connected -> null
                 moment.published == null -> Triple(AppIcons.Phone, R.string.label_on_phone, R.string.explain_on_phone)
                 changed -> Triple(AppIcons.Pen, R.string.label_unpublished_change, R.string.explain_unpublished_change)
                 else -> null

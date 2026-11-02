@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.R
 import cc.hyoban.moments.data.swarm.SwarmImport
+import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.Icon
@@ -65,7 +66,7 @@ fun SwarmSection(swarm: SwarmImport) {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     Text(stringResource(R.string.swarm_import_summary, report.checkins, report.moments, report.entries, report.photos, report.places))
                     if (report.known > 0) Text(stringResource(R.string.swarm_import_known, report.known))
-                    Text(stringResource(R.string.swarm_import_private))
+                    Text(stringResource(if (LocalSettings.current.connected) R.string.swarm_import_private else R.string.swarm_import_private_alone))
                 }
             },
             confirmButton = { TextButton(onClick = swarm::dismiss) { Text(stringResource(R.string.action_confirm)) } },

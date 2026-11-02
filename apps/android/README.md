@@ -109,8 +109,8 @@ places with provisional ids (`p-<ulid>`), marked 未发布 until published.
 ## Publishing
 
 Publishing needs an API: its address and token, set under 我 → 同步与来源 (the token in a
-file backups leave out). Without them there is nothing to publish to, and the card for it
-stays away. With them the site's Moments can be changed and deleted too. Nothing reaches the site as it is saved: new,
+file backups leave out). Without them there is nothing to publish to: the card for it
+stays away, and nothing is marked 未发布, on the timeline or on a Moment's page, until they are set. With them the site's Moments can be changed and deleted too. Nothing reaches the site as it is saved: new,
 changed and deleted Moments, changed places, public bills, trips and footprint spans wait
 on the phone, past a restart. 发布更改, from the card at the top of 我, lists them, shows
 what changed and takes a change back. 全部发布到网站 runs as WorkManager work in a
