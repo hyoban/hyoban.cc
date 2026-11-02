@@ -136,14 +136,14 @@ test('the feed hands out the places and collections whole from the start, then o
   assert.equal(all.collections.collections.length, entrySnapshot.collections.length)
 
   const [placeId, place] = Object.entries(entrySnapshot.places)[0]
-  const [gone, moved] = entrySnapshot.collections
+  const [gone, moved, ...kept] = entrySnapshot.collections
   const changedCollection = { ...moved, title: `${moved.title}（改）` }
 
   importSnapshot(
     {
       ...entrySnapshot,
       places: { ...entrySnapshot.places, [placeId]: { ...place, name: `${place.name}２` } },
-      collections: [changedCollection],
+      collections: [changedCollection, ...kept],
     },
     '2026-10-20T08:00:00Z',
   )

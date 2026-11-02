@@ -1,0 +1,15 @@
+{
+  "uid": "01M3TSWZG0NATDAYR0ADTR1PXX",
+  "slug": "2026-national-day-road-trip",
+  "kind": "trip",
+  "title": "国庆自驾",
+  "span": {
+    "start": "2026-10-01",
+    "end": "2026-10-07"
+  },
+  "include": [],
+  "exclude": [],
+  "covers": [],
+  "createdAt": "2026-10-01T12:00:00+08:00",
+  "updatedAt": "2026-10-01T12:00:00+08:00"
+}

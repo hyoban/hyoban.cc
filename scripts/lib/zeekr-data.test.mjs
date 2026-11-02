@@ -13,6 +13,10 @@ const inputs = JSON.parse(readFileSync(new URL('imports.json', directory), 'utf8
   }),
 )
 const converted = convertZeekrCaptures(inputs)
+// The two captures of October 24, while October was still the current month: raw captures
+// never change, so what they convert to doesn't move when a later month is imported.
+const october = inputs.slice(0, 2)
+const convertedOctober = convertZeekrCaptures(october)
 const month = (key, result = converted) => result.files.get(`months/zeekr-007gt/${key}.json`)
 
 function revised(input, change) {
@@ -23,7 +27,8 @@ function revised(input, change) {
 }
 
 test('converts every existing record and reproduces the saved model without changing raw bytes', () => {
-  assert.deepEqual(converted.validation.counts, {
+  assert.equal(converted.validation.counts.captures, inputs.length)
+  assert.deepEqual(convertedOctober.validation.counts, {
     captures: 2,
     months: 15,
     days: 264,
@@ -55,7 +60,7 @@ test('preserves mixed historical energy and missing splits instead of manufactur
 })
 
 test('current month retains actual chart dates and separate charging totals', () => {
-  const record = month('2026-10')
+  const record = month('2026-10', convertedOctober)
   assert.equal(record.report.distanceMeters, 3516000)
   assert.equal(record.report.energyWh, 593200)
   assert.equal(record.charging.reported.energyWh, 634600)
@@ -90,16 +95,16 @@ test('keeps duplicate charging rows with distinct evidence and does not append o
 })
 
 test('latest report replaces only its own section, retaining older daily and charging sources', () => {
-  const next = revised(inputs[1], (raw) => {
+  const next = revised(october[1], (raw) => {
     raw.captured_at = '2026-10-25T08:00:00+08:00'
     delete raw.trips.daily
     delete raw.charging
   })
-  const result = convertZeekrCaptures([next, ...inputs])
+  const result = convertZeekrCaptures([next, ...october])
   const record = month('2026-10', result)
   assert.equal(record.capturedAt, '2026-10-25T08:00:00+08:00')
-  assert.deepEqual(record.days, month('2026-10').days)
-  assert.deepEqual(record.charging, month('2026-10').charging)
+  assert.deepEqual(record.days, month('2026-10', convertedOctober).days)
+  assert.deepEqual(record.charging, month('2026-10', convertedOctober).charging)
   assert.equal(
     record.sources.find((source) => source.pointer === '/trips/report').captureId,
     next.sha256,
