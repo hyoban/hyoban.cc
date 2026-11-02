@@ -83,6 +83,16 @@ phone alone: a collection of its own, its id its uid in lowercase as the API wil
 shown and played back as the site's are. Until then it can be deleted from its 编辑旅程; once published it is the API's
 like the rest.
 
+Above the trips, 可能的旅程 are the trips the records suggest (`data/trips/TripDiscovery.kt`):
+the days from a record more than 100 km from every place lived at until the next one back,
+or two weeks without any, with two or more records and none of their days in a trip. A
+place lived at is an area of about 20 km with records on eight days or more, in three
+months or more, within a year either side, so a second home (where one works, where one's
+family lives) counts as well. The records are the check-ins and the Moments with places,
+not the footprints, and nothing leaves the phone: each is named after the city its farthest
+record was in, from its place or the fog's city boundaries. One opens 新建旅程 with its days
+and name filled in; one dismissed is kept in the settings and doesn't come back.
+
 No page has a bar: its way back and actions float as circles over it, its title large
 under them. On a wide window the map's trips stand in a column and bottom panels open as
 dialogs.

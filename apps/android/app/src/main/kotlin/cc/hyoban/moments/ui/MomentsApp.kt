@@ -210,9 +210,9 @@ private val ViewerSaver = listSaver<Viewer?, Any>(
 @Serializable
 data class Trip(val id: String)
 
-/** A trip's name, days and who sees it, to change, or with no [id] to make one. */
+/** A trip's name, days and who sees it, to change, or with no [id] to make one, from [start] to [end] and named [title] when they're given. */
 @Serializable
-data class TripEdit(val id: String? = null)
+data class TripEdit(val id: String? = null, val start: String? = null, val end: String? = null, val title: String? = null)
 
 /** A trip played back along its route. */
 @Serializable
@@ -674,6 +674,7 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                         onFocused = { mapFocus = null },
                                         onFootprintSettings = { navController.navigate(FootprintSettings) },
                                         onNewTrip = { navController.navigate(TripEdit()) },
+                                        onSuggestedTrip = { navController.navigate(TripEdit(start = it.start, end = it.end, title = it.name)) },
                                     )
                                 }
                                 screen<Moment> { entry ->
@@ -702,9 +703,13 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                     )
                                 }
                                 screen<TripEdit> { entry ->
+                                    val edit = entry.toRoute<TripEdit>()
                                     cc.hyoban.moments.ui.trips.TripEditScreen(
                                         container,
-                                        entry.toRoute<TripEdit>().id,
+                                        edit.id,
+                                        startDay = edit.start,
+                                        endDay = edit.end,
+                                        name = edit.title,
                                         onBack = back,
                                         // A trip made opens in place of the page that made it.
                                         onMade = { id -> navController.popBackStack(); openTrip(id) },

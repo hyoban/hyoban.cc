@@ -11,6 +11,9 @@ import cc.hyoban.moments.ui.format.daysBetween
 import androidx.compose.foundation.lazy.items
 import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.data.trips.coversOf
+import cc.hyoban.moments.data.trips.TripDiscovery
+import cc.hyoban.moments.data.trips.TripSuggestion
+import androidx.compose.runtime.produceState
 import cc.hyoban.moments.ui.trips.TripCard
 import android.Manifest
 import android.content.pm.PackageManager
@@ -188,9 +191,10 @@ fun MapScreen(
     onFocused: () -> Unit = {},
     onFootprintSettings: () -> Unit = {},
     onNewTrip: () -> Unit = {},
+    onSuggestedTrip: (TripSuggestion) -> Unit = {},
 ) {
     FootprintsOnMap(container, onFootprintSettings) { footprints ->
-        MapContent(container, onMoment, onPlace, onTrip, onPlay, onSearch, focus, onFocused, footprints, onNewTrip)
+        MapContent(container, onMoment, onPlace, onTrip, onPlay, onSearch, focus, onFocused, footprints, onNewTrip, onSuggestedTrip)
     }
 }
 
@@ -206,6 +210,7 @@ private fun MapContent(
     onFocused: () -> Unit,
     footprints: FootprintsMapState,
     onNewTrip: () -> Unit,
+    onSuggestedTrip: (TripSuggestion) -> Unit,
 ) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -240,20 +245,36 @@ private fun MapContent(
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var highlighted by rememberSaveable { mutableStateOf<String?>(null) }
 
-    // The fog of war: the cities read from the app's assets the first time it's turned on, and
-    // those a Moment was written in, the phone's own among them, lit.
+    // The fog of war: the cities read from the app's assets the first time it's turned on or a
+    // 可能的旅程 is named, and those a Moment was written in, the phone's own among them, lit.
     val settings = LocalSettings.current
     val context = LocalContext.current
     val resources = LocalResources.current
     var fogRegions by remember { mutableStateOf<List<FogRegion>?>(null) }
+    val readRegions = suspend {
+        fogRegions ?: withContext(Dispatchers.Default) {
+            context.assets.open(FOG_REGIONS_ASSET).bufferedReader().use(::parseFogRegions)
+        }.also { fogRegions = it }
+    }
+    // 可能的旅程: worked out off the main thread as the records change, each named after the city
+    // the fog's regions find it went farthest to, the dismissed left out.
+    val entries by container.repository.entries.collectAsStateWithLifecycle()
+    val discovered by produceState(emptyList<TripSuggestion>(), moments, entries, places, trips) {
+        val sightings = withContext(Dispatchers.Default) { TripDiscovery.sightingsOf(moments, entries.values, places) }
+        if (sightings.isEmpty()) {
+            value = emptyList()
+            return@produceState
+        }
+        val regions = readRegions()
+        value = withContext(Dispatchers.Default) {
+            TripDiscovery.discover(sightings, trips) { lat, lng -> regionAt(regions, lng, lat)?.name }
+        }
+    }
+    val suggestions = remember(discovered, settings.dismissedTrips) { discovered.filter { it.key !in settings.dismissedTrips } }
     // Each toggle, swept on the map rather than set; a toggle while one sweeps turns it around.
     var fogSweep by remember { mutableIntStateOf(0) }
     LaunchedEffect(settings.mapFog) {
-        if (settings.mapFog && fogRegions == null) {
-            fogRegions = withContext(Dispatchers.Default) {
-                context.assets.open(FOG_REGIONS_ASSET).bufferedReader().use(::parseFogRegions)
-            }
-        }
+        if (settings.mapFog) readRegions()
     }
     val fog = remember(fogRegions, mapPlaces) {
         fogRegions?.let { regions ->
@@ -486,6 +507,9 @@ private fun MapContent(
                 shown = { if (wide) 1f else (sheetState.raised * TRIPS_REVEAL).coerceAtMost(1f) },
                 onTrip = onTrip,
                 onNew = onNewTrip,
+                suggestions = suggestions,
+                onSuggestion = onSuggestedTrip,
+                onDismiss = { settings.dismissTrip(it.key) },
             )
         } else {
             val here = byPlace[id].orEmpty()
@@ -667,7 +691,8 @@ private val ROUTE_CARD = 88.dp
 
 /**
  * The trips in the map's panel: a line of how many and how far, which is all that shows while it
- * rests, then a row for each trip, newest first, growing into its page when tapped.
+ * rests, then the 可能的旅程 the records suggest, each opening a new trip of its days or dismissed,
+ * and a row for each trip, newest first, growing into its page when tapped.
  */
 @Composable
 private fun TripsSheet(
@@ -680,6 +705,9 @@ private fun TripsSheet(
     shown: () -> Float,
     onTrip: (String) -> Unit,
     onNew: () -> Unit,
+    suggestions: List<TripSuggestion> = emptyList(),
+    onSuggestion: (TripSuggestion) -> Unit = {},
+    onDismiss: (TripSuggestion) -> Unit = {},
     /** In the card floating beside the tabs on a phone on its side (H09): its title 16 in, its rows 12, their covers 56. */
     inCard: Boolean = false,
 ) {
@@ -715,6 +743,29 @@ private fun TripsSheet(
             Modifier.weight(1f).graphicsLayer { alpha = shown() },
             contentPadding = PaddingValues(top = Space.xs, bottom = Space.l + bottom),
         ) {
+            if (suggestions.isNotEmpty()) {
+                item(key = "suggested") {
+                    Column(
+                        Modifier.fillMaxWidth().padding(horizontal = if (inCard) Space.l else Space.gutter).padding(top = Space.s, bottom = Space.xs),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Text(stringResource(R.string.trips_suggested), style = AppTheme.typography.label, color = tokens.tx2, modifier = Modifier.semantics { heading() })
+                        Text(stringResource(R.string.trips_suggested_note), style = AppTheme.typography.caption, color = tokens.tx3)
+                    }
+                }
+                items(suggestions, key = { "suggested_${it.key}" }) { suggestion ->
+                    SuggestionRow(
+                        suggestion,
+                        coverSize = if (inCard) 56 else 64,
+                        modifier = Modifier.fillMaxWidth().clickable(enabled = open) { onSuggestion(suggestion) }
+                            .padding(start = if (inCard) Space.m else Space.gutter, end = Space.s).padding(vertical = Space.s).testTag("suggested_${suggestion.start}"),
+                        onDismiss = { onDismiss(suggestion) },
+                    )
+                }
+                item(key = "suggested_rule") {
+                    Box(Modifier.padding(horizontal = if (inCard) Space.m else Space.gutter, vertical = Space.s).fillMaxWidth().height(1.dp).background(dividerColor()))
+                }
+            }
             items(trips.sortedByDescending { it.start }, key = { it.id }) { trip ->
                 val covers = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1) }
                 TripRow(
@@ -724,6 +775,35 @@ private fun TripsSheet(
                         .padding(horizontal = if (inCard) Space.m else Space.gutter, vertical = Space.s).testTag("trip_${trip.id}"),
                 ) { Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(20.dp)) }
             }
+        }
+    }
+}
+
+/**
+ * A trip the records suggest, as a trip's row: a suitcase where the cover would be, the city it
+ * went farthest to, and when it began, how many days and how many records, then dismissing it.
+ */
+@Composable
+private fun SuggestionRow(suggestion: TripSuggestion, coverSize: Int, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+    val days = daysBetween(suggestion.start, suggestion.end)
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
+        Box(Modifier.size(coverSize.dp).background(tokens.fill, AppTheme.shapes.medium), contentAlignment = Alignment.Center) {
+            Icon(AppIcons.Luggage, contentDescription = null, tint = tokens.tx2)
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(suggestion.name, style = AppTheme.typography.body.strong, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                listOf(
+                    formatDate(suggestion.start),
+                    pluralStringResource(R.plurals.count_days, days, days),
+                    pluralStringResource(R.plurals.count_records, suggestion.records, suggestion.records),
+                ).joinToString(" "),
+                style = AppTheme.typography.caption,
+                color = tokens.tx2,
+            )
+        }
+        IconButton(onClick = onDismiss, modifier = Modifier.testTag("dismiss_${suggestion.start}")) {
+            Icon(AppIcons.Close, contentDescription = stringResource(R.string.trip_suggestion_dismiss, suggestion.name), tint = tokens.tx2, modifier = Modifier.size(20.dp))
         }
     }
 }

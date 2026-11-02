@@ -86,6 +86,9 @@
     <string name="year_item">%1$d 年</string>
     <string name="map_search_hint">搜索地点和旅程</string>
     <string name="trips_none">还没有旅程</string>
+    <string name="trips_suggested">可能的旅程</string>
+    <string name="trips_suggested_note">从签到和时刻的地点里找到，点开建成旅程</string>
+    <string name="trip_suggestion_dismiss">忽略%1$s的可能旅程</string>
     <string name="map_km">%1$s 公里</string>
     <string name="footprints_map_recording">足迹，正在记录</string>
     <string name="legend_trips">旅程</string>
@@ -193,6 +196,9 @@
     </plurals>
     <plurals name="count_checkins">
         <item quantity="other">%1$d 次签到</item>
+    </plurals>
+    <plurals name="count_records">
+        <item quantity="other">%1$d 条记录</item>
     </plurals>
     <plurals name="count_days_total">
         <item quantity="other">共 %1$d 天</item>

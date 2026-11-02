@@ -56,18 +56,28 @@ import kotlinx.coroutines.launch
  * 编辑旅程: its name, the days it spans (its Moments are those days', worked out, not listed),
  * and whether it is public. Kept on the phone like any change until 全部发布到网站; the page's
  * one ink button saves it. With no [id] it makes a trip, named by hand and from today to today
- * until changed, and [onMade] opens it; one not yet published can be deleted from here, [onDeleted]
- * then leaving its page too.
+ * until changed, or from [startDay] to [endDay] and named [name] when it comes from a 可能的旅程, and
+ * [onMade] opens it; one not yet published can be deleted from here, [onDeleted] then leaving its
+ * page too.
  */
 @Composable
-fun TripEditScreen(container: AppContainer, id: String?, onBack: () -> Unit, onMade: (String) -> Unit = {}, onDeleted: () -> Unit = onBack) {
+fun TripEditScreen(
+    container: AppContainer,
+    id: String?,
+    onBack: () -> Unit,
+    onMade: (String) -> Unit = {},
+    onDeleted: () -> Unit = onBack,
+    startDay: String? = null,
+    endDay: String? = null,
+    name: String? = null,
+) {
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val trip = remember(trips, id) { id?.let { trips.firstOrNull { it.id == id } } }
     if (id != null && trip == null) return
     val today = remember { LocalDate.now().toString() }
-    var title by rememberSaveable { mutableStateOf(trip?.title.orEmpty()) }
-    var start by rememberSaveable { mutableStateOf(trip?.start ?: today) }
-    var end by rememberSaveable { mutableStateOf(trip?.end ?: today) }
+    var title by rememberSaveable { mutableStateOf(trip?.title ?: name.orEmpty()) }
+    var start by rememberSaveable { mutableStateOf(trip?.start ?: startDay ?: today) }
+    var end by rememberSaveable { mutableStateOf(trip?.end ?: endDay ?: today) }
     var private by rememberSaveable { mutableStateOf(id != null && container.repository.isTripPrivate(id)) }
     var picking by rememberSaveable { mutableStateOf<String?>(null) }
     var deleting by rememberSaveable { mutableStateOf(false) }

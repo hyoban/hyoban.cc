@@ -89,6 +89,9 @@
     <string name="year_item">%1$d</string>
     <string name="map_search_hint">Search places and trips</string>
     <string name="trips_none">No trips yet</string>
+    <string name="trips_suggested">Possible trips</string>
+    <string name="trips_suggested_note">Found in check-ins and the places of Moments; open one to make it a trip</string>
+    <string name="trip_suggestion_dismiss">Dismiss the possible trip to %1$s</string>
     <string name="map_km">%1$s km</string>
     <string name="footprints_map_recording">Footprints, recording</string>
     <string name="legend_trips">Trips</string>
@@ -194,6 +197,10 @@
     <plurals name="count_checkins">
         <item quantity="one">%1$d check-in</item>
         <item quantity="other">%1$d check-ins</item>
+    </plurals>
+    <plurals name="count_records">
+        <item quantity="one">%1$d record</item>
+        <item quantity="other">%1$d records</item>
     </plurals>
     <plurals name="count_moments">
         <item quantity="one">%1$d Moment</item>
