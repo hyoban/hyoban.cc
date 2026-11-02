@@ -74,7 +74,8 @@ clear of the camera's cutout on whichever side it is.
 The pages lead to each other wherever they can: a place or a trip to the map, a day's pill
 to the day, a Moment's menu to its place, trip and day. A day's page opens on that day's
 footprints on a map, its bills and charges read down by their times, and today's says
-还在记录 while the footprints are recording. A trip's page has 回放旅程, which plays the trip back as the site's
+还在记录 while the footprints are recording. A trip's days and each day's Moments read from earliest to latest.
+A trip's page has 回放旅程, which plays the trip back as the site's
 player does (`packages/trip-map/src/player`): the route never still, a vehicle at its tip,
 a card per Moment stepped through from a toolbar, by a swipe or with a keyboard's arrows
 and Space. 编辑旅程 changes its name, days, public switch, Moments and covers, published

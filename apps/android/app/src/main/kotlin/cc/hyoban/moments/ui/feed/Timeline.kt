@@ -341,7 +341,6 @@ fun BillRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = 
 
 /** [moments], [bills] and [charges] of one day merged by the time of day, newest first, bills next to each other in one group. */
 fun dayItems(moments: List<MomentRecord>, bills: List<Txn>, charges: List<Charge> = emptyList(), things: List<ThingRecord> = emptyList(), checkins: List<Checkin> = emptyList()): List<DayItem> {
-    if (bills.isEmpty() && charges.isEmpty() && things.isEmpty() && checkins.isEmpty()) return moments.map(DayItem::Moment)
     // A device or a subscription has its day alone, so it comes first in the day.
     val timed = moments.map { it.occurredAt.drop(11).take(8) to DayItem.Moment(it) as Any } +
         bills.map { it.local.toLocalTime().toString().take(8) to it as Any } +
