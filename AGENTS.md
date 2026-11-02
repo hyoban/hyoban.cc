@@ -116,6 +116,9 @@ even when starting from the repository root.
 - Publishing never merges places by nearness or name: two shops in one mall are two places.
   A known id is that place, a Swarm venue's place is found by its `source`, and picking a
   known place is the app's to do when the place is chosen.
+- Trips' routes come from routers that need no key (Valhalla for drives, OpenRailRouting
+  for trains), so the app can route its own trips as the API does; don't bring a keyed
+  router back.
 - Map year colors and fog behavior match across Web and App; change both together.
   The app's trip playback follows `packages/trip-map/src/player`, including a route
   that keeps moving during playback.

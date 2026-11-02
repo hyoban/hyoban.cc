@@ -13,7 +13,7 @@ import {
   readTracks,
 } from './entries.ts'
 import { error, HttpError, json, jsonText, readBody } from './http.ts'
-import { createRouteFetcher, fillRoutes, readTripRoutes } from './routes.ts'
+import { createRouteFetcher, fillRoutes, readTripRoutes, routeDrivesAgain } from './routes.ts'
 import { createTelegram, syncChannel } from './telegram.ts'
 import { readUpload, uploadMedia, type WriteContext, type WriteResult } from './writes.ts'
 
@@ -21,7 +21,7 @@ import { readUpload, uploadMedia, type WriteContext, type WriteResult } from './
 // drafts and private records included. `/v2` serves entries, collections and public tracks
 // (entries.ts) and the places beside them. Records come back exactly as stored, in the shape
 // @hyoban/data-spec defines. A write the site shows first brings the trips' routes up to
-// date, when MAPBOX_TOKEN is set and the write changed what the trips are built from,
+// date, when the write changed what the trips are built from,
 // then calls DEPLOY_HOOK_URL, when there is one, so the site builds again with them, and
 // posts what changed to the Telegram channel, also every quarter of an hour on the
 // Worker's schedule, which picks up what a run left.
@@ -31,8 +31,6 @@ export interface Env {
   BUCKET: Bucket
   API_TOKENS?: string
   DEPLOY_HOOK_URL?: string
-  /** For the trips' driving routes, from Mapbox's Directions. */
-  MAPBOX_TOKEN?: string
   /** Where new places' divisions are looked up, DataV's GeoAtlas; none without it. */
   DIVISIONS_URL?: string
   /** The bot that posts to the channel; nothing is posted without it. */
@@ -244,16 +242,21 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
             : jsonText(text, 200, { ETag: etag })
         }
         case 'POST': {
-          if (!env.MAPBOX_TOKEN) {
-            return error(503, 'MAPBOX_TOKEN is not set.')
+          // `?again=drives` has every drive routed again, a batch a fill, as after the
+          // drive router changed; each leg keeps its old route until then.
+          const again = url.searchParams.get('again')
+
+          if (again !== null && again !== 'drives') {
+            return error(400, 'again takes only drives.')
           }
 
+          const queued = again === null ? undefined : await routeDrivesAgain(db)
           const result = await fillRoutes(
             { db, bucket: env.BUCKET, now: timestamp() },
-            createRouteFetcher(env.MAPBOX_TOKEN),
+            createRouteFetcher(),
           )
 
-          return json(result)
+          return json(queued === undefined ? result : { ...result, queued })
         }
         default:
           return notAllowed('GET, POST')
@@ -290,11 +293,11 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 async function afterSiteChange(env: Env, changesRoutes: boolean) {
   let routesKept = !changesRoutes
 
-  if (changesRoutes && env.MAPBOX_TOKEN) {
+  if (changesRoutes) {
     try {
       const result = await fillRoutes(
         { db: env.DB, bucket: env.BUCKET, now: timestamp() },
-        createRouteFetcher(env.MAPBOX_TOKEN),
+        createRouteFetcher(),
       )
 
       routesKept = true

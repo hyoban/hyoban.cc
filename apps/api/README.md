@@ -78,12 +78,15 @@ Records written outside the API go in with `vp run data:push` ([docs/data.md](..
 ## Routes
 
 Each leg between consecutive places of a trip, as `@hyoban/trip-map`'s `buildTrip` works
-them out, has a route in the `routes` table by its key: a drive from Mapbox Directions
-(`MAPBOX_TOKEN`), or for a train leg (`train:` key) a rail line from OpenRailRouting's demo
-between the places' `station`s. Ferries and flights are straight. After a write the trips
-see, the Worker fetches the legs it lacks (up to 30, 6 at once) and marks deleted those no
-trip has. A leg with no way along it is remembered and drawn straight; a failed fetch is
-retried after the next write.
+them out, has a route in the `routes` table by its key: a drive from FOSSGIS's public
+Valhalla, or for a train leg (`train:` key) a rail line from OpenRailRouting's demo
+between the places' `station`s. Neither needs a key, so the app can route the same way. Ferries and flights are straight. After a write the trips
+see, the Worker fetches the legs it lacks (up to 30, 2 at once, as the public routers ask)
+and marks deleted those no trip has. A leg with no way along it is remembered and drawn
+straight; a failed fetch is retried after the next write. `POST /v2/routes` fills the same
+way on request; `POST /v2/routes?again=drives` first queues every drive to be routed again,
+as after a change of router, and each fill then takes its batch from the queue after the
+missing legs, each leg keeping its old route until the new one comes.
 
 `GET /v2/routes` gives each published trip's route as the site's overview draws it, drives
 joined into one stretch and other legs dashed. The answer is cached in `meta` with its
