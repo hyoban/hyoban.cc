@@ -26,6 +26,6 @@
   "triggers": { "crons": ["*/15 * * * *"] },
   // Secrets, set with `wrangler secret put` and in `.dev.vars` locally: API_TOKENS, a
   // comma-separated list of bearer tokens, DEPLOY_HOOK_URL, which a write the site
-  // shows calls so the site builds again, MAPBOX_TOKEN, for the trips' routes, and
-  // TELEGRAM_BOT_TOKEN, the bot that posts to the channel.
+  // shows calls so the site builds again, and TELEGRAM_BOT_TOKEN, the bot that posts to
+  // the channel.
 }

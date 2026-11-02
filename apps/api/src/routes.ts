@@ -41,8 +41,9 @@ import { REVISION, routeRow } from './rows.ts'
 import { commit, toEntry, upsert, type WriteContext } from './writes.ts'
 
 // The trips' routes. Each leg between two consecutive places of a trip is driven along
-// the road Mapbox's Directions finds, or for a train leg along the rail line
-// OpenRailRouting's public demo finds between the places' stations; a ferry or a flight
+// the road FOSSGIS's public Valhalla finds, or for a train leg along the rail line
+// OpenRailRouting's public demo finds between the places' stations, neither needing a key,
+// so the app can route its own trips the same way; a ferry or a flight
 // is drawn straight. After a write the site shows, the API works out every leg the
 // published trips have, fetches the ones it doesn't have yet, and marks deleted the ones
 // no trip has any more, so the site's build and the app read the same routes.
@@ -65,8 +66,11 @@ const SIMPLIFY_TOLERANCE = 0.0003
  */
 export const FETCHES_PER_RUN = 30
 
-/** How many legs are fetched at once, so a run stays well inside `waitUntil`'s time. */
-const FETCHES_AT_ONCE = 6
+/**
+ * How many legs are fetched at once: few, as the public routers ask, and still enough for
+ * a run to stay inside `waitUntil`'s time.
+ */
+const FETCHES_AT_ONCE = 2
 
 /**
  * Where `meta` keeps the keys of the legs the routers found no way along, as a drive
@@ -75,9 +79,16 @@ const FETCHES_AT_ONCE = 6
  */
 const NO_ROUTE = 'routes_none'
 
+/**
+ * Where `meta` keeps the keys of the legs to route again, over the routes they have, as
+ * after a change of router: each fill takes its batch from them as from the missing ones,
+ * and a leg keeps its old route until its new one comes.
+ */
+const AGAIN = 'routes_again'
+
 /** What the trips are built from, read at one revision. */
 export async function readTripInputs(db: Database) {
-  const [revision, places, collections, entryRows, routes, none] = await readAll(db, [
+  const [revision, places, collections, entryRows, routes, none, again] = await readAll(db, [
     revisionQuery(db),
     placesQuery(db),
     db.prepare(`SELECT record FROM collections WHERE deleted_at IS NULL ORDER BY start_day, key`),
@@ -87,8 +98,10 @@ export async function readTripInputs(db: Database) {
     ),
     routesQuery(db),
     db.prepare(`SELECT value FROM meta WHERE key = ?1`).bind(NO_ROUTE),
+    db.prepare(`SELECT value FROM meta WHERE key = ?1`).bind(AGAIN),
   ])
   const [noRoute] = none as { value: string }[]
+  const [routeAgain] = again as { value: string }[]
   const entries = (entryRows as { record: string }[]).map((row) => toEntry(row))
 
   return {
@@ -105,6 +118,7 @@ export async function readTripInputs(db: Database) {
       .map((entry) => entryToMoment(entry)),
     routes: toRecordsByKey(routes) as Record<string, TripRoute>,
     noRoute: new Set<string>(noRoute ? (JSON.parse(noRoute.value) as string[]) : []),
+    again: new Set<string>(routeAgain ? (JSON.parse(routeAgain.value) as string[]) : []),
   }
 }
 
@@ -182,8 +196,14 @@ export async function fillRoutes(context: WriteContext, fetchRoute: RouteFetcher
   const inputs = await readTripInputs(db)
   const existing = inputs.routes
   const needed = getNeededLegs(buildTrips(inputs), inputs.places)
-  const missing = [...needed].filter(([key]) => !(key in existing) && !inputs.noRoute.has(key))
+  // The legs with no route first, then the ones to route again.
+  const missing = [...needed]
+    .filter(([key]) => inputs.again.has(key) || (!(key in existing) && !inputs.noRoute.has(key)))
+    .sort(([first], [second]) => Number(first in existing) - Number(second in existing))
   const noRoute = new Set([...inputs.noRoute].filter((key) => needed.has(key)))
+  const again = new Set([...inputs.again].filter((key) => needed.has(key)))
+  // A leg routed again that now has no way along it loses its old route.
+  const lost: string[] = []
   let failed = 0
   const answers = await pLimit(FETCHES_AT_ONCE).map(
     missing.slice(0, FETCHES_PER_RUN),
@@ -191,8 +211,14 @@ export async function fillRoutes(context: WriteContext, fetchRoute: RouteFetcher
       try {
         const route = await fetchRoute(leg)
 
+        again.delete(key)
+
         if (route) {
           return [key, routeSchema.parse(route)] as const
+        }
+
+        if (key in existing) {
+          lost.push(key)
         }
 
         noRoute.add(key)
@@ -208,9 +234,13 @@ export async function fillRoutes(context: WriteContext, fetchRoute: RouteFetcher
     },
   )
   const fetched = new Map(answers.filter((answer) => answer !== undefined))
-  const unused = Object.keys(existing).filter((key) => !needed.has(key))
+  const unused = [...Object.keys(existing).filter((key) => !needed.has(key)), ...lost]
   // As readTripInputs takes the routes it reads: checked, as the spec has them.
-  const routes = { ...existing, ...Object.fromEntries(fetched) } as Record<string, TripRoute>
+  const routes = Object.fromEntries(
+    Object.entries({ ...existing, ...Object.fromEntries(fetched) }).filter(
+      ([key]) => !lost.includes(key),
+    ),
+  ) as Record<string, TripRoute>
   const changes = fetched.size > 0 || unused.length > 0
   // A commit takes the next revision, and the answer is of that one.
   const revision = inputs.revision + (changes ? 1 : 0)
@@ -225,6 +255,17 @@ export async function fillRoutes(context: WriteContext, fetchRoute: RouteFetcher
            ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
         )
         .bind(NO_ROUTE, JSON.stringify([...noRoute].sort())),
+    )
+  }
+
+  if (!sameKeys(again, inputs.again)) {
+    keep.push(
+      db
+        .prepare(
+          `INSERT INTO meta (key, value) VALUES (?1, ?2)
+           ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+        )
+        .bind(AGAIN, JSON.stringify([...again].sort())),
     )
   }
 
@@ -248,6 +289,27 @@ export async function fillRoutes(context: WriteContext, fetchRoute: RouteFetcher
     failed,
     left: Math.max(0, missing.length - FETCHES_PER_RUN),
   }
+}
+
+/**
+ * Has every drive leg the trips have routed again by the fills to come, as after the
+ * drive router changed; returns how many.
+ */
+export async function routeDrivesAgain(db: Database) {
+  const inputs = await readTripInputs(db)
+  const drives = [...getNeededLegs(buildTrips(inputs), inputs.places)]
+    .filter(([key, leg]) => leg.by === 'car' && key in inputs.routes)
+    .map(([key]) => key)
+
+  await db
+    .prepare(
+      `INSERT INTO meta (key, value) VALUES (?1, ?2)
+       ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+    )
+    .bind(AGAIN, JSON.stringify(drives.sort()))
+    .run()
+
+  return drives.length
 }
 
 /** `GET /v2/routes`: the JSON text it answers, and an ETag of the routes in it. */
@@ -338,40 +400,85 @@ function sameKeys(first: ReadonlySet<string>, second: ReadonlySet<string>) {
   return first.size === second.size && [...first].every((key) => second.has(key))
 }
 
-/** Fetches legs from Mapbox's Directions with `token`, and train legs from OpenRailRouting. */
-export function createRouteFetcher(token: string, fetcher: typeof fetch = fetch): RouteFetcher {
-  return async (leg) =>
-    leg.by === 'train' ? fetchRail(leg, fetcher) : fetchDrive(leg, token, fetcher)
+/** Fetches drive legs from Valhalla and train legs from OpenRailRouting. */
+export function createRouteFetcher(fetcher: typeof fetch = fetch): RouteFetcher {
+  return async (leg) => (leg.by === 'train' ? fetchRail(leg, fetcher) : fetchDrive(leg, fetcher))
 }
 
-async function fetchDrive({ from, to }: Leg, token: string, fetcher: typeof fetch) {
-  const url = new URL(`https://api.mapbox.com/directions/v5/mapbox/driving/${getLegKey(from, to)}`)
-  url.searchParams.set('geometries', 'geojson')
-  url.searchParams.set('overview', 'full')
-  url.searchParams.set('access_token', token)
+/** Both public servers ask to be told who is calling. */
+const USER_AGENT = 'hyoban.cc trip routes'
 
-  const response = await fetcher(url)
+/**
+ * Valhalla's answers for a leg it will never route: no road near a place (171), longer
+ * than its 1,500 km limit (154), or no path between them (442, 443).
+ */
+const NO_PATH = new Set([154, 171, 442, 443])
+
+async function fetchDrive({ from, to }: Leg, fetcher: typeof fetch) {
+  const url = new URL('https://valhalla1.openstreetmap.de/route')
+  url.searchParams.set(
+    'json',
+    JSON.stringify({
+      locations: [
+        { lat: from.latitude, lon: from.longitude },
+        { lat: to.latitude, lon: to.longitude },
+      ],
+      costing: 'auto',
+      directions_type: 'none',
+    }),
+  )
+
+  const response = await fetcher(url, { headers: { 'User-Agent': USER_AGENT } })
   const body = (await response.json()) as {
-    code?: string
-    message?: string
-    routes?: { geometry: { coordinates: [number, number][] }; distance: number; duration: number }[]
+    error_code?: number
+    error?: string
+    trip?: { legs: { shape: string }[]; summary: { length: number; time: number } }
   }
 
-  if (body.code === 'NoRoute') {
+  if (body.error_code !== undefined && NO_PATH.has(body.error_code)) {
     return undefined
   }
 
-  const [route] = body.routes ?? []
+  const [leg] = body.trip?.legs ?? []
 
-  if (!response.ok || body.code !== 'Ok' || !route) {
-    throw new Error(`Directions answered ${response.status}: ${body.message ?? body.code}`)
+  if (!response.ok || !body.trip || !leg) {
+    throw new Error(`Valhalla answered ${response.status}: ${body.error ?? body.error_code}`)
   }
 
   return {
-    coordinates: simplify(route.geometry.coordinates),
-    distance: Math.round(route.distance),
-    duration: Math.round(route.duration),
+    coordinates: simplify(decodePolyline(leg.shape)),
+    distance: Math.round(body.trip.summary.length * 1000),
+    duration: Math.round(body.trip.summary.time),
   }
+}
+
+/** A line in Valhalla's encoded polyline, six decimal places, as (longitude, latitude). */
+export function decodePolyline(text: string): [number, number][] {
+  const line: [number, number][] = []
+  let index = 0
+  let latitude = 0
+  let longitude = 0
+  const next = () => {
+    let result = 0
+    let shift = 0
+    let byte: number
+
+    do {
+      byte = text.charCodeAt(index++) - 63
+      result |= (byte & 0x1f) << shift
+      shift += 5
+    } while (byte >= 0x20)
+
+    return result & 1 ? ~(result >> 1) : result >> 1
+  }
+
+  while (index < text.length) {
+    latitude += next()
+    longitude += next()
+    line.push([longitude / 1e6, latitude / 1e6])
+  }
+
+  return line
 }
 
 async function fetchRail({ from, to }: Leg, fetcher: typeof fetch) {
@@ -383,7 +490,7 @@ async function fetchRail({ from, to }: Leg, fetcher: typeof fetch) {
   url.searchParams.set('instructions', 'false')
 
   // The demo turns away requests without a User-Agent of their own.
-  const response = await fetcher(url, { headers: { 'User-Agent': 'hyoban.cc trip routes' } })
+  const response = await fetcher(url, { headers: { 'User-Agent': USER_AGENT } })
   const body = (await response.json()) as {
     message?: string
     paths?: { points: { coordinates: [number, number][] }; distance: number; time: number }[]

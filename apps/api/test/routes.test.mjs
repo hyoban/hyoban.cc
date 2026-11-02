@@ -5,7 +5,7 @@ import { handle } from '../src/index.ts'
 import { getStableUlid } from '@hyoban/data-spec/entry'
 import { getLegKey } from '@hyoban/trip-map'
 
-import { fillRoutes, FETCHES_PER_RUN } from '../src/routes.ts'
+import { createRouteFetcher, decodePolyline, fillRoutes, FETCHES_PER_RUN } from '../src/routes.ts'
 import { call, get, publishMoments, setUp, snapshot, token } from './setup.mjs'
 
 // The trips' routes: worked out from the trips and Moments in the database the way the
@@ -86,6 +86,49 @@ test('a missing leg is fetched once, a train leg between the places’ stations'
   })
 })
 
+test('a drive is asked of Valhalla, its shape decoded, and a leg it can never route has none', async () => {
+  const leg = {
+    by: 'car',
+    from: { latitude: 30, longitude: 120, name: 'A' },
+    to: { latitude: 30.02, longitude: 120.01, name: 'B' },
+  }
+  const asked = []
+  const answer =
+    (body, status = 200) =>
+    async (url, init) => {
+      asked.push({ url: new URL(url), init })
+      return new Response(JSON.stringify(body), { status })
+    }
+  const route = await createRouteFetcher(
+    answer({
+      trip: { legs: [{ shape: '_w`fx@__f{cF_af@_pR' }], summary: { length: 2.4567, time: 301.6 } },
+    }),
+  )(leg)
+
+  assert.deepEqual(decodePolyline('_w`fx@__f{cF_af@_pR'), [
+    [120, 30],
+    [120.01, 30.02],
+  ])
+  assert.deepEqual(route, {
+    coordinates: [
+      [120, 30],
+      [120.01, 30.02],
+    ],
+    distance: 2457,
+    duration: 302,
+  })
+  assert.equal(asked[0].url.host, 'valhalla1.openstreetmap.de')
+  assert.equal(JSON.parse(asked[0].url.searchParams.get('json')).costing, 'auto')
+  assert.ok(asked[0].init.headers['User-Agent'])
+
+  const none = await createRouteFetcher(
+    answer({ error_code: 442, error: 'No path could be found for input' }, 400),
+  )(leg)
+
+  assert.equal(none, undefined)
+  await assert.rejects(createRouteFetcher(answer({ error_code: 999, error: 'Busy' }, 503))(leg))
+})
+
 test('a fill fetches at most a batch, and leaves the rest for the next', async () => {
   const { env, importSnapshot } = setUp()
   const stops = Array.from({ length: FETCHES_PER_RUN + 5 }, (_, index) => `stop-${index}`)
@@ -138,6 +181,60 @@ test('a fill fetches at most a batch, and leaves the rest for the next', async (
     result.left,
     Object.keys(snapshot.routes).length + stops.length - 1 - FETCHES_PER_RUN,
   )
+})
+
+test('?again=drives routes every drive again, keeping each old route until its new one comes', async () => {
+  const { env, sqlite } = setUpWithData()
+  const drives = Object.keys(snapshot.routes).filter((key) => !key.startsWith('train:'))
+  const realFetch = globalThis.fetch
+  const asked = []
+
+  // Valhalla finds every drive a road but the first, and the rail demo isn't asked.
+  globalThis.fetch = async (url) => {
+    const { searchParams } = new URL(new Request(url).url)
+    const [from, to] = JSON.parse(searchParams.get('json')).locations
+    const key = getLegKey(
+      { longitude: from.lon, latitude: from.lat },
+      { longitude: to.lon, latitude: to.lat },
+    )
+
+    asked.push(key)
+
+    return key === drives[0]
+      ? Response.json({ error_code: 442 }, { status: 400 })
+      : Response.json({
+          trip: { legs: [{ shape: '_w`fx@__f{cF_af@_pR' }], summary: { length: 1, time: 60 } },
+        })
+  }
+
+  try {
+    const { status, body } = await call(env, 'POST', '/v2/routes?again=drives', owner)
+    const route = (key) =>
+      sqlite.prepare(`SELECT record, deleted_at FROM routes WHERE key = ?`).get(key)
+
+    assert.equal(status, 200)
+    assert.equal(body.queued, drives.length)
+    assert.deepEqual(new Set(asked), new Set(drives.slice(0, FETCHES_PER_RUN)))
+    assert.ok(route(drives[0]).deleted_at, 'a drive with no road now loses its route')
+    assert.deepEqual(JSON.parse(route(drives[1]).record).coordinates, [
+      [120, 30],
+      [120.01, 30.02],
+    ])
+
+    // Once all are routed, nothing is left to ask for.
+    while ((await call(env, 'POST', '/v2/routes', owner)).body.left > 0);
+    asked.length = 0
+    assert.deepEqual((await call(env, 'POST', '/v2/routes', owner)).body, {
+      fetched: 0,
+      removed: 0,
+      failed: 0,
+      left: 0,
+    })
+    assert.deepEqual(asked, [])
+    assert.equal((await call(env, 'POST', '/v2/routes?again=trains', owner)).status, 400)
+  } finally {
+    globalThis.fetch = realFetch
+  }
 })
 
 test('a leg with no route is remembered and not asked for again, and one that failed is', async () => {
@@ -305,18 +402,12 @@ test('a fill keeps what GET /v2/routes answers, of the revision its own write to
   assert.deepEqual((await get(env, '/v2/routes')).body, kept)
 })
 
-test('POST /v2/routes is the owner’s and needs the Mapbox token', async () => {
+test('POST /v2/routes is the owner’s', async () => {
   const { env } = setUpWithData()
 
   assert.equal((await call(env, 'POST', '/v2/routes', { auth: null })).status, 401)
-  assert.equal((await call(env, 'POST', '/v2/routes', owner)).status, 503)
 
-  const { status, body } = await call(
-    { ...env, MAPBOX_TOKEN: 'pk.test' },
-    'POST',
-    '/v2/routes',
-    owner,
-  )
+  const { status, body } = await call(env, 'POST', '/v2/routes', owner)
 
   assert.equal(status, 200)
   assert.deepEqual(body, { fetched: 0, removed: 0, failed: 0, left: 0 })
@@ -342,7 +433,7 @@ test('a write the site shows brings the routes up to date before calling the dep
 
       order.length = 0
       await publishMoments(
-        { ...env, MAPBOX_TOKEN: 'pk.test', DEPLOY_HOOK_URL: 'https://deploy.test/hook' },
+        { ...env, DEPLOY_HOOK_URL: 'https://deploy.test/hook' },
         { moments: [changed] },
         { context: { waitUntil: (promise) => pending.push(promise) } },
       )

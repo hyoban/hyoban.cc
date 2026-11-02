@@ -46,7 +46,6 @@ Builds:
   | -------------------- | -------------------------------------------------------- |
   | `API_TOKENS`         | comma-separated bearer tokens for writes, drafts, export |
   | `DEPLOY_HOOK_URL`    | the site's deploy hook, called after a write it shows    |
-  | `MAPBOX_TOKEN`       | Mapbox Directions, for the trips' drive routes           |
   | `TELEGRAM_BOT_TOKEN` | the bot that posts new Moments to the Telegram channel   |
 
 - bindings in `apps/api/wrangler.jsonc`: D1 `DB` (`hyoban-cc`, APAC) and R2 `BUCKET`

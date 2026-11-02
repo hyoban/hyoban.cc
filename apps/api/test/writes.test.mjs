@@ -373,6 +373,11 @@ test('the changes go as one write: places, Moments published, deletions, the sit
 
   env.DEPLOY_HOOK_URL = 'https://deploy.test/hook'
   globalThis.fetch = async (url, init) => {
+    // The trips' routes are asked for too, and found none.
+    if (new Request(url).url.startsWith('https://valhalla1.openstreetmap.de/')) {
+      return Response.json({ error_code: 442 }, { status: 400 })
+    }
+
     calls.push([url, init?.method])
     return new Response(null, { status: 200 })
   }

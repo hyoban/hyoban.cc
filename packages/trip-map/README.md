@@ -116,8 +116,8 @@ dragging. `trip-map-toolbar__actions` on the toolbar's buttons moves them aside 
    was recorded between them over any route, marked `tracked`; a place with only a day can't
    be placed on a track, so its legs keep their routes.
 
-   Routes come from the Mapbox Directions API (and OpenRailRouting for trains); fetch
-   them once and cache them (hyoban.cc's API, `apps/api/src/routes.ts`, shows how).
+   Routes come from Valhalla (FOSSGIS's public server, no key) and OpenRailRouting for
+   trains; fetch them once and cache them (hyoban.cc's API, `apps/api/src/routes.ts`, shows how).
    Without one a leg is drawn straight.
 
 3. **Shape the data.** `shapeTripData` turns a built trip into the `TripData` the player
