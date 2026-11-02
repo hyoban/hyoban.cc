@@ -87,8 +87,10 @@
     <string name="map_search_hint">搜索地点和旅程</string>
     <string name="trips_none">还没有旅程</string>
     <string name="trips_suggested">可能的旅程</string>
-    <string name="trips_suggested_note">从签到和时刻的地点里找到，点开建成旅程</string>
+    <string name="trips_suggested_note">从签到和时刻的地点里找到，点 + 直接添加，点开先改再建</string>
     <string name="trip_suggestion_dismiss">忽略%1$s的可能旅程</string>
+    <string name="trip_suggestion_add">把%1$s添加为旅程</string>
+    <string name="message_trip_added">已添加旅程「%1$s」</string>
     <string name="map_km">%1$s 公里</string>
     <string name="footprints_map_recording">足迹，正在记录</string>
     <string name="legend_trips">旅程</string>

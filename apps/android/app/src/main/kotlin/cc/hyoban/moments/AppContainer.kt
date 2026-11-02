@@ -30,6 +30,7 @@ import java.io.File
 import java.time.LocalDate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -99,7 +100,8 @@ class AppContainer(context: Context) {
             trips.filter { it.id !in roads && (!settings.connected || repository.isTripNew(it.id)) }.associate { trip ->
                 trip.id to cc.hyoban.moments.data.trips.legsOf(trip, cc.hyoban.moments.data.trips.stopsOf(trip, moments, trips, places))
             }
-        }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
+        // Every trip's stops, its Moments sought among all of them: off the main thread, which many trips would stall.
+        }.flowOn(Dispatchers.Default).stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
 
     /**
      * Each trip's route as the screens draw and play it: the footprints recorded on it where a
@@ -127,7 +129,7 @@ class AppContainer(context: Context) {
                 else trip.id to (stretches.map { cc.hyoban.moments.data.trips.RouteSegment(it, straight = false) } +
                     stretches.zipWithNext { a, b -> cc.hyoban.moments.data.trips.RouteSegment(listOf(a.last(), b.first()), straight = true) })
             }
-        }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
+        }.flowOn(Dispatchers.Default).stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
 
     /** Where shared photos wait for a Moment; copied again into its own store when it is saved. */
     private val sharedDirectory = File(context.cacheDir, "shared")

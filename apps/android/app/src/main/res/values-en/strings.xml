@@ -90,8 +90,10 @@
     <string name="map_search_hint">Search places and trips</string>
     <string name="trips_none">No trips yet</string>
     <string name="trips_suggested">Possible trips</string>
-    <string name="trips_suggested_note">Found in check-ins and the places of Moments; open one to make it a trip</string>
-    <string name="trip_suggestion_dismiss">Dismiss the possible trip to %1$s</string>
+    <string name="trips_suggested_note">Found in check-ins and the places of Moments: + adds one as it is, opening one changes it first</string>
+    <string name="trip_suggestion_dismiss">Dismiss the possible trip %1$s</string>
+    <string name="trip_suggestion_add">Add %1$s as a trip</string>
+    <string name="message_trip_added">Added the trip %1$s</string>
     <string name="map_km">%1$s km</string>
     <string name="footprints_map_recording">Footprints, recording</string>
     <string name="legend_trips">Trips</string>
