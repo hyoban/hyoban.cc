@@ -21,6 +21,15 @@ does. It is the platform's SQLite, through `androidx.sqlite`'s driver: from Andr
 oldest the app runs on, it has the tables' generated columns. The routes (`GET /v2/routes`) are asked for again only when the API's revision has moved
 on. A new API, set in 同步与来源, drops the copy and reads everything again.
 
+A trip the API hasn't routed, every trip without an API and one made on the phone with one,
+is routed on the phone the way the API routes the rest (`data/trips/PhoneRoutes.kt`): its
+drives along the road FOSSGIS's public Valhalla finds, its trains along the rail line
+OpenRailRouting finds between the places' stations, its ferries and flights straight. Neither
+asks for a key. The legs are asked for one at a time, a second apart, once a trip's stops have
+stayed put for two seconds, and kept in `phone-routes.json` by the API's keys; a leg with no way
+along it is drawn straight and not asked for again, and one that failed is asked for the next
+time the trips change.
+
 ## Pages
 
 Three tabs float at the foot of the screen, with 记录 beside them; on a window 840dp wide
@@ -71,8 +80,7 @@ a card per Moment stepped through from a toolbar, by a swipe or with a keyboard'
 and Space. 编辑旅程 changes its name, days, public switch, Moments and covers, published
 as a collection. The + on the map's trips makes one (新建旅程, `moments://trip-edit`) on the
 phone alone: a collection of its own, its id its uid in lowercase as the API will know it,
-shown and played back as the site's are, though with no route along the roads until it is
-published and the API routes it. Until then it can be deleted from its 编辑旅程; once published it is the API's
+shown and played back as the site's are. Until then it can be deleted from its 编辑旅程; once published it is the API's
 like the rest.
 
 No page has a bar: its way back and actions float as circles over it, its title large
