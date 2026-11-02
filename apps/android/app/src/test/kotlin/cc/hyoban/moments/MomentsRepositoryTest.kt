@@ -93,6 +93,8 @@ class MomentsRepositoryTest {
         var drops = 0
         /** The revision the next write says it took. */
         var revision: Long? = null
+        /** The trips the last change set sent, as collections. */
+        var collections: List<kotlinx.serialization.json.JsonObject> = emptyList()
 
         /** A photo's original by its uid, a live photo's motion as `<uid>/video`. */
         private fun key(mediaUid: String, part: UploadPart) = if (part == UploadPart.IMAGE) mediaUid else "$mediaUid/${part.path}"
@@ -115,6 +117,7 @@ class MomentsRepositoryTest {
 
         override suspend fun applyChanges(changes: ChangeSet): AppliedChanges {
             calls += "changes places=${changes.places.keys} moments=${changes.moments.map { "${it.uid} ${it.places}" }} deleted=${changes.deleted}"
+            collections = changes.collections
             val places = changes.places.keys.associateWith { if (it.startsWith("p-")) "hu-bian" else it }
             val moments = changes.moments.map { moment ->
                 moment.copy(
@@ -651,6 +654,46 @@ class MomentsRepositoryTest {
         assertEquals(listOf("changes places=[] moments=[] deleted=[GONE]"), writer.calls)
         assertEquals(0, repository.pending.value.size)
         assertEquals(emptyList(), repository.moments.value.map { it.uid })
+    }
+
+    @Test
+    fun `a trip made on the phone shows as the API's do, until it is deleted or published as a new collection`() = runBlocking {
+        val writer = FakeWriter()
+        fun repository() = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        val repository = repository()
+        repository.load()
+        repository.addLocal(moment("M", "2026-10-02", published = false))
+        repository.addLocal(moment("O", "2026-10-06", published = false))
+
+        val id = repository.createTrip("江南", "2026-10-01", "2026-10-03", cc.hyoban.moments.data.spec.Visibility.PUBLIC, include = listOf("O"))
+        val made = repository.trips.value.single()
+        assertEquals(id, made.id)
+        assertTrue(repository.isTripNew(id))
+        assertEquals(
+            listOf("M", "O"),
+            cc.hyoban.moments.data.trips.momentsOf(made, repository.moments.value, repository.trips.value).map { it.uid },
+            "its days' Moments and the one taken in from outside them",
+        )
+        assertEquals(null, repository.pending.value.trips.single().before)
+
+        repository.editTrip(id, "江南游", "2026-10-01", "2026-10-03", cc.hyoban.moments.data.spec.Visibility.PRIVATE)
+        assertTrue(repository.isTripPrivate(id))
+        val restarted = repository()
+        restarted.load()
+        assertEquals("江南游", restarted.trips.value.single().title, "kept past a restart")
+
+        restarted.revertTrip(id)
+        assertEquals(emptyList(), restarted.trips.value)
+        assertEquals(0, restarted.pending.value.size - restarted.pending.value.added.size)
+
+        val again = restarted.createTrip("江南", "2026-10-01", "2026-10-03", cc.hyoban.moments.data.spec.Visibility.PUBLIC)
+        restarted.publishPending()
+        val sent = writer.collections.single()
+        assertEquals(again, Entries.collectionKey(sent), "the API knows it by its uid in lowercase, as the phone did")
+        assertEquals("trip", (sent["kind"] as kotlinx.serialization.json.JsonPrimitive).content)
+        assertEquals(listOf(again), restarted.trips.value.map { it.id }, "still in sight until the copy has it")
+        assertTrue(restarted.pending.value.trips.isEmpty())
+        assertTrue(!restarted.isTripNew(again))
     }
 
     private fun moment(uid: String, day: String, text: String = "", hidden: Boolean = false, published: Boolean = true) =

@@ -864,6 +864,10 @@
     <string name="trip_edit_public_note">A public trip shows on the site.</string>
     <string name="action_edit_trip">Edit trip</string>
     <string name="section_changed_trips">Changed trips</string>
+    <string name="section_new_trips">New trips</string>
+    <string name="trip_new_title">New trip</string>
+    <string name="trip_delete">Delete trip</string>
+    <string name="trip_delete_confirm">Delete this trip? Its Moments stay.</string>
     <string name="filter_moments">Moments</string>
     <string name="part_private">%1$s private</string>
     <string name="trip_edit_members">What it holds</string>

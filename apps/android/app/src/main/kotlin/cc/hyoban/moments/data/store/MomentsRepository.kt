@@ -65,7 +65,7 @@ class MomentsRepository(
     private var changedPlaces: Map<String, Place> = emptyMap()
     /** The site's Moments deleted on the phone, by uid, until the deletions are published. */
     private var removed: Set<String> = emptySet()
-    /** The trips changed on the phone, as collections, by trip id, until published. */
+    /** The trips changed or made on the phone, as collections, by trip id, until published. */
     private var changedTrips: Map<String, kotlinx.serialization.json.JsonObject> = emptyMap()
     /** The trips as the API has them, before the phone's changes. */
     private var apiTrips: List<TripRecord> = emptyList()
@@ -710,8 +710,11 @@ class MomentsRepository(
                 changedTrips = changedTrips.filter { (id, collection) -> trips[id] != collection }
                 local?.writeChangedTrips(changedTrips)
                 // The site has the entries as sent; one changed again while this was sent stays to be published.
+                // The trips sent are the site's, so one made on the phone stays in sight until the copy has it.
                 val second = _second.value
-                _second.value = second.copy(entries = second.entries - goneThings + things)
+                _second.value = second.copy(entries = second.entries - goneThings + things, collections = second.collections + trips)
+                apiTrips = tripsOf()
+                showTrips()
                 changedEntries = changedEntries.filter { (uid, entry) -> things[uid] != entry }
                 removedEntries = removedEntries - goneThings
                 local?.writeChangedEntries(changedEntries, removedEntries)
@@ -808,8 +811,14 @@ class MomentsRepository(
         // A change being taken back, as though it were already.
         val phone = phone.filterKeys { it !in holding }
         val removed = removed - holding
+        // A Moment a trip changed or made on the phone takes in from outside its days names that trip already.
+        val taken = changedTrips.flatMap { (id, collection) ->
+            (Entries.strings(collection, "include") - Entries.strings(collection, "exclude").toSet()).map { it to id }
+        }.toMap()
         _moments.value = (all.values.filter { isShown(it) && it.uid !in phone && it.uid !in removed } + phone.values)
-            .filter { it.uid !in setAside }.sortedWith(newestFirst)
+            .filter { it.uid !in setAside }
+            .map { moment -> taken[moment.uid]?.takeIf { it != moment.trip }?.let { moment.copy(trip = it) } ?: moment }
+            .sortedWith(newestFirst)
         val (added, changed) = phone.values.filter { it.uid !in setAside }.sortedWith(oldestFirst).partition { it.published == null }
         _pending.value = PendingChanges(
             added,
@@ -817,7 +826,7 @@ class MomentsRepository(
             removed.mapNotNull { all[it] }.sortedWith(oldestFirst),
             changedPlaces.mapNotNull { (id, place) -> apiPlaces[id]?.let { PlaceChange(id, it, place) } }.sortedBy { it.after.name },
             outside?.pending() ?: Outside(),
-            changedTrips.mapNotNull { (id, collection) -> apiTrips.firstOrNull { it.id == id }?.let { TripChange(it, collection) } },
+            changedTrips.map { (id, collection) -> TripChange(id, apiTrips.firstOrNull { it.id == id }, collection) },
             changedEntries.map { (uid, entry) -> EntryChange(_second.value.entries[uid], entry) } +
                 removedEntries.mapNotNull { uid -> _second.value.entries[uid]?.let { EntryChange(it, null) } },
         )
@@ -832,7 +841,10 @@ class MomentsRepository(
 
     /** The trips the screens show: the API's, with the phone's changes to their names and days. */
     private fun showTrips() {
-        _trips.value = apiTrips.map { trip ->
+        // A trip made on the phone is worked out from its collection as the API's are.
+        val made = changedTrips.filterKeys { id -> apiTrips.none { it.id == id } }.values
+            .map { Entries.toTrip(it, copyEntries.values) }
+        _trips.value = made + apiTrips.map { trip ->
             val changed = changedTrips[trip.id] ?: return@map trip
             val span = changed["span"] as? kotlinx.serialization.json.JsonObject
             trip.copy(
@@ -847,6 +859,48 @@ class MomentsRepository(
     /** Whether a trip is private: by the phone's change to it, else as the API has it. */
     fun isTripPrivate(id: String): Boolean =
         (changedTrips[id] ?: _second.value.collections[id])?.let(Entries::isPrivate) == true
+
+    /**
+     * A trip's collection uid, which its public footprints name: its collection's own, as one
+     * made on the phone or since the migration has, else the migration's stable one.
+     */
+    fun tripUid(trip: TripRecord): String =
+        (tripCollection(trip.id)?.get("uid") as? kotlinx.serialization.json.JsonPrimitive)?.content ?: Entries.collectionUid(trip)
+
+    /** Whether a trip was made on the phone and isn't published yet. */
+    fun isTripNew(id: String): Boolean = id in changedTrips && apiTrips.none { it.id == id }
+
+    /**
+     * Makes a trip on the phone: a collection of its own, public unless said otherwise, kept
+     * like any change until it is published. Its id is its uid in lowercase, as the API
+     * will know it. Returns that id.
+     */
+    suspend fun createTrip(
+        title: String,
+        start: String,
+        end: String,
+        visibility: cc.hyoban.moments.data.spec.Visibility,
+        include: List<String> = emptyList(),
+        exclude: List<String> = emptyList(),
+        covers: List<Pair<String, String>> = emptyList(),
+    ): String = lock.withLock {
+        val local = checkNotNull(local) { "No store for the phone's changes" }
+        withContext(io) {
+            val now = cc.hyoban.moments.data.local.recordTime()
+            val base = kotlinx.serialization.json.buildJsonObject {
+                put("uid", kotlinx.serialization.json.JsonPrimitive(cc.hyoban.moments.data.local.Ulid.next()))
+                put("kind", kotlinx.serialization.json.JsonPrimitive("trip"))
+                put("createdAt", kotlinx.serialization.json.JsonPrimitive(now))
+            }
+            val collection = Entries.editCollection(base, title, start, end, visibility, now, include, exclude, covers)
+            val id = Entries.collectionKey(collection)
+            changedTrips = changedTrips + (id to collection)
+            local.writeChangedTrips(changedTrips)
+            showTrips()
+            publish()
+            id
+        }
+    }
 
     /** A trip as its collection, with the phone's change to it. */
     fun tripCollection(id: String): kotlinx.serialization.json.JsonObject? =
@@ -865,8 +919,12 @@ class MomentsRepository(
     ) = lock.withLock {
         val local = checkNotNull(local) { "No store for the phone's changes" }
         withContext(io) {
-            val trip = apiTrips.firstOrNull { it.id == id } ?: error("Unknown trip $id")
-            val base = Entries.collectionOf(trip, _second.value.collections[id])
+            // One made on the phone is edited as it was made, and stays a change however it ends.
+            val made = changedTrips[id]?.takeIf { apiTrips.none { it.id == id } }
+            val base = made ?: Entries.collectionOf(
+                apiTrips.firstOrNull { it.id == id } ?: error("Unknown trip $id"),
+                _second.value.collections[id],
+            )
             val now = cc.hyoban.moments.data.local.recordTime()
             val edited = Entries.editCollection(
                 base, title, start, end, visibility, now,
@@ -874,7 +932,7 @@ class MomentsRepository(
                 exclude = exclude ?: Entries.strings(base, "exclude"),
                 covers = covers ?: Entries.coversOf(base),
             )
-            val same = JsonObjectsEqualApartFrom(base, edited, "updatedAt")
+            val same = made == null && JsonObjectsEqualApartFrom(base, edited, "updatedAt")
             changedTrips = if (same) changedTrips - id else changedTrips + (id to edited)
             local.writeChangedTrips(changedTrips)
             showTrips()
@@ -882,7 +940,7 @@ class MomentsRepository(
         }
     }
 
-    /** Takes back the phone's change to a trip. */
+    /** Takes back the phone's change to a trip; one made on the phone is gone with it. */
     suspend fun revertTrip(id: String) = lock.withLock {
         withContext(io) {
             changedTrips = changedTrips - id
@@ -977,8 +1035,8 @@ data class PendingChanges(
 /** An entry that isn't a Moment as the site has it, [before] (null when new), and as it will be, [after] (null when deleted). */
 data class EntryChange(val before: kotlinx.serialization.json.JsonObject?, val after: kotlinx.serialization.json.JsonObject?)
 
-/** A trip as the site has it, [before], and the collection it is changed to. */
-data class TripChange(val before: TripRecord, val after: kotlinx.serialization.json.JsonObject)
+/** A trip as the site has it, [before] (none for one made on the phone), and the collection it is changed to or made as. */
+data class TripChange(val id: String, val before: TripRecord?, val after: kotlinx.serialization.json.JsonObject)
 
 /** One of the site's places as the site has it, [before], and with the kind changed on the phone. */
 data class PlaceChange(val id: String, val before: Place, val after: Place)
