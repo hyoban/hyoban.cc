@@ -135,19 +135,19 @@
     ],
     "width": 2232
   },
-  "posts/here/cover.jpg": {
-    "height": 1616,
+  "posts/here/cover-2.jpg": {
+    "height": 1608,
     "variants": [
       {
-        "key": "posts/here/cover-640w.webp",
+        "key": "posts/here/cover-2-640w.webp",
         "width": 640
       },
       {
-        "key": "posts/here/cover-960w.webp",
+        "key": "posts/here/cover-2-960w.webp",
         "width": 960
       },
       {
-        "key": "posts/here/cover-1280w.webp",
+        "key": "posts/here/cover-2-1280w.webp",
         "width": 1280
       }
     ],
