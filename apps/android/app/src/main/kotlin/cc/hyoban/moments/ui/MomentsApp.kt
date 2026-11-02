@@ -248,6 +248,10 @@ object SideKeySettings
 @Serializable
 object Items
 
+/** 家: where the map's 可能的旅程 count as home. */
+@Serializable
+object Homes
+
 /** 设备: what is owned and what it costs a day, with the sheet of the device [open] over it. */
 @Serializable
 data class Devices(val open: String? = null)
@@ -742,6 +746,7 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                             ledger = { navController.goTo(LedgerHome(it)) },
                                             footprints = { showOnMap(MapFocus.Footprints) },
                                             items = { navController.navigate(Items) },
+                                            homes = { navController.navigate(Homes) },
                                             sync = { navController.navigate(SyncSettings) },
                                             ledgerSettings = { navController.navigate(LedgerSettings()) },
                                             footprintSettings = { navController.navigate(FootprintSettings) },
@@ -760,6 +765,9 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                 }
                                 screen<Items> {
                                     cc.hyoban.moments.ui.settings.ItemsScreen(container, onBack = back)
+                                }
+                                screen<Homes> {
+                                    cc.hyoban.moments.ui.settings.HomesScreen(container, onBack = back)
                                 }
                                 screen<Devices> { entry ->
                                     cc.hyoban.moments.ui.things.DevicesScreen(container, onBack = back, open = entry.toRoute<Devices>().open)
@@ -1191,7 +1199,7 @@ fun pagesOf(route: Any): List<Any> {
 private fun tabOf(route: Any): Any = when (route) {
     Feed, Atlas, Preferences -> route
     is Trip, is TripEdit, is TripPlay, is PlaceMoments -> Atlas
-    SyncSettings, FootprintSettings, SideKeySettings, Items, Car, Changes, is Devices, is Subscriptions,
+    SyncSettings, FootprintSettings, SideKeySettings, Items, Homes, Car, Changes, is Devices, is Subscriptions,
     is LedgerHome, is LedgerEntry, is LedgerBill, is LedgerAccount, is LedgerAccountEdit, is LedgerSettings, is LedgerList,
     -> Preferences
     else -> Feed
@@ -1211,6 +1219,7 @@ fun routeOf(link: Uri): Any? {
         "footprints" -> Atlas
         "footprint-settings" -> FootprintSettings
         "items" -> Items
+        "homes" -> Homes
         "side-key" -> SideKeySettings
         "devices" -> Devices()
         "subscriptions" -> Subscriptions()

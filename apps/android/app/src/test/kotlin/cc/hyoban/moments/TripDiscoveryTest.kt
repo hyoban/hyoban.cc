@@ -1,6 +1,8 @@
 package cc.hyoban.moments
 
 import cc.hyoban.moments.data.spec.Division
+import cc.hyoban.moments.data.spec.MediaType
+import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
@@ -14,6 +16,8 @@ import kotlinx.serialization.json.putJsonObject
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /** Trips found in the records: days far from every place lived at, until back at one. */
 class TripDiscoveryTest {
@@ -74,11 +78,59 @@ class TripDiscoveryTest {
     }
 
     @Test
-    fun `a second home visited over many months is not a trip`() {
+    fun `a place gone to often is away each time, unless it is a home set by hand`() {
         val visits = listOf("2025-02-01", "2025-02-02", "2025-02-03", "2025-05-01", "2025-05-02", "2025-05-03", "2025-08-01", "2025-08-02", "2025-08-03", "2025-11-01", "2025-11-02")
         val sightings = year(visits.toSet()) + visits.map { at(it, family) }
 
-        assertEquals(emptyList(), TripDiscovery.discover(sightings, emptyList()))
+        assertEquals(
+            setOf("2025-02-01..2025-02-03", "2025-05-01..2025-05-03", "2025-08-01..2025-08-03", "2025-11-01..2025-11-02"),
+            TripDiscovery.discover(sightings, emptyList()).map { it.key }.toSet(),
+        )
+        assertEquals(emptyList(), TripDiscovery.discover(sightings, emptyList(), atHome = { lat, _ -> lat < 27 }))
+    }
+
+    @Test
+    fun `a home set by hand is a city by its id or a whole province by two digits`() {
+        assertTrue(TripDiscovery.isHome("350700", setOf("350700")))
+        assertTrue(TripDiscovery.isHome("350700", setOf("35")))
+        assertFalse(TripDiscovery.isHome("330100", setOf("35", "350700")))
+        assertFalse(TripDiscovery.isHome(null, setOf("35")))
+    }
+
+    @Test
+    fun `where home is now is the area with records on the most days`() {
+        assertEquals(home.latitude to home.longitude, TripDiscovery.homeOf(year(emptySet()) + days("2025-06-10", "2025-06-13").map { at(it, coast) }, "2025-07-01"))
+        assertEquals(null, TripDiscovery.homeOf(emptyList(), "2025-07-01"))
+    }
+
+    @Test
+    fun `home follows a move`() {
+        // Lived at home through May, then far away at the coast, a record every other day.
+        val before = generateSequence(LocalDate.parse("2025-01-01")) { it.plusDays(2) }.takeWhile { it.monthValue <= 5 }.map { at(it.toString(), home) }
+        val after = generateSequence(LocalDate.parse("2025-06-01")) { it.plusDays(2) }.takeWhile { it.year == 2025 }.map { at(it.toString(), coast) }
+
+        assertEquals(emptyList(), TripDiscovery.discover((before + after).toList(), emptyList()))
+    }
+
+    @Test
+    fun `the best come first, by photos kept and days with records up to a week, then the newest`() {
+        val short = days("2025-03-01", "2025-03-02")
+        val long = days("2025-06-10", "2025-06-15")
+        val shots = days("2025-09-05", "2025-09-06")
+        val plain = days("2025-11-05", "2025-11-06")
+        // Four weeks away with a record on three days alone, and three weeks with one every day.
+        val sparse = days("2025-07-01", "2025-07-28")
+        val stay = days("2025-12-01", "2025-12-21")
+        val sightings = year((short + long + shots + plain + sparse + stay).toSet()) +
+            (short + long + plain + stay).map { at(it, coast) } + shots.map { at(it, coast).copy(photos = 12) } +
+            listOf("2025-07-01", "2025-07-14", "2025-07-28").map { at(it, hills) }
+
+        // 2 days and 24 photos: 30; 21 days counted as 7: 21; 6 days: 18; 28 days, 3 with records: 9; 2 days: 6, the newer first.
+        assertEquals(
+            listOf("2025-09-05", "2025-12-01", "2025-06-10", "2025-07-01", "2025-11-05", "2025-03-01"),
+            TripDiscovery.discover(sightings, emptyList()).map { it.start },
+        )
+        assertEquals(24, TripDiscovery.discover(sightings, emptyList()).first().photos)
     }
 
     @Test
@@ -88,7 +140,7 @@ class TripDiscoveryTest {
         val sightings = year(away) + listOf("2025-03-01", "2025-03-09", "2025-03-20", "2025-04-20", "2025-04-21").map { at(it, hills) }
 
         assertEquals(
-            listOf("2025-04-20..2025-04-21", "2025-03-01..2025-03-20"),
+            listOf("2025-03-01..2025-03-20", "2025-04-20..2025-04-21"),
             TripDiscovery.discover(sightings, emptyList()).map { it.key },
         )
     }
@@ -105,14 +157,18 @@ class TripDiscoveryTest {
     }
 
     @Test
-    fun `before any place is lived at, nothing is away`() {
+    fun `records in one place alone have nothing away`() {
         assertEquals(emptyList(), TripDiscovery.discover(days("2025-01-01", "2025-01-03").map { at(it, coast) }, emptyList()))
     }
 
     @Test
     fun `Moments are where their places are, entries where their points are`() {
         val places = mapOf("coast" to coast)
-        val moment = MomentRecord("M", "2025-06-10T09:00:00+08:00", listOf("coast"), "", createdAt = "2025-06-10", updatedAt = "2025-06-10")
+        val moment = MomentRecord(
+            "M", "2025-06-10T09:00:00+08:00", listOf("coast", "coast"), "",
+            media = listOf(MomentMedia("a", MediaType.IMAGE), MomentMedia("b", MediaType.VIDEO)),
+            createdAt = "2025-06-10", updatedAt = "2025-06-10",
+        )
         val checkin = buildJsonObject {
             put("uid", "C")
             put("at", "2025-06-11T20:00:00+08:00")
@@ -121,7 +177,9 @@ class TripDiscoveryTest {
         }
         val sightings = TripDiscovery.sightingsOf(listOf(moment), listOf(checkin, buildJsonObject { put("uid", "N") }), places)
 
-        assertEquals(listOf("2025-06-10" to 35.0, "2025-06-11" to 28.0), sightings.map { it.day to it.lat })
+        assertEquals(listOf("2025-06-10" to 35.0, "2025-06-10" to 35.0, "2025-06-11" to 28.0), sightings.map { it.day to it.lat })
+        // Its photos and videos counted once, at its first place.
+        assertEquals(listOf(2, 0, 0), sightings.map { it.photos })
         assertEquals("海边", sightings.last().place?.name)
     }
 }

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="province_names">
+        <item>Beijing</item>
+        <item>Tianjin</item>
+        <item>Hebei</item>
+        <item>Shanxi</item>
+        <item>Inner Mongolia</item>
+        <item>Liaoning</item>
+        <item>Jilin</item>
+        <item>Heilongjiang</item>
+        <item>Shanghai</item>
+        <item>Jiangsu</item>
+        <item>Zhejiang</item>
+        <item>Anhui</item>
+        <item>Fujian</item>
+        <item>Jiangxi</item>
+        <item>Shandong</item>
+        <item>Henan</item>
+        <item>Hubei</item>
+        <item>Hunan</item>
+        <item>Guangdong</item>
+        <item>Guangxi</item>
+        <item>Hainan</item>
+        <item>Chongqing</item>
+        <item>Sichuan</item>
+        <item>Guizhou</item>
+        <item>Yunnan</item>
+        <item>Tibet</item>
+        <item>Shaanxi</item>
+        <item>Gansu</item>
+        <item>Qinghai</item>
+        <item>Ningxia</item>
+        <item>Xinjiang</item>
+        <item>Taiwan</item>
+        <item>Hong Kong</item>
+        <item>Macao</item>
+    </string-array>
+</resources>

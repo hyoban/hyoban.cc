@@ -255,15 +255,13 @@ private fun MapContent(
     val context = LocalContext.current
     val resources = LocalResources.current
     var fogRegions by remember { mutableStateOf<List<FogRegion>?>(null) }
-    val readRegions = suspend {
-        fogRegions ?: withContext(Dispatchers.Default) {
-            context.assets.open(FOG_REGIONS_ASSET).bufferedReader().use(::parseFogRegions)
-        }.also { fogRegions = it }
-    }
-    // 可能的旅程: worked out off the main thread as the records change, each named after the city
-    // the fog's regions find it went farthest to, the dismissed left out.
+    val readRegions = suspend { container.cityRegions().also { fogRegions = it } }
+    // 可能的旅程: worked out off the main thread as the records change, at home in the places set
+    // by hand as well, each named after the cities the fog's regions find it went to, the
+    // dismissed left out.
     val entries by container.repository.entries.collectAsStateWithLifecycle()
-    val discovered by produceState(emptyList<TripSuggestion>(), moments, entries, places, trips) {
+    val homes = settings.homes
+    val discovered by produceState(emptyList<TripSuggestion>(), moments, entries, places, trips, homes) {
         val sightings = withContext(Dispatchers.Default) { TripDiscovery.sightingsOf(moments, entries.values, places) }
         if (sightings.isEmpty()) {
             value = emptyList()
@@ -271,7 +269,12 @@ private fun MapContent(
         }
         val regions = readRegions()
         value = withContext(Dispatchers.Default) {
-            TripDiscovery.discover(sightings, trips) { lat, lng -> regionAt(regions, lng, lat)?.name }
+            TripDiscovery.discover(
+                sightings,
+                trips,
+                atHome = { lat, lng -> homes.isNotEmpty() && TripDiscovery.isHome(regionAt(regions, lng, lat)?.id, homes) },
+                cityAt = { lat, lng -> regionAt(regions, lng, lat)?.name },
+            )
         }
     }
     // Those added gone at once, and any a trip now holds, before the next working out catches up.
@@ -815,7 +818,8 @@ private fun TripsSheet(
 
 /**
  * A trip the records suggest, as a trip's row: a suitcase where the cover would be, its name, and
- * when it began, how many days and how many records, then adding it as it is and dismissing it.
+ * when it began, how many days and how many photos (or records, without any), then adding it as
+ * it is and dismissing it.
  */
 @Composable
 private fun SuggestionRow(suggestion: TripSuggestion, coverSize: Int, onDismiss: () -> Unit, onAdd: () -> Unit, modifier: Modifier = Modifier) {
@@ -830,7 +834,11 @@ private fun SuggestionRow(suggestion: TripSuggestion, coverSize: Int, onDismiss:
                 listOf(
                     formatDate(suggestion.start),
                     pluralStringResource(R.plurals.count_days, days, days),
-                    pluralStringResource(R.plurals.count_records, suggestion.records, suggestion.records),
+                    if (suggestion.photos > 0) {
+                        pluralStringResource(R.plurals.count_photos, suggestion.photos, suggestion.photos)
+                    } else {
+                        pluralStringResource(R.plurals.count_records, suggestion.records, suggestion.records)
+                    },
                 ).joinToString(" "),
                 style = AppTheme.typography.caption,
                 color = tokens.tx2,
