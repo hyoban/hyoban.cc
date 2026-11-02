@@ -83,7 +83,7 @@ phone alone: a collection of its own, its id its uid in lowercase as the API wil
 shown and played back as the site's are. Until then it can be deleted from its 编辑旅程; once published it is the API's
 like the rest.
 
-Above the trips, 可能的旅程 are the trips the records suggest (`data/trips/TripDiscovery.kt`):
+Below the trips, after a hairline, 可能的旅程 are the trips the records suggest (`data/trips/TripDiscovery.kt`):
 the days from a record more than 100 km from home until the next one back, or two weeks
 without any, with two or more records and none of their days in a trip. Home is the area of
 about 20 km with records on the most days within 120 days either side, so it follows a move,
