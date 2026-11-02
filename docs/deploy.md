@@ -66,7 +66,8 @@ dashboard; they stream with `npx wrangler tail hyoban-cc-api`.
 | `r2-backup.yml` | push to `main`, by hand     | a snapshot of the R2 bucket, in Git LFS on the `r2-backup` branch                                    |
 
 `verify.yml` exports the API into `data/` to audit every Moment, builds the site from the
-API, and on its weekly run also checks every referenced R2 object (`moments:audit
+API, its share cards kept between runs in the Actions cache as Workers Builds keeps them,
+and on its weekly run also checks every referenced R2 object (`moments:audit
 --remote`). The records aren't backed up to GitHub. The workflows run Node 24; the repository pins no Node version, so Workers
 Builds uses its own default.
 

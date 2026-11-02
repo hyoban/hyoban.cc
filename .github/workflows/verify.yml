@@ -34,6 +34,15 @@ jobs:
         run: pnpm data:export
       - name: Audit Moments
         run: pnpm moments:audit
+      # With CI set the build draws every share card; keep them between runs, as Workers
+      # Builds does, so a run draws only the cards that changed. The build prunes unused ones.
+      - uses: actions/cache@v6
+        with:
+          path: |
+            apps/web/node_modules/.astro/share-cards
+            apps/web/node_modules/.astro/share-assets
+          key: share-cards-${{ github.run_id }}
+          restore-keys: share-cards-
       - run: pnpm build
         env:
           MOMENTS_API_TOKEN: ${{ secrets.MOMENTS_API_TOKEN }}
