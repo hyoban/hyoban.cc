@@ -724,8 +724,8 @@ private val ROUTE_CARD = 88.dp
 
 /**
  * The trips in the map's panel: a line of how many and how far, which is all that shows while it
- * rests, then the 可能的旅程 the records suggest, each opening a new trip of its days or dismissed,
- * and a row for each trip, newest first, growing into its page when tapped.
+ * rests, then a row for each trip, newest first, growing into its page when tapped, and under them
+ * the 可能的旅程 the records suggest, each opening a new trip of its days, added or dismissed.
  */
 @Composable
 private fun TripsSheet(
@@ -777,18 +777,30 @@ private fun TripsSheet(
             Modifier.weight(1f).graphicsLayer { alpha = shown() },
             contentPadding = PaddingValues(top = Space.xs, bottom = Space.l + bottom),
         ) {
-            // Always the list's first item, empty without any, so the list holds to its top while
-            // they're worked out or added rather than to the trip that was first, and they show.
-            item(key = "suggested") {
-                if (suggestions.isNotEmpty()) Column(
-                    Modifier.fillMaxWidth().padding(horizontal = if (inCard) Space.l else Space.gutter).padding(top = Space.s, bottom = Space.xs),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    Text(stringResource(R.string.trips_suggested), style = AppTheme.typography.label, color = tokens.tx2, modifier = Modifier.semantics { heading() })
-                    Text(stringResource(R.string.trips_suggested_note), style = AppTheme.typography.caption, color = tokens.tx3)
-                }
+            items(trips.sortedByDescending { it.start }, key = { it.id }) { trip ->
+                val covers = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1) }
+                TripRow(
+                    trip, covers.firstOrNull(), tripColor(trip, colors), kilometres[trip.id], urls,
+                    coverSize = if (inCard) 56 else 64,
+                    modifier = Modifier.fillMaxWidth().clickable(enabled = open) { onTrip(trip.id) }
+                        .padding(horizontal = if (inCard) Space.m else Space.gutter, vertical = Space.s).testTag("trip_${trip.id}"),
+                ) { Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(20.dp)) }
             }
+            // Below the trips, after a hairline when there are any; added below them as they're
+            // worked out, so the list keeps its place.
             if (suggestions.isNotEmpty()) {
+                if (trips.isNotEmpty()) item(key = "suggested_rule") {
+                    Box(Modifier.padding(horizontal = if (inCard) Space.m else Space.gutter, vertical = Space.s).fillMaxWidth().height(1.dp).background(dividerColor()))
+                }
+                item(key = "suggested") {
+                    Column(
+                        Modifier.fillMaxWidth().padding(horizontal = if (inCard) Space.l else Space.gutter).padding(top = Space.s, bottom = Space.xs),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Text(stringResource(R.string.trips_suggested), style = AppTheme.typography.label, color = tokens.tx2, modifier = Modifier.semantics { heading() })
+                        Text(stringResource(R.string.trips_suggested_note), style = AppTheme.typography.caption, color = tokens.tx3)
+                    }
+                }
                 items(suggestions, key = { "suggested_${it.key}" }) { suggestion ->
                     SuggestionRow(
                         suggestion,
@@ -799,18 +811,6 @@ private fun TripsSheet(
                         onAdd = { onAdd(suggestion) },
                     )
                 }
-                item(key = "suggested_rule") {
-                    Box(Modifier.padding(horizontal = if (inCard) Space.m else Space.gutter, vertical = Space.s).fillMaxWidth().height(1.dp).background(dividerColor()))
-                }
-            }
-            items(trips.sortedByDescending { it.start }, key = { it.id }) { trip ->
-                val covers = remember(trip, moments) { coversOf(trip, moments, trips, limit = 1) }
-                TripRow(
-                    trip, covers.firstOrNull(), tripColor(trip, colors), kilometres[trip.id], urls,
-                    coverSize = if (inCard) 56 else 64,
-                    modifier = Modifier.fillMaxWidth().clickable(enabled = open) { onTrip(trip.id) }
-                        .padding(horizontal = if (inCard) Space.m else Space.gutter, vertical = Space.s).testTag("trip_${trip.id}"),
-                ) { Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(20.dp)) }
             }
         }
     }
