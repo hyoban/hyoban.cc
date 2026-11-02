@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -74,6 +75,7 @@ class MeRoutes(
     val ledger: (Int) -> Unit,
     val footprints: () -> Unit,
     val items: () -> Unit,
+    val homes: () -> Unit,
     val sync: () -> Unit,
     val ledgerSettings: () -> Unit,
     val footprintSettings: () -> Unit,
@@ -122,6 +124,11 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
                 AppIcons.Eye, stringResource(R.string.me_items), "settings_items", shapes,
                 supporting = stringResource(R.string.me_items_public, books.count { it.visibility == "public" }, shares),
                 onClick = routes.items,
+            )
+            MeRow(
+                AppIcons.Home, stringResource(R.string.homes_title), "settings_homes", shapes,
+                supporting = homesSummary(container),
+                onClick = routes.homes,
             )
             MeRow(
                 AppIcons.CloudSync, stringResource(R.string.sync_title), "settings_sync", shapes,
@@ -321,6 +328,19 @@ private fun MeRow(icon: ImageVector, title: String, tag: String, shapes: ListIte
 }
 
 /** The app and its version at the foot of the page, and 馒头, the cat the icon is drawn from. */
+/** What 家 says on 我: the places set by hand, by name, else that where one lives is found by itself. */
+@Composable
+private fun homesSummary(container: AppContainer): String {
+    val homes = container.settings.homes
+    val provinces = stringArrayResource(R.array.province_codes).zip(stringArrayResource(R.array.province_names)).toMap()
+    val cities by produceState<List<cc.hyoban.moments.ui.map.FogRegion>?>(null, homes) { if (homes.any { it.length > 2 }) value = container.cityRegions() }
+    if (homes.isEmpty()) return stringResource(R.string.homes_found_note)
+    val names = homes.sorted().map { id ->
+        if (id.length == 2) provinces[id] ?: id else cities?.firstOrNull { it.id == id }?.name?.let(cc.hyoban.moments.data.trips.TripDiscovery::shortCity) ?: ""
+    }.filter { it.isNotEmpty() }
+    return stringResource(R.string.me_homes_some, names.joinToString(stringResource(R.string.separator_list)))
+}
+
 @Composable
 private fun Credits() {
     Row(

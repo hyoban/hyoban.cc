@@ -51,6 +51,13 @@ class AppContainer(context: Context) {
     private val appContext = context.applicationContext
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
+    private var cities: List<cc.hyoban.moments.ui.map.FogRegion>? = null
+
+    /** The fog's cities, read from the app's assets the first time they're asked for and kept: the map's fog, and where the homes set by hand are. */
+    suspend fun cityRegions(): List<cc.hyoban.moments.ui.map.FogRegion> = cities ?: kotlinx.coroutines.withContext(Dispatchers.Default) {
+        appContext.assets.open(cc.hyoban.moments.ui.map.FOG_REGIONS_ASSET).bufferedReader().use { cc.hyoban.moments.ui.map.parseFogRegions(it) }
+    }.also { cities = it }
+
     val settings = Settings(context)
     /** GPS tracks stay on this phone, private; only the spans made public publish, simplified. */
     val footprints = cc.hyoban.moments.footprints.FootprintStore(context)

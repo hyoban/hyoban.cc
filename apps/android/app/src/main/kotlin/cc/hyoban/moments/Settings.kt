@@ -93,6 +93,18 @@ class Settings(context: Context) {
         prefs.edit { putStringSet("dismissed_trips", dismissedTrips) }
     }
 
+    /**
+     * The places set by hand as home for the map's 可能的旅程, beside the one found by itself: a
+     * city by its region's id, a province by its two digits.
+     */
+    var homes: Set<String> by mutableStateOf(prefs.getStringSet("homes", null).orEmpty().toSet())
+        private set
+
+    fun changeHomes(homes: Set<String>) {
+        this.homes = homes
+        prefs.edit { putStringSet("homes", homes) }
+    }
+
     /** Whether the ledger's amounts are hidden, for opening it with others looking on. */
     var ledgerHidden: Boolean by mutableStateOf(prefs.getBoolean("ledger_hidden", false))
         private set

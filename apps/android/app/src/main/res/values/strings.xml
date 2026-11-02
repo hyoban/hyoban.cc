@@ -91,6 +91,20 @@
     <string name="trip_suggestion_dismiss">忽略%1$s的可能旅程</string>
     <string name="trip_suggestion_add">把%1$s添加为旅程</string>
     <string name="message_trip_added">已添加旅程「%1$s」</string>
+    <string name="homes_title">家</string>
+    <string name="homes_found">常住</string>
+    <string name="homes_found_note">按记录最多的地方自动认出</string>
+    <string name="homes_found_none">还没有记录</string>
+    <string name="homes_found_group_note">离这里 100 公里以外才算出门；搬了家会跟着换。</string>
+    <string name="homes_set">也算家</string>
+    <string name="homes_set_note">在这些地方的记录不算出门，地图上的「可能的旅程」不再把去这里当成旅程，比如老家。</string>
+    <string name="homes_add">添加省或城市</string>
+    <string name="homes_whole">整个省</string>
+    <string name="homes_whole_of">整个%1$s</string>
+    <string name="homes_remove">不再把%1$s当作家</string>
+    <string name="homes_pick">添加省或城市</string>
+    <string name="homes_pick_note">点一个加进「也算家」，回到上一页；已经加了的带勾，再点是去掉。</string>
+    <string name="me_homes_some">也算家：%1$s</string>
     <string name="map_km">%1$s 公里</string>
     <string name="footprints_map_recording">足迹，正在记录</string>
     <string name="legend_trips">旅程</string>
@@ -201,6 +215,9 @@
     </plurals>
     <plurals name="count_records">
         <item quantity="other">%1$d 条记录</item>
+    </plurals>
+    <plurals name="count_photos">
+        <item quantity="other">%1$d 张照片</item>
     </plurals>
     <plurals name="count_days_total">
         <item quantity="other">共 %1$d 天</item>

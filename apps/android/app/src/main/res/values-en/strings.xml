@@ -94,6 +94,20 @@
     <string name="trip_suggestion_dismiss">Dismiss the possible trip %1$s</string>
     <string name="trip_suggestion_add">Add %1$s as a trip</string>
     <string name="message_trip_added">Added the trip %1$s</string>
+    <string name="homes_title">Home</string>
+    <string name="homes_found">Where you live</string>
+    <string name="homes_found_note">Found by itself where most records are</string>
+    <string name="homes_found_none">No records yet</string>
+    <string name="homes_found_group_note">More than 100 km from here counts as away; a move is followed.</string>
+    <string name="homes_set">Also home</string>
+    <string name="homes_set_note">Records in these places aren’t away, so the map’s possible trips don’t count going there as a trip, such as where your family lives.</string>
+    <string name="homes_add">Add a province or city</string>
+    <string name="homes_whole">The whole province</string>
+    <string name="homes_whole_of">All of %1$s</string>
+    <string name="homes_remove">Stop counting %1$s as home</string>
+    <string name="homes_pick">Add a province or city</string>
+    <string name="homes_pick_note">Tap one to add it to Also home and go back; those added have a check, and tapping one again takes it out.</string>
+    <string name="me_homes_some">Also home: %1$s</string>
     <string name="map_km">%1$s km</string>
     <string name="footprints_map_recording">Footprints, recording</string>
     <string name="legend_trips">Trips</string>
@@ -203,6 +217,10 @@
     <plurals name="count_records">
         <item quantity="one">%1$d record</item>
         <item quantity="other">%1$d records</item>
+    </plurals>
+    <plurals name="count_photos">
+        <item quantity="one">%1$d photo</item>
+        <item quantity="other">%1$d photos</item>
     </plurals>
     <plurals name="count_moments">
         <item quantity="one">%1$d Moment</item>

@@ -13,64 +13,87 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-// Trips the phone finds by itself, for the map's 可能的旅程: the days spent far from every
-// place lived at, until a record there again, that no trip holds yet. A place lived at is an
-// area of about 20 km that the records come back to on many days over many months of the year
-// around, so a second home (where one works, where one's family lives) is one as well. Worked
+// Trips the phone finds by itself, for the map's 可能的旅程: the days spent far from home,
+// until a record there again, that no trip holds yet. Home is the area of about 20 km with
+// records on the most days in the months around: only that one, so a city gone to often (a
+// day out to Shanghai) or the family's home is away each time, and a move is followed. Worked
 // out on the phone from its own records, nothing sent anywhere.
 
-/** Somewhere a record says one was: when, on which day where it happened, and where. */
-data class Sighting(val at: Long, val day: String, val lat: Double, val lng: Double, val place: Place? = null)
+/** Somewhere a record says one was: when, on which day where it happened, where, and how many [photos] it kept there. */
+data class Sighting(val at: Long, val day: String, val lat: Double, val lng: Double, val place: Place? = null, val photos: Int = 0)
 
-/** A trip the records suggest, from [start] to [end], `YYYY-MM-DD`, and a [name] for it made from where and when it went. */
-data class TripSuggestion(val start: String, val end: String, val name: String, val records: Int) {
+/**
+ * A trip the records suggest, from [start] to [end], `YYYY-MM-DD`, a [name] for it made from where
+ * and when it went, how many records and photos it has, and on how many of its days [recorded].
+ */
+data class TripSuggestion(
+    val start: String,
+    val end: String,
+    val name: String,
+    val records: Int,
+    val photos: Int = 0,
+    val recorded: Int = records,
+) {
     /** What dismissing it keeps, so it doesn't come back. */
     val key: String get() = "$start..$end"
+
+    val days: Int get() = (LocalDate.parse(end).toEpochDay() - LocalDate.parse(start).toEpochDay()).toInt() + 1
+
+    /**
+     * How much it is worth making a trip of: each photo kept, and each day with a record three
+     * times one, up to a week of them. Days without any don't count, and a stay longer than a week
+     * gains nothing more for its length, so weeks of a few records each stay below a short trip
+     * with many photos.
+     */
+    val score: Int get() = photos + DAY_SCORE * minOf(recorded, SCORED_DAYS)
 }
 
+/** What a day with records of a suggested trip is worth beside a photo, in its [TripSuggestion.score]. */
+private const val DAY_SCORE = 3
+
+/** How many of a suggested trip's days with records count towards its [TripSuggestion.score]. */
+private const val SCORED_DAYS = 7
+
 object TripDiscovery {
-    /** How far from every place lived at a record is for it to be away, in kilometres. */
+    /** How far from home a record is for it to be away, in kilometres. */
     const val AWAY_KM = 100.0
 
     /** The longest a trip goes without a record before the next one far away starts another. */
     const val MAX_GAP_DAYS = 14L
 
-    /** The days and months an area needs in the year around a day to be lived at then. */
-    private const val HOME_DAYS = 8
-    private const val HOME_MONTHS = 3
-
-    /** How far either side of a day the records count for where one lived then. */
-    private const val AROUND_DAYS = 365L
+    /** How far either side of a day the records count for where home was then: short enough to follow a move. */
+    private const val AROUND_DAYS = 120L
 
     /** An area's size, in degrees: about 20 km. */
     private const val CELL = 0.2
 
     /**
-     * The trips [sightings] suggest, newest first: each run of them away from every place lived
-     * at, ending at the next one back at one or after [MAX_GAP_DAYS] without any, with two or more
-     * records, and none of its days in one of [trips] or a trip [dismissed] by its key. Each is
-     * named by [nameOf], its records' cities those of their places, else those [cityAt] finds there.
+     * The trips [sightings] suggest, the best first by [TripSuggestion.score], then the newest:
+     * each run of them away from home, ending at the next one back there or after [MAX_GAP_DAYS]
+     * without any, with two or more records, and none of its days in one of [trips] or a trip
+     * [dismissed] by its key. A record [atHome] says is in a home set by hand is home as well.
+     * Each is named by [nameOf], its records' cities those of their places, else those [cityAt]
+     * finds there.
      */
     fun discover(
         sightings: List<Sighting>,
         trips: List<TripRecord>,
         dismissed: Set<String> = emptySet(),
+        atHome: (lat: Double, lng: Double) -> Boolean = { _, _ -> false },
         cityAt: (lat: Double, lng: Double) -> String? = { _, _ -> null },
     ): List<TripSuggestion> {
         val sorted = sightings.sortedBy { it.at }
         val dayOf = sorted.associate { it.day to LocalDate.parse(it.day).toEpochDay() }
-        // Each area's days with records, oldest first, leaving out those with too few ever to be lived at.
-        val areas = sorted.groupBy({ cellOf(it.lat, it.lng) }, { dayOf.getValue(it.day) })
-            .mapValues { (_, days) -> days.distinct().sorted().toLongArray() }
-            .filterValues { it.size >= HOME_DAYS }
-        val homes = HashMap<Long, List<Pair<Double, Double>>>()
+        val areas = areasOf(sorted, dayOf)
+        val homes = HashMap<Long, Pair<Double, Double>>()
 
         val runs = mutableListOf<List<Pair<Sighting, Double>>>()
         var run = mutableListOf<Pair<Sighting, Double>>()
         for (sighting in sorted) {
             val day = dayOf.getValue(sighting.day)
-            val near = homes.getOrPut(day) { homesAt(day, areas) }.ifEmpty { null }?.minOf { (lat, lng) -> km(lat, lng, sighting.lat, sighting.lng) } ?: continue
-            if (near <= AWAY_KM) {
+            val (homeLat, homeLng) = homes.getOrPut(day) { homeAt(day, areas) }
+            val near = km(homeLat, homeLng, sighting.lat, sighting.lng)
+            if (near <= AWAY_KM || atHome(sighting.lat, sighting.lng)) {
                 if (run.isNotEmpty()) runs += run
                 run = mutableListOf()
                 continue
@@ -90,10 +113,10 @@ object TripDiscovery {
             val start = run.first().first.day
             val end = run.last().first.day
             val where = cities[run.indexOfFirst { it.first === farthest }] ?: farthest.place?.name ?: "%.2f, %.2f".format(farthest.lat, farthest.lng)
-            TripSuggestion(start, end, nameOf(LocalDate.parse(start), LocalDate.parse(end), cities.filterNotNull(), where), run.size)
+            TripSuggestion(start, end, nameOf(LocalDate.parse(start), LocalDate.parse(end), cities.filterNotNull(), where), run.size, run.sumOf { it.first.photos }, run.map { it.first.day }.distinct().size)
         }.filter { suggestion ->
             suggestion.key !in dismissed && trips.none { it.start <= suggestion.end && it.end >= suggestion.start }
-        }.sortedByDescending { it.start }
+        }.sortedWith(compareByDescending<TripSuggestion> { it.score }.thenByDescending { it.start })
     }
 
     /**
@@ -143,15 +166,25 @@ object TripDiscovery {
         return spans.firstOrNull { (_, days) -> start <= days.endInclusive && end >= days.start }?.first
     }
 
-    /** The middles of the areas lived at around [day], an epoch day, from each area's [areas] days with records. */
-    private fun homesAt(day: Long, areas: Map<Pair<Int, Int>, LongArray>): List<Pair<Double, Double>> =
-        areas.mapNotNull { (cell, days) ->
-            val from = insertionPoint(days, day - AROUND_DAYS)
-            val to = insertionPoint(days, day + AROUND_DAYS + 1)
-            val lived = to - from >= HOME_DAYS &&
-                (from until to).map { LocalDate.ofEpochDay(days[it]).let { date -> date.year * 12 + date.monthValue } }.distinct().size >= HOME_MONTHS
-            if (lived) cell.first * CELL to cell.second * CELL else null
-        }
+    /** Where home is around [day], `YYYY-MM-DD`, by [sightings]: the middle of its area, or none without any. */
+    fun homeOf(sightings: List<Sighting>, day: String): Pair<Double, Double>? =
+        if (sightings.isEmpty()) null else homeAt(LocalDate.parse(day).toEpochDay(), areasOf(sightings, sightings.associate { it.day to LocalDate.parse(it.day).toEpochDay() }))
+
+    /** Whether a city's region, by its id, is one of [homes] set by hand: the city itself, or its province by the id's first two digits. */
+    fun isHome(regionId: String?, homes: Set<String>): Boolean = regionId != null && (regionId in homes || regionId.take(2) in homes)
+
+    /** Each area's days with records, as epoch days by [dayOf], oldest first. */
+    private fun areasOf(sightings: List<Sighting>, dayOf: Map<String, Long>): Map<Pair<Int, Int>, LongArray> =
+        sightings.groupBy({ cellOf(it.lat, it.lng) }, { dayOf.getValue(it.day) }).mapValues { (_, days) -> days.distinct().sorted().toLongArray() }
+
+    /**
+     * The middle of home around [day], an epoch day: the area of [areas] with records on the most
+     * days within [AROUND_DAYS] of it, the first of them on a tie. There is always one, the day's own.
+     */
+    private fun homeAt(day: Long, areas: Map<Pair<Int, Int>, LongArray>): Pair<Double, Double> {
+        val (cell) = areas.maxBy { (_, days) -> insertionPoint(days, day + AROUND_DAYS + 1) - insertionPoint(days, day - AROUND_DAYS) }
+        return cell.first * CELL to cell.second * CELL
+    }
 
     /** Where [value] would go in the sorted [days]: how many of them come before it. */
     private fun insertionPoint(days: LongArray, value: Long): Int = days.binarySearch(value).let { if (it < 0) -it - 1 else it }
@@ -174,14 +207,16 @@ object TripDiscovery {
     }
 
     /**
-     * Where the records say one was: each Moment at its places, or its own point without one, and
-     * each entry beyond the Moments (a check-in, a charge) at its point, or its place without one.
+     * Where the records say one was: each Moment at its places, or its own point without one, its
+     * photos and videos counted at the first, and each entry beyond the Moments (a check-in, a
+     * charge) at its point, or its place without one.
      */
     fun sightingsOf(moments: List<MomentRecord>, entries: Collection<JsonObject>, places: Map<String, Place>): List<Sighting> {
         val fromMoments = moments.flatMap { moment ->
             val at = runCatching { epochOf(moment.occurredAt) }.getOrNull() ?: return@flatMap emptyList()
             val atPlaces = moment.places.mapNotNull { id -> places[id]?.let { Sighting(at, moment.dateKey, it.latitude, it.longitude, it) } }
             atPlaces.ifEmpty { listOfNotNull(pointOf(moment.extra)?.let { (lat, lng) -> Sighting(at, moment.dateKey, lat, lng) }) }
+                .mapIndexed { index, sighting -> if (index == 0) sighting.copy(photos = moment.media.size) else sighting }
         }
         val fromEntries = entries.mapNotNull { entry ->
             val time = (entry["at"] as? JsonPrimitive)?.content ?: return@mapNotNull null

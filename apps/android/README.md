@@ -84,17 +84,21 @@ shown and played back as the site's are. Until then it can be deleted from its �
 like the rest.
 
 Above the trips, 可能的旅程 are the trips the records suggest (`data/trips/TripDiscovery.kt`):
-the days from a record more than 100 km from every place lived at until the next one back,
-or two weeks without any, with two or more records and none of their days in a trip. A
-place lived at is an area of about 20 km with records on eight days or more, in three
-months or more, within a year either side, so a second home (where one works, where one's
-family lives) counts as well. The records are the check-ins and the Moments with places,
-not the footprints, and nothing leaves the phone. Each is named as one would name it: the
-cities with the most of its records, from their places or the fog's city boundaries, in the
-order they were reached (a city passed through once left out), with the holiday it spans
-before them (春节, 元旦, 清明, 五一, 国庆: 国庆香港), else 一日 or 周末 after (南京一日). Its +
-adds it as it is, private as the check-ins it came from; opened, it is 新建旅程 with its days
-and name filled in; one dismissed is kept in the settings and doesn't come back.
+the days from a record more than 100 km from home until the next one back, or two weeks
+without any, with two or more records and none of their days in a trip. Home is the area of
+about 20 km with records on the most days within 120 days either side, so it follows a move,
+and only that one: a city gone to often (a day out to Shanghai) or the family's home is away
+each time. 我 → 家 (`moments://homes`) shows it and takes more by hand, a city or a whole
+province each, from the fog's city boundaries; records in them are home too. The records are
+the check-ins and the Moments with places, not the footprints, and nothing leaves the phone.
+The best come first: a point for each photo and three for each day with records, up to a
+week of them, so a short trip with many photos comes before weeks with a few records each.
+Each is named as one would name it: the cities with the most of its records, from their
+places or the fog's city boundaries, in the order they were reached (a city passed through
+once left out), with the holiday it spans before them (春节, 元旦, 清明, 五一, 国庆: 国庆香港),
+else 一日 or 周末 after (南京一日). Its row says how many photos it has, or records without
+any. Its + adds it as it is, private as the check-ins it came from; opened, it is 新建旅程 with
+its days and name filled in; one dismissed is kept in the settings and doesn't come back.
 
 No page has a bar: its way back and actions float as circles over it, its title large
 under them. On a wide window the map's trips stand in a column and bottom panels open as
