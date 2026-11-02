@@ -1017,6 +1017,7 @@
     <string name="swarm_import_summary">%1$d 次签到：%2$d 条成为时刻，%3$d 次只记下签到，新建了 %5$d 个地点，复制了 %4$d 张照片。</string>
     <string name="swarm_import_known">其中 %d 次之前已经导入过，没有再添。</string>
     <string name="swarm_import_private">都是私有的，在发布更改里看过再发布。</string>
+    <string name="swarm_import_private_alone">都是私有的。</string>
     <string name="swarm_import_failed">无法读取这个文件，请选择 Swarm 导出的 .zip</string>
     <string name="setting_webdav">WebDAV</string>
     <string name="webdav_directory">目录地址</string>

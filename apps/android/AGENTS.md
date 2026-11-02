@@ -154,7 +154,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 
 - The app is usable on the phone alone and is not tied to this repository's API: the build
   carries no API address or media origin, and nothing asks the network for records until
-  both an API and its token are set in 同步与来源. Don't add a default API back.
+  both an API and its token are set in 同步与来源. Don't add a default API back. Until then the
+  app is the phone's own: nothing says 未发布 or points to publishing.
 - Nothing reaches the site until 全部发布到网站, after the changes waiting have been
   reviewed: one change set, like a commit, sent as entries to `POST /v2/changes`. Don't add
   writes that bypass it.

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.ui.draw.clip
 import cc.hyoban.moments.ui.theme.tokens
@@ -188,7 +189,7 @@ private fun MomentBubble(
                 val foot: @Composable () -> Unit = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                         Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                        if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = AppIcons.Phone)
+                        if (moment.published == null && LocalSettings.current.connected) Pill(stringResource(R.string.label_on_phone), icon = AppIcons.Phone)
                     }
                 }
                 // What was eaten stays on the Moment's page: the conversation shows the words alone.
@@ -267,7 +268,7 @@ fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRe
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false),
         )
-        if (moment.published == null) Pill(stringResource(R.string.label_on_phone), icon = AppIcons.Phone)
+        if (moment.published == null && LocalSettings.current.connected) Pill(stringResource(R.string.label_on_phone), icon = AppIcons.Phone)
     }
 }
 

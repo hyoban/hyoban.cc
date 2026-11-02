@@ -1055,6 +1055,7 @@
     <string name="swarm_import_summary">%1$d check-ins: %2$d as Moments, %3$d as check-ins alone, %5$d new places, %4$d photos copied.</string>
     <string name="swarm_import_known">%d of them were imported before and weren\'t added again.</string>
     <string name="swarm_import_private">All private; review them in the changes before publishing.</string>
+    <string name="swarm_import_private_alone">All private.</string>
     <string name="swarm_import_failed">Can\'t read this file. Choose the .zip Swarm exports.</string>
     <string name="setting_webdav">WebDAV</string>
     <string name="webdav_directory">Directory address</string>
