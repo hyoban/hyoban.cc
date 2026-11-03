@@ -38,6 +38,17 @@ import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.Space
 import kotlinx.coroutines.*
 import cc.hyoban.moments.data.local.Fix
+import cc.hyoban.moments.data.local.coordinatesName
+import cc.hyoban.moments.data.local.recordTime
+import cc.hyoban.moments.data.spec.Entries
+import cc.hyoban.moments.data.spec.Visibility
+import cc.hyoban.moments.data.spec.entryUid
+import cc.hyoban.moments.ui.compose.KeepPlace
+import java.time.OffsetDateTime
+import android.widget.Toast
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import cc.hyoban.moments.data.local.SAME_PLACE_METRES
 import cc.hyoban.moments.data.local.nearestPlaces
 import java.time.Instant
@@ -127,6 +138,22 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             nearestPlaces(places, Fix(stay.latitude, stay.longitude), limit = 1).firstOrNull()
                 ?.takeIf { (_, metres) -> metres <= SAME_PLACE_METRES }?.let { (id, _) -> stay.start to places.getValue(id).name }
         }.toMap()
+    }
+    // A stay kept as a place or a check-in there, named as a bill's spot is, and the name to give it.
+    var keeping by remember { mutableStateOf<Pair<TrackStay, String>?>(null) }
+    fun keep(stay: TrackStay) {
+        val point = Fix(stay.latitude, stay.longitude)
+        scope.launch { keeping = stay to (container.billPlaces.nameOf(point) ?: coordinatesName(point)) }
+    }
+    keeping?.let { (stay, name) ->
+        KeepPlace(container, Fix(stay.latitude, stay.longitude), name, onDismiss = { keeping = null }, onCheckin = { place, venue ->
+            val entry = stayCheckin(stay, place, venue)
+            // A check-in already there over the stay, Swarm's or one kept before, is that visit.
+            val other = container.repository.checkins.value.byDay[recordStamp(stay.start).take(10)].orEmpty()
+                .any { it.uid != entry.entryUid && runCatching { OffsetDateTime.parse(it.at).toInstant().toEpochMilli() in stay.start..stay.end }.getOrDefault(false) }
+            if (other) Toast.makeText(context, R.string.message_checkin_known, Toast.LENGTH_SHORT).show()
+            else container.repository.saveEntry(entry)
+        })
     }
     val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         val action = pendingAction
@@ -341,7 +368,15 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                                 colors = segmentColors(),
                                 leadingContent = { Icon(icon, contentDescription = null) },
                                 supportingContent = { Text(supporting) },
-                                trailingContent = { Icon(AppIcons.Fit, contentDescription = stringResource(R.string.footprints_frame_part)) },
+                                trailingContent = {
+                                    if (part is TrackStay) {
+                                        IconButton(onClick = { keep(part) }, modifier = Modifier.testTag("footprints_save_place_${part.start}")) {
+                                            Icon(AppIcons.Plus, contentDescription = stringResource(R.string.share_save_place))
+                                        }
+                                    } else {
+                                        Icon(AppIcons.Fit, contentDescription = stringResource(R.string.footprints_frame_part))
+                                    }
+                                },
                                 modifier = Modifier.testTag("footprints_part_${part.start}"),
                             ) { Text(title) }
                         }
@@ -424,3 +459,37 @@ private fun duration(millis: Long): String {
 }
 
 private fun stamp(time: Long): String = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+
+/** When the footprints say, as the records write it: to the second, in the phone's offset then. */
+private fun recordStamp(time: Long): String = cc.hyoban.moments.data.local.stamp(Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).toOffsetDateTime())
+
+/**
+ * A stay kept as a private check-in at [place], called [venue]: from its start to its end, at
+ * its middle as the footprints have it. Its uid is made from its start, so keeping it again
+ * changes that one rather than adding another.
+ */
+private fun stayCheckin(stay: TrackStay, place: String, venue: String): JsonObject {
+    val at = recordStamp(stay.start)
+    val now = recordTime()
+    return buildJsonObject {
+        put("uid", Entries.stableUlid(at, "stay:${stay.start}"))
+        put("at", at)
+        put("end", recordStamp(stay.end))
+        put("point", buildJsonObject {
+            put("lat", stay.latitude)
+            put("lng", stay.longitude)
+            put("from", "track")
+        })
+        put("place", place)
+        put("parts", buildJsonObject {
+            put("checkin", buildJsonObject {
+                put("v", 1)
+                put("venue", venue)
+                put("source", buildJsonObject { put("app", "phone") })
+            })
+        })
+        put("visibility", Visibility.PRIVATE.value)
+        put("createdAt", now)
+        put("updatedAt", now)
+    }
+}

@@ -166,8 +166,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   writes that bypass it.
 - The ledger and the footprints follow the shared guide's privacy rules and publish only
   through 全部发布到网站 (`data/store/Outside.kt`). Their only other requests are exchange
-  rates, when asked, Photon naming a bill's footprint point (`footprints/BillPlaces`),
-  the point alone, and the WebDAV backup the owner sets up (`backup/`). Private and unpublished are two things, said 私有 and 未发布, never 仅本机.
+  rates, when asked, Photon naming a bill's footprint point or a stay being kept as a place
+  (`footprints/BillPlaces`), the point alone, and the WebDAV backup the owner sets up (`backup/`). Private and unpublished are two things, said 私有 and 未发布, never 仅本机.
 - The ledger replaces iCost, so what iCost's backup and export hold must keep importing:
   check a change to the importers against real ones with
   `ICOST_BACKUP=<backup> ICOST_EXPORT=<xlsx> ./gradlew :app:testDebugUnitTest --tests '*LedgerTest*'`

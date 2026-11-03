@@ -161,6 +161,8 @@ internal fun PlacePicker(
     places: Map<String, Place>,
     search: PlaceSearch,
     onDismiss: () -> Unit,
+    /** Another way to keep the choice, in place of choosing none: its words, and what it does with the choice. */
+    alternative: Pair<String, (PlaceChoice) -> Unit>? = null,
     onPick: (PlaceChoice) -> Unit,
 ) {
     val context = LocalContext.current
@@ -323,6 +325,7 @@ internal fun PlacePicker(
                 (pick as? PlaceChoice.New)?.let { new -> pick = new.copy(name = it) }
             },
             onNone = { onPick(PlaceChoice.None) },
+            alternative = alternative?.let { (label, act) -> label to { act(pick) } },
             onConfirm = { onPick(pick) },
             modifier = cardModifier,
         )
@@ -489,9 +492,15 @@ private fun PlaceCard(
     onKind: (PlaceKind) -> Unit,
     onName: (String) -> Unit,
     onNone: () -> Unit,
+    alternative: Pair<String, () -> Unit>?,
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val chosen = when (pick) {
+        is PlaceChoice.New -> pick.name.isNotBlank()
+        is PlaceChoice.Known -> true
+        PlaceChoice.None -> false
+    }
     val keyboard = LocalSoftwareKeyboardController.current
     // What the keyboard adds under the sheet, past the navigation bar the sheet already keeps clear of.
     val ime = WindowInsets.ime.exclude(WindowInsets.navigationBars)
@@ -611,15 +620,15 @@ private fun PlaceCard(
             }
         }
         Row(Modifier.padding(horizontal = Space.xl).padding(top = Space.s), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onNone, modifier = Modifier.testTag("place_none")) { Text(stringResource(R.string.place_none)) }
+            if (alternative != null) {
+                TextButton(onClick = alternative.second, enabled = chosen, modifier = Modifier.testTag("place_alternative")) { Text(alternative.first) }
+            } else {
+                TextButton(onClick = onNone, modifier = Modifier.testTag("place_none")) { Text(stringResource(R.string.place_none)) }
+            }
             Spacer(Modifier.weight(1f))
             Button(
                 onClick = onConfirm,
-                enabled = when (pick) {
-                    is PlaceChoice.New -> pick.name.isNotBlank()
-                    is PlaceChoice.Known -> true
-                    PlaceChoice.None -> false
-                },
+                enabled = chosen,
                 modifier = Modifier.testTag("place_confirm"),
             ) { Text(stringResource(R.string.action_confirm)) }
         }

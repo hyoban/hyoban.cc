@@ -279,7 +279,8 @@ one account or several with their shares, its time and book, discounts and fees,
 it is to be reimbursed or left out of the sums, and the Moment, place and trip it belongs
 to. A bill with no place is placed by the footprints nearest its time (within a quarter of
 an hour, good to 100 m), named through Photon from the point alone and kept in
-`footprints.sqlite`. An account's 校准余额 sets its balance by moving its opening balance.
+`footprints.sqlite`; its + opens the new Moment's place picker on that point, and the place kept or chosen there
+becomes the bill's. An account's 校准余额 sets its balance by moving its opening balance.
 
 The ledger meets the Moments: a Moment's page lists its bills, a meal with no bill offers
 记一笔, a trip's and a day's page show what was spent, and 关联时刻和旅程 links meals and a
@@ -420,7 +421,11 @@ backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export GP
   a car park's crawl stay part of the drive. The map draws a drive solid, a ride thinner, a
   walk dotted and a stay as a ring; 足迹 → 行程分段 lists them with distance, average and top
   speed, names a stay after one of the phone's own places within 300 m (no request leaves
-  for it), and frames one on the map when tapped.
+  for it), and frames one on the map when tapped; a stay's + opens the same picker on its middle,
+named as a bill's spot is, to keep it as a place of the phone's, or with 保存为签到 as a private
+check-in there too (`source.app` `phone`), from the stay's start to its end, its uid made from
+the start so keeping it again changes it; a check-in already within the stay, Swarm's or
+another, is that visit, and none is added.
 - **Notification.** Its icon shows the state (recording, waiting for a fix, location off).
   On Android 16 and later it asks to be a Live Update; on ColorOS that also needs
   流体云显示实时活动, linked from 足迹记录 → 状态栏显示.

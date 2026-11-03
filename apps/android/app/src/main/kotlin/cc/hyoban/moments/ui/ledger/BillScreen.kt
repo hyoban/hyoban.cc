@@ -85,6 +85,14 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
     val placeId = txn.place ?: moment?.places?.firstOrNull()
     val tripId = txn.trip ?: moment?.let { tripOf(it, trips)?.id }
     val footprintPlace = cc.hyoban.moments.footprints.footprintPlace(txn)
+    val billPlaces = cc.hyoban.moments.footprints.LocalBillPlaces.current
+    // The footprints' spot and its name, while it is being kept as a place in the place picker.
+    var keeping by remember { mutableStateOf<Pair<cc.hyoban.moments.data.local.Fix, String>?>(null) }
+    keeping?.let { (point, name) ->
+        cc.hyoban.moments.ui.compose.KeepPlace(container, point, name, onDismiss = { keeping = null }) { place ->
+            container.ledger.saveTxn(txn.copy(place = place))
+        }
+    }
 
     SubPage(
         txnTitle(txn, ledger),
@@ -138,8 +146,22 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                 val details = buildList<@Composable (ListItemShapes) -> Unit> {
                     add { shapes -> InfoRow(shapes, AppIcons.Calendar, stringResource(R.string.ledger_time), formatDay(txn.dateKey) + " " + txn.local.format(DateTimeFormatter.ofPattern("HH:mm"))) }
                     // Where the footprints were then, for a bill with no place of its own; its day's page shows them.
+                    // Kept as a place, it becomes the bill's.
                     footprintPlace?.let { name ->
-                        add { shapes -> InfoRow(shapes, AppIcons.Pin, stringResource(R.string.ledger_footprint_place), name) { nav.day(txn.dateKey) } }
+                        add { shapes ->
+                            SegmentedListItem(
+                                onClick = { nav.day(txn.dateKey) },
+                                shapes = shapes,
+                                colors = segmentColors(),
+                                leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
+                                overlineContent = { Text(stringResource(R.string.ledger_footprint_place)) },
+                                trailingContent = {
+                                    IconButton(onClick = { scope.launch { billPlaces?.pointAt(txn.time)?.let { keeping = it to name } } }, modifier = Modifier.testTag("bill_save_place")) {
+                                        Icon(AppIcons.Plus, contentDescription = stringResource(R.string.share_save_place))
+                                    }
+                                },
+                            ) { Text(name, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                        }
                     }
                     if (txn.kind == TxnKind.TRANSFER) {
                         txn.account?.let(ledger.accountsById::get)?.let { from ->
