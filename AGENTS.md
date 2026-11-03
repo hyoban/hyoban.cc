@@ -109,7 +109,8 @@ even when starting from the repository root.
   own server, of every database but photos and videos. A book can make its new bills public and each bill can say otherwise; a
   public bill publishes its kind, amount, currency, category and note alone, never its account or
   balance. Spans of the footprints can be made public (a trip's page has a switch), and
-  only their line, simplified, is published; the raw samples never leave the phone. Raw Zeekr captures and report links stay under `.private/`;
+  only their line, simplified, is published; the raw samples never leave the phone. A stay
+  kept as a check-in, by hand, is a private check-in entry like Swarm's, its point the stay's middle. Raw Zeekr captures and report links stay under `.private/`;
   only the approved statistical projection belongs in `data/zeekr/`. The car's data, its
   statistics and its charges, comes only from that import; nothing edits it by hand, the app
   included: a wrong value is fixed by capturing and importing again.

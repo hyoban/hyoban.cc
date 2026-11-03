@@ -1110,26 +1110,43 @@
               "minLength": 1
             },
             "source": {
-              "type": "object",
-              "properties": {
-                "app": {
-                  "type": "string",
-                  "const": "swarm"
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "app": {
+                      "type": "string",
+                      "const": "swarm"
+                    },
+                    "checkin": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "venue": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "app",
+                    "checkin"
+                  ],
+                  "additionalProperties": {}
                 },
-                "checkin": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "venue": {
-                  "type": "string",
-                  "minLength": 1
+                {
+                  "type": "object",
+                  "properties": {
+                    "app": {
+                      "type": "string",
+                      "const": "phone"
+                    }
+                  },
+                  "required": [
+                    "app"
+                  ],
+                  "additionalProperties": {}
                 }
-              },
-              "required": [
-                "app",
-                "checkin"
-              ],
-              "additionalProperties": {}
+              ]
             }
           },
           "required": [

@@ -145,6 +145,24 @@ test('a public check-in shows its venue, never where it came from', () => {
   assert.throws(() =>
     entrySchema.parse({ ...base, parts: { checkin: { v: 1, venue: 'x', source: { app: 'x' } } } }),
   )
+  assert.throws(() =>
+    entrySchema.parse({
+      ...base,
+      parts: { checkin: { v: 1, venue: 'x', source: { app: 'swarm' } } },
+    }),
+  )
+})
+
+test("a check-in made from the phone's stay keeps when it ended", () => {
+  const entry = entrySchema.parse({
+    ...base,
+    end: '2026-10-29T12:40:00+08:00',
+    point: { lat: 30.25, lng: 120.16, from: 'track' },
+    place: 'p-noodles',
+    parts: { checkin: { v: 1, venue: '面馆', source: { app: 'phone' } } },
+  })
+  assert.equal(entry.parts.checkin.source.app, 'phone')
+  assert.deepEqual(getPublicEntry(entry).parts.checkin, { v: 1, venue: '面馆' })
 })
 
 test('a private bill stays on the phone, a public one goes', () => {

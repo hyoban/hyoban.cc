@@ -26,7 +26,9 @@ data/
   its words, photos, meal, bill, charge, device, subscription or check-in as parts by plugin. A device
   is on the day it was bought, what it sold for written on it once sold; a subscription on
   the day it was last paid, or for software bought once the day it was first written down.
-  The use page lists both from these entries. It is named by its uid alone:
+  The use page lists both from these entries. A check-in is brought in from Swarm, its `source`
+  that app's ids, or made on the phone from a stay of the footprints (`source.app` `phone`),
+  private, from the stay's start to its `end`. It is named by its uid alone:
   its page is `/m/<uid>/` and its media sit under `moments/<uid>/` in R2, so its day, place
   and words can change after it is published. One without `published` is a draft the site
   skips; `published` blocks, the entry's and each media item's, never change. A device's
