@@ -14,6 +14,7 @@ import {
 } from './entries.ts'
 import { error, HttpError, json, jsonText, readBody } from './http.ts'
 import { createRouteFetcher, fillRoutes, readTripRoutes, routeDrivesAgain } from './routes.ts'
+import { keptPois, readPoiQuery } from './pois.ts'
 import { createTelegram, syncChannel } from './telegram.ts'
 import { readUpload, uploadMedia, type WriteContext, type WriteResult } from './writes.ts'
 
@@ -37,6 +38,8 @@ export interface Env {
   TELEGRAM_BOT_TOKEN?: string
   /** The channel, as `@name`. */
   TELEGRAM_CHAT_ID?: string
+  /** Tencent's place search, for what is around a point in China; `/v2/pois` answers 503 without it. */
+  TENCENT_MAP_KEY?: string
 }
 
 interface ExecutionContext {
@@ -190,6 +193,25 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       }
 
       return method === 'GET' ? found(await readPlace(db, key)) : notAllowed('GET')
+    }
+    case 'pois': {
+      if (key !== undefined) {
+        return notFound()
+      }
+
+      if (method !== 'GET') {
+        return notAllowed('GET')
+      }
+
+      if (!env.TENCENT_MAP_KEY) {
+        return error(503, 'No place search here.')
+      }
+
+      const query = readPoiQuery(url.searchParams)
+
+      return 'error' in query
+        ? error(400, query.error)
+        : json({ pois: await keptPois(query, env.TENCENT_MAP_KEY) })
     }
     case 'rows': {
       if (key !== undefined) {

@@ -27,5 +27,5 @@
   // Secrets, set with `wrangler secret put` and in `.dev.vars` locally: API_TOKENS, a
   // comma-separated list of bearer tokens, DEPLOY_HOOK_URL, which a write the site
   // shows calls so the site builds again, and TELEGRAM_BOT_TOKEN, the bot that posts to
-  // the channel.
+  // the channel, and TENCENT_MAP_KEY, the key `/v2/pois` searches Tencent's places with.
 }

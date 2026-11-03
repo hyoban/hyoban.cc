@@ -314,6 +314,7 @@
     <string name="place_unchosen">Tap to choose a place</string>
     <string name="place_none">No place</string>
     <string name="place_name">Place name</string>
+    <string name="place_search_hint">Search shops and addresses</string>
     <string name="distance_metres">%1$d m</string>
     <string name="distance_kilometres">%1$.1f km</string>
     <string name="confirm_discard">Discard this Moment?</string>
