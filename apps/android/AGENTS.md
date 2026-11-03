@@ -125,6 +125,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Spacing is five steps (`Space.xs` … `Space.xl`): things within a section are `Space.l` apart,
   groups and days `Space.xl`. Large system fonts are `isLargeFont()` (130% and up), so read it in composition.
 - Words are in `values` (Chinese) and `values-en`, with TalkBack descriptions for what is shown.
+- A page explains itself by its layout, headings, icons and states, not by notes or subtitles
+  telling how to use it (what + does, that a tap opens it, what a check means); if it needs
+  one, the design is wrong, so change the design. A note stays only for what the page can't
+  show: what an action costs, what leaves the phone, a rule's threshold, another app's limits.
 - The map's year colours are the tokens' `YearColors`, the same as `packages/trip-map/src/theme.ts`, and the
   fog is the site's `packages/trip-map/src/map/fog-layer.ts`. The ledger's charts are drawn on a
   Compose `Canvas` (`ui/ledger/Charts.kt`), not with a chart library.

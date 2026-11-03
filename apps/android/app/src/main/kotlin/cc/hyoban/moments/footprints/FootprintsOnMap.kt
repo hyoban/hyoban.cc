@@ -341,7 +341,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                 val days = view.points.map { day(it.time) }.distinct().size > 1
                 SegmentedGroup(
                     stringResource(R.string.footprints_section_parts),
-                    stringResource(R.string.footprints_parts_note),
+                    null,
                     view.parts.map<TrackPart, cc.hyoban.moments.ui.settings.Segment> { part ->
                         { shapes ->
                             val span = clock(part.start, days) + "–" + clock(part.end, days)

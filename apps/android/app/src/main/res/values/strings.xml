@@ -90,14 +90,12 @@
     <string name="title_trips">旅程</string>
     <string name="label_live">实况</string>
     <string name="empty_moments">还没有时刻</string>
-    <string name="empty_moments_hint">用右下角的加号记下第一条，账单和足迹也会出现在这里</string>
     <string name="empty_trips">还没有旅程</string>
     <string name="message_refresh_failed">没能更新：%1$s</string>
     <string name="year_item">%1$d 年</string>
     <string name="map_search_hint">搜索地点和旅程</string>
     <string name="trips_none">还没有旅程</string>
     <string name="trips_suggested">可能的旅程</string>
-    <string name="trips_suggested_note">从签到和时刻的地点里找到，点 + 直接添加，点开先改再建</string>
     <string name="trip_suggestion_dismiss">忽略%1$s的可能旅程</string>
     <string name="trip_suggestion_add">把%1$s添加为旅程</string>
     <string name="message_trip_added">已添加旅程「%1$s」</string>
@@ -107,13 +105,12 @@
     <string name="homes_found_none">还没有记录</string>
     <string name="homes_found_group_note">离这里 100 公里以外才算出门；搬了家会跟着换。</string>
     <string name="homes_set">也算家</string>
-    <string name="homes_set_note">在这些地方的记录不算出门，地图上的「可能的旅程」不再把去这里当成旅程，比如老家。</string>
+    <string name="homes_set_note">这些地方也不算出门，比如老家。</string>
     <string name="homes_add">添加省或城市</string>
     <string name="homes_whole">整个省</string>
     <string name="homes_whole_of">整个%1$s</string>
     <string name="homes_remove">不再把%1$s当作家</string>
     <string name="homes_pick">添加省或城市</string>
-    <string name="homes_pick_note">点一个加进「也算家」，回到上一页；已经加了的带勾，再点是去掉。</string>
     <string name="me_homes_some">也算家：%1$s</string>
     <string name="map_km">%1$s 公里</string>
     <string name="footprints_map_recording">足迹，正在记录</string>
@@ -149,10 +146,8 @@
     <string name="action_see_moments">查看全部时刻</string>
     <string name="hint_search_everything">搜时刻、地点、旅程和账单</string>
     <string name="search_prompt">输入文字，或者只选上面的筛选</string>
-    <string name="search_prompt_note">时刻搜正文、地点和旅程，账单搜分类和备注</string>
     <string name="search_none">没有找到</string>
     <string name="search_none_for">没有找到「%1$s」</string>
-    <string name="search_none_note">换个说法再找找</string>
     <string name="search_none_note_time">换个说法，或者把年份放宽到「全部」</string>
     <string name="explain_on_phone">这个时刻目前只在这台手机上。发布更改后，网站上才会出现。</string>
     <string name="explain_unpublished_change">这个时刻在手机上改过。发布更改后，网站上的才会更新。</string>
@@ -203,9 +198,7 @@
     <string name="widget_heatmap_moments_note">每天写了几个时刻</string>
     <string name="widget_heatmap_spending_note">每天花了多少，只有深浅，不写金额</string>
     <string name="widget_heatmap_footprints_note">每天走了多远</string>
-    <string name="widget_heatmap_settings_note">每天一格，越深越多。</string>
     <string name="widget_heatmap_show">显示</string>
-    <string name="widget_heatmap_settings_hint">点一项就换上；点小组件上的名字可以再来这里改。</string>
     <string name="widget_heatmap_year">近 12 个月</string>
     <string name="widget_heatmap_km">%1$s 公里</string>
     <!-- The range, then the days or the distance: 近 26 周 84 天. -->
@@ -483,7 +476,6 @@
     <string name="footprints_section_recording">记录</string>
     <string name="footprints_section_tracks">轨迹</string>
     <string name="footprints_section_parts">行程分段</string>
-    <string name="footprints_parts_note">出行方式按速度推断，同一处停留 5 分钟以上记为停留点。点一段在地图上查看。</string>
     <string name="footprints_mode_walk">走路</string>
     <string name="footprints_mode_cycle">骑车</string>
     <string name="footprints_mode_drive">开车</string>
@@ -716,7 +708,6 @@
     <string name="ledger_from_moment">记一笔 %1$s</string>
     <string name="ledger_from_moment_note">按这个时刻写的餐费记到账本</string>
     <string name="ledger_books">账本</string>
-    <string name="ledger_books_note">每个账本有自己的分类，按它的币种统计</string>
     <string name="ledger_add_book">新建账本</string>
     <string name="ledger_book_name">账本名称</string>
     <string name="ledger_book_currency">统计币种</string>
@@ -800,7 +791,6 @@
     <string name="auto_bill_wechat">微信支付</string>
     <string name="auto_bill_alipay">支付宝</string>
     <string name="tab_me">我</string>
-    <string name="me_pending_note">发布前先看一遍改动，再一起发到网站。</string>
     <string name="action_review_publish">查看并发布</string>
     <string name="me_month_expense">本月支出</string>
     <string name="label_time">时间</string>
@@ -861,7 +851,6 @@
     <string name="trip_edit_title">编辑旅程</string>
     <string name="trip_edit_name">名称</string>
     <string name="trip_edit_days">时间</string>
-    <string name="trip_edit_days_note">这几天的记录都算进旅程。</string>
     <string name="trip_edit_start">开始</string>
     <string name="trip_edit_end">结束</string>
     <string name="trip_edit_public_note">公开的旅程会出现在网站上。</string>
@@ -874,7 +863,21 @@
     <string name="filter_moments">时刻</string>
     <string name="part_private">%1$s私有</string>
     <string name="trip_edit_members">包含的记录</string>
-    <string name="trip_edit_members_note">这几天的记录自动算进来，可以排除；前后两天的可以加进来。</string>
+    <string name="trip_edit_around">前后两天</string>
+    <string name="trip_edit_in_days_title">这几天的记录</string>
+    <plurals name="trip_edit_in_days">
+        <item quantity="other">这几天的 %d 条</item>
+    </plurals>
+    <string name="trip_edit_taken_in">自动算进来</string>
+    <plurals name="trip_edit_left_out">
+        <item quantity="other">自动算进来 排除了 %d 条</item>
+    </plurals>
+    <string name="trip_edit_two_before">前两天</string>
+    <string name="trip_edit_day_before">前一天</string>
+    <string name="trip_edit_day_after">后一天</string>
+    <string name="trip_edit_two_after">后两天</string>
+    <string name="trip_edit_take_in">把「%1$s」加进旅程</string>
+    <string name="trip_edit_leave_out">把「%1$s」移出旅程</string>
     <string name="trip_edit_covers">封面</string>
     <plurals name="count_results">
         <item quantity="other">%d 条</item>

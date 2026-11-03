@@ -79,7 +79,9 @@ A trip's page has 回放旅程, which plays the trip back as the site's
 player does (`packages/trip-map/src/player`): the route never still, a vehicle at its tip,
 a card per Moment stepped through from a toolbar, by a swipe or with a keyboard's arrows
 and Space. 编辑旅程 changes its name, days, public switch, Moments and covers, published
-as a collection. The + on the map's trips makes one (新建旅程, `moments://trip-edit`) on the
+as a collection; its days' Moments are counted in one row that opens them, each with a switch to
+leave it out, and those of the two days either side are listed under it, out until added.
+The + on the map's trips makes one (新建旅程, `moments://trip-edit`) on the
 phone alone: a collection of its own, its id its uid in lowercase as the API will know it,
 shown and played back as the site's are. Until then it can be deleted from its 编辑旅程; once published it is the API's
 like the rest.

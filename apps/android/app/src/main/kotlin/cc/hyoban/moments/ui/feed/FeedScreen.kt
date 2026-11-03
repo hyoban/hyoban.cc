@@ -289,7 +289,7 @@ fun FeedScreen(
                 Box(Modifier.fillMaxSize().background(AppColors.page)) {
                     Box(Modifier.fillMaxSize().hazeSource(haze).background(AppColors.page)) {
                     TabRefreshBox(pull) {
-                        LoadedContent(moments.isEmpty() || !tracks.ready, loading = !loaded || syncing || !tracks.ready, message = R.string.empty_moments, hint = R.string.empty_moments_hint) {
+                        LoadedContent(moments.isEmpty() || !tracks.ready, loading = !loaded || syncing || !tracks.ready, message = R.string.empty_moments) {
                             // The rows over the Moments, the changes, list or calendar and the
                             // filter, stand once above both views rather than heading each, so
                             // switching cross-fades only what changes and leaves them still.

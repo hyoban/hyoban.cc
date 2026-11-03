@@ -53,7 +53,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
@@ -450,7 +449,7 @@ fun <T> CardRow(cards: List<T>, columns: Int, modifier: Modifier = Modifier, car
  * nothing to show, the first sync on a phone with nothing on it yet, a spinner in the middle.
  */
 @Composable
-fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, hint: Int? = null, content: @Composable () -> Unit) {
+fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, content: @Composable () -> Unit) {
     val fade = AppTheme.motionScheme.fastEffectsSpec<Float>()
     // Three faces, the spinner, the message and the content, each kept as it was while it fades
     // out: the spinner leaving as the content comes doesn't turn into the message on its way.
@@ -472,16 +471,16 @@ fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, hint: Int? = n
         when (shown) {
             LoadedFace.Content -> Box(Modifier.fillMaxSize().background(LocalSurfaceLevel.current.fill())) { content() }
             LoadedFace.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Spinner(Modifier.size(24.dp)) }
-            LoadedFace.Empty -> EmptyState(message, hint)
+            LoadedFace.Empty -> EmptyState(message)
         }
     }
 }
 
 private enum class LoadedFace { Loading, Empty, Content }
 
-/** A tab with nothing to show: [message], and under it a [hint] at the next step; scrollable, so it still pulls to refresh. */
+/** A tab with nothing to show: [message] alone; scrollable, so it still pulls to refresh. */
 @Composable
-fun EmptyState(message: Int, hint: Int? = null) {
+fun EmptyState(message: Int) {
     LazyColumn(Modifier.fillMaxSize()) {
         item {
             Column(
@@ -494,9 +493,6 @@ fun EmptyState(message: Int, hint: Int? = null) {
                     color = tokens.tx2,
                     style = AppTheme.typography.bodyReading,
                 )
-                if (hint != null) {
-                    Text(stringResource(hint), color = tokens.tx3, style = AppTheme.typography.caption, textAlign = TextAlign.Center)
-                }
             }
         }
     }

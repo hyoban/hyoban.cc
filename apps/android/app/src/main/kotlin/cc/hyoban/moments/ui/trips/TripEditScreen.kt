@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.trips
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
 import cc.hyoban.moments.ui.LocalSettings
@@ -42,12 +43,20 @@ import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Button
 import cc.hyoban.moments.ui.design.DateTimeDialog
+import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.SegmentedListItem
 import cc.hyoban.moments.ui.design.OutlinedTextField
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.TextButton
 import cc.hyoban.moments.ui.format.formatDay
+import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.SwitchRow
+import cc.hyoban.moments.ui.settings.segmentColors
+import cc.hyoban.moments.ui.theme.tokens
+import androidx.compose.ui.res.pluralStringResource
+import java.time.temporal.ChronoUnit
 import cc.hyoban.moments.ui.theme.Space
 import java.time.LocalDate
 import kotlinx.coroutines.launch
@@ -97,9 +106,40 @@ fun TripEditScreen(
         val inside = moment.dateKey in start..end
         (inside && moment.uid !in exclude) || (!inside && moment.uid in include)
     }
+    val (inDays, around) = nearby.partition { it.dateKey in start..end }
+    // Its days' records, listed on a page of their own from the row that counts them.
+    var listing by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = listing) { listing = false }
     val scope = rememberCoroutineScope()
     val valid = title.isNotBlank() && start <= end
-    SubPage(stringResource(if (id == null) R.string.trip_new_title else R.string.trip_edit_title), onBack, Modifier.background(AppColors.page)) {
+    SubPage(
+        stringResource(if (listing) R.string.trip_edit_in_days_title else if (id == null) R.string.trip_new_title else R.string.trip_edit_title),
+        { if (listing) listing = false else onBack() },
+        Modifier.background(AppColors.page),
+    ) {
+        if (listing) {
+            PageWidth(maxColumns = 1) { columns ->
+                Column(
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current)
+                        .navigationBarsPadding().padding(horizontal = columns.margin).padding(bottom = Space.xl),
+                ) {
+                    SegmentedGroup(
+                        null,
+                        null,
+                        inDays.map<cc.hyoban.moments.data.spec.MomentRecord, cc.hyoban.moments.ui.settings.Segment> { moment ->
+                            { shapes ->
+                                val on = moment.uid !in exclude
+                                val supporting = listOfNotNull(formatDay(moment.dateKey), formatTime(moment.occurredAt)).joinToString(" ")
+                                SwitchRow(on, AppIcons.Calendar, memberTitle(moment), "member_${moment.uid}", shapes, supporting = supporting) {
+                                    exclude = if (on) exclude + moment.uid else exclude - moment.uid
+                                }
+                            }
+                        },
+                    )
+                }
+            }
+            return@SubPage
+        }
         val form: @Composable () -> Unit = {
             OutlinedTextField(
                 title,
@@ -110,7 +150,7 @@ fun TripEditScreen(
             )
             SegmentedGroup(
                 stringResource(R.string.trip_edit_days),
-                stringResource(R.string.trip_edit_days_note),
+                null,
                 listOf(
                     { shapes -> cc.hyoban.moments.footprints.ActionRow(AppIcons.Calendar, stringResource(R.string.trip_edit_start), shapes, supporting = formatDay(start), tag = "trip_start") { picking = "start" } },
                     { shapes -> cc.hyoban.moments.footprints.ActionRow(AppIcons.Calendar, stringResource(R.string.trip_edit_end), shapes, supporting = formatDay(end), tag = "trip_end") { picking = "end" } },
@@ -118,25 +158,52 @@ fun TripEditScreen(
             )
         }
         val membersGroup: @Composable () -> Unit = {
-            // Which records it holds: its days' by themselves, the rest of these taken in by hand.
-            if (nearby.isNotEmpty()) SegmentedGroup(
+            // Which records it holds: its days', in by themselves and counted in one row that
+            // opens them, then each of the two days either side, out until added.
+            if (inDays.isNotEmpty()) SegmentedGroup(
                 stringResource(R.string.trip_edit_members),
-                stringResource(R.string.trip_edit_members_note),
-                nearby.map<cc.hyoban.moments.data.spec.MomentRecord, cc.hyoban.moments.ui.settings.Segment> { moment ->
+                null,
+                listOf { shapes ->
+                    val left = inDays.count { it.uid in exclude }
+                    SegmentedListItem(
+                        onClick = { listing = true },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        leadingContent = { Icon(AppIcons.Timeline, contentDescription = null) },
+                        supportingContent = {
+                            Text(if (left > 0) pluralStringResource(R.plurals.trip_edit_left_out, left, left) else stringResource(R.string.trip_edit_taken_in))
+                        },
+                        trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                        modifier = Modifier.testTag("trip_members"),
+                    ) { Text(pluralStringResource(R.plurals.trip_edit_in_days, inDays.size, inDays.size)) }
+                },
+            )
+            if (around.isNotEmpty()) SegmentedGroup(
+                stringResource(R.string.trip_edit_around),
+                null,
+                around.map<cc.hyoban.moments.data.spec.MomentRecord, cc.hyoban.moments.ui.settings.Segment> { moment ->
                     { shapes ->
-                        val inside = moment.dateKey in start..end
-                        val on = moment in members
-                        SwitchRow(
-                            on,
-                            if (inside) AppIcons.Calendar else AppIcons.Plus,
-                            moment.text.lines().firstOrNull()?.take(24)?.ifBlank { null } ?: formatDay(moment.dateKey),
-                            "member_${moment.uid}",
-                            shapes,
-                            supporting = formatDay(moment.dateKey),
-                        ) {
-                            if (inside) exclude = if (on) exclude + moment.uid else exclude - moment.uid
-                            else include = if (on) include - moment.uid else include + moment.uid
-                        }
+                        val on = moment.uid in include
+                        val toggle = { include = if (on) include - moment.uid else include + moment.uid }
+                        val words = memberTitle(moment)
+                        val date = LocalDate.parse(moment.dateKey)
+                        val offset = if (date.isBefore(LocalDate.parse(start))) -ChronoUnit.DAYS.between(date, LocalDate.parse(start)) else ChronoUnit.DAYS.between(LocalDate.parse(end), date)
+                        val side = stringResource(when (offset) { -2L -> R.string.trip_edit_two_before; -1L -> R.string.trip_edit_day_before; 1L -> R.string.trip_edit_day_after; else -> R.string.trip_edit_two_after })
+                        SegmentedListItem(
+                            onClick = toggle,
+                            shapes = shapes,
+                            colors = segmentColors(),
+                            supportingContent = { Text(formatDay(moment.dateKey) + " " + side) },
+                            trailingContent = {
+                                IconButton(onClick = toggle, modifier = Modifier.testTag("member_${moment.uid}")) {
+                                    if (on) {
+                                        Icon(AppIcons.Check, contentDescription = stringResource(R.string.trip_edit_leave_out, words), tint = tokens.accent)
+                                    } else {
+                                        Icon(AppIcons.Plus, contentDescription = stringResource(R.string.trip_edit_take_in, words))
+                                    }
+                                }
+                            },
+                        ) { Text(words) }
                     }
                 },
             )
@@ -271,6 +338,13 @@ fun TripEditScreen(
         }
     }
 }
+
+/** A record by its first words, else by its photos, else by when it was. */
+@Composable
+private fun memberTitle(moment: cc.hyoban.moments.data.spec.MomentRecord): String =
+    moment.text.lines().firstOrNull()?.take(24)?.ifBlank { null }
+        ?: moment.media.size.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.count_photos, it, it) }
+        ?: formatTime(moment.occurredAt) ?: formatDay(moment.dateKey)
 
 /** How wide the trip's name, days and covers stand at the start on a phone on its side, its records beside them. */
 private val FORM_COLUMN = 320.dp

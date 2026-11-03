@@ -798,7 +798,6 @@ private fun TripsSheet(
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
                         Text(stringResource(R.string.trips_suggested), style = AppTheme.typography.label, color = tokens.tx2, modifier = Modifier.semantics { heading() })
-                        Text(stringResource(R.string.trips_suggested_note), style = AppTheme.typography.caption, color = tokens.tx3)
                     }
                 }
                 items(suggestions, key = { "suggested_${it.key}" }) { suggestion ->
