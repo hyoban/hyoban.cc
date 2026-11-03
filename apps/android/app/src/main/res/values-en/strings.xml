@@ -168,9 +168,16 @@
     <string name="setting_asset_origin">Photo and video address</string>
     <string name="setting_map_style_light">Light map style</string>
     <string name="setting_map_style_dark">Dark map style</string>
+    <string name="setting_tencent_key">Tencent Maps key</string>
+    <string name="tencent_key_hint">Paste a Tencent Location Service key</string>
+    <string name="tencent_key_replace">Type a new key to replace it</string>
+    <string name="action_forget_tencent_key">Remove key</string>
+    <string name="action_show_key">Show key</string>
+    <string name="action_hide_key">Hide key</string>
+    <string name="settings_tencent_key_note">Used in China to list the shops nearby and search for places, asked of Tencent straight from the phone, counting against this key. It stays on this phone and never goes into a backup.</string>
     <string name="setting_default">Default: %1$s</string>
     <string name="settings_api_note">Changing the API address clears the copy on this phone and reads everything again from the new API</string>
-    <string name="settings_map_note">Addresses of MapLibre styles. Light and dark follow the system.</string>
+    <string name="settings_map_note">Styles are addresses of MapLibre styles; light and dark follow the system. The Tencent Maps key finds shops nearby and searches places in China, OpenStreetMap otherwise; picking a place sends the pin\'s point straight to Tencent.</string>
     <string name="setting_is_default">Default</string>
     <string name="setting_unset">Not set</string>
     <string name="setting_blank_none">Leave blank to use none</string>

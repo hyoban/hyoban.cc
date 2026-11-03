@@ -70,6 +70,9 @@ class Settings(context: Context) {
 
     fun mapStyle(dark: Boolean) = (if (dark) mapStyleDark else mapStyleLight).value
 
+    /** The owner's own Tencent Location Service key, with which the place picker asks Tencent what is around in China; none, it asks Photon. */
+    val tencentMapKey = Token(File(context.noBackupFilesDir, "tencent-map-key"))
+
     /** Whether the app has asked once to see where picked photos were taken; it doesn't ask again. */
     var askedMediaLocation: Boolean
         get() = prefs.getBoolean("asked_media_location", false)

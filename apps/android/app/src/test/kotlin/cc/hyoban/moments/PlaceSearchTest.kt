@@ -6,12 +6,16 @@ import cc.hyoban.moments.data.local.kindOf
 import cc.hyoban.moments.data.local.landmarks
 import cc.hyoban.moments.data.local.nameAt
 import cc.hyoban.moments.data.local.parsePhoton
-import cc.hyoban.moments.data.local.parsePois
+import cc.hyoban.moments.data.local.parseTencent
+import cc.hyoban.moments.data.local.tencentKind
+import cc.hyoban.moments.data.local.wgsToGcj
 import cc.hyoban.moments.data.spec.Division
 import cc.hyoban.moments.data.spec.PlaceKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 /** Photon's answers read as places, and a pin named after what is around it. */
 class PlaceSearchTest {
@@ -72,22 +76,38 @@ class PlaceSearchTest {
     }
 
     @Test
-    fun `the API's places are read with their address and kind, the nameless left out`() {
-        val found = parsePois(
+    fun `Tencent's places are read in WGS 84 with their address and kind, the nameless left out`() {
+        val here = Fix(31.2001, 121.4001)
+        val shifted = wgsToGcj(here)
+        val found = parseTencent(
             """
-            {"pois":[
-              {"name":"某某面馆(某商场店)","latitude":31.2001,"longitude":121.4001,"address":"某路 1 号 B1 层","kind":"food","distance":15},
-              {"name":"某某大厦","latitude":31.2,"longitude":121.4},
-              {"name":"","latitude":31.2,"longitude":121.4}
+            {"status":0,"data":[
+              {"title":"某某面馆(某商场店)","address":"某路 1 号 B1 层","category":"美食:中餐厅:面馆","location":{"lat":${shifted.latitude},"lng":${shifted.longitude}}},
+              {"title":"某某大厦","category":"房产小区:商务楼宇","location":{"lat":31.2,"lng":121.4}},
+              {"title":"","location":{"lat":31.2,"lng":121.4}}
             ]}
             """.trimIndent(),
         )
         assertEquals(listOf("某某面馆(某商场店)", "某某大厦"), found.map { it.name })
-        assertEquals(Fix(31.2001, 121.4001), found[0].fix)
+        assertTrue(kotlin.math.abs(found[0].fix.latitude - here.latitude) < 1e-6 && kotlin.math.abs(found[0].fix.longitude - here.longitude) < 1e-6, "shifted back to WGS 84")
         assertEquals("某路 1 号 B1 层", found[0].address)
         assertEquals(PlaceKind.FOOD, kindOf(found[0]))
         assertNull(kindOf(found[1]))
         assertEquals(found, landmarks(found), "every one of them a landmark")
-        assertEquals(emptyList(), parsePois("""{"error":"No place search here."}"""))
+        assertFailsWith<java.io.IOException>("calls used up are an error, so Photon answers") {
+            parseTencent("""{"status":121,"message":"此key每日调用量已达到上限"}""")
+        }
+    }
+
+    @Test
+    fun `Tencent's categories say what kind of place it is`() {
+        assertEquals(PlaceKind.SHOPPING, tencentKind("购物:综合商场:购物中心"))
+        assertEquals(PlaceKind.STAY, tencentKind("酒店宾馆:星级酒店"))
+        assertEquals(PlaceKind.SCENIC, tencentKind("旅游景点:公园"))
+        assertEquals(PlaceKind.TRANSPORT, tencentKind("基础设施:交通设施:地铁站"))
+        assertEquals(PlaceKind.TRANSPORT, tencentKind("汽车:充电站"))
+        assertEquals(PlaceKind.FOOD, tencentKind("娱乐休闲:咖啡厅"))
+        assertNull(tencentKind("娱乐休闲:KTV"))
+        assertNull(tencentKind(null))
     }
 }
