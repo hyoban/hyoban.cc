@@ -201,7 +201,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   export, city or date. Cover its rules with made-up records; private exports are local
   regression checks, not fixtures.
 - No keys in the app: OpenFreeMap tiles drawn by MapLibre, Photon for place names, Valhalla and
-  OpenRailRouting for the routes of trips the API hasn't routed, the trip's stops alone.
+  OpenRailRouting for the routes of trips the API hasn't routed, the trip's stops alone. A
+  service that needs a key goes behind the API, its key a Worker secret: in China the place
+  picker's names and search come from Tencent through `/v2/pois`, Photon still answering
+  without the API, outside China, or once Tencent's 200 calls a day are used up.
   APK size matters, so the release is arm64 only; weigh what a new dependency costs.
 - Pin a newer library version only for a reason, and say why in the comment in
   `gradle/libs.versions.toml`.

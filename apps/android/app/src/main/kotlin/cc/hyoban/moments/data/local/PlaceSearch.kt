@@ -19,12 +19,24 @@ import okhttp3.Request
 import java.io.IOException
 
 /**
- * The places around a point, from Photon: OpenStreetMap's, the same the map draws, in
- * WGS 84 as the map and the records are, to name a new place after. Where it can't be
+ * The places around a point, to name a new place after, in WGS 84 as the map and the
+ * records are. In China they come from the API's `/v2/pois`, Tencent's, as OpenStreetMap
+ * knows few shops there; elsewhere, without the API or its token, or when it can't answer,
+ * from Photon at [baseUrl]: OpenStreetMap's, the same the map draws. Where neither can be
  * reached, the system's geocoder stands in.
  */
-class PlaceSearch(private val baseUrl: () -> String, private val client: OkHttpClient = Http.client) {
-    constructor(baseUrl: String) : this({ baseUrl })
+class PlaceSearch(
+    private val baseUrl: () -> String,
+    private val apiUrl: () -> String = { "" },
+    private val token: () -> String? = { null },
+    private val client: OkHttpClient = Http.client,
+) {
+    constructor(baseUrl: String, apiUrl: () -> String = { "" }, token: () -> String? = { null }) : this({ baseUrl }, apiUrl, token)
+
+    /** The API's answers this run, by what was asked, so a pin moved back costs none of its day's calls. */
+    private val kept = object : LinkedHashMap<String, List<Found>>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<Found>>) = size > KEPT
+    }
 
     /** What is around [fix], within [radiusKm], nearest first. */
     suspend fun nearby(fix: Fix, limit: Int = NEARBY_LIMIT, radiusKm: Double = NEARBY_RADIUS_KM): List<Found> {
@@ -37,13 +49,45 @@ class PlaceSearch(private val baseUrl: () -> String, private val client: OkHttpC
         return parsePhoton(get(url.toString()))
     }
 
+    /** The places called [text], nearest [near] first: the API's in China, else Photon's. */
+    suspend fun search(text: String, near: Fix): List<Found> {
+        pois(near, text)?.takeIf { it.isNotEmpty() }?.let { return it }
+        val url = "${baseUrl()}/api".toHttpUrl().newBuilder()
+            .addQueryParameter("q", text)
+            .addQueryParameter("lat", near.latitude.toString())
+            .addQueryParameter("lon", near.longitude.toString())
+            .addQueryParameter("limit", SEARCH_LIMIT.toString())
+            .build()
+        return parsePhoton(get(url.toString()))
+    }
+
     /**
-     * What to call the place at [fix], and what else is around it: the nearest park, sight,
-     * shop or quarter Photon knows, else the street; where it can't be reached, the
-     * system's geocoder's town.
+     * What the API's `/v2/pois` knows around [fix], or called [text]; null where it has
+     * nothing to say: outside China, without the API or its token, or when it can't answer.
+     */
+    private suspend fun pois(fix: Fix, text: String? = null): List<Found>? {
+        val api = apiUrl().trimEnd('/')
+        val token = token()?.takeIf { it.isNotBlank() }
+        if (api.isEmpty() || token == null || !inChina(fix)) return null
+        val url = "$api/v2/pois".toHttpUrl().newBuilder()
+            .addQueryParameter("lat", "%.3f".format(java.util.Locale.ROOT, fix.latitude))
+            .addQueryParameter("lon", "%.3f".format(java.util.Locale.ROOT, fix.longitude))
+            .apply { text?.let { addQueryParameter("q", it) } }
+            .build()
+        val id = url.toString()
+        synchronized(kept) { kept[id] }?.let { return it }
+        val found = runCatching { parsePois(get(id, token)) }.getOrNull() ?: return null
+        synchronized(kept) { kept[id] = found }
+        return found
+    }
+
+    /**
+     * What to call the place at [fix], and what else is around it: the nearest shop, sight
+     * or building the API knows in China, else the nearest park, sight, shop or quarter
+     * Photon knows, else the street; where neither can be reached, the system's geocoder's town.
      */
     suspend fun around(context: Context, fix: Fix): Around {
-        val found = runCatching { nearby(fix) }.getOrNull()
+        val found = pois(fix)?.takeIf { it.isNotEmpty() } ?: runCatching { nearby(fix) }.getOrNull()
         if (found != null) {
             val name = nameAt(found)
             if (name != null) return Around(name, landmarks(found), landmarks(found).firstOrNull()?.let(::kindOf))
@@ -51,8 +95,9 @@ class PlaceSearch(private val baseUrl: () -> String, private val client: OkHttpC
         return Around(placeName(context, fix), emptyList())
     }
 
-    private suspend fun get(url: String): String = withContext(Dispatchers.IO) {
-        val request = Request.Builder().url(url).header("Accept", "application/json").header("User-Agent", USER_AGENT).build()
+    private suspend fun get(url: String, token: String? = null): String = withContext(Dispatchers.IO) {
+        val request = Request.Builder().url(url).header("Accept", "application/json").header("User-Agent", USER_AGENT)
+            .apply { token?.let { header("Authorization", "Bearer $it") } }.build()
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IOException("GET $url answered ${response.code}")
             response.body?.string() ?: throw IOException("GET $url answered without a body")
@@ -62,12 +107,25 @@ class PlaceSearch(private val baseUrl: () -> String, private val client: OkHttpC
     companion object {
         private const val NEARBY_LIMIT = 12
         private const val NEARBY_RADIUS_KM = 0.3
+        private const val SEARCH_LIMIT = 20
+        private const val KEPT = 100
         private const val USER_AGENT = "hyoban.cc Moments for Android"
     }
 }
 
-/** A place OpenStreetMap knows near a point: what it is called, where, and what kind of thing it is (`leisure`, `park`). */
-data class Found(val name: String, val fix: Fix, val kind: String? = null, val type: String? = null)
+/**
+ * A place known near a point: what it is called, where, and what kind of thing it is, as
+ * OpenStreetMap says it (`leisure`, `park`) or, from the API, as a place's [placeKind]; and
+ * its [address] where the API gives one.
+ */
+data class Found(
+    val name: String,
+    val fix: Fix,
+    val kind: String? = null,
+    val type: String? = null,
+    val address: String? = null,
+    val placeKind: PlaceKind? = null,
+)
 
 /** What a place is called, the named places around it to call it instead, and what sort of place the name is of. */
 data class Around(val name: String?, val landmarks: List<Found>, val kind: PlaceKind? = null)
@@ -87,6 +145,19 @@ fun parsePhoton(json: String): List<Found> {
     }
 }
 
+/** `/v2/pois`'s answer as places. */
+fun parsePois(json: String): List<Found> {
+    val pois = Json.parseToJsonElement(json).jsonObject["pois"] as? JsonArray ?: return emptyList()
+    return pois.mapNotNull { element ->
+        val poi = element as? JsonObject ?: return@mapNotNull null
+        fun text(key: String) = poi[key]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+        val name = text("name") ?: return@mapNotNull null
+        val latitude = poi["latitude"]?.jsonPrimitive?.doubleOrNull ?: return@mapNotNull null
+        val longitude = poi["longitude"]?.jsonPrimitive?.doubleOrNull ?: return@mapNotNull null
+        Found(name, Fix(latitude, longitude), address = text("address"), placeKind = PlaceKind.of(text("kind")))
+    }
+}
+
 /** The places around worth naming one after: not the streets, nor a building with no more to it than being one. */
 fun landmarks(found: List<Found>): List<Found> =
     found.filter { it.kind != "highway" && it.kind != "railway" && !(it.kind == "building" && it.type == "yes") }
@@ -97,7 +168,7 @@ fun nameAt(found: List<Found>): String? =
     landmarks(found).firstOrNull()?.name ?: found.firstOrNull { it.kind == "highway" }?.name
 
 /** What sort of place an OpenStreetMap feature is, by its key and value; null where that says too little. */
-fun kindOf(found: Found): PlaceKind? = when (found.kind) {
+fun kindOf(found: Found): PlaceKind? = found.placeKind ?: when (found.kind) {
     "place" -> when (found.type) {
         "city" -> PlaceKind.CITY
         "town", "village", "hamlet", "county", "municipality" -> PlaceKind.TOWN

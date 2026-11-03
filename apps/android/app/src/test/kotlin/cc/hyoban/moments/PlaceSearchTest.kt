@@ -6,6 +6,7 @@ import cc.hyoban.moments.data.local.kindOf
 import cc.hyoban.moments.data.local.landmarks
 import cc.hyoban.moments.data.local.nameAt
 import cc.hyoban.moments.data.local.parsePhoton
+import cc.hyoban.moments.data.local.parsePois
 import cc.hyoban.moments.data.spec.Division
 import cc.hyoban.moments.data.spec.PlaceKind
 import kotlin.test.Test
@@ -68,5 +69,25 @@ class PlaceSearchTest {
         assertEquals("安徽省 芜湖市", Division("340200", "安徽省", "芜湖市").label())
         assertEquals("北京市", Division("110000", "北京市", "北京市").label())
         assertEquals("四川省", Division("510000", "四川省").label())
+    }
+
+    @Test
+    fun `the API's places are read with their address and kind, the nameless left out`() {
+        val found = parsePois(
+            """
+            {"pois":[
+              {"name":"某某面馆(某商场店)","latitude":31.2001,"longitude":121.4001,"address":"某路 1 号 B1 层","kind":"food","distance":15},
+              {"name":"某某大厦","latitude":31.2,"longitude":121.4},
+              {"name":"","latitude":31.2,"longitude":121.4}
+            ]}
+            """.trimIndent(),
+        )
+        assertEquals(listOf("某某面馆(某商场店)", "某某大厦"), found.map { it.name })
+        assertEquals(Fix(31.2001, 121.4001), found[0].fix)
+        assertEquals("某路 1 号 B1 层", found[0].address)
+        assertEquals(PlaceKind.FOOD, kindOf(found[0]))
+        assertNull(kindOf(found[1]))
+        assertEquals(found, landmarks(found), "every one of them a landmark")
+        assertEquals(emptyList(), parsePois("""{"error":"No place search here."}"""))
     }
 }

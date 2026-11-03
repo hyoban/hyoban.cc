@@ -22,6 +22,16 @@ is public itself, as `getPublicEntry` does.
 | `GET /v2/export`                              | `{ revision, manifest, places, entries, collections, tracks, routes, vehicleMonths, vehicleAssisted, vehicleCaptures }` |
 | `GET /v2/places[/:id]`                        | `{ revision, places }` by id, or one place                                                                              |
 | `GET /v2/routes`                              | `{ revision, trips }`, each published trip's route as stretches, with an `ETag`                                         |
+| `GET /v2/pois?lat=&lon=[&q=]`                 | `{ pois }`, what Tencent knows around a point in China, or by name nearest first; see below                             |
+
+`/v2/pois` is the app's place search in mainland China, where OpenStreetMap knows few shops:
+Tencent's places within 400 m of the point, or with `q` the ones by that name nearest it,
+each `{ name, latitude, longitude, address?, kind?, distance? }` in WGS 84, shifted back
+from Tencent's GCJ-02, with the place's `kind` from Tencent's category. Each of Tencent's
+searches allows 200 calls a day, so the point is taken to about 100 m and an answer is kept
+a day in the Worker's memory. Outside China it answers none; without the `TENCENT_MAP_KEY`
+secret, or when Tencent can't answer (its calls for the day or the second used up), a 503,
+and the app asks Photon instead.
 
 The records are entries, collections and public tracks (`@hyoban/data-spec/entry`). `/v1`,
 which served them as Moments and trips, is gone, and so is the first shape D1 kept beside
@@ -121,7 +131,7 @@ vp run --filter @hyoban/api dev
 ```
 
 Put `API_TOKENS=<token>` in `apps/api/.dev.vars`: the local API, like the deployed one,
-answers nothing without it. `data:import` needs an exported `data/` (see docs/data.md).
+answers nothing without it; `TENCENT_MAP_KEY=<key>` there gives it `/v2/pois`. `data:import` needs an exported `data/` (see docs/data.md).
 
 ## Layout
 
@@ -131,6 +141,7 @@ answers nothing without it. `data:import` needs an exported `data/` (see docs/da
   the writes, against the few D1 and R2 calls they need (`Database`, `Bucket`), which the
   tests fill in with an in-memory `node:sqlite` and a map.
 - `src/telegram.ts` posts to the channel, against a `Telegram` the tests fake.
+- `src/pois.ts` asks Tencent what is around a point, against a `fetch` the tests fake.
 - `src/rows.ts` turns a record into a row, for the writes and the import.
 - `src/import.ts` builds the SQL `vp run data:import` runs: new and changed records
   written, missing ones marked deleted, unchanged rows keeping their revision.

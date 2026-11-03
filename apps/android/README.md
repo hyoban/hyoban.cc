@@ -148,9 +148,13 @@ except in 演示模式.
   the files' dates, else now.
 - **Place.** Where the first photo was taken, else none until one is chosen: the page
   never locates the phone on its own, only the map's locate button does. A photo's place
-  is the known place within 2 km, else a new place named through Photon (`BuildConfig.PLACE_SEARCH_URL`)
-  after the nearest park, sight, shop or street, with the system's geocoder as fallback.
-  It can be moved on a map with a pin. Its kind follows OpenStreetMap and can be changed,
+  is the known place within 2 km, else a new place named after what is nearest: in China,
+  with an API and its token, the shops, sights and buildings Tencent knows through the API's
+  `/v2/pois`, else the nearest park, sight, shop or street Photon knows
+  (`BuildConfig.PLACE_SEARCH_URL`), with the system's geocoder as fallback.
+  It can be moved on a map with a pin, or found by name with the search at the map's top
+  end, from the same sources, nearest the pin first; a result chosen moves the pin there
+  with its name and kind. Its kind follows OpenStreetMap and can be changed,
   for a known place too. A place shared from Amap (Here (作为时刻的地点), or 保存为地点 to
   only keep it) is followed from its short link and shifted from GCJ-02 back to WGS 84.
 

@@ -11,7 +11,7 @@ import kotlin.math.sqrt
 // and the map are in WGS 84, so a point from Amap is shifted back before it is kept.
 
 /** Whether a point is where GCJ-02 shifts it: mainland China, roughly; elsewhere the two agree. */
-private fun inChina(fix: Fix): Boolean = fix.longitude in 72.004..137.8347 && fix.latitude in 0.8293..55.8271
+internal fun inChina(fix: Fix): Boolean = fix.longitude in 72.004..137.8347 && fix.latitude in 0.8293..55.8271
 
 /** A WGS 84 point as a map in China would give it. */
 fun wgsToGcj(fix: Fix): Fix {

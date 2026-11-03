@@ -293,6 +293,7 @@
     <string name="place_unchosen">点按选择地点</string>
     <string name="place_none">不加地点</string>
     <string name="place_name">地点名称</string>
+    <string name="place_search_hint">搜索店名或地址</string>
     <string name="distance_metres">%1$d 米</string>
     <string name="distance_kilometres">%1$.1f 公里</string>
     <string name="confirm_discard">放弃这个时刻？</string>
