@@ -192,14 +192,6 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                     listOf(
                         { shapes ->
                             SegmentedListItem(
-                                onClick = { importer.pick() }, shapes = shapes, colors = segmentColors(), enabled = !busy,
-                                leadingContent = { Icon(AppIcons.FileOpen, contentDescription = null) },
-                                supportingContent = { Text(stringResource(R.string.ledger_import_icost_note)) },
-                                modifier = Modifier.testTag("import_icost"),
-                            ) { Text(stringResource(R.string.ledger_import_icost)) }
-                        },
-                        { shapes ->
-                            SegmentedListItem(
                                 onClick = {
                                     scope.launch {
                                         val changed = autoLink(container.ledger.ledger.value, container.repository.moments.value, container.repository.trips.value)

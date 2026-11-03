@@ -125,7 +125,6 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                 }
                 Section(stringResource(R.string.section_site), rows.subList(0, 1), 0, stringResource(R.string.settings_api_note), extra = listOf(token, refresh)) { editing = it }
                 BackupSection(container.backup) { editingBackup = true }
-                SwarmSection(container.swarm)
                 Section(stringResource(R.string.section_media), rows.subList(1, 2), 1, null) { editing = it }
                 Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
             }

@@ -77,6 +77,7 @@ class MeRoutes(
     val items: () -> Unit,
     val homes: () -> Unit,
     val sync: () -> Unit,
+    val imports: () -> Unit,
     val ledgerSettings: () -> Unit,
     val footprintSettings: () -> Unit,
     val sideKey: () -> Unit,
@@ -140,6 +141,11 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
                     },
                 ),
                 onClick = routes.sync,
+            )
+            MeRow(
+                AppIcons.FileOpen, stringResource(R.string.import_title), "settings_import", shapes,
+                supporting = stringResource(R.string.me_import_sources),
+                onClick = routes.imports,
             )
         }
         PageCaption(stringResource(R.string.me_on_phone))

@@ -57,7 +57,7 @@ clear of the camera's cutout on whichever side it is.
   opens the trip or plays it back. 迷雾地图 lays a fog over it, as the site's map does, thinner over a city the
   more Moments it has, from the site's `apps/web/src/data/boundaries/cities.json` shipped as an asset.
 - **我** holds the changes waiting to be published, this month's spending, rows for
-  账单与资产 and 足迹, and the settings in two parts: 通用 (记录项与公开, 同步与来源) and
+  账单与资产 and 足迹, and the settings in two parts: 通用 (记录项与公开, 家, 同步与来源, 导入) and
   只在这台手机上 (记账, 足迹记录, 侧键), each a page with what it is set to under its name.
   There is no settings page over them, and under 我 there is one level of pages: what goes
   deeper, such as a book, the exchange rates or a side key gesture's action, opens over its
@@ -184,9 +184,16 @@ backup the directory keeps the newest seven and deletes the rest, leaving other 
 Restoring is by hand: the files go back where the zip's paths say, `databases/` into
 `noBackupFilesDir` and `local/` into `filesDir`.
 
+## Importing
+
+导入, under 我 (`moments://import`), is where every file from another app comes in, grouped by
+where it goes: 时刻 (Swarm), 账本 (iCost) and 足迹 (GPX). A row opens the system's file picker
+and what came in is said in a dialog; Swarm's progress shows on its row while it runs. An empty
+ledger keeps its own button for iCost, and an iCost file shared in still opens 记账.
+
 ## Importing from Swarm
 
-从 Swarm 导入, under 我 → 同步与来源, reads the .zip Swarm (Foursquare) exports
+从 Swarm 导入, under 我 → 导入, reads the .zip Swarm (Foursquare) exports
 (`data/swarm/Swarm.kt`): its `checkins*.json`, and `photos*.json` with the `pix/` they name;
 the account, friends, devices, visits and comments in it are left alone. Each check-in comes
 in private, at its time in the offset it was made at and its point as Swarm has it (WGS-84),
@@ -274,7 +281,7 @@ An empty ledger imports from iCost on its own page.
 
 The data:
 
-- **从 iCost 导入** reads either iCost's backup (`.backup`, a zip of its SQLite database sealed
+- **从 iCost 导入**, in 我 → 导入, reads either iCost's backup (`.backup`, a zip of its SQLite database sealed
   with the password iCost itself uses) or the .xlsx of its 账单导出, picked, shared in or
   opened with the app. It shows what it found before writing and skips what is already
   there, so each newer file brings the ledger up to date. Tags become `#tag` in the note.
@@ -359,7 +366,7 @@ settings and original system action are excluded from Android backup and device 
 
 The footprints are GPS tracks kept on the phone alone, in
 `noBackupFilesDir/footprints.sqlite` (`footprints/FootprintStore`), outside sync and
-backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export and import GPX and delete;
+backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export GPX and delete (importing is in 我 → 导入);
 足迹记录 (`moments://footprint-settings`), from 我 or the panel's settings button, sets how recording behaves.
 
 - **Recording.** 日常自动记录 runs until turned off; 单次行程 marks a trip over the same
@@ -382,7 +389,7 @@ backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export an
   restarts. 导出当前原始采样 GPX exports every stored sample of the chosen day or trip, and
   导出全部原始采样 GPX those of every day, with accuracy and speed in
   `https://hyoban.cc/ns/footprints/1` extensions: the full backup to import again.
-- **Import.** 导入 GPX 轨迹 reads a GPX the app exported (`footprints/TrackImport`), a line
+- **Import.** 导入 GPX 轨迹, in 我 → 导入, reads a GPX the app exported (`footprints/TrackImport`), a line
   or raw samples, back into the store as samples of no trip: raw samples keep their
   segments and extras, each `trkseg` of a line becomes a segment. Where the phone already
   has samples within 45 seconds, its own are kept and the file's skipped, so importing a
@@ -467,7 +474,7 @@ adb -s emulator-5554 shell am instrument -w -e class cc.hyoban.moments.footprint
 
 ## On the phone, from adb
 
-Every page has a link, `moments://moments`, `map`, `trips`, `settings` (我), `sync`, `items`,
+Every page has a link, `moments://moments`, `map`, `trips`, `settings` (我), `sync`, `import`, `items`,
 `ledger-settings`, `footprint-settings`, `side-key`, `new`,
 `moment/{uid}`, `trip/{id}`, `play/{id}`, `day/{YYYY-MM-DD}` and `place/{id}`, which
 `adb shell am start -d` opens. Opening the app, a link's page comes over the tab it is
