@@ -275,9 +275,10 @@ internal fun PlacePicker(
                 results = emptyList()
                 return@collectLatest
             }
-            // Asked once typing pauses, so each word costs one of the day's searches, not each letter.
+            // Asked once typing pauses, so each word costs one of the day's searches, not each
+            // letter; meanwhile what was found stays, or it is looking, never found nothing yet.
+            if (results.isNullOrEmpty()) results = null
             delay(400)
-            results = null
             val near = searchFrom
             results = if (near == null) emptyList() else runCatching { search.search(text, near) }.getOrDefault(emptyList())
         }
