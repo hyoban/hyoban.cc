@@ -78,6 +78,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalFocusManager
 import kotlinx.coroutines.flow.collectLatest
@@ -324,6 +326,30 @@ internal fun PlacePicker(
             modifier = cardModifier,
         )
     }
+    val locateButton: @Composable () -> Unit = {
+        val locateLabel = stringResource(R.string.action_locate)
+        Tooltip(locateLabel) {
+            FloatingActionButton(
+                onClick = askToLocate,
+                // Round on the floating surface, as the map's own controls are, quieter
+                // than the sheet's one action.
+                containerColor = SurfaceLevel.Floating.fill(),
+                contentColor = tokens.tx,
+                shape = Corners.full,
+                // Named on the button, so it keeps its name while the indicator stands in for the icon.
+                modifier = Modifier.semantics { contentDescription = locateLabel }.testTag("locate"),
+            ) {
+                // A loading indicator while it finds where the phone is, as the map tab's button has.
+                Crossfade(locating, animationSpec = AppTheme.motionScheme.fastEffectsSpec(), label = "locating") { busy ->
+                    if (busy) {
+                        Spinner(Modifier.size(32.dp), color = LocalContentColor.current)
+                    } else {
+                        Icon(AppIcons.Locate, contentDescription = null)
+                    }
+                }
+            }
+        }
+    }
     val mapArea: @Composable (Modifier) -> Unit = { areaModifier ->
         Box(areaModifier) {
             PickerMap(
@@ -352,32 +378,8 @@ internal fun PlacePicker(
                 PickPin(lift)
             }
             FloatingBack(onDismiss, Modifier.align(Alignment.TopStart))
-            // At the map's bottom end, clear of the sheet's corners; a box of its own places
-            // it, as the tooltip's box doesn't pass an alignment on.
-            Box(Modifier.align(if (sideways) Alignment.TopEnd else Alignment.BottomEnd).padding(bottom = if (sideways) 0.dp else SHEET_CORNER).padding(Space.l)) {
-                val locateLabel = stringResource(R.string.action_locate)
-                Tooltip(locateLabel) {
-                    FloatingActionButton(
-                        onClick = askToLocate,
-                        // Round on the floating surface, as the map's own controls are, quieter
-                        // than the sheet's one action.
-                        containerColor = SurfaceLevel.Floating.fill(),
-                        contentColor = tokens.tx,
-                        shape = Corners.full,
-                        // Named on the button, so it keeps its name while the indicator stands in for the icon.
-                        modifier = Modifier.semantics { contentDescription = locateLabel }.testTag("locate"),
-                    ) {
-                        // A loading indicator while it finds where the phone is, as the map tab's button has.
-                        Crossfade(locating, animationSpec = AppTheme.motionScheme.fastEffectsSpec(), label = "locating") { busy ->
-                            if (busy) {
-                                Spinner(Modifier.size(32.dp), color = LocalContentColor.current)
-                            } else {
-                                Icon(AppIcons.Locate, contentDescription = null)
-                            }
-                        }
-                    }
-                }
-            }
+            // On a phone on its side, at the map's top end; upright, it stands on the sheet instead.
+            if (sideways) Box(Modifier.align(Alignment.TopEnd).padding(Space.l)) { locateButton() }
         }
     }
     if (sideways) {
@@ -402,18 +404,22 @@ internal fun PlacePicker(
             content = {
                 mapArea(Modifier)
                 Box(Modifier.fillMaxWidth().sheetSurface(AppColors.sheet, sheetShape)) { card(Modifier) }
+                // At the end, just above the sheet's top, so it rises with the sheet over the keyboard.
+                Box(Modifier.padding(Space.l)) { locateButton() }
             },
             modifier = Modifier.fillMaxSize().predictiveBackScale(back).background(AppColors.page),
-        ) { (map, choice), constraints ->
+        ) { (map, choice, locate), constraints ->
             val width = constraints.maxWidth
             val height = constraints.maxHeight
             val sheet = choice.measure(constraints.copy(minWidth = width, minHeight = 0))
             val fitted = (height - sheet.height + SHEET_CORNER.roundToPx()).coerceIn(0, height)
             if (ime.getBottom(this) == 0 || resting[0] == 0) resting[0] = fitted
             val shown = map.measure(Constraints.fixed(width, resting[0]))
+            val button = locate.measure(constraints.copy(minWidth = 0, minHeight = 0))
             layout(width, height) {
                 shown.place(0, 0)
                 sheet.place(0, height - sheet.height)
+                button.place(width - button.width, (height - sheet.height - button.height).coerceAtLeast(0))
             }
         }
     }
@@ -667,6 +673,13 @@ private fun ChosenRow(
         if (renaming && pick is PlaceChoice.New) {
             val focus = remember { FocusRequester() }
             LaunchedEffect(Unit) { focus.requestFocus() }
+            // Named, it goes back to a row however the naming ends: the keyboard's done, back,
+            // the keyboard put away, or a tap anywhere else that takes the focus.
+            BackHandler(onBack = onDone)
+            val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+            var keyboardCame by remember { mutableStateOf(false) }
+            LaunchedEffect(keyboardUp) { if (keyboardUp) keyboardCame = true else if (keyboardCame) onDone() }
+            var focused by remember { mutableStateOf(false) }
             OutlinedTextField(
                 value = name,
                 onValueChange = onName,
@@ -674,7 +687,9 @@ private fun ChosenRow(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { onDone() }),
-                modifier = Modifier.weight(1f).padding(vertical = Space.s).focusRequester(focus).testTag("place_name"),
+                modifier = Modifier.weight(1f).padding(vertical = Space.s).focusRequester(focus)
+                    .onFocusChanged { if (focused && !it.isFocused) onDone() else focused = it.isFocused }
+                    .testTag("place_name"),
             )
         } else {
             Column(Modifier.weight(1f).padding(vertical = Space.s)) {
