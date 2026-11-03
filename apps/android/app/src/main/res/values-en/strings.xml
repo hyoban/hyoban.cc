@@ -1099,6 +1099,7 @@
     <string name="car_assisted_beats">More assisted driving than %d%% of owners</string>
     <string name="car_previous_month">Previous month</string>
     <string name="car_next_month">Next month</string>
+    <string name="section_changed_checkins">Check-ins</string>
     <string name="section_changed_things">Devices and subscriptions</string>
     <string name="thing_new">New</string>
     <string name="thing_deleted">Will be deleted from the site</string>

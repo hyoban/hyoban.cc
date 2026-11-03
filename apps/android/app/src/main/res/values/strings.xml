@@ -1057,6 +1057,7 @@
     <string name="car_assisted_beats">辅助驾驶里程超过 %d%% 的车主</string>
     <string name="car_previous_month">上个月</string>
     <string name="car_next_month">下个月</string>
+    <string name="section_changed_checkins">签到</string>
     <string name="section_changed_things">设备与订阅</string>
     <string name="thing_new">新加的</string>
     <string name="thing_deleted">会从网站删除</string>
