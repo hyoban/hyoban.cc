@@ -70,6 +70,7 @@ import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.ui.format.foodShareLine
 import cc.hyoban.moments.accessibility.AssistStatus
 import cc.hyoban.moments.accessibility.ShareAccessibilityService
+import cc.hyoban.moments.share.InstagramShareAdapter
 import cc.hyoban.moments.share.TelegramAssistFlow
 import cc.hyoban.moments.share.TelegramShareAdapter
 import cc.hyoban.moments.share.ThreadsShareAdapter
@@ -83,10 +84,12 @@ import kotlinx.coroutines.launch
 /** Menu order: complete text/photo composers, assisted sharing, manual captions, then manual albums. */
 enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val limit: Int = Int.MAX_VALUE, val app: String? = null) {
     X("x", R.string.action_share_x, 4, app = "com.twitter.android"),
+    BLUESKY("bluesky", R.string.action_share_bluesky, 4, app = "xyz.blueskyweb.app"),
     BILIBILI("bilibili", R.string.action_share_bilibili, app = "tv.danmaku.bili"),
     TELEGRAM("telegram", R.string.action_share_telegram, app = "org.telegram.messenger"),
     THREADS("threads", R.string.action_share_threads, app = "com.instagram.barcelona"),
     XIAOHONGSHU("xiaohongshu", R.string.action_share_xiaohongshu, app = "com.xingin.xhs"),
+    INSTAGRAM("instagram", R.string.action_share_instagram, 20, app = "com.instagram.android"),
     DOUYIN("douyin", R.string.action_share_douyin, app = "com.ss.android.ugc.aweme"),
     WECHAT("wechat", R.string.action_share_wechat, app = "com.tencent.mm"),
     PREPARE("prepare", R.string.action_prepare_share),
@@ -96,10 +99,12 @@ enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val lim
 private val ShareTarget.icon: ImageVector
     get() = when (this) {
         ShareTarget.X -> AppIcons.X
+        ShareTarget.BLUESKY -> AppIcons.Bluesky
         ShareTarget.BILIBILI -> AppIcons.Bilibili
         ShareTarget.TELEGRAM -> AppIcons.Telegram
         ShareTarget.THREADS -> AppIcons.Threads
         ShareTarget.XIAOHONGSHU -> AppIcons.Xiaohongshu
+        ShareTarget.INSTAGRAM -> AppIcons.Instagram
         ShareTarget.DOUYIN -> AppIcons.Douyin
         ShareTarget.WECHAT -> AppIcons.Wechat
         ShareTarget.PREPARE -> AppIcons.Photos
@@ -176,9 +181,12 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
     var destination by rememberSaveable { mutableStateOf(telegramPrefs.getString("destination", "").orEmpty()) }
     val threadsPrefs = remember(context) { context.getSharedPreferences("threads-share", Context.MODE_PRIVATE) }
     var threadsAssist by rememberSaveable { mutableStateOf(threadsPrefs.getBoolean("assist", false)) }
+    val instagramPrefs = remember(context) { context.getSharedPreferences("instagram-share", Context.MODE_PRIVATE) }
+    var instagramAssist by rememberSaveable { mutableStateOf(instagramPrefs.getBoolean("assist", false)) }
     val adapter = when (target) {
         ShareTarget.TELEGRAM -> TelegramShareAdapter
         ShareTarget.THREADS -> ThreadsShareAdapter
+        ShareTarget.INSTAGRAM -> InstagramShareAdapter
         else -> null
     }
     val assistState by ShareAccessibilityService.state.collectAsStateWithLifecycle()
@@ -195,12 +203,13 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
     val useAssist = chosen.isNotEmpty() && when (target) {
         ShareTarget.TELEGRAM -> telegramAssist
         ShareTarget.THREADS -> threadsAssist
+        ShareTarget.INSTAGRAM -> instagramAssist && text.isNotBlank()
         else -> false
     }
-    val needsPhoto = target == ShareTarget.DOUYIN && chosen.isEmpty()
+    val needsPhoto = (target == ShareTarget.DOUYIN || target == ShareTarget.INSTAGRAM) && chosen.isEmpty()
     val copyTextOnOpen = text.isNotBlank() && when (target) {
         ShareTarget.TELEGRAM -> chosen.size > 1
-        ShareTarget.XIAOHONGSHU, ShareTarget.THREADS, ShareTarget.DOUYIN -> chosen.isNotEmpty()
+        ShareTarget.XIAOHONGSHU, ShareTarget.THREADS, ShareTarget.DOUYIN, ShareTarget.INSTAGRAM -> chosen.isNotEmpty()
         else -> false
     }
     var prepared by remember { mutableStateOf(false) }
@@ -248,7 +257,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                         }
                     }
                     if (needsPhoto) {
-                        error = R.string.share_douyin_no_photos
+                        error = if (target == ShareTarget.INSTAGRAM) R.string.share_instagram_no_photos else R.string.share_douyin_no_photos
                         return@TextButton
                     }
                     if (text.isBlank() && chosen.isEmpty()) {
@@ -265,6 +274,10 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                             }
                             when (if (prepareByHand) ShareTarget.PREPARE else target) {
                                 ShareTarget.X -> Share.toX(context, text, chosen, urls)
+                                ShareTarget.BLUESKY -> Share.toBluesky(context, text, chosen, urls)
+                                ShareTarget.INSTAGRAM -> Share.toInstagram(context, chosen, urls) {
+                                    if (useAssist) ShareAccessibilityService.start(InstagramShareAdapter.request(text))
+                                }
                                 ShareTarget.TELEGRAM -> Share.toTelegram(context, text, chosen, urls) {
                                     if (useAssist) {
                                         val request = TelegramShareAdapter.request(TelegramAssistFlow.username(destination)!!, text, chosen.size)
@@ -296,6 +309,8 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                             if (useAssist) adapter?.let { ShareAccessibilityService.cancel(it.id) }
                             error = when (target) {
                                 ShareTarget.X -> R.string.share_x_unavailable
+                                ShareTarget.BLUESKY -> R.string.share_bluesky_unavailable
+                                ShareTarget.INSTAGRAM -> R.string.share_instagram_unavailable
                                 ShareTarget.TELEGRAM -> R.string.share_telegram_unavailable
                                 ShareTarget.XIAOHONGSHU -> R.string.share_xiaohongshu_unavailable
                                 ShareTarget.THREADS -> R.string.share_threads_unavailable
@@ -320,10 +335,16 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     Spinner(Modifier.size(24.dp).semantics { contentDescription = preparing }.testTag("share_busy"))
                 } else Text(stringResource(when {
                     target == ShareTarget.X -> R.string.share_x_open
-                    useAssist -> if (target == ShareTarget.TELEGRAM) R.string.telegram_assist_open else R.string.threads_assist_open
+                    useAssist -> when (target) {
+                        ShareTarget.TELEGRAM -> R.string.telegram_assist_open
+                        ShareTarget.INSTAGRAM -> R.string.instagram_assist_open
+                        else -> R.string.threads_assist_open
+                    }
                     target == ShareTarget.TELEGRAM -> if (copyTextOnOpen) R.string.share_telegram_copy_open else R.string.share_telegram_open
                     target == ShareTarget.XIAOHONGSHU -> if (copyTextOnOpen) R.string.share_xiaohongshu_copy_open else R.string.share_xiaohongshu_open
                     target == ShareTarget.THREADS -> if (copyTextOnOpen) R.string.share_threads_copy_open else R.string.share_threads_open
+                    target == ShareTarget.BLUESKY -> R.string.share_bluesky_open
+                    target == ShareTarget.INSTAGRAM -> if (copyTextOnOpen) R.string.share_instagram_copy_open else R.string.share_instagram_open
                     target == ShareTarget.DOUYIN -> if (copyTextOnOpen) R.string.share_douyin_copy_open else R.string.share_douyin_open
                     target == ShareTarget.WECHAT && !prepareByHand -> R.string.share_wechat_open
                     target == ShareTarget.BILIBILI -> R.string.share_bilibili_open
@@ -341,6 +362,13 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
             Text(stringResource(target.title), style = AppTheme.typography.titlePage)
             Text(stringResource(when (target) {
                 ShareTarget.X -> R.string.share_x_hint
+                ShareTarget.BLUESKY -> R.string.share_bluesky_hint
+                ShareTarget.INSTAGRAM -> when {
+                    needsPhoto -> R.string.share_instagram_no_photos
+                    useAssist -> R.string.instagram_assist_note
+                    copyTextOnOpen -> R.string.share_instagram_photos_hint
+                    else -> R.string.share_instagram_hint
+                }
                 ShareTarget.TELEGRAM -> if (useAssist) R.string.telegram_assist_note else if (copyTextOnOpen) R.string.share_telegram_multiple_hint else R.string.share_telegram_hint
                 ShareTarget.XIAOHONGSHU -> if (copyTextOnOpen) R.string.share_xiaohongshu_photos_hint else R.string.share_xiaohongshu_hint
                 ShareTarget.THREADS -> if (useAssist) R.string.threads_assist_note else if (copyTextOnOpen) R.string.share_threads_photos_hint else R.string.share_threads_hint
@@ -387,6 +415,21 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 ) {
                     if (chosen.isEmpty()) Text(stringResource(R.string.share_assist_photos_only), style = AppTheme.typography.caption)
                 }
+            }
+            if (target == ShareTarget.INSTAGRAM) {
+                ShareAssistOptions(
+                    adapter = InstagramShareAdapter,
+                    tag = "instagram",
+                    label = R.string.instagram_assist_label,
+                    running = R.string.instagram_assist_running,
+                    enabled = instagramAssist,
+                    onEnabled = { enabled ->
+                        instagramAssist = enabled
+                        ShareAccessibilityService.resetStatus(InstagramShareAdapter.id)
+                        instagramPrefs.edit { putBoolean("assist", enabled) }
+                    },
+                    busy = busy || assistRunning,
+                )
             }
             OutlinedTextField(
                 value = text,

@@ -36,7 +36,9 @@
         <package android:name="com.twitter.android" />
         <package android:name="org.telegram.messenger" />
         <package android:name="com.xingin.xhs" />
+        <package android:name="xyz.blueskyweb.app" />
         <package android:name="com.instagram.barcelona" />
+        <package android:name="com.instagram.android" />
         <package android:name="com.ss.android.ugc.aweme" />
         <package android:name="com.tencent.mm" />
         <package android:name="tv.danmaku.bili" />

@@ -15,6 +15,17 @@
     <string name="action_share_douyin">发布到抖音</string>
     <string name="action_share_wechat">微信朋友圈</string>
     <string name="action_share_bilibili">发布到 B 站</string>
+    <string name="action_share_bluesky">发布到 Bluesky</string>
+    <string name="action_share_instagram">发布到 Instagram</string>
+    <string name="share_bluesky_hint">将文字和照片带入 Bluesky 编辑器，检查后发布。这里的修改只用于这次分享，最多 4 张照片，字数限制以 Bluesky 为准。</string>
+    <string name="share_bluesky_open">打开 Bluesky</string>
+    <string name="share_bluesky_unavailable">无法打开 Bluesky，确认已安装</string>
+    <string name="share_instagram_hint">在 Instagram 编辑照片后点「继续」，检查后分享。照片数量限制以 Instagram 为准。</string>
+    <string name="share_instagram_photos_hint">Instagram 接收照片时不会带入文字，打开前会先复制文字。编辑照片后点「继续」，把文字粘贴到说明，检查后分享。</string>
+    <string name="share_instagram_no_photos">Instagram 不接收纯文字分享。至少选一张照片，或用「准备图文」复制文字后自己编辑。</string>
+    <string name="share_instagram_open">打开 Instagram</string>
+    <string name="share_instagram_copy_open">复制文字并打开 Instagram</string>
+    <string name="share_instagram_unavailable">无法打开 Instagram 的发帖入口，确认 Instagram 已安装并更新到最新版</string>
     <string name="action_share_feishu_manual">飞书</string>
     <string name="share_bilibili_hint">将文字和照片带入 B 站动态编辑器，检查后发布。如果已有未完成的动态，请先处理；未正确带入时可用「准备图文」。</string>
     <string name="share_bilibili_open">打开 B 站动态编辑器</string>
@@ -406,7 +417,7 @@
     <string name="reason_unknown">发生了意外错误</string>
 
     <string name="share_assist_enable_service">开启分享与记账助手无障碍服务</string>
-    <string name="share_assist_service_description">分享：只在你从「这里」发起辅助分享时，读取此次目标应用的分享界面并执行适配步骤。完成填写后停在发送前，不保存聊天内容。目前支持 Telegram 和 Threads 照片分享，40 秒内未完成就停止。\n\n自动记账：在记账设置中打开后，读取微信和支付宝显示的支付成功页和账单详情，用通知提醒你记一笔。只读取，不点击、不输入，页面内容不保存，也不会离开手机。</string>
+    <string name="share_assist_service_description">分享：只在你从「这里」发起辅助分享时，读取此次目标应用的分享界面并执行适配步骤。完成填写后停在发送前，不保存聊天内容。目前支持 Telegram、Threads 照片分享和 Instagram 帖子的说明，超时未完成就停止。\n\n自动记账：在记账设置中打开后，读取微信和支付宝显示的支付成功页和账单详情，用通知提醒你记一笔。只读取，不点击、不输入，页面内容不保存，也不会离开手机。</string>
     <string name="share_assist_photos_only">此次没有选择照片，将使用普通文字分享。</string>
     <string name="share_assist_cancel">停止自动填写</string>
     <string name="share_assist_service_required">请先开启无障碍服务，或关闭分享助手以手动分享</string>
@@ -419,6 +430,12 @@
     <string name="telegram_assist_stopped">自动填写已停止，请在 Telegram 手动检查目标和说明；不会自动重试</string>
     <string name="telegram_assist_invalid_target">请输入完整的公开用户名，例如 @username 或 https://t.me/username</string>
     <string name="telegram_assist_open">打开 Telegram 并自动填写</string>
+    <string name="instagram_assist_label">Instagram 分享助手（试用）</string>
+    <string name="instagram_assist_note">打开前会先复制文字。在 Instagram 编辑照片后点「继续」，助手在说明里填好文字，停在分享前。请手动检查图文后分享。说明里已有不同的文字、页面不匹配或 2 分钟内未完成时会停止，可关闭助手手动粘贴。</string>
+    <string name="instagram_assist_running">等你在 Instagram 点「继续」后填写说明…</string>
+    <string name="instagram_assist_ready">说明已填写，请在 Instagram 检查图文后手动分享</string>
+    <string name="instagram_assist_stopped">自动填写已停止，请在 Instagram 手动粘贴说明；已有的说明不会被覆盖，也不会自动重试</string>
+    <string name="instagram_assist_open">打开 Instagram 并自动填写</string>
     <string name="threads_assist_label">Threads 分享助手（试用）</string>
     <string name="threads_assist_note">保留分享带入的照片，自动填写正文，停在发布前。请手动检查图文；如出现分享选项，请手动选择发布入口。已有不同正文、页面不匹配或 40 秒内未完成时会停止，可关闭助手手动分享。</string>
     <string name="threads_assist_running">正在 Threads 中填写正文…</string>

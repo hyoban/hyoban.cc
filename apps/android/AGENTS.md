@@ -176,7 +176,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   and concurrent first entries. Opening a test form must not add books to the user's ledger.
 - Sharing hands off to the other app and leaves posting to the user. Never post, pick a
   recipient or drive another app automatically. The one exception is the opt-in share
-  assistant (Telegram, Threads): an accessibility service that only fills the composer
+  assistant (Telegram, Threads, Instagram): an accessibility service that only fills the composer
   and stops before sending. The same service, while 自动记账 is on, only reads WeChat Pay's and
   Alipay's payment pages for a payment to offer as a bill: it never taps, types or keeps the
   page; `adb logcat -s AutoBill:I` says whether a page read was offered or already in the
@@ -185,6 +185,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   `adb shell dumpsys activity service cc.hyoban.moments/.share.TelegramShareService`,
   not `uiautomator dump`, which interrupts the service. Threads shows a single photo
   outside any `IgLazyRow`, and repeated shares stack photos into an open composer.
+  Instagram's caption is missing from `uiautomator dump` but reaches the service; its
+  view ids are full names (`com.instagram.android:id/…`), and an empty caption reads out
+  its hint as its text.
 - The home screen widgets are the owner's own: they show private Moments and trips too,
   passing over only photos kept off covers. 演示模式 (`Settings.demo`, which took the place of
   hiding amounts) hides amounts, account names and private Moments and trips everywhere, the

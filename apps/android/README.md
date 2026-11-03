@@ -211,10 +211,12 @@ ends with a line of its place, each one's share of the bill and its verdict (好
 | Destination    | How                                                                                     |
 | -------------- | --------------------------------------------------------------------------------------- |
 | 发布到 X       | the X app's composer, up to four photos (stills of live photos, no video)              |
+| 发布到 Bluesky | `bluesky://intent/compose?text=…` for text, else its share receiver, text and up to four photos |
 | 发布到 B 站    | Bilibili's dynamic composer (`FollowingPublishActivity`) with text and photos          |
 | 分享到 Telegram | Telegram's share receiver; with several photos the text is copied to paste as caption |
 | 发布到 Threads | `barcelona://create?text=…` for text, else its share receiver with the text copied     |
 | 发布到小红书   | its share receiver, the text copied; text alone opens 写想法                           |
+| 发布到 Instagram | its feed post's `ShareHandlerActivity`, the text copied; needs a photo |
 | 发布到抖音     | `SystemShareActivity` into the photo editor, the text copied; needs a photo            |
 | 微信朋友圈     | `ShareToTimeLineUI` for text or one photo; more go through 准备图文                    |
 | 飞书, 准备图文 | the photos saved to a `Pictures/Here Share-…` album and the text copied                |
@@ -224,11 +226,12 @@ edited text and selection kept. Each share has its own cache directory, cleaned 
 a week, and the read grants given to the receiving apps are revoked with it.
 
 The opt-in 分享与记账助手（试用） is an accessibility service
-(`accessibility/ShareAccessibilityService`) that, for Telegram and Threads only, fills
-the composer (Telegram: finds the `@username` given and the caption) and stops before
-sending. It reads only the app of the share it was asked for, gives up after 40 seconds
-and keeps nothing. Each destination is an `AssistAdapter` with an `AssistFlow`
-(`share/TelegramShareAdapter`, `share/ThreadsShareAdapter`); add an app the same way,
+(`accessibility/ShareAccessibilityService`) that, for Telegram, Threads and Instagram only,
+fills the composer (Telegram: finds the `@username` given and the caption; Instagram: the
+caption, once the photos are edited and 继续 tapped by hand) and stops before sending. It
+reads only the app of the share it was asked for, gives up after 40 seconds (Instagram:
+two minutes) and keeps nothing. Each destination is an `AssistAdapter` with an `AssistFlow`
+(`share/TelegramShareAdapter`, `share/ThreadsShareAdapter`, `share/InstagramShareAdapter`); add an app the same way,
 with fixtures for its pages. The manifest keeps the `share/TelegramShareService` name
 only so the permission already granted to it stays.
 
