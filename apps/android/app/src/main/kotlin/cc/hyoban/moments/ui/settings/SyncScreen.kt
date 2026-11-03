@@ -72,6 +72,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
     // The setting whose dialog is open, by its place in the list, so it stays open across a rotation.
     var editing by rememberSaveable { mutableStateOf<Int?>(null) }
     var editingToken by rememberSaveable { mutableStateOf(false) }
+    var editingTencentKey by rememberSaveable { mutableStateOf(false) }
     var editingBackup by rememberSaveable { mutableStateOf(false) }
     val rows = listOf(
         Row(settings.apiUrl, R.string.setting_api_url, AppIcons.Cloud) { container.changeApi(it) },
@@ -126,15 +127,33 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                 Section(stringResource(R.string.section_site), rows.subList(0, 1), 0, stringResource(R.string.settings_api_note), extra = listOf(token, refresh)) { editing = it }
                 BackupSection(container.backup) { editingBackup = true }
                 Section(stringResource(R.string.section_media), rows.subList(1, 2), 1, null) { editing = it }
-                Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note)) { editing = it }
+                // The key the place picker asks Tencent with in China, kept beside the map's styles.
+                val tencentKey: Segment = { shapes ->
+                    SegmentedListItem(
+                        onClick = { editingTencentKey = true },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        leadingContent = { Icon(AppIcons.Key, contentDescription = null) },
+                        supportingContent = { Text(stringResource(if (settings.tencentMapKey.isSet) R.string.token_set else R.string.token_unset)) },
+                        modifier = Modifier.testTag("tencent_key"),
+                    ) { Text(stringResource(R.string.setting_tencent_key)) }
+                }
+                Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note), extra = listOf(tencentKey)) { editing = it }
             }
         }
     }
 
     if (editingToken) {
-        TokenDialog(settings.apiToken, onDismiss = { editingToken = false }) { text ->
+        TokenDialog(settings.apiToken, TokenWords.Api, "api_token", onDismiss = { editingToken = false }) { text ->
             settings.apiToken.set(text)
             editingToken = false
+        }
+    }
+
+    if (editingTencentKey) {
+        TokenDialog(settings.tencentMapKey, TokenWords.Tencent, "tencent_key", onDismiss = { editingTencentKey = false }) { text ->
+            settings.tencentMapKey.set(text)
+            editingTencentKey = false
         }
     }
 
@@ -248,13 +267,19 @@ private fun AddressDialog(setting: Setting, title: String, onDismiss: () -> Unit
     )
 }
 
+/** What a secret's dialog calls it, asks for and says it is for. */
+private enum class TokenWords(val title: Int, val hint: Int, val replace: Int, val note: Int, val forget: Int, val show: Int, val hide: Int) {
+    Api(R.string.setting_api_token, R.string.token_hint, R.string.token_replace, R.string.settings_token_note, R.string.action_forget_token, R.string.action_show_token, R.string.action_hide_token),
+    Tencent(R.string.setting_tencent_key, R.string.tencent_key_hint, R.string.tencent_key_replace, R.string.settings_tencent_key_note, R.string.action_forget_tencent_key, R.string.action_show_key, R.string.action_hide_key),
+}
+
 /**
- * The API's token to type or paste in Material 3's secure text field, its dots shown as
- * what they are on the eye's tap; one already kept isn't shown again, only replaced, or
- * forgotten from under the field, in the error colour, as it can't be had back.
+ * A secret, the API's token or the Tencent key, to type or paste in the secure text field,
+ * its dots shown as what they are on the eye's tap; one already kept isn't shown again, only
+ * replaced, or forgotten from under the field, in the error colour, as it can't be had back.
  */
 @Composable
-private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+private fun TokenDialog(token: Token, words: TokenWords, tag: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
     val field = rememberTextFieldState()
     var hidden by remember { mutableStateOf(true) }
     val focus = remember { FocusRequester() }
@@ -262,39 +287,39 @@ private fun TokenDialog(token: Token, onDismiss: () -> Unit, onSave: (String) ->
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.setting_api_token)) },
+        title = { Text(stringResource(words.title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 OutlinedSecureTextField(
                     state = field,
-                    placeholder = { Text(stringResource(if (token.isSet) R.string.token_replace else R.string.token_hint)) },
+                    placeholder = { Text(stringResource(if (token.isSet) words.replace else words.hint)) },
                     textObfuscationMode = if (hidden) TextObfuscationMode.RevealLastTyped else TextObfuscationMode.Visible,
                     trailingIcon = {
-                        val label = stringResource(if (hidden) R.string.action_show_token else R.string.action_hide_token)
+                        val label = stringResource(if (hidden) words.show else words.hide)
                         Tooltip(label) {
-                            IconButton(onClick = { hidden = !hidden }, modifier = Modifier.testTag("api_token_reveal")) {
+                            IconButton(onClick = { hidden = !hidden }, modifier = Modifier.testTag("${tag}_reveal")) {
                                 Icon(if (hidden) AppIcons.Eye else AppIcons.EyeOff, contentDescription = label)
                             }
                         }
                     },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     onKeyboardAction = { field.text.toString().takeIf { it.isNotBlank() }?.let(onSave) },
-                    modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("api_token_field"),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("${tag}_field"),
                 )
-                // What the token is for, said where it is set: the changes wait on the phone until published.
-                Text(stringResource(R.string.settings_token_note), style = AppTheme.typography.caption, color = tokens.tx2)
+                // What the secret is for, said where it is set.
+                Text(stringResource(words.note), style = AppTheme.typography.caption, color = tokens.tx2)
                 if (token.isSet) {
                     TextButton(
                         onClick = { onSave("") },
                         colors = ButtonDefaults.textButtonColors(contentColor = tokens.danger),
-                        modifier = Modifier.testTag("api_token_forget"),
-                    ) { Text(stringResource(R.string.action_forget_token)) }
+                        modifier = Modifier.testTag("${tag}_forget"),
+                    ) { Text(stringResource(words.forget)) }
                 }
             }
         },
         confirmButton = {
             val text = field.text.toString()
-            TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank(), modifier = Modifier.testTag("api_token_save")) {
+            TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank(), modifier = Modifier.testTag("${tag}_save")) {
                 Text(stringResource(R.string.action_confirm))
             }
         },

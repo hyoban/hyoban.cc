@@ -10,6 +10,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -20,20 +21,19 @@ import java.io.IOException
 
 /**
  * The places around a point, to name a new place after, in WGS 84 as the map and the
- * records are. In China they come from the API's `/v2/pois`, Tencent's, as OpenStreetMap
- * knows few shops there; elsewhere, without the API or its token, or when it can't answer,
- * from Photon at [baseUrl]: OpenStreetMap's, the same the map draws. Where neither can be
- * reached, the system's geocoder stands in.
+ * records are. In China, with the owner's Tencent key, they come from Tencent's place
+ * search, asked from the phone, as OpenStreetMap knows few shops there; elsewhere, without
+ * the key, or when Tencent can't answer, from Photon at [baseUrl]: OpenStreetMap's, the same
+ * the map draws. Where neither can be reached, the system's geocoder stands in.
  */
 class PlaceSearch(
     private val baseUrl: () -> String,
-    private val apiUrl: () -> String = { "" },
-    private val token: () -> String? = { null },
+    private val tencentKey: () -> String? = { null },
     private val client: OkHttpClient = Http.client,
 ) {
-    constructor(baseUrl: String, apiUrl: () -> String = { "" }, token: () -> String? = { null }) : this({ baseUrl }, apiUrl, token)
+    constructor(baseUrl: String, tencentKey: () -> String? = { null }) : this({ baseUrl }, tencentKey)
 
-    /** The API's answers this run, by what was asked, so a pin moved back costs none of its day's calls. */
+    /** Tencent's answers this run, by what was asked, so a pin moved back costs none of the key's day's calls. */
     private val kept = object : LinkedHashMap<String, List<Found>>(16, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<Found>>) = size > KEPT
     }
@@ -49,9 +49,9 @@ class PlaceSearch(
         return parsePhoton(get(url.toString()))
     }
 
-    /** The places called [text], nearest [near] first: the API's in China, else Photon's. */
+    /** The places called [text], nearest [near] first: Tencent's in China, else Photon's. */
     suspend fun search(text: String, near: Fix): List<Found> {
-        pois(near, text)?.takeIf { it.isNotEmpty() }?.let { return it }
+        tencent(near, text)?.takeIf { it.isNotEmpty() }?.let { return it }
         val url = "${baseUrl()}/api".toHttpUrl().newBuilder()
             .addQueryParameter("q", text)
             .addQueryParameter("lat", near.latitude.toString())
@@ -62,22 +62,33 @@ class PlaceSearch(
     }
 
     /**
-     * What the API's `/v2/pois` knows around [fix], or called [text]; null where it has
-     * nothing to say: outside China, without the API or its token, or when it can't answer.
+     * What Tencent knows within [AROUND_METRES] of [fix], or called [text] nearest it; null
+     * where it has nothing to say: outside China, without the key, or when it can't answer,
+     * its calls for the day or the second used up among them. The point goes there in GCJ-02,
+     * taken to about 100 m so a pin moved a little asks what was asked already.
      */
-    private suspend fun pois(fix: Fix, text: String? = null): List<Found>? {
-        val api = apiUrl().trimEnd('/')
-        val token = token()?.takeIf { it.isNotBlank() }
-        if (api.isEmpty() || token == null || !inChina(fix)) return null
-        val url = "$api/v2/pois".toHttpUrl().newBuilder()
-            .addQueryParameter("lat", "%.3f".format(java.util.Locale.ROOT, fix.latitude))
-            .addQueryParameter("lon", "%.3f".format(java.util.Locale.ROOT, fix.longitude))
-            .apply { text?.let { addQueryParameter("q", it) } }
+    private suspend fun tencent(fix: Fix, text: String? = null): List<Found>? {
+        val key = tencentKey()?.takeIf { it.isNotBlank() } ?: return null
+        if (!inChina(fix)) return null
+        val snapped = Fix(Math.round(fix.latitude * 1e3) / 1e3, Math.round(fix.longitude * 1e3) / 1e3)
+        val shifted = wgsToGcj(snapped)
+        val at = "${shifted.latitude},${shifted.longitude}"
+        val url = (if (text == null) "$TENCENT/explore" else "$TENCENT/suggestion").toHttpUrl().newBuilder()
+            .apply {
+                if (text == null) {
+                    addQueryParameter("boundary", "nearby($at,$AROUND_METRES,0)")
+                    addQueryParameter("policy", "2")
+                } else {
+                    addQueryParameter("keyword", text)
+                    addQueryParameter("location", at)
+                }
+            }
+            .addQueryParameter("page_size", TENCENT_PAGE.toString())
             .build()
         val id = url.toString()
         synchronized(kept) { kept[id] }?.let { return it }
-        val found = runCatching { parsePois(get(id, token)) }
-            .onFailure { if (it !is kotlinx.coroutines.CancellationException) android.util.Log.w("Moments", "Asking the API for places failed", it) }
+        val found = runCatching { parseTencent(get(url.newBuilder().addQueryParameter("key", key).build().toString())) }
+            .onFailure { if (it !is kotlinx.coroutines.CancellationException) android.util.Log.w("Moments", "Asking Tencent for places failed: ${it.message?.replace(key, "…")}") }
             .getOrNull() ?: return null
         synchronized(kept) { kept[id] = found }
         return found
@@ -85,11 +96,11 @@ class PlaceSearch(
 
     /**
      * What to call the place at [fix], and what else is around it: the nearest shop, sight
-     * or building the API knows in China, else the nearest park, sight, shop or quarter
+     * or building Tencent knows in China, else the nearest park, sight, shop or quarter
      * Photon knows, else the street; where neither can be reached, the system's geocoder's town.
      */
     suspend fun around(context: Context, fix: Fix): Around {
-        val found = pois(fix)?.takeIf { it.isNotEmpty() } ?: runCatching { nearby(fix) }.getOrNull()
+        val found = tencent(fix)?.takeIf { it.isNotEmpty() } ?: runCatching { nearby(fix) }.getOrNull()
         if (found != null) {
             val name = nameAt(found)
             if (name != null) return Around(name, landmarks(found), landmarks(found).firstOrNull()?.let(::kindOf))
@@ -97,9 +108,8 @@ class PlaceSearch(
         return Around(placeName(context, fix), emptyList())
     }
 
-    private suspend fun get(url: String, token: String? = null): String = withContext(Dispatchers.IO) {
-        val request = Request.Builder().url(url).header("Accept", "application/json").header("User-Agent", USER_AGENT)
-            .apply { token?.let { header("Authorization", "Bearer $it") } }.build()
+    private suspend fun get(url: String): String = withContext(Dispatchers.IO) {
+        val request = Request.Builder().url(url).header("Accept", "application/json").header("User-Agent", USER_AGENT).build()
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IOException("GET $url answered ${response.code}")
             response.body?.string() ?: throw IOException("GET $url answered without a body")
@@ -111,14 +121,18 @@ class PlaceSearch(
         private const val NEARBY_RADIUS_KM = 0.3
         private const val SEARCH_LIMIT = 20
         private const val KEPT = 100
+        private const val TENCENT = "https://apis.map.qq.com/ws/place/v1"
+        /** How far around the pin Tencent is asked what there is, in metres. */
+        private const val AROUND_METRES = 400
+        private const val TENCENT_PAGE = 20
         private const val USER_AGENT = "hyoban.cc Moments for Android"
     }
 }
 
 /**
  * A place known near a point: what it is called, where, and what kind of thing it is, as
- * OpenStreetMap says it (`leisure`, `park`) or, from the API, as a place's [placeKind]; and
- * its [address] where the API gives one.
+ * OpenStreetMap says it (`leisure`, `park`) or, from Tencent, as a place's [placeKind]; and
+ * its [address] where Tencent gives one.
  */
 data class Found(
     val name: String,
@@ -147,16 +161,40 @@ fun parsePhoton(json: String): List<Found> {
     }
 }
 
-/** `/v2/pois`'s answer as places. */
-fun parsePois(json: String): List<Found> {
-    val pois = Json.parseToJsonElement(json).jsonObject["pois"] as? JsonArray ?: return emptyList()
-    return pois.mapNotNull { element ->
-        val poi = element as? JsonObject ?: return@mapNotNull null
-        fun text(key: String) = poi[key]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
-        val name = text("name") ?: return@mapNotNull null
-        val latitude = poi["latitude"]?.jsonPrimitive?.doubleOrNull ?: return@mapNotNull null
-        val longitude = poi["longitude"]?.jsonPrimitive?.doubleOrNull ?: return@mapNotNull null
-        Found(name, Fix(latitude, longitude), address = text("address"), placeKind = PlaceKind.of(text("kind")))
+/**
+ * Tencent's answer as places, shifted from its GCJ-02 back to WGS 84, each with what its
+ * category says it is; one that isn't an answer is an error, as when the key's calls are
+ * used up, and the nameless are left out.
+ */
+fun parseTencent(json: String): List<Found> {
+    val answer = Json.parseToJsonElement(json).jsonObject
+    val status = answer["status"]?.jsonPrimitive?.intOrNull
+    if (status != 0) throw IOException("Tencent answered $status: ${answer["message"]?.jsonPrimitive?.contentOrNull.orEmpty()}")
+    val data = answer["data"] as? JsonArray ?: return emptyList()
+    return data.mapNotNull { element ->
+        val place = element as? JsonObject ?: return@mapNotNull null
+        fun text(key: String) = place[key]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+        val name = text("title") ?: return@mapNotNull null
+        val location = place["location"] as? JsonObject ?: return@mapNotNull null
+        val latitude = location["lat"]?.jsonPrimitive?.doubleOrNull ?: return@mapNotNull null
+        val longitude = location["lng"]?.jsonPrimitive?.doubleOrNull ?: return@mapNotNull null
+        Found(name, gcjToWgs(Fix(latitude, longitude)), address = text("address"), placeKind = tencentKind(text("category")))
+    }
+}
+
+/** What sort of place Tencent's category says it is, `美食:中餐厅:粤菜` food; null where it says too little. */
+fun tencentKind(category: String?): PlaceKind? {
+    val parts = category.orEmpty().split(':')
+    val second = parts.getOrNull(1).orEmpty()
+    return when (parts.first()) {
+        "美食" -> PlaceKind.FOOD
+        "购物" -> PlaceKind.SHOPPING
+        "酒店宾馆" -> PlaceKind.STAY
+        "旅游景点", "自然地物", "文化场馆" -> PlaceKind.SCENIC
+        "基础设施" -> if (second == "交通设施") PlaceKind.TRANSPORT else null
+        "娱乐休闲" -> if (listOf("咖啡", "茶", "酒吧").any { it in second }) PlaceKind.FOOD else null
+        "汽车" -> if (listOf("充电", "加油", "停车").any { it in category.orEmpty() }) PlaceKind.TRANSPORT else null
+        else -> null
     }
 }
 

@@ -165,9 +165,16 @@
     <string name="setting_asset_origin">图片与视频地址</string>
     <string name="setting_map_style_light">浅色地图样式</string>
     <string name="setting_map_style_dark">深色地图样式</string>
+    <string name="setting_tencent_key">腾讯地图 Key</string>
+    <string name="tencent_key_hint">粘贴腾讯位置服务的 Key</string>
+    <string name="tencent_key_replace">输入新的 Key 来替换</string>
+    <string name="action_forget_tencent_key">移除 Key</string>
+    <string name="action_show_key">显示 Key</string>
+    <string name="action_hide_key">隐藏 Key</string>
+    <string name="settings_tencent_key_note">在中国列出附近的店、搜索地点时用它，直接从手机向腾讯请求，额度算在这个 Key 上。Key 只存在这台手机上，不会进入备份。</string>
     <string name="setting_default">默认：%1$s</string>
     <string name="settings_api_note">换了 API 地址后，手机上的副本会清空，再从新的 API 重新读取</string>
-    <string name="settings_map_note">MapLibre 样式的地址，浅色和深色随系统切换</string>
+    <string name="settings_map_note">样式是 MapLibre 样式的地址，浅色和深色随系统切换。腾讯地图 Key 用来在中国找附近的店和搜索地点，没有就用 OpenStreetMap；选地点时，图钉的位置会直接发给腾讯</string>
     <string name="setting_is_default">默认</string>
     <string name="setting_unset">未设置</string>
     <string name="setting_blank_none">留空则不使用</string>
