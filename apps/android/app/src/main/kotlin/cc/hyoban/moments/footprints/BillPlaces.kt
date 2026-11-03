@@ -26,8 +26,15 @@ class BillPlaces(private val footprints: FootprintStore, private val search: Pla
     private val asking = Mutex()
 
     /** The name of where the footprints were at [time], or null where they weren't kept or nothing there has one. */
-    suspend fun nameAt(time: Long): String? = withContext(Dispatchers.IO) {
-        val point = footprints.pointNear(time, WITHIN_MS, ACCURACY_M) ?: return@withContext null
+    suspend fun nameAt(time: Long): String? = pointAt(time)?.let { nameOf(it) }
+
+    /** Where the footprints were at [time], or null where they weren't kept. */
+    suspend fun pointAt(time: Long): Fix? = withContext(Dispatchers.IO) {
+        footprints.pointNear(time, WITHIN_MS, ACCURACY_M)?.let { Fix(it.latitude, it.longitude) }
+    }
+
+    /** The name of what is at [point], asked about and kept as a bill's spot is; null where nothing there has one. */
+    suspend fun nameOf(point: Fix): String? = withContext(Dispatchers.IO) {
         val cell = String.format(Locale.ROOT, "%.4f,%.4f", point.latitude, point.longitude)
         val known = names[cell] ?: footprints.placeName(cell)?.also { names[cell] = it }
         if (known != null) return@withContext known.ifEmpty { null }
@@ -35,7 +42,7 @@ class BillPlaces(private val footprints: FootprintStore, private val search: Pla
         // One question at a time, so a list of bills doesn't flood Photon.
         asking.withLock {
             names[cell]?.let { return@withLock it.ifEmpty { null } }
-            val found = runCatching { search.nearby(Fix(point.latitude, point.longitude)) }.getOrElse {
+            val found = runCatching { search.nearby(point) }.getOrElse {
                 unreachable += cell
                 return@withLock null
             }

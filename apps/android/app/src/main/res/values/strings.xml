@@ -330,6 +330,8 @@
     <string name="share_as_place">作为时刻的地点</string>
     <string name="error_shared_place">没能从分享里认出地点</string>
     <string name="source_shared">来自分享</string>
+    <string name="action_save_checkin">保存为签到</string>
+    <string name="message_checkin_known">这段停留已有签到</string>
     <string name="share_save_place">保存为地点</string>
     <string name="message_place_saved">已保存地点「%1$s」</string>
     <string name="message_place_known">已经有地点「%1$s」了</string>

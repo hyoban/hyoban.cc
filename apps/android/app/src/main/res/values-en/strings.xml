@@ -352,6 +352,8 @@
     <string name="share_as_place">As a Moment’s place</string>
     <string name="error_shared_place">Couldn’t find a place in what was shared</string>
     <string name="source_shared">Shared from a map</string>
+    <string name="action_save_checkin">Save as a check-in</string>
+    <string name="message_checkin_known">This stay already has a check-in</string>
     <string name="share_save_place">Save as a place</string>
     <string name="message_place_saved">Saved the place %1$s</string>
     <string name="message_place_known">%1$s is already a place</string>
