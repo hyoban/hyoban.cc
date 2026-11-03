@@ -103,9 +103,9 @@ import cc.hyoban.moments.ui.theme.fill
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit, onBill: (String) -> Unit = {}) {
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val query = rememberTextFieldState()
     val text = query.text.toString().trim()
     var kind by rememberSaveable { mutableStateOf(FeedKind.ALL) }

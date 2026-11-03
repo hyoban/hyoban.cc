@@ -11,6 +11,12 @@ import android.os.Build
 import android.util.Log
 import kotlin.reflect.KClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.TextUnit
@@ -51,9 +57,11 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.LinkActivity
 import cc.hyoban.moments.MomentsApplication
 import cc.hyoban.moments.R
-import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.MomentMedia
+import cc.hyoban.moments.data.store.Shown
+import cc.hyoban.moments.data.store.shown
 import cc.hyoban.moments.data.trips.countOf
+import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.ui.DEEP_LINK_SCHEME
 import cc.hyoban.moments.ui.format.daysBetween
 import cc.hyoban.moments.ui.format.formatDate
@@ -80,7 +88,7 @@ class MemoryWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val card = memoryCard(context)
-        provideContent { WidgetTheme(context) { WidgetCard(card) } }
+        provideContent { WidgetTheme(context) { WidgetCard(redrawn(context, card, ::memoryCard)) } }
     }
 
     override suspend fun providePreview(context: Context, widgetCategory: Int) {
@@ -90,15 +98,11 @@ class MemoryWidget : GlanceAppWidget() {
 
     private suspend fun memoryCard(context: Context): Card {
         val container = container(context)
-        val repository = container.repository
-        val moments = publicMoments(repository.moments.value, repository.trips.value, repository::isTripPrivate)
-        val memory = memoryFor(moments, LocalDate.now()) { container.mediaUrls.still(it, PHOTO_WIDTH) != null }
+        val memory = memoryFor(shown(container).moments, LocalDate.now()) { container.mediaUrls.still(it, PHOTO_WIDTH) != null }
             ?: return Card.Empty(context.getString(R.string.widget_memory_empty))
         val moment = memory.moment
         val places = container.repository.places.value
-        // Words private on their own stay off the widget, as they do off the site.
-        val text = moment.text.takeUnless { Entries.isPartPrivate(moment, "text") }.orEmpty()
-        val words = text.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
+        val words = moment.text.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
         val where = moment.places.mapNotNull { places[it]?.name }.joinToString(" ").ifEmpty { null }
 
         return Card.Photo(
@@ -109,7 +113,7 @@ class MemoryWidget : GlanceAppWidget() {
             title = words ?: where ?: formatDate(moment.dateKey),
             subtitle = if (words != null) where else null,
             link = "moment/${moment.uid}",
-            text = text.trim().ifEmpty { null },
+            text = moment.text.trim().ifEmpty { null },
         )
     }
 }
@@ -120,7 +124,7 @@ class TripWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val card = tripCard(context)
-        provideContent { WidgetTheme(context) { WidgetCard(card) } }
+        provideContent { WidgetTheme(context) { WidgetCard(redrawn(context, card, ::tripCard)) } }
     }
 
     override suspend fun providePreview(context: Context, widgetCategory: Int) {
@@ -131,10 +135,8 @@ class TripWidget : GlanceAppWidget() {
     private suspend fun tripCard(context: Context): Card {
         val container = container(context)
         val today = LocalDate.now()
-        val repository = container.repository
-        val trips = repository.trips.value
-        val moments = publicMoments(repository.moments.value, trips, repository::isTripPrivate)
-        val (trip, phase) = tripFor(trips.filterNot { repository.isTripPrivate(it.id) }, today) ?: return Card.Empty(context.getString(R.string.empty_trips))
+        val (moments, trips) = shown(container)
+        val (trip, phase) = tripFor(trips, today) ?: return Card.Empty(context.getString(R.string.empty_trips))
         val total = daysBetween(trip.start, trip.end)
         val when_ = when (phase) {
             TripPhase.ONGOING -> context.getString(R.string.trip_day, daysBetween(trip.start, today.toString())) + " " +
@@ -143,7 +145,7 @@ class TripWidget : GlanceAppWidget() {
             TripPhase.PAST -> formatRange(trip.start, trip.end, today)
         }
         val count = countOf(trip, moments, trips)
-        val cover = tripCover(trip, moments, trips)
+        val cover = coversOf(trip, moments, trips, limit = 1).firstOrNull()
 
         return Card.Photo(
             photo = cover?.let { photo(context, container, it) },
@@ -352,6 +354,29 @@ internal fun open(link: String) = actionStartActivity(
 /** The app's container, its copy of the records read before anything is picked from it. */
 internal suspend fun container(context: Context): AppContainer =
     (context.applicationContext as MomentsApplication).container.also { it.repository.loaded.first { loaded -> loaded } }
+
+/**
+ * [first], made again by [card] when what the app shows changes while the widget is drawn:
+ * demo mode turning arrives so, as an update to the session, not as a new provideGlance.
+ */
+@Composable
+private fun redrawn(context: Context, first: Card, card: suspend (Context) -> Card): Card {
+    val container = (context.applicationContext as MomentsApplication).container
+    val changed by container.shown.collectAsState()
+    var drawn by remember { mutableStateOf<Shown?>(null) }
+    val made by produceState(first, changed) {
+        val now = shown(container)
+        if (drawn != null && now != drawn) value = card(context)
+        drawn = now
+    }
+    return made
+}
+
+/** The Moments and trips the widgets may show: all of them, or in demo mode only the public's. */
+internal fun shown(container: AppContainer): Shown {
+    val repository = container.repository
+    return shown(repository.moments.value, repository.trips.value, container.settings.demo, repository::isTripPrivate)
+}
 
 /** A media item's still, from Coil's cache when it has it, small enough for a widget to carry. */
 private suspend fun photo(context: Context, container: AppContainer, media: MomentMedia): Bitmap? {

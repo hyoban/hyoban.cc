@@ -160,8 +160,8 @@ internal fun fieldOf(cents: Long?): String = cents?.let { formatCents(it).replac
 @Composable
 fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val show = rememberShowMessage()
     val resources = LocalResources.current
@@ -465,9 +465,9 @@ internal fun BillFields(
     withMoment: Boolean = false,
     keypad: Boolean = false,
 ) {
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val bookId = draft.book ?: ledger.book?.id
     val bookRecord = ledger.books.firstOrNull { it.id == bookId }
@@ -668,9 +668,11 @@ internal fun BillFields(
 
 internal enum class Sheet { Account, From, To, Split, Book, Moment, Place, Trip }
 
-private fun accountName(ledger: Ledger, id: String?): String? = id?.let { ledger.accountsById[it]?.name }
+@Composable
+private fun accountName(ledger: Ledger, id: String?): String? = id?.let(ledger.accountsById::get)?.let { accountName(it) }
 
-private fun accountIconOf(ledger: Ledger, id: String?) = id?.let(ledger.accountsById::get)?.let(::accountIcon) ?: accountKindIcon(AccountKind.OTHER)
+@Composable
+private fun accountIconOf(ledger: Ledger, id: String?) = id?.let(ledger.accountsById::get)?.let { accountIcon(it) } ?: accountKindIcon(AccountKind.OTHER)
 
 /** A row of the form that opens a choice: what it is, and what is chosen or that nothing is. */
 @Composable
@@ -830,9 +832,9 @@ private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphi
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraft, at: OffsetDateTime, fixedKind: TxnKind?, withMoment: Boolean, keypad: Boolean) {
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val kind = draft.kind
     val account = draft.account
     val shownCurrency = draft.shownCurrency(ledger)
@@ -1115,7 +1117,7 @@ private fun SplitEditor(ledger: Ledger, splits: List<Pair<String, String>>, curr
                 OutlinedTextField(
                     value = text,
                     onValueChange = { value -> onChange(splits.mapIndexed { i, it -> if (i == index) it.first to value else it }) },
-                    label = { Text(ledger.accountsById[account]?.name ?: account) },
+                    label = { Text(ledger.accountsById[account]?.let { accountName(it) } ?: account) },
                     prefix = { Text(currencySymbol(currency)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -1158,7 +1160,7 @@ fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> U
             }
             items(ledger.accountsByUse, key = { it.id }) { account ->
                 ListItem(
-                    headlineContent = { Text(account.name) },
+                    headlineContent = { Text(accountName(account)) },
                     supportingContent = { Text(accountKindLabel(account.kind) + " " + money(ledger.balances[account.id] ?: 0, account.currency)) },
                     leadingContent = { Icon(accountIcon(account), contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),

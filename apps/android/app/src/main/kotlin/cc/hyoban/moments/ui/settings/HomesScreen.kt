@@ -54,7 +54,7 @@ import java.time.LocalDate
 fun HomesScreen(container: AppContainer, onBack: () -> Unit) {
     val settings = container.settings
     val regions by produceState<List<FogRegion>?>(null) { value = container.cityRegions() }
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     // Where one lives now, as the 可能的旅程 find it: empty without records, null while worked out.

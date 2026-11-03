@@ -1,27 +1,21 @@
 package cc.hyoban.moments
 
-import cc.hyoban.moments.data.spec.Cover
-import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.widget.TripPhase
 import cc.hyoban.moments.widget.memoryFor
-import cc.hyoban.moments.widget.publicMoments
-import cc.hyoban.moments.widget.tripCover
 import cc.hyoban.moments.widget.tripFor
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * The widgets show a Moment from this day in an earlier year, or any earlier one, and the trip
- * that fits the day, never what is private.
+ * that fits the day, private ones too: the home screen is the owner's own.
  */
 class WidgetPicksTest {
     private val today = LocalDate.parse("2026-10-20")
@@ -68,38 +62,14 @@ class WidgetPicksTest {
     }
 
     @Test
-    fun `private Moments, Moments of private trips and private photos are never picked`() {
-        val secret = trip("secret", "2025-10-18", "2025-10-22")
+    fun `private Moments are picked too, but never a photo kept off covers`() {
         val moments = listOf(
             moment("HIDDEN", "2025-10-20", hidden = true),
-            moment("IN_SECRET", "2025-10-21", trip = "secret"),
-            moment("ON_SECRET_DAYS", "2025-10-20T10:00:00+08:00"),
-            moment("PHOTO_PRIVATE", "2024-10-20", private = listOf("media")),
             moment("SHOWN", "2023-03-02"),
         )
-        val shown = publicMoments(moments, listOf(secret)) { it == "secret" }
-        assertEquals(listOf("PHOTO_PRIVATE", "SHOWN"), shown.map { it.uid })
-        // Only the public one with a public photo is left, so not one from this day.
-        val memory = memoryFor(shown, today, hasStill)!!
-        assertEquals("SHOWN", memory.moment.uid)
-        assertNull(memory.yearsAgo)
-        assertNull(memoryFor(shown.take(1), today, hasStill))
-        assertTrue(Entries.isPartPrivate(moments[0], "text"))
-        assertTrue(Entries.isPartPrivate(moments[3], "media"))
-        assertTrue(!Entries.isPartPrivate(moments[3], "text"))
-    }
-
-    @Test
-    fun `a trip's cover passes over private Moments and photos`() {
-        val trip = trip("away", "2026-09-01", "2026-09-05").copy(covers = listOf(Cover("HIDDEN", "HIDDEN-1")))
-        val moments = listOf(
-            moment("HIDDEN", "2026-09-01", hidden = true),
-            moment("PHOTO_PRIVATE", "2026-09-02", private = listOf("media")),
-            moment("SHOWN", "2026-09-03"),
-        )
-        val shown = publicMoments(moments, listOf(trip)) { false }
-        assertEquals("SHOWN-1", tripCover(trip, shown, listOf(trip))?.uid)
-        assertNull(tripCover(trip, shown.take(1), listOf(trip)))
+        assertEquals("HIDDEN", memoryFor(moments, today, hasStill)!!.moment.uid)
+        val kept = moment("KEPT", "2025-10-20").let { it.copy(media = it.media.map { media -> media.copy(utility = true) }) }
+        assertNull(memoryFor(listOf(kept), today, hasStill))
     }
 
     private fun trip(id: String, start: String, end: String) = TripRecord(id, id, start, end, createdAt = start, updatedAt = start)
@@ -109,18 +79,13 @@ class WidgetPicksTest {
         occurredAt: String,
         photo: Boolean = true,
         hidden: Boolean = false,
-        trip: String? = null,
-        private: List<String> = emptyList(),
     ) = MomentRecord(
         uid,
         occurredAt,
         text = "",
         hidden = hidden,
         media = if (photo) listOf(MomentMedia("$uid-1", MediaType.IMAGE)) else emptyList(),
-        trip = trip,
         createdAt = occurredAt,
         updatedAt = occurredAt,
-        extra = if (private.isEmpty()) JsonObject(emptyMap())
-        else JsonObject(mapOf(Entries.PART_VISIBILITY to JsonObject(private.associateWith { JsonPrimitive("private") }))),
     )
 }

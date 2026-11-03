@@ -192,7 +192,7 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
                         if (month != null) {
                             Row(Modifier.padding(top = Space.l), verticalAlignment = Alignment.CenterVertically) {
                                 Text(stringResource(R.string.me_month_expense), style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.weight(1f))
-                                HideAmountsButton()
+                                DemoButton()
                             }
                             Text(money(month.expense, currency), style = AppTheme.typography.titlePage, modifier = Modifier.testTag("ledger_side_expense"))
                             Text(stringResource(R.string.ledger_income_short, money(month.income, currency)), style = AppTheme.typography.caption, color = tokens.tx3)
@@ -233,15 +233,18 @@ private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, c
     }
 }
 
-/** Hides the ledger's amounts, or shows them again: an eye beside the month's sums under 我. */
+/**
+ * Turns demo mode on or off, hiding amounts, accounts and private Moments and trips: an eye at
+ * the top of 我 and beside the ledger's month.
+ */
 @Composable
-fun HideAmountsButton() {
+fun DemoButton() {
     val settings = LocalSettings.current
-    val label = stringResource(if (settings.ledgerHidden) R.string.ledger_show_amounts else R.string.ledger_hide_amounts)
+    val label = stringResource(if (settings.demo) R.string.demo_off else R.string.demo_on)
     Tooltip(label, below = true) {
-        IconButton(onClick = { settings.changeLedgerHidden(!settings.ledgerHidden) }, modifier = Modifier.testTag("ledger_hide")) {
+        IconButton(onClick = { settings.changeDemo(!settings.demo) }, modifier = Modifier.testTag("demo")) {
             Icon(
-                if (settings.ledgerHidden) AppIcons.EyeOff else AppIcons.Eye,
+                if (settings.demo) AppIcons.EyeOff else AppIcons.Eye,
                 contentDescription = label,
                 tint = tokens.tx2,
                 modifier = Modifier.size(20.dp),
@@ -431,7 +434,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                                 } else null,
                                 trailingContent = { Text(money(balance, account.currency), style = AppTheme.typography.body.strong) },
                                 modifier = Modifier.testTag("account_${account.id}"),
-                            ) { Text(account.name, maxLines = 1) }
+                            ) { Text(accountName(account), maxLines = 1) }
                         }
                     },
                 )
@@ -449,7 +452,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                                 colors = segmentColors(),
                                 leadingContent = { Icon(accountIcon(account), contentDescription = null) },
                                 trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
-                            ) { Text(account.name, maxLines = 1) }
+                            ) { Text(accountName(account), maxLines = 1) }
                         }
                     },
                 )

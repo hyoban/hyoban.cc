@@ -188,9 +188,9 @@ fun FeedScreen(
         accessory.value = newBeside
         onDispose { if (accessory.value === newBeside) accessory.value = null }
     }
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val loaded by container.repository.loaded.collectAsStateWithLifecycle()
     val tracks = rememberTimelineTracks(container)
     // The app counts as started once the Moments on the phone are read, as the system measures
@@ -496,9 +496,9 @@ fun DayScreen(
     onBack: () -> Unit,
     onTrip: (String) -> Unit = {},
 ) {
-    val all by container.repository.moments.collectAsStateWithLifecycle()
+    val all by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val moments = remember(all, date) { all.filter { it.occurredAt.startsWith(date) } }
     val trip = remember(moments, trips, date) { moments.firstNotNullOfOrNull { tripOf(it, trips) } ?: trips.firstOrNull { date >= it.start && date <= it.end } }
     val ledgerNav = LocalLedgerNav.current
@@ -773,9 +773,9 @@ fun PlaceScreen(
     onDay: (String) -> Unit = {},
     onMap: (String) -> Unit = {},
 ) {
-    val all by container.repository.moments.collectAsStateWithLifecycle()
+    val all by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val moments = remember(all, id) { all.filter { id in it.places } }
     // Its check-ins alone, among its Moments by their days.
     val allCheckins by container.repository.checkins.collectAsStateWithLifecycle()

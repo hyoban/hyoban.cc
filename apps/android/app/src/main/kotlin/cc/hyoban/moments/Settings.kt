@@ -105,12 +105,16 @@ class Settings(context: Context) {
         prefs.edit { putStringSet("homes", homes) }
     }
 
-    /** Whether the ledger's amounts are hidden, for opening it with others looking on. */
-    var ledgerHidden: Boolean by mutableStateOf(prefs.getBoolean("ledger_hidden", false))
+    /**
+     * Demo mode, for opening the app with others looking on: the ledger's amounts, its accounts'
+     * names and balances, and private Moments and trips are hidden, the widgets included. On
+     * for whoever had the ledger's amounts hidden before it took their place.
+     */
+    var demo: Boolean by mutableStateOf(prefs.getBoolean("demo", prefs.getBoolean("ledger_hidden", false)))
         private set
 
-    fun changeLedgerHidden(on: Boolean) {
-        ledgerHidden = on
-        prefs.edit { putBoolean("ledger_hidden", on) }
+    fun changeDemo(on: Boolean) {
+        demo = on
+        prefs.edit { putBoolean("demo", on).remove("ledger_hidden") }
     }
 }

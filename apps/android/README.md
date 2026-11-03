@@ -133,9 +133,9 @@ what to try next.
 记录, or `moments://new`, opens a page of its own, or a dialog on a wide window. A Moment
 has its words, up to nine photos and videos, a time and a place, and under 加一项 a meal
 (美食: the dishes, 好吃, 一般 or 踩雷, the cost and how many it fed) and a bill (账单). It
-is 公开 or 私有; a private one is published for its owner but never shown on the site,
-nor on the home screen widgets, which leave out the Moments of a private trip, a private
-trip itself and photos private on their own as well.
+is 公开 or 私有; a private one is published for its owner but never shown on the site.
+The home screen widgets are the owner's own and show private Moments and trips too,
+except in 演示模式.
 
 - **Media.** Picked with the system's documents picker, which keeps a photo's location,
   or shared in from the gallery (Here (写一个时刻)). They are copied in whole; a motion
@@ -243,8 +243,9 @@ in their own currencies. Its page (`moments://ledger`, from 我) has three tabs:
 - **资产**, net assets, a line of the last twelve months, and the accounts by kind.
 
 The book's name switches books or shows 全部账本, which the app opens on each time it
-starts. The eye on 我's ledger card, beside this month's spending, hides every amount
-(隐藏金额), there and on the ledger's pages.
+starts. The eye at the top of 我, and beside the ledger's month, turns on 演示模式 for showing
+the app to others: every amount is hidden, an account goes by its kind alone (no name, no
+bank's mark), and private Moments and trips are left out everywhere, the widgets included.
 
 A bill is an expense, an income or a transfer (also a repayment or a loan), or a refund or
 reimbursement written from its expense. `moments://new-bill`, or the ledger's +, opens one

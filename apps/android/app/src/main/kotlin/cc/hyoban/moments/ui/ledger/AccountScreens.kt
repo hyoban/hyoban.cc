@@ -75,7 +75,7 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
     var calibrating by remember { mutableStateOf(false) }
 
     SubPage(
-        account.name,
+        accountName(account),
         nav.back,
         subtitle = accountKindLabel(account.kind) + " " + account.currency,
         actions = {

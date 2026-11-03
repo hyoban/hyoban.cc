@@ -62,8 +62,8 @@ internal fun billsOf(of: SpendingOf, ledger: Ledger, moments: Map<String, Moment
 @Composable
 fun SpendingCard(container: AppContainer, of: SpendingOf, onOpen: () -> Unit, modifier: Modifier = Modifier) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val byUid = remember(moments) { moments.associateBy { it.uid } }
     val bills = remember(ledger, of, byUid, trips) { billsOf(of, ledger, byUid, trips) }
     if (bills.isEmpty()) return

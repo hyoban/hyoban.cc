@@ -64,8 +64,8 @@ fun filterBills(ledger: Ledger, filter: LedgerFilter, query: String, moments: Ma
 @Composable
 fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     val byUid = remember(moments) { moments.associateBy { it.uid } }

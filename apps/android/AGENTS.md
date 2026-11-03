@@ -185,6 +185,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   `adb shell dumpsys activity service cc.hyoban.moments/.share.TelegramShareService`,
   not `uiautomator dump`, which interrupts the service. Threads shows a single photo
   outside any `IgLazyRow`, and repeated shares stack photos into an open composer.
+- The home screen widgets are the owner's own: they show private Moments and trips too,
+  passing over only photos kept off covers. 演示模式 (`Settings.demo`, which took the place of
+  hiding amounts) hides amounts, account names and private Moments and trips everywhere, the
+  widgets included; screens read `container.shownMoments` and `shownTrips`, not the
+  repository's, so a new screen keeps to it.
 - Trip discovery uses general time and location evidence, never exceptions for a particular
   export, city or date. Cover its rules with made-up records; private exports are local
   regression checks, not fixtures.
