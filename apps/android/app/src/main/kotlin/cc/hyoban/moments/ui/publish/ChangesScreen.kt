@@ -218,7 +218,30 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         )
                     }
                 }
-                section(R.string.section_changed_things, pending.entries, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
+                // Check-ins, Swarm's or the footprints' stays, apart from the devices and subscriptions.
+                val (checkins, things) = pending.entries.partition { cc.hyoban.moments.data.things.checkinOf((it.after ?: it.before)!!) != null }
+                section(R.string.section_changed_checkins, checkins, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
+                    val entry = (change.after ?: change.before)!!
+                    val revert = { container.scope.launch { container.repository.revertEntry(entry.entryUid) }; Unit }.takeUnless { busy }
+                    val checkin = cc.hyoban.moments.data.things.checkinOf(entry)!!
+                    val end = (entry["end"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.let(::formatTime)
+                    SwipeToRevert(revert) {
+                        OutsideCard(
+                            stringResource(R.string.timeline_checkin, checkin.venue),
+                            listOfNotNull(formatDate(checkin.at), listOfNotNull(formatTime(checkin.at), end).joinToString("–").ifEmpty { null }).joinToString(" "),
+                            null,
+                            stringResource(
+                                when {
+                                    change.after == null -> R.string.thing_deleted
+                                    change.before == null -> R.string.thing_new
+                                    else -> R.string.thing_changed
+                                },
+                            ),
+                            revert,
+                        )
+                    }
+                }
+                section(R.string.section_changed_things, things, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
                     val entry = (change.after ?: change.before)!!
                     val revert = { container.scope.launch { container.repository.revertEntry(entry.entryUid) }; Unit }.takeUnless { busy }
                     val device = cc.hyoban.moments.data.things.Things.device(entry)
