@@ -72,6 +72,7 @@ import cc.hyoban.moments.ui.design.OutlinedTextField
 import cc.hyoban.moments.ui.design.SegmentedButton
 import cc.hyoban.moments.ui.design.SegmentedListItem
 import cc.hyoban.moments.ui.design.SingleChoiceSegmentedButtonRow
+import cc.hyoban.moments.ui.design.rememberHaptics
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.runtime.Composable
@@ -183,10 +184,12 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
         },
     )
 
+    val haptics = rememberHaptics()
     fun save() {
-        val txn = draft.toTxn(ledger, at, trips, original, related, fixedKind) { show(resources.getString(it)) } ?: return
+        val txn = draft.toTxn(ledger, at, trips, original, related, fixedKind) { show(resources.getString(it)) } ?: run { haptics.reject(); return }
         scope.launch {
             container.ledger.saveTxn(txn)
+            haptics.confirm()
             // Reimbursed, an expense waiting for it is done.
             if (fixedKind == TxnKind.REIMBURSEMENT && related != null && related.reimburse != Reimburse.DONE) {
                 container.ledger.saveTxn(related.copy(reimburse = Reimburse.DONE, updatedAt = txn.updatedAt))
@@ -1066,8 +1069,9 @@ private val SIDEWAYS_KEY_HEIGHT = 40.dp
 /** A key of the keypad, on the fill. */
 @Composable
 private fun Key(key: Char, modifier: Modifier, height: Dp = KeyHeight, onClick: () -> Unit) {
+    val haptics = rememberHaptics()
     Button(
-        onClick = onClick,
+        onClick = { haptics.key(); onClick() },
         shape = AppTheme.shapes.medium,
         colors = ButtonDefaults.buttonColors(containerColor = tokens.fill, contentColor = tokens.tx),
         contentPadding = PaddingValues(0.dp),

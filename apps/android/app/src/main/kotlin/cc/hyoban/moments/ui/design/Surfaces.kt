@@ -56,7 +56,12 @@ fun AppSwitch(checked: Boolean, modifier: Modifier = Modifier, enabled: Boolean 
     val edge by animateColorAsState(if (checked) tokens.accent else tokens.borderStrong, AppTheme.motionScheme.fastEffectsSpec(), label = "switch edge")
     val thumb by animateColorAsState(if (checked) tokens.onAccent else tokens.borderStrong, AppTheme.motionScheme.fastEffectsSpec(), label = "switch thumb")
     val x by animateDpAsState(if (checked) 21.dp else 3.dp, AppTheme.motionScheme.fastSpatialSpec(), label = "switch thumb x")
-    val tap = if (onCheckedChange != null) Modifier.toggleable(checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange) else Modifier
+    val haptics = rememberHaptics()
+    val tap = if (onCheckedChange != null) {
+        Modifier.toggleable(checked, enabled = enabled, role = Role.Switch) { haptics.toggle(it); onCheckedChange(it) }
+    } else {
+        Modifier
+    }
     Box(
         modifier
             .then(tap)

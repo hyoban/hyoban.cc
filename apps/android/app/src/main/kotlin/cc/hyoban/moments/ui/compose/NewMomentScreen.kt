@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.compose
 
+import cc.hyoban.moments.ui.design.rememberHaptics
 import cc.hyoban.moments.ui.theme.dividerColor
 import androidx.compose.foundation.layout.fillMaxHeight
 import cc.hyoban.moments.ui.components.railPadding
@@ -46,9 +47,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
@@ -711,7 +710,7 @@ private fun PhotoStrip(
     modifier: Modifier = Modifier,
 ) {
     val list = rememberLazyListState()
-    val haptics = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val currentMove by rememberUpdatedState(onMove)
     // The photo held, and how far it has been dragged from where it is laid out.
     var held by remember { mutableStateOf<Uri?>(null) }
@@ -743,7 +742,7 @@ private fun PhotoStrip(
         currentMove(current.index, target.index)
         // Still under the finger once laid out where it now goes.
         offset += current.offset - target.offset
-        haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+        haptics.tick()
         // Held where it was in the same layout, rather than following the item it was anchored to.
         list.requestScrollToItem(first.first, first.second)
     }
@@ -779,7 +778,7 @@ private fun PhotoStrip(
                     .pointerInput(uri) {
                         detectDragGesturesAfterLongPress(
                             onDragStart = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                haptics.lift()
                                 settle?.cancel()
                                 settling = null
                                 held = uri

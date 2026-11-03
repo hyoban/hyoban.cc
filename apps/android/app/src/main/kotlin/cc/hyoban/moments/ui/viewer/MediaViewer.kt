@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.viewer
 
+import cc.hyoban.moments.ui.design.rememberHaptics
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.Spinner
 import android.app.Activity
@@ -145,6 +146,7 @@ fun MediaViewer(
     val dragging by remember { derivedStateOf { drag != 0f } }
     val density = LocalDensity.current
     val closeAt = with(density) { 120.dp.toPx() }
+    val haptics = rememberHaptics()
     // In a window of its own only the video shows: no bars, no controls.
     val inPip = LocalInPictureInPicture.current
     ViewerSystemBars(hidden = !chrome || inPip)
@@ -219,7 +221,10 @@ fun MediaViewer(
                 .draggable(
                     orientation = Orientation.Vertical,
                     enabled = !zoomed,
-                    state = rememberDraggableState { delta -> drag += delta },
+                    state = rememberDraggableState { delta ->
+                        haptics.across(abs(drag), abs(drag + delta), closeAt)
+                        drag += delta
+                    },
                     onDragStopped = { velocity ->
                         if (abs(drag) > closeAt || abs(velocity) > 2000f) onBack()
                         else animate(drag, 0f, initialVelocity = velocity) { value, _ -> drag = value }

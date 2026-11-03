@@ -165,19 +165,24 @@ fun PullToRefreshBox(isRefreshing: Boolean, onRefresh: () -> Unit, modifier: Mod
     val scope = rememberCoroutineScope()
     val pull = remember { Animatable(0f) }
     val threshold = with(androidx.compose.ui.platform.LocalDensity.current) { 80.dp.toPx() }
+    val haptics = rememberHaptics()
     LaunchedEffect(isRefreshing) { pull.animateTo(if (isRefreshing) threshold else 0f, spring(dampingRatio = 1f, stiffness = 500f)) }
-    val connection = remember(isRefreshing, threshold) {
+    val connection = remember(isRefreshing, threshold, haptics) {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 if (isRefreshing || available.y >= 0f || pull.value <= 0f || source != NestedScrollSource.UserInput) return Offset.Zero
                 val before = pull.value
+                haptics.across(before, (before + available.y).coerceAtLeast(0f), threshold)
                 scope.launch { pull.snapTo((before + available.y).coerceAtLeast(0f)) }
                 return Offset(0f, (before + available.y).coerceAtLeast(0f) - before)
             }
 
             override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
                 if (isRefreshing || available.y <= 0f || source != NestedScrollSource.UserInput) return Offset.Zero
-                scope.launch { pull.snapTo((pull.value + available.y * 0.5f).coerceAtMost(threshold * 1.6f)) }
+                val before = pull.value
+                val after = (before + available.y * 0.5f).coerceAtMost(threshold * 1.6f)
+                haptics.across(before, after, threshold)
+                scope.launch { pull.snapTo(after) }
                 return Offset(0f, available.y)
             }
 
@@ -213,13 +218,19 @@ fun SwipeToDismissBox(onDismiss: () -> Unit, backgroundContent: @Composable RowS
     val scope = rememberCoroutineScope()
     val offset = remember { Animatable(0f) }
     var width by remember { mutableFloatStateOf(0f) }
+    val haptics = rememberHaptics()
     Box(modifier.onSizeChanged { width = it.width.toFloat() }) {
         Row(Modifier.matchParentSize(), content = backgroundContent)
         Box(
             Modifier
                 .offset { IntOffset(offset.value.roundToInt(), 0) }
                 .draggable(
-                    rememberDraggableState { delta -> scope.launch { offset.snapTo((offset.value + delta).coerceIn(-width, 0f)) } },
+                    rememberDraggableState { delta ->
+                        val before = offset.value
+                        val after = (before + delta).coerceIn(-width, 0f)
+                        haptics.across(-before, -after, width * 0.4f)
+                        scope.launch { offset.snapTo(after) }
+                    },
                     Orientation.Horizontal,
                     onDragStopped = { velocity ->
                         if (offset.value < -width * 0.4f || velocity < -2000f) {

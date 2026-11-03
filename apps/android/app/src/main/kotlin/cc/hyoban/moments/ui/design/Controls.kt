@@ -323,13 +323,17 @@ private fun SegmentTrack(modifier: Modifier, content: @Composable RowScope.() ->
 
 /** A segment chosen as one of its row's. */
 @Composable
-fun RowScope.SegmentedButton(selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, label: @Composable () -> Unit) =
-    Segment(selected, modifier.selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick), label)
+fun RowScope.SegmentedButton(selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, label: @Composable () -> Unit) {
+    val haptics = rememberHaptics()
+    Segment(selected, modifier.selectable(selected, enabled = enabled, role = Role.RadioButton) { if (!selected) haptics.tick(); onClick() }, label)
+}
 
 /** A segment turned on and off on its own. */
 @Composable
-fun RowScope.SegmentedButton(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, label: @Composable () -> Unit) =
-    Segment(checked, modifier.toggleable(checked, enabled = enabled, role = Role.Checkbox, onValueChange = onCheckedChange), label)
+fun RowScope.SegmentedButton(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, label: @Composable () -> Unit) {
+    val haptics = rememberHaptics()
+    Segment(checked, modifier.toggleable(checked, enabled = enabled, role = Role.Checkbox) { haptics.tick(); onCheckedChange(it) }, label)
+}
 
 @Composable
 private fun RowScope.Segment(on: Boolean, modifier: Modifier, label: @Composable () -> Unit) {

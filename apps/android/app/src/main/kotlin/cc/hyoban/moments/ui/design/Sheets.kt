@@ -118,6 +118,7 @@ fun ModalBottomSheet(
     val offset = remember { Animatable(Float.MAX_VALUE) }
     // How far it travels out: its height from the foot, or on its side its width out to the end.
     var travel by remember { mutableFloatStateOf(0f) }
+    val haptics = rememberHaptics()
     val leave: () -> Unit = {
         scope.launch {
             offset.animateTo(travel, spring(stiffness = 1500f))
@@ -172,7 +173,10 @@ fun ModalBottomSheet(
                     .draggable(
                         rememberDraggableState { delta ->
                             val out = if (side && !ltr) -delta else delta
-                            scope.launch { offset.snapTo((offset.value + out).coerceIn(0f, travel)) }
+                            val before = offset.value
+                            val after = (before + out).coerceIn(0f, travel)
+                            haptics.across(before, after, travel / 3)
+                            scope.launch { offset.snapTo(after) }
                         },
                         if (side) Orientation.Horizontal else Orientation.Vertical,
                         onDragStopped = { velocity -> settle(if (side && !ltr) -velocity else velocity) },
