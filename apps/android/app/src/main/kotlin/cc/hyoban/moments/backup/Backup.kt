@@ -1,6 +1,7 @@
 package cc.hyoban.moments.backup
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,7 +24,7 @@ import java.util.concurrent.TimeUnit
 
 // Backing the phone's databases up to a WebDAV directory of the owner's: once a day while
 // 每天自动备份 is on, or when 立即备份 is tapped, as WorkManager's work. Only the newest
-// backups are kept there; restoring is by hand, from the zip.
+// backups are kept there. 从备份恢复 fetches one back and starts the app again to put it in place.
 
 /** Why the last backup didn't get there, said on the page in the owner's words. */
 enum class BackupFailure { Auth, NotFound, Server, Unreachable, Other }
@@ -82,6 +83,35 @@ class Backup(private val context: Context) {
 
     fun backUpNow() = BackupWorker.enqueueNow(context)
 
+    /** The backups in the directory, newest first. */
+    suspend fun backups(): List<String> = withContext(Dispatchers.IO) {
+        dav().list().filter(BackupArchive::isBackup).sortedDescending()
+    }
+
+    /**
+     * Fetches the backup [name] and starts the app again, which puts it in place of the phone's
+     * databases and unpublished Moments before opening them; returns only when it failed.
+     */
+    suspend fun restore(name: String) = lock.withLock {
+        withContext(Dispatchers.IO) {
+            val zip = File(context.cacheDir, "restore.zip")
+            try {
+                dav().get(name, zip)
+                BackupArchive.stage(context, zip)
+            } catch (error: Exception) {
+                Log.w(TAG, "Restore failed", error)
+                throw error
+            } finally {
+                zip.delete()
+            }
+            val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)!!
+            context.startActivity(Intent.makeRestartActivityTask(launch.component))
+            Runtime.getRuntime().exit(0)
+        }
+    }
+
+    private fun dav() = WebDav(client, url.value, user.value, password.value)
+
     /** Writes a backup and puts it in the directory, then deletes the ones past the newest [KEEP]; one at a time. */
     suspend fun run() = lock.withLock {
         withContext(Dispatchers.IO) {
@@ -93,7 +123,7 @@ class Backup(private val context: Context) {
                 val name = BackupArchive.name()
                 val zip = File(directory, name)
                 BackupArchive.write(context, zip, File(directory, "scratch"))
-                val dav = WebDav(client, url.value, user.value, password.value)
+                val dav = dav()
                 dav.makeDirectory()
                 dav.put(name, zip)
                 BackupArchive.beyond(dav.list(), KEEP).forEach(dav::delete)

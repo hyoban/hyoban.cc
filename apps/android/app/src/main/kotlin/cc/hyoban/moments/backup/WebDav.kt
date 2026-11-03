@@ -17,7 +17,8 @@ import java.net.URLDecoder
 import javax.xml.parsers.DocumentBuilderFactory
 
 // The few WebDAV requests a backup needs, over the app's HTTP client: make the directory,
-// put a file in it, list it and delete from it. Nothing else of the server is read.
+// put a file in it, list it, fetch a file from it and delete from it. Nothing else of the
+// server is read.
 
 /** A WebDAV directory at [directory], signed in as [user] with [password]. */
 class WebDav(private val client: OkHttpClient, directory: String, user: String, password: String) {
@@ -41,6 +42,15 @@ class WebDav(private val client: OkHttpClient, directory: String, user: String, 
 
     fun put(name: String, file: File) {
         send(request(file(name)).put(file.asRequestBody(ZIP)).build())
+    }
+
+    /** Fetches the file [name] into [into]. */
+    fun get(name: String, into: File) {
+        val request = request(file(name)).get().build()
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw HttpException(response.code, "GET ${request.url} answered ${response.code}")
+            into.outputStream().use { response.body!!.byteStream().copyTo(it) }
+        }
     }
 
     /** The names of the files directly in the directory. */

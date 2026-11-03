@@ -188,8 +188,13 @@ under `local/` the unpublished Moments and places, without `local/media/`. Photo
 the tokens stay out. 每天自动备份, on until turned off, backs up once a day as WorkManager's
 periodic work on a network with the battery not low; 立即备份 backs up at once. After each
 backup the directory keeps the newest seven and deletes the rest, leaving other files alone.
-Restoring is by hand: the files go back where the zip's paths say, `databases/` into
-`noBackupFilesDir` and `local/` into `filesDir`.
+从备份恢复 lists the backups in the directory, newest first; restoring the one picked
+downloads it, unpacks only what a backup holds into `noBackupFilesDir/restore/` and starts
+the app again. As the app starts, before anything opens the databases,
+`BackupArchive.restoreStaged` moves the ledger, the footprints, the copy, the footprints'
+JSON and `local/` (its `media/` left in place) aside into `noBackupFilesDir/restore-replaced/`,
+kept until the next restore, and puts the backup's files where they were; cut off halfway, it
+carries on the next time. Settings, tokens and the WebDAV sign-in stay as they are.
 
 ## Importing
 
