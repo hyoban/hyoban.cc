@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.ui.design.rememberHaptics
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.CompositionLocalProvider
 import cc.hyoban.moments.ui.LocalSettings
@@ -283,6 +284,7 @@ private fun TrackShareRow(container: AppContainer, trip: cc.hyoban.moments.data.
         }
     }
     val scope = rememberCoroutineScope()
+    val haptics = rememberHaptics()
     val toggle = { on: Boolean ->
         scope.launch(kotlinx.coroutines.Dispatchers.IO) {
             val current = share
@@ -305,7 +307,7 @@ private fun TrackShareRow(container: AppContainer, trip: cc.hyoban.moments.data.
     Row(
         Modifier
             .fillMaxWidth()
-            .toggleable(share != null, role = androidx.compose.ui.semantics.Role.Switch, onValueChange = toggle)
+            .toggleable(share != null, role = androidx.compose.ui.semantics.Role.Switch) { haptics.toggle(it); toggle(it) }
             .padding(horizontal = Space.gutter, vertical = Space.m)
             .testTag("trip_track_public"),
         verticalAlignment = Alignment.CenterVertically,

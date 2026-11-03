@@ -99,6 +99,7 @@ import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.ui.design.IconButtonDefaults
 import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.rememberHaptics
 import cc.hyoban.moments.ui.design.Surface
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.minimumInteractiveComponentSize
@@ -425,6 +426,7 @@ private fun PlayerCard(
                 )
             } }
         }
+        val haptics = rememberHaptics()
         val letGo = {
             dragging = false
             scope.launch { if (reduced) drag.snapTo(Offset.Zero) else drag.animateTo(Offset.Zero, settle) }
@@ -442,25 +444,39 @@ private fun PlayerCard(
                 .then(if (stop != null) Modifier.sharedCard(stop.stop.moment.uid, cardCorner = Radius.large) else Modifier)
                 .pointerInput(swipe, forward) {
                     var dragged = Offset.Zero
+                    // What letting go now would do, if anything.
+                    fun aim(): CardSwipe? {
+                        val (x, y) = dragged
+                        return when {
+                            abs(x) >= abs(y) && x * forward > swipe -> CardSwipe.Next
+                            abs(x) >= abs(y) && -x * forward > swipe -> CardSwipe.Previous
+                            !fill && abs(y) > abs(x) && y > swipe -> CardSwipe.Fold
+                            !fill && abs(y) > abs(x) && -y > swipe -> CardSwipe.Open
+                            else -> null
+                        }
+                    }
                     detectDragGestures(
                         onDragStart = {
                             dragged = Offset.Zero
                             dragging = true
                         },
                         onDragEnd = {
-                            val (x, y) = dragged
-                            when {
-                                abs(x) >= abs(y) && x * forward > swipe -> controller.stepPhoto(1)
-                                abs(x) >= abs(y) && -x * forward > swipe -> controller.stepPhoto(-1)
-                                !fill && abs(y) > abs(x) && y > swipe -> onExpanded(false)
-                                !fill && abs(y) > abs(x) && -y > swipe -> onExpanded(true)
+                            when (aim()) {
+                                CardSwipe.Next -> controller.stepPhoto(1)
+                                CardSwipe.Previous -> controller.stepPhoto(-1)
+                                CardSwipe.Fold -> onExpanded(false)
+                                CardSwipe.Open -> onExpanded(true)
+                                null -> Unit
                             }
                             letGo()
                         },
                         onDragCancel = { letGo() },
                     ) { change, amount ->
                         change.consume()
+                        val before = aim()
                         dragged += amount
+                        val after = aim()
+                        if (after != before) if (after != null) haptics.armed() else haptics.disarmed()
                         // Held back, so the card leans the way it's pulled rather than leaving its place.
                         scope.launch { drag.snapTo(dragged * DRAG_FOLLOW) }
                     }
@@ -816,3 +832,6 @@ private fun <T> lateral(order: (T) -> Int = { it as Int }): AnimatedContentTrans
         }
     }
 }
+
+/** What a swipe of the playback's card does once let go past its threshold. */
+private enum class CardSwipe { Next, Previous, Fold, Open }

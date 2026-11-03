@@ -7,6 +7,7 @@ import androidx.compose.ui.semantics.heading
 import cc.hyoban.moments.ui.components.SideBySide
 import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.components.LocalTopClearance
+import cc.hyoban.moments.ui.design.rememberHaptics
 import cc.hyoban.moments.ui.design.strong
 import kotlinx.coroutines.launch
 
@@ -143,6 +144,11 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
 
     // Back to where it was opened from once everything is published.
     var started by remember { mutableStateOf(false) }
+    val haptics = rememberHaptics()
+    // Done, or stopped with changes still waiting, felt as well as said.
+    LaunchedEffect(busy) {
+        if (!busy && started) if (pending.size == 0) haptics.confirm() else haptics.reject()
+    }
     LaunchedEffect(publishing, pending) {
         if (busy) started = true else if (started && pending.size == 0) onBack()
     }

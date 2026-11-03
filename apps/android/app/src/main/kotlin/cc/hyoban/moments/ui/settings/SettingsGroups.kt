@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.ui.design.rememberHaptics
 import cc.hyoban.moments.ui.design.AppSwitch
 import cc.hyoban.moments.ui.theme.dividerColor
 import cc.hyoban.moments.ui.theme.cardBorder
@@ -54,8 +55,9 @@ fun SwitchRow(
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
+    val haptics = rememberHaptics()
     SegmentedListItem(
-        onClick = onClick,
+        onClick = { haptics.toggle(!checked); onClick() },
         shapes = shapes,
         enabled = enabled,
         colors = segmentColors(),

@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.rememberHaptics
 import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.Surface
 import cc.hyoban.moments.ui.design.Text
@@ -209,6 +210,7 @@ fun BarChart(
     val base = tokens.border
     val select by rememberUpdatedState(onSelect)
     val picked by rememberUpdatedState(selected)
+    val haptics = rememberHaptics()
     val max = (if (stacked) (0 until count).maxOf { i -> series.sumOf { it[i].coerceAtLeast(0) } } else series.maxOf { s -> s.maxOf { it } }).coerceAtLeast(1)
     // More back than spent, a refund's, falls below the baseline rather than vanishing.
     val min = if (stacked) 0 else series.minOf { s -> s.minOf { it } }.coerceAtMost(0)
@@ -219,6 +221,7 @@ fun BarChart(
                 .pointerInput(count) {
                     detectTapGestures { offset ->
                         val index = (offset.x / (size.width.toFloat() / count)).toInt().coerceIn(0, count - 1)
+                        if (index != picked) haptics.tick()
                         select(if (index == picked) null else index)
                     }
                 },
@@ -281,6 +284,7 @@ fun LineChart(
     val surface = LocalSurfaceLevel.current.raised.fill()
     val select by rememberUpdatedState(onSelect)
     val picked by rememberUpdatedState(selected)
+    val haptics = rememberHaptics()
     val values = lines.flatten()
     val top = values.max().coerceAtLeast(if (zeroBased) 1 else values.max())
     val low = if (zeroBased) min(0, values.min()) else values.min()
@@ -292,6 +296,7 @@ fun LineChart(
                 .pointerInput(length) {
                     detectTapGestures { offset ->
                         val index = (offset.x / size.width * (length - 1)).roundToInt().coerceIn(0, length - 1)
+                        if (index != picked) haptics.tick()
                         select(if (index == picked) null else index)
                     }
                 },
@@ -355,6 +360,7 @@ fun DonutChart(
     val reveal = rememberReveal(slices)
     val select by rememberUpdatedState(onSelect)
     val picked by rememberUpdatedState(selected)
+    val haptics = rememberHaptics()
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Box(Modifier.size(200.dp), contentAlignment = Alignment.Center) {
             Canvas(
@@ -369,6 +375,7 @@ fun DonutChart(
                             val angle = (Math.toDegrees(atan2(dy, dx).toDouble()) + 90 + 360) % 360
                             var start = 0.0
                             val index = slices.indexOfFirst { (cents, _) -> start += cents * 360.0 / total; angle < start }
+                            if (index >= 0 && index != picked) haptics.tick()
                             select(if (index == picked || index < 0) null else index)
                         }
                     },
@@ -490,6 +497,7 @@ fun YearHeatmap(year: Int, byDay: Map<LocalDate, Long>, selected: LocalDate?, on
     val level = remember(byDay) { levelsOf(byDay.filterKeys { it.year == year }.values) }
     val select by rememberUpdatedState(onSelect)
     val picked by rememberUpdatedState(selected)
+    val haptics = rememberHaptics()
     val gutter = 20.dp
     Canvas(
         Modifier.fillMaxWidth().aspectRatio(31f / 12f * 0.9f)
@@ -502,6 +510,7 @@ fun YearHeatmap(year: Int, byDay: Map<LocalDate, Long>, selected: LocalDate?, on
                     val column = ((offset.x - left) / cell).toInt()
                     val month = java.time.YearMonth.of(year, row + 1)
                     val date = if (column in 0 until month.lengthOfMonth()) month.atDay(column + 1) else null
+                    if (date != null && date != picked) haptics.tick()
                     select(if (date == picked) null else date)
                 }
             },
