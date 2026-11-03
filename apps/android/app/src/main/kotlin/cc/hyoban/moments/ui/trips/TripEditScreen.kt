@@ -71,7 +71,7 @@ fun TripEditScreen(
     endDay: String? = null,
     name: String? = null,
 ) {
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val trip = remember(trips, id) { id?.let { trips.firstOrNull { it.id == id } } }
     if (id != null && trip == null) return
     val today = remember { LocalDate.now().toString() }
@@ -86,7 +86,7 @@ fun TripEditScreen(
     var include by rememberSaveable { mutableStateOf(collection?.let { cc.hyoban.moments.data.spec.Entries.strings(it, "include") }.orEmpty()) }
     var exclude by rememberSaveable { mutableStateOf(collection?.let { cc.hyoban.moments.data.spec.Entries.strings(it, "exclude") }.orEmpty()) }
     var covers by rememberSaveable { mutableStateOf(collection?.let { cc.hyoban.moments.data.spec.Entries.coversOf(it) }.orEmpty().map { "${it.first}/${it.second}" }) }
-    val all by container.repository.moments.collectAsStateWithLifecycle()
+    val all by container.shownMoments.collectAsStateWithLifecycle()
     // The Moments of its days and of two days either side, which can be taken in from outside.
     val nearby = remember(all, start, end) {
         val from = LocalDate.parse(start).minusDays(2).toString()

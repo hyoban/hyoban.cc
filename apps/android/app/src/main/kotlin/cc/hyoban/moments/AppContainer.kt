@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.runtime.snapshotFlow
 import cc.hyoban.moments.data.api.MomentsApi
 import cc.hyoban.moments.data.local.AmapShare
 import cc.hyoban.moments.data.local.Photos
@@ -21,6 +22,8 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.store.DataStore
 import cc.hyoban.moments.data.store.MomentsRepository
 import cc.hyoban.moments.data.store.PublishProgress
+import cc.hyoban.moments.data.store.Shown
+import cc.hyoban.moments.data.store.shown
 import cc.hyoban.moments.publish.PublishWorker
 import cc.hyoban.moments.data.trips.TripRoutes
 import cc.hyoban.moments.ui.format.failureReason
@@ -41,6 +44,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -98,6 +103,14 @@ class AppContainer(context: Context) {
     /** The routes of the trips the API hasn't routed, as one made on the phone, worked out here the same way. */
     val phoneRoutes = cc.hyoban.moments.data.trips.PhoneRoutes(File(context.filesDir, "phone-routes.json"))
 
+    /** The Moments and trips the screens show: all of them, or in demo mode only the public's. */
+    val shown: StateFlow<Shown> =
+        kotlinx.coroutines.flow.combine(repository.moments, repository.trips, snapshotFlow { settings.demo }) { moments, trips, demo ->
+            shown(moments, trips, demo, repository::isTripPrivate)
+        }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, shown(repository.moments.value, repository.trips.value, settings.demo, repository::isTripPrivate))
+    val shownMoments: StateFlow<List<MomentRecord>> = shown.map { it.moments }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, shown.value.moments)
+    val shownTrips: StateFlow<List<cc.hyoban.moments.data.spec.TripRecord>> = shown.map { it.trips }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, shown.value.trips)
+
     /**
      * The legs of each trip the API won't route, by trip id: with an API, only one made on the
      * phone and not yet published, so the site's are never asked for while their routes load.
@@ -147,6 +160,8 @@ class AppContainer(context: Context) {
         // Routes were once kept per trip from the site's trip pages, under routes/.
         File(context.filesDir, "routes").takeIf { it.isDirectory }?.deleteRecursively()
         scope.launch { ledger.load() }
+        // The widgets show only what the public sees in demo mode, so they are drawn again as it turns.
+        scope.launch { snapshotFlow { settings.demo }.drop(1).collect { Widgets.update(appContext) } }
         // The legs of the trips the API hasn't routed are routed here, once they settle.
         scope.launch {
             @OptIn(kotlinx.coroutines.FlowPreview::class)

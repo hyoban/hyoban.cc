@@ -193,7 +193,7 @@
     <string name="widget_heatmap_moments">Moments</string>
     <string name="widget_heatmap_spending">Spending</string>
     <string name="widget_heatmap_footprints">Footprints</string>
-    <string name="widget_heatmap_moments_note">How many Moments each day, public ones only</string>
+    <string name="widget_heatmap_moments_note">How many Moments each day</string>
     <string name="widget_heatmap_spending_note">How much each day, as shades only, no amounts</string>
     <string name="widget_heatmap_footprints_note">How far each day went</string>
     <string name="widget_heatmap_settings_note">A square a day, deeper for more.</string>
@@ -606,8 +606,8 @@
     <string name="ledger_balance_label">Balance</string>
     <string name="ledger_switch_book">Switch book</string>
     <string name="ledger_all_books">All books</string>
-    <string name="ledger_hide_amounts">Hide amounts</string>
-    <string name="ledger_show_amounts">Show amounts</string>
+    <string name="demo_on">Demo mode</string>
+    <string name="demo_off">Leave demo mode</string>
     <string name="ledger_settings_title">Ledger</string>
     <string name="ledger_empty_title">No bills yet</string>
     <string name="ledger_empty_body">Bills stay on this phone and are never synced or published. Import an iCost backup or export, or add a bill.</string>

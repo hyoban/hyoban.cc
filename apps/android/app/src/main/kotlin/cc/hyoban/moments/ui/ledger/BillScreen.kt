@@ -74,9 +74,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val txn = ledger.txnsById[id] ?: return
     val scope = rememberCoroutineScope()
     var deleting by remember { mutableStateOf(false) }
@@ -144,13 +144,13 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                     if (txn.kind == TxnKind.TRANSFER) {
                         txn.account?.let(ledger.accountsById::get)?.let { from ->
                             add { shapes ->
-                                InfoRow(shapes, accountIcon(from), stringResource(R.string.ledger_from_account), from.name,
+                                InfoRow(shapes, accountIcon(from), stringResource(R.string.ledger_from_account), accountName(from),
                                     trailing = txn.accountAmount?.let { money(it, from.currency) }) { nav.account(from.id) }
                             }
                         }
                         txn.toAccount?.let(ledger.accountsById::get)?.let { to ->
                             add { shapes ->
-                                InfoRow(shapes, accountIcon(to), stringResource(R.string.ledger_to_account), to.name,
+                                InfoRow(shapes, accountIcon(to), stringResource(R.string.ledger_to_account), accountName(to),
                                     trailing = txn.toAmount?.let { money(it, to.currency) }) { nav.account(to.id) }
                             }
                         }
@@ -160,7 +160,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                         txn.payers.forEach { split ->
                             val account = ledger.accountsById[split.account] ?: return@forEach
                             add { shapes ->
-                                InfoRow(shapes, accountIcon(account), stringResource(R.string.ledger_account), account.name,
+                                InfoRow(shapes, accountIcon(account), stringResource(R.string.ledger_account), accountName(account),
                                     trailing = if (txn.splits.isNotEmpty()) money(split.amount, txn.currency)
                                     else txn.accountAmount?.let { money(it, account.currency) }) { nav.account(account.id) }
                             }

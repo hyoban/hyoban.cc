@@ -158,9 +158,9 @@ fun MomentScreen(
     onNewBill: (String) -> Unit = LocalLedgerNav.current?.let { nav -> { uid -> nav.entry(LedgerEntryArgs(moment = uid)) } } ?: {},
 ) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val moment = remember(moments, uid) { moments.firstOrNull { it.uid == uid } } ?: return
     val trip = remember(moment, trips) { tripOf(moment, trips) }
     val urls = container.mediaUrls

@@ -216,9 +216,9 @@ private fun MapContent(
     onNewTrip: () -> Unit,
     onSuggestedTrip: (TripSuggestion) -> Unit,
 ) {
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val routes by container.tripRoutes.collectAsStateWithLifecycle()
     val byPlace = remember(moments) {
         moments.flatMap { moment -> moment.places.distinct().map { it to moment } }.groupBy({ it.first }, { it.second })

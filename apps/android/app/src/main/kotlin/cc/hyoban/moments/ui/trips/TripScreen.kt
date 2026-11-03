@@ -94,8 +94,8 @@ fun TripScreen(
     onMap: (String) -> Unit = {},
     onEdit: (String) -> Unit = {},
 ) {
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
-    val all by container.repository.moments.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
+    val all by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val routes by container.tripRoutes.collectAsStateWithLifecycle()
     val trip = remember(trips, id) { trips.firstOrNull { it.id == id } } ?: return
@@ -332,8 +332,8 @@ private fun TripFacets(
     onBills: () -> Unit,
 ) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val second by container.repository.second.collectAsStateWithLifecycle()
     val km = remember(route) {
         route.sumOf { segment ->

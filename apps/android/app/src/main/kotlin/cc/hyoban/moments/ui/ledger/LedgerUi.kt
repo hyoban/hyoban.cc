@@ -90,12 +90,12 @@ data class LedgerFilter(
 val LocalLedgerNav = staticCompositionLocalOf<LedgerNav?> { null }
 
 /**
- * An amount as [formatMoney] writes it, or only its sign and currency while the ledger's amounts
- * are hidden; shown, with the minus sign (−) the design sets rather than a hyphen.
+ * An amount as [formatMoney] writes it, or only its sign and currency in demo mode; shown, with
+ * the minus sign (−) the design sets rather than a hyphen.
  */
 @Composable
 fun money(cents: Long, currency: String): String =
-    if (LocalSettings.current.ledgerHidden) (if (cents < 0) "−" else "") + currencySymbol(currency) + "****" else formatMoney(cents, currency).replaceFirst('-', '−')
+    if (LocalSettings.current.demo) (if (cents < 0) "−" else "") + currencySymbol(currency) + "****" else formatMoney(cents, currency).replaceFirst('-', '−')
 
 /** An amount as a bill shows it: what was spent plain, what came in marked with a plus. */
 @Composable
@@ -162,8 +162,17 @@ fun accountKindIcon(kind: AccountKind): ImageVector = when (kind) {
     AccountKind.OTHER -> AppIcons.Savings
 }
 
-/** An account's icon: the mark of the bank or wallet its name says, else what its name or kind says it is. */
+/**
+ * An account's icon: the mark of the bank or wallet its name says, else what its name or kind
+ * says it is; in demo mode only its kind's, as a bank's mark says whose the account is.
+ */
+/** An account's name, or in demo mode only its kind. */
+@Composable
+fun accountName(account: Account): String = if (LocalSettings.current.demo) accountKindLabel(account.kind) else account.name
+
+@Composable
 fun accountIcon(account: Account): ImageVector {
+    if (LocalSettings.current.demo) return accountKindIcon(account.kind)
     val name = account.name
     return brandIcon(name) ?: when {
         name.contains("红包") -> AppIcons.RedPacket
@@ -332,8 +341,8 @@ fun LeadingIcon(icon: ImageVector, modifier: Modifier = Modifier, tonal: Boolean
 @Composable
 fun txnTitle(txn: Txn, ledger: Ledger): String = when (txn.kind) {
     TxnKind.TRANSFER -> {
-        val from = txn.account?.let(ledger.accountsById::get)?.name ?: stringResource(R.string.ledger_no_account)
-        val to = txn.toAccount?.let(ledger.accountsById::get)?.name ?: stringResource(R.string.ledger_no_account)
+        val from = txn.account?.let(ledger.accountsById::get)?.let { accountName(it) } ?: stringResource(R.string.ledger_no_account)
+        val to = txn.toAccount?.let(ledger.accountsById::get)?.let { accountName(it) } ?: stringResource(R.string.ledger_no_account)
         "$from → $to"
     }
     else -> ledger.categoryPath(txn.category) ?: kindLabel(txn.kind)

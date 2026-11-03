@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -74,6 +75,7 @@ import cc.hyoban.moments.ui.DEEP_LINK_SCHEME
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.Text
 import androidx.lifecycle.lifecycleScope
+import cc.hyoban.moments.MomentsApplication
 import cc.hyoban.moments.R
 import cc.hyoban.moments.footprints.TrackSelection
 import cc.hyoban.moments.footprints.trackStats
@@ -123,8 +125,10 @@ class HeatmapWidget : GlanceAppWidget() {
             // A source chosen while the widget is drawn arrives as its state changing, not a new
             // provideGlance: its days are read then, the widget keeping the last ones until they are.
             val chosen = HeatSource.of(currentState(SOURCE))
-            val shown by produceState(first to firstDays, chosen) {
-                if (value.first != chosen) value = chosen to heatDays(context, chosen, from, today)
+            // The Moments, which demo mode narrows, are counted again as they change.
+            val moments by (context.applicationContext as MomentsApplication).container.shownMoments.collectAsState()
+            val shown by produceState(first to firstDays, chosen, moments) {
+                if (value.first != chosen || chosen == HeatSource.MOMENTS) value = chosen to heatDays(context, chosen, from, today)
             }
             WidgetTheme(context) { HeatCard(shown.first, shown.second, today, choose = choose) }
         }
@@ -150,8 +154,7 @@ private suspend fun heatDays(context: Context, source: HeatSource, from: LocalDa
     val container = container(context)
     return when (source) {
         HeatSource.MOMENTS -> {
-            val repository = container.repository
-            publicMoments(repository.moments.value, repository.trips.value, repository::isTripPrivate)
+            shown(container).moments
                 .mapNotNull { runCatching { LocalDate.parse(it.dateKey) }.getOrNull() }
                 .filter { it in from..to }
                 .groupingBy { it }.eachCount()

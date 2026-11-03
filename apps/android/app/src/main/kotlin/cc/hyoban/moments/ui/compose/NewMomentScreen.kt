@@ -263,7 +263,7 @@ fun NewMomentScreen(
     val withMoment = original != null || !startWithBill
     var withBill by rememberSaveable { mutableStateOf(original == null && startWithBill) }
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val bill = rememberBillDraft(ledger, null, null, null, LedgerEntryArgs())
     EnsureBook(container, enabled = withBill)
 

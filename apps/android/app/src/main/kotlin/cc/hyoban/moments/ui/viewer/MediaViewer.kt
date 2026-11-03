@@ -130,7 +130,7 @@ fun MediaViewer(
     onBack: () -> Unit,
     onDay: (String) -> Unit = {},
 ) {
-    val moments by container.repository.moments.collectAsStateWithLifecycle()
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val moment = remember(moments, uid) { moments.firstOrNull { it.uid == uid } } ?: return
     val media = moment.media

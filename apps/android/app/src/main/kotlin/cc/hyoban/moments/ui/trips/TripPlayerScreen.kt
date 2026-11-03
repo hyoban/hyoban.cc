@@ -171,8 +171,8 @@ class PlaybackHolder : ViewModel() {
  */
 @Composable
 fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> Unit, onBack: () -> Unit) {
-    val trips by container.repository.trips.collectAsStateWithLifecycle()
-    val all by container.repository.moments.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
+    val all by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val routes by container.tripRoutes.collectAsStateWithLifecycle()
     val trip = remember(trips, id) { trips.firstOrNull { it.id == id } } ?: return

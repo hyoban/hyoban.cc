@@ -190,7 +190,7 @@
     <string name="widget_heatmap_moments">记录</string>
     <string name="widget_heatmap_spending">支出</string>
     <string name="widget_heatmap_footprints">足迹</string>
-    <string name="widget_heatmap_moments_note">每天写了几个时刻，只算公开的</string>
+    <string name="widget_heatmap_moments_note">每天写了几个时刻</string>
     <string name="widget_heatmap_spending_note">每天花了多少，只有深浅，不写金额</string>
     <string name="widget_heatmap_footprints_note">每天走了多远</string>
     <string name="widget_heatmap_settings_note">每天一格，越深越多。</string>
@@ -583,8 +583,8 @@
     <string name="ledger_balance_label">余额</string>
     <string name="ledger_switch_book">切换账本</string>
     <string name="ledger_all_books">全部账本</string>
-    <string name="ledger_hide_amounts">隐藏金额</string>
-    <string name="ledger_show_amounts">显示金额</string>
+    <string name="demo_on">演示模式</string>
+    <string name="demo_off">退出演示模式</string>
     <string name="ledger_settings_title">记账</string>
     <string name="ledger_empty_title">还没有账单</string>
     <string name="ledger_empty_body">账单只存在这台手机上，不会同步或发布。可以从 iCost 的备份或导出导入，也可以直接记一笔。</string>
