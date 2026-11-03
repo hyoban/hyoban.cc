@@ -13,8 +13,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   install it over what is there, a few seconds each: `./gradlew :app:assembleDebug`, then
   `adb install -r app/build/outputs/apk/debug/app-debug.apk`. Launch it and look at
   logcat's crash buffer. Build only what the step needs, not the CI set each time.
-- While the change is still in development, install only the debug build, never the release.
-  Install the release once, after committing and before pushing: `./gradlew :app:assembleRelease`
+- Install only the debug build, never the release, unless the user asks for the release, not
+  even before pushing. Then: `./gradlew :app:assembleRelease`
   (half a minute, R8's), then `adb install-multiple -r app/build/outputs/apk/release/app-release.apk
   app/build/outputs/apk/release/baselineProfiles/0/app-release.dm`: with its profile beside it the
   phone compiles the app ahead of time on install (`dumpsys package` says `speed-profile`), where
@@ -22,7 +22,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   and dropped frames on it then, as the debug build runs slower. Both are signed
   with the debug key unless `local.properties` has a release key, so either installs over
   the other and the app's data stays. The emulator only ever gets the debug build, so
-  `run-as` can read its files: when the work was tested there, skip the release install.
+  `run-as` can read its files.
 - Testing never costs the app's data: the ledger and footprints live in `noBackupFilesDir`
   and have no other copy. Ask before anything that would lose or reset it, and say what
   would go: `adb uninstall`, `pm clear`, a reinstall after `INSTALL_FAILED_UPDATE_INCOMPATIBLE`
