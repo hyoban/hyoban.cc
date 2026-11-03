@@ -76,7 +76,9 @@ class PlaceSearch(
             .build()
         val id = url.toString()
         synchronized(kept) { kept[id] }?.let { return it }
-        val found = runCatching { parsePois(get(id, token)) }.getOrNull() ?: return null
+        val found = runCatching { parsePois(get(id, token)) }
+            .onFailure { if (it !is kotlinx.coroutines.CancellationException) android.util.Log.w("Moments", "Asking the API for places failed", it) }
+            .getOrNull() ?: return null
         synchronized(kept) { kept[id] = found }
         return found
     }

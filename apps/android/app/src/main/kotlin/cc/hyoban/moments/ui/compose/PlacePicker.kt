@@ -1,12 +1,12 @@
 package cc.hyoban.moments.ui.compose
 
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
 import cc.hyoban.moments.ui.components.isPhoneLandscape
@@ -41,27 +41,27 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import cc.hyoban.moments.ui.design.BottomSheetScaffold
 import cc.hyoban.moments.ui.design.Button
-import cc.hyoban.moments.ui.design.FilterChip
-import cc.hyoban.moments.ui.design.FilterChipDefaults
 import cc.hyoban.moments.ui.design.FloatingActionButton
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.OutlinedTextField
-import cc.hyoban.moments.ui.design.AssistChip
 import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.DropdownMenu
+import cc.hyoban.moments.ui.design.DropdownMenuItem
+import cc.hyoban.moments.ui.design.strong
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.unit.Dp
 import cc.hyoban.moments.ui.design.ListItem
 import cc.hyoban.moments.ui.design.SearchField
 import cc.hyoban.moments.ui.design.Surface
-import cc.hyoban.moments.ui.components.FloatingButton
 import cc.hyoban.moments.ui.theme.cardBorder
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
@@ -70,9 +70,11 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalFocusManager
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.animation.AnimatedVisibility
 import cc.hyoban.moments.ui.components.predictiveBackScale
@@ -83,7 +85,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.heightIn
-import cc.hyoban.moments.ui.design.AssistChipDefaults
 import androidx.compose.ui.graphics.TransformOrigin
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.TextButton
@@ -142,10 +143,12 @@ internal sealed interface PlaceChoice {
 }
 
 /**
- * The place for a new Moment, chosen on a map: a pin stands at its middle, and the map
- * dragged under it makes a new place there, named after what is around it until a name is
- * typed; a known place's dot tapped chooses it. A place found in a map app comes in by
- * sharing it to the app instead.
+ * The place for a new Moment, chosen on a map: a pin stands at its middle, and under the map
+ * a search and one list of what is there, the choice first, ticked. The map dragged under the
+ * pin makes a new place there, named after what is around it; a row tapped, a search's result
+ * or a known place's dot chooses that instead. Opened with nothing chosen and nowhere to
+ * start, it finds where the phone is. A place found in a map app comes in by sharing it to
+ * the app instead.
  */
 @Composable
 internal fun PlacePicker(
@@ -162,6 +165,8 @@ internal fun PlacePicker(
     var pick by remember { mutableStateOf(current) }
     var named by remember { mutableStateOf(current is PlaceChoice.New) }
     var name by remember { mutableStateOf((current as? PlaceChoice.New)?.name.orEmpty()) }
+    // A name typed stays where the pin goes; one taken from a row follows the pin to what is there next.
+    var typedName by remember { mutableStateOf(current is PlaceChoice.New) }
     // A kind chosen by hand stays; until then it follows what the pin is named after.
     var kindChosen by remember { mutableStateOf((current as? PlaceChoice.New)?.kind != null) }
     val opening = remember {
@@ -173,14 +178,14 @@ internal fun PlacePicker(
     }
     var target by remember { mutableStateOf(opening?.let { MapTarget(it.latitude, it.longitude, PICK_ZOOM) }) }
     var locating by remember { mutableStateOf(false) }
-    // Just where the phone is becomes the choice, a new place named after what is around it;
-    // a known place nearby is a chip away. Asked for only here, never on opening the page.
+    // Just where the phone is becomes the choice, a new place named after what is around it.
     val locate: () -> Unit = {
         locating = true
         scope.launch {
             currentLocation(context)?.let { location ->
                 val here = Fix(location.latitude, location.longitude)
                 named = false
+                typedName = false
                 kindChosen = false
                 pick = PlaceChoice.New(name, here)
                 target = MapTarget(here.latitude, here.longitude, PICK_ZOOM)
@@ -191,26 +196,47 @@ internal fun PlacePicker(
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
         if (granted.values.any { it }) locate() else Toast.makeText(context, R.string.error_location_permission, Toast.LENGTH_SHORT).show()
     }
+    val askToLocate = {
+        if (!locating) {
+            if (LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
+                locate()
+            } else {
+                permission.launch(LOCATION_PERMISSIONS)
+            }
+        }
+    }
+    // The keyboard the Moment's words had goes, so the map shows. Opened with nothing chosen
+    // and nowhere to start, where the phone is: asked once, and refused, the map waits for a
+    // drag or the locate button.
+    val focusManager = LocalFocusManager.current
+    LaunchedEffect(Unit) {
+        focusManager.clearFocus()
+        if (opening == null) askToLocate()
+    }
     val fly = { to: Fix -> target = MapTarget(to.latitude, to.longitude, PICK_ZOOM) }
     val choose: (String) -> Unit = { id ->
         pick = PlaceChoice.Known(id)
         places[id]?.let { fly(it.fix()) }
     }
+    val chooseFound: (Found) -> Unit = { found ->
+        named = true
+        typedName = false
+        name = found.name
+        kindChosen = false
+        pick = PlaceChoice.New(found.name, found.fix, kindOf(found))
+        fly(found.fix)
+    }
 
     // Back, by the system's gesture, previews closing the picker under the finger.
     val back = rememberPredictiveBack(onBack = onDismiss)
 
-    // The search, standing in for the choice under the map while it is open: what is called
-    // what is typed, nearest the pin first; null while it is looked up.
-    var searching by remember { mutableStateOf(false) }
+    // What is typed in the search: while there is any, the list is what is called that,
+    // nearest the pin first; null while it is looked up.
     val query = rememberTextFieldState()
     var results by remember { mutableStateOf<List<Found>?>(emptyList()) }
-    val closeSearch = {
-        searching = false
-        query.clearText()
-    }
-    // Back closes the search before the picker.
-    BackHandler(enabled = searching, onBack = closeSearch)
+    val keyboard = LocalSoftwareKeyboardController.current
+    // Back clears the search before it closes the picker.
+    BackHandler(enabled = query.text.isNotEmpty()) { query.clearText() }
 
     // Where the pin has come to rest: what is around it, to name a new place after, and
     // the name of the nearest of them for it until one is typed.
@@ -233,8 +259,9 @@ internal fun PlacePicker(
             pick = new.copy(name = name, kind = if (kindChosen) new.kind else around.kind)
         }
     }
-    LaunchedEffect(searching) {
-        if (!searching) return@LaunchedEffect
+    // Where the search looks from, read when it runs: the pin may only come to rest after it starts.
+    val searchFrom by rememberUpdatedState(pinned ?: opening ?: fix)
+    LaunchedEffect(Unit) {
         snapshotFlow { query.text.toString().trim() }.collectLatest { text ->
             if (text.isEmpty()) {
                 results = emptyList()
@@ -243,23 +270,14 @@ internal fun PlacePicker(
             // Asked once typing pauses, so each word costs one of the day's searches, not each letter.
             delay(400)
             results = null
-            val near = pinned ?: opening ?: fix
+            val near = searchFrom
             results = if (near == null) emptyList() else runCatching { search.search(text, near) }.getOrDefault(emptyList())
         }
     }
-    val chooseFound: (Found) -> Unit = { found ->
-        named = true
-        name = found.name
-        val kind = kindOf(found)
-        kindChosen = false
-        pick = PlaceChoice.New(found.name, found.fix, kind)
-        fly(found.fix)
-        closeSearch()
-    }
 
-    // What is chosen in Material 3's standard bottom sheet over the map, as the map's own
-    // place is: as tall as what it holds, held there, the map reaching under its corners and
-    // the pin at the middle of what shows of it.
+    // What is chosen in the standard bottom sheet over the map, as the map's own place is: as
+    // tall as what it holds, held there, the map reaching under its corners and the pin at the
+    // middle of what shows of it.
     val density = LocalDensity.current
     var sheetHeight by remember { mutableStateOf(0.dp) }
     var dragging by remember { mutableStateOf(false) }
@@ -268,46 +286,43 @@ internal fun PlacePicker(
     // at the middle of the map beside it (H08).
     val sideways = isPhoneLandscape()
     val card: @Composable (Modifier) -> Unit = { cardModifier ->
-        if (searching) {
-            SearchCard(query, results, pinned ?: opening ?: fix, onPick = chooseFound, onClose = closeSearch, modifier = cardModifier)
-        } else {
-            ChoiceCard(
-                pick = pick,
-                name = name,
-                places = places,
-                landmarks = landmarks,
-                onLandmark = { landmark ->
-                    named = true
-                    name = landmark.name
-                    val kind = kindOf(landmark)
-                    if (kind != null) kindChosen = false
-                    pick = PlaceChoice.New(landmark.name, landmark.fix, kind ?: (pick as? PlaceChoice.New)?.kind)
-                    fly(landmark.fix)
-                },
-                onKind = { kind ->
-                    when (val chosen = pick) {
-                        is PlaceChoice.New -> {
-                            kindChosen = kind != null
-                            pick = chosen.copy(kind = kind)
-                        }
-                        // A known place keeps a kind: the one it has chosen again is no change.
-                        is PlaceChoice.Known -> if (kind != null) {
-                            pick = chosen.copy(kind = kind.takeUnless { it == PlaceKind.of(places[chosen.id]?.kind) })
-                        }
-                        PlaceChoice.None -> Unit
+        PlaceCard(
+            tall = sideways,
+            pick = pick,
+            name = name,
+            places = places,
+            landmarks = landmarks,
+            query = query,
+            results = results,
+            near = pinned ?: opening ?: fix,
+            locating = locating,
+            onFound = { found ->
+                chooseFound(found)
+                query.clearText()
+                keyboard?.hide()
+            },
+            onKnown = choose,
+            onKind = { kind ->
+                when (val chosen = pick) {
+                    is PlaceChoice.New -> {
+                        kindChosen = true
+                        pick = chosen.copy(kind = kind)
                     }
-                },
-                onName = {
-                    named = true
-                    name = it
-                    (pick as? PlaceChoice.New)?.let { new -> pick = new.copy(name = it) }
-                },
-                onKnown = choose,
-                onNone = { onPick(PlaceChoice.None) },
-                onConfirm = { onPick(pick) },
-                modifier = cardModifier,
-            )
-        }
+                    // A known place keeps a kind: the one it has chosen again is no change.
+                    is PlaceChoice.Known -> pick = chosen.copy(kind = kind.takeUnless { it == PlaceKind.of(places[chosen.id]?.kind) })
+                    PlaceChoice.None -> Unit
+                }
+            },
+            onName = {
+                named = true
+                typedName = true
+                name = it
+                (pick as? PlaceChoice.New)?.let { new -> pick = new.copy(name = it) }
+            },
+            onNone = { onPick(PlaceChoice.None) },
+            onConfirm = { onPick(pick) },
+            modifier = cardModifier,
+        )
     }
     val mapArea: @Composable (Modifier) -> Unit = { areaModifier ->
         Box(areaModifier) {
@@ -319,6 +334,7 @@ internal fun PlacePicker(
                     val at = Fix(latitude, longitude)
                     // Dragged, the pin is a new place where it stands; a new place flown to an address stays one there.
                     if (byUser || pick is PlaceChoice.New) pick = PlaceChoice.New(name, at, (pick as? PlaceChoice.New)?.kind)
+                    if (byUser && !typedName) named = false
                 },
                 onPlace = choose,
                 modifier = Modifier.fillMaxSize().testTag("place_map"),
@@ -330,37 +346,19 @@ internal fun PlacePicker(
                 pick !is PlaceChoice.Known,
                 enter = scaleIn(motion.fastSpatialSpec(), transformOrigin = TransformOrigin(0.5f, 1f)) + fadeIn(motion.fastEffectsSpec()),
                 exit = scaleOut(motion.fastSpatialSpec(), transformOrigin = TransformOrigin(0.5f, 1f)) + fadeOut(motion.fastEffectsSpec()),
-                modifier = Modifier.align(Alignment.Center).offset(y = -(PIN_SIZE / 2)),
+                modifier = Modifier.align(Alignment.Center).offset(y = -(PIN_HEIGHT / 2)),
             ) {
-                // Lifted off the map while a finger moves it, a small shadow left where its point
-                // will land; set down again when the map comes to rest.
                 val lift by animateDpAsState(if (dragging) PIN_LIFT else 0.dp, motion.fastSpatialSpec(), label = "pin lift")
-                Box(contentAlignment = Alignment.BottomCenter) {
-                    Box(
-                        Modifier.size(width = 12.dp, height = 4.dp).offset(y = 2.dp)
-                            .graphicsLayer { alpha = (lift / PIN_LIFT).coerceIn(0f, 1f) * 0.25f }
-                            .background(tokens.tx, CircleShape),
-                    )
-                    Icon(AppIcons.Pin, contentDescription = null, tint = tokens.accent, modifier = Modifier.offset(y = -lift).size(PIN_SIZE))
-                }
+                PickPin(lift)
             }
             FloatingBack(onDismiss, Modifier.align(Alignment.TopStart))
-            FloatingButton(AppIcons.Search, stringResource(R.string.action_search), { searching = true }, Modifier.align(Alignment.TopEnd), tag = "place_search")
-            // At the map's bottom end, clear of the sheet's corners, the search above at its top
-            // end; a box of its own places it, as the tooltip's box doesn't pass an alignment on.
-            Box(Modifier.align(Alignment.BottomEnd).padding(bottom = if (sideways) 0.dp else SHEET_CORNER).padding(Space.l)) {
+            // At the map's bottom end, clear of the sheet's corners; a box of its own places
+            // it, as the tooltip's box doesn't pass an alignment on.
+            Box(Modifier.align(if (sideways) Alignment.TopEnd else Alignment.BottomEnd).padding(bottom = if (sideways) 0.dp else SHEET_CORNER).padding(Space.l)) {
                 val locateLabel = stringResource(R.string.action_locate)
                 Tooltip(locateLabel) {
                     FloatingActionButton(
-                        onClick = {
-                            if (!locating) {
-                                if (LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
-                                    locate()
-                                } else {
-                                    permission.launch(LOCATION_PERMISSIONS)
-                                }
-                            }
-                        },
+                        onClick = askToLocate,
                         // Round on the floating surface, as the map's own controls are, quieter
                         // than the sheet's one action.
                         containerColor = SurfaceLevel.Floating.fill(),
@@ -388,7 +386,6 @@ internal fun PlacePicker(
             Box(
                 Modifier.width(PANEL_WIDTH).fillMaxHeight().background(AppColors.sheet)
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End + WindowInsetsSides.Vertical))
-                    .verticalScroll(rememberScrollState())
                     .padding(top = Space.s),
             ) { card(Modifier) }
         }
@@ -412,91 +409,95 @@ internal fun PlacePicker(
 /** How wide the choice's panel stands down the end on a phone on its side. */
 private val PANEL_WIDTH = 360.dp
 
-/** What is chosen, under the map: a known place, a new one to name, or none; and the buttons to keep it. */
+/**
+ * The pin: an ink head with a dot of the page in it on a thin stem, whose point is where the
+ * place is; [lift] raises head and stem off the map while it is dragged, a faint shadow left
+ * where the point will land.
+ */
 @Composable
-private fun ChoiceCard(
+private fun PickPin(lift: Dp) {
+    val ink = tokens.tx
+    val page = tokens.bg
+    Canvas(Modifier.size(PIN_WIDTH, PIN_HEIGHT)) {
+        val middle = size.width / 2
+        val shadow = (lift / PIN_LIFT).coerceIn(0f, 1f)
+        drawOval(
+            ink.copy(alpha = 0.15f + 0.1f * shadow),
+            topLeft = Offset(middle - 4.dp.toPx(), size.height - 3.dp.toPx()),
+            size = Size(8.dp.toPx(), 3.dp.toPx()),
+        )
+        val up = lift.toPx()
+        val head = 11.dp.toPx()
+        drawRoundRect(
+            ink,
+            topLeft = Offset(middle - 1.dp.toPx(), head * 1.6f - up),
+            size = Size(2.dp.toPx(), size.height - 1.5.dp.toPx() - head * 1.6f),
+            cornerRadius = CornerRadius(1.dp.toPx()),
+        )
+        drawCircle(ink, head, Offset(middle, head + 1.dp.toPx() - up))
+        drawCircle(page, 4.dp.toPx(), Offset(middle, head + 1.dp.toPx() - up))
+    }
+}
+
+/** One row of the list under the map: the choice, a known place or one found there. */
+private sealed interface Entry {
+    data object Chosen : Entry
+    data class Known(val id: String, val metres: Double) : Entry
+    data class Around(val found: Found) : Entry
+}
+
+/**
+ * Under the map: the search, then one list, the choice first and ticked, then the known
+ * places close by and what is found around the pin, or while something is typed what is
+ * called that; and the buttons to keep it. The choice tapped again names a new place; its
+ * kind is a menu at its end.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PlaceCard(
+    /** In the panel down the end: the list takes the height, the buttons at its foot. */
+    tall: Boolean,
     pick: PlaceChoice,
     name: String,
     places: Map<String, Place>,
     landmarks: List<Found>,
-    onLandmark: (Found) -> Unit,
-    onKind: (PlaceKind?) -> Unit,
-    onName: (String) -> Unit,
+    query: TextFieldState,
+    results: List<Found>?,
+    near: Fix?,
+    locating: Boolean,
+    onFound: (Found) -> Unit,
     onKnown: (String) -> Unit,
+    onKind: (PlaceKind) -> Unit,
+    onName: (String) -> Unit,
     onNone: () -> Unit,
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Growing or shrinking from one kind of choice to another, rather than jumping, the map above following.
-    Box(modifier.fillMaxWidth()) {
-        Column(
-            Modifier.navigationBarsPadding().imePadding().animateContentSize(AppTheme.motionScheme.defaultSpatialSpec()).padding(start = Space.xl, end = Space.xl, top = Space.l, bottom = Space.m),
-            verticalArrangement = Arrangement.spacedBy(Space.s),
-        ) {
-            when (pick) {
-                is PlaceChoice.Known -> {
-                    Text(stringResource(R.string.label_known_place), style = AppTheme.typography.label, color = tokens.tx2)
-                    Text(places[pick.id]?.name ?: pick.id, style = AppTheme.typography.titlePage, modifier = Modifier.testTag("chosen_place"))
-                    places[pick.id]?.let { known ->
-                        KindChips(pick.kind ?: PlaceKind.of(known.kind), onKind)
-                        NearbyChips(known.fix(), pick.id, places, landmarks, onKnown, onLandmark)
-                    }
-                }
-                is PlaceChoice.New -> {
-                    Text(stringResource(R.string.place_new_here), style = AppTheme.typography.label, color = tokens.tx2)
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = onName,
-                        label = { Text(stringResource(R.string.place_name)) },
-                        supportingText = { Text(coordinatesName(pick.fix)) },
-                        singleLine = true,
-                        // Done, or Enter, keeps the place as confirm does, once it has a name.
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { if (name.isNotBlank()) onConfirm() }),
-                        modifier = Modifier.fillMaxWidth().testTag("place_name"),
-                    )
-                    KindChips(pick.kind, onKind)
-                    NearbyChips(pick.fix, null, places, landmarks, onKnown, onLandmark)
-                }
-                PlaceChoice.None -> {
-                    Text(stringResource(R.string.place_drag_hint), style = AppTheme.typography.bodyReading, color = tokens.tx2)
-                }
+    val keyboard = LocalSoftwareKeyboardController.current
+    // With the keyboard up the list stands shorter and the buttons go, so the map keeps a part
+    // of the screen; the keyboard's done or a row tapped brings them back.
+    val typing = WindowInsets.isImeVisible && !tall
+    val typed = query.text.toString().trim()
+    var renaming by remember { mutableStateOf(false) }
+    LaunchedEffect(pick::class, (pick as? PlaceChoice.Known)?.id) { if (pick !is PlaceChoice.New) renaming = false }
+    val chosenId = (pick as? PlaceChoice.Known)?.id
+    val rows: List<Entry> = when {
+        typed.isNotEmpty() -> results.orEmpty().map(Entry::Around)
+        pick == PlaceChoice.None -> emptyList()
+        else -> buildList {
+            add(Entry.Chosen)
+            near?.let { at ->
+                nearestPlaces(places, at, limit = KNOWN_NEARBY + 1)
+                    .filter { it.first != chosenId && it.second <= NEARBY_METRES }
+                    .take(KNOWN_NEARBY)
+                    .forEach { (id, metres) -> add(Entry.Known(id, metres)) }
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = onNone, modifier = Modifier.testTag("place_none")) { Text(stringResource(R.string.place_none)) }
-                Spacer(Modifier.weight(1f))
-                Button(
-                    onClick = onConfirm,
-                    enabled = when (pick) {
-                        is PlaceChoice.New -> pick.name.isNotBlank()
-                        is PlaceChoice.Known -> true
-                        PlaceChoice.None -> false
-                    },
-                    modifier = Modifier.testTag("place_confirm"),
-                ) { Text(stringResource(R.string.action_confirm)) }
-            }
+            landmarks.filter { it.name != (pick as? PlaceChoice.New)?.name }
+                .sortedBy { distance(at = near, found = it) }
+                .forEach { add(Entry.Around(it)) }
         }
     }
-}
-
-/**
- * The search under the map: its field, and what is called what is typed, each with where it
- * is and how far from [near]; tapped, the pin moves there and takes its name and kind.
- */
-@Composable
-private fun SearchCard(
-    query: TextFieldState,
-    results: List<Found>?,
-    near: Fix?,
-    onPick: (Found) -> Unit,
-    onClose: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val focus = remember { FocusRequester() }
-    val keyboard = LocalSoftwareKeyboardController.current
-    LaunchedEffect(Unit) { focus.requestFocus() }
-    val text = query.text.toString().trim()
-    Column(modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(top = Space.l, bottom = Space.m)) {
+    Column(modifier.fillMaxWidth().then(if (tall) Modifier.fillMaxHeight() else Modifier).navigationBarsPadding().imePadding().padding(top = Space.l, bottom = Space.m)) {
         Surface(
             shape = Corners.full,
             color = SurfaceLevel.Card.fill(),
@@ -508,9 +509,7 @@ private fun SearchCard(
                 onSearch = { keyboard?.hide() },
                 placeholder = { Text(stringResource(R.string.place_search_hint), maxLines = 1) },
                 leadingIcon = {
-                    IconButton(onClick = onClose, modifier = Modifier.testTag("place_search_back")) {
-                        Icon(AppIcons.ArrowLeft, contentDescription = stringResource(R.string.action_back))
-                    }
+                    Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) { Icon(AppIcons.Search, contentDescription = null) }
                 },
                 trailingIcon = if (query.text.isNotEmpty()) {
                     {
@@ -521,99 +520,171 @@ private fun SearchCard(
                 } else {
                     null
                 },
-                modifier = Modifier.focusRequester(focus).testTag("place_search_field"),
+                modifier = Modifier.testTag("place_search_field"),
             )
         }
-        Box(Modifier.fillMaxWidth().heightIn(min = 56.dp, max = SEARCH_HEIGHT).padding(top = Space.s)) {
+        Box(Modifier.fillMaxWidth().then(if (tall) Modifier.weight(1f) else Modifier.heightIn(min = LIST_MIN, max = if (typing) LIST_TYPING else LIST_MAX)).padding(top = Space.s)) {
             when {
-                text.isEmpty() -> Unit
-                results == null -> Spinner(Modifier.align(Alignment.Center).size(24.dp), color = tokens.tx3)
-                results.isEmpty() -> Text(
-                    stringResource(R.string.search_none_for, text),
+                typed.isNotEmpty() && results == null || typed.isEmpty() && locating && pick == PlaceChoice.None ->
+                    Spinner(Modifier.align(Alignment.Center).size(24.dp), color = tokens.tx3)
+                typed.isNotEmpty() && rows.isEmpty() -> Text(
+                    stringResource(R.string.search_none_for, typed),
                     style = AppTheme.typography.body,
                     color = tokens.tx2,
                     modifier = Modifier.align(Alignment.Center),
                 )
-                else -> LazyColumn(Modifier.testTag("place_results")) {
-                    itemsIndexed(results, key = { index, it -> "$index:${it.name}@${it.fix}" }) { index, found ->
-                        val distance = near?.let { distance(it, found.fix) }
-                        ListItem(
-                            headlineContent = { Text(found.name, maxLines = 1) },
-                            supportingContent = listOfNotNull(found.address, distance?.let { formatDistance(it) })
-                                .takeIf { it.isNotEmpty() }
-                                ?.let { parts -> { Text(parts.joinToString(" · "), maxLines = 1) } },
-                            leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
-                            modifier = Modifier.clickable { onPick(found) }.padding(horizontal = Space.s).testTag("place_result_$index"),
-                        )
+                rows.isEmpty() -> Text(
+                    stringResource(R.string.place_drag_hint),
+                    style = AppTheme.typography.body,
+                    color = tokens.tx2,
+                    modifier = Modifier.align(Alignment.Center).padding(horizontal = Space.xl),
+                )
+                else -> LazyColumn(Modifier.testTag("place_rows")) {
+                    itemsIndexed(rows, key = { index, row ->
+                        when (row) {
+                            Entry.Chosen -> "chosen"
+                            is Entry.Known -> "known:${row.id}"
+                            is Entry.Around -> "$index:${row.found.name}@${row.found.fix}"
+                        }
+                    }) { index, row ->
+                        when (row) {
+                            Entry.Chosen -> ChosenRow(pick, name, places, renaming, onRename = { renaming = true }, onName = onName, onDone = { renaming = false }, onKind = onKind, modifier = Modifier.animateItem())
+                            is Entry.Known -> PlaceRow(
+                                places.getValue(row.id).name,
+                                listOfNotNull(
+                                    stringResource(R.string.place_visited),
+                                    PlaceKind.of(places.getValue(row.id).kind)?.let { stringResource(it.label) },
+                                    formatDistance(row.metres),
+                                ),
+                                onClick = { onKnown(row.id) },
+                                modifier = Modifier.animateItem().testTag("nearby_${row.id}"),
+                            )
+                            is Entry.Around -> PlaceRow(
+                                row.found.name,
+                                listOfNotNull(
+                                    kindOf(row.found)?.let { stringResource(it.label) },
+                                    near?.let { formatDistance(distance(it, row.found.fix)) },
+                                    row.found.address.takeIf { typed.isNotEmpty() },
+                                ),
+                                onClick = { onFound(row.found) },
+                                modifier = Modifier.animateItem().testTag("landmark_$index"),
+                            )
+                        }
                     }
                 }
             }
         }
+        if (!typing) Row(Modifier.padding(horizontal = Space.xl).padding(top = Space.s), verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = onNone, modifier = Modifier.testTag("place_none")) { Text(stringResource(R.string.place_none)) }
+            Spacer(Modifier.weight(1f))
+            Button(
+                onClick = onConfirm,
+                enabled = when (pick) {
+                    is PlaceChoice.New -> pick.name.isNotBlank()
+                    is PlaceChoice.Known -> true
+                    PlaceChoice.None -> false
+                },
+                modifier = Modifier.testTag("place_confirm"),
+            ) { Text(stringResource(R.string.action_confirm)) }
+        }
     }
+}
+
+/** How far [found] is from [at], or nowhere when there is no [at]. */
+private fun distance(at: Fix?, found: Found): Double = at?.let { distance(it, found.fix) } ?: 0.0
+
+/** A place to choose, a row of the list: its name, and what it is and how far in a line under it. */
+@Composable
+private fun PlaceRow(name: String, about: List<String>, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    ListItem(
+        headlineContent = { Text(name, maxLines = 1) },
+        supportingContent = about.takeIf { it.isNotEmpty() }?.let { { Text(it.joinToString(" · "), maxLines = 1) } },
+        leadingContent = { Icon(AppIcons.Pin, contentDescription = null, tint = tokens.tx3) },
+        modifier = modifier.clickable(onClick = onClick).padding(horizontal = Space.s),
+    )
 }
 
 /**
- * What is around [at] to choose instead: the known places close by but [chosen], each
- * with how far it is, then what OpenStreetMap knows there, each a name to take and a
- * place to move the pin to.
+ * The choice, first in the list on the accent's soft tint and ticked: a known place, or a new
+ * one at the pin, which tapped is named in a field in its place. Its kind is a menu at its end.
  */
 @Composable
-private fun NearbyChips(
-    at: Fix,
-    chosen: String?,
+private fun ChosenRow(
+    pick: PlaceChoice,
+    name: String,
     places: Map<String, Place>,
-    landmarks: List<Found>,
-    onKnown: (String) -> Unit,
-    onLandmark: (Found) -> Unit,
+    renaming: Boolean,
+    onRename: () -> Unit,
+    onName: (String) -> Unit,
+    onDone: () -> Unit,
+    onKind: (PlaceKind) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    val known = nearestPlaces(places, at, limit = KNOWN_NEARBY + 1).filter { it.first != chosen && it.second <= NEARBY_METRES }.take(KNOWN_NEARBY)
-    // The row keeps its height while what is around is looked up again, so the sheet, and the
-    // pin at the middle of the map above it, stay put as the pin moves; the chips fade in and out.
-    LazyRow(Modifier.heightIn(min = AssistChipDefaults.Height), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-            itemsIndexed(known, key = { _, it -> "known:${it.first}" }) { _, (id, metres) ->
-                AssistChip(
-                    onClick = { onKnown(id) },
-                    label = { Text("${places.getValue(id).name} ${formatDistance(metres)}", maxLines = 1) },
-                    leadingIcon = { Icon(AppIcons.Pin, contentDescription = null, modifier = Modifier.size(18.dp)) },
-                    modifier = Modifier.animateItem().testTag("nearby_$id"),
-                )
-            }
-            itemsIndexed(landmarks, key = { _, it -> "${it.name}@${it.fix}" }) { index, landmark ->
-                AssistChip(
-                    onClick = { onLandmark(landmark) },
-                    label = { Text(landmark.name, maxLines = 1) },
-                    modifier = Modifier.animateItem().testTag("landmark_$index"),
-                )
-            }
+    val known = (pick as? PlaceChoice.Known)?.let { places[it.id] }
+    val kind = when (pick) {
+        is PlaceChoice.Known -> pick.kind ?: PlaceKind.of(known?.kind)
+        is PlaceChoice.New -> pick.kind
+        PlaceChoice.None -> null
     }
-}
-
-/** The place's kind, one of Material 3's filter chips in a row; the chosen one tapped again leaves it unset. */
-@Composable
-private fun KindChips(kind: PlaceKind?, onKind: (PlaceKind?) -> Unit) {
-    val label = stringResource(R.string.place_kind)
-    // Opened on a kind out of sight, the row starts with it in view, the one before it peeking.
-    val row = androidx.compose.foundation.lazy.rememberLazyListState()
-    LaunchedEffect(Unit) {
-        val index = kind?.let(PlaceKind.entries::indexOf) ?: return@LaunchedEffect
-        val info = row.layoutInfo
-        val shown = info.visibleItemsInfo.any { it.index == index && it.offset + it.size <= info.viewportEndOffset }
-        if (!shown) row.scrollToItem((index - 1).coerceAtLeast(0))
-    }
-    LazyRow(Modifier.semantics { contentDescription = label }, state = row, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-        items(PlaceKind.entries, key = { it.value }) { entry ->
-            val selected = entry == kind
-            FilterChip(
-                selected = selected,
-                onClick = { onKind(if (selected) null else entry) },
-                label = { Text(stringResource(entry.label)) },
-                leadingIcon = if (selected) {
-                    { Icon(AppIcons.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
-                } else {
-                    null
-                },
-                modifier = Modifier.testTag("kind_${entry.value}"),
+    var kinds by remember { mutableStateOf(false) }
+    Row(
+        modifier.fillMaxWidth().padding(horizontal = Space.s).background(tokens.accentSoft, AppTheme.shapes.medium)
+            .clickable(enabled = pick is PlaceChoice.New && !renaming, onClick = onRename)
+            .padding(start = Space.l, end = Space.xs).heightIn(min = 64.dp).testTag("chosen_place"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(AppIcons.Pin, contentDescription = null, tint = tokens.accent)
+        Spacer(Modifier.width(Space.l))
+        if (renaming && pick is PlaceChoice.New) {
+            val focus = remember { FocusRequester() }
+            LaunchedEffect(Unit) { focus.requestFocus() }
+            OutlinedTextField(
+                value = name,
+                onValueChange = onName,
+                label = { Text(stringResource(R.string.place_name)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { onDone() }),
+                modifier = Modifier.weight(1f).padding(vertical = Space.s).focusRequester(focus).testTag("place_name"),
             )
+        } else {
+            Column(Modifier.weight(1f).padding(vertical = Space.s)) {
+                Text(
+                    when (pick) {
+                        is PlaceChoice.Known -> known?.name ?: pick.id
+                        is PlaceChoice.New -> name.ifBlank { coordinatesName(pick.fix) }
+                        PlaceChoice.None -> ""
+                    },
+                    style = AppTheme.typography.body.strong,
+                    maxLines = 1,
+                )
+                Text(
+                    stringResource(if (pick is PlaceChoice.Known) R.string.place_visited else R.string.place_at_pin),
+                    style = AppTheme.typography.caption,
+                    color = tokens.tx2,
+                )
+            }
+        }
+        Box {
+            TextButton(onClick = { kinds = true }, modifier = Modifier.testTag("place_kind")) {
+                Text(kind?.let { stringResource(it.label) } ?: stringResource(R.string.place_kind))
+            }
+            DropdownMenu(kinds, onDismissRequest = { kinds = false }) {
+                PlaceKind.entries.forEach { entry ->
+                    DropdownMenuItem(
+                        text = { Text(stringResource(entry.label)) },
+                        onClick = {
+                            onKind(entry)
+                            kinds = false
+                        },
+                        trailingIcon = if (entry == kind) {
+                            { Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent) }
+                        } else {
+                            null
+                        },
+                    )
+                }
+            }
         }
     }
 }
@@ -637,10 +708,13 @@ internal fun formatDistance(metres: Double): String =
 
 internal val LOCATION_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 private const val LANDMARKS = 8
-/** How tall the search's results stand at most, so the map keeps some of the screen. */
-private val SEARCH_HEIGHT = 320.dp
+/** How tall the list under the map stands: a couple of rows at least, so it doesn't jump while it is looked up, and never so tall the map goes. */
+private val LIST_MIN = 128.dp
+private val LIST_MAX = 320.dp
+private val LIST_TYPING = 168.dp
 private const val KNOWN_NEARBY = 3
-private val PIN_SIZE = 44.dp
+private val PIN_WIDTH = 28.dp
+private val PIN_HEIGHT = 46.dp
 /** How far the map reaches under the sheet: its corners' radius, Material 3's extra large. */
 private val SHEET_CORNER = Radius.large
 

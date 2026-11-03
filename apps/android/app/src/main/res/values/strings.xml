@@ -294,6 +294,8 @@
     <string name="place_none">不加地点</string>
     <string name="place_name">地点名称</string>
     <string name="place_search_hint">搜索店名或地址</string>
+    <string name="place_visited">去过</string>
+    <string name="place_at_pin">图钉处</string>
     <string name="distance_metres">%1$d 米</string>
     <string name="distance_kilometres">%1$.1f 公里</string>
     <string name="confirm_discard">放弃这个时刻？</string>
@@ -308,8 +310,6 @@
     <string name="error_no_camera">没有可以拍照的相机应用</string>
     <string name="label_on_phone">未发布</string>
     <string name="action_delete_moment">删除这个时刻</string>
-    <string name="label_known_place">已有地点</string>
-    <string name="place_new_here">新地点，在图钉处</string>
     <string name="place_kind">类型</string>
     <string name="place_kind_city">城市</string>
     <string name="place_kind_town">城镇乡村</string>
