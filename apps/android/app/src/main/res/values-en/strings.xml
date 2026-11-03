@@ -315,6 +315,8 @@
     <string name="place_none">No place</string>
     <string name="place_name">Place name</string>
     <string name="place_search_hint">Search shops and addresses</string>
+    <string name="place_visited">Been here</string>
+    <string name="place_at_pin">At the pin</string>
     <string name="distance_metres">%1$d m</string>
     <string name="distance_kilometres">%1$.1f km</string>
     <string name="confirm_discard">Discard this Moment?</string>
@@ -330,8 +332,6 @@
     <string name="error_no_camera">No camera app to take a photo with</string>
     <string name="label_on_phone">Unpublished</string>
     <string name="action_delete_moment">Delete this Moment</string>
-    <string name="label_known_place">A known place</string>
-    <string name="place_new_here">A new place, at the pin</string>
     <string name="place_kind">Kind</string>
     <string name="place_kind_city">City</string>
     <string name="place_kind_town">Town</string>
