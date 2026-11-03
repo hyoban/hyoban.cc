@@ -105,7 +105,6 @@ fun HomesScreen(container: AppContainer, onBack: () -> Unit) {
                                     AppIcons.Home,
                                     found?.ifEmpty { stringResource(R.string.homes_found_none) } ?: "",
                                     shapes,
-                                    supporting = stringResource(R.string.homes_found_note).takeIf { !found.isNullOrEmpty() },
                                     tag = "home_found",
                                 )
                             },
@@ -137,7 +136,7 @@ fun HomesScreen(container: AppContainer, onBack: () -> Unit) {
                     }
                     "" -> SegmentedGroup(
                         null,
-                        stringResource(R.string.homes_pick_note),
+                        null,
                         provinces.keys.filter { it in cities }.map<String, Segment> { code ->
                             { shapes ->
                                 val alone = cities[code]?.size == 1
@@ -155,7 +154,7 @@ fun HomesScreen(container: AppContainer, onBack: () -> Unit) {
                     )
                     else -> SegmentedGroup(
                         provinces[province],
-                        stringResource(R.string.homes_pick_note),
+                        null,
                         listOf<Segment> { shapes ->
                             HomeRow(AppIcons.Map, stringResource(R.string.homes_whole_of, provinces[province] ?: province), shapes, tag = "province_whole_$province", onClick = { toggle(province) }) {
                                 if (province in settings.homes) Check()

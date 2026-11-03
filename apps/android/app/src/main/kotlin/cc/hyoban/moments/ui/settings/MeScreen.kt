@@ -209,7 +209,6 @@ private fun PublishCard(count: Int, onChanges: () -> Unit) {
             style = AppTheme.typography.body.strong,
             modifier = Modifier.semantics { heading() },
         )
-        Text(stringResource(R.string.me_pending_note), style = AppTheme.typography.body, color = tokens.tx2)
         Button(onClick = onChanges, modifier = Modifier.padding(top = Space.m).testTag("review_publish")) {
             Text(stringResource(R.string.action_review_publish))
         }

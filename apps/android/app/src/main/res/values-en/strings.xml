@@ -93,14 +93,12 @@
     <string name="title_trips">Trips</string>
     <string name="label_live">Live</string>
     <string name="empty_moments">No Moments yet</string>
-    <string name="empty_moments_hint">Write the first with the plus at the bottom; bills and footprints show up here too</string>
     <string name="empty_trips">No trips yet</string>
     <string name="message_refresh_failed">Couldn’t update: %1$s</string>
     <string name="year_item">%1$d</string>
     <string name="map_search_hint">Search places and trips</string>
     <string name="trips_none">No trips yet</string>
     <string name="trips_suggested">Possible trips</string>
-    <string name="trips_suggested_note">Found in check-ins and the places of Moments: + adds one as it is, opening one changes it first</string>
     <string name="trip_suggestion_dismiss">Dismiss the possible trip %1$s</string>
     <string name="trip_suggestion_add">Add %1$s as a trip</string>
     <string name="message_trip_added">Added the trip %1$s</string>
@@ -110,13 +108,12 @@
     <string name="homes_found_none">No records yet</string>
     <string name="homes_found_group_note">More than 100 km from here counts as away; a move is followed.</string>
     <string name="homes_set">Also home</string>
-    <string name="homes_set_note">Records in these places aren’t away, so the map’s possible trips don’t count going there as a trip, such as where your family lives.</string>
+    <string name="homes_set_note">These places don’t count as away either, such as where your family lives.</string>
     <string name="homes_add">Add a province or city</string>
     <string name="homes_whole">The whole province</string>
     <string name="homes_whole_of">All of %1$s</string>
     <string name="homes_remove">Stop counting %1$s as home</string>
     <string name="homes_pick">Add a province or city</string>
-    <string name="homes_pick_note">Tap one to add it to Also home and go back; those added have a check, and tapping one again takes it out.</string>
     <string name="me_homes_some">Also home: %1$s</string>
     <string name="map_km">%1$s km</string>
     <string name="footprints_map_recording">Footprints, recording</string>
@@ -152,10 +149,8 @@
     <string name="action_see_moments">See all Moments</string>
     <string name="hint_search_everything">Search Moments, places, trips and bills</string>
     <string name="search_prompt">Type, or just pick a filter above</string>
-    <string name="search_prompt_note">Moments by their text, place and trip; bills by category and note</string>
     <string name="search_none">Nothing found</string>
     <string name="search_none_for">Nothing found for “%1$s”</string>
-    <string name="search_none_note">Try other words</string>
     <string name="search_none_note_time">Try other words, or widen the year to All</string>
     <string name="explain_on_phone">This Moment is only on this phone. Publish your changes to add it to the site.</string>
     <string name="explain_unpublished_change">This Moment was edited on this phone. Publish your changes to update the site.</string>
@@ -206,9 +201,7 @@
     <string name="widget_heatmap_moments_note">How many Moments each day</string>
     <string name="widget_heatmap_spending_note">How much each day, as shades only, no amounts</string>
     <string name="widget_heatmap_footprints_note">How far each day went</string>
-    <string name="widget_heatmap_settings_note">A square a day, deeper for more.</string>
     <string name="widget_heatmap_show">Show</string>
-    <string name="widget_heatmap_settings_hint">Tap one to show it; tap the widget\'s name to come back here.</string>
     <string name="widget_heatmap_year">Last 12 months</string>
     <string name="widget_heatmap_km">%1$s km</string>
     <!-- The range, then the days or the distance: Last 26 weeks · 84 days. -->
@@ -506,7 +499,6 @@
     <string name="footprints_section_recording">Recording</string>
     <string name="footprints_section_tracks">Tracks</string>
     <string name="footprints_section_parts">Moves and stays</string>
-    <string name="footprints_parts_note">How each move went is told from its speed; five minutes or more in one spot is a stay. Tap one to see it on the map.</string>
     <string name="footprints_mode_walk">Walking</string>
     <string name="footprints_mode_cycle">Cycling</string>
     <string name="footprints_mode_drive">Driving</string>
@@ -741,7 +733,6 @@
     <string name="ledger_from_moment">Add bill of %1$s</string>
     <string name="ledger_from_moment_note">The meal\'s bill written in this Moment</string>
     <string name="ledger_books">Books</string>
-    <string name="ledger_books_note">Each book has its own categories and is summed in its currency</string>
     <string name="ledger_add_book">New book</string>
     <string name="ledger_book_name">Book name</string>
     <string name="ledger_book_currency">Currency for totals</string>
@@ -836,7 +827,6 @@
     <string name="auto_bill_wechat">WeChat Pay</string>
     <string name="auto_bill_alipay">Alipay</string>
     <string name="tab_me">Me</string>
-    <string name="me_pending_note">Look over the changes, then publish them to the site together.</string>
     <string name="action_review_publish">Review and publish</string>
     <string name="me_month_expense">Spent this month</string>
     <string name="label_time">Time</string>
@@ -900,7 +890,6 @@
     <string name="trip_edit_title">Edit trip</string>
     <string name="trip_edit_name">Name</string>
     <string name="trip_edit_days">Days</string>
-    <string name="trip_edit_days_note">Everything recorded on these days belongs to the trip.</string>
     <string name="trip_edit_start">Starts</string>
     <string name="trip_edit_end">Ends</string>
     <string name="trip_edit_public_note">A public trip shows on the site.</string>
@@ -913,7 +902,23 @@
     <string name="filter_moments">Moments</string>
     <string name="part_private">%1$s private</string>
     <string name="trip_edit_members">What it holds</string>
-    <string name="trip_edit_members_note">Its days’ records are in unless left out; those of two days either side can be taken in.</string>
+    <string name="trip_edit_around">The days either side</string>
+    <string name="trip_edit_in_days_title">These days’ records</string>
+    <plurals name="trip_edit_in_days">
+        <item quantity="one">%d from these days</item>
+        <item quantity="other">%d from these days</item>
+    </plurals>
+    <string name="trip_edit_taken_in">Taken in by themselves</string>
+    <plurals name="trip_edit_left_out">
+        <item quantity="one">Taken in by themselves, %d left out</item>
+        <item quantity="other">Taken in by themselves, %d left out</item>
+    </plurals>
+    <string name="trip_edit_two_before">Two days before</string>
+    <string name="trip_edit_day_before">The day before</string>
+    <string name="trip_edit_day_after">The day after</string>
+    <string name="trip_edit_two_after">Two days after</string>
+    <string name="trip_edit_take_in">Take “%1$s” into the trip</string>
+    <string name="trip_edit_leave_out">Leave “%1$s” out of the trip</string>
     <string name="trip_edit_covers">Covers</string>
     <plurals name="count_results">
         <item quantity="one">%d result</item>

@@ -404,7 +404,6 @@ private fun HeatmapSettings(chosen: HeatSource?, onBack: () -> Unit, onChoose: (
         stringResource(R.string.widget_heatmap_name),
         onBack,
         Modifier.background(AppColors.page),
-        subtitle = stringResource(R.string.widget_heatmap_settings_note),
         close = true,
     ) {
         androidx.compose.foundation.layout.Column(
@@ -417,7 +416,7 @@ private fun HeatmapSettings(chosen: HeatSource?, onBack: () -> Unit, onChoose: (
         ) {
             SegmentedGroup(
                 stringResource(R.string.widget_heatmap_show),
-                stringResource(R.string.widget_heatmap_settings_hint),
+                null,
                 HeatSource.entries.map { source ->
                     { shapes ->
                         val (icon, title, supporting) = when (source) {

@@ -145,7 +145,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
             ) {
                 SegmentedGroup(
                     stringResource(R.string.ledger_books),
-                    stringResource(R.string.ledger_books_note),
+                    null,
                     ledger.books.map<Book, Segment> { book ->
                         { shapes ->
                             val count = ledger.txns.count { it.book == book.id }

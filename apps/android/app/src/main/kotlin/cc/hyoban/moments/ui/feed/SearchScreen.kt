@@ -223,8 +223,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
         val results: @Composable ColumnScope.() -> Unit = {
             // What the search found, said as it changes, so a screen reader hears it too; shown only
             // when there is nothing to list, as the kinds' counts say how many there are.
-            // Nothing to list says why, and under it the next step: what can be searched, or what to
-            // loosen.
+            // Nothing to list says why, and under it, when a year narrows it, to loosen that.
             val status = when {
                 !searching -> stringResource(R.string.search_prompt)
                 found.isEmpty() && text.isNotEmpty() -> stringResource(R.string.search_none_for, text)
@@ -232,13 +231,12 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                 else -> pluralStringResource(R.plurals.count_results, found.size, found.size)
             }
             val note = when {
-                !searching -> stringResource(R.string.search_prompt_note)
                 found.isEmpty() && filter != TimeFilter() -> stringResource(R.string.search_none_note_time)
-                found.isEmpty() -> stringResource(R.string.search_none_note)
                 else -> null
             }
             val announce = Modifier.semantics { liveRegion = LiveRegionMode.Polite }.testTag("search_status")
-            if (found.isEmpty()) {
+            // Before a search, the field's hint says what can be searched, so only a screen reader hears it.
+            if (found.isEmpty() && searching) {
                 Column(
                     Modifier.fillMaxWidth().padding(horizontal = Space.xl * 2, vertical = Space.xl * 3).then(announce),
                     verticalArrangement = Arrangement.spacedBy(Space.xs),
