@@ -517,13 +517,15 @@ fun ShowRefreshErrors(container: AppContainer) {
 
 /**
  * Pull to refresh that shows its indicator only for a refresh pulled for: the refreshes the
- * app makes by itself, on start, go on without it.
+ * app makes by itself, on start, go on without it. Without an API to read it is [off], and the
+ * list doesn't pull at all.
  */
-class PulledRefresh(val refreshing: Boolean, val onRefresh: () -> Unit)
+class PulledRefresh(val refreshing: Boolean, val off: Boolean, val onRefresh: () -> Unit)
 
 /** A tab's list under its top app bar, pulled down to refresh, the indicator coming down from the bar. */
 @Composable
 fun TabRefreshBox(pull: PulledRefresh, content: @Composable BoxScope.() -> Unit) {
+    if (pull.off) return Box(Modifier.fillMaxSize(), content = content)
     PullToRefreshBox(isRefreshing = pull.refreshing, onRefresh = pull.onRefresh, modifier = Modifier.fillMaxSize(), content = content)
 }
 
@@ -533,9 +535,7 @@ fun rememberPulledRefresh(container: AppContainer): PulledRefresh {
     var pulled by remember { mutableStateOf(false) }
     // Over once the refresh it started is.
     LaunchedEffect(syncing) { if (!syncing) pulled = false }
-    return PulledRefresh(pulled) {
-        // With no API to read, there is nothing to wait for.
-        if (!container.settings.connected) return@PulledRefresh
+    return PulledRefresh(pulled, off = !container.settings.connected) {
         pulled = true
         container.refresh()
     }
