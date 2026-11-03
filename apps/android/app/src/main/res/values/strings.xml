@@ -26,7 +26,6 @@
     <string name="share_instagram_open">打开 Instagram</string>
     <string name="share_instagram_copy_open">复制文字并打开 Instagram</string>
     <string name="share_instagram_unavailable">无法打开 Instagram 的发帖入口，确认 Instagram 已安装并更新到最新版</string>
-    <string name="action_share_feishu_manual">飞书</string>
     <string name="share_bilibili_hint">将文字和照片带入 B 站动态编辑器，检查后发布。如果已有未完成的动态，请先处理；未正确带入时可用「准备图文」。</string>
     <string name="share_bilibili_open">打开 B 站动态编辑器</string>
     <string name="share_bilibili_unavailable">无法打开 B 站动态编辑器，可用「准备图文」手动发布</string>
@@ -403,7 +402,6 @@
     <string name="refresh_note">从 API 读取最新的时刻、地点和旅程</string>
     <string name="refresh_needs_api">填上 API 地址和令牌后才能刷新</string>
     <string name="refreshing">正在刷新</string>
-    <string name="share_manual_note">保存照片、复制文字后手动发布</string>
     <string name="confirm_discard_note">还没保存的文字、照片和地点都会丢掉</string>
     <string name="action_keep_writing">继续写</string>
     <string name="reason_no_token">还没设置 API 令牌</string>

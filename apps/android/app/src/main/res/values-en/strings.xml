@@ -26,7 +26,6 @@
     <string name="share_instagram_open">Open Instagram</string>
     <string name="share_instagram_copy_open">Copy text and open Instagram</string>
     <string name="share_instagram_unavailable">Couldn’t open Instagram’s post screen. Make sure Instagram is installed and up to date.</string>
-    <string name="action_share_feishu_manual">Feishu</string>
     <string name="share_bilibili_hint">Open the Bilibili dynamic composer with the text and photos, then review and post. Finish any existing draft first. If content is missing, use “Prepare text and photos.”</string>
     <string name="share_bilibili_open">Open Bilibili composer</string>
     <string name="share_bilibili_unavailable">Couldn’t open Bilibili’s composer. Use “Prepare text and photos” to post manually.</string>
@@ -426,7 +425,6 @@
     <string name="refresh_note">Get the latest Moments, places and trips from the API</string>
     <string name="refresh_needs_api">Add an API address and token to refresh</string>
     <string name="refreshing">Refreshing</string>
-    <string name="share_manual_note">Save the photos and copy the text, then post yourself</string>
     <string name="confirm_discard_note">Unsaved text, photos, and place will be lost</string>
     <string name="action_keep_writing">Keep writing</string>
     <string name="reason_no_token">no API token is set</string>

@@ -7,6 +7,7 @@ import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.pm.PackageManager
 import androidx.annotation.StringRes
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -114,20 +115,25 @@ private val ShareTarget.icon: ImageVector
  * Where to share a Moment, in a bottom sheet: the apps it is sent to straight away, then
  * those it is made ready for by hand, a space between, each a row on the sheet's gutter
  * leading on to its copy to edit. Each app in an outline after its own mark, drawn in the
- * design's hand and the text's grey rather than with the app's logo. It stays open under
- * each share, for the next one; the scrim or a swipe down closes it.
+ * design's hand and the text's grey rather than with the app's logo. Only the apps on the
+ * phone are listed; 准备图文 always is. It stays open under each share, for the next one; the
+ * scrim or a swipe down closes it.
  */
 @Composable
 fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
     val shapes = ListItemShapes(AppTheme.shapes.medium)
-    val choice: @Composable (String, String, ImageVector, String?, ShareTarget) -> Unit = { label, tag, icon, note, target ->
+    val context = LocalContext.current
+    // Read each time the sheet opens, so an app installed or removed meanwhile is counted.
+    val installed = remember(context) {
+        ShareTarget.entries.mapNotNull { it.app }.filterTo(mutableSetOf()) { context.isInstalled(it) }
+    }
+    val choice: @Composable (String, String, ImageVector, ShareTarget) -> Unit = { label, tag, icon, target ->
         SegmentedListItem(
             onClick = { onSelect(target) },
             shapes = shapes,
             colors = ListItemDefaults.segmentedColors(containerColor = Color.Transparent),
             leadingContent = { Icon(icon, contentDescription = null) },
             trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
-            supportingContent = note?.let { { Text(it) } },
             modifier = Modifier.testTag("share_$tag"),
         ) { Text(label) }
     }
@@ -145,15 +151,22 @@ fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
             )
             // The rows' icons on the title's edge, their own padding outside it.
             Column(Modifier.padding(horizontal = Space.gutter - ROW_PADDING)) {
-                ShareTarget.entries.filter { it != ShareTarget.PREPARE }.forEach { target ->
-                    choice(stringResource(target.title), target.tag, target.icon, null, target)
+                ShareTarget.entries.filter { it.app in installed }.forEach { target ->
+                    choice(stringResource(target.title), target.tag, target.icon, target)
                 }
                 Spacer(Modifier.height(Space.l))
-                choice(stringResource(R.string.action_share_feishu_manual), "feishu", AppIcons.Feishu, stringResource(R.string.share_manual_note), ShareTarget.PREPARE)
-                choice(stringResource(ShareTarget.PREPARE.title), "prepare", AppIcons.Photos, null, ShareTarget.PREPARE)
+                choice(stringResource(ShareTarget.PREPARE.title), "prepare", AppIcons.Photos, ShareTarget.PREPARE)
             }
         }
     }
+}
+
+/** The manifest's `<queries>` names each share app, so this sees it when it is installed. */
+private fun Context.isInstalled(packageName: String): Boolean = try {
+    packageManager.getPackageInfo(packageName, 0)
+    true
+} catch (_: PackageManager.NameNotFoundException) {
+    false
 }
 
 /** The side padding of a list row, outside the sheet's gutter so the rows line up with its title. */
