@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.exclude
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.ui.layout.layout
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
 import cc.hyoban.moments.ui.components.isPhoneLandscape
@@ -44,13 +46,16 @@ import androidx.compose.foundation.background
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
-import cc.hyoban.moments.ui.design.BottomSheetScaffold
 import cc.hyoban.moments.ui.design.Button
 import cc.hyoban.moments.ui.design.FloatingActionButton
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.OutlinedTextField
 import cc.hyoban.moments.ui.design.IconButton
+import cc.hyoban.moments.ui.design.sheetSurface
+import androidx.compose.foundation.shape.ZeroCornerSize
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
 import cc.hyoban.moments.ui.design.DropdownMenu
 import cc.hyoban.moments.ui.design.DropdownMenuItem
 import cc.hyoban.moments.ui.design.strong
@@ -79,17 +84,15 @@ import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.animation.AnimatedVisibility
 import cc.hyoban.moments.ui.components.predictiveBackScale
 import cc.hyoban.moments.ui.components.rememberPredictiveBack
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.graphics.TransformOrigin
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.TextButton
-import cc.hyoban.moments.ui.design.rememberBottomSheetScaffoldState
-import cc.hyoban.moments.ui.design.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -99,9 +102,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -247,11 +248,16 @@ internal fun PlacePicker(
         is PlaceChoice.Known -> places[chosen.id]?.fix()
         PlaceChoice.None -> null
     }
+    // What is shown stays until what is around the new point has come, and a pin come to rest
+    // a step from where it was looked around, as after flying to where the phone is, doesn't look again.
+    var lookedAround by remember { mutableStateOf<Fix?>(null) }
     LaunchedEffect(pinned) {
-        landmarks = emptyList()
         val at = pinned ?: return@LaunchedEffect
+        val last = lookedAround
+        if (last != null && landmarks.isNotEmpty() && distance(last, at) < SAME_SPOT_METRES) return@LaunchedEffect
         delay(300)
         val around = search.around(context, at)
+        lookedAround = at
         landmarks = around.landmarks.take(LANDMARKS)
         val new = pick as? PlaceChoice.New
         if (!named && new != null && new.fix == at) {
@@ -275,13 +281,7 @@ internal fun PlacePicker(
         }
     }
 
-    // What is chosen in the standard bottom sheet over the map, as the map's own place is: as
-    // tall as what it holds, held there, the map reaching under its corners and the pin at the
-    // middle of what shows of it.
-    val density = LocalDensity.current
-    var sheetHeight by remember { mutableStateOf(0.dp) }
     var dragging by remember { mutableStateOf(false) }
-    val sheet = rememberBottomSheetScaffoldState(rememberStandardBottomSheetState(skipHiddenState = true))
     // On a phone on its side the choice stands in a panel down the end, the whole height, the pin
     // at the middle of the map beside it (H08).
     val sideways = isPhoneLandscape()
@@ -390,18 +390,31 @@ internal fun PlacePicker(
             ) { card(Modifier) }
         }
     } else {
-        BottomSheetScaffold(
-            scaffoldState = sheet,
-            modifier = Modifier.predictiveBackScale(back),
-            sheetPeekHeight = sheetHeight,
-            sheetSwipeEnabled = false,
-            sheetDragHandle = null,
-            sheetContainerColor = AppColors.sheet,
-            sheetShadowElevation = 0.dp,
-            containerColor = AppColors.page,
-            sheetContent = { card(Modifier.onSizeChanged { sheetHeight = with(density) { it.height.toDp() } }) },
-        ) {
-            mapArea(Modifier.fillMaxSize().padding(bottom = (sheetHeight - SHEET_CORNER).coerceAtLeast(0.dp)))
+        // The choice in a sheet over the map's foot, the map reaching under its corners and the
+        // pin at the middle of what shows of it: the two laid out together in one pass, so they
+        // come and grow as one, never the map's space before the sheet.
+        val sheetShape = AppTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
+        // While the keyboard is up the map keeps the height it had, the sheet rising over it,
+        // rather than being laid out again each frame the keyboard moves.
+        val ime = WindowInsets.ime
+        val resting = remember { intArrayOf(0) }
+        Layout(
+            content = {
+                mapArea(Modifier)
+                Box(Modifier.fillMaxWidth().sheetSurface(AppColors.sheet, sheetShape)) { card(Modifier) }
+            },
+            modifier = Modifier.fillMaxSize().predictiveBackScale(back).background(AppColors.page),
+        ) { (map, choice), constraints ->
+            val width = constraints.maxWidth
+            val height = constraints.maxHeight
+            val sheet = choice.measure(constraints.copy(minWidth = width, minHeight = 0))
+            val fitted = (height - sheet.height + SHEET_CORNER.roundToPx()).coerceIn(0, height)
+            if (ime.getBottom(this) == 0 || resting[0] == 0) resting[0] = fitted
+            val shown = map.measure(Constraints.fixed(width, resting[0]))
+            layout(width, height) {
+                shown.place(0, 0)
+                sheet.place(0, height - sheet.height)
+            }
         }
     }
 }
@@ -452,7 +465,6 @@ private sealed interface Entry {
  * called that; and the buttons to keep it. The choice tapped again names a new place; its
  * kind is a menu at its end.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PlaceCard(
     /** In the panel down the end: the list takes the height, the buttons at its foot. */
@@ -474,9 +486,8 @@ private fun PlaceCard(
     modifier: Modifier = Modifier,
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
-    // With the keyboard up the list stands shorter and the buttons go, so the map keeps a part
-    // of the screen; the keyboard's done or a row tapped brings them back.
-    val typing = WindowInsets.isImeVisible && !tall
+    // What the keyboard adds under the sheet, past the navigation bar the sheet already keeps clear of.
+    val ime = WindowInsets.ime.exclude(WindowInsets.navigationBars)
     val typed = query.text.toString().trim()
     var renaming by remember { mutableStateOf(false) }
     LaunchedEffect(pick::class, (pick as? PlaceChoice.Known)?.id) { if (pick !is PlaceChoice.New) renaming = false }
@@ -523,7 +534,25 @@ private fun PlaceCard(
                 modifier = Modifier.testTag("place_search_field"),
             )
         }
-        Box(Modifier.fillMaxWidth().then(if (tall) Modifier.weight(1f) else Modifier.heightIn(min = LIST_MIN, max = if (typing) LIST_TYPING else LIST_MAX)).padding(top = Space.s)) {
+        // One height whatever it holds, so the sheet stands still as what is around comes in:
+        // grown, it would move the map's middle, and with it the pin, which looks again. The
+        // keyboard rising takes its height from the list, frame by frame, down to two and a
+        // half rows, so the sheet's top stays put until then and only rises the rest.
+        Box(
+            Modifier.fillMaxWidth()
+                .then(
+                    if (tall) {
+                        Modifier.weight(1f)
+                    } else {
+                        Modifier.layout { measurable, constraints ->
+                            val height = maxOf(LIST_TYPING.roundToPx(), LIST_HEIGHT.roundToPx() - ime.getBottom(this))
+                            val list = measurable.measure(Constraints.fixed(constraints.maxWidth, height))
+                            layout(list.width, list.height) { list.place(0, 0) }
+                        }
+                    },
+                )
+                .padding(top = Space.s),
+        ) {
             when {
                 typed.isNotEmpty() && results == null || typed.isEmpty() && locating && pick == PlaceChoice.None ->
                     Spinner(Modifier.align(Alignment.Center).size(24.dp), color = tokens.tx3)
@@ -574,7 +603,7 @@ private fun PlaceCard(
                 }
             }
         }
-        if (!typing) Row(Modifier.padding(horizontal = Space.xl).padding(top = Space.s), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(horizontal = Space.xl).padding(top = Space.s), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = onNone, modifier = Modifier.testTag("place_none")) { Text(stringResource(R.string.place_none)) }
             Spacer(Modifier.weight(1f))
             Button(
@@ -708,9 +737,10 @@ internal fun formatDistance(metres: Double): String =
 
 internal val LOCATION_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 private const val LANDMARKS = 8
-/** How tall the list under the map stands: a couple of rows at least, so it doesn't jump while it is looked up, and never so tall the map goes. */
-private val LIST_MIN = 128.dp
-private val LIST_MAX = 320.dp
+/** How near the pin can come to rest to where it was looked around and keep what was found there. */
+private const val SAME_SPOT_METRES = 20.0
+/** How tall the list under the map stands: five rows, and at least two and a half over the keyboard. */
+private val LIST_HEIGHT = 320.dp
 private val LIST_TYPING = 168.dp
 private const val KNOWN_NEARBY = 3
 private val PIN_WIDTH = 28.dp
