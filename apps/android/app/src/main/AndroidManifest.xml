@@ -42,8 +42,6 @@
         <package android:name="com.ss.android.ugc.aweme" />
         <package android:name="com.tencent.mm" />
         <package android:name="tv.danmaku.bili" />
-        <!-- Feishu uses the manual album flow; its icon appears in the share menu. -->
-        <package android:name="com.ss.android.lark" />
     </queries>
 
     <application

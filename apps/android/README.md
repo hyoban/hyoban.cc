@@ -203,7 +203,8 @@ is new and copies no photo twice. All of it waits with the other unpublished cha
 ## Sharing
 
 A Moment's share sheet hands a copy of its words and a choice of photos to another app,
-which leaves the recipient and the final send to the user. It never posts. The sheet stays
+which leaves the recipient and the final send to the user. It never posts. It lists only
+the apps on the phone; 准备图文 is always there. The sheet stays
 open under each share, so the next one starts from it. A meal's copy
 ends with a line of its place, each one's share of the bill and its verdict (好吃, 一般 or
 踩雷), each behind an emoji, which can be edited away like the rest.
@@ -219,7 +220,7 @@ ends with a line of its place, each one's share of the bill and its verdict (好
 | 发布到 Instagram | its feed post's `ShareHandlerActivity`, the text copied; needs a photo |
 | 发布到抖音     | `SystemShareActivity` into the photo editor, the text copied; needs a photo            |
 | 微信朋友圈     | `ShareToTimeLineUI` for text or one photo; more go through 准备图文                    |
-| 飞书, 准备图文 | the photos saved to a `Pictures/Here Share-…` album and the text copied                |
+| 准备图文       | the photos saved to a `Pictures/Here Share-…` album and the text copied                |
 
 These entries depend on each app's version; when one fails, 准备图文 is offered with the
 edited text and selection kept. Each share has its own cache directory, cleaned up after
