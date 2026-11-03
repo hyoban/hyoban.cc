@@ -57,6 +57,28 @@ object Share {
         toApp(context, "com.instagram.barcelona", text, photos, urls, beforeOpen = beforeOpen)
     }
 
+    /** Bluesky's composer takes text on its own link, and photos (four at most) through its share entry. */
+    suspend fun toBluesky(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) {
+        require(photos.size <= 4)
+        if (photos.isEmpty()) {
+            require(text.isNotBlank())
+            val compose = Intent(Intent.ACTION_VIEW, Uri.Builder()
+                .scheme("bluesky").authority("intent").path("compose").appendQueryParameter("text", text).build())
+                .setPackage("xyz.blueskyweb.app")
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (tryOpen(context, compose)) return
+        }
+        toApp(context, "xyz.blueskyweb.app", text, photos, urls)
+    }
+
+    /** Instagram's feed post, never its Story, Reel or Direct entries; it takes photos only, its caption written there. */
+    suspend fun toInstagram(context: Context, photos: List<MomentMedia>, urls: MediaUrls, beforeOpen: () -> Unit = {}) {
+        require(photos.isNotEmpty())
+        toApp(context, "com.instagram.android", "", photos, urls, beforeOpen = beforeOpen,
+            activity = if (photos.size == 1) "com.instagram.share.handleractivity.ShareHandlerActivity"
+            else "com.instagram.share.handleractivity.ShareHandlerActivityMultipleFeedAlias")
+    }
+
     suspend fun toBilibili(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) =
         toApp(context, "tv.danmaku.bili", text, photos, urls,
             activity = "com.bilibili.bplus.followingpublish.FollowingPublishActivity",

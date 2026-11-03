@@ -15,6 +15,17 @@
     <string name="action_share_douyin">Post to Douyin</string>
     <string name="action_share_wechat">WeChat Moments</string>
     <string name="action_share_bilibili">Post to Bilibili</string>
+    <string name="action_share_bluesky">Post to Bluesky</string>
+    <string name="action_share_instagram">Post to Instagram</string>
+    <string name="share_bluesky_hint">Open the Bluesky composer with the text and photos, then review and post. Edits here apply only to this share. Up to 4 photos; Bluesky sets its own text limit.</string>
+    <string name="share_bluesky_open">Open Bluesky</string>
+    <string name="share_bluesky_unavailable">Couldn’t open Bluesky. Make sure it’s installed.</string>
+    <string name="share_instagram_hint">Edit the photos in Instagram and tap “Continue,” then review and share. Instagram sets its own photo limit.</string>
+    <string name="share_instagram_photos_hint">Instagram doesn’t bring in text with photos, so the text is copied before Instagram opens. Edit the photos and tap “Continue.” Then paste the text into the caption, review, and share.</string>
+    <string name="share_instagram_no_photos">Instagram doesn’t accept text-only shares. Select at least one photo, or use “Prepare text and photos” to copy the text and compose the post yourself.</string>
+    <string name="share_instagram_open">Open Instagram</string>
+    <string name="share_instagram_copy_open">Copy text and open Instagram</string>
+    <string name="share_instagram_unavailable">Couldn’t open Instagram’s post screen. Make sure Instagram is installed and up to date.</string>
     <string name="action_share_feishu_manual">Feishu</string>
     <string name="share_bilibili_hint">Open the Bilibili dynamic composer with the text and photos, then review and post. Finish any existing draft first. If content is missing, use “Prepare text and photos.”</string>
     <string name="share_bilibili_open">Open Bilibili composer</string>
@@ -429,7 +440,7 @@
     <string name="reason_unknown">something unexpected went wrong</string>
 
     <string name="share_assist_enable_service">Turn on the share and ledger assistant</string>
-    <string name="share_assist_service_description">Sharing: only during an assisted share started in Here, reads the target app and runs its adapted steps. Stops before sending and does not store chat content. Currently supports Telegram and Threads photo shares, stopping after 40 seconds if unfinished.\n\nAuto bills: once turned on in the ledger settings, reads the payment and bill pages WeChat and Alipay show, and reminds you in a notification to add the bill. It only reads, never taps or types, keeps nothing of the page and sends nothing off the phone.</string>
+    <string name="share_assist_service_description">Sharing: only during an assisted share started in Here, reads the target app and runs its adapted steps. Stops before sending and does not store chat content. Currently supports Telegram and Threads photo shares and Instagram post captions, stopping if unfinished in time.\n\nAuto bills: once turned on in the ledger settings, reads the payment and bill pages WeChat and Alipay show, and reminds you in a notification to add the bill. It only reads, never taps or types, keeps nothing of the page and sends nothing off the phone.</string>
     <string name="share_assist_photos_only">No photos selected. This will use ordinary text sharing.</string>
     <string name="share_assist_cancel">Stop assistant</string>
     <string name="share_assist_service_required">Enable the accessibility service first, or turn off the assistant to share manually.</string>
@@ -442,6 +453,12 @@
     <string name="telegram_assist_stopped">Assistant stopped. Check the recipient and caption manually in Telegram. It will not retry automatically.</string>
     <string name="telegram_assist_invalid_target">Enter a public username, such as @username or https://t.me/username.</string>
     <string name="telegram_assist_open">Open Telegram and fill caption</string>
+    <string name="instagram_assist_label">Instagram share assistant (experimental)</string>
+    <string name="instagram_assist_note">The text is copied before Instagram opens. Edit the photos in Instagram and tap “Continue”; the assistant fills the caption and stops before Share. Review the post and share manually. Stops on a different caption, an unknown page, or after 2 minutes. Turn it off to paste manually.</string>
+    <string name="instagram_assist_running">Waiting for “Continue” in Instagram to fill the caption…</string>
+    <string name="instagram_assist_ready">Caption filled. Review the post in Instagram and share manually.</string>
+    <string name="instagram_assist_stopped">Assistant stopped. Paste the caption manually in Instagram. An existing caption is preserved and there is no automatic retry.</string>
+    <string name="instagram_assist_open">Open Instagram and fill caption</string>
     <string name="threads_assist_label">Threads share assistant (experimental)</string>
     <string name="threads_assist_note">Keeps the shared photos and fills the body, stopping before Post. Review text and photos manually. If share options appear, choose the composer manually. Stops on a different draft, an unknown page, or after 40 seconds. Turn it off to share manually.</string>
     <string name="threads_assist_running">Filling the Threads composer…</string>
