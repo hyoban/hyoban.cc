@@ -159,20 +159,23 @@ export const subscriptionPartSchema = z.looseObject({
 })
 
 /**
- * A check-in brought over from another app, Swarm for now: the venue by its name there, and
- * where in that app's export it came from, so importing it again finds it rather than adding
- * it twice. The ids are never published.
+ * A check-in: brought over from Swarm, the venue by its name there and where in that app's
+ * export it came from, so importing it again finds it rather than adding it twice; or made on
+ * the phone from a stay of its footprints, the venue its place's name. The ids are never published.
  */
 export const checkinPartSchema = z.looseObject({
   ...partBase,
   venue: z.string().min(1),
   /** The venue's other name there, often the local one, as `面馆` beside `Noodle House`. */
   alias: z.string().min(1).optional(),
-  source: z.looseObject({
-    app: z.literal('swarm'),
-    checkin: z.string().min(1),
-    venue: z.string().min(1).optional(),
-  }),
+  source: z.discriminatedUnion('app', [
+    z.looseObject({
+      app: z.literal('swarm'),
+      checkin: z.string().min(1),
+      venue: z.string().min(1).optional(),
+    }),
+    z.looseObject({ app: z.literal('phone') }),
+  ]),
 })
 
 /** The parts by plugin; one this version doesn't know is kept as it is. */
