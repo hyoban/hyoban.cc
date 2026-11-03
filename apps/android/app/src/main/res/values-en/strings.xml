@@ -479,7 +479,7 @@
     <string name="footprints_export">Export this track as GPX</string>
     <string name="footprints_export_all">Export all tracks as GPX</string>
     <string name="footprints_import">Import a GPX track</string>
-    <string name="footprints_import_note">Reads tracks or raw samples this app exported. Where the phone already has samples, its own are kept.</string>
+    <string name="footprints_import_note">Tracks or raw samples this app exported</string>
     <string name="footprints_import_done">Imported %1$d points; skipped %2$d overlapping the phone\'s and %3$d unreadable.</string>
     <string name="footprints_import_empty">The file has no readable track points.</string>
     <string name="footprints_export_raw">Export current raw samples as GPX</string>
@@ -1097,7 +1097,12 @@
     <string name="timeline_bought">Bought %s</string>
     <string name="timeline_renewed">Renewed %s</string>
     <string name="section_backup">Backup</string>
-    <string name="section_import">Import</string>
+    <string name="import_title">Import</string>
+    <string name="import_moments">Moments</string>
+    <string name="import_ledger">Ledger</string>
+    <string name="import_ledger_note">The ledger stays on this phone; it isn\'t synced or published.</string>
+    <string name="import_footprints_note">Where the phone already has samples for a time, its own are kept.</string>
+    <string name="me_import_sources">Swarm, iCost, GPX tracks</string>
     <string name="swarm_import">Import from Swarm</string>
     <string name="swarm_import_note">The .zip Swarm exports</string>
     <string name="swarm_import_explain">Check-ins come in private: those with words or photos as Moments, the rest as check-ins alone, each venue a place. Importing the same export again adds only what is new.</string>

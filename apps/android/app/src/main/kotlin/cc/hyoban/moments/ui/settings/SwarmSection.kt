@@ -24,11 +24,11 @@ import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.TextButton
 import cc.hyoban.moments.ui.theme.Space
 
-// 导入 on 同步与来源: Swarm's export, its check-ins brought in private and unpublished, how far
+// 时刻 on 导入: Swarm's export, its check-ins brought in private and unpublished, how far
 // copying their photos has got while it runs, and what came in once it is done.
 
 @Composable
-fun SwarmSection(swarm: SwarmImport) {
+fun SwarmGroup(swarm: SwarmImport) {
     val state by swarm.state.collectAsStateWithLifecycle()
     val running = state.running
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) swarm.start(uri) }
@@ -37,7 +37,7 @@ fun SwarmSection(swarm: SwarmImport) {
             onClick = { if (!running) picker.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
             shapes = shapes,
             colors = segmentColors(),
-            leadingContent = { Icon(AppIcons.FileOpen, contentDescription = null) },
+            leadingContent = { Icon(AppIcons.Timeline, contentDescription = null) },
             supportingContent = {
                 Text(
                     when (val now = state) {
@@ -55,7 +55,7 @@ fun SwarmSection(swarm: SwarmImport) {
             modifier = Modifier.testTag("import_swarm"),
         ) { Text(stringResource(R.string.swarm_import)) }
     }
-    SegmentedGroup(stringResource(R.string.section_import), stringResource(R.string.swarm_import_explain), listOf(row))
+    SegmentedGroup(stringResource(R.string.import_moments), stringResource(R.string.swarm_import_explain), listOf(row))
 
     when (val now = state) {
         is SwarmImport.State.Done -> AlertDialog(

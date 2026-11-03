@@ -456,7 +456,7 @@
     <string name="footprints_export">导出当前轨迹 GPX</string>
     <string name="footprints_export_all">导出全部轨迹 GPX</string>
     <string name="footprints_import">导入 GPX 轨迹</string>
-    <string name="footprints_import_note">读取本应用导出的轨迹或原始采样。与本机已有记录重叠的时段保留本机的。</string>
+    <string name="footprints_import_note">这里导出的轨迹或原始采样</string>
     <string name="footprints_import_done">导入 %1$d 个轨迹点，跳过与本机记录重叠的 %2$d 个、无法读取的 %3$d 个。</string>
     <string name="footprints_import_empty">文件里没有可读取的轨迹点。</string>
     <string name="footprints_export_raw">导出当前原始采样 GPX</string>
@@ -1055,7 +1055,12 @@
     <string name="timeline_bought">买了 %s</string>
     <string name="timeline_renewed">续费 %s</string>
     <string name="section_backup">备份</string>
-    <string name="section_import">导入</string>
+    <string name="import_title">导入</string>
+    <string name="import_moments">时刻</string>
+    <string name="import_ledger">账本</string>
+    <string name="import_ledger_note">账本只存在这台手机上，不参与同步和发布。</string>
+    <string name="import_footprints_note">和手机上已有记录重叠的时段，保留手机上的。</string>
+    <string name="me_import_sources">Swarm、iCost、GPX 轨迹</string>
     <string name="swarm_import">从 Swarm 导入</string>
     <string name="swarm_import_note">Swarm 导出的 .zip</string>
     <string name="swarm_import_explain">签到都导入成私有的：写了字或带照片的成为时刻，其余只记下签到，每家店成为一个地点。再导入同一份导出，只添上新的。</string>

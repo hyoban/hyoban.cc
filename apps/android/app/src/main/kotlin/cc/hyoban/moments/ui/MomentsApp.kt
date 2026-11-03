@@ -252,6 +252,10 @@ object Items
 @Serializable
 object Homes
 
+/** 导入: Swarm, iCost and GPX files brought in, each where it belongs. */
+@Serializable
+object Imports
+
 /** 设备: what is owned and what it costs a day, with the sheet of the device [open] over it. */
 @Serializable
 data class Devices(val open: String? = null)
@@ -748,6 +752,7 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                             items = { navController.navigate(Items) },
                                             homes = { navController.navigate(Homes) },
                                             sync = { navController.navigate(SyncSettings) },
+                                            imports = { navController.navigate(Imports) },
                                             ledgerSettings = { navController.navigate(LedgerSettings()) },
                                             footprintSettings = { navController.navigate(FootprintSettings) },
                                             sideKey = { navController.navigate(SideKeySettings) },
@@ -759,6 +764,9 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                 }
                                 screen<SyncSettings> {
                                     SyncScreen(container, onBack = back)
+                                }
+                                screen<Imports> {
+                                    cc.hyoban.moments.ui.settings.ImportScreen(container, onBack = back)
                                 }
                                 screen<SideKeySettings> {
                                     cc.hyoban.moments.sidekey.SideKeySettingsScreen(onBack = back)
@@ -1199,7 +1207,7 @@ fun pagesOf(route: Any): List<Any> {
 private fun tabOf(route: Any): Any = when (route) {
     Feed, Atlas, Preferences -> route
     is Trip, is TripEdit, is TripPlay, is PlaceMoments -> Atlas
-    SyncSettings, FootprintSettings, SideKeySettings, Items, Homes, Car, Changes, is Devices, is Subscriptions,
+    SyncSettings, Imports, FootprintSettings, SideKeySettings, Items, Homes, Car, Changes, is Devices, is Subscriptions,
     is LedgerHome, is LedgerEntry, is LedgerBill, is LedgerAccount, is LedgerAccountEdit, is LedgerSettings, is LedgerList,
     -> Preferences
     else -> Feed
@@ -1216,6 +1224,7 @@ fun routeOf(link: Uri): Any? {
         "trips" -> Atlas
         "settings" -> Preferences
         "sync" -> SyncSettings
+        "import" -> Imports
         "footprints" -> Atlas
         "footprint-settings" -> FootprintSettings
         "items" -> Items
