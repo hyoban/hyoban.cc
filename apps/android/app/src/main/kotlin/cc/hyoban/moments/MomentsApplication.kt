@@ -17,6 +17,9 @@ class MomentsApplication : Application(), SingletonImageLoader.Factory {
 
     override fun onCreate() {
         super.onCreate()
+        // A backup fetched to restore goes in place before anything opens the databases.
+        runCatching { cc.hyoban.moments.backup.BackupArchive.restoreStaged(this) }
+            .onFailure { android.util.Log.e("Backup", "Restore failed", it) }
         container = AppContainer(this)
         cc.hyoban.moments.sidekey.SideKeys.initialize(this)
         lastLocales = resources.configuration.locales.toLanguageTags()

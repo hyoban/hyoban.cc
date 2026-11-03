@@ -1143,5 +1143,13 @@
     <string name="backup_failure_server">The WebDAV server had a problem</string>
     <string name="backup_failure_unreachable">Couldn’t reach the WebDAV server</string>
     <string name="backup_failure_other">Something unexpected went wrong</string>
-    <string name="settings_backup_note">The phone’s databases go to this WebDAV directory as one zip: the ledger, the footprints, unpublished Moments and the copy of the site, without photos, videos or the API token. To restore, put the files back.</string>
+    <string name="action_restore_backup">Restore from a backup</string>
+    <string name="restore_note">Replace with one on WebDAV</string>
+    <string name="restore_none">No backups on WebDAV yet</string>
+    <string name="restore_dialog_note">The ledger, footprints, unpublished Moments and the copy of the site are replaced by this one; what they replace stays on the phone. The app then opens again.</string>
+    <string name="action_restore">Restore</string>
+    <string name="restore_running">Fetching the backup; the app opens again once it’s ready</string>
+    <string name="restore_failed">Restore failed: %1$s</string>
+    <string name="restore_list_failed">Couldn’t read the backups: %1$s</string>
+    <string name="settings_backup_note">The phone’s databases go to this WebDAV directory as one zip: the ledger, the footprints, unpublished Moments and the copy of the site, without photos, videos or the API token. Restoring replaces them with one of the backups and keeps what it replaced on the phone.</string>
 </resources>

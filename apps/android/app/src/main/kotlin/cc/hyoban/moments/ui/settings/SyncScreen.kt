@@ -74,6 +74,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
     var editingToken by rememberSaveable { mutableStateOf(false) }
     var editingTencentKey by rememberSaveable { mutableStateOf(false) }
     var editingBackup by rememberSaveable { mutableStateOf(false) }
+    var restoring by rememberSaveable { mutableStateOf(false) }
     val rows = listOf(
         Row(settings.apiUrl, R.string.setting_api_url, AppIcons.Cloud) { container.changeApi(it) },
         Row(settings.assetOrigin, R.string.setting_asset_origin, AppIcons.Image) { settings.assetOrigin.set(it) },
@@ -125,7 +126,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                     ) { Text(stringResource(R.string.action_refresh)) }
                 }
                 Section(stringResource(R.string.section_site), rows.subList(0, 1), 0, stringResource(R.string.settings_api_note), extra = listOf(token, refresh)) { editing = it }
-                BackupSection(container.backup) { editingBackup = true }
+                BackupSection(container.backup, onEdit = { editingBackup = true }, onRestore = { restoring = true })
                 Section(stringResource(R.string.section_media), rows.subList(1, 2), 1, null) { editing = it }
                 // The key the place picker asks Tencent with in China, kept beside the map's styles.
                 val tencentKey: Segment = { shapes ->
@@ -170,6 +171,10 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
             backup.change(url, user, password)
             editingBackup = false
         }
+    }
+
+    if (restoring) {
+        RestoreDialog(container.backup) { restoring = false }
     }
 
     editing?.let { index ->

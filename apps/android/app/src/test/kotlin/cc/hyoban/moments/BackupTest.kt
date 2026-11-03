@@ -5,6 +5,7 @@ import cc.hyoban.moments.backup.WebDav
 import java.time.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class BackupTest {
     @Test
@@ -18,6 +19,22 @@ class BackupTest {
         val names = (1..9).map { "here-backup-2026010$it-030000.zip" } + listOf("notes.txt", "here-backup-old.txt")
         assertEquals(listOf("here-backup-20260102-030000.zip", "here-backup-20260101-030000.zip"), BackupArchive.beyond(names, 7))
         assertEquals(emptyList(), BackupArchive.beyond(names.take(3), 7))
+    }
+
+    @Test
+    fun readsWhenABackupWasMade() {
+        assertEquals(LocalDateTime.of(2026, 3, 4, 5, 6, 7), BackupArchive.madeAt("here-backup-20260304-050607.zip"))
+        assertNull(BackupArchive.madeAt("here-backup-old.zip"))
+        assertNull(BackupArchive.madeAt("notes.txt"))
+    }
+
+    @Test
+    fun restoresOnlyWhatABackupHolds() {
+        assertEquals("databases/ledger.sqlite", BackupArchive.restoredPath("databases/ledger.sqlite"))
+        assertEquals("local/places/a.json", BackupArchive.restoredPath("local/places/a.json"))
+        for (entry in listOf("databases/other.db", "databases/../ledger.sqlite", "local/../shared_prefs/x.xml", "local/media/a.jpg", "local/a//b", "local/dir/", "other/a", "/local/a")) {
+            assertNull(BackupArchive.restoredPath(entry), entry)
+        }
     }
 
     @Test

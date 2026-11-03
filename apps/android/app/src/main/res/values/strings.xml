@@ -1101,5 +1101,13 @@
     <string name="backup_failure_server">WebDAV 服务器出了问题</string>
     <string name="backup_failure_unreachable">连不上 WebDAV 服务器</string>
     <string name="backup_failure_other">发生了意外错误</string>
-    <string name="settings_backup_note">把手机上的数据库打成一个 zip 传到这个 WebDAV 目录：记账、足迹、未发布的时刻和网站的副本，不带照片和视频，也不带 API 令牌。恢复时把文件放回去。</string>
+    <string name="action_restore_backup">从备份恢复</string>
+    <string name="restore_note">换成 WebDAV 上的一份</string>
+    <string name="restore_none">WebDAV 上还没有备份</string>
+    <string name="restore_dialog_note">记账、足迹、未发布的时刻和网站的副本换成这一份，换下来的在手机上留一份。之后 App 重新打开。</string>
+    <string name="action_restore">恢复</string>
+    <string name="restore_running">正在取回备份，好了 App 会重新打开</string>
+    <string name="restore_failed">恢复失败：%1$s</string>
+    <string name="restore_list_failed">读不到备份：%1$s</string>
+    <string name="settings_backup_note">把手机上的数据库打成一个 zip 传到这个 WebDAV 目录：记账、足迹、未发布的时刻和网站的副本，不带照片和视频，也不带 API 令牌。恢复时选一份替换这些数据，换下来的在手机上留一份。</string>
 </resources>
