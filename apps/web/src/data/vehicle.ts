@@ -159,10 +159,11 @@ export function findOutings(
 export function getTripOdometer(
   trip: { start: string; end: string; legs: readonly { by: string }[] },
   days: VehicleDistanceDay[],
-  span: { start: string; end: string },
+  span: { start: string; end: string } | undefined,
   charges: VehicleCharge[] = [],
 ) {
   if (
+    !span ||
     trip.start < span.start ||
     trip.end > span.end ||
     trip.legs.some((leg) => leg.by === 'plane' || leg.by === 'train')
@@ -191,9 +192,15 @@ export function getDistanceLevel(distanceMeters: number) {
 }
 
 /** The days the records cover: from the car's first day to the latest capture. */
-export function getVehicleSpan(months: VehicleMonth[], days: VehicleDistanceDay[]) {
+/** From the car's first day to the latest capture; none for a site without a car's records. */
+export function getVehicleSpan(
+  months: VehicleMonth[],
+  days: VehicleDistanceDay[],
+): { start: string; end: string } | undefined {
   const captured = months.map((month) => month.capturedAt.slice(0, 10)).sort()
-  return { end: captured.at(-1)!, start: days[0]!.date }
+  const start = days[0]?.date
+  const end = captured.at(-1)
+  return start && end ? { end, start } : undefined
 }
 
 export interface HeatmapCell {

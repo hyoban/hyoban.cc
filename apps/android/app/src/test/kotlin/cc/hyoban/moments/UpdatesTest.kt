@@ -23,7 +23,7 @@ class UpdatesTest {
     @Test
     fun newestIsTheHighestAppRelease() {
         val newest = Updates.newestOf(feed("android-v0.2.0", "android-v0.10.0", "web-v9.0.0", "android-v0.9.0", "android-v1.2"))
-        assertEquals(Release("0.10.0", 1000, "https://github.com/hyoban/hyoban.cc/releases/download/android-v0.10.0/here-0.10.0.apk"), newest)
+        assertEquals(Release("0.10.0", 1000, "https://github.com/${BuildConfig.GITHUB_REPO}/releases/download/android-v0.10.0/here-0.10.0.apk"), newest)
     }
 
     @Test

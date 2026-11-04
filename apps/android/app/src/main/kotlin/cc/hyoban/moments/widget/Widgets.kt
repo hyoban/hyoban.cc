@@ -1,5 +1,6 @@
 package cc.hyoban.moments.widget
 
+import cc.hyoban.moments.BuildConfig
 import androidx.core.net.toUri
 import cc.hyoban.moments.ui.theme.Tokens
 import androidx.glance.color.colorProviders
@@ -348,7 +349,7 @@ internal fun WidgetTheme(context: Context, content: @Composable () -> Unit) {
 
 /** Opens a page of the app by its link, as `moments://moment/{uid}`. */
 internal fun open(link: String) = actionStartActivity(
-    Intent(Intent.ACTION_VIEW, "$DEEP_LINK_SCHEME://$link".toUri()).setClassName("cc.hyoban.moments", LinkActivity::class.java.name),
+    Intent(Intent.ACTION_VIEW, "$DEEP_LINK_SCHEME://$link".toUri()).setClassName(BuildConfig.APPLICATION_ID, LinkActivity::class.java.name),
 )
 
 /** The app's container, its copy of the records read before anything is picked from it. */

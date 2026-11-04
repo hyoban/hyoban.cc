@@ -1,3 +1,4 @@
+import { SITE_HOST, site } from './site-config.ts'
 import { getSeed, SEED_PARAMETER } from './year-random.ts'
 
 // A year review as pictures to share: the page's own content drawn in the browser by
@@ -9,7 +10,7 @@ import { getSeed, SEED_PARAMETER } from './year-random.ts'
 // the page loaded again out of sight at the narrowest wide layout, where the footprint and
 // the days, which spread wider than the words on a big screen, keep to their column, and
 // a square isn't left with a phone's tall, narrow columns. The photos come from
-// image.hyoban.cc, which answers with Access-Control-Allow-Origin so the drawing can be
+// the image origin, which answers with Access-Control-Allow-Origin so the drawing can be
 // read back. A phone hands the pictures to the share sheet; anything else saves them, the
 // squares as one ZIP. Loaded only once a picture is asked for (./year-share.ts), so none of
 // it, nor modern-screenshot or fflate, weighs on the page's load.
@@ -219,7 +220,7 @@ function drawSquares({ canvas, scale, width, blocks }: Drawing, mark: string) {
     context.fillStyle = style.getPropertyValue('--color-tx-3')
     const baseline = side - PADDING.y / 2
     context.textAlign = 'left'
-    context.fillText('Hyoban', PADDING.x, baseline)
+    context.fillText(site.author, PADDING.x, baseline)
     context.textAlign = 'right'
     context.fillText(`${mark} ${index + 1}/${squares.length}`, side - PADDING.x, baseline)
     return square
@@ -260,7 +261,8 @@ export async function drawPictures(mode: Mode, content: HTMLElement, year: strin
   const frame = mode === 'square' || innerWidth > FRAME_WIDTH ? await openWide() : undefined
   try {
     const drawing = await drawYear(frame?.content ?? content)
-    const canvases = mode === 'long' ? [drawing.canvas] : drawSquares(drawing, `hyoban.cc/${year}`)
+    const canvases =
+      mode === 'long' ? [drawing.canvas] : drawSquares(drawing, `${SITE_HOST}/${year}`)
     // Encoded before the frame goes: a canvas of its page draws nothing once it's gone.
     return await Promise.all(
       canvases.map(async (canvas, index) => {

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.sidekey
 
+import cc.hyoban.moments.BuildConfig
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -93,7 +94,7 @@ internal object SideKeys {
     private var connection: ServiceConnection? = null
     private var generation = 0
     private var failed = false
-    private val args = Shizuku.UserServiceArgs(ComponentName("cc.hyoban.moments", KeyBridge::class.java.name))
+    private val args = Shizuku.UserServiceArgs(ComponentName(BuildConfig.APPLICATION_ID, KeyBridge::class.java.name))
         .daemon(false).processNameSuffix("sidekey").tag("side-key").version(1)
     private val detector = GestureDetector(::execute)
     private val torch by lazy { SideKeyTorch(context) }

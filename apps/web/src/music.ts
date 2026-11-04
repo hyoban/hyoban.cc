@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+import { MUSIC_PLAYLIST_ID, SITE_HOST } from './site-config.ts'
 
 // The songs on /media/music/: the owner's liked-songs playlist on NetEase Cloud Music,
 // read at build time from its public web API, which needs no login. The playlist lists
@@ -8,13 +9,11 @@ import { dirname, join } from 'node:path'
 // build cache keeps, and a build that can't reach NetEase shows that instead; with
 // neither, the build fails.
 
-export const MUSIC_PLAYLIST_ID = 2948809894
-
 const API_BASE_URL = 'https://music.163.com/api'
 const CACHE_FILE = join(process.cwd(), 'node_modules', '.astro', 'netease-playlist.json')
 const REQUEST_HEADERS = {
   Referer: 'https://music.163.com/',
-  'User-Agent': 'Mozilla/5.0 (hyoban.cc build)',
+  'User-Agent': `Mozilla/5.0 (${SITE_HOST} build)`,
 }
 
 export type MusicTrack = {
@@ -85,7 +84,12 @@ export function getMusicTracks() {
   return tracksPromise
 }
 
-async function readMusicTracks() {
+async function readMusicTracks(): Promise<MusicTrack[]> {
+  // A site without a playlist (site.config.json) lists no music.
+  if (MUSIC_PLAYLIST_ID === null) {
+    return []
+  }
+
   try {
     const tracks = await fetchMusicTracks(MUSIC_PLAYLIST_ID)
     await mkdir(dirname(CACHE_FILE), { recursive: true })

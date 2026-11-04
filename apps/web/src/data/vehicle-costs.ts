@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { vehicleExpensesSchema, type VehicleCharge, type VehicleExpense } from '@hyoban/data-spec'
 import { dataRoot, readJson } from './store.ts'
 import { VEHICLE_ID } from './vehicle.ts'
@@ -46,9 +48,11 @@ const ledgers = new Map<string, VehicleExpense[]>()
 export function readVehicleExpenses(root = dataRoot): VehicleExpense[] {
   let entries = ledgers.get(root)
   if (!entries) {
-    entries = vehicleExpensesSchema.parse(
-      readJson(`zeekr/expenses/${VEHICLE_ID}.json`, root),
-    ).entries
+    const file = `zeekr/expenses/${VEHICLE_ID}.json`
+    // A site without a car keeps no ledger for it.
+    entries = existsSync(join(root, file))
+      ? vehicleExpensesSchema.parse(readJson(file, root)).entries
+      : []
     ledgers.set(root, entries)
   }
   return entries

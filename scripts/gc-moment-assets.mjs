@@ -15,7 +15,7 @@ const root = fileURLToPath(new URL('../', import.meta.url))
 const dataRoot = join(root, 'data')
 // What D1 holds may have moved on since data/ was exported: an older copy is exported again first.
 const maxExportAgeHours = 24
-const config = JSON.parse(await readFile(join(root, 'apps/web/src/data/asset-config.json'), 'utf8'))
+const config = JSON.parse(await readFile(join(root, 'site.config.json'), 'utf8')).assets
 const options = parseArguments(process.argv.slice(2))
 
 if (options.mode === 'dry-run') {

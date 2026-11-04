@@ -39,13 +39,19 @@ Android app ──POST /v2/changes──▶ API Worker (D1 + R2) ──deploy ho
   that `vp run data:export` writes for the scripts, which git leaves out. Edit records
   through the API, or push what you wrote with `vp run data:push` (docs/data.md).
 
+## Forking
+
+[FORKING.md](FORKING.md) says how to make it your own: who the site belongs to and where it
+lives is all in `site.config.json`, which the site, scripts, API and app read, and a local
+build without a token shows made-up records.
+
 ## Development
 
 This is a pnpm workspace driven by [Vite+](https://viteplus.dev) (`vp`); see AGENTS.md.
 
 ```sh
 vp install
-vp run dev          # the site, from the API: .env needs MOMENTS_API_TOKEN
+vp run dev          # the site, from the API with MOMENTS_API_TOKEN in .env, else made-up records
 vp check            # format, lint and type check, packages and API included
 vp test
 vp run build        # the static site into apps/web/dist/
@@ -57,7 +63,7 @@ vp run build        # the static site into apps/web/dist/
 | --------------------- | --------------------------------------------------------------------- |
 | `VITE_MAPBOX_TOKEN`   | the map page's Mapbox tiles                                           |
 | `MAPBOX_STATIC_TOKEN` | the map pages' placeholders, if `VITE_MAPBOX_TOKEN` is URL-restricted |
-| `MOMENTS_API_TOKEN`   | building the site, `data:export` and `data:push`                      |
+| `MOMENTS_API_TOKEN`   | building the site from the API, `data:export` and `data:push`         |
 | `CI`                  | set, the build draws every Moment's share card (slow; off locally)    |
 
 The scripts that upload to R2 use Wrangler's login, or `CLOUDFLARE_API_TOKEN`;

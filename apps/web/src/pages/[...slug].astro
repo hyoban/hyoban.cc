@@ -5,6 +5,7 @@ import { getPageTitle } from '@/page-cards'
 import { getPostCardPath } from '@/post-cards'
 import { countPostWords, formatPostFullDate, formatPostWordCount, getMarkdownEntries, type PostEntry } from '@/utils'
 import { render } from 'astro:content'
+import { site } from '@/site-config'
 
 export async function getStaticPaths() {
   // The use page has its own route, which renders its devices around the markdown.
@@ -34,9 +35,9 @@ const { entry, newer, older } = Astro.props as Props
 const post = entry.collection === 'posts' ? (entry as PostEntry) : null
 const article = post
   ? {
-      author: 'Hyoban',
+      author: site.author,
       publishedTime: post.data.pubDate.toISOString(),
-      telegramChannel: '@hyoban',
+      telegramChannel: site.telegram || undefined,
     }
   : undefined
 const wordCount = post ? countPostWords(post.body ?? '') : 0

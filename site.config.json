@@ -1,0 +1,135 @@
+{
+  "site": {
+    "url": "https://hyoban.cc",
+    "title": "Hyoban",
+    "author": "Hyoban",
+    "tagline": "Do what you like",
+    "description": "写代码、做开源，也记录生活和旅途。",
+    "telegram": "@hyoban",
+    "links": [
+      {
+        "href": "https://github.com/hyoban",
+        "label": "GitHub",
+        "icon": "i-simple-icons-github"
+      },
+      {
+        "href": "https://x.com/hyoban_cc",
+        "label": "X",
+        "icon": "i-simple-icons-x"
+      },
+      {
+        "href": "/rss.xml",
+        "label": "RSS",
+        "icon": "i-simple-icons-rss"
+      },
+      {
+        "href": "mailto:hi@hyoban.cc",
+        "label": "hi@hyoban.cc",
+        "icon": "i-lucide-mail"
+      },
+      {
+        "href": "https://t.me/hyoban",
+        "label": "Telegram",
+        "icon": "i-simple-icons-telegram"
+      },
+      {
+        "href": "https://t.me/s/hyoban_travel",
+        "label": "Telegram 旅行频道",
+        "icon": "i-lucide-plane"
+      },
+      {
+        "href": "https://www.xiaohongshu.com/user/profile/64085a45000000000f01228d",
+        "label": "小红书",
+        "icon": "i-simple-icons-xiaohongshu"
+      },
+      {
+        "href": "https://bsky.app/profile/hyoban.cc",
+        "label": "Bluesky",
+        "icon": "i-simple-icons-bluesky"
+      },
+      {
+        "href": "https://www.threads.com/@hyoban.cc",
+        "label": "Threads",
+        "icon": "i-simple-icons-threads"
+      },
+      {
+        "href": "https://www.instagram.com/hyoban.cc/",
+        "label": "Instagram",
+        "icon": "i-simple-icons-instagram"
+      },
+      {
+        "href": "https://space.bilibili.com/223973299",
+        "label": "哔哩哔哩",
+        "icon": "i-simple-icons-bilibili"
+      },
+      {
+        "href": "https://www.douyin.com/user/MS4wLjABAAAAe8zudLMaaVsjaz6Q1gSengwTquxVRbKjl6OyRytNGac",
+        "label": "抖音",
+        "icon": "i-simple-icons-tiktok"
+      },
+      {
+        "href": "https://photos.hyoban.cc/",
+        "label": "Photos",
+        "icon": "i-lucide-images"
+      }
+    ],
+    "anniversaries": [
+      {
+        "kind": "birthday",
+        "id": "birthday",
+        "birthYear": 1999,
+        "date": {
+          "calendar": "lunar",
+          "month": 8,
+          "day": 16
+        }
+      },
+      {
+        "kind": "yearly",
+        "id": "car",
+        "icon": "i-lucide-car-front",
+        "name": "提车",
+        "initialLabel": "提车日",
+        "startYear": 2025,
+        "date": {
+          "calendar": "gregorian",
+          "month": 8,
+          "day": 17
+        }
+      },
+      {
+        "kind": "annual",
+        "id": "driver-license-points-reset",
+        "icon": "i-lucide-rotate-ccw",
+        "label": "驾驶证清分",
+        "date": {
+          "calendar": "gregorian",
+          "month": 12,
+          "day": 16
+        }
+      },
+      {
+        "kind": "dated",
+        "id": "driver-license-expiry",
+        "icon": "i-lucide-calendar-clock",
+        "label": "驾驶证有效期截止",
+        "dateKey": "2028-12-16"
+      }
+    ]
+  },
+  "music": {
+    "neteasePlaylistId": 2948809894
+  },
+  "assets": {
+    "accountId": "e68c7dce80df20ff5802b9ac36f1eab6",
+    "bucket": "blog-images",
+    "origin": "https://image.hyoban.cc"
+  },
+  "api": {
+    "url": "https://hyoban-cc-api.hyoban.workers.dev"
+  },
+  "github": "hyoban/hyoban.cc",
+  "android": {
+    "applicationId": "cc.hyoban.moments"
+  }
+}

@@ -25,6 +25,7 @@ import { readDevices, readPlaces } from '@/data/store'
 import { getSortedPosts } from '@/utils'
 import type { FogRegions } from '@hyoban/trip-map'
 import { dealYear } from '@/year-random'
+import { SITE_HOST, site } from '@/site-config'
 
 // A year at a glance (src/year-review.ts): its counts; every day of it as a tile and a few
 // days worth going back to; then where it went, from its footprint on a map drawn at build
@@ -52,9 +53,10 @@ const life = year === undefined
 const moments = await getMoments()
 const { span: carSpan } = await getCarSummary()
 // Only the years the car's records reach into, from its first day to the latest capture,
-// and a life with a car in it.
+// and a life with a car in it; none on a site without a car.
 const drove =
-  life || (carSpan.start.slice(0, 4) <= String(year) && String(year) <= carSpan.end.slice(0, 4))
+  carSpan !== undefined &&
+  (life || (carSpan.start.slice(0, 4) <= String(year) && String(year) <= carSpan.end.slice(0, 4)))
 const regions = cities as FogRegions
 const numberFormat = new Intl.NumberFormat('zh-CN')
 const formatNumber = (value: number) => numberFormat.format(value)
@@ -571,8 +573,8 @@ const highlights = [
         avatar waits, hidden, until then, when the drawing has it loaded. */}
     <footer class="year-share-mark" aria-hidden="true">
       <img src={getAssetUrl('site/avatar-80.webp')} alt="" width="40" height="40" loading="lazy" />
-      <span>Hyoban</span>
-      <span class="year-share-mark__url">hyoban.cc/{shareKey}</span>
+      <span>{site.author}</span>
+      <span class="year-share-mark__url">{SITE_HOST}/{shareKey}</span>
     </footer>
     {/* As soon as the page is read: the year's hand finished (src/year-random.ts). */}
     <script is:inline set:html={`(${dealYear})('finish')`} />

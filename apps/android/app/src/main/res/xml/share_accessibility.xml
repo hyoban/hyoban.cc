@@ -8,4 +8,4 @@
     android:description="@string/share_assist_service_description"
     android:isAccessibilityTool="false"
     android:notificationTimeout="100"
-    android:packageNames="cc.hyoban.moments" />
+    android:packageNames="@string/application_id" />
