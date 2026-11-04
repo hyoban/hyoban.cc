@@ -929,7 +929,7 @@
         <item quantity="one">%d min</item>
         <item quantity="other">%d min</item>
     </plurals>
-    <string name="me_ledger">Bills and assets</string>
+    <string name="me_ledger">Ledger</string>
     <string name="section_visibility">Visibility</string>
     <string name="changes_private_note">What is private stays yours and never shows on the site.</string>
     <string name="facet_km">km</string>
@@ -1053,8 +1053,8 @@
     <string name="side_key_torch_on">Flashlight on</string>
     <string name="side_key_torch_off">Flashlight off</string>
     <string name="side_key_torch_unavailable">Flashlight unavailable. Check whether the camera is in use</string>
-    <string name="me_general">General</string>
-    <string name="me_on_phone">Only on this phone</string>
+    <string name="me_settings">Settings</string>
+    <string name="me_footprints_recording">Recording</string>
     <string name="me_footer">%1$s %2$s The cat on the icon is Mantou</string>
     <string name="sync_title">Sync and sources</string>
     <string name="section_site">Site</string>
@@ -1062,24 +1062,18 @@
     <string name="me_sync_token_set">Token set</string>
     <string name="me_sync_token_unset">No token, can’t sync</string>
     <string name="me_sync_no_api">No API connected</string>
-    <string name="me_auto_bill_on">Auto bills on</string>
     <string name="me_items_public">Public: %1$d books, %2$d spans</string>
     <string name="side_key_needs">Requires</string>
     <string name="side_key_service">Share and bill assistant</string>
     <string name="side_key_service_on">Accessibility service on</string>
     <string name="side_key_service_off">Accessibility service off</string>
     <string name="side_key_shizuku">Shizuku</string>
-    <plurals name="me_ledger_books">
-        <item quantity="one">%d book</item>
-        <item quantity="other">%d books</item>
-    </plurals>
     <string name="footprint_settings_subtitle">Tracks stay on this phone and record offline</string>
     <string name="me_things">Things</string>
     <string name="devices_title">Devices</string>
     <string name="subscriptions_title">Subscriptions</string>
     <string name="car_title">Car</string>
-    <string name="me_devices_summary">%1$d in use %2$s a day</string>
-    <string name="me_subscriptions_summary">%1$s a month</string>
+    <string name="things_switch">Switch</string>
     <string name="devices_in_use">In use</string>
     <string name="devices_sold">Sold</string>
     <string name="devices_daily">A day</string>
@@ -1159,7 +1153,6 @@
     <string name="thing_new">New</string>
     <string name="thing_deleted">Will be deleted from the site</string>
     <string name="thing_changed">Changed</string>
-    <string name="me_car_summary">%2$s in month %1$d</string>
     <string name="timeline_bought">Bought %s</string>
     <string name="timeline_renewed">Renewed %s</string>
     <string name="section_backup">Backup</string>

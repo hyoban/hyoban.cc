@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.background
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.settings.MeRoutes
+import cc.hyoban.moments.ui.things.ThingKind
 import cc.hyoban.moments.ui.settings.MeScreen
 import android.net.Uri
 import androidx.activity.compose.BackHandler
@@ -256,17 +257,12 @@ object Homes
 @Serializable
 object Imports
 
-/** 设备: what is owned and what it costs a day, with the sheet of the device [open] over it. */
+/**
+ * 东西: the devices, the subscriptions and the car on one page, [kind] the one shown (devices,
+ * subscriptions or car; none: the one looked at last), with the sheet of the thing [open] over it.
+ */
 @Serializable
-data class Devices(val open: String? = null)
-
-/** 订阅: what digital life costs, with the sheet of the subscription [open] over it. */
-@Serializable
-data class Subscriptions(val open: String? = null)
-
-/** 车: the car's statistics from the Zeekr import. */
-@Serializable
-object Car
+data class Things(val kind: String? = null, val open: String? = null)
 
 /** A Moment to write, kept on the phone, with a bill or the [bill] alone. */
 @Serializable
@@ -475,8 +471,8 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
         { uid ->
             val parts = container.repository.entries.value[uid]?.get("parts") as? kotlinx.serialization.json.JsonObject
             when {
-                parts?.containsKey("device") == true -> navController.navigate(Devices(open = uid))
-                parts?.containsKey("subscription") == true -> navController.navigate(Subscriptions(open = uid))
+                parts?.containsKey("device") == true -> navController.navigate(Things(ThingKind.DEVICES.key, open = uid))
+                parts?.containsKey("subscription") == true -> navController.navigate(Things(ThingKind.SUBSCRIPTIONS.key, open = uid))
             }
         }
     }
@@ -494,6 +490,7 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
             place = { navController.goTo(PlaceMoments(it)) },
             trip = { navController.goTo(Trip(it)) },
             day = { navController.goTo(Day(it)) },
+            settings = { navController.navigate(LedgerSettings()) },
             back = back,
         )
     }
@@ -758,12 +755,8 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                             homes = { navController.navigate(Homes) },
                                             sync = { navController.navigate(SyncSettings) },
                                             imports = { navController.navigate(Imports) },
-                                            ledgerSettings = { navController.navigate(LedgerSettings()) },
-                                            footprintSettings = { navController.navigate(FootprintSettings) },
                                             sideKey = { navController.navigate(SideKeySettings) },
-                                            devices = { navController.navigate(Devices()) },
-                                            subscriptions = { navController.navigate(Subscriptions()) },
-                                            car = { navController.navigate(Car) },
+                                            things = { navController.navigate(Things()) },
                                         ),
                                     )
                                 }
@@ -782,14 +775,9 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                 screen<Homes> {
                                     cc.hyoban.moments.ui.settings.HomesScreen(container, onBack = back)
                                 }
-                                screen<Devices> { entry ->
-                                    cc.hyoban.moments.ui.things.DevicesScreen(container, onBack = back, open = entry.toRoute<Devices>().open)
-                                }
-                                screen<Subscriptions> { entry ->
-                                    cc.hyoban.moments.ui.things.SubscriptionsScreen(container, onBack = back, open = entry.toRoute<Subscriptions>().open)
-                                }
-                                screen<Car> {
-                                    cc.hyoban.moments.ui.things.CarScreen(container, onBack = back, onDay = openDay)
+                                screen<Things> { entry ->
+                                    val route = entry.toRoute<Things>()
+                                    cc.hyoban.moments.ui.things.ThingsScreen(container, onBack = back, onDay = openDay, kind = ThingKind.of(route.kind), open = route.open)
                                 }
                                 screen<FootprintSettings> {
                                     FootprintSettingsScreen(container, onBack = back)
@@ -1216,7 +1204,7 @@ fun pagesOf(route: Any): List<Any> {
 private fun tabOf(route: Any): Any = when (route) {
     Feed, Atlas, Preferences -> route
     is Trip, is TripEdit, is TripPlay, is PlaceMoments -> Atlas
-    SyncSettings, Imports, FootprintSettings, SideKeySettings, Items, Homes, Car, Changes, is Devices, is Subscriptions,
+    SyncSettings, Imports, FootprintSettings, SideKeySettings, Items, Homes, Changes, is Things,
     is LedgerHome, is LedgerEntry, is LedgerBill, is LedgerAccount, is LedgerAccountEdit, is LedgerSettings, is LedgerList,
     -> Preferences
     else -> Feed
@@ -1242,9 +1230,7 @@ fun routeOf(link: Uri): Any? {
         "items" -> Items
         "homes" -> Homes
         "side-key" -> SideKeySettings
-        "devices" -> Devices()
-        "subscriptions" -> Subscriptions()
-        "car" -> Car
+        "devices", "subscriptions", "car" -> Things(link.host)
         "new" -> NewMoment()
         "edit" -> id?.let(::EditMoment)
         "changes" -> Changes

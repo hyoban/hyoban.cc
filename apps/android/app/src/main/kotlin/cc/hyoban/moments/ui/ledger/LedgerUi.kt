@@ -52,6 +52,8 @@ class LedgerNav(
     val place: (String) -> Unit,
     val trip: (String) -> Unit,
     val day: (String) -> Unit,
+    /** 记账, the ledger's own settings, from its top bar. */
+    val settings: () -> Unit,
     val back: () -> Unit,
 )
 

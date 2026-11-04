@@ -79,13 +79,16 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   opens the trip or plays it back. 迷雾地图 lays a fog over it, as the site's map does, thinner
   over a city the more Moments it has, from the site's
   `apps/web/src/data/boundaries/cities.json` shipped as an asset.
-- **我** holds the changes waiting to be published, this month's spending, rows for
-  账单与资产 and 足迹, and the settings in two parts: 通用 (记录项与公开, 家, 同步与来源, 导入) and
-  只在这台手机上 (记账, 足迹记录, 侧键), each a page with what it is set to under its name.
-  There is no settings page over them, and under 我 there is one level of pages: what goes
-  deeper, such as a book, the exchange rates or a side key gesture's action, opens over its
-  page as a sheet or a dialog. Theme and language have no setting; they follow the phone.
-- **东西** in 我 opens three pages, 车 only with an API. 设备 (`moments://devices`) lists what is
+- **我** is one screen: the changes waiting to be published, then three rows, 账本 (with this
+  month's spending under its name), 足迹 and 东西, and one group of 设置: 记录项与公开, 家,
+  同步与来源, 导入 and 侧键, each a page with what it is set to under its name. There is no
+  settings page over them, and under 我 there is one level of pages: what goes deeper, such as
+  a book, the exchange rates or a side key gesture's action, opens over its page as a sheet or
+  a dialog. The ledger's own settings (记账) open from the ledger's top bar and the footprints'
+  (足迹记录) from the footprints panel, beside what they are about. Theme and language have no
+  setting; they follow the phone.
+- **东西** in 我 is one page that switches between 设备, 订阅 and 车 from its title, 车 only with
+  an API; it opens on the one looked at last. 设备 (`moments://devices`) lists what is
   owned and what was sold, each with what it costs a day; 订阅 (`moments://subscriptions`)
   what is paid by the month, by the year and once. Each device and subscription is an entry
   with its plugin's part, edited in a sheet and published with the rest from 发布更改. 车

@@ -170,6 +170,12 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
         subtitle = subtitle.takeUnless { sideways },
         titleMenu = titleMenu.takeUnless { sideways },
         actions = {
+            // Its settings live here, beside what they are about, not on 我.
+            Tooltip(stringResource(R.string.ledger_settings_title), below = true) {
+                IconButton(onClick = nav.settings, modifier = Modifier.testTag("ledger_settings")) {
+                    Icon(AppIcons.Settings, contentDescription = stringResource(R.string.ledger_settings_title))
+                }
+            }
             Tooltip(stringResource(R.string.action_search), below = true) {
                 IconButton(onClick = { nav.list(LedgerFilter(book = book?.id.takeIf { !ledger.allBooks }, search = true)) }, modifier = Modifier.testTag("ledger_search")) {
                     Icon(AppIcons.Search, contentDescription = stringResource(R.string.action_search))
@@ -207,7 +213,7 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
     importer.Dialog()
 }
 
-/** The books to switch between, from the title; they are managed under 我 → 记账. */
+/** The books to switch between, from the title; they are managed in 记账, from the bar's settings. */
 @Composable
 private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, close: () -> Unit) {
     val scope = rememberCoroutineScope()
