@@ -72,6 +72,7 @@ fun FootprintSettingsScreen(container: AppContainer, onBack: () -> Unit) {
                     .padding(bottom = Space.xl)
                     .semantics { testTagsAsResourceId = true },
             ) {
+                NeedsSettings()
                 StatusBarSettings()
                 BackgroundSettings()
                 ConnectionAutomationSettings(container)
@@ -80,6 +81,44 @@ fun FootprintSettingsScreen(container: AppContainer, onBack: () -> Unit) {
             }
         }
     }
+}
+
+/**
+ * What recording is missing, one row a permission, the way to the system's settings at its end;
+ * the group isn't there when nothing is (35).
+ */
+@Composable
+private fun NeedsSettings() {
+    val context = LocalContext.current
+    fun read() = Triple(
+        androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled(),
+        !RecordingService.hasPreciseLocation(context) || context.granted(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+        !ActivityTransitions.enabled(context) || ActivityTransitions.permitted(context),
+    )
+    var state by androidx.compose.runtime.remember { mutableStateOf(read()) }
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { state = read() }
+    val (notifying, background, activity) = state
+    val rows = buildList<cc.hyoban.moments.ui.settings.Segment> {
+        if (!notifying) add { shapes ->
+            ActionRow(AppIcons.Bell, stringResource(R.string.onboarding_notifications), shapes,
+                supporting = stringResource(R.string.footprints_needs_notifications), tag = "footprints_needs_notifications", external = true) {
+                context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName))
+            }
+        }
+        if (!background) add { shapes ->
+            ActionRow(AppIcons.Locate, stringResource(R.string.footprints_needs_location), shapes,
+                supporting = stringResource(R.string.footprints_needs_location_note), tag = "footprints_needs_location", external = true) {
+                context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
+            }
+        }
+        if (!activity) add { shapes ->
+            ActionRow(AppIcons.Walk, stringResource(R.string.footprints_needs_activity), shapes,
+                supporting = stringResource(R.string.footprints_needs_activity_note), tag = "footprints_needs_activity", external = true) {
+                context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
+            }
+        }
+    }
+    if (rows.isNotEmpty()) SegmentedGroup(stringResource(R.string.footprints_needs), null, rows)
 }
 
 /** The live update the recording notification may become, the notification's own settings, and what its icons mean. */

@@ -33,6 +33,8 @@ import cc.hyoban.moments.widget.Widgets
 import java.io.File
 import java.time.LocalDate
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.SupervisorJob
@@ -210,6 +212,28 @@ class AppContainer(context: Context) {
             repository.clear()
             routes.clear()
             refreshAll()
+        }
+    }
+
+    /**
+     * 初次打开's 连接网站: keeps the API and its token and reads everything from it, in the app's
+     * own scope, so leaving the page leaves the reading going. One that can't be read is
+     * forgotten again, the phone left its own.
+     */
+    fun connect(url: String, token: String): Deferred<Result<Long>> {
+        val before = settings.apiUrl.value to settings.apiToken.value
+        settings.apiToken.set(token)
+        settings.apiUrl.set(url)
+        return scope.async {
+            repository.clear()
+            routes.clear()
+            repository.refresh()
+                .onSuccess { revision -> routes.refresh(revision) }
+                .onFailure {
+                    settings.apiUrl.set(before.first)
+                    settings.apiToken.set(before.second)
+                    repository.clear()
+                }
         }
     }
 

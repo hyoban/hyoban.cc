@@ -408,6 +408,9 @@ private enum class Tab(val route: Any, val type: KClass<*>, val label: Int, val 
 fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
     val navController = rememberNavController()
     val activity = LocalActivity.current as? MainActivity
+    // 初次打开 (34), over everything until it is through: once, on a phone with nothing set up,
+    // or again from moments://onboarding.
+    var onboarding by rememberSaveable { mutableStateOf(!container.settings.onboarded || activity?.intent?.data?.host == ONBOARDING_HOST) }
     // The page shown, under a dialog over it, as the editor is on a wide window: the tabs stay
     // with that page rather than going as the dialog opens.
     val stack by navController.backStack.collectAsStateWithLifecycle()
@@ -609,6 +612,8 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                 // An iCost export shared in, imported from the ledger's settings, which take it from the container.
                 viewer = null
                 if (navController.currentBackStackEntry?.destination?.hasRoute(LedgerSettings::class) != true) navController.navigate(LedgerSettings())
+            } else if (intent.data?.host == ONBOARDING_HOST) {
+                onboarding = true
             } else {
                 val route = intent.data?.let(::routeOf) ?: return@collect
                 viewer = null
@@ -901,6 +906,10 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                 )
                             }
                         }
+                        if (onboarding) cc.hyoban.moments.ui.onboarding.OnboardingScreen(container) {
+                            container.settings.onboarded = true
+                            onboarding = false
+                        }
                     }
                 }
             }
@@ -922,7 +931,7 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                 traversalIndex = -1f
             }
             AnimatedVisibility(
-                current != null && viewer == null && railed,
+                current != null && viewer == null && railed && !onboarding,
                 enter = slideInHorizontally(transitions.defaultSpatialSpec()) { if (railLeft) -it else it },
                 exit = slideOutHorizontally(transitions.defaultSpatialSpec()) { if (railLeft) -it else it },
                 modifier = navigation.align(if (railLeft) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight).fillMaxHeight(),
@@ -949,7 +958,7 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                 }
             }
             AnimatedVisibility(
-                current != null && viewer == null && !railed && !tabsHidden.value,
+                current != null && viewer == null && !railed && !tabsHidden.value && !onboarding,
                 enter = slideInVertically(transitions.defaultSpatialSpec()) { it },
                 exit = slideOutVertically(transitions.defaultSpatialSpec()) { it },
                 modifier = navigation.align(Alignment.BottomCenter).fillMaxWidth(),
@@ -1214,6 +1223,9 @@ private fun tabOf(route: Any): Any = when (route) {
 }
 
 /** The page a link opens, `moments://moment/{uid}` and the rest; null for one the app has no page for. */
+/** The link that opens 初次打开 again. */
+private const val ONBOARDING_HOST = "onboarding"
+
 fun routeOf(link: Uri): Any? {
     if (link.scheme != DEEP_LINK_SCHEME) return null
     val id = link.pathSegments.firstOrNull()

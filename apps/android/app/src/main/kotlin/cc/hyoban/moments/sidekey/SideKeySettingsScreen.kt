@@ -79,6 +79,28 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
         Shizuku.addRequestPermissionResultListener(listener)
         onDispose { Shizuku.removeRequestPermissionResultListener(listener) }
     }
+    var explaining by remember { mutableStateOf(false) }
+    if (explaining) cc.hyoban.moments.ui.design.PermissionSheet(
+        icon = AppIcons.Key,
+        title = stringResource(R.string.permission_side_key_title),
+        body = stringResource(R.string.permission_side_key_body, stringResource(R.string.share_assist_service_label)),
+        facts = listOf(
+            cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Refresh, stringResource(R.string.permission_side_key_restart)),
+            cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Undo, stringResource(R.string.permission_side_key_restore)),
+        ),
+        path = stringResource(R.string.permission_side_key_path),
+        primary = stringResource(R.string.permission_side_key_primary),
+        external = true,
+        secondary = stringResource(R.string.permission_not_now),
+        onPrimary = {
+            explaining = false
+            val intent = context.packageManager.getLaunchIntentForPackage("moe.shizuku.privileged.api")
+            if (intent != null) context.startActivity(intent)
+            else Toast.makeText(context, R.string.side_key_shizuku_missing, Toast.LENGTH_LONG).show()
+        },
+        onDismiss = { explaining = false },
+        tag = "permission_side_key",
+    )
     SubPage(stringResource(R.string.side_key_title), onBack) {
         PageWidth(maxColumns = 1) { columns ->
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current).navigationBarsPadding()
@@ -86,7 +108,11 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
                 SegmentedGroup(null, stringResource(R.string.side_key_note), listOf { shapes ->
                     SwitchRow(config.enabled, AppIcons.Phone,
                         stringResource(R.string.side_key_enabled), "sidekey_enabled", shapes,
-                        supporting = stringResource(state.phase.label)) { SideKeys.setEnabled(!config.enabled) }
+                        supporting = stringResource(state.phase.label)) {
+                        // Turned on with Shizuku or the service still missing, the sheet says what it needs first (35).
+                        if (!config.enabled && (!connected || runCatching { !Shizuku.pingBinder() || Shizuku.checkSelfPermission() != android.content.pm.PackageManager.PERMISSION_GRANTED }.getOrDefault(true))) explaining = true
+                        SideKeys.setEnabled(!config.enabled)
+                    }
                 })
                 // What it needs, each with where it stands, the way to the system's own settings at its end.
                 SegmentedGroup(stringResource(R.string.side_key_needs), null, buildList {

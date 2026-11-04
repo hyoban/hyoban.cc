@@ -98,7 +98,20 @@ fun ConnectionAutomationSettings(container: AppContainer) {
         pending?.let(::afterPermission)
         pending = null
     }
+    // Bluetooth's Nearby devices is said first (35); location and notifications go on as they did.
+    val nearby = cc.hyoban.moments.ui.components.rememberPermissionAsk(
+        if (Build.VERSION.SDK_INT >= 31) arrayOf(Manifest.permission.BLUETOOTH_CONNECT) else emptyArray(),
+        cc.hyoban.moments.ui.components.PermissionWords(
+            AppIcons.Bluetooth,
+            stringResource(R.string.permission_bluetooth_title),
+            stringResource(R.string.permission_bluetooth_body),
+            stringResource(R.string.permission_not_now),
+            listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Block, stringResource(R.string.permission_bluetooth_fact))),
+        ),
+        isGranted = { it.bluetoothAllowed() },
+    ) { afterPermission("bluetooth") }
     fun request(action: String) {
+        if (action == "bluetooth" && !context.bluetoothAllowed()) return nearby()
         val needed = mutableListOf<String>()
         if (action == "wifi" || action == "enable") {
             if (!context.granted(Manifest.permission.ACCESS_FINE_LOCATION)) {

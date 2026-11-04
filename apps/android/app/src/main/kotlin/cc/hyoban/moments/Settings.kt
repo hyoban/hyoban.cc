@@ -87,6 +87,14 @@ class Settings(context: Context) {
         get() = prefs.getBoolean("asked_media_location", false)
         set(value) = prefs.edit { putBoolean("asked_media_location", value) }
 
+    /**
+     * Whether 初次打开 has been through, or wasn't needed: a phone already reading an API never
+     * sees it, and it shows once, the first time the app opens with nothing set up.
+     */
+    var onboarded: Boolean
+        get() = prefs.getBoolean("onboarded", false) || connected
+        set(value) = prefs.edit { putBoolean("onboarded", value) }
+
     /** Whether the map is under its fog of war, every city not been to veiled. */
     var mapFog: Boolean by mutableStateOf(prefs.getBoolean("map_fog", false))
         private set

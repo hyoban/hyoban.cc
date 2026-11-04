@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.compose
 
+import cc.hyoban.moments.ui.components.openAppSettings
+
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -227,25 +229,25 @@ internal fun PlacePicker(
             locating = false
         }
     }
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
-        if (granted.values.any { it }) locate() else Toast.makeText(context, R.string.error_location_permission, Toast.LENGTH_SHORT).show()
+    // Asked with the sheet first (PermissionSheet); refused, the map waits for a drag or a search.
+    val permission = cc.hyoban.moments.ui.components.rememberPermissionAsk(LOCATION_PERMISSIONS, cc.hyoban.moments.ui.components.PermissionWords(
+        AppIcons.Locate,
+        stringResource(R.string.permission_locate_title),
+        stringResource(R.string.permission_locate_body),
+        stringResource(R.string.permission_not_now),
+        listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Pin, stringResource(R.string.permission_locate_fact))),
+    )) { granted ->
+        if (granted) locate() else Toast.makeText(context, R.string.error_location_permission, Toast.LENGTH_SHORT).show()
     }
-    val askToLocate = {
-        if (!locating) {
-            if (LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
-                locate()
-            } else {
-                permission.launch(LOCATION_PERMISSIONS)
-            }
-        }
-    }
+    val askToLocate = { if (!locating) permission() }
     // The keyboard the Moment's words had goes, so the map shows. Opened with nothing chosen
     // and nowhere to start, where the phone is: asked once, and refused, the map waits for a
     // drag or the locate button.
     val focusManager = LocalFocusManager.current
     LaunchedEffect(Unit) {
         focusManager.clearFocus()
-        if (opening == null) askToLocate()
+        // Opened on its own, it asks only the first time; after that only the locate button does.
+        if (opening == null && (!permission.asked || LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED })) askToLocate()
     }
     val fly = { to: Fix -> target = MapTarget(to.latitude, to.longitude, PICK_ZOOM) }
     val choose: (String) -> Unit = { id ->
@@ -337,6 +339,7 @@ internal fun PlacePicker(
             results = results,
             near = pinned ?: opening ?: fix,
             locating = locating,
+            noLocation = !LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED },
             // What was found stays, the choice above it, so another of them is a tap away.
             onFound = { found ->
                 chooseFound(found)
@@ -524,6 +527,8 @@ private fun PlaceCard(
     results: List<Found>?,
     near: Fix?,
     locating: Boolean,
+    /** Location not given: the list says so first, the map still dragged and searched (35). */
+    noLocation: Boolean,
     onFound: (Found) -> Unit,
     onKnown: (String) -> Unit,
     onKind: (PlaceKind) -> Unit,
@@ -632,6 +637,7 @@ private fun PlaceCard(
                     color = tokens.tx2,
                     modifier = Modifier.align(Alignment.Center),
                 )
+                rows.isEmpty() && noLocation -> NoLocationRow(Modifier.align(Alignment.TopCenter))
                 rows.isEmpty() -> Text(
                     stringResource(R.string.place_drag_hint),
                     style = AppTheme.typography.body,
@@ -689,6 +695,19 @@ private fun PlaceCard(
             ) { Text(stringResource(R.string.action_confirm)) }
         }
     }
+}
+
+/** Location not given: a row saying so, the way to the app's settings at its end. */
+@Composable
+private fun NoLocationRow(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    ListItem(
+        headlineContent = { Text(stringResource(R.string.place_no_location)) },
+        supportingContent = { Text(stringResource(R.string.place_no_location_note)) },
+        leadingContent = { Icon(AppIcons.Locate, contentDescription = null, tint = tokens.danger) },
+        trailingContent = { Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp), tint = tokens.tx2) },
+        modifier = modifier.fillMaxWidth().clickable { with(context) { openAppSettings() } }.padding(horizontal = Space.s).testTag("place_no_location"),
+    )
 }
 
 /** How far [found] is from [at], or nowhere when there is no [at]. */
