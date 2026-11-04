@@ -87,6 +87,16 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   a dialog. The ledger's own settings (记账) open from the ledger's top bar and the footprints'
   (足迹记录) from the footprints panel, beside what they are about. Theme and language have no
   setting; they follow the phone.
+- **记录项与公开** (`moments://items`) opens on the 记录项, the modules the spec defines
+  (`data/spec/Modules.kt`, mirroring `modules` in `@hyoban/data-spec/entry`): 足迹, 账本, 东西
+  (设备 and 订阅), 车, 美食 and 签到, each a switch, all on until turned off. One turned off is
+  put away everywhere: its rows on 我, its pages, its records on the timeline, a day, a trip,
+  a Moment, the search's kinds and the map, its chip under 加一项, its sources under 导入, the
+  side key's payment action and the widgets' counts (导入 lists the sources left, and goes
+  from 我 with none); its background work stops (the
+  footprints' recording and connection reminders, 自动记账), and its data stays on the phone,
+  so turning it on again brings everything back as it was, the recording included. Under the
+  modules, each book's and the footprints' publishing defaults (below, Ledger and Footprints).
 - **东西** in 我 is one page that switches between 设备, 订阅 and 车 from its title, 车 only with
   an API; it opens on the one looked at last. 设备 (`moments://devices`) lists what is
   owned and what was sold, each with what it costs a day; 订阅 (`moments://subscriptions`)
@@ -351,7 +361,7 @@ The data:
 
 `ledger/LedgerStore` keeps it in `noBackupFilesDir/ledger.sqlite`, outside sync and
 Android's backup. Bills are private: 记录项与公开 (`moments://items`) makes a book's new bills
-public, and a bill's 公开 chip says otherwise for one. A public bill publishes only its
+public (under the 记录项, while the ledger is on), and a bill's 公开 chip says otherwise for one. A public bill publishes only its
 kind, amount, currency, category and note (`data/store/Outside.kt`). `ledger/ICostImport`,
 `ledger/Accounting` and `ledger/Links` are plain Kotlin tested in `LedgerTest`, which also
 reads a real export when `ICOST_EXPORT` names one and a real backup when `ICOST_BACKUP` does.
@@ -365,7 +375,8 @@ Nothing is written until saved, and a payment matching a kept bill within ten mi
 offered. It never taps, types or keeps the page. `ledger/Payments` reads the page, with
 fixtures in `PaymentsTest`; `ledger/AutoBill` keeps the switch and posts the notification.
 
-**侧键**, in 我 (`moments://side-key`), gives the physical OPPO key's single, double and long
+**侧键**, in 我 (`moments://side-key`), is for one phone, the OPPO Find X10 Pro Max (model
+`PMX110`, `SideKeys.supported`); any other phone has no 侧键 row. It gives the physical OPPO key's single, double and long
 press each an action: payment capture, the flashlight, an app or a link, media and volume
 keys, or a system action (back, home, recent apps, notifications, quick settings, lock).
 None is set on the user's behalf. The double-press window (300 ms, 150–600) and the long

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.data.spec.Module
 import android.annotation.SuppressLint
 import android.app.*
 import android.bluetooth.*
@@ -399,7 +400,7 @@ class ConnectionReminderService : Service() {
             val app = context.applicationContext
             val rules = withContext(Dispatchers.IO) { (app as MomentsApplication).container.connectionRules.load() }
             CompanionConnections.sync(app, rules)
-            if (!rules.enabled || !rules.hasTargets) {
+            if (!rules.enabled || !rules.hasTargets || !(app as MomentsApplication).container.settings.isOn(Module.FOOTPRINTS)) {
                 app.stopService(Intent(app, ConnectionReminderService::class.java))
             } else {
                 val service = live

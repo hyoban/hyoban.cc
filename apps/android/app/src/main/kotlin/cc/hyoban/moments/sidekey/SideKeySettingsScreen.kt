@@ -1,5 +1,7 @@
 package cc.hyoban.moments.sidekey
 
+import cc.hyoban.moments.ui.LocalSettings
+import cc.hyoban.moments.data.spec.Module
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
@@ -221,7 +223,9 @@ private fun ColumnScope.ActionChoices(current: String?, follow: String?, onPick:
     var mode by remember { mutableStateOf("actions") }
     when (mode) {
         "actions" -> Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(bottom = Space.l)) {
-            val choices = SideKeyActions.choices.map { (value, label) -> value to stringResource(label) }
+            // The payment action only while the ledger is on (记录项与公开); a gesture bound to it keeps it.
+            val ledgerOn = LocalSettings.current.isOn(Module.LEDGER)
+            val choices = SideKeyActions.choices.filterKeys { it != "ledger:capture" || ledgerOn }.map { (value, label) -> value to stringResource(label) }
             val items = if (follow != null) listOf(null to stringResource(R.string.side_key_follow_value, follow)) + choices else choices
             SegmentedGroup(null, null, items.map { (value, label) ->
                 { shapes ->

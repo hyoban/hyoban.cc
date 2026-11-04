@@ -15,11 +15,15 @@ import {
   getStableUlid,
   getUnknownFields,
   getUploadEntry,
+  getPluginModule,
   isInCollection,
   isMarkEntry,
+  modules,
   momentToEntry,
+  plugins,
   tripToCollection,
 } from '../src/entry.ts'
+import { tables } from '../src/tables.ts'
 import { momentRecordSchema, tripRecordSchema } from '../src/index.ts'
 import { readMomentRecords, readTripRecords } from '../../../apps/web/src/data/store.ts'
 
@@ -254,4 +258,17 @@ test('fields the spec does not name are found, in the parts it knows', () => {
 
   assert.deepEqual(getUnknownFields(entry), ['visibilty', 'parts.charge.durationMinutes'])
   assert.deepEqual(getUnknownFields({ ...base, parts: {} }), [])
+})
+
+test('a module owns plugins the spec has, each in one module, and tables it keeps', () => {
+  const owned = modules.flatMap((module) => module.plugins)
+  assert.equal(new Set(owned).size, owned.length)
+  for (const plugin of owned) assert.ok(plugin in plugins)
+  for (const module of modules) {
+    for (const table of module.tables) assert.ok(tables.some((each) => each.name === table))
+  }
+  assert.equal(getPluginModule('bill'), 'ledger')
+  assert.equal(getPluginModule('subscription'), 'things')
+  assert.equal(getPluginModule('text'), undefined)
+  assert.equal(getPluginModule('unknown'), undefined)
 })

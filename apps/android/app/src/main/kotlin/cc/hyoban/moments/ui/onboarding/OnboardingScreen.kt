@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.onboarding
 
+import cc.hyoban.moments.ui.settings.importSources
+import cc.hyoban.moments.data.spec.Module
 import android.Manifest
 import android.content.Intent
 import android.os.Build
@@ -96,17 +98,19 @@ fun OnboardingScreen(container: AppContainer, onDone: () -> Unit) {
             Step.Background -> Step.Footprints
         }
     }
+    // The footprints step only while the footprints are on (记录项与公开).
+    val toFootprints: () -> Unit = { if (container.settings.isOn(Module.FOOTPRINTS)) step = Step.Footprints else onDone() }
     BackHandler(enabled = step != Step.Welcome, onBack = back)
     Box(Modifier.fillMaxSize().background(AppColors.page).testTag("onboarding")) {
         when (step) {
             Step.Welcome -> Welcome { step = Step.Start }
-            Step.Start -> Start(back, onSite = { step = Step.Connect }, onImport = { step = Step.Import }, onBlank = { step = Step.Footprints })
-            Step.Connect -> Connect(container, back) { step = Step.Footprints }
+            Step.Start -> Start(back, onSite = { step = Step.Connect }, onImport = { step = Step.Import }, onBlank = toFootprints)
+            Step.Connect -> Connect(container, back, toFootprints)
             // The 导入 page as it is in 我, with the way on at its foot; back is back to where to start.
             Step.Import -> Column(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(1f).fillMaxWidth()) { ImportScreen(container, onBack = back) }
                 Button(
-                    onClick = { step = Step.Footprints },
+                    onClick = toFootprints,
                     modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = Space.gutter).padding(top = Space.s, bottom = Space.xl).testTag("onboarding_import_next"),
                 ) { Text(stringResource(R.string.onboarding_continue)) }
             }
@@ -217,9 +221,10 @@ private fun Start(onBack: () -> Unit, onSite: () -> Unit, onImport: () -> Unit, 
             }
             segment
         }
-        SegmentedGroup(null, stringResource(R.string.onboarding_where_note), listOf(
+        // Importing only while a source's module is on (记录项与公开).
+        SegmentedGroup(null, stringResource(R.string.onboarding_where_note), listOfNotNull(
             row(AppIcons.Link, R.string.onboarding_site, R.string.onboarding_site_note, "onboarding_site", onSite),
-            row(AppIcons.Download, R.string.onboarding_import, R.string.onboarding_import_note, "onboarding_import", onImport),
+            row(AppIcons.Download, R.string.onboarding_import, R.string.onboarding_import_note, "onboarding_import", onImport).takeIf { importSources().isNotEmpty() },
             row(AppIcons.Phone, R.string.onboarding_blank, R.string.onboarding_blank_note, "onboarding_blank", onBlank),
         ))
     }

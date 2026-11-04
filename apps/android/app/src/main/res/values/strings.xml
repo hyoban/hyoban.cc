@@ -876,6 +876,10 @@
     <string name="items_tracks">轨迹</string>
     <string name="items_tracks_note">轨迹默认私有，可以在旅程页公开某一段。</string>
     <string name="items_track_shares">%1$d 段公开</string>
+    <string name="items_modules">记录项</string>
+    <string name="items_modules_note">关掉的记录项从各页收起，数据留在手机上；足迹停止记录，自动记账和侧键记账停下。打开就都回来。</string>
+    <string name="module_checkin">签到</string>
+    <string name="side_key_ledger_off">账本已在「记录项与公开」里关掉</string>
     <string name="moment_private_note">私有的不会发布</string>
     <string name="me_items">记录项与公开</string>
     <string name="part_text">文字</string>
@@ -1118,7 +1122,10 @@
     <string name="import_ledger">账本</string>
     <string name="import_ledger_note">账本只存在这台手机上，不参与同步和发布。</string>
     <string name="import_footprints_note">和手机上已有记录重叠的时段，保留手机上的。</string>
-    <string name="me_import_sources">Swarm、iCost、GPX 轨迹</string>
+    <string name="import_source_swarm">Swarm</string>
+    <string name="import_source_icost">iCost</string>
+    <string name="import_source_gpx">GPX 轨迹</string>
+    <string name="import_none">记录项都关掉了，没有可导入的。在「记录项与公开」里打开签到、账本或足迹，再来导入。</string>
     <string name="swarm_import">从 Swarm 导入</string>
     <string name="swarm_import_note">Swarm 导出的 .zip</string>
     <string name="swarm_import_explain">签到都导入成私有的：写了字或带照片的成为时刻，其余只记下签到，每家店成为一个地点。再导入同一份导出，只添上新的。</string>

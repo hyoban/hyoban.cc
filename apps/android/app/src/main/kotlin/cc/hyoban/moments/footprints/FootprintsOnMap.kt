@@ -1,5 +1,7 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.ui.LocalSettings
+import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.components.openAppSettings
 
 import androidx.compose.runtime.produceState
@@ -148,14 +150,16 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
         scope.launch { keeping = stay to (container.billPlaces.nameOf(point) ?: coordinatesName(point)) }
     }
     keeping?.let { (stay, name) ->
-        KeepPlace(container, Fix(stay.latitude, stay.longitude), name, onDismiss = { keeping = null }, onCheckin = { place, venue ->
+        val keepCheckin: suspend (String, String) -> Unit = { place, venue ->
             val entry = stayCheckin(stay, place, venue)
             // A check-in already there over the stay, Swarm's or one kept before, is that visit.
             val other = container.repository.checkins.value.byDay[recordStamp(stay.start).take(10)].orEmpty()
                 .any { it.uid != entry.entryUid && runCatching { OffsetDateTime.parse(it.at).toInstant().toEpochMilli() in stay.start..stay.end }.getOrDefault(false) }
             if (other) Toast.makeText(context, R.string.message_checkin_known, Toast.LENGTH_SHORT).show()
             else container.repository.saveEntry(entry)
-        })
+        }
+        // Kept as a check-in only while check-ins are on (记录项与公开).
+        KeepPlace(container, Fix(stay.latitude, stay.longitude), name, onDismiss = { keeping = null }, onCheckin = keepCheckin.takeIf { LocalSettings.current.isOn(Module.CHECKIN) })
     }
     // Recording in the background needs location 始终允许, which only the system's settings give:
     // said once, after recording first starts without it (35).

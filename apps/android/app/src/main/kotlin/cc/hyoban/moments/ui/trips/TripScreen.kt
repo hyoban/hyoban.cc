@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.design.rememberHaptics
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.CompositionLocalProvider
@@ -101,6 +102,8 @@ fun TripScreen(
     val routes by container.tripRoutes.collectAsStateWithLifecycle()
     val trip = remember(trips, id) { trips.firstOrNull { it.id == id } } ?: return
     val connected = LocalSettings.current.connected
+    val footprintsOn = LocalSettings.current.isOn(Module.FOOTPRINTS)
+    val ledgerOn = LocalSettings.current.isOn(Module.LEDGER)
     val moments = remember(trip, all) { momentsOf(trip, all, trips) }
     val stops = remember(trip, all, places) { stopsOf(trip, all, trips, places) }
     val resources = LocalResources.current
@@ -234,9 +237,9 @@ fun TripScreen(
                         chronological = true,
                     ) {
                         item(key = "summary") { summary() }
-                        item(key = "spending") { spending() }
+                        if (ledgerOn) item(key = "spending") { spending() }
                         // Public footprints only go out with a publish, so with no API there is no switch.
-                        if (connected) item(key = "track") { TrackShareRow(container, trip) }
+                        if (connected && footprintsOn) item(key = "track") { TrackShareRow(container, trip) }
                         if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(3) }
                     }
                     }
@@ -259,8 +262,8 @@ fun TripScreen(
                     chronological = true,
                 ) {
                     item(key = "summary") { summary() }
-                    item(key = "spending") { spending() }
-                    if (connected) item(key = "track") { TrackShareRow(container, trip) }
+                    if (ledgerOn) item(key = "spending") { spending() }
+                    if (connected && footprintsOn) item(key = "track") { TrackShareRow(container, trip) }
                     if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(5) }
                     item(key = "map") { routeCard(Modifier, Modifier.height(240.dp)) }
                     item(key = "gap") { Spacer(Modifier.height(Space.s)) }
@@ -337,13 +340,15 @@ private fun TripFacets(
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val trips by container.shownTrips.collectAsStateWithLifecycle()
     val second by container.repository.second.collectAsStateWithLifecycle()
+    val carOn = LocalSettings.current.isOn(Module.CAR)
+    val spendingOn = LocalSettings.current.isOn(Module.LEDGER)
     val km = remember(route) {
         route.sumOf { segment ->
             segment.line.zipWithNext { (lng1, lat1), (lng2, lat2) -> haversineKm(lat1, lng1, lat2, lng2) }.sum()
         }
     }
-    val charges = remember(second, trip) {
-        second.entries.values.mapNotNull { entry ->
+    val charges = remember(second, trip, carOn) {
+        if (!carOn) emptyList() else second.entries.values.mapNotNull { entry ->
             val at = (entry["at"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
             val charge = (entry["parts"] as? kotlinx.serialization.json.JsonObject)?.get("charge") as? kotlinx.serialization.json.JsonObject
             if (charge == null || at.take(10) < trip.start || at.take(10) > trip.end) null
@@ -351,7 +356,8 @@ private fun TripFacets(
         }
     }
     val currency = ledger.book?.currency ?: "CNY"
-    val spent = remember(ledger, moments, trips, trip) {
+    val spent = remember(ledger, moments, trips, trip, spendingOn) {
+        if (!spendingOn) return@remember null
         val bills = cc.hyoban.moments.ui.ledger.billsOf(SpendingOf.Trip(trip.id), ledger, moments.associateBy { it.uid }, trips)
         if (bills.isEmpty()) null else cc.hyoban.moments.ledger.spendingOf(ledger, bills, currency).expense
     }

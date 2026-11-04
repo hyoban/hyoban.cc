@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
+import cc.hyoban.moments.data.spec.Module
 import java.io.File
 
 /**
@@ -136,5 +137,21 @@ class Settings(context: Context) {
     fun changeDemo(on: Boolean) {
         demo = on
         prefs.edit { putBoolean("demo", on).remove("ledger_hidden") }
+    }
+
+    /**
+     * The modules turned off in 记录项与公开, by the spec's keys: every module is on until turned
+     * off, one the app gains later too. Off, a module's rows, pages and records are put away and
+     * its background work stops (the footprints' recording, 自动记账, the side key's payment
+     * action); its data stays on the phone, and turning it on brings everything back.
+     */
+    var modulesOff: Set<String> by mutableStateOf(prefs.getStringSet("modules_off", null).orEmpty().toSet())
+        private set
+
+    fun isOn(module: Module): Boolean = module.key !in modulesOff
+
+    fun changeModule(module: Module, on: Boolean) {
+        modulesOff = if (on) modulesOff - module.key else modulesOff + module.key
+        prefs.edit { putStringSet("modules_off", modulesOff) }
     }
 }

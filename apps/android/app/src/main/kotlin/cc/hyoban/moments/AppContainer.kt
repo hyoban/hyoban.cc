@@ -1,5 +1,6 @@
 package cc.hyoban.moments
 
+import cc.hyoban.moments.data.spec.Module
 import android.content.Context
 import android.net.Uri
 import android.util.Log
@@ -104,7 +105,7 @@ class AppContainer(context: Context) {
         tencentFirst = { settings.chinaPlaces.value == CHINA_PLACES_TENCENT },
     )
     /** Where each bill was paid, by the footprints. */
-    val billPlaces = cc.hyoban.moments.footprints.BillPlaces(footprints, placeSearch)
+    val billPlaces = cc.hyoban.moments.footprints.BillPlaces(footprints, placeSearch) { settings.isOn(Module.FOOTPRINTS) }
     /** The trips' routes along the roads, from the API. */
     val routes = TripRoutes({ settings.apiUrl.value }, File(context.filesDir, "routes.json"), token = { settings.apiToken.value })
 

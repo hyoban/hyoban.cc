@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.LocalSettings
+import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.ui.unit.Dp
@@ -119,17 +121,19 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
     val second by container.repository.second.collectAsStateWithLifecycle()
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val allCheckins by container.repository.checkins.collectAsStateWithLifecycle()
-    return remember(ledger, second, entries, allCheckins, moments, filter, kind) {
+    // Only the records of modules that are on (记录项与公开).
+    val off = LocalSettings.current.modulesOff
+    return remember(ledger, second, entries, allCheckins, moments, filter, kind, off) {
         val inFilter = { day: String ->
             (filter.year == null || day.take(4).toInt() == filter.year) && (filter.month == null || day.substring(5, 7).toInt() == filter.month)
         }
-        val things = if (kind != FeedKind.ALL) emptyMap() else (
+        val things = if (kind != FeedKind.ALL || Module.THINGS.key in off) emptyMap() else (
             cc.hyoban.moments.data.things.Things.devices(entries.values).map { ThingRecord(it.uid, it.bought.toString(), true, true, it.name, it.price, "CNY") } +
                 cc.hyoban.moments.data.things.Things.subscriptions(entries.values).map {
                     ThingRecord(it.uid, it.paid.toString(), false, it.period == cc.hyoban.moments.data.things.Period.ONCE, it.name, it.price, it.currency)
                 }
             ).filter { inFilter(it.day) }.groupBy { it.day }
-        val charges = if (kind != FeedKind.ALL && kind != FeedKind.CHARGES) emptyMap() else second.entries.values.mapNotNull { entry ->
+        val charges = if ((kind != FeedKind.ALL && kind != FeedKind.CHARGES) || Module.CAR.key in off) emptyMap() else second.entries.values.mapNotNull { entry ->
             val charge = (entry["parts"] as? kotlinx.serialization.json.JsonObject)?.get("charge") as? kotlinx.serialization.json.JsonObject
                 ?: return@mapNotNull null
             val at = (entry["at"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
@@ -146,9 +150,9 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
                 (filter.month == null || charge.at.substring(5, 7).toInt() == filter.month)
         }.groupBy { it.at.take(10) }
         // The phone's own too, an import's waiting to be published among them.
-        val checkins = if (kind != FeedKind.ALL) emptyMap() else allCheckins.byDay.filterKeys(inFilter)
+        val checkins = if (kind != FeedKind.ALL || Module.CHECKIN.key in off) emptyMap() else allCheckins.byDay.filterKeys(inFilter)
         val book = ledger.book
-        if (book == null || (kind != FeedKind.ALL && kind != FeedKind.BILLS)) {
+        if (book == null || (kind != FeedKind.ALL && kind != FeedKind.BILLS) || Module.LEDGER.key in off) {
             return@remember TimelineBills(ledger, emptyMap(), emptyMap(), emptyMap(), book?.currency ?: "CNY", charges, things, checkins)
         }
         val shown = ledger.books.filterNot { it.archived }.mapTo(HashSet()) { it.id }
@@ -498,6 +502,8 @@ fun knownDayTrack(day: String): DayTrack? = TrackMemory.cache[day]
 
 @Composable
 fun rememberTimelineTracks(container: AppContainer): TimelineTracks {
+    // With the footprints turned off (记录项与公开), no day has any.
+    if (!LocalSettings.current.isOn(Module.FOOTPRINTS)) return TimelineTracks.EMPTY
     val store = container.footprints
     val revision by store.revision.collectAsStateWithLifecycle()
     val read: (String) -> DayTrack? = remember(store) {

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.moment
 
+import cc.hyoban.moments.data.spec.Module
 import androidx.compose.ui.AbsoluteAlignment
 import cc.hyoban.moments.data.store.isPublic
 
@@ -376,6 +377,11 @@ private fun MomentDetails(
     onPartPrivate: ((String, Boolean) -> Unit)? = null,
 ) {
     val sameDay = remember(moments, moment.dateKey) { moments.count { it.dateKey == moment.dateKey } }
+    // Its parts of modules turned off (记录项与公开) go unshown, kept as they are.
+    val settings = LocalSettings.current
+    val foodOn = settings.isOn(Module.FOOD)
+    val ledgerOn = settings.isOn(Module.LEDGER)
+    val carOn = settings.isOn(Module.CAR)
     Column(Modifier.padding(top = Space.xl, bottom = Space.xl)) {
         // When, in the second grey over the words, as the timeline's line over a Moment has it.
         Text(
@@ -416,7 +422,7 @@ private fun MomentDetails(
             }
             // What was eaten: the dishes, how it went, what the meal cost and each one's share.
             // Not a link, so a row that doesn't answer a tap.
-            moment.food?.let { food ->
+            moment.food?.takeIf { foodOn }?.let { food ->
                 val verdict = FoodVerdict.of(food.verdict)
                 add {
                     ListItem(
@@ -434,8 +440,8 @@ private fun MomentDetails(
                     )
                 }
             }
-            addAll(bills)
-            (parts?.get("charge") as? kotlinx.serialization.json.JsonObject)?.let { charge ->
+            if (ledgerOn) addAll(bills)
+            (parts?.get("charge") as? kotlinx.serialization.json.JsonObject)?.takeIf { carOn }?.let { charge ->
                 add {
                     ListItem(
                         headlineContent = { Text(chargeTitle(charge)) },
@@ -480,9 +486,9 @@ private fun MomentDetails(
                 val published = listOfNotNull(
                     stringResource(R.string.part_text).takeIf { moment.text.isNotBlank() },
                     stringResource(R.string.part_photos).takeIf { moment.media.isNotEmpty() },
-                    stringResource(R.string.section_food).takeIf { moment.food != null },
-                    stringResource(R.string.part_bill).takeIf { billPublic },
-                    stringResource(R.string.part_charge).takeIf { parts?.containsKey("charge") == true },
+                    stringResource(R.string.section_food).takeIf { moment.food != null && foodOn },
+                    stringResource(R.string.part_bill).takeIf { billPublic && ledgerOn },
+                    stringResource(R.string.part_charge).takeIf { parts?.containsKey("charge") == true && carOn },
                 )
                 ListItem(
                     headlineContent = { Text(stringResource(if (private) R.string.visibility_private else R.string.visibility_public)) },
@@ -500,7 +506,7 @@ private fun MomentDetails(
             val own = moment.extra[cc.hyoban.moments.data.spec.Entries.PART_VISIBILITY] as? kotlinx.serialization.json.JsonObject
             if (onPartPrivate != null && !moment.hidden) {
                 listOfNotNull(
-                    ("food" to R.string.section_food).takeIf { moment.food != null },
+                    ("food" to R.string.section_food).takeIf { moment.food != null && foodOn },
                     ("media" to R.string.part_photos).takeIf { moment.media.isNotEmpty() },
                 ).forEach { (plugin, label) ->
                     val private = (own?.get(plugin) as? kotlinx.serialization.json.JsonPrimitive)?.content == "private"
