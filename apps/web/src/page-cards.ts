@@ -52,7 +52,7 @@ export interface PageText {
 export const CALENDAR_DESCRIPTION = '随手拍的照片，和想记住的小事。'
 export const MEDIA_TEXT: PageText = {
   heading: '影视推荐',
-  description: '我喜欢的电影、剧集和动画。',
+  description: '我喜欢的电影、剧集、动画和音乐。',
 }
 
 export function getPageTitle({ heading }: Pick<PageText, 'heading'>) {

@@ -5,6 +5,7 @@ import generatedMedia from '@/data/media.generated.json'
 import mediaRecommendations from '@/data/media-recommendations.json'
 import Layout from '@/layouts/Layout.astro'
 import { compareMediaItems, getMediaItemKey } from '@/media'
+import { formatDuration, getMusicTracks } from '@/music'
 import { getPageCardPath, getPageTitle, MEDIA_TEXT } from '@/page-cards'
 
 const pageTitle = getPageTitle(MEDIA_TEXT)
@@ -16,6 +17,7 @@ const mediaCategories = [
   { label: '电视剧', value: 'tv' },
   { label: 'TVB', value: 'tvb' },
   { label: '电影', value: 'movie' },
+  { label: '音乐', value: 'music' },
 ] as const
 
 type MediaCategory = typeof mediaCategories[number]['value']
@@ -91,10 +93,14 @@ const mediaWorks = sortedRecommendations.map((recommendation) => {
   return resolveMediaWork(recommendation, generated)
 })
 
+const musicTracks = await getMusicTracks()
+
 const mediaCategoryCounts = new Map(
   mediaCategories.map(category => [
     category.value,
-    mediaWorks.filter(work => work.categories.includes(category.value)).length,
+    category.value === 'music'
+      ? musicTracks.length
+      : mediaWorks.filter(work => work.categories.includes(category.value)).length,
   ]),
 )
 
@@ -201,7 +207,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
   <Fragment slot="head">
     <script is:inline data-astro-rerun>
       const mediaCategory = new URL(window.location.href).searchParams.get('category')
-      document.documentElement.dataset.mediaCategory = ['anime', 'tv', 'tvb', 'movie'].includes(mediaCategory)
+      document.documentElement.dataset.mediaCategory = ['anime', 'tv', 'tvb', 'movie', 'music'].includes(mediaCategory)
         ? mediaCategory
         : 'anime'
     </script>
@@ -291,13 +297,45 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
           </li>
         ))
       }
+      {
+        musicTracks.map(track => (
+          <li class="media-item" data-media-category="music">
+            <article class="music-track">
+              {
+                track.coverUrl && (
+                  <a
+                    href={track.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="music-track__cover"
+                    tabindex="-1"
+                    aria-hidden="true"
+                  >
+                    <img src={track.coverUrl} alt="" loading="lazy" />
+                  </a>
+                )
+              }
+              <header class="music-track__header">
+                <h2>
+                  <a href={track.url} target="_blank" rel="noopener noreferrer">{track.title}</a>
+                </h2>
+                <p class="media-work__meta">
+                  {track.artists.length > 0 && <span>{track.artists.join(' / ')}</span>}
+                  {track.album && track.album !== track.title && <span class="music-track__album">{track.album}</span>}
+                  {track.durationSeconds && <span class="music-track__duration">{formatDuration(track.durationSeconds)}</span>}
+                </p>
+              </header>
+            </article>
+          </li>
+        ))
+      }
     </ol>
   </SitePage>
 </Layout>
 
 <script>
   const DEFAULT_MEDIA_CATEGORY = 'anime'
-  const MEDIA_CATEGORIES = new Set(['tv', 'tvb', 'movie', 'anime'])
+  const MEDIA_CATEGORIES = new Set(['tv', 'tvb', 'movie', 'anime', 'music'])
 
   function getMediaCategoryFromUrl() {
     const category = new URL(window.location.href).searchParams.get('category')
@@ -479,6 +517,56 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
   .media-work__text--overview {
     color: var(--color-tx-2);
   }
+
+  /* A song: its album's cover beside the title, and who sings it, the album and its length below. */
+  .music-track {
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    padding-block: 0.375rem;
+  }
+
+  .music-track__cover {
+    display: block;
+
+    & img {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 0.25rem;
+      background: var(--color-inline);
+      object-fit: cover;
+      box-shadow: 0 0 0 1px var(--color-border);
+    }
+  }
+
+  .music-track__header {
+    grid-column-start: 2;
+    min-width: 0;
+
+    & h2 {
+      overflow: hidden;
+      font-weight: 500;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    & .media-work__meta {
+      flex-wrap: nowrap;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+  }
+
+  .music-track__album {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .music-track__duration {
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
 </style>
 
 <style is:global>
@@ -486,7 +574,8 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
   html[data-media-category='anime'] [data-media-category]:not([data-media-category~='anime']),
   html[data-media-category='tv'] [data-media-category]:not([data-media-category~='tv']),
   html[data-media-category='tvb'] [data-media-category]:not([data-media-category~='tvb']),
-  html[data-media-category='movie'] [data-media-category]:not([data-media-category~='movie']) {
+  html[data-media-category='movie'] [data-media-category]:not([data-media-category~='movie']),
+  html[data-media-category='music'] [data-media-category]:not([data-media-category~='music']) {
     display: none;
   }
 
@@ -494,7 +583,8 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
   html[data-media-category='anime'] [data-media-filter='anime'],
   html[data-media-category='tv'] [data-media-filter='tv'],
   html[data-media-category='tvb'] [data-media-filter='tvb'],
-  html[data-media-category='movie'] [data-media-filter='movie'] {
+  html[data-media-category='movie'] [data-media-filter='movie'],
+  html[data-media-category='music'] [data-media-filter='music'] {
     color: var(--color-tx);
   }
 </style>
