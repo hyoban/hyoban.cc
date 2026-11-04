@@ -9,17 +9,15 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 
 ## Check every change on the phone
 
-- The phone is the user's, with their real data and a live link to the site: ask before
-  each test on it, saying what it will install, open, tap, change and take back, and
-  wait for a yes. One yes covers only the steps it was given for; anything new, and above
-  all publishing, asks again. Building and unit tests need no asking.
-- Never tap blind: chain no taps or opens after a step that may have failed, take a
-  screenshot before every tap by position and tap only what it shows. Stop and tell the
-  user at once when anything unexpected starts, rather than working around it.
-- Iterate as fast as possible: after each runtime or UI change, build the debug build and
-  install it over what is there, a few seconds each: `./gradlew :app:assembleDebug`, then
-  `adb install -r app/build/outputs/apk/debug/app-debug.apk`. Launch it and look at
-  logcat's crash buffer. Build only what the step needs, not the CI set each time.
+- The phone is the user's, with their real data and a live link to the site. After a
+  runtime or UI change, build the debug build and install it over what is there, without
+  asking: `./gradlew :app:assembleDebug`, then `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
+  The user tests it: don't launch, open, tap or publish on the phone yourself. Say what to
+  try and what to look for, and read logcat (its crash buffer, `Moments:W`) when asked.
+  Build only what the step needs, not the CI set each time.
+- Only when the user asks for a test on the phone run one, and only the steps named: never
+  tap blind, chain nothing after a step that may have failed, screenshot before each tap
+  by position and tap only what it shows, and stop and say so when anything unexpected starts.
 - Install only the debug build, never the release, unless the user asks for the release, not
   even before pushing. Then: `./gradlew :app:assembleRelease`
   (half a minute, R8's), then `adb install-multiple -r app/build/outputs/apk/release/app-release.apk
@@ -52,9 +50,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   tap its items by their words.
 - The new Moment page opens with the keyboard up, and `ui.py dump` still lists what is
   under it, so a tap there types instead: close the keyboard first.
-- Look at it, don't just build it: `scripts/ui.py open|dump|tap|back`, the `moments://`
-  links and screenshots. Check dark mode and landscape when a change touches colour or
-  layout, and watch for dropped frames when it touches motion.
+- A test the user asks for uses `scripts/ui.py open|dump|tap|back`, the `moments://` links
+  and screenshots. When a change touches colour, layout or motion, ask the user to check
+  dark mode, landscape or dropped frames.
 - A publish that fails says why only in a toast that soon goes; the exception is in
   `adb logcat -s Moments:W`, and the API's side in `npx wrangler tail hyoban-cc-api`
   (read-only) from `apps/api`. The phone's traffic goes through FlClash, whose link
