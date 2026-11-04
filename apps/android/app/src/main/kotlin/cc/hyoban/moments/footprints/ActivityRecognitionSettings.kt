@@ -21,7 +21,16 @@ internal fun ActivityRecognitionSettings() {
     var permitted by remember { mutableStateOf(ActivityTransitions.permitted(context)) }
     val status by ActivityTransitions.status.collectAsState()
     fun change(value: Boolean) { enabled = value; ActivityTransitions.setEnabled(context, value) }
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+    val permission = cc.hyoban.moments.ui.components.rememberPermissionAsk(
+        arrayOf(Manifest.permission.ACTIVITY_RECOGNITION),
+        cc.hyoban.moments.ui.components.PermissionWords(
+            AppIcons.Walk,
+            stringResource(R.string.permission_activity_title),
+            stringResource(R.string.permission_activity_body),
+            stringResource(R.string.permission_not_now),
+            listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Phone, stringResource(R.string.permission_activity_fact))),
+        ),
+    ) { granted ->
         permitted = granted
         if (granted) change(true)
     }
@@ -49,7 +58,7 @@ internal fun ActivityRecognitionSettings() {
                 }),
                 enabled = available || enabled,
             ) {
-                if (!enabled && !permitted) permission.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+                if (!enabled && !permitted) permission()
                 else change(!enabled)
             }
         },

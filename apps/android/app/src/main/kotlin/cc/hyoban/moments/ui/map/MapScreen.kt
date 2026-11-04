@@ -333,21 +333,16 @@ private fun MapContent(
         locating = true
         locate++
     }
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
-        if (granted.values.any { it }) {
-            startLocating()
-        } else {
-            show(resources.getString(R.string.error_location_permission))
-        }
+    val permission = cc.hyoban.moments.ui.components.rememberPermissionAsk(LOCATION_PERMISSIONS, cc.hyoban.moments.ui.components.PermissionWords(
+        AppIcons.Locate,
+        stringResource(R.string.permission_locate_title),
+        stringResource(R.string.permission_locate_body),
+        stringResource(R.string.permission_not_now),
+        listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Pin, stringResource(R.string.permission_locate_fact))),
+    )) { granted ->
+        if (granted) startLocating() else show(resources.getString(R.string.error_location_permission))
     }
-    val requestLocate: () -> Unit = {
-        val granted = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
-        if (granted) {
-            startLocating()
-        } else {
-            permission.launch(LOCATION_PERMISSIONS)
-        }
-    }
+    val requestLocate: () -> Unit = { permission() }
 
     // On a wide window the panel is a column standing at the start, the map beside it (L01); on a
     // phone on its side, a card floating beside the tabs instead, the map round it (H09).

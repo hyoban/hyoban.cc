@@ -1,5 +1,7 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.ui.components.openAppSettings
+
 import androidx.compose.runtime.produceState
 import cc.hyoban.moments.ui.design.ModalBottomSheet
 import cc.hyoban.moments.ui.design.AlertDialog
@@ -155,18 +157,59 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             else container.repository.saveEntry(entry)
         })
     }
-    val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+    // Recording in the background needs location 始终允许, which only the system's settings give:
+    // said once, after recording first starts without it (35).
+    var askBackground by rememberSaveable { mutableStateOf(false) }
+    val prefs = remember { context.getSharedPreferences("permissions", android.content.Context.MODE_PRIVATE) }
+    val requested = remember {
+        buildList {
+            add(Manifest.permission.ACCESS_FINE_LOCATION)
+            add(Manifest.permission.ACCESS_COARSE_LOCATION)
+            if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
+        }.toTypedArray()
+    }
+    val permissions = cc.hyoban.moments.ui.components.rememberPermissionAsk(
+        requested,
+        cc.hyoban.moments.ui.components.PermissionWords(
+            AppIcons.Footprints,
+            stringResource(R.string.onboarding_footprints),
+            stringResource(R.string.onboarding_footprints_line),
+            stringResource(R.string.permission_not_now),
+            listOf(
+                cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Shield, stringResource(R.string.onboarding_fp_local)),
+                cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Bell, stringResource(R.string.onboarding_fp_notification)),
+            ),
+        ),
+        isGranted = { RecordingService.hasPreciseLocation(it) },
+        onDecline = { pendingAction = null },
+    ) { granted ->
         val action = pendingAction
         pendingAction = null
-        if (RecordingService.hasPreciseLocation(context) && action != null) control(action)
-        else error = R.string.footprints_permission_needed
+        if (granted && action != null) {
+            control(action)
+            if (!context.granted(Manifest.permission.ACCESS_BACKGROUND_LOCATION) && !prefs.getBoolean("told_background", false)) {
+                prefs.edit().putBoolean("told_background", true).apply()
+                askBackground = true
+            }
+        } else if (!granted) error = R.string.footprints_permission_needed
     }
     fun enable(action: String) {
         pendingAction = action
-        val requested = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-        if (Build.VERSION.SDK_INT >= 33) requested += Manifest.permission.POST_NOTIFICATIONS
-        permissions.launch(requested.toTypedArray())
+        permissions()
     }
+    if (askBackground) cc.hyoban.moments.ui.design.PermissionSheet(
+        icon = AppIcons.Footprints,
+        title = stringResource(R.string.permission_background_title),
+        body = stringResource(R.string.permission_background_body),
+        facts = listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Bell, stringResource(R.string.onboarding_fp_notification))),
+        path = stringResource(R.string.permission_background_path),
+        primary = stringResource(R.string.permission_open_settings),
+        external = true,
+        secondary = stringResource(R.string.permission_background_secondary),
+        onPrimary = { askBackground = false; context.openAppSettings() },
+        onDismiss = { askBackground = false },
+        tag = "permission_background",
+    )
     // ColorOS's file manager names the file from the type: application/gpx+xml became ".gpx+xml"
     // and octet-stream ".bin". Only a wildcard keeps the ".gpx" name as given.
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->

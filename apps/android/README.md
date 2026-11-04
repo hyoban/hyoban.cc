@@ -30,7 +30,25 @@ stayed put for two seconds, and kept in `phone-routes.json` by the API's keys; a
 along it is drawn straight and not asked for again, and one that failed is asked for the next
 time the trips change.
 
-## Pages
+## First run and permissions
+
+The first time the app opens with no API set, 初次打开 (`ui/onboarding`) goes over it once:
+where to start (连接我的网站 with the API's address and token, which reads everything in the
+background and is forgotten again if it can't be read; 从别的 App 导入, the 导入 page with 继续 at its foot; or 从空白开始),
+then 记录足迹, the only place it asks for location, and only when footprints are turned on. Given
+location only while in use, it says recording stops in the background and links to the system's
+settings. `moments://onboarding` shows it again.
+
+Every other permission is asked where it is used, with a `PermissionSheet` first saying what it
+is for and what stays on the phone (`rememberPermissionAsk` in `ui/components/Permissions.kt`):
+location from the map's locate button and the place picker (which asks on opening only the first
+time, and otherwise lists 定位没有打开 at the top), where photos were taken before the first pick,
+location and notifications for footprints, physical activity for 活动识别增强, Nearby devices for a
+Bluetooth device in 连接自动控制. Refused for good, the sheet's button opens the app's settings
+instead, and coming back carries on. Location 始终允许, the accessibility service for 自动记账 and
+Shizuku for 侧键 are the system's settings to give: their sheets name the way there. 足迹记录 lists
+what recording is missing in 需要 at its top. Notifications for publishing are asked directly.
+
 
 Three tabs float at the foot of the screen, with 记录 beside them; on a window 840dp wide
 or more, or a phone on its side, the same capsule stands on its end down the side, 记录 under

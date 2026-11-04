@@ -50,10 +50,31 @@ internal fun AutoBillGroup() {
         notifying = NotificationManagerCompat.from(context).areNotificationsEnabled()
     }
     val on = enabled == true
+    // Turned on without the accessibility service, the sheet says what it reads first (35).
+    var explaining by remember { mutableStateOf(false) }
+    val service = stringResource(R.string.share_assist_service_label)
+    if (explaining) cc.hyoban.moments.ui.design.PermissionSheet(
+        icon = AppIcons.Accessibility,
+        title = stringResource(R.string.permission_auto_bill_title),
+        body = stringResource(R.string.permission_auto_bill_body, service),
+        facts = listOf(
+            cc.hyoban.moments.ui.design.PermissionFact(AppIcons.EyeOff, stringResource(R.string.permission_auto_bill_page)),
+            cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Phone, stringResource(R.string.permission_auto_bill_local)),
+            cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Bell, stringResource(R.string.permission_auto_bill_notify)),
+        ),
+        path = stringResource(R.string.permission_auto_bill_path, service),
+        primary = stringResource(R.string.permission_open_settings),
+        external = true,
+        secondary = stringResource(R.string.permission_not_now),
+        onPrimary = { explaining = false; context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
+        onDismiss = { explaining = false },
+        tag = "permission_auto_bill",
+    )
     val rows = buildList<Segment> {
         add { shapes ->
             SwitchRow(on, AppIcons.Receipt, stringResource(R.string.auto_bill_label), "auto_bill", shapes, stringResource(R.string.auto_bill_note)) {
                 AutoBill.setEnabled(context, !on)
+                if (!on && !connected) explaining = true
                 if (!on && Build.VERSION.SDK_INT >= 33 &&
                     ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                     permission.launch(Manifest.permission.POST_NOTIFICATIONS)

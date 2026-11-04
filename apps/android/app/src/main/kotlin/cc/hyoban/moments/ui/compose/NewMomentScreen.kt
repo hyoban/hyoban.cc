@@ -328,13 +328,26 @@ fun NewMomentScreen(
     val pickPhotos = { picker.launch(arrayOf("image/*", "video/*")) }
     // Where a photo was taken is kept from the app until it may see it: asked for once, before
     // the first pick ever; declined, the photos still give their time and the phone its place.
-    val mediaLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { pickPhotos() }
+    val mediaLocation = cc.hyoban.moments.ui.components.rememberPermissionAsk(
+        arrayOf(Manifest.permission.ACCESS_MEDIA_LOCATION),
+        cc.hyoban.moments.ui.components.PermissionWords(
+            AppIcons.Photos,
+            stringResource(R.string.permission_photo_title),
+            stringResource(R.string.permission_photo_body),
+            stringResource(R.string.permission_photo_secondary),
+            listOf(
+                cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Image, stringResource(R.string.permission_photo_only)),
+                cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Shield, stringResource(R.string.permission_photo_candidate)),
+            ),
+        ),
+        onDecline = { pickPhotos() },
+    ) { pickPhotos() }
     val addPhotos = {
         if (!container.settings.askedMediaLocation &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_MEDIA_LOCATION) != PackageManager.PERMISSION_GRANTED
         ) {
             container.settings.askedMediaLocation = true
-            mediaLocation.launch(Manifest.permission.ACCESS_MEDIA_LOCATION)
+            mediaLocation()
         } else {
             pickPhotos()
         }
