@@ -1249,4 +1249,30 @@
     <string name="footprints_needs_location_note">只在使用 App 时允许：切到后台就会停</string>
     <string name="place_no_location">定位没有打开</string>
     <string name="place_no_location_note">拖动地图选，或在系统设置里允许</string>
+    <!-- 更新 on 同步与来源, its notification and the sheet before 安装未知应用. -->
+    <string name="section_update">更新</string>
+    <string name="update_auto">每天检查更新</string>
+    <string name="update_auto_note">有新版本时发一条通知</string>
+    <string name="action_check_update">检查更新</string>
+    <string name="update_checking">检查中…</string>
+    <string name="update_never">%1$s，还没检查过</string>
+    <string name="update_checked">%1$s 检查</string>
+    <string name="update_current">%1$s 已是最新 · %2$s</string>
+    <string name="update_check_failed">检查失败：%1$s</string>
+    <string name="action_install_update">安装 %1$s</string>
+    <string name="update_source">从 GitHub 下载</string>
+    <string name="update_downloading">下载中 %1$d%%</string>
+    <string name="update_failure_unreachable">连不上 GitHub</string>
+    <string name="update_failure_server">GitHub 没有正常回应</string>
+    <string name="update_failure_signature">签名与这台手机上的不一致，没有安装</string>
+    <string name="update_failure_install">没有装上</string>
+    <string name="settings_update_note">每天问一次 GitHub 有没有新版本，只问这一件事。新版本的签名与这台手机上的一致才会安装，安装由系统确认。</string>
+    <string name="update_channel">App 更新</string>
+    <string name="update_notification_title">Here %1$s 可以更新了</string>
+    <string name="update_notification_text">点开去安装</string>
+    <string name="permission_install_title">允许安装更新</string>
+    <string name="permission_install_body">新版本从 GitHub 下载，要先在系统设置里允许 Here 安装应用，安装时系统还会再问一次。</string>
+    <string name="permission_install_source">只从这个 App 的 GitHub 发布下载</string>
+    <string name="permission_install_signature">签名与这台手机上的一致才安装</string>
+    <string name="permission_install_path">系统设置 › 安装未知应用 › Here › 允许</string>
 </resources>
