@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
-// The songs on /media/'s 音乐 tab: the owner's liked-songs playlist on NetEase Cloud Music,
+// The songs on /media/music/: the owner's liked-songs playlist on NetEase Cloud Music,
 // read at build time from its public web API, which needs no login. The playlist lists
 // every track's id but details only a few, so the songs are looked up by id in a second
 // request. The last playlist read is kept under node_modules/.astro, which Cloudflare's

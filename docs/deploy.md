@@ -24,7 +24,7 @@ shows: the API calls the build's **deploy hook**, kept in the API's `DEPLOY_HOOK
 secret. Without a token, or with one that can't fetch the export, the build fails: the
 repository keeps no copy of the records.
 
-Each build also reads `/media/`'s 音乐 tab from the NetEase Cloud Music playlist named
+Each build also reads `/media/music/` from the NetEase Cloud Music playlist named
 in `apps/web/src/music.ts`, from its public API with no login, and keeps the last copy
 in the build cache under `apps/web/node_modules/.astro`; when NetEase can't be reached
 it shows that copy, and with none the build fails.
