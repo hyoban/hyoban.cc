@@ -21,9 +21,12 @@ import java.io.IOException
 
 /**
  * The places around a point, to name a new place after, in WGS 84 as the map and the
- * records are. In China, with the owner's AMap or Tencent key, they come from that service's
- * place search, asked from the phone, as OpenStreetMap knows few shops there: with both keys,
- * the one the owner chose, the other when it can't answer; elsewhere, without a key, or when neither
+ * records are. In China, with the owner's AMap or Tencent key, they come from that service,
+ * asked from the phone, as OpenStreetMap knows few shops there: with both keys, the one the
+ * owner chose, the other when it can't answer. What is around a point comes from their place
+ * searches first, which know the shops nearest, then from their reverse geocoding, whose calls
+ * are thirty times as many but which knows mostly sights and buildings; what is called
+ * something comes from their input tips. Elsewhere, without a key, or when neither
  * can answer, from Photon at [baseUrl]: OpenStreetMap's, the same the map draws. Where neither can be reached, the system's geocoder stands in.
  */
 class PlaceSearch(
@@ -64,76 +67,123 @@ class PlaceSearch(
         return parsePhoton(get(url.toString()))
     }
 
-    /** What the chosen of AMap and Tencent knows around [fix], or called [text], else what the other does; null where neither has anything. */
-    private suspend fun china(fix: Fix, text: String? = null): List<Found>? =
-        if (tencentFirst()) tencent(fix, text)?.takeIf { it.isNotEmpty() } ?: amap(fix, text)
-        else amap(fix, text)?.takeIf { it.isNotEmpty() } ?: tencent(fix, text)
-
     /**
-     * What AMap knows within [AROUND_METRES] of [fix], or called [text] nearest it; null where
-     * it has nothing to say: outside China, without the key, or when it can't answer, its calls
-     * for the day used up among them. Asked as Tencent is, in GCJ-02 taken to about 100 m.
+     * What AMap and Tencent know around [fix], or called [text]; null where neither has anything.
+     * Called something, the chosen one's tips, else the other's. Around, the better answers
+     * first: the chosen one's place search, the other's, then the chosen one's reverse
+     * geocoding and the other's, so the shops nearest come while their calls last.
      */
-    private suspend fun amap(fix: Fix, text: String? = null): List<Found>? {
-        val key = amapKey()?.takeIf { it.isNotBlank() } ?: return null
+    internal suspend fun china(fix: Fix, text: String? = null): List<Found>? {
         if (!inChina(fix)) return null
-        val shifted = wgsToGcj(snap(fix))
-        val at = "${shifted.longitude},${shifted.latitude}"
-        val url = (if (text == null) "$AMAP/v5/place/around" else "$AMAP/v3/assistant/inputtips").toHttpUrl().newBuilder()
-            .apply {
-                addQueryParameter("location", at)
-                if (text == null) {
-                    addQueryParameter("radius", AROUND_METRES.toString())
-                    addQueryParameter("sortrule", "distance")
-                    addQueryParameter("page_size", AMAP_PAGE.toString())
-                } else {
-                    addQueryParameter("keywords", text)
-                    addQueryParameter("datatype", "poi")
-                }
-            }
-            .build()
+        val asks: List<suspend () -> List<Found>?> = if (text != null) {
+            listOf({ amapTips(fix, text) }, { tencentTips(fix, text) })
+        } else {
+            listOf({ amapAround(fix) }, { tencentAround(fix) }, { amapRegeo(fix) }, { tencentGeocoder(fix) })
+        }
+        // Each pair is AMap's then Tencent's; with Tencent chosen, each pair turns round.
+        val ordered = if (tencentFirst()) asks.chunked(2).flatMap { it.reversed() } else asks
+        var last: List<Found>? = null
+        for (ask in ordered) {
+            val found = ask() ?: continue
+            if (found.isNotEmpty()) return found
+            last = found
+        }
+        return last
+    }
+
+    /** The point as AMap and Tencent take it: in GCJ-02, taken to about 100 m so a pin moved a little asks what was asked already. */
+    private fun gcj(fix: Fix) = wgsToGcj(snap(fix))
+
+    /** AMap's places within [AROUND_METRES] of [fix], nearest first, from its place search: the shops nearest, from its smaller allowance. */
+    private suspend fun amapAround(fix: Fix): List<Found>? = amap("$AMAP/v5/place/around", fix) {
+        addQueryParameter("radius", AROUND_METRES.toString())
+        addQueryParameter("sortrule", "distance")
+        addQueryParameter("page_size", AMAP_PAGE.toString())
+    }
+
+    /** AMap's places within [AROUND_METRES] of [fix], from its reverse geocoding: mostly sights and buildings, from an allowance thirty times as large. */
+    private suspend fun amapRegeo(fix: Fix): List<Found>? = amap("$AMAP/v3/geocode/regeo", fix) {
+        addQueryParameter("radius", AROUND_METRES.toString())
+        addQueryParameter("extensions", "all")
+    }
+
+    /** AMap's places called [text], nearest [fix] first. */
+    private suspend fun amapTips(fix: Fix, text: String): List<Found>? = amap("$AMAP/v3/assistant/inputtips", fix) {
+        addQueryParameter("keywords", text)
+        addQueryParameter("datatype", "poi")
+    }
+
+    /** [endpoint] of AMap asked about [fix]; null without the key or when it can't answer, its calls used up among them. */
+    private suspend fun amap(endpoint: String, fix: Fix, query: okhttp3.HttpUrl.Builder.() -> Unit): List<Found>? {
+        val key = amapKey()?.takeIf { it.isNotBlank() } ?: return null
+        val at = gcj(fix)
+        val url = endpoint.toHttpUrl().newBuilder().addQueryParameter("location", "${at.longitude},${at.latitude}").apply(query).build()
         return ask("AMap", url, key, ::parseAmap)
     }
 
+    /** Tencent's places within [AROUND_METRES] of [fix], from its place search: the shops nearest, from its smaller allowance. */
+    private suspend fun tencentAround(fix: Fix): List<Found>? = tencent("$TENCENT/place/v1/explore", fix, near = false) {
+        val at = gcj(fix)
+        addQueryParameter("boundary", "nearby(${at.latitude},${at.longitude},$AROUND_METRES,0)")
+        addQueryParameter("policy", "2")
+        addQueryParameter("page_size", TENCENT_PAGE.toString())
+    }
+
     /**
-     * What Tencent knows within [AROUND_METRES] of [fix], or called [text] nearest it; null
-     * where it has nothing to say: outside China, without the key, or when it can't answer,
-     * its calls for the day or the second used up among them. The point goes there in GCJ-02,
-     * taken to about 100 m so a pin moved a little asks what was asked already.
+     * Tencent's places within [AROUND_METRES] of [fix], from its reverse geocoding, from an
+     * allowance thirty times as large: the shops and sights first (policy 4) rather than the
+     * buildings at the point.
      */
-    private suspend fun tencent(fix: Fix, text: String? = null): List<Found>? {
+    private suspend fun tencentGeocoder(fix: Fix): List<Found>? = tencent("$TENCENT/geocoder/v1/", fix) {
+        addQueryParameter("get_poi", "1")
+        addQueryParameter("poi_options", "radius=$AROUND_METRES;page_size=$TENCENT_PAGE;policy=4")
+    }
+
+    /** Tencent's places called [text], nearest [fix] first. */
+    private suspend fun tencentTips(fix: Fix, text: String): List<Found>? = tencent("$TENCENT/place/v1/suggestion", fix) {
+        addQueryParameter("keyword", text)
+        addQueryParameter("page_size", TENCENT_PAGE.toString())
+    }
+
+    /** [endpoint] of Tencent asked about [fix], as `location` where [near]; null without the key or when it can't answer, its calls for the day or the second used up among them. */
+    private suspend fun tencent(endpoint: String, fix: Fix, near: Boolean = true, query: okhttp3.HttpUrl.Builder.() -> Unit): List<Found>? {
         val key = tencentKey()?.takeIf { it.isNotBlank() } ?: return null
-        if (!inChina(fix)) return null
-        val shifted = wgsToGcj(snap(fix))
-        val at = "${shifted.latitude},${shifted.longitude}"
-        val url = (if (text == null) "$TENCENT/explore" else "$TENCENT/suggestion").toHttpUrl().newBuilder()
-            .apply {
-                if (text == null) {
-                    addQueryParameter("boundary", "nearby($at,$AROUND_METRES,0)")
-                    addQueryParameter("policy", "2")
-                } else {
-                    addQueryParameter("keyword", text)
-                    addQueryParameter("location", at)
-                }
-            }
-            .addQueryParameter("page_size", TENCENT_PAGE.toString())
-            .build()
+        val at = gcj(fix)
+        val url = endpoint.toHttpUrl().newBuilder()
+            .apply { if (near) addQueryParameter("location", "${at.latitude},${at.longitude}") }
+            .apply(query).build()
         return ask("Tencent", url, key, ::parseTencent)
     }
 
     /** A point taken to about 100 m, so a pin moved a little asks what was asked already. */
     private fun snap(fix: Fix) = Fix(Math.round(fix.latitude * 1e3) / 1e3, Math.round(fix.longitude * 1e3) / 1e3)
 
-    /** [url] asked with [key] and read by [parse], kept by what was asked; null when the service can't answer. */
+    /**
+     * [url] asked with [key] and read by [parse], kept by what was asked; null when the service
+     * can't answer. An endpoint whose calls are used up isn't asked again until tomorrow, so the
+     * next one answers at once.
+     */
     private suspend fun ask(service: String, url: okhttp3.HttpUrl, key: String, parse: (String) -> List<Found>): List<Found>? {
         val id = url.toString()
-        synchronized(kept) { kept[id] }?.let { return it }
+        val endpoint = url.host + url.encodedPath
+        synchronized(kept) {
+            kept[id]?.let { return it }
+            if (spent[endpoint] == today()) return null
+        }
         val found = runCatching { parse(get(url.newBuilder().addQueryParameter("key", key).build().toString())) }
-            .onFailure { if (it !is kotlinx.coroutines.CancellationException) android.util.Log.w("Moments", "Asking $service for places failed: ${it.message?.replace(key, "…")}") }
+            .onFailure {
+                if (it is kotlinx.coroutines.CancellationException) return@onFailure
+                if (it is CallsUsedUp) synchronized(kept) { spent[endpoint] = today() }
+                // Not said off the phone, in a unit test, where Log is a stub.
+                runCatching { android.util.Log.w("Moments", "Asking $service for places failed: ${it.message?.replace(key, "…")}") }
+            }
             .getOrNull() ?: return null
         synchronized(kept) { kept[id] = found }
         return found
     }
+
+    /** The endpoints whose calls were used up, each with the day it was, as [today] says. */
+    private val spent = mutableMapOf<String, Long>()
 
     /**
      * What to call the place at [fix], and what else is around it: the nearest shop, sight
@@ -162,7 +212,7 @@ class PlaceSearch(
         private const val NEARBY_RADIUS_KM = 0.3
         private const val SEARCH_LIMIT = 20
         private const val KEPT = 100
-        private const val TENCENT = "https://apis.map.qq.com/ws/place/v1"
+        private const val TENCENT = "https://apis.map.qq.com/ws"
         /** How far around the pin Tencent is asked what there is, in metres. */
         private const val AROUND_METRES = 400
         private const val TENCENT_PAGE = 20
@@ -188,6 +238,18 @@ data class Found(
     val source: PlaceSource? = null,
 )
 
+/** A map service's answer that the key's calls of that endpoint are used up for now, so it isn't asked again until tomorrow. */
+class CallsUsedUp(message: String) : IOException(message)
+
+/** Tencent's status for a key's calls of the day used up; 120, those of the second, passes. */
+private const val TENCENT_DAY_USED_UP = 121
+
+/** AMap's codes for a key's or its account's calls used up, at home or abroad. */
+private val AMAP_USED_UP = setOf("10003", "10044", "10045")
+
+/** Today in China, where both services count their calls, as days since 1970. */
+internal fun today(): Long = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Shanghai")).toEpochDay()
+
 /** A place as a map service knows it: `amap` or `tencent`, and that service's id; a record's `source`. */
 data class PlaceSource(val app: String, val venue: String)
 
@@ -210,15 +272,19 @@ fun parsePhoton(json: String): List<Found> {
 }
 
 /**
- * Tencent's answer as places, shifted from its GCJ-02 back to WGS 84, each with what its
+ * Tencent's answer, its reverse geocoding's places around or its suggestions, as places
+ * shifted from its GCJ-02 back to WGS 84, each with what its
  * category says it is; one that isn't an answer is an error, as when the key's calls are
  * used up, and the nameless are left out.
  */
 fun parseTencent(json: String): List<Found> {
     val answer = Json.parseToJsonElement(json).jsonObject
     val status = answer["status"]?.jsonPrimitive?.intOrNull
-    if (status != 0) throw IOException("Tencent answered $status: ${answer["message"]?.jsonPrimitive?.contentOrNull.orEmpty()}")
-    val data = answer["data"] as? JsonArray ?: return emptyList()
+    if (status != 0) {
+        val message = "Tencent answered $status: ${answer["message"]?.jsonPrimitive?.contentOrNull.orEmpty()}"
+        throw if (status == TENCENT_DAY_USED_UP) CallsUsedUp(message) else IOException(message)
+    }
+    val data = (answer["data"] ?: (answer["result"] as? JsonObject)?.get("pois")) as? JsonArray ?: return emptyList()
     return data.mapNotNull { element ->
         val place = element as? JsonObject ?: return@mapNotNull null
         fun text(key: String) = place[key]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
@@ -298,17 +364,24 @@ fun tencentKind(category: String?): PlaceKind? {
 }
 
 /**
- * AMap's answer, its places around (v5) or its input tips (v3), as places shifted from GCJ-02
- * back to WGS 84, each with what its type code says it is; one that isn't an answer is an
+ * AMap's answer, its reverse geocoding's places around, nearest first, or its input tips, as
+ * places shifted from GCJ-02 back to WGS 84, each with what its type code says it is (or its
+ * type's words, where reverse geocoding gives no code); one that isn't an answer is an
  * error, as when the key's calls are used up, and tips with no name or point (a bus line, a
  * category) are left out. Fields it has nothing for come as `[]`.
  */
 fun parseAmap(json: String): List<Found> {
     val answer = Json.parseToJsonElement(json).jsonObject
     fun JsonObject.text(key: String) = (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
-    if (answer.text("status") != "1") throw IOException("AMap answered ${answer.text("infocode")}: ${answer.text("info").orEmpty()}")
-    val places = (answer["pois"] ?: answer["tips"]) as? JsonArray ?: return emptyList()
-    return places.mapNotNull { element ->
+    if (answer.text("status") != "1") {
+        val code = answer.text("infocode")
+        val message = "AMap answered $code: ${answer.text("info").orEmpty()}"
+        throw if (code in AMAP_USED_UP) CallsUsedUp(message) else IOException(message)
+    }
+    val around = (answer["regeocode"] as? JsonObject)?.get("pois") as? JsonArray
+    val places = around ?: (answer["pois"] ?: answer["tips"]) as? JsonArray ?: return emptyList()
+    val ordered = if (around == null) places else places.sortedBy { (it as? JsonObject)?.text("distance")?.toDoubleOrNull() ?: Double.MAX_VALUE }
+    return ordered.mapNotNull { element ->
         val place = element as? JsonObject ?: return@mapNotNull null
         val name = place.text("name") ?: return@mapNotNull null
         val (longitude, latitude) = place.text("location")?.split(',')?.mapNotNull { it.trim().toDoubleOrNull() }
@@ -317,11 +390,48 @@ fun parseAmap(json: String): List<Found> {
             name,
             gcjToWgs(Fix(latitude, longitude)),
             address = place.text("address"),
-            placeKind = amapKind(place.text("typecode")),
+            placeKind = amapKind(place.text("typecode") ?: amapTypecode(place.text("type"))),
             source = place.text("id")?.let { PlaceSource("amap", it) },
         )
     }
 }
+
+/**
+ * The type code for AMap's type in words, `餐饮服务;咖啡厅;星巴克咖啡` 050500, as far as
+ * [amapKind] reads codes; null for a type it would make nothing of.
+ */
+fun amapTypecode(type: String?): String? {
+    val words = type?.split('|')?.first()?.split(';') ?: return null
+    val big = AMAP_TYPES[words.first()] ?: return null
+    val mid = AMAP_SUBTYPES["$big${words.getOrNull(1).orEmpty()}"] ?: return big + "0000"
+    val small = when ("$mid${words.getOrNull(2).orEmpty()}") {
+        "0803酒吧" -> "04"
+        "1102寺庙道观" -> "05"
+        else -> "00"
+    }
+    return mid + small
+}
+
+/** AMap's kinds in words, by their type codes' first two figures. */
+private val AMAP_TYPES = mapOf(
+    "汽车服务" to "01", "餐饮服务" to "05", "购物服务" to "06", "生活服务" to "07", "体育休闲服务" to "08",
+    "医疗保健服务" to "09", "住宿服务" to "10", "风景名胜" to "11", "商务住宅" to "12", "科教文化服务" to "14",
+    "交通设施服务" to "15", "公司企业" to "17",
+)
+
+/** The classes [amapKind] tells apart, by their kind's figures and their words, to their four figures. */
+private val AMAP_SUBTYPES = mapOf(
+    "01加油站" to "0101", "01充电站" to "0111",
+    "05咖啡厅" to "0505", "05茶艺馆" to "0506", "05冷饮店" to "0507", "05糕饼店" to "0508", "05甜品店" to "0509",
+    "06便民商店/便利店" to "0602", "06超级市场" to "0604", "06综合市场" to "0607",
+    "08运动场馆" to "0801", "08娱乐场所" to "0803", "08影剧院" to "0806",
+    "11公园广场" to "1101", "11风景名胜" to "1102",
+    "12住宅区" to "1203",
+    "14博物馆" to "1401", "14展览馆" to "1402", "14会展中心" to "1403", "14美术馆" to "1404", "14图书馆" to "1405",
+    "14文化宫" to "1409", "14学校" to "1412",
+    "15机场相关" to "1501", "15火车站" to "1502", "15港口码头" to "1503", "15长途汽车站" to "1504", "15地铁站" to "1505",
+    "15公交车站" to "1507", "15停车场" to "1509",
+)
 
 /**
  * What sort of place AMap's type code says it is, `050500` a café, by its kind and then its

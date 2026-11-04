@@ -151,7 +151,10 @@ except in 演示模式.
   new place named after what is nearest: in China, with the owner's AMap or Tencent key
   (高德地图 Key, 腾讯地图 Key, under 同步与来源; with both, the one chosen under 国内地点来源
   first and the other when it can't answer), the shops, sights and buildings that service knows, asked from the
-  phone with the pin's point, else the nearest park,
+  phone with the pin's point: their place searches first, which know the shops nearest, then,
+  once those calls are used up for the day, their reverse geocoding, whose calls are thirty
+  times as many but which knows mostly sights and buildings (a search by name asks their
+  input tips), else the nearest park,
   sight, shop or street Photon knows (`BuildConfig.PLACE_SEARCH_URL`), with the system's
   geocoder as fallback. Tapped, the place opens on a map with a pin at its middle, which
   finds where the phone is when there is no place yet to open on. Under the map are a
