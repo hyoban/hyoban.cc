@@ -10,16 +10,18 @@ It works on the phone alone: the build names no API, so until an API's address a
 token, which every request needs, are set under 我 → 同步与来源, it asks nothing of one and
 everything written stays on the phone. With them it reads the API (`apps/api`) and keeps a
 copy of every row D1 has but the trips' routes, in the same tables (`copy.db`, out of the
-backup, its tables generated from `@hyoban/data-spec/tables` into `data/copy/CopyTables.kt`),
-so it opens at once and works offline. A sync rebuilds what the screens show only from the
-rows it brought, and skips a table the copy doesn't keep. The copy only follows the API: each start, each pull down on a list,
-and 刷新 in 我 → 同步与来源, and each publish ask only for the rows changed since, from
-`/v2/rows`. The screens take the entries as Moments when they have words and as they are
-otherwise (charges, public bills, marks), with the places, collections and public tracks; the
-trips are worked out from the collections and their marks, as the spec's `collectionToTrip`
-does. It is the platform's SQLite, through `androidx.sqlite`'s driver: from Android 12, the
-oldest the app runs on, it has the tables' generated columns. The routes (`GET /v2/routes`) are asked for again only when the API's revision has moved
-on. A new API, set in 同步与来源, drops the copy and reads everything again.
+backup, its tables generated from `@hyoban/data-spec/tables` into
+`data/copy/CopyTables.kt`), so it opens at once and works offline. A sync rebuilds what the
+screens show only from the rows it brought, and skips a table the copy doesn't keep. The
+copy only follows the API: each start, each pull down on a list, and 刷新 in 我 → 同步与来源, and
+each publish ask only for the rows changed since, from `/v2/rows`. The screens take the
+entries as Moments when they have words and as they are otherwise (charges, public bills,
+marks), with the places, collections and public tracks; the trips are worked out from the
+collections and their marks, as the spec's `collectionToTrip` does. It is the platform's
+SQLite, through `androidx.sqlite`'s driver: from Android 12, the oldest the app runs on, it
+has the tables' generated columns. The routes (`GET /v2/routes`) are asked for again only
+when the API's revision has moved on. A new API, set in 同步与来源, drops the copy and reads
+everything again.
 
 A trip the API hasn't routed, every trip without an API and one made on the phone with one,
 is routed on the phone the way the API routes the rest (`data/trips/PhoneRoutes.kt`): its
@@ -34,10 +36,10 @@ time the trips change.
 
 The first time the app opens with no API set, 初次打开 (`ui/onboarding`) goes over it once:
 where to start (连接我的网站 with the API's address and token, which reads everything in the
-background and is forgotten again if it can't be read; 从别的 App 导入, the 导入 page with 继续 at its foot; or 从空白开始),
-then 记录足迹, the only place it asks for location, and only when footprints are turned on. Given
-location only while in use, it says recording stops in the background and links to the system's
-settings. `moments://onboarding` shows it again.
+background and is forgotten again if it can't be read; 从别的 App 导入, the 导入 page with 继续 at
+its foot; or 从空白开始), then 记录足迹, the only place it asks for location, and only when
+footprints are turned on. Given location only while in use, it says recording stops in the
+background and links to the system's settings. `moments://onboarding` shows it again.
 
 Every other permission is asked where it is used, with a `PermissionSheet` first saying what it
 is for and what stays on the phone (`rememberPermissionAsk` in `ui/components/Permissions.kt`):
@@ -49,19 +51,21 @@ instead, and coming back carries on. Location 始终允许, the accessibility se
 Shizuku for 侧键 are the system's settings to give: their sheets name the way there. 足迹记录 lists
 what recording is missing in 需要 at its top. Notifications for publishing are asked directly.
 
+## Pages
 
-Three tabs float at the foot of the screen, with 记录 beside them; on a window 840dp wide
-or more, or a phone on its side, the same capsule stands on its end down the side, 记录 under
-it: on a phone on its side, down the side away from the camera, so it reads the same turned
-either way. On a phone on its side the status and navigation bars are put away (a swipe from the edge
-shows them), the timeline is a conversation beside the tabs with the day it has scrolled to on a map
-filling the rest, the map's trips float in a card beside the tabs, and sheets slide in from
-the side. A Moment's photo, a day's footprints, a trip's route and a place's map take the half
-on the camera's side, running under its cutout, as does the timeline's map of the day, and
-the playback's card stands across from the camera, the whole height, always open; 记录, 编辑旅程 and 搜索 (its filters) stand in two columns; the ledger, 发布更改, a bill, 设备, 订阅 and 车 keep their
-figures in a column at the left beside their list, the ledger's segments in the bar; 我 is two
-columns; 记一笔's keys take the right half; 记录 is a page rather than a dialog. Controls keep
-clear of the camera's cutout on whichever side it is.
+Three tabs float at the foot of the screen, with 记录 beside them; on a window 840dp wide or
+more, or a phone on its side, the same capsule stands on its end down the side, 记录 under it:
+on a phone on its side, down the side away from the camera, so it reads the same turned
+either way. On a phone on its side the status and navigation bars are put away (a swipe from
+the edge shows them), the timeline is a conversation beside the tabs with the day it has
+scrolled to on a map filling the rest, the map's trips float in a card beside the tabs, and
+sheets slide in from the side. A Moment's photo, a day's footprints, a trip's route and a
+place's map take the half on the camera's side, running under its cutout, as does the
+timeline's map of the day, and the playback's card stands across from the camera, the whole
+height, always open; 记录, 编辑旅程 and 搜索 (its filters) stand in two columns; the ledger, 发布更改, a
+bill, 设备, 订阅 and 车 keep their figures in a column at the left beside their list, the
+ledger's segments in the bar; 我 is two columns; 记一笔's keys take the right half; 记录 is a page
+rather than a dialog. Controls keep clear of the camera's cutout on whichever side it is.
 
 - **时间线** is everything newest first, as a conversation with oneself: each day opens
   with its date in a capsule, Moments are bubbles from the right with their photos across
@@ -72,73 +76,49 @@ clear of the camera's cutout on whichever side it is.
   footprints. Search sits at the top beside the fog's switch, over a legend of the years;
   the footprints and the phone's place are buttons down the side. A place tapped fills the
   sheet with its Moments and the way there; a route tapped floats its trip's card, which
-  opens the trip or plays it back. 迷雾地图 lays a fog over it, as the site's map does, thinner over a city the
-  more Moments it has, from the site's `apps/web/src/data/boundaries/cities.json` shipped as an asset.
+  opens the trip or plays it back. 迷雾地图 lays a fog over it, as the site's map does, thinner
+  over a city the more Moments it has, from the site's
+  `apps/web/src/data/boundaries/cities.json` shipped as an asset.
 - **我** holds the changes waiting to be published, this month's spending, rows for
   账单与资产 and 足迹, and the settings in two parts: 通用 (记录项与公开, 家, 同步与来源, 导入) and
   只在这台手机上 (记账, 足迹记录, 侧键), each a page with what it is set to under its name.
   There is no settings page over them, and under 我 there is one level of pages: what goes
   deeper, such as a book, the exchange rates or a side key gesture's action, opens over its
   page as a sheet or a dialog. Theme and language have no setting; they follow the phone.
-- **东西** in 我 opens three pages, 车 only with an API. 设备 (`moments://devices`) lists what is owned and what was
-  sold, each with what it costs a day; 订阅 (`moments://subscriptions`) what is paid by the
-  month, by the year and once. Each device and subscription is an entry with its plugin's
-  part, edited in a sheet and published with the rest from 发布更改. 车 (`moments://car`)
-  shows a month of the Zeekr import at a time, its days, charges and assisted driving, and
-  is read-only: only an import changes the car's data.
-  On the timeline a device comes as a record on the day it was bought, a subscription on the
-  day it was last paid, first in its day's records bubble; tapped, it opens its sheet.
+- **东西** in 我 opens three pages, 车 only with an API. 设备 (`moments://devices`) lists what is
+  owned and what was sold, each with what it costs a day; 订阅 (`moments://subscriptions`)
+  what is paid by the month, by the year and once. Each device and subscription is an entry
+  with its plugin's part, edited in a sheet and published with the rest from 发布更改. 车
+  (`moments://car`) shows a month of the Zeekr import at a time, its days, charges and
+  assisted driving, and is read-only: only an import changes the car's data. On the timeline
+  a device comes as a record on the day it was bought, a subscription on the day it was last
+  paid, first in its day's records bubble; tapped, it opens its sheet.
 
 The pages lead to each other wherever they can: a place or a trip to the map, a day's pill
 to the day, a Moment's menu to its place, trip and day. A day's page opens on that day's
-footprints on a map, its bills and charges read down by their times, and today's says
-还在记录 while the footprints are recording. A trip's days and each day's Moments read from earliest to latest.
-A trip's page has 回放旅程, which plays the trip back as the site's
-player does (`packages/trip-map/src/player`): the route never still, a vehicle at its tip,
-a card per Moment stepped through from a toolbar, by a swipe or with a keyboard's arrows
-and Space. 编辑旅程 changes its name, days, public switch, Moments and covers, published
-as a collection; its days' Moments are counted in one row that opens them, each with a switch to
-leave it out, and those of the two days either side are listed under it, out until added.
-The + on the map's trips makes one (新建旅程, `moments://trip-edit`) on the
-phone alone: a collection of its own, its id its uid in lowercase as the API will know it,
-shown and played back as the site's are. Until then it can be deleted from its 编辑旅程; once published it is the API's
-like the rest.
+footprints on a map, its bills and charges read down by their times, and today's says 还在记录
+while the footprints are recording. A trip's days and each day's Moments read from earliest
+to latest. A trip's page has 回放旅程, which plays the trip back as the site's player does
+(`packages/trip-map/src/player`): the route never still, a vehicle at its tip, a card per
+Moment stepped through from a toolbar, by a swipe or with a keyboard's arrows and Space.
+编辑旅程 changes its name, days, public switch, Moments and covers, published as a collection;
+its days' Moments are counted in one row that opens them, each with a switch to leave it
+out, and those of the two days either side are listed under it, out until added. The + on
+the map's trips makes one (新建旅程, `moments://trip-edit`) on the phone alone: a collection of
+its own, its id its uid in lowercase as the API will know it, shown and played back as the
+site's are. Until then it can be deleted from its 编辑旅程; once published it is the API's like
+the rest.
 
-Below the trips, after a hairline, 可能的旅程 are the trips the records suggest: `data/trips/TripDiscovery.kt`
-groups the away records and builds candidates, `TripEvidence.kt` keeps the visit evidence,
-and `TripNames.kt` formats the destinations and dates. The candidates cover
-the days from a record at least 50 km from home until the next one within 30 km, or two weeks
-without any, with two or more records and none of their days in a trip. Beyond 100 km there
-must be evidence of local activity: a known scenic, food, shopping or stay place, a local stay,
-nearby observations on consecutive days at least 90 minutes apart in actual time, distinct
-local stops at least 90 minutes apart on
-one day (presence without assuming a continuous stay), or at least three distinct stops over 20 minutes at
-a local pace (up to 15 km/h). Photos alone and known transport places do not establish a visit.
-Nearer outings need records spanning at least 90 minutes within 30 km of
-a valid starting point of a stay, with no gap over six hours. Later valid starting points
-are kept when an earlier one no longer fits. Known transport observations interrupt the
-evidence sequence rather than being removed to join its two sides. Separate departure and return distances
-keep a trip together while it crosses the departure boundary. Home is the area of
-about 20 km with records on the most days within 120 days either side, so it follows a move,
-and only that one: a city gone to often (a day out to Shanghai) or the family's home is away
-each time. 我 → 家 (`moments://homes`) shows it and takes more by hand, a city or a whole
-province each, from the fog's city boundaries; records in them are home too. The records are
-the check-ins and the Moments with places, not the footprints, and nothing leaves the phone.
-The best come first: a point for each photo and three for each day with records, up to a
-week of them, so a short trip with many photos comes before weeks with a few records each.
-Each is named after cities with evidence of a visit, including short visits and known activity
-places recorded only once. Sparse observations in different parts of a city on at least three
-days also keep it in the name; two brief transfers on the way out and back do not add up to a
-visit. The home city is left out when there are other destinations. Without a city name the
-farthest point in the evidence that qualified the trip names it, by its place or coordinates;
-a more distant transfer cannot supply the fallback. Raw city counts never restore unqualified
-destinations. Names
-use their places or the fog's city boundaries, in the order reached, with the most-recorded
-cities kept when the title would be long and 等 marking destinations omitted, with the holiday
-it spans before them (春节, 元旦, 清明, 五一, 国庆: 国庆香港),
-else 一日 or 周末 after (南京一日). Its row says how many photos it has, or records without
-any. Its + adds it as it is, private as the check-ins it came from; opened, it is 新建旅程 with
-its days and name filled in; one dismissed is kept in the settings and doesn't come back.
+Below the trips, after a hairline, 可能的旅程 are the trips the records suggest
+(`data/trips/TripDiscovery.kt`, with `TripEvidence.kt` and `TripNames.kt`): runs of days
+away from home, with evidence of a visit beyond passing through, from the check-ins and the
+Moments with places, not the footprints; nothing leaves the phone. Home is where the records
+fall on the most days around each one, so it follows a move; 我 → 家 (`moments://homes`)
+shows it and takes more by hand, a city or a whole province each. The best come first, by
+photos and days with records, each named after the cities visited, with the holiday it spans
+(国庆香港) or 一日 or 周末 (南京一日). Its + adds it as it is, private as the check-ins it came
+from; opened, it is 新建旅程 with its days and name filled in; one dismissed doesn't come back.
+The thresholds live in the code and its tests.
 
 No page has a bar: its way back and actions float as circles over it, its title large
 under them. On a wide window the map's trips stand in a column and bottom panels open as
@@ -164,28 +144,29 @@ except in 演示模式.
   photo marked 不用作封面 never becomes a cover, widget or share card.
 - **Time.** The earliest photo's EXIF time and offset, else a video's creation time, else
   the files' dates, else now.
-- **Place.** Where the first photo was taken, else none until one is chosen: the page
-  itself never locates the phone. A photo's place is the known place within 2 km, else a
-  new place named after what is nearest: in China, with the owner's AMap or Tencent key
-  (高德地图 Key, 腾讯地图 Key, under 同步与来源; with both, the one chosen under 国内地点来源
-  first and the other when it can't answer), the shops, sights and buildings that service knows, asked from the
-  phone with the pin's point: their place searches first, which know the shops nearest, then,
-  once those calls are used up for the day, their reverse geocoding, whose calls are thirty
-  times as many but which knows mostly sights and buildings (a search by name asks their
-  input tips), else the nearest park,
-  sight, shop or street Photon knows (`BuildConfig.PLACE_SEARCH_URL`), with the system's
-  geocoder as fallback. Tapped, the place opens on a map with a pin at its middle, which
-  finds where the phone is when there is no place yet to open on. Under the map are a
-  search and one list: the choice first and ticked, then the known places close by and
-  what is around the pin, nearest first, or while something is typed what is called that
-  from the same sources. A row tapped is chosen and the pin moves there; a result chosen
-  leaves the search as it was, the choice above the rest, so another is a tap away. The choice tapped
-  again is named by hand, and its kind, which follows where it came from, opens a sheet of
-  every kind by group (餐饮, 购物, 住宿, 景点, 娱乐, 交通, 生活, 地区), for a known place too: a
-  café, a metro station or a park rather than only food, transport or a sight, each with its
-  icon in the list. A place picked from AMap or Tencent keeps that service's id as its
-  `source`, so finding it again chooses the place already kept rather than a new one beside it. A place shared from Amap (Here (作为时刻的地点), or 保存为地点 to
-  only keep it) is followed from its short link and shifted from GCJ-02 back to WGS 84.
+- **Place.** Where the first photo was taken, else none until one is chosen: the page itself
+  never locates the phone. A photo's place is the known place within 2 km, else a new place
+  named after what is nearest: in China, with the owner's AMap or Tencent key (高德地图 Key,
+  腾讯地图 Key, under 同步与来源; with both, the one chosen under 国内地点来源 first and the other when it
+  can't answer), the shops, sights and buildings that service knows, asked from the phone
+  with the pin's point: their place searches first, which know the shops nearest, then, once
+  those calls are used up for the day, their reverse geocoding, whose calls are thirty times
+  as many but which knows mostly sights and buildings (a search by name asks their input
+  tips), else the nearest park, sight, shop or street Photon knows
+  (`BuildConfig.PLACE_SEARCH_URL`), with the system's geocoder as fallback. Tapped, the
+  place opens on a map with a pin at its middle, which finds where the phone is when there
+  is no place yet to open on. Under the map are a search and one list: the choice first and
+  ticked, then the known places close by and what is around the pin, nearest first, or while
+  something is typed what is called that from the same sources. A row tapped is chosen and
+  the pin moves there; a result chosen leaves the search as it was, the choice above the
+  rest, so another is a tap away. The choice tapped again is named by hand, and its kind,
+  which follows where it came from, opens a sheet of every kind by group (餐饮, 购物, 住宿, 景点,
+  娱乐, 交通, 生活, 地区), for a known place too: a café, a metro station or a park rather than only
+  food, transport or a sight, each with its icon in the list. A place picked from AMap or
+  Tencent keeps that service's id as its `source`, so finding it again chooses the place
+  already kept rather than a new one beside it. A place shared from Amap (Here (作为时刻的地点), or
+  保存为地点 to only keep it) is followed from its short link and shifted from GCJ-02 back to WGS
+  84.
 - A place's page edits it (编辑地点) in the same picker, opened on the place as it is with no
   other place offered: the pin moved, the choice renamed or given another kind. It keeps its
   id, so its Moments, check-ins and bills stay at it. One of the phone's changes at once; one
@@ -197,21 +178,22 @@ places with provisional ids (`p-<ulid>`), marked 未发布 until published.
 
 ## Publishing
 
-Publishing needs an API: its address and token, set under 我 → 同步与来源 (the token in a
-file backups leave out). Without them there is nothing to publish to: the card for it
-stays away, and nothing is marked 未发布, on the timeline or on a Moment's page, until they are set. With them the site's Moments can be changed and deleted too. Nothing reaches the site as it is saved: new,
-changed and deleted Moments, changed places, public bills, trips and footprint spans wait
-on the phone, past a restart. 发布更改, from the card at the top of 我, lists them, shows
-what changed and takes a change back. 全部发布到网站 runs as WorkManager work in a
-foreground service with a progress notification, waiting out a dropped link: it uploads
-the new originals a few at a time, then sends everything else as one `POST /v2/changes`,
-which the API takes whole or not at all. What is published
-leaves the phone's store for the site's. 取消发布, on the page or the notification, stops it
-while it uploads or waits: what was uploaded stays for the next try, and a change set
-already on its way still goes through and is noted. 清除全部更改 takes back everything
-waiting, after asking: the Moments written on the phone are deleted with their photos'
-copies, and the site's records, places, trips and bills go back to what the site has.
-A public bill whose words or amount changed, and a footprint span, stay to be published.
+Publishing needs an API: its address and token, set under 我 → 同步与来源 (the token in a file
+backups leave out). Without them there is nothing to publish to: the card for it stays away,
+and nothing is marked 未发布, on the timeline or on a Moment's page, until they are set. With
+them the site's Moments can be changed and deleted too. Nothing reaches the site as it is
+saved: new, changed and deleted Moments, changed places, public bills, trips and footprint
+spans wait on the phone, past a restart. 发布更改, from the card at the top of 我, lists them,
+shows what changed and takes a change back. 全部发布到网站 runs as WorkManager work in a foreground
+service with a progress notification, waiting out a dropped link: it uploads the new
+originals a few at a time, then sends everything else as one `POST /v2/changes`, which the
+API takes whole or not at all. What is published leaves the phone's store for the site's.
+取消发布, on the page or the notification, stops it while it uploads or waits: what was uploaded
+stays for the next try, and a change set already on its way still goes through and is noted.
+清除全部更改 takes back everything waiting, after asking: the Moments written on the phone are
+deleted with their photos' copies, and the site's records, places, trips and bills go back
+to what the site has. A public bill whose words or amount changed, and a footprint span,
+stay to be published.
 
 ## Backup
 
@@ -234,16 +216,17 @@ carries on the next time. Settings, tokens and the WebDAV sign-in stay as they a
 
 ## Updates
 
-更新, under 我 → 同步与来源, keeps the app current from this repository's GitHub releases.
-每天检查更新, on until turned off, reads the feed of GitHub's releases (`releases.atom`, GitHub's page rather than its API, whose
-limit without a token is soon used up behind a shared proxy's address) once a day as WorkManager's
-periodic work on a network, and nothing of the phone's goes with it; the first time a release
-is newer than the app, a notification says so and opens the page. 检查更新 asks at once and says
-the version and when it last looked. A newer release adds 安装 x.y.z, which downloads its APK,
-`here-x.y.z.apk` as the release workflow names it, into the cache, checks that it is this app, the version it says and newer, signed with the
-same key as the app installed, and hands it to the system's installer, which asks before it
-installs. Until 安装未知应用 is allowed for the app, a sheet says why first and goes to the
-system's settings.
+更新, under 我 → 同步与来源, keeps the app current from this repository's GitHub releases. 每天检查更新,
+on until turned off, reads the feed of GitHub's releases (`releases.atom`, GitHub's page
+rather than its API, whose limit without a token is soon used up behind a shared proxy's
+address) once a day as WorkManager's periodic work on a network, and nothing of the phone's
+goes with it; the first time a release is newer than the app, a notification says so and
+opens the page. 检查更新 asks at once and says the version and when it last looked. A newer
+release adds 安装 x.y.z, which downloads its APK, `here-x.y.z.apk` as the release workflow
+names it, into the cache, checks that it is this app, the version it says and newer, signed
+with the same key as the app installed, and hands it to the system's installer, which asks
+before it installs. Until 安装未知应用 is allowed for the app, a sheet says why first and goes to
+the system's settings.
 
 ## Importing
 
@@ -300,11 +283,11 @@ The opt-in 分享与记账助手（试用） is an accessibility service
 (`accessibility/ShareAccessibilityService`) that, for Telegram, Threads and Instagram only,
 fills the composer (Telegram: finds the `@username` given and the caption; Instagram: the
 caption, once the photos are edited and 继续 tapped by hand) and stops before sending. It
-reads only the app of the share it was asked for, gives up after 40 seconds (Instagram:
-two minutes) and keeps nothing. Each destination is an `AssistAdapter` with an `AssistFlow`
-(`share/TelegramShareAdapter`, `share/ThreadsShareAdapter`, `share/InstagramShareAdapter`); add an app the same way,
-with fixtures for its pages. The manifest keeps the `share/TelegramShareService` name
-only so the permission already granted to it stays.
+reads only the app of the share it was asked for, gives up after 40 seconds (Instagram: two
+minutes) and keeps nothing. Each destination is an `AssistAdapter` with an `AssistFlow`
+(`share/TelegramShareAdapter`, `share/ThreadsShareAdapter`, `share/InstagramShareAdapter`);
+add an app the same way, with fixtures for its pages. The manifest keeps the
+`share/TelegramShareService` name only so the permission already granted to it stays.
 
 ## Ledger
 
@@ -323,13 +306,14 @@ bank's mark), and private Moments and trips are left out everywhere, the widgets
 
 A bill is an expense, an income or a transfer (also a repayment or a loan), or a refund or
 reimbursement written from its expense. `moments://new-bill`, or the ledger's +, opens one
-on a keypad (sums like `12+3.4` add up). It has an amount in any currency, a category,
-one account or several with their shares, its time and book, discounts and fees, whether
-it is to be reimbursed or left out of the sums, and the Moment, place and trip it belongs
-to. A bill with no place is placed by the footprints nearest its time (within a quarter of
-an hour, good to 100 m), named through Photon from the point alone and kept in
-`footprints.sqlite`; its + opens the new Moment's place picker on that point, and the place kept or chosen there
-becomes the bill's. An account's 校准余额 sets its balance by moving its opening balance.
+on a keypad (sums like `12+3.4` add up). It has an amount in any currency, a category, one
+account or several with their shares, its time and book, discounts and fees, whether it is
+to be reimbursed or left out of the sums, and the Moment, place and trip it belongs to. A
+bill with no place is placed by the footprints nearest its time (within a quarter of an
+hour, good to 100 m), named through Photon from the point alone and kept in
+`footprints.sqlite`; its + opens the new Moment's place picker on that point, and the place
+kept or chosen there becomes the bill's. An account's 校准余额 sets its balance by moving its
+opening balance.
 
 The ledger meets the Moments: a Moment's page lists its bills, a meal with no bill offers
 记一笔, a trip's and a day's page show what was spent, and 关联时刻和旅程 links meals and a
@@ -343,19 +327,19 @@ An empty ledger imports from iCost on its own page.
 
 The data:
 
-- **从 iCost 导入**, in 我 → 导入, reads either iCost's backup (`.backup`, a zip of its SQLite database sealed
-  with the password iCost itself uses) or the .xlsx of its 账单导出, picked, shared in or
-  opened with the app. It shows what it found before writing and skips what is already
-  there, so each newer file brings the ledger up to date. Tags become `#tag` in the note.
-  The backup is the fuller one: `ledger/ICostBackup` takes its accounts with their kinds and
-  balances, ties refunds, reimbursements and a transfer's discount to the bills iCost tied
-  them to, and keeps a bill paid from several accounts as one. Every account iCost has, new
-  or already here, opens where the bills iCost also has leave it at iCost's balance, so balance
-  adjustments need no bill and bills kept only here move it on from there. The export
-  has no balances, so its accounts are calibrated after, and its refunds and reimbursements
-  are matched by amount and time. Accounts are matched by name, spaces at either end aside,
-  and those of one name become one, archived only when all of them are hidden in iCost and
-  counted in net assets when any of them is. Budgets, recurring bills,
+- **从 iCost 导入**, in 我 → 导入, reads either iCost's backup (`.backup`, a zip of its SQLite
+  database sealed with the password iCost itself uses) or the .xlsx of its 账单导出, picked,
+  shared in or opened with the app. It shows what it found before writing and skips what is
+  already there, so each newer file brings the ledger up to date. Tags become `#tag` in the
+  note. The backup is the fuller one: `ledger/ICostBackup` takes its accounts with their
+  kinds and balances, ties refunds, reimbursements and a transfer's discount to the bills
+  iCost tied them to, and keeps a bill paid from several accounts as one. Every account
+  iCost has, new or already here, opens where the bills iCost also has leave it at iCost's
+  balance, so balance adjustments need no bill and bills kept only here move it on from
+  there. The export has no balances, so its accounts are calibrated after, and its refunds
+  and reimbursements are matched by amount and time. Accounts are matched by name, spaces at
+  either end aside, and those of one name become one, archived only when all of them are
+  hidden in iCost and counted in net assets when any of them is. Budgets, recurring bills,
   installments, savings plans, templates, places and photos aren't carried over.
 - **Rates** are the European Central Bank's, bundled in `assets/ledger-rates.json` and
   refreshed from Frankfurter only when asked.
@@ -369,67 +353,43 @@ kind, amount, currency, category and note (`data/store/Outside.kt`). `ledger/ICo
 `ledger/Accounting` and `ledger/Links` are plain Kotlin tested in `LedgerTest`, which also
 reads a real export when `ICOST_EXPORT` names one and a real backup when `ICOST_BACKUP` does.
 
-Opening a bill form waits for the local ledger to load before checking for a book. It
-creates a default book only when none exists, including when several forms initialize
-at once.
+**自动记账（试用）**, switched on in 记账, has the same accessibility service read WeChat Pay's and
+Alipay's pages. On one that says a payment went through, it offers a 记一笔 notification with
+the amount, time, note and account it read; tapping it opens
+`moments://payment?amount=…&time=…&note=…` with a category guessed from the books' category
+names in the note, which also picks its book. WeChat's note is the payee and the 商品 row.
+Nothing is written until saved, and a payment matching a kept bill within ten minutes isn't
+offered. It never taps, types or keeps the page. `ledger/Payments` reads the page, with
+fixtures in `PaymentsTest`; `ledger/AutoBill` keeps the switch and posts the notification.
 
-**自动记账（试用）**, switched on in 记账, has the same accessibility service read WeChat
-Pay's and Alipay's pages. On one that says a payment went through, it offers a 记一笔
-notification with the amount, time, note and account it read; tapping it opens
-`moments://payment?amount=…&time=…&note=…` with a guessed category. Categorization matches
-expense category names across all books contained in the note before falling back to fixed
-keywords; past bills do not affect it. Longer names win; equal-length names prefer a
-subcategory. A matched category also selects its book in the form.
-WeChat notes combine the payee above the amount and the 商品 row, separated by a space;
-identical values appear only once. Without 商品, the payee alone is kept.
-Nothing is written until saved, and a payment matching a kept bill within ten minutes
-isn't offered. It never taps, types or keeps the page. `ledger/Payments` reads the page, with fixtures in
-`PaymentsTest`; `ledger/AutoBill` keeps the switch and posts the notification.
-
-**侧键**, in 我 (`moments://side-key`), assigns an action separately to a
-single press, double press and long press of the physical OPPO key. It includes payment
-capture, toggling the flashlight, opening an installed app or a link/app URI, play/pause,
-next/previous track, volume, back, home, recent apps, notifications, quick settings and lock screen. No gesture
-is assigned on the user's behalf. Double press defaults to a 300 ms window, adjustable
-from 150 to 600; long press to 600 ms, adjustable from 400 to 2000. Single press waits for
-the double-press window, and long press runs once. A tap followed by a hold runs long
-press alone. The flashlight action toggles the rear flash without opening the camera or
-requesting camera permission, reads its current system state each time (including changes
-from Quick Settings), and reports when the flash is unavailable, such as while a camera
-is using it. It does not keep a camera-state listener running between presses.
+**侧键**, in 我 (`moments://side-key`), gives the physical OPPO key's single, double and long
+press each an action: payment capture, the flashlight, an app or a link, media and volume
+keys, or a system action (back, home, recent apps, notifications, quick settings, lock).
+None is set on the user's behalf. The double-press window (300 ms, 150–600) and the long
+press (600 ms, 400–2000) can be changed; a single press waits out the window. The flashlight
+toggles the rear flash without the camera, reading its state each press.
 
 Under 场景 the same gestures can do something else in a scene: 付款页, a completed WeChat Pay or
-Alipay payment page as the payment reader recognizes it, and any app added there, while it is in
-front. A press first checks the payment page, then the app in front, and a gesture a scene leaves
-at 跟随默认 runs its default action; no scene is set on the user's behalf. Only a press whose gesture
-some scene changes looks at what is in front, and the payment page is read only when 付款页 changes
-that gesture; nothing read is kept. The last press shows the scene it ran in.
+Alipay payment page as the payment reader recognizes it, or any app added there, while it is in
+front. A gesture a scene leaves at 跟随默认 runs its default action. Only a press whose gesture
+some scene changes looks at what is in front, and nothing read is kept.
 
-Start Shizuku and enable the app's existing share-and-ledger accessibility service,
-then turn on the side-key switch. The listener uses a small Shizuku UserService with
-shell privileges to find the input device advertising `BTN_TRIGGER_HAPPY32` and read its
-press/release events, without root or a fixed device number. It is hosted by the existing
-accessibility service, with no separate foreground service or notification. Switching it
-off or disconnecting accessibility stops the reader and restores the saved system action.
-Shizuku loss leaves restoration pending until it is available and authorized again. A
-phone restart needs Shizuku started again; while the switch stays on, the listener resumes
-when both services are ready. Unsupported devices report a connection failure. Stop any
-standalone side-key remapper before enabling this one.
-
-The payment action directly calls the same accessibility reader while WeChat or Alipay
-is still in front, then opens the prefilled confirmation; it does not require the auto-bills
-switch. The phone must be unlocked. An already saved payment is reported instead of opened
-again. Nothing is saved until the user confirms. There is no cross-app capture broadcast
-or signature permission anymore. The reader never keeps a payment page, and the side-key
-settings and original system action are excluded from Android backup and device transfer.
-`sidekey/GestureDetector` and `SideKeyActions` are covered by timing and validation tests.
+It needs Shizuku started and the share-and-ledger accessibility service on: a small Shizuku
+UserService reads the input device advertising `BTN_TRIGGER_HAPPY32`, hosted by that service,
+with no foreground service of its own. Turned off, it restores the system's own action (once
+Shizuku is back, if it was lost); after a restart Shizuku has to be started again. Stop any
+other side-key remapper first. The payment action reads the page still in front, which needs
+the phone unlocked but not 自动记账, and opens the bill to confirm; one already saved is
+reported instead. The settings and the original action stay out of Android's backup.
+`sidekey/GestureDetector` and `SideKeyActions` have timing and validation tests.
 
 ## Footprints
 
 The footprints are GPS tracks kept on the phone alone, in
-`noBackupFilesDir/footprints.sqlite` (`footprints/FootprintStore`), outside sync and
-backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export GPX and delete (importing is in 我 → 导入);
-足迹记录 (`moments://footprint-settings`), from 我 or the panel's settings button, sets how recording behaves.
+`noBackupFilesDir/footprints.sqlite` (`footprints/FootprintStore`), outside sync and backup.
+地图 → 足迹 opens a panel to record, pick a day or trip, export GPX and delete (importing is in
+我 → 导入); 足迹记录 (`moments://footprint-settings`), from 我 or the panel's settings button, sets
+how recording behaves.
 
 - **Recording.** 日常自动记录 runs until turned off; 单次行程 marks a trip over the same
   samples; 暂停所有记录 pauses both. A foreground service with precise location asks for a
@@ -466,21 +426,21 @@ backup. 地图 → 足迹 opens a panel to record, pick a day or trip, export GP
 - **Moves and stays.** `TrackParts` reads the refined points of the chosen day or trip as
   stays (five minutes or more within 120 m, a pause or a rest inside one included) and moves
   between them, each told walking, cycling or driving by the kept activities where there are
-  any, else by its speeds, and never against them (a walk can't go at a drive's pace); slow traffic and
-  a car park's crawl stay part of the drive. The map draws a drive solid, a ride thinner, a
-  walk dotted and a stay as a ring; 足迹 → 行程分段 lists them with distance, average and top
-  speed, names a stay after one of the phone's own places within 300 m (no request leaves
-  for it), and frames one on the map when tapped; a stay's + opens the same picker on its middle,
-named as a bill's spot is, to keep it as a place of the phone's, or with 保存为签到 as a private
-check-in there too (`source.app` `phone`), from the stay's start to its end, its uid made from
-the start so keeping it again changes it; a check-in already within the stay, Swarm's or
-another, is that visit, and none is added.
+  any, else by its speeds, and never against them (a walk can't go at a drive's pace); slow
+  traffic and a car park's crawl stay part of the drive. The map draws a drive solid, a ride
+  thinner, a walk dotted and a stay as a ring; 足迹 → 行程分段 lists them with distance, average
+  and top speed, names a stay after one of the phone's own places within 300 m (no request
+  leaves for it), and frames one on the map when tapped; a stay's + opens the same picker on
+  its middle, named as a bill's spot is, to keep it as a place of the phone's, or with 保存为签到
+  as a private check-in there too (`source.app` `phone`), from the stay's start to its end,
+  its uid made from the start so keeping it again changes it; a check-in already within the
+  stay, Swarm's or another, is that visit, and none is added.
 - **Notification.** Its icon shows the state (recording, waiting for a fix, location off).
   On Android 16 and later it asks to be a Live Update; on ColorOS that also needs
   流体云显示实时活动, linked from 足迹记录 → 状态栏显示.
 - **Diagnostics.** `noBackupFilesDir/footprint-diagnostics/` keeps two rotating JSONL files
-  of 8 MiB, about two days, with each request, fix, filter decision and state change, never a coordinate,
-  network name or token. 足迹记录 → 诊断 → 导出诊断日志 exports them with a replay of the
+  of 8 MiB, about two days, with each request, fix, filter decision and state change, never
+  a coordinate, network name or token. 足迹记录 → 诊断 → 导出诊断日志 exports them with a replay of the
   latest day through the current filter.
 - **Publishing.** A trip's page has 公开这段旅程的轨迹: at the next 全部发布到网站 its line goes
   out simplified to 30 m (`track_shares`), and the site draws the trip along it. The raw
@@ -508,10 +468,10 @@ are `noBackupFilesDir/connection-reminders.json` and `companion-connections.json
 - **Video.** The viewer goes picture-in-picture when the app is left while a video plays.
   A photo that can't be fetched there says so, with 重试.
 - **Language and appearance.** Always the phone's: Chinese, or English when the phone speaks
-  it, and light or dark as the system is. The API and the media origin have no default
-  and are set in 我 → 同步与来源; the map's styles default to `BuildConfig` and can be
-  changed there too, beside the AMap and Tencent keys, which have none either and stays on the phone,
-  out of the backup.
+  it, and light or dark as the system is. The API and the media origin have no default and
+  are set in 我 → 同步与来源; the map's styles default to `BuildConfig` and can be changed there
+  too, beside the AMap and Tencent keys, which have none either and stays on the phone, out
+  of the backup.
 - **Maps.** OpenFreeMap's vector tiles drawn by MapLibre, needing no key.
 - **Name and icon.** Here, in English whatever the phone speaks: a white cat with a grey cap
   peeking in from the lower left on blue, an adaptive icon with a monochrome layer.
@@ -542,10 +502,11 @@ adb -s emulator-5554 shell am instrument -w -e class cc.hyoban.moments.footprint
 ## Releasing
 
 A release is a tag: pushing `android-v1.2.3` runs `.github/workflows/android-release.yml`,
-which runs the unit tests, builds the release at version 1.2.3 (version code 10203, each part
-kept under 100) and puts `here-1.2.3.apk` in a GitHub release of the same name, its notes
-the commits since the last one. Other builds take their version from the newest such tag, so
-one built here installs over the release on the phone. The app checks for these releases itself (Updates).
+which runs the unit tests, builds the release at version 1.2.3 (version code 10203, each
+part kept under 100) and puts `here-1.2.3.apk` in a GitHub release of the same name, its
+notes the commits since the last one. Other builds take their version from the newest such
+tag, so one built here installs over the release on the phone. The app checks for these
+releases itself (Updates).
 
 Every build is signed with the release key when there is one, debug builds too, so they install
 over each other and keep the app's data; without it they take the machine's debug key. Locally
@@ -557,20 +518,20 @@ the repository, kept somewhere safe: a lost key can't sign an update to the app 
 
 ## On the phone, from adb
 
-Every page has a link, `moments://moments`, `map`, `trips`, `settings` (我), `sync`, `import`, `items`,
-`ledger-settings`, `footprint-settings`, `side-key`, `new`,
-`moment/{uid}`, `trip/{id}`, `play/{id}`, `day/{YYYY-MM-DD}` and `place/{id}`, which
-`adb shell am start -d` opens. Opening the app, a link's page comes over the tab it is
-under (a trip or a place over 地图, a setting, the ledger or the changes over 我, the rest
-over 时间线), so back, the top bar's or the system's, leads to that tab and the tabs go on
-from there; opened while the app is on screen, it goes over the page shown. A page a widget
-opens stands alone over the app, and back closes it onto the app as it was. Buttons, tabs and cards carry test tags that
-`uiautomator dump` reports as resource ids (`tab_map`, `settings`, `back`,
-`moment_{uid}`, `media_{uid}_{index}`, `trip_{id}`, `day_{date}`, …), and
-`scripts/ui.py` uses both:
+Every page has a link, `moments://moments`, `map`, `trips`, `settings` (我), `sync`,
+`import`, `items`, `ledger-settings`, `footprint-settings`, `side-key`, `new`,
+`moment/{uid}`, `trip/{id}`, `play/{id}`, `day/{YYYY-MM-DD}` and `place/{id}`, which `adb
+shell am start -d` opens. Opening the app, a link's page comes over the tab it is under (a
+trip or a place over 地图, a setting, the ledger or the changes over 我, the rest over 时间线), so
+back, the top bar's or the system's, leads to that tab and the tabs go on from there; opened
+while the app is on screen, it goes over the page shown. A page a widget opens stands alone
+over the app, and back closes it onto the app as it was. Buttons, tabs and cards carry test
+tags that `uiautomator dump` reports as resource ids (`tab_map`, `settings`, `back`,
+`moment_{uid}`, `media_{uid}_{index}`, `trip_{id}`, `day_{date}`, …), and `scripts/ui.py`
+uses both:
 
 ```sh
-scripts/ui.py open moment/01M466J3KG95G3V62CZ1C7ZZBH
+scripts/ui.py open moment/<uid>
 scripts/ui.py dump
 scripts/ui.py tap tab_map
 ```

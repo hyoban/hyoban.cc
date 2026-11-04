@@ -23,17 +23,17 @@ data/
 ```
 
 - An **entry** (`packages/data-spec/src/entry.ts`) is a moment and an optional point, with
-  its words, photos, meal, bill, charge, device, subscription or check-in as parts by plugin. A device
-  is on the day it was bought, what it sold for written on it once sold; a subscription on
-  the day it was last paid, or for software bought once the day it was first written down.
-  The use page lists both from these entries. A check-in is brought in from Swarm, its `source`
-  that app's ids, or made on the phone from a stay of the footprints (`source.app` `phone`),
-  private, from the stay's start to its `end`. It is named by its uid alone:
-  its page is `/m/<uid>/` and its media sit under `moments/<uid>/` in R2, so its day, place
-  and words can change after it is published. One without `published` is a draft the site
-  skips; `published` blocks, the entry's and each media item's, never change. A device's
-  `id` names one device, and a charge's `vehicle` names one of them; the API turns away a
-  change set that breaks either.
+  its words, photos, meal, bill, charge, device, subscription or check-in as parts by
+  plugin. A device is on the day it was bought, what it sold for written on it once sold; a
+  subscription on the day it was last paid, or for software bought once the day it was first
+  written down. The use page lists both from these entries. A check-in is brought in from
+  Swarm, its `source` that app's ids, or made on the phone from a stay of the footprints
+  (`source.app` `phone`), private, from the stay's start to its `end`. It is named by its
+  uid alone: its page is `/m/<uid>/` and its media sit under `moments/<uid>/` in R2, so its
+  day, place and words can change after it is published. One without `published` is a draft
+  the site skips; `published` blocks, the entry's and each media item's, never change. A
+  device's `id` names one device, and a charge's `vehicle` names one of them; the API turns
+  away a change set that breaks either.
 - A **trip** is a collection taking the entries in its span (with `include` and
   `exclude`), its waypoints marks of their own (entries with a place and no parts).
 - A **place** has a name, WGS-84 coordinates, a kind, the province, city and district it is
@@ -44,27 +44,21 @@ data/
   plugin's default (a bill is private), else public.
 - Units are those `packages/data-spec/src/primitives.ts` gives: metres, watt-hours, seconds,
   and yuan where no `currency` is beside an amount. What happened keeps the offset it
-  happened at; `createdAt` and `updatedAt` are written in UTC. Records written before
-  that rule keep their offsets. A charge's `durationMin` is still written beside its
-  `durationSeconds` for the apps installed before it.
+  happened at; `createdAt` and `updatedAt` are written in UTC. A charge's `durationMin` is
+  still written beside its `durationSeconds` for the apps installed before it.
 
 `vp run data:check` checks `data/` as a whole, past what each record's schema sees: that
 every entry and collection parses, that what they name is there, that device ids hold,
 and it warns of fields the spec doesn't name, which the loose schemas let through.
 
-Schema version 3 moved `data/` from the first shape (`moments/`, `trips/`) to this one.
-`vp run data:migrate` shows such a move, `--write` makes it and `--rollback --write` undoes
-it byte for byte; the store reads either layout. D1 keeps only this shape, so an import of
-the first layout writes it as entries and collections.
-
 ## Building from the API
 
 The site is built from the API, with `MOMENTS_API_TOKEN` in the environment or `.env`:
 `apps/web/src/data/api-data.ts` fetches `/v2/export` once, writes it under
-`apps/web/.artifacts/api-data/` in this layout, and points the store there. `MOMENTS_API_URL`
-overrides the address. Without a token, or with one that fails to fetch, the build fails;
-`HYOBAN_DATA_ROOT` set to a directory in this layout builds from that instead, as the tests
-do with the fixture. The scripts read `data/`.
+`apps/web/.artifacts/api-data/` in this layout, and points the store there. Without a
+token, or with one that fails to fetch, the build fails; `HYOBAN_DATA_ROOT` set to a
+directory in this layout builds from that instead, as the tests do with the fixture. The
+scripts read `data/`.
 
 ## Writing outside the API
 
@@ -99,6 +93,6 @@ committed: those may not be in the API yet.
 
 `data:import` makes the database a mirror of `data/`, so use it only to restore: it applies
 the migrations, writes new and changed records and marks the rest deleted, including what
-the app published since that copy was exported. Only those take a new revision, so the app's sync sees
-just the difference. `--dry-run` writes the SQL under `.artifacts/import/`. D1's Time Travel
-also keeps 30 days of the database.
+the app published since that copy was exported. Only those take a new revision, so the app's
+sync sees just the difference. `--dry-run` writes the SQL under `.artifacts/import/`. D1's
+Time Travel also keeps 30 days of the database.

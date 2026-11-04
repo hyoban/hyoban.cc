@@ -71,9 +71,9 @@ dashboard; they stream with `npx wrangler tail hyoban-cc-api`.
 
 `verify.yml` exports the API into `data/` to audit every Moment, builds the site from the
 API, its share cards kept between runs in the Actions cache as Workers Builds keeps them,
-and on its weekly run also checks every referenced R2 object (`moments:audit
---remote`). The records aren't backed up to GitHub. The workflows run Node 24; the repository pins no Node version, so Workers
-Builds uses its own default.
+and on its weekly run also checks every referenced R2 object (`moments:audit --remote`). The
+records aren't backed up to GitHub. The workflows run Node 24; the repository pins no Node
+version, so Workers Builds uses its own default.
 
 `r2-backup.yml` checks out the existing `r2-backup` branch and commits to it, so that
 branch has to exist, and the snapshot counts against the repository's Git LFS storage.
@@ -87,9 +87,9 @@ D1's 30 days of Time Travel and the R2 snapshot on the `r2-backup` branch are th
 back; the records have no copy in git. A `data/` exported earlier can be restored over the
 deployed database with `vp run data:import --remote` ([data.md](data.md)).
 
-A restore with Time Travel puts back `meta`'s `database` too, and the app's copy, ahead of the
-restore, would carry on from rows the database no longer has. Give it a new one from `apps/api`, so every copy
-reads all the rows again:
+A restore with Time Travel puts back `meta`'s `database` too, and the app's copy, ahead of
+the restore, would carry on from rows the database no longer has. Give it a new one from
+`apps/api`, so every copy reads all the rows again:
 
 ```bash
 npx wrangler d1 execute hyoban-cc --remote --command "UPDATE meta SET value = CAST(abs(random() % 9007199254740991) AS TEXT) WHERE key = 'database'"
