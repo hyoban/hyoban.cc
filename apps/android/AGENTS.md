@@ -9,6 +9,13 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 
 ## Check every change on the phone
 
+- The phone is the user's, with their real data and a live link to the site: ask before
+  each test on it, saying what it will install, open, tap, change and take back, and
+  wait for a yes. One yes covers only the steps it was given for; anything new, and above
+  all publishing, asks again. Building and unit tests need no asking.
+- Never tap blind: chain no taps or opens after a step that may have failed, take a
+  screenshot before every tap by position and tap only what it shows. Stop and tell the
+  user at once when anything unexpected starts, rather than working around it.
 - Iterate as fast as possible: after each runtime or UI change, build the debug build and
   install it over what is there, a few seconds each: `./gradlew :app:assembleDebug`, then
   `adb install -r app/build/outputs/apk/debug/app-debug.apk`. Launch it and look at
@@ -36,7 +43,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   If only the phone's pairing service shows, scan that address's ports 30000–50000 for
   the other open one and `adb connect` to it (the phone is already paired); on "No route
   to host", restart the server and connect again.
-- Publishing is tried with a test Moment written on the phone (text "test", 不加地点 so
+- Publishing, once the user has said yes to it, is tried with a test Moment written on the phone (text "test", 不加地点 so
   no place of the user's reaches the site), published, then deleted and the deletion
   published. A new Moment has no place unless a photo gives one; only its place picker,
   opened with none, locates the phone. Close the keyboard before tapping the place row,
