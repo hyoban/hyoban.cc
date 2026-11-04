@@ -56,9 +56,7 @@ export function toMusicTracks(playlist: NeteasePlaylist, songs: NeteaseSong[]): 
         artists: (song.ar ?? [])
           .map((artist) => artist.name)
           .filter((name): name is string => Boolean(name)),
-        coverUrl: song.al?.picUrl
-          ? `${song.al.picUrl.replace(/^http:/, 'https:')}?param=120y120`
-          : undefined,
+        coverUrl: song.al?.picUrl?.replace(/^http:/, 'https:') || undefined,
         durationSeconds: song.dt ? Math.round(song.dt / 1000) : undefined,
         id,
         title: song.name,
@@ -66,6 +64,12 @@ export function toMusicTracks(playlist: NeteasePlaylist, songs: NeteaseSong[]): 
       },
     ]
   })
+}
+
+/** A cover, as NetEase resizes it: `size` pixels square. */
+export function getCoverUrl(coverUrl: string, size: number) {
+  // A copy cached before covers were kept unsized carries a size already.
+  return `${coverUrl.split('?')[0]}?param=${size}y${size}`
 }
 
 /** `3:05`: a song's length. */

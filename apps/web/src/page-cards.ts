@@ -10,6 +10,7 @@ import { buildYearReview, getReviewYears } from '@/year-review'
 import type { FogRegions } from '@hyoban/trip-map'
 import { getTripCovers } from '@/moments/trip-images'
 import { getMediaPosters } from '@/media-card'
+import { getCoverUrl, getMusicTracks } from '@/music'
 import type { APIRoute } from 'astro'
 import { createHash } from 'node:crypto'
 import { getDocumentTitle, getMapHeading, getTripListHeading } from '@/trip-map'
@@ -301,12 +302,25 @@ async function loadPageCards(): Promise<Array<{ path: string; card: PageCard }>>
   })
 
   const media = getMediaPosters()
+  const music = await getMusicTracks()
   cards.push({
     path: '/media/',
     card: {
       title: MEDIA_TEXT.heading,
-      detail: `${media.count} 部作品`,
+      detail: `${media.count} 部作品 ${music.length} 首歌`,
       panel: media.photos.length ? { kind: 'posters', photos: media.photos } : undefined,
+    },
+  })
+  // /media/music/ shows the newest liked songs' album covers, each album once.
+  const covers = [...new Set(music.flatMap((track) => (track.coverUrl ? [track.coverUrl] : [])))]
+  cards.push({
+    path: '/media/music/',
+    card: {
+      title: `${MEDIA_TEXT.heading}\n音乐`,
+      detail: `${music.length} 首歌`,
+      panel: covers.length
+        ? { kind: 'covers', photos: covers.slice(0, 9).map((url) => getCoverUrl(url, 360)) }
+        : undefined,
     },
   })
   return cards
