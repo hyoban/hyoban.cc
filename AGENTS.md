@@ -24,8 +24,8 @@ even when starting from the repository root.
   maintained libraries and existing project components over new bespoke machinery.
 - Verify the result where it runs: inspect website changes in the browser and app
   changes on the phone, including navigation, light/dark mode and affected layouts
-  or motion. The phone holds the user's real data: ask before each test on it and say
-  what it will do (see the [Android guide](apps/android/AGENTS.md)). Fix problems introduced or exposed by the change; report any checks
+  or motion. The phone holds the user's real data: install the app's debug build there,
+  and leave testing on it to the user (see the [Android guide](apps/android/AGENTS.md)). Fix problems introduced or exposed by the change; report any checks
   blocked by the environment instead of claiming they passed.
 - Preview new or changed site media from a local server; upload it to R2 only once
   the user has approved it there, since objects are immutable. Never request its R2
