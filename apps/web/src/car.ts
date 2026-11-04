@@ -22,7 +22,8 @@ import {
 
 export interface CarSummary {
   days: Map<string, number>
-  span: { start: string; end: string }
+  /** None for a site without a car's records (data/zeekr). */
+  span: { start: string; end: string } | undefined
   /** Every charge, oldest first. */
   charges: VehicleCharge[]
   /** The ledger from the car's first payment on, oldest first. */

@@ -25,9 +25,7 @@ const { entrySchema, getEntryFile, momentToEntry } = await fromRepository(
   'packages/data-spec/src/entry.ts',
 )
 const { readMomentRecords } = await fromRepository('apps/web/src/data/store.ts')
-const config = JSON.parse(
-  await readFile(join(repositoryPath, 'apps/web/src/data/asset-config.json'), 'utf8'),
-)
+const config = JSON.parse(await readFile(join(repositoryPath, 'site.config.json'), 'utf8')).assets
 const inputs = await Promise.all(
   options.media.map(async (mediaPath) => {
     const path = resolve(mediaPath)

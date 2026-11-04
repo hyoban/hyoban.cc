@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
+import siteConfig from '../site.config.json' with { type: 'json' }
 
 // Lays a post out as 3:4 cards for Xiaohongshu (1242×1656): a cover of its title,
 // ogDescription, description and ogImage, then its text and images in order, flowed card by card, with
@@ -22,6 +23,7 @@ const { positionals, values } = parseArgs({
 })
 
 const root = fileURLToPath(new URL('../', import.meta.url))
+const siteHost = new URL(siteConfig.site.url).host
 const slug = positionals[0]
 
 if (!slug) {
@@ -44,7 +46,7 @@ await writeFile(
     date: new Date(data.pubDate),
     description: data.description ?? '',
     subtitle: (data.ogDescription ?? '').replace(/[。.]$/, ''),
-    link: `hyoban.cc/${data.link ?? slug}`,
+    link: `${siteHost}/${data.link ?? slug}`,
     title: data.title,
   }),
 )
@@ -191,6 +193,7 @@ const description = ${JSON.stringify(description)}
 const subtitle = ${JSON.stringify(subtitle)}
 const link = ${JSON.stringify(link)}
 const stamp = ${JSON.stringify(stamp)}
+const host = ${JSON.stringify(link.split('/')[0])}
 ${paginate.toString()}
 paginate()
 </script>
@@ -231,7 +234,8 @@ function paginate() {
   const build = async () => {
     const coverCard = element('section', 'card cover')
     coverCard.innerHTML =
-      '<div class="bar"><span>hyoban.cc</span><span></span></div><h1></h1><h2></h2><p></p>'
+      '<div class="bar"><span></span><span></span></div><h1></h1><h2></h2><p></p>'
+    coverCard.querySelector('.bar span:first-child').textContent = host
     coverCard.querySelector('.bar span:last-child').textContent = stamp
     coverCard.querySelector('h1').textContent = title
     coverCard.querySelector('h2').textContent = subtitle

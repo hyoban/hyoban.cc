@@ -65,6 +65,7 @@ even when starting from the repository root.
 | API                 | Cloudflare Worker with D1 and R2 in `apps/api`; see its [README](apps/api/README.md) for endpoints and local setup.                                       |
 | Android             | Kotlin, Compose and Gradle in `apps/android`; read its [AGENTS.md](apps/android/AGENTS.md) and [README](apps/android/README.md).                          |
 | Data and media      | `data/`, `scripts/`, [docs/data.md](docs/data.md) and [docs/assets.md](docs/assets.md).                                                                   |
+| Site identity       | `site.config.json`; [FORKING.md](FORKING.md) says what a fork changes.                                                                                    |
 | Deployment          | Cloudflare Workers Builds and GitHub Actions; [docs/deploy.md](docs/deploy.md).                                                                           |
 
 ## Data shared by Web and App
@@ -100,8 +101,14 @@ even when starting from the repository root.
 - Scripts that write records first export the latest data, then push the
   changed records with `vp run data:push`. `vp run data:import` restores an entire
   exported copy; it is not the normal editing workflow. See `docs/data.md` for side effects.
-- The site build reads only the API export, with `MOMENTS_API_TOKEN`; without a token, or
-  when the export fails, the build fails.
+- The site build reads only the API export, with `MOMENTS_API_TOKEN`; when the export fails,
+  or in CI without a token, the build fails. A local build without one reads the made-up
+  fixtures, so a fork runs before it has an API.
+- Who the site belongs to and where it lives (domain, author, links, anniversaries, image
+  origin, API URL, GitHub repository, Android application id) lives only in
+  `site.config.json`, read by the site, scripts, API and Android build; keep new personal
+  values there rather than in code, keep the site working without a car's records, and
+  keep `FORKING.md` current.
 - Keep API/schema changes compatible with the installed app. If a required field
   must be removed or renamed, update and install the app before pushing the API
   change: pushes to `main` deploy it.

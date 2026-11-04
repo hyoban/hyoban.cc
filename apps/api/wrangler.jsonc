@@ -14,7 +14,8 @@
       "migrations_dir": "migrations",
     },
   ],
-  // The bucket image.hyoban.cc serves; uploads wait under uploads/ until they publish.
+  // The bucket image.hyoban.cc serves (site.config.json's assets); uploads wait under
+  // uploads/ until they publish.
   "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "blog-images" }],
   // Where a new place's province, city and district are looked up,
   // and the Telegram channel the Moments are posted to.

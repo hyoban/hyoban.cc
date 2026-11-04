@@ -1,3 +1,4 @@
+import { SITE_HOST } from './site.ts'
 import {
   placesSchema,
   routeSchema,
@@ -406,7 +407,7 @@ export function createRouteFetcher(fetcher: typeof fetch = fetch): RouteFetcher 
 }
 
 /** Both public servers ask to be told who is calling. */
-const USER_AGENT = 'hyoban.cc trip routes'
+const USER_AGENT = `${SITE_HOST} trip routes`
 
 /**
  * Valhalla's answers for a leg it will never route: no road near a place (171), longer

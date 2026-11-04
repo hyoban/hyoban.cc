@@ -1,5 +1,7 @@
-import assetConfig from './data/asset-config.json' with { type: 'json' }
+import siteConfig from '../../../site.config.json' with { type: 'json' }
 import postImages from './data/post-images.json' with { type: 'json' }
+
+const assetConfig = siteConfig.assets
 
 const POST_ASSET_PREFIX = `${assetConfig.origin}/posts/`
 // Articles sit in a 40rem column inside the body's 1rem side padding.

@@ -506,7 +506,9 @@ which runs the unit tests, builds the release at version 1.2.3 (version code 102
 part kept under 100) and puts `here-1.2.3.apk` in a GitHub release of the same name, its
 notes the commits since the last one. Other builds take their version from the newest such
 tag, so one built here installs over the release on the phone. The app checks for these
-releases itself (Updates).
+releases itself (Updates), in the repository `site.config.json`'s `github` names; its
+`android.applicationId` there is the app's id, while the code keeps the package
+`cc.hyoban.moments`.
 
 Every build is signed with the release key when there is one, debug builds too, so they install
 over each other and keep the app's data; without it they take the machine's debug key. Locally

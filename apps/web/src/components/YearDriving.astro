@@ -33,12 +33,14 @@ interface Props {
 
 const { year } = Astro.props
 const car = await getCarSummary()
+// Shown only where the car drove (Review.astro), so its records have a span.
+const span = car.span!
 const activeDates = new Set(getActiveDateKeys(await getMoments()))
 const inYear = (date: string) => year === undefined || date.startsWith(`${year}-`)
-const firstYear = Number(car.span.start.slice(0, 4))
+const firstYear = Number(span.start.slice(0, 4))
 const heatYears =
   year === undefined
-    ? Array.from({ length: Number(car.span.end.slice(0, 4)) - firstYear + 1 }, (_, index) => firstYear + index)
+    ? Array.from({ length: Number(span.end.slice(0, 4)) - firstYear + 1 }, (_, index) => firstYear + index)
     : [year]
 const days = [...car.days].filter(([date]) => inYear(date))
 const distance = days.reduce((total, [, meters]) => total + meters, 0)
@@ -83,7 +85,7 @@ const bands = [
 
 // Owning it so far, on a life's page only: everything paid up to the latest capture, less
 // what had come back by then, counted from the day it was handed over.
-const ownedUntil = car.span.end
+const ownedUntil = span.end
 const owned =
   year === undefined && DELIVERED_ON <= ownedUntil
     ? car.expenses.filter((expense) => expense.at.slice(0, 10) <= ownedUntil)
@@ -137,7 +139,7 @@ const formatDay = (date: string) => formatCarDate(date, year === undefined)
 // tile a day.
 const heatmaps = heatYears.map((at) => {
   const cells = new Map(
-    getYearWeeks(at, car.days, car.span)
+    getYearWeeks(at, car.days, span)
       .flat()
       .filter((cell) => cell !== null)
       .map((cell) => [cell.date, cell]),

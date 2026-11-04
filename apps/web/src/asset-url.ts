@@ -1,5 +1,5 @@
 import type { PublishedImage } from '@hyoban/data-spec'
-import assetConfig from './data/asset-config.json' with { type: 'json' }
+import { assets as assetConfig } from './site-config.ts'
 
 export function getAssetUrl(key: string) {
   const encodedKey = key

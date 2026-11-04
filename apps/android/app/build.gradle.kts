@@ -6,6 +6,14 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// Whose app this is, from the repository's site.config.json, which a fork changes to make the
+// app its own: its application id, and the GitHub repository whose releases it updates from.
+// The code keeps its package, cc.hyoban.moments, whatever the id.
+@Suppress("UNCHECKED_CAST")
+val siteConfig = groovy.json.JsonSlurper().parse(rootProject.file("../../site.config.json")) as Map<String, Any?>
+val appId = (siteConfig["android"] as Map<String, Any?>)["applicationId"] as String
+val githubRepo = siteConfig["github"] as String
+
 val localProperties: Properties? = rootProject.file("local.properties").takeIf { it.exists() }
     ?.let { file -> Properties().apply { file.inputStream().use(::load) } }
 
@@ -34,7 +42,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "cc.hyoban.moments"
+        applicationId = appId
         minSdk = 31
         targetSdk = 37
         versionCode = appVersionCode
@@ -48,6 +56,10 @@ android {
         // Where places are searched for by name and found around a pin: Photon, over the
         // same OpenStreetMap data the map draws.
         buildConfigField("String", "PLACE_SEARCH_URL", "\"https://photon.komoot.io\"")
+        // The repository whose GitHub releases the app updates from (site.config.json).
+        buildConfigField("String", "GITHUB_REPO", "\"$githubRepo\"")
+        // The accessibility service watches the app itself, by its id (res/xml/share_accessibility.xml).
+        resValue("string", "application_id", appId)
         // Phones are all arm64; the map's native library for the other ABIs would triple the
         // APK, and a debug build's install on the phone with it.
         ndk { abiFilters += "arm64-v8a" }
@@ -108,6 +120,7 @@ android {
     buildFeatures {
         aidl = true
         buildConfig = true
+        resValues = true
         compose = true
     }
 }

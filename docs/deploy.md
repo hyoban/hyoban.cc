@@ -21,11 +21,12 @@ serving `./dist`), deployed by **Workers Builds**:
 
 It builds on every push to `main`, and again whenever the API takes a write the site
 shows: the API calls the build's **deploy hook**, kept in the API's `DEPLOY_HOOK_URL`
-secret. Without a token, or with one that can't fetch the export, the build fails: the
-repository keeps no copy of the records.
+secret. In CI, without a token, or with one that can't fetch the export, the build fails:
+the repository keeps no copy of the records. A local build without a token shows the
+tests' made-up records instead.
 
 Each build also reads `/media/music/` from the NetEase Cloud Music playlist named
-in `apps/web/src/music.ts`, from its public API with no login, and keeps the last copy
+in `site.config.json` (`music`), from its public API with no login, and keeps the last copy
 in the build cache under `apps/web/node_modules/.astro`; when NetEase can't be reached
 it shows that copy, and with none the build fails.
 
@@ -100,8 +101,8 @@ npx wrangler d1 execute hyoban-cc --remote --command "UPDATE meta SET value = CA
 The API comes first: the site's build reads it, and the API needs the site's deploy
 hook, which exists only once the site's build does.
 
-1. In the account `apps/web/src/data/asset-config.json` names, create the R2 bucket
-   `blog-images` and connect `image.hyoban.cc` to it.
+1. Fill in `site.config.json` ([FORKING.md](../FORKING.md)). In the account its `assets`
+   name, create the R2 bucket `blog-images` and connect `image.hyoban.cc` to it.
 2. `wrangler d1 create hyoban-cc --location apac`, and put the new id in
    `apps/api/wrangler.jsonc`.
 3. Create the Telegram bot and make it an admin of the channel.

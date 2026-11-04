@@ -9,8 +9,7 @@ import sharp from 'sharp'
 import { getContentType, uploadR2Object } from './lib/r2-assets.mjs'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
-const configPath = join(root, 'apps/web/src/data/asset-config.json')
-const config = JSON.parse(await readFile(configPath, 'utf8'))
+const config = JSON.parse(await readFile(join(root, 'site.config.json'), 'utf8')).assets
 const shouldUpload = process.argv.includes('--upload')
 const shouldRemoveLocal = process.argv.includes('--remove-local')
 

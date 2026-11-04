@@ -2,6 +2,7 @@ import { isMomentShown, type MomentRecord } from '@hyoban/data-spec'
 import { entryToMoment, isMomentEntry } from '@hyoban/data-spec/entry'
 import type { Bucket } from './bucket.ts'
 import { readAll, revisionQuery, toRevision, type Database } from './database.ts'
+import { IMAGE_ORIGIN, SITE_URL } from './site.ts'
 import { toEntry } from './writes.ts'
 
 // The Moments the site shows, posted to the Telegram channel as they publish: the words
@@ -12,8 +13,6 @@ import { toEntry } from './writes.ts'
 // after a write the site shows, after `POST /v2/build` and on the Worker's schedule, which
 // picks up whatever an earlier run left.
 
-const SITE_URL = 'https://hyoban.cc'
-const IMAGE_ORIGIN = 'https://image.hyoban.cc'
 /** Telegram's limits: a caption, a message's text, an album and a file a bot sends. */
 const CAPTION_LIMIT = 1024
 const TEXT_LIMIT = 4096

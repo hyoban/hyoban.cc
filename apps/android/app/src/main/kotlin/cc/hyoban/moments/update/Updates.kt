@@ -202,8 +202,8 @@ class Updates(private val context: Context) {
     }
 
     companion object {
-        private const val RELEASES = "https://github.com/hyoban/hyoban.cc/releases.atom"
-        private const val DOWNLOADS = "https://github.com/hyoban/hyoban.cc/releases/download"
+        private const val RELEASES = "https://github.com/${BuildConfig.GITHUB_REPO}/releases.atom"
+        private const val DOWNLOADS = "https://github.com/${BuildConfig.GITHUB_REPO}/releases/download"
         private const val TAG = "android-v"
         private const val AUTO = "auto"
         private const val CHECKED_AT = "checked_at"

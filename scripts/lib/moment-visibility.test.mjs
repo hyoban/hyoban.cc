@@ -14,9 +14,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url))
 const site = join(root, 'apps/web')
 // The build reads the made-up data/ rather than the API's export.
 const fixtureRoot = join(root, 'packages/data-spec/test/fixtures/data')
-const assetConfig = JSON.parse(
-  await readFile(join(root, 'apps/web/src/data/asset-config.json'), 'utf8'),
-)
+const assetConfig = JSON.parse(await readFile(join(root, 'site.config.json'), 'utf8')).assets
 
 test(
   'builds optimized public calendar pages without hidden moments',

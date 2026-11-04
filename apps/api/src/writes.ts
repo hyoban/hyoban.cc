@@ -1,3 +1,4 @@
+import { SITE_HOST } from './site.ts'
 import {
   getMediaKey,
   placeSchema,
@@ -26,7 +27,7 @@ import { BUMP_REVISION, placeRow, upsertSql, type Row, type Table } from './rows
 // publishes, never taken from a request, and never changed afterwards. Nothing in them
 // names the Moment, which is its uid, so a published one can move to another day.
 
-export const GENERATOR = 'hyoban.cc api'
+export const GENERATOR = `${SITE_HOST} api`
 const PLACE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 export interface WriteContext {

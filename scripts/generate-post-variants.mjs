@@ -15,7 +15,7 @@ const VARIANT_WIDTHS = [640, 960, 1280]
 const root = fileURLToPath(new URL('../', import.meta.url))
 const postsRoot = join(root, 'apps/web/src/content/posts')
 const manifestPath = join(root, 'apps/web/src/data/post-images.json')
-const config = JSON.parse(await readFile(join(root, 'apps/web/src/data/asset-config.json'), 'utf8'))
+const config = JSON.parse(await readFile(join(root, 'site.config.json'), 'utf8')).assets
 const assetPattern = new RegExp(`${escapeRegExp(config.origin)}/(posts/[^)"'\\s]+)`, 'g')
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8').catch(() => '{}'))
 const temporaryPath = await mkdtemp(join(tmpdir(), 'hyoban-post-variants-'))

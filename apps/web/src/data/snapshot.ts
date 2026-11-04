@@ -14,13 +14,15 @@ import {
   type Entry,
   type PublicTrack,
 } from '@hyoban/data-spec/entry'
+import siteConfig from '../../../../site.config.json' with { type: 'json' }
 import { listJsonFiles } from './store.ts'
 
 // The API's export, `GET /v2/export` (entries, collections and public tracks), and how it
 // lands on disk in data/'s layout: for the site's build (api-data.ts) and for the copy in
 // data/ (`pnpm data:export`).
 
-export const DEFAULT_API_URL = 'https://hyoban-cc-api.hyoban.workers.dev'
+/** The API the site and scripts read, unless MOMENTS_API_URL names another. */
+export const DEFAULT_API_URL = siteConfig.api.url
 
 export interface Snapshot {
   revision: number

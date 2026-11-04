@@ -1,3 +1,5 @@
+import { site } from './site-config.ts'
+
 type AnnualDate =
   | {
       calendar: 'gregorian'
@@ -67,34 +69,29 @@ export type CalendarAnniversary = Readonly<{
   label: string
 }>
 
-const anniversaryDefinitions: readonly AnniversaryDefinition[] = [
-  defineBirthday({
-    birthYear: 1999,
-    date: lunarDate(8, 16),
-    icon: 'i-lucide-cake-slice',
-    id: 'birthday',
-  }),
-  defineYearlyAnniversary({
-    date: gregorianDate(8, 17),
-    icon: 'i-lucide-car-front',
-    id: 'car',
-    initialLabel: '提车日',
-    name: '提车',
-    startYear: 2025,
-  }),
-  defineAnnualEvent({
-    date: gregorianDate(12, 16),
-    icon: 'i-lucide-rotate-ccw',
-    id: 'driver-license-points-reset',
-    label: '驾驶证清分',
-  }),
-  defineDatedEvent({
-    dateKey: '2028-12-16',
-    icon: 'i-lucide-calendar-clock',
-    id: 'driver-license-expiry',
-    label: '驾驶证有效期截止',
-  }),
-]
+/** The owner's anniversaries, as site.config.json lists them. */
+export type AnniversaryConfig =
+  | ({ kind: 'birthday' } & BirthdayOptions)
+  | ({ kind: 'yearly' } & YearlyAnniversaryOptions)
+  | ({ kind: 'annual' } & AnnualEventOptions)
+  | ({ kind: 'dated' } & DatedEventOptions)
+
+const siteAnniversaries = defineAnniversaries(site.anniversaries as AnniversaryConfig[])
+
+function defineAnniversaries(anniversaries: readonly AnniversaryConfig[]) {
+  return anniversaries.map((anniversary): AnniversaryDefinition => {
+    switch (anniversary.kind) {
+      case 'birthday':
+        return defineBirthday(anniversary)
+      case 'yearly':
+        return defineYearlyAnniversary(anniversary)
+      case 'annual':
+        return defineAnnualEvent(anniversary)
+      case 'dated':
+        return defineDatedEvent(anniversary)
+    }
+  })
+}
 
 const chineseCalendarFormatter = new Intl.DateTimeFormat('zh-CN-u-ca-chinese', {
   day: 'numeric',
@@ -117,10 +114,15 @@ const lunarMonthNames = [
   '十二月',
 ] as const
 
-export function getCalendarAnniversaries(dateKey: string): CalendarAnniversary[] {
+/** The anniversaries on `dateKey`: the site's, or the `anniversaries` given, as the tests do. */
+export function getCalendarAnniversaries(
+  dateKey: string,
+  anniversaries?: readonly AnniversaryConfig[],
+): CalendarAnniversary[] {
   const year = Number.parseInt(dateKey.slice(0, 4), 10)
+  const definitions = anniversaries ? defineAnniversaries(anniversaries) : siteAnniversaries
 
-  return anniversaryDefinitions.flatMap((definition) => {
+  return definitions.flatMap((definition) => {
     if (
       year < definition.startYear ||
       (definition.endYear !== undefined && year > definition.endYear) ||
@@ -205,10 +207,6 @@ function defineDatedEvent(options: DatedEventOptions): AnniversaryDefinition {
 
 function gregorianDate(month: number, day: number): AnnualDate {
   return { calendar: 'gregorian', day, month }
-}
-
-function lunarDate(month: number, day: number, leapMonth = false): AnnualDate {
-  return { calendar: 'lunar', day, leapMonth, month }
 }
 
 function matchesAnnualDate(dateKey: string, annualDate: AnnualDate) {
