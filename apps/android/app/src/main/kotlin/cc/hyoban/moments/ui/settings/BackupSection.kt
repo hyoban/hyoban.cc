@@ -135,7 +135,7 @@ fun BackupSection(backup: Backup, onEdit: () -> Unit, onRestore: () -> Unit) {
 private val TIME = DateTimeFormatter.ofPattern("HH:mm")
 
 /** `今天 03:12`, or the day and time. */
-private fun timeText(context: Context, at: LocalDateTime): String {
+internal fun timeText(context: Context, at: LocalDateTime): String {
     val day = if (at.toLocalDate() == LocalDate.now()) context.getString(R.string.label_today) else formatDate(at.toLocalDate().toString())
     return "$day ${at.format(TIME)}"
 }

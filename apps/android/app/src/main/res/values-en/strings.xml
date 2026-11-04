@@ -1292,4 +1292,30 @@
     <string name="footprints_needs_location_note">Only while using the app: stops in the background</string>
     <string name="place_no_location">Location is off</string>
     <string name="place_no_location_note">Drag the map to choose, or allow it in system settings</string>
+    <!-- 更新 on 同步与来源, its notification and the sheet before 安装未知应用. -->
+    <string name="section_update">Updates</string>
+    <string name="update_auto">Check daily</string>
+    <string name="update_auto_note">A notification when there is a new version</string>
+    <string name="action_check_update">Check for updates</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_never">%1$s, not checked yet</string>
+    <string name="update_checked">Checked %1$s</string>
+    <string name="update_current">%1$s is the latest · %2$s</string>
+    <string name="update_check_failed">Check failed: %1$s</string>
+    <string name="action_install_update">Install %1$s</string>
+    <string name="update_source">Downloaded from GitHub</string>
+    <string name="update_downloading">Downloading %1$d%%</string>
+    <string name="update_failure_unreachable">Can\'t reach GitHub</string>
+    <string name="update_failure_server">GitHub didn\'t answer properly</string>
+    <string name="update_failure_signature">Not signed like the app on this phone, so not installed</string>
+    <string name="update_failure_install">Not installed</string>
+    <string name="settings_update_note">Once a day the app asks GitHub whether there is a new version, and nothing else. A new version is installed only when it is signed like the one on this phone, and the system asks first.</string>
+    <string name="update_channel">App updates</string>
+    <string name="update_notification_title">Here %1$s is ready to install</string>
+    <string name="update_notification_text">Tap to install</string>
+    <string name="permission_install_title">Allow installing updates</string>
+    <string name="permission_install_body">New versions come from GitHub. Allow Here to install apps in the system\'s settings first; the system asks again when installing.</string>
+    <string name="permission_install_source">Only from this app\'s GitHub releases</string>
+    <string name="permission_install_signature">Installed only when signed like the app on this phone</string>
+    <string name="permission_install_path">Settings › Install unknown apps › Here › Allow</string>
 </resources>

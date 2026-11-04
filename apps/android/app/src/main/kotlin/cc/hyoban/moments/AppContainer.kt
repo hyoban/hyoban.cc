@@ -77,6 +77,8 @@ class AppContainer(context: Context) {
     val ledger = cc.hyoban.moments.ledger.LedgerStore(context)
     /** The databases backed up to the owner's WebDAV directory, when one is set. */
     val backup = cc.hyoban.moments.backup.Backup(context)
+    /** The app's own updates, from its GitHub releases. */
+    val updates = cc.hyoban.moments.update.Updates(context)
 
     // Each its own: `copy.db` the copy of what the API serves, row for row as D1 keeps it,
     // out of the backup since a sync brings it again; `local/` the Moments written on this
@@ -176,6 +178,7 @@ class AppContainer(context: Context) {
             }
         }
         cc.hyoban.moments.backup.BackupWorker.schedule(appContext, backup, replace = false)
+        cc.hyoban.moments.update.UpdateWorker.schedule(appContext, updates.auto)
         // A bill or a span going public, or private again, is a change to publish too.
         scope.launch {
             kotlinx.coroutines.flow.combine(ledger.ledger, footprints.revision) { _, _ -> }.collect {

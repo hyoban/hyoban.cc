@@ -210,6 +210,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Trip discovery uses general time and location evidence, never exceptions for a particular
   export, city or date. Cover its rules with made-up records; private exports are local
   regression checks, not fixtures.
+- Beyond the services named here, the app's one request of its own is for updates: the feed of this
+  repository's GitHub releases (not GitHub's API, whose limit without a token a shared proxy uses up) and the APK it installs (`update/`), with nothing of the phone's.
 - No keys in the build: OpenFreeMap tiles drawn by MapLibre, Photon for place names, Valhalla
   and OpenRailRouting for the routes of trips the API hasn't routed, the trip's stops alone.
   A service that needs a key takes the owner's own, typed into 同步与来源 and kept beside the

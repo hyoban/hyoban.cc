@@ -232,6 +232,19 @@ JSON and `local/` (its `media/` left in place) aside into `noBackupFilesDir/rest
 kept until the next restore, and puts the backup's files where they were; cut off halfway, it
 carries on the next time. Settings, tokens and the WebDAV sign-in stay as they are.
 
+## Updates
+
+更新, under 我 → 同步与来源, keeps the app current from this repository's GitHub releases.
+每天检查更新, on until turned off, reads the feed of GitHub's releases (`releases.atom`, GitHub's page rather than its API, whose
+limit without a token is soon used up behind a shared proxy's address) once a day as WorkManager's
+periodic work on a network, and nothing of the phone's goes with it; the first time a release
+is newer than the app, a notification says so and opens the page. 检查更新 asks at once and says
+the version and when it last looked. A newer release adds 安装 x.y.z, which downloads its APK,
+`here-x.y.z.apk` as the release workflow names it, into the cache, checks that it is this app, the version it says and newer, signed with the
+same key as the app installed, and hands it to the system's installer, which asks before it
+installs. Until 安装未知应用 is allowed for the app, a sheet says why first and goes to the
+system's settings.
+
 ## Importing
 
 导入, under 我 (`moments://import`), is where every file from another app comes in, grouped by
@@ -532,7 +545,7 @@ A release is a tag: pushing `android-v1.2.3` runs `.github/workflows/android-rel
 which runs the unit tests, builds the release at version 1.2.3 (version code 10203, each part
 kept under 100) and puts `here-1.2.3.apk` in a GitHub release of the same name, its notes
 the commits since the last one. Other builds take their version from the newest such tag, so
-one built here installs over the release on the phone.
+one built here installs over the release on the phone. The app checks for these releases itself (Updates).
 
 Every build is signed with the release key when there is one, debug builds too, so they install
 over each other and keep the app's data; without it they take the machine's debug key. Locally

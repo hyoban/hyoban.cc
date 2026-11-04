@@ -1,7 +1,8 @@
 name: Android release
 
 # Pushing a tag `android-v1.2.3` builds the app at that version, signed with the release key,
-# and puts the APK in a GitHub release of the same name.
+# and puts the APK in a GitHub release of the same name. The app finds its updates by that tag and
+# the APK's name, `here-1.2.3.apk`, so keep both.
 on:
   push:
     tags:

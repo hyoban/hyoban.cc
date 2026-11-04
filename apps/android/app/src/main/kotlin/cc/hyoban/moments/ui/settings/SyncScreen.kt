@@ -186,6 +186,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                     ) { Text(stringResource(R.string.setting_tencent_key)) }
                 }
                 Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note), extra = listOfNotNull(amapKey, tencentKey, chinaPlaces.takeIf { settings.amapKey.isSet && settings.tencentMapKey.isSet })) { editing = it }
+                UpdateSection(container.updates, container.scope)
             }
         }
     }
