@@ -526,6 +526,22 @@ adb -s emulator-5554 install -r app/build/outputs/apk/androidTest/debug/app-debu
 adb -s emulator-5554 shell am instrument -w -e class cc.hyoban.moments.footprints.RecordingRecoveryTest cc.hyoban.moments.test/androidx.test.runner.AndroidJUnitRunner
 ```
 
+## Releasing
+
+A release is a tag: pushing `android-v1.2.3` runs `.github/workflows/android-release.yml`,
+which runs the unit tests, builds the release at version 1.2.3 (version code 10203, each part
+kept under 100) and puts `here-1.2.3.apk` in a GitHub release of the same name, its notes
+the commits since the last one. Other builds take their version from the newest such tag, so
+one built here installs over the release on the phone.
+
+Every build is signed with the release key when there is one, debug builds too, so they install
+over each other and keep the app's data; without it they take the machine's debug key. Locally
+the key is in `local.properties` (`release.storeFile`, `release.storePassword`,
+`release.keyAlias`, `release.keyPassword`); in Actions it is the repository's secrets
+`ANDROID_RELEASE_KEYSTORE` (the keystore in base64), `ANDROID_RELEASE_STORE_PASSWORD`,
+`ANDROID_RELEASE_KEY_ALIAS` and `ANDROID_RELEASE_KEY_PASSWORD`. The keystore itself stays out of
+the repository, kept somewhere safe: a lost key can't sign an update to the app installed with it.
+
 ## On the phone, from adb
 
 Every page has a link, `moments://moments`, `map`, `trips`, `settings` (我), `sync`, `import`, `items`,

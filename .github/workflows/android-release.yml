@@ -1,0 +1,51 @@
+name: Android release
+
+# Pushing a tag `android-v1.2.3` builds the app at that version, signed with the release key,
+# and puts the APK in a GitHub release of the same name.
+on:
+  push:
+    tags:
+      - 'android-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/android
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Restore the release key
+        env:
+          ANDROID_RELEASE_KEYSTORE: ${{ secrets.ANDROID_RELEASE_KEYSTORE }}
+        run: |
+          if [ -z "$ANDROID_RELEASE_KEYSTORE" ]; then
+            echo "::error::ANDROID_RELEASE_KEYSTORE is not set"
+            exit 1
+          fi
+          echo "$ANDROID_RELEASE_KEYSTORE" | base64 --decode > "$RUNNER_TEMP/release.jks"
+      - name: Build the release
+        env:
+          ANDROID_RELEASE_STORE_FILE: ${{ runner.temp }}/release.jks
+          ANDROID_RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_STORE_PASSWORD }}
+          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+        run: |
+          version="${GITHUB_REF_NAME#android-v}"
+          ./gradlew :app:testDebugUnitTest :app:assembleRelease -PappVersion="$version" --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/here-$version.apk"
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#android-v}"
+          gh release create "$GITHUB_REF_NAME" "$RUNNER_TEMP/here-$version.apk" \
+            --title "Here $version" --generate-notes

@@ -9,6 +9,26 @@ plugins {
 val localProperties: Properties? = rootProject.file("local.properties").takeIf { it.exists() }
     ?.let { file -> Properties().apply { file.inputStream().use(::load) } }
 
+// The release key's settings: `release.storeFile` and the rest in local.properties, else
+// `ANDROID_RELEASE_STORE_FILE` and the rest in the environment, as the release workflow sets them.
+fun releaseSetting(name: String): String? =
+    localProperties?.getProperty("release.$name")
+        ?: providers.environmentVariable(
+            "ANDROID_RELEASE_" + name.replace(Regex("([A-Z])"), "_\$1").uppercase(),
+        ).orNull?.takeIf { it.isNotBlank() }
+
+// The version is the release's tag, `android-v1.2.3`: the release workflow passes it as
+// `-PappVersion`, and other builds take the newest such tag, so a build from here installs over
+// the release on the phone. Each part stays under 100 to keep the code growing with the name.
+val appVersion: String = providers.gradleProperty("appVersion").orNull
+    ?: providers.exec {
+        commandLine("git", "describe", "--tags", "--abbrev=0", "--match", "android-v*")
+        isIgnoreExitValue = true
+    }.standardOutput.asText.get().trim().removePrefix("android-v").ifEmpty { "0.1.0" }
+val appVersionCode: Int = appVersion.split(".").map(String::toInt)
+    .also { parts -> require(parts.size == 3 && parts.all { it in 0..99 }) { "appVersion must be x.y.z, each under 100: $appVersion" } }
+    .let { (major, minor, patch) -> major * 10000 + minor * 100 + patch }
+
 android {
     namespace = "cc.hyoban.moments"
     compileSdk = 37
@@ -17,8 +37,8 @@ android {
         applicationId = "cc.hyoban.moments"
         minSdk = 31
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = appVersionCode
+        versionName = appVersion
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // The map's styles in light and dark, what the app draws until its settings say otherwise.
         // There is no API or media origin of the build's own: the app works on the phone alone
@@ -33,25 +53,28 @@ android {
         ndk { abiFilters += "arm64-v8a" }
     }
 
-    // A release keystore from local.properties (`release.storeFile`, `release.storePassword`,
-    // `release.keyAlias`, `release.keyPassword`) when there is one; otherwise release builds
-    // are signed with the debug key, so they install over a debug build and keep its data.
-    val releaseStore = localProperties?.getProperty("release.storeFile")?.let(rootProject::file)
+    // With the release key, debug and release builds are both signed with it, so a debug build
+    // installs over the release from GitHub and keeps its data; without it, both take the debug key.
+    val releaseStore = releaseSetting("storeFile")?.let(rootProject::file)
 
     signingConfigs {
         if (releaseStore != null) {
             create("release") {
                 storeFile = releaseStore
-                storePassword = localProperties?.getProperty("release.storePassword")
-                keyAlias = localProperties?.getProperty("release.keyAlias")
-                keyPassword = localProperties?.getProperty("release.keyPassword")
+                storePassword = releaseSetting("storePassword")
+                keyAlias = releaseSetting("keyAlias")
+                keyPassword = releaseSetting("keyPassword")
             }
         }
     }
+    val signing = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
 
     buildTypes {
+        debug {
+            signingConfig = signing
+        }
         release {
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            signingConfig = signing
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

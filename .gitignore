@@ -65,6 +65,9 @@ apps/android/.gradle/
 apps/android/.kotlin/
 apps/android/**/build/
 apps/android/local.properties
+# The release key stays out of the repository.
+*.jks
+*.keystore
 
 # Python capture and validation scripts
 __pycache__/

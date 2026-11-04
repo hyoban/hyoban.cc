@@ -25,9 +25,12 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   phone compiles the app ahead of time on install (`dumpsys package` says `speed-profile`), where
   the APK alone runs interpreted until the phone next compiles in the background. Judge motion
   and dropped frames on it then, as the debug build runs slower. Both are signed
-  with the debug key unless `local.properties` has a release key, so either installs over
-  the other and the app's data stays. The emulator only ever gets the debug build, so
-  `run-as` can read its files.
+  with the same key, the release key in `local.properties` or else the debug key, so either
+  installs over the other and the app's data stays. The emulator only ever gets the debug
+  build, so `run-as` can read its files.
+- Releases go to GitHub by pushing an `android-v<x.y.z>` tag (README, Releasing), and only
+  when the user asks for one. The release key and its passwords are the user's: never create,
+  read, print or commit them, nor set the repository's secrets.
 - Testing never costs the app's data: the ledger and footprints live in `noBackupFilesDir`
   and have no other copy. Ask before anything that would lose or reset it, and say what
   would go: `adb uninstall`, `pm clear`, a reinstall after `INSTALL_FAILED_UPDATE_INCOMPATIBLE`
