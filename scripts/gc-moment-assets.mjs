@@ -8,10 +8,13 @@ import { promisify } from 'node:util'
 import pLimit from 'p-limit'
 
 import { listR2Objects } from './lib/cloudflare-r2-api.mjs'
-import { getReferencedR2Objects, readMomentRecords } from './lib/moment-assets.mjs'
+import { readReferencedR2Keys } from './lib/r2-references.mjs'
 
 const execFile = promisify(execFileCallback)
 const root = fileURLToPath(new URL('../', import.meta.url))
+const dataRoot = join(root, 'data')
+// What D1 holds may have moved on since data/ was exported: an older copy is exported again first.
+const maxExportAgeHours = 24
 const config = JSON.parse(await readFile(join(root, 'apps/web/src/data/asset-config.json'), 'utf8'))
 const options = parseArguments(process.argv.slice(2))
 
@@ -24,8 +27,7 @@ if (options.mode === 'dry-run') {
 async function createManifest() {
   const generatedAt = new Date()
   const cutoff = new Date(generatedAt.getTime() - options.graceDays * 24 * 60 * 60 * 1000)
-  const records = await readMomentRecords()
-  const referenced = new Set(getReferencedR2Objects(records).map((object) => object.key))
+  const referenced = await readReferences()
   const inventory = await listR2Objects({
     accountId: config.accountId,
     bucket: config.bucket,
@@ -93,8 +95,7 @@ async function applyManifest() {
     throw new Error('R2 GC manifest digest mismatch.')
   }
 
-  const records = await readMomentRecords()
-  const referenced = new Set(getReferencedR2Objects(records).map((object) => object.key))
+  const referenced = await readReferences()
   const inventory = await listR2Objects({
     accountId: config.accountId,
     bucket: config.bucket,
@@ -129,14 +130,7 @@ async function applyManifest() {
   let completed = 0
 
   await pLimit(8).map(candidates, async (candidate) => {
-    await execFile(
-      wrangler,
-      ['r2', 'object', 'delete', `${config.bucket}/${candidate.key}`, '--remote', '--force'],
-      {
-        cwd: root,
-        maxBuffer: 10 * 1024 * 1024,
-      },
-    )
+    await deleteWithRetries(wrangler, candidate.key)
 
     completed += 1
 
@@ -146,6 +140,56 @@ async function applyManifest() {
   })
 
   console.log(`R2 GC applied: ${candidates.length} object(s) deleted from ${config.bucket}.`)
+}
+
+// Every key data/ names, from an export fresh enough to stand for D1.
+async function readReferences() {
+  const manifest = JSON.parse(await readFile(join(dataRoot, 'manifest.json'), 'utf8'))
+  const exportedAt = new Date(manifest.updatedAt)
+  const ageHours = (Date.now() - exportedAt.getTime()) / (60 * 60 * 1000)
+
+  if (!(ageHours <= maxExportAgeHours)) {
+    throw new Error(
+      `data/ was exported at ${manifest.updatedAt}, over ${maxExportAgeHours} hours ago; ` +
+        'run `vp run data:export` first.',
+    )
+  }
+
+  const referenced = await readReferencedR2Keys(dataRoot, 'moments/')
+
+  if (referenced.size === 0) {
+    throw new Error('data/ names no R2 objects under moments/; refusing to collect.')
+  }
+
+  return referenced
+}
+
+// A delete that fails midway (wrangler's "fetch failed") is tried again; deleting an object
+// that is already gone succeeds, so a repeat is harmless.
+async function deleteWithRetries(wrangler, key) {
+  let lastError
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    try {
+      await execFile(
+        wrangler,
+        ['r2', 'object', 'delete', `${config.bucket}/${key}`, '--remote', '--force'],
+        {
+          cwd: root,
+          maxBuffer: 10 * 1024 * 1024,
+        },
+      )
+      return
+    } catch (error) {
+      lastError = error
+
+      if (attempt < 5) {
+        await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** (attempt - 1)))
+      }
+    }
+  }
+
+  throw new Error(`Failed to delete ${key} after 5 attempts.`, { cause: lastError })
 }
 
 function digestCandidates(candidates) {

@@ -63,8 +63,11 @@ vp run moments:gc               # an R2 cleanup manifest under .artifacts, delet
 ```
 
 These read the Moments from `data/`, so run `vp run data:export` first. `moments:audit`
-warns about visible media with empty alt text. `moments:gc` keeps a 30-day grace period; deletion is a separate step, which
-reloads the references and the inventory and refuses anything that changed since:
+warns about visible media with empty alt text. `moments:gc` counts as referenced every
+`moments/` key any file in `data/` names, private media and records without words included,
+refuses an export more than a day old, and keeps a 30-day grace period; deletion is a separate
+step, which reloads the references and the inventory, refuses anything that changed since and
+tries a failed delete up to five times:
 
 ```sh
 node scripts/gc-moment-assets.mjs --apply /absolute/path/to/manifest.json
