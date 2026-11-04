@@ -891,7 +891,7 @@
     <plurals name="charge_minutes">
         <item quantity="other">%d 分钟</item>
     </plurals>
-    <string name="me_ledger">账单与资产</string>
+    <string name="me_ledger">账本</string>
     <string name="section_visibility">公开状态</string>
     <string name="changes_private_note">私有的只留给自己，不会出现在网站上。</string>
     <string name="facet_km">公里</string>
@@ -1010,8 +1010,8 @@
     <string name="side_key_torch_on">手电筒已打开</string>
     <string name="side_key_torch_off">手电筒已关闭</string>
     <string name="side_key_torch_unavailable">手电筒暂不可用，请检查相机是否正在使用</string>
-    <string name="me_general">通用</string>
-    <string name="me_on_phone">只在这台手机上</string>
+    <string name="me_settings">设置</string>
+    <string name="me_footprints_recording">记录中</string>
     <string name="me_footer">%1$s %2$s 图标里的猫是馒头</string>
     <string name="sync_title">同步与来源</string>
     <string name="section_site">网站</string>
@@ -1019,24 +1019,18 @@
     <string name="me_sync_token_set">令牌已设置</string>
     <string name="me_sync_token_unset">没有令牌，不能同步</string>
     <string name="me_sync_no_api">未连接 API</string>
-    <string name="me_auto_bill_on">自动记账已开</string>
     <string name="me_items_public">公开：%1$d 个账本 %2$d 段轨迹</string>
     <string name="side_key_needs">需要</string>
     <string name="side_key_service">分享与记账助手</string>
     <string name="side_key_service_on">无障碍服务已开启</string>
     <string name="side_key_service_off">无障碍服务未开启</string>
     <string name="side_key_shizuku">Shizuku</string>
-    <plurals name="me_ledger_books">
-        <item quantity="one">%d 个账本</item>
-        <item quantity="other">%d 个账本</item>
-    </plurals>
     <string name="footprint_settings_subtitle">轨迹只在这台手机上，离线也能记</string>
     <string name="me_things">东西</string>
     <string name="devices_title">设备</string>
     <string name="subscriptions_title">订阅</string>
     <string name="car_title">车</string>
-    <string name="me_devices_summary">在用 %1$d 件 每天 %2$s</string>
-    <string name="me_subscriptions_summary">每月 %1$s</string>
+    <string name="things_switch">切换</string>
     <string name="devices_in_use">在用</string>
     <string name="devices_sold">卖掉的</string>
     <string name="devices_daily">每天</string>
@@ -1116,7 +1110,6 @@
     <string name="thing_new">新加的</string>
     <string name="thing_deleted">会从网站删除</string>
     <string name="thing_changed">改过的</string>
-    <string name="me_car_summary">%1$d 月 %2$s</string>
     <string name="timeline_bought">买了 %s</string>
     <string name="timeline_renewed">续费 %s</string>
     <string name="section_backup">备份</string>

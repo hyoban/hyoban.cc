@@ -38,6 +38,7 @@ import cc.hyoban.moments.data.things.VehicleMonth
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
+import cc.hyoban.moments.ui.components.TitleMenu
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Icon
@@ -60,7 +61,7 @@ const val CAR_ID = "zeekr-007gt"
  * day.
  */
 @Composable
-fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Unit) {
+fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Unit, titleMenu: TitleMenu? = null) {
     val second by container.repository.second.collectAsStateWithLifecycle()
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val car = remember(entries) { Things.devices(entries.values).firstOrNull { it.id == CAR_ID } }
@@ -75,6 +76,7 @@ fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Un
         car?.name ?: stringResource(R.string.car_title),
         onBack,
         Modifier.background(AppColors.page),
+        titleMenu = titleMenu,
         subtitle = assisted?.let { stats ->
             listOfNotNull(
                 stats.daysOwned?.let { stringResource(R.string.car_days_owned, it.toInt()) },

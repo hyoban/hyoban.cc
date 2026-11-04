@@ -69,6 +69,9 @@ import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.settings.PageCaption
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.SwitchRow
+import cc.hyoban.moments.ui.components.TitleMenu
+import cc.hyoban.moments.ui.design.DropdownMenuItem
+import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
 import kotlinx.coroutines.launch
@@ -146,9 +149,54 @@ internal fun PageColumn(figures: (@Composable () -> Unit)? = null, content: @Com
     }
 }
 
+/** The three kinds of things on the one page, by the name a `moments://` link or a route gives each. */
+enum class ThingKind(val key: String, val title: Int) {
+    DEVICES("devices", R.string.devices_title),
+    SUBSCRIPTIONS("subscriptions", R.string.subscriptions_title),
+    CAR("car", R.string.car_title);
+
+    companion object {
+        fun of(key: String?) = entries.firstOrNull { it.key == key }
+    }
+}
+
+/** Which kind was looked at last, where 东西 opens again from 我 until the app is gone. */
+private var lastKind: ThingKind? = null
+
+/**
+ * 东西: the devices, the subscriptions and, with an API that imported it, the car, one page that
+ * switches between the three from its title (29); [kind] is the one to open on, else the one
+ * looked at last, and [open] the device or subscription whose sheet opens over the page.
+ */
+@Composable
+fun ThingsScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Unit, kind: ThingKind? = null, open: String? = null) {
+    val connected = LocalSettings.current.connected
+    val kinds = ThingKind.entries.filter { it != ThingKind.CAR || connected }
+    var shown by rememberSaveable { mutableStateOf((kind ?: lastKind)?.takeIf { it in kinds } ?: ThingKind.DEVICES) }
+    lastKind = shown
+    val menu = if (kinds.size < 2) null else TitleMenu(stringResource(R.string.things_switch)) { close ->
+        kinds.forEach { each ->
+            DropdownMenuItem(
+                text = { Text(stringResource(each.title)) },
+                trailingIcon = if (each == shown) { { Icon(AppIcons.Check, contentDescription = null) } } else null,
+                onClick = {
+                    close()
+                    shown = each
+                },
+                modifier = Modifier.testTag("things_${each.key}"),
+            )
+        }
+    }
+    when (shown) {
+        ThingKind.DEVICES -> DevicesScreen(container, onBack, open.takeIf { kind == ThingKind.DEVICES }, menu)
+        ThingKind.SUBSCRIPTIONS -> SubscriptionsScreen(container, onBack, open.takeIf { kind == ThingKind.SUBSCRIPTIONS }, menu)
+        ThingKind.CAR -> CarScreen(container, onBack, onDay, menu)
+    }
+}
+
 /** 设备: what is owned, newest first, and what was sold, each with what it costs a day. */
 @Composable
-fun DevicesScreen(container: AppContainer, onBack: () -> Unit, open: String? = null) {
+fun DevicesScreen(container: AppContainer, onBack: () -> Unit, open: String? = null, titleMenu: TitleMenu? = null) {
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val devices = remember(entries) { Things.devices(entries.values) }
     val today = LocalDate.now()
@@ -160,6 +208,7 @@ fun DevicesScreen(container: AppContainer, onBack: () -> Unit, open: String? = n
         stringResource(R.string.devices_title),
         onBack,
         Modifier.background(AppColors.page),
+        titleMenu = titleMenu,
         actions = {
             IconButton(onClick = { adding = true }, modifier = Modifier.testTag("device_add")) {
                 Icon(AppIcons.Plus, contentDescription = stringResource(R.string.device_add))
@@ -329,7 +378,7 @@ private fun DeviceSheet(container: AppContainer, device: Device?, categories: Li
 
 /** 订阅: by month, by year, then one row each for what was bought once and what was stopped. */
 @Composable
-fun SubscriptionsScreen(container: AppContainer, onBack: () -> Unit, open: String? = null) {
+fun SubscriptionsScreen(container: AppContainer, onBack: () -> Unit, open: String? = null, titleMenu: TitleMenu? = null) {
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val all = remember(entries) { Things.subscriptions(entries.values) }
     val today = LocalDate.now()
@@ -345,6 +394,7 @@ fun SubscriptionsScreen(container: AppContainer, onBack: () -> Unit, open: Strin
         stringResource(R.string.subscriptions_title),
         onBack,
         Modifier.background(AppColors.page),
+        titleMenu = titleMenu,
         actions = {
             IconButton(onClick = { adding = true }, modifier = Modifier.testTag("subscription_add")) {
                 Icon(AppIcons.Plus, contentDescription = stringResource(R.string.subscription_add))
