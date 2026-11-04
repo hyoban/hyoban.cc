@@ -51,7 +51,7 @@ export interface PageText {
 
 export const CALENDAR_DESCRIPTION = '随手拍的照片，和想记住的小事。'
 export const MEDIA_TEXT: PageText = {
-  heading: '影视推荐',
+  heading: '影音推荐',
   description: '我喜欢的电影、剧集、动画和音乐。',
 }
 

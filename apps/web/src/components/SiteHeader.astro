@@ -8,7 +8,7 @@ const reviewed = getReviewYears(await getMoments()).length > 0
 const nav = [
   { href: '/calendar/', label: '日历' },
   { href: '/trip/', label: '旅程' },
-  { href: '/media/', label: '影视' },
+  { href: '/media/', label: '影音' },
   // Every year's review, and each year's own under it.
   ...(reviewed ? [{ href: '/life/', label: '回顾', match: /^\/(?:\d{4}|life)\/$/ }] : []),
   { href: '/use/', label: 'Use' },
