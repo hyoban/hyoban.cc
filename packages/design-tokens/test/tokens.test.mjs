@@ -3,8 +3,9 @@ import { readFile } from 'node:fs/promises'
 import { test } from 'vite-plus/test'
 
 import { YEAR_COLORS } from '../../trip-map/src/theme.ts'
-import { kotlinFile, readTokens } from '../generate.mjs'
+import { kotlinFile, readTokens, swiftFile } from '../generate.mjs'
 import { renderKotlin, resolveColors } from '../src/kotlin.mjs'
+import { renderSwift } from '../src/swift.mjs'
 
 // The tokens are the one source of the design's values, so what is generated from them must be
 // current, and the colours must keep the contrast the design system promises in both themes.
@@ -24,6 +25,10 @@ const contrast = (a, b) => {
 
 test('the Android tokens are generated from the current tokens', async () => {
   assert.equal(await readFile(kotlinFile, 'utf8'), renderKotlin(tokens, motion))
+})
+
+test('the iOS tokens are generated from the current tokens', async () => {
+  assert.equal(await readFile(swiftFile, 'utf8'), renderSwift(tokens, motion))
 })
 
 test("the map's year colours are the site's", () => {

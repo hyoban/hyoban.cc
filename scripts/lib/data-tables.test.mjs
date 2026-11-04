@@ -13,9 +13,16 @@ import {
 } from '@hyoban/data-spec/entry'
 import { copiedTables, getTableStatements } from '@hyoban/data-spec/tables'
 import { listJsonFiles, readJson } from '../../apps/web/src/data/store.ts'
-import { kotlinFile, renderKotlin, renderSql, sqlFile } from './data-tables.mjs'
+import {
+  kotlinFile,
+  renderKotlin,
+  renderSql,
+  renderSwift,
+  sqlFile,
+  swiftFile,
+} from './data-tables.mjs'
 
-// D1 and the app's copy keep the same tables, so what is generated for each must be current,
+// D1 and the apps' copies keep the same tables, so what is generated for each must be current,
 // and the columns SQLite works out from a record must say what the spec's own rules say.
 
 const fixtureRoot = fileURLToPath(
@@ -25,6 +32,7 @@ const fixtureRoot = fileURLToPath(
 test('the tables for D1 and the app are generated from the current spec', async () => {
   assert.equal(await readFile(sqlFile, 'utf8'), renderSql())
   assert.equal(await readFile(kotlinFile, 'utf8'), renderKotlin())
+  assert.equal(await readFile(swiftFile, 'utf8'), renderSwift())
 })
 
 test('the Kotlin strings read back as the same statements', () => {
@@ -34,6 +42,14 @@ test('the Kotlin strings read back as the same statements', () => {
 
   assert.deepEqual(statements, getTableStatements(copiedTables))
   assert.ok(!copiedTables.some((table) => table.name === 'routes'), 'the routes are D1’s alone')
+})
+
+test('the Swift strings read back as the same statements', () => {
+  const statements = [...renderSwift().matchAll(/"""\n([\s\S]*?)\n\s*"""/g)].map(([, text]) =>
+    text.replaceAll(/^ {8}/gm, ''),
+  )
+
+  assert.deepEqual(statements, getTableStatements(copiedTables))
 })
 
 test("the worked-out columns agree with the spec's rules", () => {

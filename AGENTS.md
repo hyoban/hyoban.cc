@@ -4,9 +4,10 @@
 
 `AGENTS.md` is the source of truth for both agents. Each `CLAUDE.md` imports the
 `AGENTS.md` beside it; keep those entry points as imports, and edit the shared file.
-This guide applies to the whole repository, including the website, API and Android
-app. Before working in `apps/android`, also read [its guide](apps/android/AGENTS.md),
-even when starting from the repository root.
+This guide applies to the whole repository, including the website, API and the Android
+and iOS apps. Before working in `apps/android` or `apps/ios`, also read its guide
+([Android](apps/android/AGENTS.md), [iOS](apps/ios/AGENTS.md)), even when starting from
+the repository root.
 
 ## Working agreements
 
@@ -54,17 +55,18 @@ even when starting from the repository root.
 
 ## Workspace
 
-| Area                | Source and reference                                                                                                                                      |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Website             | Astro and plain CSS in `apps/web` (`@hyoban/web`); [its DESIGN.md](apps/web/DESIGN.md) defines its visual language.                                       |
-| Map and trip player | `packages/trip-map` (`@hyoban/trip-map`); its [README](packages/trip-map/README.md) describes the markup and data contract.                               |
-| Drawers             | `packages/drawer` (`@hyoban/drawer`), a plain DOM port of Base UI's Drawer with shadcn/ui CSS; used by the calendar and bundled into trip-map.            |
-| Design tokens       | `packages/design-tokens`: the design system's tokens, springs and icon source for every platform; `vp run design:tokens` generates Android's `Tokens.kt`. |
-| Shared data model   | Plain Zod schemas in `packages/data-spec`, used by the site, scripts and API; `vp run data:schema` generates `data/schema`.                               |
-| API                 | Cloudflare Worker with D1 and R2 in `apps/api`; see its [README](apps/api/README.md) for endpoints and local setup.                                       |
-| Android             | Kotlin, Compose and Gradle in `apps/android`; read its [AGENTS.md](apps/android/AGENTS.md) and [README](apps/android/README.md).                          |
-| Data and media      | `data/`, `scripts/`, [docs/data.md](docs/data.md) and [docs/assets.md](docs/assets.md).                                                                   |
-| Deployment          | Cloudflare Workers Builds and GitHub Actions; [docs/deploy.md](docs/deploy.md).                                                                           |
+| Area                | Source and reference                                                                                                                                                               |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Website             | Astro and plain CSS in `apps/web` (`@hyoban/web`); [its DESIGN.md](apps/web/DESIGN.md) defines its visual language.                                                                |
+| Map and trip player | `packages/trip-map` (`@hyoban/trip-map`); its [README](packages/trip-map/README.md) describes the markup and data contract.                                                        |
+| Drawers             | `packages/drawer` (`@hyoban/drawer`), a plain DOM port of Base UI's Drawer with shadcn/ui CSS; used by the calendar and bundled into trip-map.                                     |
+| Design tokens       | `packages/design-tokens`: the design system's tokens, springs and icon source for every platform; `vp run design:tokens` generates Android's `Tokens.kt` and iOS's `Tokens.swift`. |
+| Shared data model   | Plain Zod schemas in `packages/data-spec`, used by the site, scripts and API; `vp run data:schema` generates `data/schema`.                                                        |
+| API                 | Cloudflare Worker with D1 and R2 in `apps/api`; see its [README](apps/api/README.md) for endpoints and local setup.                                                                |
+| Android             | Kotlin, Compose and Gradle in `apps/android`; read its [AGENTS.md](apps/android/AGENTS.md) and [README](apps/android/README.md).                                                   |
+| iOS                 | Swift and SwiftUI in `apps/ios`, an Xcode project; read its [AGENTS.md](apps/ios/AGENTS.md) and [README](apps/ios/README.md).                                                      |
+| Data and media      | `data/`, `scripts/`, [docs/data.md](docs/data.md) and [docs/assets.md](docs/assets.md).                                                                                            |
+| Deployment          | Cloudflare Workers Builds and GitHub Actions; [docs/deploy.md](docs/deploy.md).                                                                                                    |
 
 ## Data shared by Web and App
 
@@ -140,8 +142,8 @@ inputs change. Run `vp pack` for trip-map bundle changes; its package's `build`
 script additionally builds the CSS. Consult `.github/workflows/verify.yml` for CI,
 and run the relevant Moment or Zeekr audits when changing their data.
 
-Android uses its Gradle wrapper, not Vite+. Root checks do not build or test Kotlin;
-run the Android checks in its guide when changes affect the app or its API contract.
+Android uses its Gradle wrapper and iOS `xcodebuild`, not Vite+. Root checks do not build or
+test Kotlin or Swift; run each app's checks in its guide when changes affect it or its API contract.
 Documentation-only changes need formatting and link/import checks, not a phone
 installation or a site deployment.
 

@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { copiedTables, getTableStatements } from '@hyoban/data-spec/tables'
 
 // What `vp run data:tables` writes from @hyoban/data-spec/tables: the tables as SQL for D1,
-// and those the app copies as Kotlin, so both keep what leaves the phone the same way.
+// and those the apps copy as Kotlin and Swift, so all keep what leaves the phone the same way.
 
 export const sqlFile = fileURLToPath(new URL('../../apps/api/schema.sql', import.meta.url))
 
@@ -12,6 +12,10 @@ export const kotlinFile = fileURLToPath(
     '../../apps/android/app/src/main/kotlin/cc/hyoban/moments/data/copy/CopyTables.kt',
     import.meta.url,
   ),
+)
+
+export const swiftFile = fileURLToPath(
+  new URL('../../apps/ios/Here/Data/CopyTables.swift', import.meta.url),
 )
 
 export function renderSql() {
@@ -43,6 +47,26 @@ export function renderKotlin() {
       (statement) => `${indent(raw(statement), 8)}.trimIndent(),`,
     ),
     '    )',
+    '}',
+    '',
+  ].join('\n')
+}
+
+export function renderSwift() {
+  const raw = (text) => `"""\n${text.replaceAll(/^/gm, '        ')}\n        """`
+
+  return [
+    '// Generated from packages/data-spec/src/tables.ts by `vp run data:tables`. Do not edit by hand.',
+    '',
+    "/// The tables the copy keeps the API's records in, as D1 keeps them.",
+    'enum CopyTables {',
+    '    /// Every table, in the order `GET /v2/rows` hands them out.',
+    `    static let names = [${copiedTables.map((table) => JSON.stringify(table.name)).join(', ')}]`,
+    '',
+    '    /// The statements that make them, one per table and index.',
+    '    static let statements = [',
+    ...getTableStatements(copiedTables).map((statement) => `        ${raw(statement)},`),
+    '    ]',
     '}',
     '',
   ].join('\n')

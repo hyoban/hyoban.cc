@@ -1,0 +1,4 @@
+"NSLocationWhenInUseUsageDescription" = "Shows where you are on the map and records footprints.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Keeps recording footprints in the background. They stay on this phone.";
+"NSPhotoLibraryUsageDescription" = "Picks photos and videos for a Moment.";
+"NSMotionUsageDescription" = "Tells walking, cycling and driving apart in the footprints.";
