@@ -6,14 +6,16 @@ and the pieces around it that record and serve them.
 
 ```
 .
-├─ apps/web/            the Astro site (@hyoban/web; its DESIGN.md describes how it looks)
-├─ data/                the car's records, and a local copy of the API's (docs/data.md)
-├─ apps/api/            Cloudflare Worker serving the records from D1 (@hyoban/api)
-├─ apps/android/        这里, the Android app that reads and writes Moments (Gradle)
-├─ packages/data-spec/  the Zod schemas every side shares (@hyoban/data-spec)
-├─ packages/trip-map/   the map page and trip player (@hyoban/trip-map)
-├─ scripts/             data, asset and media scripts, run as `vp run <name>`
-└─ docs/                data.md, assets.md and deploy.md
+├─ apps/web/               the Astro site (@hyoban/web; its DESIGN.md describes how it looks)
+├─ data/                   the car's records, and a local copy of the API's (docs/data.md)
+├─ apps/api/               Cloudflare Worker serving the records from D1 (@hyoban/api)
+├─ apps/android/           这里, the Android app that reads and writes Moments (Gradle)
+├─ packages/data-spec/     the Zod schemas every side shares (@hyoban/data-spec)
+├─ packages/trip-map/      the map page and trip player (@hyoban/trip-map)
+├─ packages/drawer/        the calendar's and map's drawers (@hyoban/drawer)
+├─ packages/design-tokens/ the app's design tokens, springs and icons
+├─ scripts/                data, asset and media scripts, run as `vp run <name>`
+└─ docs/                   data.md, assets.md and deploy.md
 ```
 
 ## How it fits together
@@ -56,7 +58,6 @@ vp run build        # the static site into apps/web/dist/
 | `VITE_MAPBOX_TOKEN`   | the map page's Mapbox tiles                                           |
 | `MAPBOX_STATIC_TOKEN` | the map pages' placeholders, if `VITE_MAPBOX_TOKEN` is URL-restricted |
 | `MOMENTS_API_TOKEN`   | building the site, `data:export` and `data:push`                      |
-| `MOMENTS_API_URL`     | another API than `https://hyoban-cc-api.hyoban.workers.dev`           |
 | `CI`                  | set, the build draws every Moment's share card (slow; off locally)    |
 
 The scripts that upload to R2 use Wrangler's login, or `CLOUDFLARE_API_TOKEN`;
@@ -74,7 +75,7 @@ and recovery steps are in [docs/deploy.md](docs/deploy.md).
 
 ## Thanks
 
-The 3D car's speed mode, held down in the year review and the 20,000 km post, where a line credits it
-(`apps/web/src/car-model-speed.ts`), follows [GameMCU](https://gamemcu.com)'s
-[Xiaomi SU7 showroom](https://gamemcu.com/su7/): its tunnel of streaks, its reflections
-laid crisp over the paint, its glossy floor and its camera.
+The 3D car's speed mode, held down in the year review and the 20,000 km post, where a line
+credits it (`apps/web/src/car-model-speed.ts`), follows [GameMCU](https://gamemcu.com)'s
+[Xiaomi SU7 showroom](https://gamemcu.com/su7/): its tunnel of streaks, its reflections laid
+crisp over the paint, its glossy floor and its camera.
