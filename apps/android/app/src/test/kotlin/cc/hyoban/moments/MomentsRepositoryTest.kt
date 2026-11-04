@@ -569,7 +569,9 @@ class MomentsRepositoryTest {
             publishing.cancel()
             kotlinx.coroutines.delay(10)
         }
-        publishing = launch(Dispatchers.Default) { repository.publishPending() }
+        // Started only once it is assigned, so the writer can't reach it first.
+        publishing = launch(Dispatchers.Default, start = kotlinx.coroutines.CoroutineStart.LAZY) { repository.publishPending() }
+        publishing.start()
         publishing.join()
 
         assertEquals(1, writer.calls.count { it.startsWith("changes") })
