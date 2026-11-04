@@ -20,7 +20,7 @@ capture below. It saves a dated, incomplete-month snapshot without changing the
 historical archive or sharing anything to WeChat:
 
 ```bash
-python3 .claude/skills/zeekr-data/scripts/capture_current_month.py --out .private/zeekr/captures
+python3 .agents/skills/zeekr-data/scripts/capture_current_month.py --out .private/zeekr/captures
 ```
 
 This reads each daily chart tooltip and the current charging list, preserving the
@@ -69,7 +69,7 @@ Original private files are not modified. Do not commit private exports or logs.
 2. From the project root, run the capture in the background:
 
    ```bash
-   python3 .claude/skills/zeekr-data/scripts/zeekr_capture.py --out .private/zeekr/captures
+   python3 .agents/skills/zeekr-data/scripts/zeekr_capture.py --out .private/zeekr/captures
    ```
 
    - `--sections car,energy,charging,trips,assist` captures only some pages.
@@ -100,6 +100,7 @@ Original private files are not modified. Do not commit private exports or logs.
      pages. They still read the current odometer and discover the oldest month.
      Use `--months 1` to record just the latest month: its trip report, its charges,
      自提车至今 and its assisted driving, in a few minutes.
+
 3. Tell the user that the phone will be tapped through the Zeekr app and WeChat
    while this runs, so they shouldn't use it until the capture is done.
 
@@ -128,18 +129,18 @@ page has to be loaded; don't call the endpoint directly. It takes about 2 s per 
 To fetch saved links without the phone, run:
 
 ```bash
-node .claude/skills/zeekr-data/scripts/fetch_share.mjs <link>... > months.json
+node .agents/skills/zeekr-data/scripts/fetch_share.mjs <link>... > months.json
 ```
 
 ## What gets captured
 
-| Key | Source | Contents |
-|---|---|---|
-| `car` | 爱车 tab | battery %, range, status line, car name, location, cabin temp, sentry mode |
-| `energy` | 能量管理 | battery %, range, charge limit, scheduled charging window |
-| `charging.months[]` | 能量管理 → 充电记录 | per complete month: count and kWh; `sessions[]` with AC/DC, kWh, start time, duration |
-| `trips` | 爱车 → 行程统计 | odometer; per complete month: `summary`, `report` (用车报告 text), `daily[]`, `share_url`, `share_data` |
-| `assisted_driving.periods[]` | 行程统计 → 辅助驾驶统计数据 | 自提车至今 and each month offered: NZP and ACC/LCC km and hours, rank, parking assists, days owned |
+| Key                          | Source                      | Contents                                                                                                |
+| ---------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `car`                        | 爱车 tab                    | battery %, range, status line, car name, location, cabin temp, sentry mode                              |
+| `energy`                     | 能量管理                    | battery %, range, charge limit, scheduled charging window                                               |
+| `charging.months[]`          | 能量管理 → 充电记录         | per complete month: count and kWh; `sessions[]` with AC/DC, kWh, start time, duration                   |
+| `trips`                      | 爱车 → 行程统计             | odometer; per complete month: `summary`, `report` (用车报告 text), `daily[]`, `share_url`, `share_data` |
+| `assisted_driving.periods[]` | 行程统计 → 辅助驾驶统计数据 | 自提车至今 and each month offered: NZP and ACC/LCC km and hours, rank, parking assists, days owned      |
 
 Each `daily[]` row has `date`, `distance_km`, `duration_min`, `energy_kwh`, and,
 when the report splits it, `energy_driving_kwh` and `energy_parked_kwh`.
@@ -151,6 +152,7 @@ Charging months keep the expanded header and session text too, including any
 duplicate rows shown by the app; do not silently deduplicate them.
 
 The app limits how far back the data goes:
+
 - **Trip reports**: back to the first month the car was used (August 2025),
   for at most two years.
 - **Assisted driving**: only the last three complete months, plus 自提车至今.
@@ -186,7 +188,7 @@ Script regression tests, including mixed energy formats, cached month identity
 and partial charging capture recovery:
 
 ```bash
-python3 -m unittest discover -s .claude/skills/zeekr-data/scripts
+python3 -m unittest discover -s .agents/skills/zeekr-data/scripts
 ```
 
 Each trip month's `share_data.yearMonth` must match its `month`. A mismatch means

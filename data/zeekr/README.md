@@ -125,5 +125,5 @@ are computed on each run; only counts and actionable differences are saved.
 
 ```sh
 vp test scripts/lib/zeekr-data.test.mjs scripts/lib/zeekr-privacy.test.mjs
-python3 -m unittest discover -s .claude/skills/zeekr-data/scripts
+python3 -m unittest discover -s .agents/skills/zeekr-data/scripts
 ```
