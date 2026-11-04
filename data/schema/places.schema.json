@@ -29,11 +29,38 @@
           "city",
           "town",
           "region",
-          "scenic",
           "food",
+          "cafe",
+          "tea",
+          "bar",
+          "dessert",
           "shopping",
+          "supermarket",
+          "market",
           "stay",
-          "transport"
+          "camp",
+          "scenic",
+          "park",
+          "museum",
+          "temple",
+          "nature",
+          "leisure",
+          "show",
+          "sport",
+          "transport",
+          "station",
+          "metro",
+          "bus",
+          "airport",
+          "port",
+          "parking",
+          "charging",
+          "fuel",
+          "life",
+          "hospital",
+          "school",
+          "work",
+          "residential"
         ]
       },
       "division": {
@@ -95,7 +122,11 @@
         "properties": {
           "app": {
             "type": "string",
-            "const": "swarm"
+            "enum": [
+              "swarm",
+              "amap",
+              "tencent"
+            ]
           },
           "venue": {
             "type": "string",

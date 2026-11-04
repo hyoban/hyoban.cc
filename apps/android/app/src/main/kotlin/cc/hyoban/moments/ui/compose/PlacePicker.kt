@@ -56,8 +56,6 @@ import cc.hyoban.moments.ui.design.sheetSurface
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.Constraints
-import cc.hyoban.moments.ui.design.DropdownMenu
-import cc.hyoban.moments.ui.design.DropdownMenuItem
 import cc.hyoban.moments.ui.design.strong
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.geometry.CornerRadius
@@ -123,6 +121,13 @@ import cc.hyoban.moments.data.local.kindOf
 import cc.hyoban.moments.data.local.nearestPlaces
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.PlaceKind
+import cc.hyoban.moments.data.local.PlaceSource
+
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.put
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FloatingBack
 import cc.hyoban.moments.ui.components.Tooltip
@@ -141,9 +146,31 @@ import kotlinx.coroutines.launch
  */
 internal sealed interface PlaceChoice {
     data class Known(val id: String, val kind: PlaceKind? = null) : PlaceChoice
-    data class New(val name: String, val fix: Fix, val kind: PlaceKind? = null) : PlaceChoice
+    /** A new place; [source] the map service's own id when it is a place one of them knows, picked from the list. */
+    data class New(val name: String, val fix: Fix, val kind: PlaceKind? = null, val source: PlaceSource? = null) : PlaceChoice
     data object None : PlaceChoice
 }
+
+/** The new place as a record made [at], its map service's id kept as its `source`. */
+internal fun PlaceChoice.New.toPlace(at: String): Place = Place(
+    name.trim().ifEmpty { coordinatesName(fix) },
+    fix.latitude,
+    fix.longitude,
+    kind = kind?.value,
+    createdAt = at,
+    extra = source?.let { buildJsonObject { put("source", buildJsonObject { put("app", it.app); put("venue", it.venue) }) } } ?: JsonObject(emptyMap()),
+)
+
+/** The map service's id a known place came from, if it came from one. */
+internal fun Place.source(): PlaceSource? = (extra["source"] as? JsonObject)?.let { source ->
+    val app = (source["app"] as? JsonPrimitive)?.contentOrNull
+    val venue = (source["venue"] as? JsonPrimitive)?.contentOrNull
+    if (app != null && venue != null) PlaceSource(app, venue) else null
+}
+
+/** The known places by the map service's id they came from, so a place found again is the one kept. */
+internal fun bySource(places: Map<String, Place>): Map<PlaceSource, String> =
+    places.mapNotNull { (id, place) -> place.source()?.let { it to id } }.toMap()
 
 /**
  * The place for a new Moment, chosen on a map: a pin stands at its middle, and under the map
@@ -223,13 +250,20 @@ internal fun PlacePicker(
         pick = PlaceChoice.Known(id)
         places[id]?.let { fly(it.fix()) }
     }
+    val known = remember(places) { bySource(places) }
     val chooseFound: (Found) -> Unit = { found ->
-        named = true
-        typedName = false
-        name = found.name
-        kindChosen = false
-        pick = PlaceChoice.New(found.name, found.fix, kindOf(found))
-        fly(found.fix)
+        // A place the map service knows that is kept already is that place, not a new one beside it.
+        val same = found.source?.let(known::get)
+        if (same != null) {
+            choose(same)
+        } else {
+            named = true
+            typedName = false
+            name = found.name
+            kindChosen = false
+            pick = PlaceChoice.New(found.name, found.fix, kindOf(found), found.source)
+            fly(found.fix)
+        }
     }
 
     // Back, by the system's gesture, previews closing the picker under the finger.
@@ -363,7 +397,8 @@ internal fun PlacePicker(
                 onCenter = { latitude, longitude, byUser ->
                     val at = Fix(latitude, longitude)
                     // Dragged, the pin is a new place where it stands; a new place flown to an address stays one there.
-                    if (byUser || pick is PlaceChoice.New) pick = PlaceChoice.New(name, at, (pick as? PlaceChoice.New)?.kind)
+                    // Dragged off a place found there, it is somewhere else, no longer that place.
+                    if (byUser || pick is PlaceChoice.New) pick = PlaceChoice.New(name, at, (pick as? PlaceChoice.New)?.kind, (pick as? PlaceChoice.New)?.source.takeUnless { byUser })
                     if (byUser && !typedName) named = false
                 },
                 onPlace = choose,
@@ -508,20 +543,26 @@ private fun PlaceCard(
     var renaming by remember { mutableStateOf(false) }
     LaunchedEffect(pick::class, (pick as? PlaceChoice.Known)?.id) { if (pick !is PlaceChoice.New) renaming = false }
     val chosenId = (pick as? PlaceChoice.Known)?.id
+    val known = remember(places) { bySource(places) }
+    // What the map service found that is kept already shows as that place.
+    fun keptAs(found: Found): String? = found.source?.let(known::get)
     val rows: List<Entry> = when {
-        typed.isNotEmpty() -> results.orEmpty().map(Entry::Around)
+        typed.isNotEmpty() -> results.orEmpty().map { found -> keptAs(found)?.let { Entry.Known(it, near?.let { at -> distance(at, found.fix) } ?: 0.0) } ?: Entry.Around(found) }
+            .distinctBy { if (it is Entry.Known) it.id else it }
         pick == PlaceChoice.None -> emptyList()
         else -> buildList {
             add(Entry.Chosen)
+            val shown = mutableSetOf<String>()
             near?.let { at ->
                 nearestPlaces(places, at, limit = KNOWN_NEARBY + 1)
                     .filter { it.first != chosenId && it.second <= NEARBY_METRES }
                     .take(KNOWN_NEARBY)
-                    .forEach { (id, metres) -> add(Entry.Known(id, metres)) }
+                    .forEach { (id, metres) -> add(Entry.Known(id, metres)); shown += id }
             }
-            landmarks.filter { it.name != (pick as? PlaceChoice.New)?.name }
-                .sortedBy { distance(at = near, found = it) }
-                .forEach { add(Entry.Around(it)) }
+            landmarks.filter { it.name != (pick as? PlaceChoice.New)?.name && keptAs(it).let { id -> id == null || id != chosenId && id !in shown } }
+                .map { found -> keptAs(found)?.let { Entry.Known(it, distance(at = near, found = found)) } ?: Entry.Around(found) }
+                .sortedBy { if (it is Entry.Known) it.metres else distance(at = near, found = (it as Entry.Around).found) }
+                .forEach { add(it) }
         }
     }
     Column(modifier.fillMaxWidth().then(if (tall) Modifier.fillMaxHeight() else Modifier).navigationBarsPadding().imePadding().padding(top = Space.l, bottom = Space.m)) {
@@ -596,6 +637,7 @@ private fun PlaceCard(
                             Entry.Chosen -> ChosenRow(pick, name, places, renaming, onRename = { renaming = true }, onName = onName, onDone = { renaming = false }, onKind = onKind, modifier = Modifier.animateItem())
                             is Entry.Known -> PlaceRow(
                                 places.getValue(row.id).name,
+                                PlaceKind.of(places.getValue(row.id).kind),
                                 listOfNotNull(
                                     stringResource(R.string.place_visited),
                                     PlaceKind.of(places.getValue(row.id).kind)?.let { stringResource(it.label) },
@@ -606,6 +648,7 @@ private fun PlaceCard(
                             )
                             is Entry.Around -> PlaceRow(
                                 row.found.name,
+                                kindOf(row.found),
                                 listOfNotNull(
                                     kindOf(row.found)?.let { stringResource(it.label) },
                                     near?.let { formatDistance(distance(it, row.found.fix)) },
@@ -638,13 +681,13 @@ private fun PlaceCard(
 /** How far [found] is from [at], or nowhere when there is no [at]. */
 private fun distance(at: Fix?, found: Found): Double = at?.let { distance(it, found.fix) } ?: 0.0
 
-/** A place to choose, a row of the list: its name, and what it is and how far in a line under it. */
+/** A place to choose, a row of the list: its kind's icon, its name, and what it is and how far in a line under it. */
 @Composable
-private fun PlaceRow(name: String, about: List<String>, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun PlaceRow(name: String, kind: PlaceKind?, about: List<String>, onClick: () -> Unit, modifier: Modifier = Modifier) {
     ListItem(
         headlineContent = { Text(name, maxLines = 1) },
         supportingContent = about.takeIf { it.isNotEmpty() }?.let { { Text(it.joinToString(" · "), maxLines = 1) } },
-        leadingContent = { Icon(AppIcons.Pin, contentDescription = null, tint = tokens.tx3) },
+        leadingContent = { Icon(kind?.icon ?: AppIcons.Pin, contentDescription = null, tint = tokens.tx2) },
         modifier = modifier.clickable(onClick = onClick).padding(horizontal = Space.s),
     )
 }
@@ -678,7 +721,7 @@ private fun ChosenRow(
             .padding(start = Space.l, end = Space.xs).heightIn(min = 64.dp).testTag("chosen_place"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(AppIcons.Pin, contentDescription = null, tint = tokens.accent)
+        Icon(kind?.icon ?: AppIcons.Pin, contentDescription = null, tint = tokens.accent)
         Spacer(Modifier.width(Space.l))
         if (renaming && pick is PlaceChoice.New) {
             val focus = remember { FocusRequester() }
@@ -723,38 +766,15 @@ private fun ChosenRow(
             TextButton(onClick = { kinds = true }, modifier = Modifier.testTag("place_kind")) {
                 Text(kind?.let { stringResource(it.label) } ?: stringResource(R.string.place_kind))
             }
-            DropdownMenu(kinds, onDismissRequest = { kinds = false }) {
-                PlaceKind.entries.forEach { entry ->
-                    DropdownMenuItem(
-                        text = { Text(stringResource(entry.label)) },
-                        onClick = {
-                            onKind(entry)
-                            kinds = false
-                        },
-                        trailingIcon = if (entry == kind) {
-                            { Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent) }
-                        } else {
-                            null
-                        },
-                    )
-                }
+        }
+        if (kinds) {
+            PlaceKindSheet(kind, onDismiss = { kinds = false }) {
+                onKind(it)
+                kinds = false
             }
         }
     }
 }
-
-/** What the kind is called on screen. */
-internal val PlaceKind.label: Int
-    get() = when (this) {
-        PlaceKind.CITY -> R.string.place_kind_city
-        PlaceKind.TOWN -> R.string.place_kind_town
-        PlaceKind.REGION -> R.string.place_kind_region
-        PlaceKind.SCENIC -> R.string.place_kind_scenic
-        PlaceKind.FOOD -> R.string.place_kind_food
-        PlaceKind.SHOPPING -> R.string.place_kind_shopping
-        PlaceKind.STAY -> R.string.place_kind_stay
-        PlaceKind.TRANSPORT -> R.string.place_kind_transport
-    }
 
 @Composable
 internal fun formatDistance(metres: Double): String =

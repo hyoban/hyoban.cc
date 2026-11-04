@@ -9,7 +9,12 @@ import {
 import { pairChargePayments, readVehicleExpenses, type ChargePayment } from '@/data/vehicle-costs'
 import { readPlaces, readTripRecords } from '@/data/store'
 import { getMoments } from '@/moments'
-import type { Place, VehicleCharge, VehicleExpense } from '@hyoban/data-spec'
+import {
+  getPlaceKindGroup,
+  type Place,
+  type VehicleCharge,
+  type VehicleExpense,
+} from '@hyoban/data-spec'
 
 // What the car recorded, for the year review's driving and the trip list's outings: the
 // days driven, from the records in data/zeekr, and the outings found in them against the
@@ -57,8 +62,14 @@ async function loadCarSummary(): Promise<CarSummary> {
   }
 }
 
-/** Kinds of place that are somewhere to go in their own right, not just in a city. */
-const SIGHT_KINDS = new Set<Place['kind']>(['scenic', 'town', 'region'])
+/** Whether a kind of place is somewhere to go in its own right, not just in a city: a sight, a town, an area. */
+function isSight(kind: Place['kind']) {
+  return (
+    kind === 'town' ||
+    kind === 'region' ||
+    (kind !== undefined && getPlaceKindGroup(kind) === 'scenic')
+  )
+}
 
 /** A place as the city it's in, `南京` for a restaurant there, and its name if it's a sight. */
 function toOutingLocation(place: Place) {
@@ -67,7 +78,7 @@ function toOutingLocation(place: Place) {
       ? place.name
       : (place.division.city ?? place.division.province).replace(/市$/, '')
 
-  return SIGHT_KINDS.has(place.kind) && place.name !== city ? { city, sight: place.name } : { city }
+  return isSight(place.kind) && place.name !== city ? { city, sight: place.name } : { city }
 }
 
 const kilometerFormatter = new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 0 })

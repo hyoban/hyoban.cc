@@ -3,6 +3,11 @@ package cc.hyoban.moments
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.Found
 import cc.hyoban.moments.data.local.PlaceSearch
+import cc.hyoban.moments.data.local.PlaceSource
+import cc.hyoban.moments.ui.compose.bySource
+import cc.hyoban.moments.ui.compose.toPlace
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.ResponseBody.Companion.toResponseBody
 import cc.hyoban.moments.data.local.amapKind
 import cc.hyoban.moments.data.local.kindOf
@@ -65,7 +70,9 @@ class PlaceSearchTest {
         assertEquals(PlaceKind.FOOD, kind("amenity", "restaurant"))
         assertEquals(PlaceKind.SHOPPING, kind("shop", "mall"))
         assertEquals(PlaceKind.STAY, kind("tourism", "hotel"))
-        assertEquals(PlaceKind.TRANSPORT, kind("railway", "station"))
+        assertEquals(PlaceKind.STATION, kind("railway", "station"))
+        assertEquals(PlaceKind.CAFE, kind("amenity", "cafe"))
+        assertEquals(PlaceKind.PARK, kind("leisure", "park"))
         assertEquals(PlaceKind.TOWN, kind("place", "village"))
         assertNull(kind("amenity", "bank"))
         assertNull(kind("building", "yes"))
@@ -96,7 +103,7 @@ class PlaceSearchTest {
         assertTrue(kotlin.math.abs(found[0].fix.latitude - here.latitude) < 1e-6 && kotlin.math.abs(found[0].fix.longitude - here.longitude) < 1e-6, "shifted back to WGS 84")
         assertEquals("某路 1 号 B1 层", found[0].address)
         assertEquals(PlaceKind.FOOD, kindOf(found[0]))
-        assertNull(kindOf(found[1]))
+        assertEquals(PlaceKind.WORK, kindOf(found[1]))
         assertEquals(found, landmarks(found), "every one of them a landmark")
         assertFailsWith<java.io.IOException>("calls used up are an error, so Photon answers") {
             parseTencent("""{"status":121,"message":"此key每日调用量已达到上限"}""")
@@ -110,7 +117,7 @@ class PlaceSearchTest {
         val around = parseAmap(
             """
             {"status":"1","info":"OK","infocode":"10000","pois":[
-              {"name":"某某面馆(某商场店)","address":"某路 1 号 B1 层","typecode":"050100","location":"${shifted.longitude},${shifted.latitude}"},
+              {"id":"B0TEST0001","name":"某某面馆(某商场店)","address":"某路 1 号 B1 层","typecode":"050100","location":"${shifted.longitude},${shifted.latitude}"},
               {"name":"某某大厦","address":[],"typecode":"120201","location":"121.4,31.2"}
             ]}
             """.trimIndent(),
@@ -119,6 +126,8 @@ class PlaceSearchTest {
         assertTrue(kotlin.math.abs(around[0].fix.latitude - here.latitude) < 1e-6 && kotlin.math.abs(around[0].fix.longitude - here.longitude) < 1e-6, "shifted back to WGS 84")
         assertEquals("某路 1 号 B1 层", around[0].address)
         assertNull(around[1].address, "an empty field comes as []")
+        assertEquals(PlaceSource("amap", "B0TEST0001"), around[0].source)
+        assertNull(around[1].source)
         assertEquals(PlaceKind.FOOD, kindOf(around[0]))
         val tips = parseAmap(
             """
@@ -163,14 +172,39 @@ class PlaceSearchTest {
     }
 
     @Test
+    fun `a place picked from a map service keeps its id, and is found by it again`() {
+        val picked = cc.hyoban.moments.ui.compose.PlaceChoice.New("某某咖啡", Fix(31.2, 121.4), PlaceKind.CAFE, PlaceSource("amap", "B0TEST0002"))
+        val place = picked.toPlace("2026-11-04T12:00:00+08:00")
+        val text = cc.hyoban.moments.data.spec.Spec.json.encodeToString(cc.hyoban.moments.data.spec.Place.serializer(), place)
+        val source = kotlinx.serialization.json.Json.parseToJsonElement(text).jsonObject["source"]!!.jsonObject
+        assertEquals("amap", source["app"]!!.jsonPrimitive.content)
+        assertEquals("B0TEST0002", source["venue"]!!.jsonPrimitive.content)
+        val read = cc.hyoban.moments.data.spec.Spec.json.decodeFromString(cc.hyoban.moments.data.spec.Place.serializer(), text)
+        assertEquals("cafe", read.kind)
+        assertEquals(mapOf(PlaceSource("amap", "B0TEST0002") to "p1"), bySource(mapOf("p1" to read, "p2" to read.copy(extra = kotlinx.serialization.json.JsonObject(emptyMap())))))
+    }
+
+    @Test
+    fun `the app's kinds are the spec's, in its order`() {
+        val schema = java.io.File("../../../data/schema/places.schema.json").readText()
+        val kinds = Regex("\"kind\"\\s*:\\s*\\{[^}]*?\"enum\"\\s*:\\s*\\[([^\\]]*)\\]").find(schema)!!.groupValues[1]
+            .split(',').map { it.trim().trim('"') }
+        assertEquals(kinds, PlaceKind.entries.map { it.value })
+    }
+
+    @Test
     fun `AMap's type codes say what kind of place it is`() {
         assertEquals(PlaceKind.SHOPPING, amapKind("060101"))
         assertEquals(PlaceKind.STAY, amapKind("100100"))
-        assertEquals(PlaceKind.SCENIC, amapKind("110101|110102"))
-        assertEquals(PlaceKind.TRANSPORT, amapKind("150500"))
-        assertEquals(PlaceKind.TRANSPORT, amapKind("011100"))
-        assertEquals(PlaceKind.SCENIC, amapKind("140100"))
-        assertNull(amapKind("120201"))
+        assertEquals(PlaceKind.PARK, amapKind("110101|110102"))
+        assertEquals(PlaceKind.CAFE, amapKind("050500"))
+        assertEquals(PlaceKind.FOOD, amapKind("050100"))
+        assertEquals(PlaceKind.METRO, amapKind("150500"))
+        assertEquals(PlaceKind.STATION, amapKind("150200"))
+        assertEquals(PlaceKind.CHARGING, amapKind("011100"))
+        assertEquals(PlaceKind.MUSEUM, amapKind("140100"))
+        assertEquals(PlaceKind.WORK, amapKind("120201"))
+        assertNull(amapKind("190000"))
         assertNull(amapKind(null))
     }
 
@@ -178,11 +212,15 @@ class PlaceSearchTest {
     fun `Tencent's categories say what kind of place it is`() {
         assertEquals(PlaceKind.SHOPPING, tencentKind("购物:综合商场:购物中心"))
         assertEquals(PlaceKind.STAY, tencentKind("酒店宾馆:星级酒店"))
-        assertEquals(PlaceKind.SCENIC, tencentKind("旅游景点:公园"))
-        assertEquals(PlaceKind.TRANSPORT, tencentKind("基础设施:交通设施:地铁站"))
-        assertEquals(PlaceKind.TRANSPORT, tencentKind("汽车:充电站"))
-        assertEquals(PlaceKind.FOOD, tencentKind("娱乐休闲:咖啡厅"))
-        assertNull(tencentKind("娱乐休闲:KTV"))
+        assertEquals(PlaceKind.SCENIC, tencentKind("旅游景点:风景名胜"))
+        assertEquals(PlaceKind.METRO, tencentKind("基础设施:交通设施:地铁站"))
+        assertEquals(PlaceKind.CHARGING, tencentKind("汽车:充电站"))
+        assertEquals(PlaceKind.CAFE, tencentKind("娱乐休闲:咖啡厅"))
+        assertEquals(PlaceKind.CAFE, tencentKind("美食:咖啡厅"))
+        assertEquals(PlaceKind.PARK, tencentKind("旅游景点:公园"))
+        assertEquals(PlaceKind.SPORT, tencentKind("运动健身:健身中心"))
+        assertEquals(PlaceKind.LEISURE, tencentKind("娱乐休闲:KTV"))
+        assertNull(tencentKind("地名地址:行政地名"))
         assertNull(tencentKind(null))
     }
 }

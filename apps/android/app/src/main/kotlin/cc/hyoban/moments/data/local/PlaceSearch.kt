@@ -184,7 +184,12 @@ data class Found(
     val type: String? = null,
     val address: String? = null,
     val placeKind: PlaceKind? = null,
+    /** The map service's own id for it, so the same place picked again is the one already kept. */
+    val source: PlaceSource? = null,
 )
+
+/** A place as a map service knows it: `amap` or `tencent`, and that service's id; a record's `source`. */
+data class PlaceSource(val app: String, val venue: String)
 
 /** What a place is called, the named places around it to call it instead, and what sort of place the name is of. */
 data class Around(val name: String?, val landmarks: List<Found>, val kind: PlaceKind? = null)
@@ -221,22 +226,73 @@ fun parseTencent(json: String): List<Found> {
         val location = place["location"] as? JsonObject ?: return@mapNotNull null
         val latitude = location["lat"]?.jsonPrimitive?.doubleOrNull ?: return@mapNotNull null
         val longitude = location["lng"]?.jsonPrimitive?.doubleOrNull ?: return@mapNotNull null
-        Found(name, gcjToWgs(Fix(latitude, longitude)), address = text("address"), placeKind = tencentKind(text("category")))
+        Found(
+            name,
+            gcjToWgs(Fix(latitude, longitude)),
+            address = text("address"),
+            placeKind = tencentKind(text("category")),
+            source = text("id")?.let { PlaceSource("tencent", it) },
+        )
     }
 }
 
-/** What sort of place Tencent's category says it is, `美食:中餐厅:粤菜` food; null where it says too little. */
+/** What sort of place Tencent's category says it is, `美食:咖啡厅` a café; null where it says too little. */
 fun tencentKind(category: String?): PlaceKind? {
-    val parts = category.orEmpty().split(':')
-    val second = parts.getOrNull(1).orEmpty()
+    val text = category.orEmpty()
+    val parts = text.split(':')
+    val rest = parts.drop(1).joinToString(":")
+    fun has(vararg words: String) = words.any { it in rest }
     return when (parts.first()) {
-        "美食" -> PlaceKind.FOOD
-        "购物" -> PlaceKind.SHOPPING
-        "酒店宾馆" -> PlaceKind.STAY
-        "旅游景点", "自然地物", "文化场馆" -> PlaceKind.SCENIC
-        "基础设施" -> if (second == "交通设施") PlaceKind.TRANSPORT else null
-        "娱乐休闲" -> if (listOf("咖啡", "茶", "酒吧").any { it in second }) PlaceKind.FOOD else null
-        "汽车" -> if (listOf("充电", "加油", "停车").any { it in category.orEmpty() }) PlaceKind.TRANSPORT else null
+        "美食" -> when {
+            has("咖啡") -> PlaceKind.CAFE
+            has("茶", "冷饮", "饮品") -> PlaceKind.TEA
+            has("甜品", "面包", "蛋糕", "烘焙") -> PlaceKind.DESSERT
+            has("酒吧") -> PlaceKind.BAR
+            else -> PlaceKind.FOOD
+        }
+        "购物" -> when {
+            has("超市", "便利店") -> PlaceKind.SUPERMARKET
+            has("市场") -> PlaceKind.MARKET
+            else -> PlaceKind.SHOPPING
+        }
+        "酒店宾馆" -> if (has("露营")) PlaceKind.CAMP else PlaceKind.STAY
+        "旅游景点" -> when {
+            has("公园", "植物园", "动物园") -> PlaceKind.PARK
+            has("寺", "庙", "教堂", "宗教", "道观") -> PlaceKind.TEMPLE
+            has("博物馆", "纪念馆", "展览") -> PlaceKind.MUSEUM
+            has("山", "湖", "海滩", "自然") -> PlaceKind.NATURE
+            else -> PlaceKind.SCENIC
+        }
+        "自然地物" -> PlaceKind.NATURE
+        "文化场馆" -> if (has("剧", "音乐厅")) PlaceKind.SHOW else PlaceKind.MUSEUM
+        "娱乐休闲" -> when {
+            has("咖啡") -> PlaceKind.CAFE
+            has("茶") -> PlaceKind.TEA
+            has("酒吧") -> PlaceKind.BAR
+            has("电影", "剧", "演出") -> PlaceKind.SHOW
+            else -> PlaceKind.LEISURE
+        }
+        "运动健身" -> PlaceKind.SPORT
+        "医疗保健" -> PlaceKind.HOSPITAL
+        "教育学校" -> PlaceKind.SCHOOL
+        "房产小区" -> if (has("住宅")) PlaceKind.RESIDENTIAL else PlaceKind.WORK
+        "公司企业" -> PlaceKind.WORK
+        "生活服务" -> PlaceKind.LIFE
+        "基础设施" -> if (!has("交通")) null else when {
+            has("机场") -> PlaceKind.AIRPORT
+            has("火车站") -> PlaceKind.STATION
+            has("地铁") -> PlaceKind.METRO
+            has("公交", "长途") -> PlaceKind.BUS
+            has("港口", "码头", "渡口") -> PlaceKind.PORT
+            has("停车") -> PlaceKind.PARKING
+            else -> PlaceKind.TRANSPORT
+        }
+        "汽车" -> when {
+            has("充电") -> PlaceKind.CHARGING
+            has("加油") -> PlaceKind.FUEL
+            has("停车") -> PlaceKind.PARKING
+            else -> null
+        }
         else -> null
     }
 }
@@ -257,22 +313,68 @@ fun parseAmap(json: String): List<Found> {
         val name = place.text("name") ?: return@mapNotNull null
         val (longitude, latitude) = place.text("location")?.split(',')?.mapNotNull { it.trim().toDoubleOrNull() }
             ?.takeIf { it.size == 2 } ?: return@mapNotNull null
-        Found(name, gcjToWgs(Fix(latitude, longitude)), address = place.text("address"), placeKind = amapKind(place.text("typecode")))
+        Found(
+            name,
+            gcjToWgs(Fix(latitude, longitude)),
+            address = place.text("address"),
+            placeKind = amapKind(place.text("typecode")),
+            source = place.text("id")?.let { PlaceSource("amap", it) },
+        )
     }
 }
 
-/** What sort of place AMap's type code says it is, `050100` food; null where it says too little. Several codes take the first. */
+/**
+ * What sort of place AMap's type code says it is, `050500` a café, by its kind and then its
+ * class; null where it says too little. Of several codes the first is taken.
+ */
 fun amapKind(typecode: String?): PlaceKind? {
     val code = typecode?.substringBefore('|')?.takeIf { it.length == 6 } ?: return null
+    val big = code.take(2)
+    val mid = code.take(4)
     return when {
-        code.startsWith("05") -> PlaceKind.FOOD
-        code.startsWith("06") -> PlaceKind.SHOPPING
-        code.startsWith("10") -> PlaceKind.STAY
-        code.startsWith("11") -> PlaceKind.SCENIC
-        code.startsWith("15") -> PlaceKind.TRANSPORT
-        code.startsWith("0101") || code.startsWith("0111") -> PlaceKind.TRANSPORT // fuel, charging
-        code.take(4) in setOf("1401", "1402", "1404") -> PlaceKind.SCENIC // museums, exhibitions, galleries
-        code == "080304" -> PlaceKind.FOOD // bars
+        mid == "0101" -> PlaceKind.FUEL
+        mid == "0111" -> PlaceKind.CHARGING
+        big == "05" -> when (mid) {
+            "0505" -> PlaceKind.CAFE
+            "0506", "0507" -> PlaceKind.TEA
+            "0508", "0509" -> PlaceKind.DESSERT
+            else -> PlaceKind.FOOD
+        }
+        big == "06" -> when (mid) {
+            "0602", "0604" -> PlaceKind.SUPERMARKET
+            "0607" -> PlaceKind.MARKET
+            else -> PlaceKind.SHOPPING
+        }
+        big == "07" -> PlaceKind.LIFE
+        big == "08" -> when {
+            code == "080304" -> PlaceKind.BAR
+            mid == "0801" -> PlaceKind.SPORT
+            mid == "0806" -> PlaceKind.SHOW
+            else -> PlaceKind.LEISURE
+        }
+        big == "09" -> PlaceKind.HOSPITAL
+        big == "10" -> PlaceKind.STAY
+        big == "11" -> when {
+            mid == "1101" -> PlaceKind.PARK
+            code == "110205" -> PlaceKind.TEMPLE
+            else -> PlaceKind.SCENIC
+        }
+        big == "12" -> if (mid == "1203") PlaceKind.RESIDENTIAL else PlaceKind.WORK
+        big == "14" -> when (mid) {
+            "1401", "1402", "1403", "1404", "1405", "1409" -> PlaceKind.MUSEUM
+            "1412" -> PlaceKind.SCHOOL
+            else -> null
+        }
+        big == "15" -> when (mid) {
+            "1501" -> PlaceKind.AIRPORT
+            "1502" -> PlaceKind.STATION
+            "1503" -> PlaceKind.PORT
+            "1505" -> PlaceKind.METRO
+            "1504", "1507" -> PlaceKind.BUS
+            "1509" -> PlaceKind.PARKING
+            else -> PlaceKind.TRANSPORT
+        }
+        big == "17" -> PlaceKind.WORK
         else -> null
     }
 }
@@ -295,30 +397,65 @@ fun kindOf(found: Found): PlaceKind? = found.placeKind ?: when (found.kind) {
         else -> null
     }
     "amenity" -> when (found.type) {
-        "restaurant", "cafe", "fast_food", "food_court", "bar", "pub", "biergarten", "ice_cream" -> PlaceKind.FOOD
-        "marketplace" -> PlaceKind.SHOPPING
-        "parking", "bus_station", "ferry_terminal", "charging_station", "fuel" -> PlaceKind.TRANSPORT
-        "place_of_worship", "theatre", "arts_centre", "university" -> PlaceKind.SCENIC
+        "cafe" -> PlaceKind.CAFE
+        "bar", "pub", "biergarten" -> PlaceKind.BAR
+        "ice_cream" -> PlaceKind.DESSERT
+        "restaurant", "fast_food", "food_court" -> PlaceKind.FOOD
+        "marketplace" -> PlaceKind.MARKET
+        "parking" -> PlaceKind.PARKING
+        "charging_station" -> PlaceKind.CHARGING
+        "fuel" -> PlaceKind.FUEL
+        "bus_station" -> PlaceKind.BUS
+        "ferry_terminal" -> PlaceKind.PORT
+        "place_of_worship" -> PlaceKind.TEMPLE
+        "theatre", "cinema", "arts_centre" -> PlaceKind.SHOW
+        "library" -> PlaceKind.MUSEUM
+        "university", "college", "school" -> PlaceKind.SCHOOL
+        "hospital", "clinic" -> PlaceKind.HOSPITAL
         else -> null
     }
-    "shop" -> PlaceKind.SHOPPING
+    "shop" -> when (found.type) {
+        "supermarket", "convenience" -> PlaceKind.SUPERMARKET
+        "bakery", "confectionery", "pastry" -> PlaceKind.DESSERT
+        "tea" -> PlaceKind.TEA
+        else -> PlaceKind.SHOPPING
+    }
     "tourism" -> when (found.type) {
-        "hotel", "hostel", "guest_house", "motel", "apartment", "chalet", "camp_site", "caravan_site" -> PlaceKind.STAY
+        "hotel", "hostel", "guest_house", "motel", "apartment", "chalet" -> PlaceKind.STAY
+        "camp_site", "caravan_site" -> PlaceKind.CAMP
+        "museum", "gallery" -> PlaceKind.MUSEUM
+        "zoo", "theme_park", "aquarium" -> PlaceKind.LEISURE
         "information" -> null
         else -> PlaceKind.SCENIC
     }
     "leisure" -> when (found.type) {
-        "park", "garden", "nature_reserve", "beach_resort", "marina" -> PlaceKind.SCENIC
+        "park", "garden" -> PlaceKind.PARK
+        "nature_reserve", "beach_resort" -> PlaceKind.NATURE
+        "marina" -> PlaceKind.PORT
+        "sports_centre", "stadium", "fitness_centre", "pitch", "swimming_pool" -> PlaceKind.SPORT
         else -> null
     }
-    "natural", "historic", "waterway", "mountain_pass" -> PlaceKind.SCENIC
-    "aeroway", "railway", "public_transport" -> PlaceKind.TRANSPORT
+    "natural", "waterway", "mountain_pass" -> PlaceKind.NATURE
+    "historic" -> PlaceKind.SCENIC
+    "aeroway" -> PlaceKind.AIRPORT
+    "railway", "public_transport" -> when (found.type) {
+        "subway_entrance" -> PlaceKind.METRO
+        "station", "halt" -> if (found.kind == "railway") PlaceKind.STATION else PlaceKind.TRANSPORT
+        else -> PlaceKind.TRANSPORT
+    }
     "building" -> when (found.type) {
-        "train_station", "transportation" -> PlaceKind.TRANSPORT
+        "train_station" -> PlaceKind.STATION
+        "transportation" -> PlaceKind.TRANSPORT
         "hotel" -> PlaceKind.STAY
         "retail", "commercial" -> PlaceKind.SHOPPING
-        "temple", "church", "museum" -> PlaceKind.SCENIC
+        "temple", "church", "mosque", "cathedral" -> PlaceKind.TEMPLE
+        "museum" -> PlaceKind.MUSEUM
+        "hospital" -> PlaceKind.HOSPITAL
+        "school", "university" -> PlaceKind.SCHOOL
+        "office" -> PlaceKind.WORK
+        "apartments", "residential" -> PlaceKind.RESIDENTIAL
         else -> null
     }
+    "office" -> PlaceKind.WORK
     else -> null
 }

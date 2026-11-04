@@ -1,5 +1,6 @@
 package cc.hyoban.moments.data.trips
 
+import cc.hyoban.moments.data.spec.PlaceGroup
 import cc.hyoban.moments.data.spec.PlaceKind
 import java.time.LocalDate
 import kotlin.math.asin
@@ -17,8 +18,8 @@ internal object TripEvidence {
     private const val LOCAL_SPEED_KMH = 15.0
     private const val PRESENCE_DAYS = 3
 
-    private val ACTIVITY_KINDS = setOf(PlaceKind.SCENIC.value, PlaceKind.FOOD.value, PlaceKind.SHOPPING.value, PlaceKind.STAY.value)
-    private val Sighting.isTransport: Boolean get() = place?.kind == PlaceKind.TRANSPORT.value
+    private val ACTIVITY_GROUPS = setOf(PlaceGroup.SCENIC, PlaceGroup.FOOD, PlaceGroup.SHOPPING, PlaceGroup.STAY, PlaceGroup.LEISURE)
+    private val Sighting.isTransport: Boolean get() = PlaceKind.of(place?.kind)?.group == PlaceGroup.TRANSPORT
 
     /** Keep every still-valid start: leaving one anchor's radius need not leave a later one's. */
     fun stay(sightings: List<Sighting>): List<Sighting> {
@@ -55,7 +56,7 @@ internal object TripEvidence {
 
     /** Positive evidence of a visit, without guessing a place's type from its name. */
     private fun localActivity(points: List<Sighting>): List<Sighting> {
-        points.firstOrNull { it.place?.kind in ACTIVITY_KINDS }
+        points.firstOrNull { PlaceKind.of(it.place?.kind)?.group in ACTIVITY_GROUPS }
             ?.let { return listOf(it) }
         stay(points).takeIf { it.isNotEmpty() }?.let { return it }
         return dayPresence(points)
