@@ -8,6 +8,7 @@ export type OgPanel =
       days: { day: number; active: boolean; photo?: string | undefined }[]
     }
   | { kind: 'posters'; photos: string[] }
+  | { kind: 'covers'; photos: string[] }
   | { kind: 'months'; months: { photo?: string | undefined }[] }
   | { kind: 'trips'; trips: { title: string; detail: string; photo?: string | undefined }[] }
   | { kind: 'route'; route: string; photo?: string | undefined }
@@ -152,6 +153,26 @@ export async function renderOgPanel(panel: OgPanel, load: LoadImage) {
             (630 - rows * 270 - (rows - 1) * 12) / 2 + Math.floor(index / columns) * 282,
             180,
             270,
+          ),
+        ),
+      )),
+    )
+  } else if (panel.kind === 'covers') {
+    // Album covers, square, up to nine in rows of three.
+    const photos = panel.photos.slice(0, 9)
+    const size = 180
+    const gap = 12
+    const columns = Math.min(3, photos.length)
+    const rows = Math.ceil(photos.length / columns)
+    children.push(
+      ...(await Promise.all(
+        photos.map(async (url, index) =>
+          picture(
+            await load(url, size, size),
+            (660 - columns * size - (columns - 1) * gap) / 2 + (index % columns) * (size + gap),
+            (630 - rows * size - (rows - 1) * gap) / 2 + Math.floor(index / columns) * (size + gap),
+            size,
+            size,
           ),
         ),
       )),

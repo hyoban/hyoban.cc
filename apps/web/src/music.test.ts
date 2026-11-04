@@ -29,7 +29,7 @@ describe('toMusicTracks', () => {
         title: '晚风',
         artists: ['甲', '乙'],
         album: '夏天',
-        coverUrl: 'https://p1.music.126.net/a.jpg?param=120y120',
+        coverUrl: 'https://p1.music.126.net/a.jpg',
         durationSeconds: 185,
         url: 'https://music.163.com/song?id=1',
       },

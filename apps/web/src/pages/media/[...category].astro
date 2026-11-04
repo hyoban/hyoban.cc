@@ -5,7 +5,7 @@ import generatedMedia from '@/data/media.generated.json'
 import mediaRecommendations from '@/data/media-recommendations.json'
 import Layout from '@/layouts/Layout.astro'
 import { compareMediaItems, DEFAULT_MEDIA_CATEGORY, getMediaCategoryPath, getMediaItemKey, type MediaCategory, mediaCategories } from '@/media'
-import { formatDuration, getMusicTracks } from '@/music'
+import { formatDuration, getCoverUrl, getMusicTracks } from '@/music'
 import { getPageCardPath, getPageTitle, MEDIA_TEXT } from '@/page-cards'
 
 export function getStaticPaths() {
@@ -202,7 +202,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
 
 ---
 
-<Layout title={pageTitle} description={pageDescription} image={await getPageCardPath('/media/')}>
+<Layout title={pageTitle} description={pageDescription} image={await getPageCardPath(currentCategory === 'music' ? '/media/music/' : '/media/')}>
   {
     currentCategory === DEFAULT_MEDIA_CATEGORY && (
       <Fragment slot="head">
@@ -308,7 +308,7 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
                     tabindex="-1"
                     aria-hidden="true"
                   >
-                    <img src={track.coverUrl} alt="" loading="lazy" />
+                    <img src={getCoverUrl(track.coverUrl, 120)} alt="" loading="lazy" />
                   </a>
                 )
               }
