@@ -128,19 +128,34 @@ test('a place from a Swarm venue is that venue’s alone, however near or alike 
   )
 })
 
-test('a known place sent under its own id takes the kind it is sent with, and nothing else', async () => {
+test('a known place sent under its own id takes its name, point and kind, and keeps the rest', async () => {
   const { env } = setUpWithData()
   const nanjing = snapshot.places.nanjing
   const kind = nanjing.kind === 'scenic' ? 'food' : 'scenic'
-  const changed = await commit(env, {
-    places: { nanjing: { ...nanjing, name: '别的名字', latitude: 0, kind } },
+  const renamed = await commit(env, { places: { nanjing: { ...nanjing, name: '别的名字', kind } } })
+
+  assert.equal(renamed.status, 200)
+  assert.ok(renamed.body.revision, 'and takes a revision')
+  assert.deepEqual((await get(env, '/v2/places/nanjing')).body, {
+    ...nanjing,
+    name: '别的名字',
+    kind,
   })
 
-  assert.equal(changed.status, 200)
-  assert.ok(changed.body.revision, 'and takes a revision')
-  assert.deepEqual((await get(env, '/v2/places/nanjing')).body, { ...nanjing, kind })
+  const sent = { name: '别的名字', latitude: 0, longitude: nanjing.longitude, kind }
+  const moved = await commit(env, { places: { nanjing: sent } })
+  const kept = { ...nanjing, ...sent }
 
-  const again = await commit(env, { places: { nanjing: { ...nanjing, kind } } })
+  delete kept.division
+
+  assert.equal(moved.status, 200)
+  assert.deepEqual(
+    (await get(env, '/v2/places/nanjing')).body,
+    kept,
+    'moved, it loses the division it was in, and keeps its note and the rest',
+  )
+
+  const again = await commit(env, { places: { nanjing: sent } })
 
   assert.ok(!('revision' in again.body), 'sent as it is, it writes nothing')
 })

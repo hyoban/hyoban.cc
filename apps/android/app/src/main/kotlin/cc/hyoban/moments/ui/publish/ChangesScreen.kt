@@ -104,6 +104,9 @@ import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.data.spec.showcase
 import cc.hyoban.moments.data.store.Change
 import cc.hyoban.moments.data.store.PlaceChange
+import cc.hyoban.moments.data.local.Fix
+import cc.hyoban.moments.data.local.distance
+import cc.hyoban.moments.ui.compose.formatDistance
 import cc.hyoban.moments.data.store.PublishProgress
 import cc.hyoban.moments.publish.publishingText
 import cc.hyoban.moments.ui.LocalSnackbarLift
@@ -602,7 +605,7 @@ private fun OutsideCard(title: String, date: String?, figure: String?, note: Str
     }
 }
 
-/** One of the site's places with its kind changed: its name, and the kind from what it was. */
+/** One of the site's places changed: its name, then what of it changed, each from what it was. */
 @Composable
 private fun PlaceChangeCard(change: PlaceChange, onRevert: (() -> Unit)?) {
     Column(
@@ -614,8 +617,17 @@ private fun PlaceChangeCard(change: PlaceChange, onRevert: (() -> Unit)?) {
     ) {
         Text(change.after.name, style = AppTheme.typography.body.strong)
         HorizontalDivider(color = dividerColor())
-        val kindOf = @Composable { place: Place -> PlaceKind.of(place.kind)?.let { stringResource(it.label) } ?: place.kind }
-        Field(R.string.change_place_kind) { FromTo(kindOf(change.before), kindOf(change.after).orEmpty(), AppIcons.Category) }
+        val before = change.before
+        val after = change.after
+        if (before.name != after.name) Field(R.string.change_place_name) { FromTo(before.name, after.name, AppIcons.Pen) }
+        if (before.latitude != after.latitude || before.longitude != after.longitude) {
+            val metres = distance(Fix(before.latitude, before.longitude), Fix(after.latitude, after.longitude))
+            Field(R.string.change_place_point) { FromTo(null, stringResource(R.string.change_place_moved, formatDistance(metres)), AppIcons.Pin) }
+        }
+        if (before.kind != after.kind) {
+            val kindOf = @Composable { place: Place -> PlaceKind.of(place.kind)?.let { stringResource(it.label) } ?: place.kind }
+            Field(R.string.change_place_kind) { FromTo(kindOf(before), kindOf(after).orEmpty(), AppIcons.Category) }
+        }
         CardActions(onRevert?.let { revert -> { RevertButton(revert, Modifier.testTag("revert_place_${change.id}")) } })
     }
 }

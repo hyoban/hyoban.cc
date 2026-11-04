@@ -50,8 +50,10 @@ export interface WriteResult<T> {
 /**
  * The places a change set sends, each by the id it is known by: a known id stays, one near or
  * named as a known place takes that one's, and any other is added, the app's provisional
- * `p-<ulid>` spelled from its name. A known place sent under its own id takes the kind it is
- * sent with, and nothing else. What it writes goes in `statements`; `places` takes the new.
+ * `p-<ulid>` spelled from its name. A known place sent under its own id takes the name, point
+ * and kind it is sent with, and keeps everything else; moved, its division is looked up again.
+ * What it writes goes in `statements`; `places` takes the new. Says whether a known place
+ * moved, as the trips' routes are worked out from the places' points.
  */
 export async function namePlaces(
   context: WriteContext,
@@ -60,6 +62,7 @@ export async function namePlaces(
   statements: Statement[],
 ) {
   const placeIds: Record<string, string> = {}
+  let moved = false
 
   for (const [given, value] of Object.entries(givenPlaces)) {
     const provisional = PROVISIONAL_PLACE_PATTERN.test(given)
@@ -78,21 +81,35 @@ export async function namePlaces(
 
       places[match.id] = located
       statements.push(upsert(context.db, 'places', placeRow(match.id, located)))
-    } else if (match.status === 'known' && place.kind && place.kind !== places[match.id]?.kind) {
-      const kinded = withKind(places[match.id]!, place.kind)
+    } else if (match.status === 'known') {
+      const stored = places[match.id]!
+      const moves = place.latitude !== stored.latitude || place.longitude !== stored.longitude
+      const edited = withKind(
+        { ...stored, name: place.name, latitude: place.latitude, longitude: place.longitude },
+        place.kind ?? stored.kind,
+      )
 
-      places[match.id] = kinded
-      statements.push(upsert(context.db, 'places', placeRow(match.id, kinded)))
+      if (moves) {
+        delete edited.division
+      }
+
+      const changed = moves ? await withDivision(context, edited) : edited
+
+      if (JSON.stringify(changed) !== JSON.stringify(stored)) {
+        places[match.id] = changed
+        statements.push(upsert(context.db, 'places', placeRow(match.id, changed)))
+        moved ||= moves
+      }
     }
   }
 
-  return placeIds
+  return { placeIds, moved }
 }
 
-/** A place with another kind, the kind where the spec orders it, after the point. */
-function withKind(place: Place, kind: NonNullable<Place['kind']>): Place {
-  if (place.kind) {
-    return { ...place, kind }
+/** A place with its kind, the kind where the spec orders it, after the point. */
+function withKind(place: Place, kind: Place['kind']): Place {
+  if (!kind || place.kind) {
+    return kind ? { ...place, kind } : place
   }
 
   const entries = Object.entries(place)

@@ -190,6 +190,8 @@ internal fun PlacePicker(
     onDismiss: () -> Unit,
     /** Another way to keep the choice, in place of choosing none: its words, and what it does with the choice. */
     alternative: Pair<String, (PlaceChoice) -> Unit>? = null,
+    /** Where a place kept already is to be: none is no answer then. */
+    editing: Boolean = false,
     onPick: (PlaceChoice) -> Unit,
 ) {
     val context = LocalContext.current
@@ -358,7 +360,7 @@ internal fun PlacePicker(
                 name = it
                 (pick as? PlaceChoice.New)?.let { new -> pick = new.copy(name = it) }
             },
-            onNone = { onPick(PlaceChoice.None) },
+            onNone = { onPick(PlaceChoice.None) }.takeUnless { editing },
             alternative = alternative?.let { (label, act) -> label to { act(pick) } },
             onConfirm = { onPick(pick) },
             modifier = cardModifier,
@@ -526,7 +528,7 @@ private fun PlaceCard(
     onKnown: (String) -> Unit,
     onKind: (PlaceKind) -> Unit,
     onName: (String) -> Unit,
-    onNone: () -> Unit,
+    onNone: (() -> Unit)?,
     alternative: Pair<String, () -> Unit>?,
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
@@ -676,7 +678,7 @@ private fun PlaceCard(
         Row(Modifier.padding(horizontal = Space.xl).padding(top = Space.s), verticalAlignment = Alignment.CenterVertically) {
             if (alternative != null) {
                 TextButton(onClick = alternative.second, enabled = chosen, modifier = Modifier.testTag("place_alternative")) { Text(alternative.first) }
-            } else {
+            } else if (onNone != null) {
                 TextButton(onClick = onNone, modifier = Modifier.testTag("place_none")) { Text(stringResource(R.string.place_none)) }
             }
             Spacer(Modifier.weight(1f))
