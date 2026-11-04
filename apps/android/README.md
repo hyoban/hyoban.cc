@@ -160,7 +160,8 @@ except in 演示模式.
   finds where the phone is when there is no place yet to open on. Under the map are a
   search and one list: the choice first and ticked, then the known places close by and
   what is around the pin, nearest first, or while something is typed what is called that
-  from the same sources. A row tapped is chosen and the pin moves there; the choice tapped
+  from the same sources. A row tapped is chosen and the pin moves there; a result chosen
+  leaves the search as it was, the choice above the rest, so another is a tap away. The choice tapped
   again is named by hand, and its kind, which follows where it came from, opens a sheet of
   every kind by group (餐饮, 购物, 住宿, 景点, 娱乐, 交通, 生活, 地区), for a known place too: a
   café, a metro station or a park rather than only food, transport or a sight, each with its

@@ -335,9 +335,9 @@ internal fun PlacePicker(
             results = results,
             near = pinned ?: opening ?: fix,
             locating = locating,
+            // What was found stays, the choice above it, so another of them is a tap away.
             onFound = { found ->
                 chooseFound(found)
-                query.clearText()
                 keyboard?.hide()
             },
             onKnown = choose,
@@ -547,8 +547,19 @@ private fun PlaceCard(
     // What the map service found that is kept already shows as that place.
     fun keptAs(found: Found): String? = found.source?.let(known::get)
     val rows: List<Entry> = when {
-        typed.isNotEmpty() -> results.orEmpty().map { found -> keptAs(found)?.let { Entry.Known(it, near?.let { at -> distance(at, found.fix) } ?: 0.0) } ?: Entry.Around(found) }
-            .distinctBy { if (it is Entry.Known) it.id else it }
+        typed.isNotEmpty() -> buildList {
+            val found = results.orEmpty().map { found -> keptAs(found)?.let { Entry.Known(it, near?.let { at -> distance(at, found.fix) } ?: 0.0) } ?: Entry.Around(found) }
+                .distinctBy { if (it is Entry.Known) it.id else it }
+            // One of them chosen stands first as the choice, as it does without a search, and
+            // stays while it is renamed: it is told by the map service's id, else by where it is
+            // (the map flown there says its middle a hair off), which a new name leaves.
+            val new = pick as? PlaceChoice.New
+            fun isNew(found: Found) = new != null &&
+                (found.source != null && found.source == new.source || distance(found.fix, new.fix) < SAME_POINT_METRES)
+            val picked = found.filter { it is Entry.Known && it.id == chosenId || it is Entry.Around && isNew(it.found) }
+            if (picked.isNotEmpty()) add(Entry.Chosen)
+            addAll(found - picked.toSet())
+        }
         pick == PlaceChoice.None -> emptyList()
         else -> buildList {
             add(Entry.Chosen)
@@ -783,6 +794,8 @@ internal fun formatDistance(metres: Double): String =
 internal val LOCATION_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 private const val LANDMARKS = 8
 /** How near the pin can come to rest to where it was looked around and keep what was found there. */
+/** How near a new place chosen is to a place found for it to be that one. */
+private const val SAME_POINT_METRES = 5.0
 private const val SAME_SPOT_METRES = 20.0
 /** How tall the list under the map stands: five rows, and at least two and a half over the keyboard. */
 private val LIST_HEIGHT = 320.dp
