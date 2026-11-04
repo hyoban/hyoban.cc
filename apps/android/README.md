@@ -158,8 +158,11 @@ except in 演示模式.
   search and one list: the choice first and ticked, then the known places close by and
   what is around the pin, nearest first, or while something is typed what is called that
   from the same sources. A row tapped is chosen and the pin moves there; the choice tapped
-  again is named by hand, and its kind, which follows where it came from, is a menu at its
-  end, for a known place too. A place shared from Amap (Here (作为时刻的地点), or 保存为地点 to
+  again is named by hand, and its kind, which follows where it came from, opens a sheet of
+  every kind by group (餐饮, 购物, 住宿, 景点, 娱乐, 交通, 生活, 地区), for a known place too: a
+  café, a metro station or a park rather than only food, transport or a sight, each with its
+  icon in the list. A place picked from AMap or Tencent keeps that service's id as its
+  `source`, so finding it again chooses the place already kept rather than a new one beside it. A place shared from Amap (Here (作为时刻的地点), or 保存为地点 to
   only keep it) is followed from its short link and shifted from GCJ-02 back to WGS 84.
 
 New Moments and places live under the app's `local/` directory in the spec's layout, the

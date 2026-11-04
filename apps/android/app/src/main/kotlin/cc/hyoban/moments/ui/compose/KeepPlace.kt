@@ -45,7 +45,7 @@ fun KeepPlace(
                     }
                     is PlaceChoice.New -> {
                         val id = newPlaceId()
-                        val place = Place(pick.name.trim().ifEmpty { coordinatesName(pick.fix) }, pick.fix.latitude, pick.fix.longitude, kind = pick.kind?.value, createdAt = recordTime())
+                        val place = pick.toPlace(recordTime())
                         container.repository.addLocalPlace(id, place)
                         then(id, place.name)
                     }

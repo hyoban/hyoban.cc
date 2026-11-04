@@ -1127,7 +1127,7 @@ private suspend fun buildMoment(
         )
     }
     val newPlace = (place as? PlaceChoice.New)?.let {
-        newPlaceId() to Place(it.name.trim().ifEmpty { coordinatesName(it.fix) }, it.fix.latitude, it.fix.longitude, kind = it.kind?.value, createdAt = now)
+        newPlaceId() to it.toPlace(now)
     }
     val placeIds = when (place) {
         is PlaceChoice.Known -> listOf(place.id)

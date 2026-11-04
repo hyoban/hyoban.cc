@@ -25,20 +25,46 @@ const point = {
 }
 
 /**
- * What sort of place it is: a city; a county, town or village passed through; an area
- * too wide for one point, like a sea; somewhere to see, eat, shop or stay; or a station,
- * airport, port or car park.
+ * What sort of place it is, by group: a city, town or area too wide for one point; then
+ * somewhere to eat, shop, stay, see, have fun or get about, and the places of everyday life.
+ * Each group's first kind is the group as a whole, for a place no finer kind fits; the
+ * finer ones say what it is, a café or a metro station, as the map services do.
  */
-export const placeKindSchema = z.enum([
-  'city',
-  'town',
-  'region',
-  'scenic',
-  'food',
-  'shopping',
-  'stay',
-  'transport',
-])
+export const placeKindGroups = {
+  area: ['city', 'town', 'region'],
+  food: ['food', 'cafe', 'tea', 'bar', 'dessert'],
+  shopping: ['shopping', 'supermarket', 'market'],
+  stay: ['stay', 'camp'],
+  scenic: ['scenic', 'park', 'museum', 'temple', 'nature'],
+  leisure: ['leisure', 'show', 'sport'],
+  transport: [
+    'transport',
+    'station',
+    'metro',
+    'bus',
+    'airport',
+    'port',
+    'parking',
+    'charging',
+    'fuel',
+  ],
+  life: ['life', 'hospital', 'school', 'work', 'residential'],
+} as const
+
+export type PlaceKindGroup = keyof typeof placeKindGroups
+
+export const placeKindSchema = z.enum(
+  Object.values(placeKindGroups).flat() as [PlaceKindValue, ...PlaceKindValue[]],
+)
+
+type PlaceKindValue = (typeof placeKindGroups)[PlaceKindGroup][number]
+
+/** The group a kind is in, `cafe` food. */
+export function getPlaceKindGroup(kind: PlaceKindValue): PlaceKindGroup {
+  return (Object.keys(placeKindGroups) as PlaceKindGroup[]).find((group) =>
+    (placeKindGroups[group] as readonly string[]).includes(kind),
+  )!
+}
 
 export const placeSchema = z.looseObject({
   name: z.string().min(1),
@@ -66,10 +92,13 @@ export const placeSchema = z.looseObject({
    */
   station: z.looseObject({ name: z.string().min(1), ...point }).optional(),
   /**
-   * The venue in another app it was brought in from, Swarm's for now: it is that place and no
-   * other, so publishing never takes it for one nearby or of the same name.
+   * The venue in another app or map service it came from, by that one's id: Swarm's venue, or
+   * the place AMap or Tencent knows. It is that place and no other, so publishing never takes it
+   * for one nearby or of the same name, and the same venue picked again is this place.
    */
-  source: z.looseObject({ app: z.literal('swarm'), venue: z.string().min(1) }).optional(),
+  source: z
+    .looseObject({ app: z.enum(['swarm', 'amap', 'tencent']), venue: z.string().min(1) })
+    .optional(),
   createdAt: timestamp.optional(),
 })
 

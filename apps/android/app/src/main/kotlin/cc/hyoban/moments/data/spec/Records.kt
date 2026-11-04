@@ -41,16 +41,49 @@ data class Place(
     object Serializer : PassthroughSerializer<Place>(generatedSerializer(), { v, e -> v.copy(extra = e) }, { it.extra })
 }
 
-/** What sort of place it is, as the spec names it. */
-enum class PlaceKind(val value: String) {
-    CITY("city"),
-    TOWN("town"),
-    REGION("region"),
-    SCENIC("scenic"),
-    FOOD("food"),
-    SHOPPING("shopping"),
-    STAY("stay"),
-    TRANSPORT("transport");
+/** The groups the kinds of place fall in, as the spec's `placeKindGroups` has them. */
+enum class PlaceGroup { AREA, FOOD, SHOPPING, STAY, SCENIC, LEISURE, TRANSPORT, LIFE }
+
+/**
+ * What sort of place it is, as the spec names it, in its group: each group's first kind is the
+ * group as a whole, the rest finer. In the spec's order, which a test checks against its schema.
+ */
+enum class PlaceKind(val value: String, val group: PlaceGroup) {
+    CITY("city", PlaceGroup.AREA),
+    TOWN("town", PlaceGroup.AREA),
+    REGION("region", PlaceGroup.AREA),
+    FOOD("food", PlaceGroup.FOOD),
+    CAFE("cafe", PlaceGroup.FOOD),
+    TEA("tea", PlaceGroup.FOOD),
+    BAR("bar", PlaceGroup.FOOD),
+    DESSERT("dessert", PlaceGroup.FOOD),
+    SHOPPING("shopping", PlaceGroup.SHOPPING),
+    SUPERMARKET("supermarket", PlaceGroup.SHOPPING),
+    MARKET("market", PlaceGroup.SHOPPING),
+    STAY("stay", PlaceGroup.STAY),
+    CAMP("camp", PlaceGroup.STAY),
+    SCENIC("scenic", PlaceGroup.SCENIC),
+    PARK("park", PlaceGroup.SCENIC),
+    MUSEUM("museum", PlaceGroup.SCENIC),
+    TEMPLE("temple", PlaceGroup.SCENIC),
+    NATURE("nature", PlaceGroup.SCENIC),
+    LEISURE("leisure", PlaceGroup.LEISURE),
+    SHOW("show", PlaceGroup.LEISURE),
+    SPORT("sport", PlaceGroup.LEISURE),
+    TRANSPORT("transport", PlaceGroup.TRANSPORT),
+    STATION("station", PlaceGroup.TRANSPORT),
+    METRO("metro", PlaceGroup.TRANSPORT),
+    BUS("bus", PlaceGroup.TRANSPORT),
+    AIRPORT("airport", PlaceGroup.TRANSPORT),
+    PORT("port", PlaceGroup.TRANSPORT),
+    PARKING("parking", PlaceGroup.TRANSPORT),
+    CHARGING("charging", PlaceGroup.TRANSPORT),
+    FUEL("fuel", PlaceGroup.TRANSPORT),
+    LIFE("life", PlaceGroup.LIFE),
+    HOSPITAL("hospital", PlaceGroup.LIFE),
+    SCHOOL("school", PlaceGroup.LIFE),
+    WORK("work", PlaceGroup.LIFE),
+    RESIDENTIAL("residential", PlaceGroup.LIFE);
 
     companion object {
         fun of(value: String?): PlaceKind? = entries.firstOrNull { it.value == value }
