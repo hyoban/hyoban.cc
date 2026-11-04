@@ -74,7 +74,7 @@ even when starting from the repository root.
   record a moment and an optional point with parts by plugin, a trip a collection, each
   thing public or private by its own say, its container's, its plugin's (a bill's is
   private), else its entry's; an entry is public unless it says otherwise. The plugins are
-  grouped into modules (`modules` there: footprints, ledger, things, car, food, check-ins),
+  grouped into modules (`modules` there: footprints, ledger, things, car, food, check-ins, occasions),
   what the app lets the owner turn on or off as one in 记录项与公开; `vp run data:tables`
   generates Android's `data/spec/Modules.kt` from them. A module off hides its rows, pages
   and records and stops its background work, and its data stays: gate a new screen, part or
