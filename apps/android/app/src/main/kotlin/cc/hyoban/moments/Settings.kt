@@ -48,6 +48,9 @@ class Token internal constructor(private val file: File) {
     }
 }
 
+const val CHINA_PLACES_AMAP = "amap"
+const val CHINA_PLACES_TENCENT = "tencent"
+
 /** Where the app reads from, kept on the phone. */
 class Settings(context: Context) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -72,6 +75,12 @@ class Settings(context: Context) {
 
     /** The owner's own Tencent Location Service key, with which the place picker asks Tencent what is around in China; none, it asks Photon. */
     val tencentMapKey = Token(File(context.noBackupFilesDir, "tencent-map-key"))
+
+    /** The owner's own AMap Web Service key, with which the place picker asks AMap what is around in China. */
+    val amapKey = Token(File(context.noBackupFilesDir, "amap-key"))
+
+    /** Which of the two the place picker asks first in China when both keys are set, `amap` or `tencent`; the other answers when it can't. */
+    val chinaPlaces = Setting(prefs, "china_places", CHINA_PLACES_AMAP)
 
     /** Whether the app has asked once to see where picked photos were taken; it doesn't ask again. */
     var askedMediaLocation: Boolean

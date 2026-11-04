@@ -94,7 +94,10 @@ class AppContainer(context: Context) {
     )
     val mediaUrls = MediaUrls { settings.assetOrigin.value }
     /** Places by name and around a point, for a new Moment's place. */
-    val placeSearch = PlaceSearch(BuildConfig.PLACE_SEARCH_URL, tencentKey = { settings.tencentMapKey.value })
+    val placeSearch = PlaceSearch(BuildConfig.PLACE_SEARCH_URL, tencentKey = { settings.tencentMapKey.value },
+        amapKey = { settings.amapKey.value },
+        tencentFirst = { settings.chinaPlaces.value == CHINA_PLACES_TENCENT },
+    )
     /** Where each bill was paid, by the footprints. */
     val billPlaces = cc.hyoban.moments.footprints.BillPlaces(footprints, placeSearch)
     /** The trips' routes along the roads, from the API. */

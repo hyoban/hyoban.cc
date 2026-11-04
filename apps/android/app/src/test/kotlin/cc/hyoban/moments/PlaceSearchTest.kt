@@ -2,9 +2,13 @@ package cc.hyoban.moments
 
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.Found
+import cc.hyoban.moments.data.local.PlaceSearch
+import okhttp3.ResponseBody.Companion.toResponseBody
+import cc.hyoban.moments.data.local.amapKind
 import cc.hyoban.moments.data.local.kindOf
 import cc.hyoban.moments.data.local.landmarks
 import cc.hyoban.moments.data.local.nameAt
+import cc.hyoban.moments.data.local.parseAmap
 import cc.hyoban.moments.data.local.parsePhoton
 import cc.hyoban.moments.data.local.parseTencent
 import cc.hyoban.moments.data.local.tencentKind
@@ -97,6 +101,77 @@ class PlaceSearchTest {
         assertFailsWith<java.io.IOException>("calls used up are an error, so Photon answers") {
             parseTencent("""{"status":121,"message":"此key每日调用量已达到上限"}""")
         }
+    }
+
+    @Test
+    fun `AMap's places and tips are read in WGS 84 with their address and kind, the pointless left out`() {
+        val here = Fix(31.2001, 121.4001)
+        val shifted = wgsToGcj(here)
+        val around = parseAmap(
+            """
+            {"status":"1","info":"OK","infocode":"10000","pois":[
+              {"name":"某某面馆(某商场店)","address":"某路 1 号 B1 层","typecode":"050100","location":"${shifted.longitude},${shifted.latitude}"},
+              {"name":"某某大厦","address":[],"typecode":"120201","location":"121.4,31.2"}
+            ]}
+            """.trimIndent(),
+        )
+        assertEquals(listOf("某某面馆(某商场店)", "某某大厦"), around.map { it.name })
+        assertTrue(kotlin.math.abs(around[0].fix.latitude - here.latitude) < 1e-6 && kotlin.math.abs(around[0].fix.longitude - here.longitude) < 1e-6, "shifted back to WGS 84")
+        assertEquals("某路 1 号 B1 层", around[0].address)
+        assertNull(around[1].address, "an empty field comes as []")
+        assertEquals(PlaceKind.FOOD, kindOf(around[0]))
+        val tips = parseAmap(
+            """
+            {"status":"1","info":"OK","infocode":"10000","tips":[
+              {"name":"某某咖啡","district":"某区","address":"某街 2 号","typecode":"050500","location":"121.4,31.2"},
+              {"name":"某路公交","address":[],"typecode":[],"location":[]},
+              {"name":"咖啡","location":""}
+            ]}
+            """.trimIndent(),
+        )
+        assertEquals(listOf("某某咖啡"), tips.map { it.name })
+        assertFailsWith<java.io.IOException>("calls used up are an error, so Tencent or Photon answers") {
+            parseAmap("""{"status":"0","info":"DAILY_QUERY_OVER_LIMIT","infocode":"10003"}""")
+        }
+    }
+
+    @Test
+    fun `with both keys the chosen service is asked first, the other when it has nothing`() {
+        val asked = mutableListOf<String>()
+        fun client(emptyHost: String) = okhttp3.OkHttpClient.Builder().addInterceptor { chain ->
+            val host = chain.request().url.host
+            asked += host
+            val body = when {
+                host == emptyHost && host.contains("amap") -> """{"status":"1","tips":[]}"""
+                host == emptyHost -> """{"status":0,"data":[]}"""
+                host.contains("amap") -> """{"status":"1","tips":[{"name":"高德的","location":"121.4,31.2"}]}"""
+                else -> """{"status":0,"data":[{"title":"腾讯的","location":{"lat":31.2,"lng":121.4}}]}"""
+            }
+            okhttp3.Response.Builder().request(chain.request()).protocol(okhttp3.Protocol.HTTP_1_1).code(200).message("OK")
+                .body(body.toResponseBody()).build()
+        }.build()
+        fun search(tencentFirst: Boolean, emptyHost: String = "") = kotlinx.coroutines.runBlocking {
+            asked.clear()
+            PlaceSearch({ "https://photon.invalid" }, { "t" }, { "a" }, { tencentFirst }, client(emptyHost)).search("某店", Fix(31.2, 121.4)).map { it.name }
+        }
+        assertEquals(listOf("高德的"), search(tencentFirst = false))
+        assertEquals(listOf("restapi.amap.com"), asked)
+        assertEquals(listOf("腾讯的"), search(tencentFirst = true))
+        assertEquals(listOf("apis.map.qq.com"), asked)
+        assertEquals(listOf("高德的"), search(tencentFirst = true, emptyHost = "apis.map.qq.com"))
+        assertEquals(listOf("apis.map.qq.com", "restapi.amap.com"), asked)
+    }
+
+    @Test
+    fun `AMap's type codes say what kind of place it is`() {
+        assertEquals(PlaceKind.SHOPPING, amapKind("060101"))
+        assertEquals(PlaceKind.STAY, amapKind("100100"))
+        assertEquals(PlaceKind.SCENIC, amapKind("110101|110102"))
+        assertEquals(PlaceKind.TRANSPORT, amapKind("150500"))
+        assertEquals(PlaceKind.TRANSPORT, amapKind("011100"))
+        assertEquals(PlaceKind.SCENIC, amapKind("140100"))
+        assertNull(amapKind("120201"))
+        assertNull(amapKind(null))
     }
 
     @Test
