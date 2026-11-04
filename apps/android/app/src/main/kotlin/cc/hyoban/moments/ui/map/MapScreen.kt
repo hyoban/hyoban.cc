@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.map
 
+import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.TextButton
 import cc.hyoban.moments.ui.design.AppIcons
@@ -225,7 +226,8 @@ private fun MapContent(
     }
     // The check-ins alone at each place, an import's waiting to be published among them.
     val checkins by container.repository.checkins.collectAsStateWithLifecycle()
-    val checkinsByPlace = checkins.byPlace
+    val checkinsByPlace = if (LocalSettings.current.isOn(Module.CHECKIN)) checkins.byPlace else emptyMap()
+    val footprintsOn = LocalSettings.current.isOn(Module.FOOTPRINTS)
     val mapPlaces = remember(byPlace, checkinsByPlace, places) {
         (byPlace.keys + checkinsByPlace.keys).mapNotNull { id ->
             val moments = byPlace[id].orEmpty()
@@ -314,7 +316,7 @@ private fun MapContent(
             MapFocus.Footprints -> {
                 selected = null
                 highlighted = null
-                footprints.open()
+                if (footprintsOn) footprints.open()
                 onFocused()
             }
             null -> Unit
@@ -380,7 +382,7 @@ private fun MapContent(
             locate = locate,
             north = north,
             onBearing = { bearing = it },
-            footprints = footprints.drawing,
+            footprints = if (footprintsOn) footprints.drawing else cc.hyoban.moments.footprints.FootprintDrawing(),
             footprintFrame = footprints.frame,
             frameFootprints = footprints.frameRequested,
             onFootprintsFramed = footprints.onFramed,
@@ -463,7 +465,7 @@ private fun MapContent(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             CompassButton(turned, bearing, onClick = { north++ })
-            FootprintsButton(footprints.recording, onClick = openFootprints)
+            if (footprintsOn) FootprintsButton(footprints.recording, onClick = openFootprints)
             LocateButton(locating, onClick = requestLocate)
         }
         // Kept while the card leaves, after the route is let go.

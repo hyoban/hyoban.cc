@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.LocalSettings
+import cc.hyoban.moments.data.spec.Module
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.WindowInsets
@@ -109,6 +111,16 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
     val query = rememberTextFieldState()
     val text = query.text.toString().trim()
     var kind by rememberSaveable { mutableStateOf(FeedKind.ALL) }
+    // The kinds to choose from: bills and charges only while their modules are on (记录项与公开).
+    val settings = LocalSettings.current
+    val kinds = FeedKind.entries.filter {
+        when (it) {
+            FeedKind.BILLS -> settings.isOn(Module.LEDGER)
+            FeedKind.CHARGES -> settings.isOn(Module.CAR)
+            else -> true
+        }
+    }
+    LaunchedEffect(kinds) { if (kind !in kinds) kind = FeedKind.ALL }
     var year by rememberSaveable { mutableStateOf<Int?>(null) }
     var month by rememberSaveable { mutableStateOf<Int?>(null) }
     val filter = TimeFilter(year, month)
@@ -181,8 +193,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
             )
         }
         // One kind's chip: its name and, searching, how many it found.
-        val kindChip: @Composable (Int) -> Unit = { index ->
-            val option = FeedKind.entries[index]
+        val kindChip: @Composable (FeedKind) -> Unit = { option ->
             val count = counts.getValue(option)
             cc.hyoban.moments.ui.design.FilterChip(
                 selected = option == kind,
@@ -289,7 +300,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
             Row(Modifier.fillMaxSize().railPadding()) {
                 Column(Modifier.width(SIDE_COLUMN).fillMaxHeight().verticalScroll(rememberScrollState()).padding(start = Space.gutter, top = Space.xs, bottom = Space.xl)) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                        FeedKind.entries.indices.forEach { kindChip(it) }
+                        kinds.forEach { kindChip(it) }
                     }
                     Box(Modifier.offset(x = -Space.gutter)) { time() }
                 }
@@ -302,7 +313,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                 horizontalArrangement = Arrangement.spacedBy(Space.s),
                 modifier = Modifier.padding(vertical = Space.xs),
             ) {
-                items(FeedKind.entries.size) { index -> kindChip(index) }
+                items(kinds, key = { it.name }) { kindChip(it) }
             }
             time()
             results()

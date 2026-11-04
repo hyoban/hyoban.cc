@@ -42,6 +42,10 @@ data/
   being near each other or sharing a name.
 - Each record is public or private: its own `visibility`, else its container's, else its
   plugin's default (a bill is private), else public.
+- The plugins are grouped into **modules** (`modules` in `entry.ts`: footprints, ledger,
+  things, car, food, check-ins), each owning its plugins' parts and the tables past the
+  entries that are its. They are what the app lets the owner turn on or off as one; the data
+  is the same either way.
 - Units are those `packages/data-spec/src/primitives.ts` gives: metres, watt-hours, seconds,
   and yuan where no `currency` is beside an amount. What happened keeps the offset it
   happened at; `createdAt` and `updatedAt` are written in UTC. A charge's `durationMin` is

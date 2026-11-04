@@ -13,6 +13,7 @@ import {
   timestamp,
   ulid,
 } from './primitives.ts'
+import type { TableName } from './tables.ts'
 import { vehicleSourceSchema } from './vehicle.ts'
 
 // The second shape of the data: every record is a moment and an optional point (an Entry),
@@ -391,6 +392,41 @@ export const plugins = {
 } satisfies Record<string, Plugin<never>>
 
 export type PluginId = keyof typeof plugins
+
+// Modules: what a client lets the owner turn on or off as one, in 记录项与公开 on the phone.
+// Each owns the plugins whose parts are its and, past the entries, the tables it keeps (the
+// footprints' public tracks, the car's statistics). Words and photos are every entry's and no
+// module's. Off, a module's pages, rows and background work are put away and its records
+// kept, so the data is the same either way; a part of a module the client doesn't know
+// travels through like any other.
+
+export interface Module {
+  id: string
+  /** The plugins whose parts are its. */
+  plugins: readonly PluginId[]
+  /** What of the data past the entries is its, by table. */
+  tables: readonly TableName[]
+}
+
+export const modules = [
+  { id: 'footprints', plugins: [], tables: ['tracks'] },
+  { id: 'ledger', plugins: ['bill'], tables: [] },
+  { id: 'things', plugins: ['device', 'subscription'], tables: [] },
+  {
+    id: 'car',
+    plugins: ['charge'],
+    tables: ['vehicle_months', 'vehicle_assisted', 'vehicle_captures'],
+  },
+  { id: 'food', plugins: ['food'], tables: [] },
+  { id: 'checkin', plugins: ['checkin'], tables: [] },
+] as const satisfies readonly Module[]
+
+export type ModuleId = (typeof modules)[number]['id']
+
+/** The module a plugin belongs to; none for what every entry may hold, or a plugin unknown here. */
+export function getPluginModule(pluginId: string): ModuleId | undefined {
+  return modules.find((module) => (module.plugins as readonly string[]).includes(pluginId))?.id
+}
 
 function getPlugin(id: string): Plugin<never> | undefined {
   return (plugins as Record<string, Plugin<never>>)[id]

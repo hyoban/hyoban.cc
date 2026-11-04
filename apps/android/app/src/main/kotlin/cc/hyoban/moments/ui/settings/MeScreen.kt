@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.data.spec.Module
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -93,7 +94,8 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
         }
     }
     val sideKey by SideKeys.state.collectAsStateWithLifecycle()
-    val connected = LocalSettings.current.connected
+    val settings = LocalSettings.current
+    val connected = settings.connected
     val books = ledger.books.filter { !it.archived }
     // This month's spending in the shown books, in the book's currency, under the ledger's name.
     val month = remember(ledger) {
@@ -108,24 +110,26 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
     val first: @Composable () -> Unit = {
         // With no API to publish to, what is kept here is simply the phone's.
         if (pending.size > 0 && container.canPublish) PublishCard(pending.size, routes.changes)
+        // A row for each module that is on (记录项与公开); the things' row names what of it is.
+        val things = listOfNotNull(
+            stringResource(R.string.devices_title).takeIf { settings.isOn(Module.THINGS) },
+            stringResource(R.string.subscriptions_title).takeIf { settings.isOn(Module.THINGS) },
+            // The car's data comes only from an import into the API, so without one there is none.
+            stringResource(R.string.car_title).takeIf { connected && settings.isOn(Module.CAR) },
+        )
         PageRows(Modifier.padding(top = Space.s)) { shapes ->
-            MeRow(
+            if (settings.isOn(Module.LEDGER)) MeRow(
                 AppIcons.Wallet, stringResource(R.string.me_ledger), "me_ledger", shapes,
                 supporting = month?.let { (expense, currency) -> stringResource(R.string.me_month_expense) + APART + money(expense, currency) },
             ) { routes.ledger(0) }
-            MeRow(
+            if (settings.isOn(Module.FOOTPRINTS)) MeRow(
                 AppIcons.Footprints, stringResource(R.string.footprints_title), "me_footprints", shapes,
                 supporting = stringResource(R.string.me_footprints_recording).takeIf { footprints.second },
                 onClick = routes.footprints,
             )
-            // The car's data comes only from an import into the API, so without one there is none.
-            MeRow(
+            if (things.isNotEmpty()) MeRow(
                 AppIcons.Package, stringResource(R.string.me_things), "me_things", shapes,
-                supporting = listOfNotNull(
-                    stringResource(R.string.devices_title),
-                    stringResource(R.string.subscriptions_title),
-                    stringResource(R.string.car_title).takeIf { connected },
-                ).joinToString(stringResource(R.string.separator_list)),
+                supporting = things.joinToString(stringResource(R.string.separator_list)),
                 onClick = routes.things,
             )
         }
@@ -154,12 +158,15 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
                 ),
                 onClick = routes.sync,
             )
-            MeRow(
+            // The sources of the modules that are on; with none, nothing to import into.
+            val sources = importSources()
+            if (sources.isNotEmpty()) MeRow(
                 AppIcons.FileOpen, stringResource(R.string.import_title), "settings_import", shapes,
-                supporting = stringResource(R.string.me_import_sources),
+                supporting = sources.joinToString(stringResource(R.string.separator_list)),
                 onClick = routes.imports,
             )
-            MeRow(
+            // Only on the phone whose key it is.
+            if (SideKeys.supported) MeRow(
                 AppIcons.Phone, stringResource(R.string.side_key_title), "settings_sidekey", shapes,
                 supporting = stringResource(sideKey.phase.label),
                 onClick = routes.sideKey,

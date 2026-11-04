@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.ui.draw.clip
@@ -118,8 +119,9 @@ fun MomentCard(
             if (moment.text.isNotBlank()) {
                 Text(moment.text, style = AppTheme.typography.bodyReading, maxLines = 8, overflow = TextOverflow.Ellipsis)
             }
-            // What was eaten, under the words as the site has it: one line of secondary text.
-            foodLine(moment.food)?.let { line ->
+            // What was eaten, under the words as the site has it: one line of secondary text,
+            // while meals are on (记录项与公开).
+            if (LocalSettings.current.isOn(Module.FOOD)) foodLine(moment.food)?.let { line ->
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                     Icon(AppIcons.Food, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
                     Text(line, style = AppTheme.typography.body, color = tokens.tx2, maxLines = 1, overflow = TextOverflow.Ellipsis)

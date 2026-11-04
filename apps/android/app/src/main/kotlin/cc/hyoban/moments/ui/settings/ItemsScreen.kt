@@ -1,5 +1,15 @@
 package cc.hyoban.moments.ui.settings
 
+import kotlinx.coroutines.CancellationException
+import android.util.Log
+import android.content.Context
+import cc.hyoban.moments.accessibility.ShareAccessibilityService
+import cc.hyoban.moments.footprints.ConnectionReminderService
+import cc.hyoban.moments.footprints.RecordingService
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import cc.hyoban.moments.ui.LocalSettings
+import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -31,10 +41,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * 记录项与公开: who sees what, by default. Each book says whether its new bills are public, a public
- * one publishing its amount, category and note alone; the footprints are private, with the spans
- * made public counted here and made so on a trip's page. Every bill and span can still say
- * otherwise. Nothing here opens a page further down.
+ * 记录项与公开: what is recorded, and who sees it by default. First the modules the spec defines
+ * (`Module`), each on or off as one: off, its rows, pages and records are put away everywhere,
+ * its background work stops ([applyModule]) and its data stays. Then each book says whether its
+ * new bills are public, a public one publishing its amount, category and note alone; the
+ * footprints are private, with the spans made public counted here and made so on a trip's
+ * page. Every bill and span can still say otherwise. Nothing here opens a page further down.
  */
 @Composable
 fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
@@ -44,6 +56,8 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
         value = withContext(Dispatchers.IO) { container.footprints.shares().count { !it.removed } }
     }
     val scope = rememberCoroutineScope()
+    val settings = LocalSettings.current
+    val context = LocalContext.current
     SubPage(stringResource(R.string.items_title), onBack, Modifier.background(AppColors.page)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
@@ -55,8 +69,21 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
                     .padding(horizontal = columns.margin)
                     .padding(bottom = Space.xl),
             ) {
+                SegmentedGroup(
+                    stringResource(R.string.items_modules),
+                    stringResource(R.string.items_modules_note),
+                    Module.entries.map { module ->
+                        { shapes ->
+                            val on = settings.isOn(module)
+                            SwitchRow(on, moduleIcon(module), stringResource(moduleTitle(module)), "module_${module.key}", shapes) {
+                                settings.changeModule(module, !on)
+                                scope.launch { applyModule(context, module) }
+                            }
+                        }
+                    },
+                )
                 val books = ledger.books.filter { !it.archived }
-                if (books.isNotEmpty()) {
+                if (books.isNotEmpty() && settings.isOn(Module.LEDGER)) {
                     SegmentedGroup(
                         stringResource(R.string.items_books),
                         stringResource(R.string.items_book_note),
@@ -78,7 +105,7 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
                         },
                     )
                 }
-                SegmentedGroup(
+                if (settings.isOn(Module.FOOTPRINTS)) SegmentedGroup(
                     stringResource(R.string.items_tracks),
                     stringResource(R.string.items_tracks_note),
                     listOf { _ ->
@@ -92,5 +119,45 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+/** A module's name on the page: the app's own word for each. */
+fun moduleTitle(module: Module): Int = when (module) {
+    Module.FOOTPRINTS -> R.string.footprints_title
+    Module.LEDGER -> R.string.me_ledger
+    Module.THINGS -> R.string.me_things
+    Module.CAR -> R.string.car_title
+    Module.FOOD -> R.string.section_food
+    Module.CHECKIN -> R.string.module_checkin
+}
+
+/** A module's icon, the one its row on 我 or its part has. */
+fun moduleIcon(module: Module): ImageVector = when (module) {
+    Module.FOOTPRINTS -> AppIcons.Footprints
+    Module.LEDGER -> AppIcons.Wallet
+    Module.THINGS -> AppIcons.Package
+    Module.CAR -> AppIcons.Car
+    Module.FOOD -> AppIcons.Food
+    Module.CHECKIN -> AppIcons.Pin
+}
+
+/**
+ * Brings the phone's background work in line with [module] just turned on or off: the footprints'
+ * recording and connection reminders stop while their module is off and come back as they were
+ * set when it is on again; the payment reader listens for 自动记账 only while the ledger is on.
+ */
+suspend fun applyModule(context: Context, module: Module) {
+    when (module) {
+        Module.FOOTPRINTS -> try {
+            RecordingService.control(context)
+            ConnectionReminderService.sync(context)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w("Footprints", "Could not apply the footprints module", e)
+        }
+        Module.LEDGER -> ShareAccessibilityService.listenIdle()
+        else -> Unit
     }
 }

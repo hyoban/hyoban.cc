@@ -1,5 +1,6 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.data.spec.Module
 import android.Manifest
 import android.app.*
 import android.content.*
@@ -693,7 +694,8 @@ class RecordingService : Service() {
             if (action != null) container.footprintDiagnostics.record("command",
                 mapOf("action" to action, "daily" to state.daily, "trip" to (state.session != null), "paused" to state.paused,
                     "elapsed_ms" to SystemClock.elapsedRealtime()))
-            if (!state.recording) {
+            // Nothing records while the footprints are turned off (记录项与公开), whatever was asked.
+            if (!state.recording || !container.settings.isOn(Module.FOOTPRINTS)) {
                 app.stopService(Intent(app, RecordingService::class.java))
                 _status.value = null
                 // A dead service has no onDestroy callback to unregister its activity PendingIntent.

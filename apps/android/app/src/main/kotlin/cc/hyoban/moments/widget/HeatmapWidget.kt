@@ -1,5 +1,6 @@
 package cc.hyoban.moments.widget
 
+import cc.hyoban.moments.data.spec.Module
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
@@ -161,6 +162,7 @@ private suspend fun heatDays(context: Context, source: HeatSource, from: LocalDa
                 .mapValues { it.value.toDouble() }
         }
         HeatSource.SPENDING -> {
+            if (!container.settings.isOn(Module.LEDGER)) return emptyMap()
             container.ledger.loaded.first { it }
             val ledger = container.ledger.ledger.value
             val currency = ledger.book?.currency ?: return emptyMap()
@@ -169,6 +171,7 @@ private suspend fun heatDays(context: Context, source: HeatSource, from: LocalDa
                 .expenseByDay.mapValues { it.value.toDouble() }
         }
         HeatSource.FOOTPRINTS -> withContext(Dispatchers.IO) {
+            if (!container.settings.isOn(Module.FOOTPRINTS)) return@withContext emptyMap<LocalDate, Double>()
             val store = container.footprints
             store.days().mapNotNull { day -> runCatching { LocalDate.parse(day) }.getOrNull()?.takeIf { it in from..to }?.let { it to day } }
                 .associate { (date, day) ->

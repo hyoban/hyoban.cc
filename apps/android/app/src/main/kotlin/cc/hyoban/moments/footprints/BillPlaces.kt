@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap
  * the footprints so each spot is asked about once, and a spot Photon couldn't be reached for is
  * asked about again next time the app runs.
  */
-class BillPlaces(private val footprints: FootprintStore, private val search: PlaceSearch) {
+class BillPlaces(private val footprints: FootprintStore, private val search: PlaceSearch, private val enabled: () -> Boolean = { true }) {
     private val names = ConcurrentHashMap<String, String>()
     private val unreachable = ConcurrentHashMap.newKeySet<String>()
     private val asking = Mutex()
@@ -30,6 +30,7 @@ class BillPlaces(private val footprints: FootprintStore, private val search: Pla
 
     /** Where the footprints were at [time], or null where they weren't kept. */
     suspend fun pointAt(time: Long): Fix? = withContext(Dispatchers.IO) {
+        if (!enabled()) return@withContext null
         footprints.pointNear(time, WITHIN_MS, ACCURACY_M)?.let { Fix(it.latitude, it.longitude) }
     }
 

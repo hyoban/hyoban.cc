@@ -71,7 +71,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   Do not close the user's IDE, stop unrelated processes or interrupt another build.
 
 - Programmable actions stay configurable: adding an action must not assign or replace the
-  user’s gesture bindings.
+  user’s gesture bindings. 侧键 is for the owner's one phone model (`SideKeys.supported`,
+  README); don't show it on others or widen the match without asking.
 
 ## Design
 

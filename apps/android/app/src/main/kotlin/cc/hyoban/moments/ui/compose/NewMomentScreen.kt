@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.compose
 
+import cc.hyoban.moments.ui.LocalSettings
+import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.design.rememberHaptics
 import cc.hyoban.moments.ui.theme.dividerColor
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -544,22 +546,28 @@ fun NewMomentScreen(
                         )
                     }
                 }
-                // 加一项: the plugins in a row, each opening its fields when chosen, a tick in place of its icon.
-                PageCaption(stringResource(R.string.section_add_item))
-                FlowRow(
-                    Modifier.fillMaxWidth().padding(horizontal = Space.gutter),
-                    horizontalArrangement = Arrangement.spacedBy(Space.s),
-                    verticalArrangement = Arrangement.spacedBy(Space.s),
-                ) {
-                    AddChip(withFood, AppIcons.Food, stringResource(R.string.section_food), "add_food") {
-                        withFood = !withFood
-                        if (!withFood) {
-                            dishes = ""; verdict = null; amount = ""; people = ""
+                // 加一项: the plugins in a row, each opening its fields when chosen, a tick in place of
+                // its icon; only those of modules that are on (记录项与公开), a meal already written
+                // staying as it is while meals are off.
+                val foodOn = LocalSettings.current.isOn(Module.FOOD)
+                val billOn = LocalSettings.current.isOn(Module.LEDGER)
+                if (foodOn || billOn) {
+                    PageCaption(stringResource(R.string.section_add_item))
+                    FlowRow(
+                        Modifier.fillMaxWidth().padding(horizontal = Space.gutter),
+                        horizontalArrangement = Arrangement.spacedBy(Space.s),
+                        verticalArrangement = Arrangement.spacedBy(Space.s),
+                    ) {
+                        if (foodOn) AddChip(withFood, AppIcons.Food, stringResource(R.string.section_food), "add_food") {
+                            withFood = !withFood
+                            if (!withFood) {
+                                dishes = ""; verdict = null; amount = ""; people = ""
+                            }
                         }
+                        if (billOn) AddChip(withBill, AppIcons.Receipt, stringResource(R.string.section_bill), "add_bill") { withBill = !withBill }
                     }
-                    AddChip(withBill, AppIcons.Receipt, stringResource(R.string.section_bill), "add_bill") { withBill = !withBill }
                 }
-                if (withFood) FoodGroup(
+                if (withFood && foodOn) FoodGroup(
                     dishes = dishes,
                     onDishes = { dishes = it },
                     verdict = verdict,

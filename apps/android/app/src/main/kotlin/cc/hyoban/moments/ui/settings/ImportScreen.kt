@@ -1,5 +1,9 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.ui.theme.tokens
+import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.LocalSettings
+import cc.hyoban.moments.data.spec.Module
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -45,6 +49,20 @@ import kotlinx.coroutines.withContext
 // Every way in for what another app or a file holds, grouped by where it goes: the Moments, the
 // ledger, the footprints. A row opens the system's file picker; what came in is said in a dialog.
 
+/**
+ * The sources 导入 offers, by name: those whose module is on (记录项与公开). What 我 says under
+ * 导入, and the row is left out when there are none.
+ */
+@Composable
+fun importSources(): List<String> {
+    val settings = LocalSettings.current
+    return listOfNotNull(
+        stringResource(R.string.import_source_swarm).takeIf { settings.isOn(Module.CHECKIN) },
+        stringResource(R.string.import_source_icost).takeIf { settings.isOn(Module.LEDGER) },
+        stringResource(R.string.import_source_gpx).takeIf { settings.isOn(Module.FOOTPRINTS) },
+    )
+}
+
 /** 导入: Swarm's export, iCost's backup or bill export, and GPX tracks, on one page under 我. */
 @Composable
 fun ImportScreen(container: AppContainer, onBack: () -> Unit) {
@@ -59,9 +77,18 @@ fun ImportScreen(container: AppContainer, onBack: () -> Unit) {
                     .padding(horizontal = columns.margin)
                     .padding(bottom = Space.xl),
             ) {
-                SwarmGroup(container.swarm)
-                ICostGroup(container)
-                GpxGroup(container)
+                // Each source under the module it feeds, so one turned off (记录项与公开) isn't offered.
+                val settings = LocalSettings.current
+                if (settings.isOn(Module.CHECKIN)) SwarmGroup(container.swarm)
+                if (settings.isOn(Module.LEDGER)) ICostGroup(container)
+                if (settings.isOn(Module.FOOTPRINTS)) GpxGroup(container)
+                // Opened by a link with every one of them off: why there is nothing here.
+                if (importSources().isEmpty()) Text(
+                    stringResource(R.string.import_none),
+                    style = AppTheme.typography.body,
+                    color = tokens.tx2,
+                    modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).testTag("import_none"),
+                )
             }
         }
     }

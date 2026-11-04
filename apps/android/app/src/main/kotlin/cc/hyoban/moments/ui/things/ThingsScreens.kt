@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.things
 
+import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.components.SIDE_COLUMN
 import cc.hyoban.moments.ui.components.SideBySide
 import cc.hyoban.moments.ui.components.isPhoneLandscape
@@ -170,9 +171,9 @@ private var lastKind: ThingKind? = null
  */
 @Composable
 fun ThingsScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Unit, kind: ThingKind? = null, open: String? = null) {
-    val connected = LocalSettings.current.connected
-    val kinds = ThingKind.entries.filter { it != ThingKind.CAR || connected }
-    var shown by rememberSaveable { mutableStateOf((kind ?: lastKind)?.takeIf { it in kinds } ?: ThingKind.DEVICES) }
+    val settings = LocalSettings.current
+    val kinds = ThingKind.entries.filter { if (it == ThingKind.CAR) settings.connected && settings.isOn(Module.CAR) else settings.isOn(Module.THINGS) }
+    var shown by rememberSaveable { mutableStateOf((kind ?: lastKind)?.takeIf { it in kinds } ?: kinds.firstOrNull() ?: ThingKind.DEVICES) }
     lastKind = shown
     val menu = if (kinds.size < 2) null else TitleMenu(stringResource(R.string.things_switch)) { close ->
         kinds.forEach { each ->

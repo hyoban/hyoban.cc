@@ -913,6 +913,10 @@
     <string name="items_tracks">Tracks</string>
     <string name="items_tracks_note">Tracks are private; a trip’s page can make its span public.</string>
     <string name="items_track_shares" tools:ignore="PluralsCandidate">%1$d public</string>
+    <string name="items_modules">Items</string>
+    <string name="items_modules_note">An item turned off is put away on every page; its data stays on the phone. Footprints stop recording, and automatic and side-key billing stop. Turned on, it all comes back.</string>
+    <string name="module_checkin">Check-ins</string>
+    <string name="side_key_ledger_off">The ledger is turned off under Items and visibility</string>
     <string name="moment_private_note">Private ones aren’t published</string>
     <string name="me_items">Items and visibility</string>
     <string name="part_text">Words</string>
@@ -1161,7 +1165,10 @@
     <string name="import_ledger">Ledger</string>
     <string name="import_ledger_note">The ledger stays on this phone; it isn\'t synced or published.</string>
     <string name="import_footprints_note">Where the phone already has samples for a time, its own are kept.</string>
-    <string name="me_import_sources">Swarm, iCost, GPX tracks</string>
+    <string name="import_source_swarm">Swarm</string>
+    <string name="import_source_icost">iCost</string>
+    <string name="import_source_gpx">GPX tracks</string>
+    <string name="import_none">Every item is turned off, so there is nothing to import into. Turn on check-ins, the ledger or footprints under Items and visibility, then import.</string>
     <string name="swarm_import">Import from Swarm</string>
     <string name="swarm_import_note">The .zip Swarm exports</string>
     <string name="swarm_import_explain">Check-ins come in private: those with words or photos as Moments, the rest as check-ins alone, each venue a place. Importing the same export again adds only what is new.</string>

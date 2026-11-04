@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ledger
 
+import cc.hyoban.moments.data.spec.Module
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -31,7 +32,12 @@ object AutoBill {
     private const val TAG = "AutoBill"
     private val enabledState = MutableStateFlow<Boolean?>(null)
 
-    fun enabled(context: Context): Boolean = enabledState.value
+    /** Whether payment pages are read: the switch, and the ledger on (记录项与公开). */
+    fun enabled(context: Context): Boolean =
+        (context.applicationContext as MomentsApplication).container.settings.isOn(Module.LEDGER) && switched(context)
+
+    /** The switch as set, whatever the ledger's module. */
+    private fun switched(context: Context): Boolean = enabledState.value
         ?: context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean("enabled", false).also { enabledState.value = it }
 
     /** The same as a flow, for the settings' switch; read from the preferences first. */

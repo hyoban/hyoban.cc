@@ -1,5 +1,6 @@
 package cc.hyoban.moments.sidekey
 
+import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.BuildConfig
 import android.content.ComponentName
 import android.content.Context
@@ -78,6 +79,12 @@ internal data class SideKeyState(
 
 /** A single listener hosted by the accessibility service; preferences stay on this phone. */
 internal object SideKeys {
+    /**
+     * The one phone the side key is for, the OPPO Find X10 Pro Max (model PMX110), whose key
+     * advertises `BTN_TRIGGER_HAPPY32`: on any other, 我 shows no 侧键 row.
+     */
+    val supported: Boolean = android.os.Build.MANUFACTURER.equals("OPPO", ignoreCase = true) && android.os.Build.MODEL == "PMX110"
+
     val gestures = listOf("single", "double", "long")
     private const val ORIGINAL = "original"
     private lateinit var context: Context
@@ -354,8 +361,13 @@ internal object SideKeys {
                     }
                 }
                 action == "ledger:capture" -> {
-                    val result = ShareAccessibilityService.capturePayment()
-                    report(context.getString(result.message), result != cc.hyoban.moments.accessibility.PaymentCapture.OPENED)
+                    // Bound still, so it is there again when the ledger is turned back on.
+                    if (!(context.applicationContext as cc.hyoban.moments.MomentsApplication).container.settings.isOn(Module.LEDGER)) {
+                        report(context.getString(R.string.side_key_ledger_off), true)
+                    } else {
+                        val result = ShareAccessibilityService.capturePayment()
+                        report(context.getString(result.message), result != cc.hyoban.moments.accessibility.PaymentCapture.OPENED)
+                    }
                 }
                 action.startsWith("media:") -> {
                     val bridge = checkNotNull(remote)

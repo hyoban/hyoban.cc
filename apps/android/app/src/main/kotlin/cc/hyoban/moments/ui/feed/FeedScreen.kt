@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.ui.LocalSettings
+import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.MainActivity
 import cc.hyoban.moments.ui.components.MediaBeside
 import cc.hyoban.moments.ui.components.sideInsetsPadding
@@ -502,15 +504,17 @@ fun DayScreen(
     val moments = remember(all, date) { all.filter { it.occurredAt.startsWith(date) } }
     val trip = remember(moments, trips, date) { moments.firstNotNullOfOrNull { tripOf(it, trips) } ?: trips.firstOrNull { date >= it.start && date <= it.end } }
     val ledgerNav = LocalLedgerNav.current
-    // The day's own footprints, private and the phone's, read once for the page; null until read.
-    val track by androidx.compose.runtime.produceState<List<cc.hyoban.moments.footprints.TrackPoint>?>(null, date) {
-        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+    val footprintsOn = LocalSettings.current.isOn(Module.FOOTPRINTS)
+    // The day's own footprints, private and the phone's, read once for the page; null until read,
+    // and none with the footprints turned off.
+    val track by androidx.compose.runtime.produceState<List<cc.hyoban.moments.footprints.TrackPoint>?>(null, date, footprintsOn) {
+        value = if (!footprintsOn) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             container.footprints.points(cc.hyoban.moments.footprints.TrackSelection(day = date))
         }
     }
     // Whether today is still being recorded, said after its figures; read with the footprints.
-    val recording by androidx.compose.runtime.produceState(false, date) {
-        if (date == java.time.LocalDate.now().toString()) {
+    val recording by androidx.compose.runtime.produceState(false, date, footprintsOn) {
+        if (footprintsOn && date == java.time.LocalDate.now().toString()) {
             value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { container.footprints.state().recording }
         }
     }
@@ -700,9 +704,10 @@ private fun TimelineDayMap(
     }
     var mapped by remember { mutableStateOf<MappedDay?>(null) }
     var nowhere by remember { mutableStateOf(false) }
-    LaunchedEffect(day, moments) {
+    val footprintsOn = LocalSettings.current.isOn(Module.FOOTPRINTS)
+    LaunchedEffect(day, moments, footprintsOn) {
         val shown = day ?: return@LaunchedEffect
-        val points = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val points = if (!footprintsOn) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             container.footprints.points(cc.hyoban.moments.footprints.TrackSelection(day = shown))
         }
         val dayMoments = moments.filter { it.occurredAt.startsWith(shown) }
@@ -779,7 +784,7 @@ fun PlaceScreen(
     val moments = remember(all, id) { all.filter { id in it.places } }
     // Its check-ins alone, among its Moments by their days.
     val allCheckins by container.repository.checkins.collectAsStateWithLifecycle()
-    val checkins = allCheckins.byPlace[id].orEmpty()
+    val checkins = if (LocalSettings.current.isOn(Module.CHECKIN)) allCheckins.byPlace[id].orEmpty() else emptyList()
     val bills = remember(checkins) { TimelineBills(checkins = checkins.groupBy { it.at.take(10) }) }
 
     val place = places[id]
