@@ -148,8 +148,9 @@ except in 演示模式.
   the files' dates, else now.
 - **Place.** Where the first photo was taken, else none until one is chosen: the page
   itself never locates the phone. A photo's place is the known place within 2 km, else a
-  new place named after what is nearest: in China, with the owner's Tencent key (腾讯地图
-  Key, under 同步与来源), the shops, sights and buildings Tencent knows, asked from the
+  new place named after what is nearest: in China, with the owner's AMap or Tencent key
+  (高德地图 Key, 腾讯地图 Key, under 同步与来源; with both, the one chosen under 国内地点来源
+  first and the other when it can't answer), the shops, sights and buildings that service knows, asked from the
   phone with the pin's point, else the nearest park,
   sight, shop or street Photon knows (`BuildConfig.PLACE_SEARCH_URL`), with the system's
   geocoder as fallback. Tapped, the place opens on a map with a pin at its middle, which
@@ -461,7 +462,7 @@ are `noBackupFilesDir/connection-reminders.json` and `companion-connections.json
 - **Language and appearance.** Always the phone's: Chinese, or English when the phone speaks
   it, and light or dark as the system is. The API and the media origin have no default
   and are set in 我 → 同步与来源; the map's styles default to `BuildConfig` and can be
-  changed there too, beside the Tencent key, which has none either and stays on the phone,
+  changed there too, beside the AMap and Tencent keys, which have none either and stays on the phone,
   out of the backup.
 - **Maps.** OpenFreeMap's vector tiles drawn by MapLibre, needing no key.
 - **Name and icon.** Here, in English whatever the phone speaks: a white cat with a grey cap

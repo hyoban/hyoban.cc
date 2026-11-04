@@ -52,6 +52,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.CHINA_PLACES_AMAP
+import cc.hyoban.moments.CHINA_PLACES_TENCENT
+import cc.hyoban.moments.ui.design.DropdownMenu
+import cc.hyoban.moments.ui.design.DropdownMenuItem
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.unit.DpOffset
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Setting
 import cc.hyoban.moments.Token
@@ -73,6 +79,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
     var editing by rememberSaveable { mutableStateOf<Int?>(null) }
     var editingToken by rememberSaveable { mutableStateOf(false) }
     var editingTencentKey by rememberSaveable { mutableStateOf(false) }
+    var editingAmapKey by rememberSaveable { mutableStateOf(false) }
     var editingBackup by rememberSaveable { mutableStateOf(false) }
     var restoring by rememberSaveable { mutableStateOf(false) }
     val rows = listOf(
@@ -128,7 +135,46 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                 Section(stringResource(R.string.section_site), rows.subList(0, 1), 0, stringResource(R.string.settings_api_note), extra = listOf(token, refresh)) { editing = it }
                 BackupSection(container.backup, onEdit = { editingBackup = true }, onRestore = { restoring = true })
                 Section(stringResource(R.string.section_media), rows.subList(1, 2), 1, null) { editing = it }
-                // The key the place picker asks Tencent with in China, kept beside the map's styles.
+                // The keys the place picker asks AMap and Tencent with in China, kept beside the map's styles, and,
+                // with both, which it asks first: a menu under the row.
+                val chinaPlaces: Segment = { shapes ->
+                    var open by remember { mutableStateOf(false) }
+                    val tencentFirst = settings.chinaPlaces.value == CHINA_PLACES_TENCENT
+                    Box {
+                        SegmentedListItem(
+                            onClick = { open = true },
+                            shapes = shapes,
+                            colors = segmentColors(),
+                            leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
+                            supportingContent = { Text(stringResource(if (tencentFirst) R.string.setting_tencent_maps else R.string.setting_amap)) },
+                            trailingContent = { Icon(AppIcons.CaretDown, contentDescription = null) },
+                            modifier = Modifier.testTag("china_places"),
+                        ) { Text(stringResource(R.string.setting_china_places)) }
+                        DropdownMenu(open, onDismissRequest = { open = false }, offset = DpOffset(Space.l, 0.dp)) {
+                            listOf(CHINA_PLACES_AMAP to R.string.setting_amap, CHINA_PLACES_TENCENT to R.string.setting_tencent_maps).forEach { (value, words) ->
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(words)) },
+                                    onClick = { settings.chinaPlaces.set(value); open = false },
+                                    trailingIcon = if (settings.chinaPlaces.value == value) {
+                                        { Icon(AppIcons.Check, contentDescription = null) }
+                                    } else {
+                                        null
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+                val amapKey: Segment = { shapes ->
+                    SegmentedListItem(
+                        onClick = { editingAmapKey = true },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        leadingContent = { Icon(AppIcons.Key, contentDescription = null) },
+                        supportingContent = { Text(stringResource(if (settings.amapKey.isSet) R.string.token_set else R.string.token_unset)) },
+                        modifier = Modifier.testTag("amap_key"),
+                    ) { Text(stringResource(R.string.setting_amap_key)) }
+                }
                 val tencentKey: Segment = { shapes ->
                     SegmentedListItem(
                         onClick = { editingTencentKey = true },
@@ -139,7 +185,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                         modifier = Modifier.testTag("tencent_key"),
                     ) { Text(stringResource(R.string.setting_tencent_key)) }
                 }
-                Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note), extra = listOf(tencentKey)) { editing = it }
+                Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note), extra = listOfNotNull(amapKey, tencentKey, chinaPlaces.takeIf { settings.amapKey.isSet && settings.tencentMapKey.isSet })) { editing = it }
             }
         }
     }
@@ -155,6 +201,13 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
         TokenDialog(settings.tencentMapKey, TokenWords.Tencent, "tencent_key", onDismiss = { editingTencentKey = false }) { text ->
             settings.tencentMapKey.set(text)
             editingTencentKey = false
+        }
+    }
+
+    if (editingAmapKey) {
+        TokenDialog(settings.amapKey, TokenWords.Amap, "amap_key", onDismiss = { editingAmapKey = false }) { text ->
+            settings.amapKey.set(text)
+            editingAmapKey = false
         }
     }
 
@@ -276,10 +329,11 @@ private fun AddressDialog(setting: Setting, title: String, onDismiss: () -> Unit
 private enum class TokenWords(val title: Int, val hint: Int, val replace: Int, val note: Int, val forget: Int, val show: Int, val hide: Int) {
     Api(R.string.setting_api_token, R.string.token_hint, R.string.token_replace, R.string.settings_token_note, R.string.action_forget_token, R.string.action_show_token, R.string.action_hide_token),
     Tencent(R.string.setting_tencent_key, R.string.tencent_key_hint, R.string.tencent_key_replace, R.string.settings_tencent_key_note, R.string.action_forget_tencent_key, R.string.action_show_key, R.string.action_hide_key),
+    Amap(R.string.setting_amap_key, R.string.amap_key_hint, R.string.tencent_key_replace, R.string.settings_amap_key_note, R.string.action_forget_tencent_key, R.string.action_show_key, R.string.action_hide_key),
 }
 
 /**
- * A secret, the API's token or the Tencent key, to type or paste in the secure text field,
+ * A secret, the API's token or a map service's key, to type or paste in the secure text field,
  * its dots shown as what they are on the eye's tap; one already kept isn't shown again, only
  * replaced, or forgotten from under the field, in the error colour, as it can't be had back.
  */

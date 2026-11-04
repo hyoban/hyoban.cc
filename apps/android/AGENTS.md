@@ -206,8 +206,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   and OpenRailRouting for the routes of trips the API hasn't routed, the trip's stops alone.
   A service that needs a key takes the owner's own, typed into 同步与来源 and kept beside the
   API token, asked from the phone: in China the place picker's names and search come from
-  Tencent with the owner's key, Photon still answering without it, outside China, or once
-  the key's calls for the day are used up.
+  AMap or Tencent with the owner's key; with both, the one the owner chose first and the
+  other when it can't answer, Photon still answering without either, outside China, or once the keys'
+  calls for the day are used up.
   APK size matters, so the release is arm64 only; weigh what a new dependency costs.
 - Pin a newer library version only for a reason, and say why in the comment in
   `gradle/libs.versions.toml`.
