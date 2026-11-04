@@ -67,6 +67,7 @@ class MeRoutes(
     val ledger: (Int) -> Unit,
     val footprints: () -> Unit,
     val things: () -> Unit,
+    val occasions: () -> Unit,
     val items: () -> Unit,
     val homes: () -> Unit,
     val sync: () -> Unit,
@@ -131,6 +132,11 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
                 AppIcons.Package, stringResource(R.string.me_things), "me_things", shapes,
                 supporting = things.joinToString(stringResource(R.string.separator_list)),
                 onClick = routes.things,
+            )
+            if (settings.isOn(Module.OCCASIONS)) MeRow(
+                AppIcons.Calendar, stringResource(R.string.occasions_title), "me_occasions", shapes,
+                supporting = cc.hyoban.moments.ui.occasions.nextOccasionSummary(container),
+                onClick = routes.occasions,
             )
         }
     }

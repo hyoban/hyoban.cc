@@ -109,6 +109,13 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   assisted driving, and is read-only: only an import changes the car's data. On the timeline
   a device comes as a record on the day it was bought, a subscription on the day it was last
   paid, first in its day's records bubble; tapped, it opens its sheet.
+- **纪念日** in 我 (`moments://occasions`) lists the days that matter, the one coming soonest
+  first with how far off it is and what it will be (生日 27 岁, 提车 1 周年, or the first day's
+  own name), then the days that have passed. Each is an entry with the `occasion` part on the
+  day it started: it comes round every year by the Gregorian or the lunar calendar (the phone's
+  ICU works the lunar day out from the first day), counted in 岁, 周年 or not at all, or it is
+  the one day. A public one is marked on the site's calendar; the sheet edits it and 发布更改
+  publishes it with the rest.
 
 The pages lead to each other wherever they can: a place or a trip to the map, a day's pill
 to the day, a Moment's menu to its place, trip and day. A day's page opens on that day's

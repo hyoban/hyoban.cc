@@ -15,7 +15,8 @@ enum class Module(val key: String, val plugins: List<String>, val tables: List<S
     THINGS("things", listOf("device", "subscription"), emptyList()),
     CAR("car", listOf("charge"), listOf("vehicle_months", "vehicle_assisted", "vehicle_captures")),
     FOOD("food", listOf("food"), emptyList()),
-    CHECKIN("checkin", listOf("checkin"), emptyList());
+    CHECKIN("checkin", listOf("checkin"), emptyList()),
+    OCCASIONS("occasions", listOf("occasion"), emptyList());
 
     companion object {
         fun of(key: String): Module? = entries.firstOrNull { it.key == key }

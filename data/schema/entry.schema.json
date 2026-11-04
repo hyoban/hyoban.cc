@@ -1155,6 +1155,57 @@
             "source"
           ],
           "additionalProperties": {}
+        },
+        "occasion": {
+          "type": "object",
+          "properties": {
+            "v": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "visibility": {
+              "type": "string",
+              "enum": [
+                "public",
+                "private"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "repeat": {
+              "type": "string",
+              "const": "year"
+            },
+            "calendar": {
+              "type": "string",
+              "enum": [
+                "gregorian",
+                "lunar"
+              ]
+            },
+            "count": {
+              "type": "string",
+              "enum": [
+                "age",
+                "years"
+              ]
+            },
+            "firstLabel": {
+              "type": "string",
+              "minLength": 1
+            },
+            "note": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "v",
+            "name"
+          ],
+          "additionalProperties": {}
         }
       },
       "additionalProperties": {}

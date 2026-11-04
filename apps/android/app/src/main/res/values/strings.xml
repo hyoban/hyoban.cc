@@ -1111,6 +1111,79 @@
     <string name="car_next_month">下个月</string>
     <string name="section_changed_checkins">签到</string>
     <string name="section_changed_things">设备与订阅</string>
+    <string name="section_changed_occasions">纪念日</string>
+    <string name="occasions_title">纪念日</string>
+    <string name="occasion_add">添加纪念日</string>
+    <string name="occasions_empty">还没有纪念日</string>
+    <string name="occasions_coming">接下来</string>
+    <string name="occasions_passed">过去的</string>
+    <string name="occasions_note">公开的纪念日标在网站的日历上；私有的只在这里。</string>
+    <string name="occasion_name">名称</string>
+    <string name="occasion_date">日期</string>
+    <string name="occasion_first_day">第一天</string>
+    <string name="occasion_repeat">每年</string>
+    <string name="occasion_lunar">按农历</string>
+    <string name="occasion_count_years">周年</string>
+    <string name="occasion_count_age">岁</string>
+    <string name="occasion_count_none">不计</string>
+    <string name="occasion_first_label">第一天叫</string>
+    <string name="occasion_note">备注</string>
+    <string name="occasion_public_note">标在网站的日历上</string>
+    <string name="occasion_today">今天</string>
+    <string name="occasion_in_days">还有 %d 天</string>
+    <string name="occasion_days_ago">%d 天前</string>
+    <string name="occasion_age">%1$s %2$d 岁</string>
+    <string name="occasion_years">%1$s %2$d 周年</string>
+    <string name="occasion_each_year">每年</string>
+    <string name="occasion_each_lunar">每年农历%s</string>
+    <string name="occasion_once">仅一次</string>
+    <string name="lunar_leap">闰</string>
+    <string-array name="lunar_months">
+        <item>正月</item>
+        <item>二月</item>
+        <item>三月</item>
+        <item>四月</item>
+        <item>五月</item>
+        <item>六月</item>
+        <item>七月</item>
+        <item>八月</item>
+        <item>九月</item>
+        <item>十月</item>
+        <item>十一月</item>
+        <item>十二月</item>
+    </string-array>
+    <string-array name="lunar_days">
+        <item>初一</item>
+        <item>初二</item>
+        <item>初三</item>
+        <item>初四</item>
+        <item>初五</item>
+        <item>初六</item>
+        <item>初七</item>
+        <item>初八</item>
+        <item>初九</item>
+        <item>初十</item>
+        <item>十一</item>
+        <item>十二</item>
+        <item>十三</item>
+        <item>十四</item>
+        <item>十五</item>
+        <item>十六</item>
+        <item>十七</item>
+        <item>十八</item>
+        <item>十九</item>
+        <item>二十</item>
+        <item>廿一</item>
+        <item>廿二</item>
+        <item>廿三</item>
+        <item>廿四</item>
+        <item>廿五</item>
+        <item>廿六</item>
+        <item>廿七</item>
+        <item>廿八</item>
+        <item>廿九</item>
+        <item>三十</item>
+    </string-array>
     <string name="thing_new">新加的</string>
     <string name="thing_deleted">会从网站删除</string>
     <string name="thing_changed">改过的</string>

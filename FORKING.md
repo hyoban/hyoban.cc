@@ -29,7 +29,6 @@ missing token still fails the build.
 | `site.description`        | the home page's and feed's description                                                            |
 | `site.telegram`           | the Telegram channel posts name in their `telegram:channel` meta, or `""` for none                |
 | `site.links`              | the footer's links: `href`, `label` and a UnoCSS icon class                                       |
-| `site.anniversaries`      | the calendar's anniversaries: `birthday`, `yearly`, `annual` or `dated`, as listed                |
 | `music.neteasePlaylistId` | the NetEase Cloud Music playlist `/media/music/` lists, or `null` for no music                    |
 | `assets`                  | the Cloudflare account id, the R2 bucket and the origin that serves it ([assets](docs/assets.md)) |
 | `api.url`                 | the API the site and scripts read, unless `MOMENTS_API_URL` names another                         |
@@ -48,8 +47,7 @@ same values again.
   `avatar-cropped.png`.
 - **The car**: `data/zeekr/` holds the original's car statistics and is the only record kept
   in git. Delete it; without car records the site leaves out the car, its 3D model and its
-  driving statistics, though its code stays; drop the car's entries from
-  `site.anniversaries` too.
+  driving statistics, though its code stays.
 - **Records**: Moments, places and trips live only in your API's D1. Start empty, write them
   from the Android app, or import an exported `data/` ([data.md](docs/data.md)).
 

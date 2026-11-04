@@ -130,6 +130,7 @@ fun moduleTitle(module: Module): Int = when (module) {
     Module.CAR -> R.string.car_title
     Module.FOOD -> R.string.section_food
     Module.CHECKIN -> R.string.module_checkin
+    Module.OCCASIONS -> R.string.occasions_title
 }
 
 /** A module's icon, the one its row on 我 or its part has. */
@@ -140,6 +141,7 @@ fun moduleIcon(module: Module): ImageVector = when (module) {
     Module.CAR -> AppIcons.Car
     Module.FOOD -> AppIcons.Food
     Module.CHECKIN -> AppIcons.Pin
+    Module.OCCASIONS -> AppIcons.Calendar
 }
 
 /**

@@ -1,0 +1,19 @@
+{
+  "uid": "01HZ4V2M00AAAAAAAAAAAAAAC1",
+  "at": "1999-09-25",
+  "parts": {
+    "occasion": {
+      "v": 1,
+      "name": "生日",
+      "repeat": "year",
+      "calendar": "lunar",
+      "count": "age"
+    }
+  },
+  "visibility": "private",
+  "published": {
+    "at": "2026-10-01T12:00:00+08:00"
+  },
+  "createdAt": "2026-10-01T12:00:00+08:00",
+  "updatedAt": "2026-10-01T12:00:00+08:00"
+}

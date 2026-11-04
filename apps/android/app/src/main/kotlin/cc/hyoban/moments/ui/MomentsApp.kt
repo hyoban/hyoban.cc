@@ -265,6 +265,10 @@ object Imports
 @Serializable
 data class Things(val kind: String? = null, val open: String? = null)
 
+/** 纪念日: the days that matter, with the sheet of the one [open] over the page. */
+@Serializable
+data class Occasions(val open: String? = null)
+
 /** A Moment to write, kept on the phone, with a bill or the [bill] alone. */
 @Serializable
 data class NewMoment(val bill: Boolean = false)
@@ -758,6 +762,7 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                             imports = { navController.navigate(Imports) },
                                             sideKey = { navController.navigate(SideKeySettings) },
                                             things = { navController.navigate(Things()) },
+                                            occasions = { navController.navigate(Occasions()) },
                                         ),
                                     )
                                 }
@@ -779,6 +784,9 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                 screen<Things> { entry ->
                                     val route = entry.toRoute<Things>()
                                     cc.hyoban.moments.ui.things.ThingsScreen(container, onBack = back, onDay = openDay, kind = ThingKind.of(route.kind), open = route.open)
+                                }
+                                screen<Occasions> { entry ->
+                                    cc.hyoban.moments.ui.occasions.OccasionsScreen(container, onBack = back, open = entry.toRoute<Occasions>().open)
                                 }
                                 screen<FootprintSettings> {
                                     FootprintSettingsScreen(container, onBack = back)
@@ -1205,7 +1213,7 @@ fun pagesOf(route: Any): List<Any> {
 private fun tabOf(route: Any): Any = when (route) {
     Feed, Atlas, Preferences -> route
     is Trip, is TripEdit, is TripPlay, is PlaceMoments -> Atlas
-    SyncSettings, Imports, FootprintSettings, SideKeySettings, Items, Homes, Changes, is Things,
+    SyncSettings, Imports, FootprintSettings, SideKeySettings, Items, Homes, Changes, is Things, is Occasions,
     is LedgerHome, is LedgerEntry, is LedgerBill, is LedgerAccount, is LedgerAccountEdit, is LedgerSettings, is LedgerList,
     -> Preferences
     else -> Feed
@@ -1227,6 +1235,7 @@ fun moduleOf(route: Any): Module? = when (route) {
         null -> null
         else -> Module.THINGS
     }
+    is Occasions -> Module.OCCASIONS
     else -> null
 }
 
@@ -1260,6 +1269,7 @@ fun routeOf(link: Uri): Any? {
         "homes" -> Homes
         "side-key" -> SideKeySettings
         "devices", "subscriptions", "car" -> Things(link.host)
+        "occasions" -> Occasions(id)
         "new" -> NewMoment()
         "edit" -> id?.let(::EditMoment)
         "changes" -> Changes

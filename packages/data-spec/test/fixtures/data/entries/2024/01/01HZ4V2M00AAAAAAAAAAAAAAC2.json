@@ -1,0 +1,18 @@
+{
+  "uid": "01HZ4V2M00AAAAAAAAAAAAAAC2",
+  "at": "2024-01-20",
+  "parts": {
+    "occasion": {
+      "v": 1,
+      "name": "开站",
+      "repeat": "year",
+      "count": "years",
+      "firstLabel": "开站日"
+    }
+  },
+  "published": {
+    "at": "2026-10-01T12:00:00+08:00"
+  },
+  "createdAt": "2026-10-01T12:00:00+08:00",
+  "updatedAt": "2026-10-01T12:00:00+08:00"
+}

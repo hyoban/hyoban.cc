@@ -119,8 +119,24 @@ export function readSubscriptions(root = getDataRoot()): (SubscriptionPart & { a
     .map(({ entry, part }) => ({ ...part, at: entry.at }))
 }
 
+export type OccasionPart = NonNullable<EntryParts['occasion']>
+
+/** The occasions the public sees (the calendar's birthdays, anniversaries and dated days), each with its entry's uid and day. */
+export function readOccasions(
+  root = getDataRoot(),
+): (OccasionPart & { uid: string; at: string })[] {
+  return readPublicParts('occasion', root).map(({ entry, part }) => ({
+    ...part,
+    uid: entry.uid,
+    at: entry.at.slice(0, 10),
+  }))
+}
+
 /** The public entries with a part of this plugin, and that part as the public sees it. */
-function readPublicParts<K extends 'device' | 'subscription'>(plugin: K, root: string) {
+function readPublicParts<K extends 'device' | 'subscription' | 'occasion'>(
+  plugin: K,
+  root: string,
+) {
   return readEntries(root).flatMap(({ record }) => {
     const shown = getPublicEntry(record)
     const part = shown?.parts[plugin]

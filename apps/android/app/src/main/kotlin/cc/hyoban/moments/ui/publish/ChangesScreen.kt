@@ -275,8 +275,9 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         )
                     }
                 }
-                // Check-ins, Swarm's or the footprints' stays, apart from the devices and subscriptions.
-                val (checkins, things) = pending.entries.partition { cc.hyoban.moments.data.things.checkinOf((it.after ?: it.before)!!) != null }
+                // Check-ins, Swarm's or the footprints' stays, and the occasions, apart from the devices and subscriptions.
+                val (checkins, rest) = pending.entries.partition { cc.hyoban.moments.data.things.checkinOf((it.after ?: it.before)!!) != null }
+                val (occasions, things) = rest.partition { cc.hyoban.moments.data.occasions.Occasions.occasion((it.after ?: it.before)!!) != null }
                 section(R.string.section_changed_checkins, checkins, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
                     val entry = (change.after ?: change.before)!!
                     val revert = { container.scope.launch { container.repository.revertEntry(entry.entryUid) }; Unit }.takeUnless { busy }
@@ -287,6 +288,26 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                             stringResource(R.string.timeline_checkin, checkin.venue),
                             listOfNotNull(formatDate(checkin.at), listOfNotNull(formatTime(checkin.at), end).joinToString("–").ifEmpty { null }).joinToString(" "),
                             null,
+                            stringResource(
+                                when {
+                                    change.after == null -> R.string.thing_deleted
+                                    change.before == null -> R.string.thing_new
+                                    else -> R.string.thing_changed
+                                },
+                            ),
+                            revert,
+                        )
+                    }
+                }
+                section(R.string.section_changed_occasions, occasions, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
+                    val entry = (change.after ?: change.before)!!
+                    val revert = { container.scope.launch { container.repository.revertEntry(entry.entryUid) }; Unit }.takeUnless { busy }
+                    val occasion = cc.hyoban.moments.data.occasions.Occasions.occasion(entry)!!
+                    SwipeToRevert(revert) {
+                        OutsideCard(
+                            occasion.name,
+                            formatDate(occasion.first.toString()),
+                            stringResource(if (occasion.repeat) R.string.occasion_each_year else R.string.occasion_once),
                             stringResource(
                                 when {
                                     change.after == null -> R.string.thing_deleted

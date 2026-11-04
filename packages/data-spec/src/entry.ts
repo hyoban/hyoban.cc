@@ -183,6 +183,27 @@ export const checkinPartSchema = z.looseObject({
   ]),
 })
 
+/**
+ * A day that matters, on the entry of the day it started: a birthday on the day of birth, an
+ * anniversary on the day the thing happened, a deadline on its own day. One with `repeat`
+ * comes round each year on that day of the calendar it follows, a lunar one on the lunar day
+ * the entry's day falls on; without it, the day alone.
+ */
+export const occasionPartSchema = z.looseObject({
+  ...partBase,
+  /** What the day is, like 生日 or 提车. */
+  name: z.string().min(1),
+  /** Comes round each year; left out, it is the one day. */
+  repeat: z.literal('year').optional(),
+  /** The calendar a repeat follows; Gregorian when left out. */
+  calendar: z.enum(['gregorian', 'lunar']).optional(),
+  /** How the years since are said: 26 岁, 1 周年, or not at all when left out. */
+  count: z.enum(['age', 'years']).optional(),
+  /** What the first day is called, like 提车日; the name when left out. */
+  firstLabel: z.string().min(1).optional(),
+  note: z.string().optional(),
+})
+
 /** The parts by plugin; one this version doesn't know is kept as it is. */
 export const entryPartsSchema = z.looseObject({
   text: textPartSchema.optional(),
@@ -193,6 +214,7 @@ export const entryPartsSchema = z.looseObject({
   device: devicePartSchema.optional(),
   subscription: subscriptionPartSchema.optional(),
   checkin: checkinPartSchema.optional(),
+  occasion: occasionPartSchema.optional(),
 })
 
 export const entryLinkSchema = z.looseObject({ rel: z.string().min(1), to: ulid })
@@ -375,6 +397,11 @@ export const plugins = {
     defaultVisibility: 'inherit',
     publicFields: ['venue', 'alias'],
   }),
+  occasion: definePlugin({
+    id: 'occasion',
+    version: 1,
+    defaultVisibility: 'inherit',
+  }),
 } satisfies Record<string, Plugin>
 
 export type PluginId = keyof typeof plugins
@@ -405,6 +432,7 @@ export const modules = [
   },
   { id: 'food', plugins: ['food'], tables: [] },
   { id: 'checkin', plugins: ['checkin'], tables: [] },
+  { id: 'occasions', plugins: ['occasion'], tables: [] },
 ] as const satisfies readonly Module[]
 
 export type ModuleId = (typeof modules)[number]['id']

@@ -272,6 +272,29 @@ test('a module owns plugins the spec has, each in one module, and tables it keep
   }
   assert.equal(getPluginModule('bill'), 'ledger')
   assert.equal(getPluginModule('subscription'), 'things')
+  assert.equal(getPluginModule('occasion'), 'occasions')
   assert.equal(getPluginModule('text'), undefined)
   assert.equal(getPluginModule('unknown'), undefined)
+})
+
+test('an occasion is on the day it started, public with every field, and once without a repeat', () => {
+  const entry = entrySchema.parse({
+    ...base,
+    at: '2025-08-17',
+    parts: {
+      occasion: { v: 1, name: '提车', repeat: 'year', count: 'years', firstLabel: '提车日' },
+    },
+  })
+  assert.deepEqual(getPublicEntry(entry).parts.occasion, {
+    v: 1,
+    name: '提车',
+    repeat: 'year',
+    count: 'years',
+    firstLabel: '提车日',
+  })
+  assert.ok(entrySchema.safeParse({ ...base, parts: { occasion: { v: 1, name: '搬家' } } }).success)
+  assert.ok(
+    !entrySchema.safeParse({ ...base, parts: { occasion: { v: 1, name: '', repeat: 'month' } } })
+      .success,
+  )
 })

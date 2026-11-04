@@ -23,12 +23,15 @@ data/
 ```
 
 - An **entry** (`packages/data-spec/src/entry.ts`) is a moment and an optional point, with
-  its words, photos, meal, bill, charge, device, subscription or check-in as parts by
-  plugin. A device is on the day it was bought, what it sold for written on it once sold; a
+  its words, photos, meal, bill, charge, device, subscription, check-in or occasion as
+  parts by plugin. A device is on the day it was bought, what it sold for written on it once sold; a
   subscription on the day it was last paid, or for software bought once the day it was first
   written down. The use page lists both from these entries. A check-in is brought in from
   Swarm, its `source` that app's ids, or made on the phone from a stay of the footprints
-  (`source.app` `phone`), private, from the stay's start to its `end`. It is named by its
+  (`source.app` `phone`), private, from the stay's start to its `end`. An occasion is a day
+  that matters (a birthday, an anniversary, a deadline), on the entry of the day it started:
+  with `repeat` it comes round each year, by the Gregorian or the lunar calendar, counted in
+  岁 or 周年 or not at all; without, it is that one day. The calendar marks them. It is named by its
   uid alone: its page is `/m/<uid>/` and its media sit under `moments/<uid>/` in R2, so its
   day, place and words can change after it is published. One without `published` is a draft
   the site skips; `published` blocks, the entry's and each media item's, never change. A
@@ -43,7 +46,7 @@ data/
 - Each record is public or private: its own `visibility`, else its container's, else its
   plugin's default (a bill is private), else public.
 - The plugins are grouped into **modules** (`modules` in `entry.ts`: footprints, ledger,
-  things, car, food, check-ins), each owning its plugins' parts and the tables past the
+  things, car, food, check-ins, occasions), each owning its plugins' parts and the tables past the
   entries that are its. They are what the app lets the owner turn on or off as one; the data
   is the same either way.
 - Units are those `packages/data-spec/src/primitives.ts` gives: metres, watt-hours, seconds,

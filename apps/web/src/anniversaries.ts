@@ -1,4 +1,8 @@
-import { site } from './site-config.ts'
+import { readOccasions } from './data/store.ts'
+
+// The calendar's anniversaries, from the occasion entries the API has (`occasion` in
+// packages/data-spec): each a day that matters, on the entry of the day it started, coming
+// round each year by the Gregorian or the lunar calendar, or the one day alone.
 
 type AnnualDate =
   | {
@@ -9,9 +13,29 @@ type AnnualDate =
   | {
       calendar: 'lunar'
       day: number
-      leapMonth?: boolean
+      leapMonth: boolean
       month: number
     }
+
+/** An occasion as the calendar reads it: the part's fields with its entry's uid and day. */
+export type Occasion = {
+  uid: string
+  /** The day it started, `YYYY-MM-DD`. */
+  at: string
+  name: string
+  repeat?: 'year' | undefined
+  calendar?: 'gregorian' | 'lunar' | undefined
+  count?: 'age' | 'years' | undefined
+  firstLabel?: string | undefined
+  note?: string | undefined
+}
+
+export type CalendarAnniversary = Readonly<{
+  description: string
+  icon: string
+  id: string
+  label: string
+}>
 
 type AnniversaryOccurrence = {
   date: AnnualDate
@@ -26,71 +50,6 @@ type AnniversaryDefinition = {
   id: string
   label: (occurrence: AnniversaryOccurrence) => string
   startYear: number
-}
-
-type BirthdayOptions = {
-  birthYear: number
-  date: AnnualDate
-  icon?: string
-  id: string
-  name?: string
-}
-
-type YearlyAnniversaryOptions = {
-  date: AnnualDate
-  icon: string
-  id: string
-  initialLabel: string
-  name: string
-  startYear: number
-}
-
-type AnnualEventOptions = {
-  date: AnnualDate
-  description?: string
-  icon: string
-  id: string
-  label: string
-  startYear?: number
-}
-
-type DatedEventOptions = {
-  dateKey: string
-  description?: string
-  icon: string
-  id: string
-  label: string
-}
-
-export type CalendarAnniversary = Readonly<{
-  description: string
-  icon: string
-  id: string
-  label: string
-}>
-
-/** The owner's anniversaries, as site.config.json lists them. */
-export type AnniversaryConfig =
-  | ({ kind: 'birthday' } & BirthdayOptions)
-  | ({ kind: 'yearly' } & YearlyAnniversaryOptions)
-  | ({ kind: 'annual' } & AnnualEventOptions)
-  | ({ kind: 'dated' } & DatedEventOptions)
-
-const siteAnniversaries = defineAnniversaries(site.anniversaries as AnniversaryConfig[])
-
-function defineAnniversaries(anniversaries: readonly AnniversaryConfig[]) {
-  return anniversaries.map((anniversary): AnniversaryDefinition => {
-    switch (anniversary.kind) {
-      case 'birthday':
-        return defineBirthday(anniversary)
-      case 'yearly':
-        return defineYearlyAnniversary(anniversary)
-      case 'annual':
-        return defineAnnualEvent(anniversary)
-      case 'dated':
-        return defineDatedEvent(anniversary)
-    }
-  })
 }
 
 const chineseCalendarFormatter = new Intl.DateTimeFormat('zh-CN-u-ca-chinese', {
@@ -114,13 +73,17 @@ const lunarMonthNames = [
   '十二月',
 ] as const
 
-/** The anniversaries on `dateKey`: the site's, or the `anniversaries` given, as the tests do. */
+let siteAnniversaries: AnniversaryDefinition[] | undefined
+
+/** The anniversaries on `dateKey`: the site's occasions, or the `occasions` given, as the tests do. */
 export function getCalendarAnniversaries(
   dateKey: string,
-  anniversaries?: readonly AnniversaryConfig[],
+  occasions?: readonly Occasion[],
 ): CalendarAnniversary[] {
   const year = Number.parseInt(dateKey.slice(0, 4), 10)
-  const definitions = anniversaries ? defineAnniversaries(anniversaries) : siteAnniversaries
+  const definitions = occasions
+    ? occasions.map(defineAnniversary)
+    : (siteAnniversaries ??= readOccasions().map(defineAnniversary))
 
   return definitions.flatMap((definition) => {
     if (
@@ -147,66 +110,59 @@ export function getCalendarAnniversaries(
   })
 }
 
-function defineBirthday(options: BirthdayOptions): AnniversaryDefinition {
-  const name = options.name ?? '生日'
+/**
+ * An occasion as the calendar marks it: a birthday counts in 岁, an anniversary in 周年 from
+ * its first day (called by `firstLabel`), one not counted keeps its name, and one that doesn't
+ * repeat is marked on its day alone.
+ */
+function defineAnniversary(occasion: Occasion): AnniversaryDefinition {
+  const startYear = Number.parseInt(occasion.at.slice(0, 4), 10)
+  const date =
+    occasion.repeat && occasion.calendar === 'lunar'
+      ? { calendar: 'lunar' as const, ...getChineseDate(occasion.at) }
+      : {
+          calendar: 'gregorian' as const,
+          month: Number.parseInt(occasion.at.slice(5, 7), 10),
+          day: Number.parseInt(occasion.at.slice(8, 10), 10),
+        }
+  const first = occasion.firstLabel ?? occasion.name
+  const label = ({ years }: AnniversaryOccurrence) => {
+    switch (occasion.count) {
+      case 'age':
+        return `${occasion.name} ${years} 岁`
+      case 'years':
+        return years === 0 ? first : `${occasion.name} ${years} 周年`
+      default:
+        return years === 0 ? first : occasion.name
+    }
+  }
+  const describe = (occurrence: AnniversaryOccurrence) =>
+    occasion.note ??
+    (occasion.count === 'age'
+      ? `${occurrence.years} 岁${occasion.name}（${formatAnnualDate(occurrence.date)}）`
+      : label(occurrence))
 
   return {
-    date: options.date,
-    describe: ({ date, years }) => `${years} 岁${name}（${formatAnnualDate(date)}）`,
-    icon: options.icon ?? 'i-lucide-cake-slice',
-    id: options.id,
-    label: ({ years }) => `${name} ${years} 岁`,
-    startYear: options.birthYear,
+    date,
+    describe,
+    ...(occasion.repeat ? {} : { endYear: startYear }),
+    icon: getIcon(occasion),
+    id: occasion.uid,
+    label,
+    startYear,
   }
 }
 
-function defineYearlyAnniversary(options: YearlyAnniversaryOptions): AnniversaryDefinition {
-  const format = ({ years }: AnniversaryOccurrence) =>
-    years === 0 ? options.initialLabel : `${options.name} ${years} 周年`
-
-  return {
-    date: options.date,
-    describe: format,
-    icon: options.icon,
-    id: options.id,
-    label: format,
-    startYear: options.startYear,
+/** The icon an occasion is marked with: by what it counts, and whether it comes round. */
+function getIcon(occasion: Pick<Occasion, 'count' | 'repeat'>) {
+  switch (occasion.count) {
+    case 'age':
+      return 'i-lucide-cake-slice'
+    case 'years':
+      return 'i-lucide-party-popper'
+    default:
+      return occasion.repeat ? 'i-lucide-rotate-ccw' : 'i-lucide-calendar-clock'
   }
-}
-
-function defineAnnualEvent(options: AnnualEventOptions): AnniversaryDefinition {
-  const description = options.description ?? options.label
-
-  return {
-    date: options.date,
-    describe: () => description,
-    icon: options.icon,
-    id: options.id,
-    label: () => options.label,
-    startYear: options.startYear ?? 0,
-  }
-}
-
-function defineDatedEvent(options: DatedEventOptions): AnniversaryDefinition {
-  const year = Number.parseInt(options.dateKey.slice(0, 4), 10)
-  const month = Number.parseInt(options.dateKey.slice(5, 7), 10)
-  const day = Number.parseInt(options.dateKey.slice(8, 10), 10)
-
-  return {
-    ...defineAnnualEvent({
-      date: gregorianDate(month, day),
-      icon: options.icon,
-      id: options.id,
-      label: options.label,
-      startYear: year,
-      ...(options.description === undefined ? {} : { description: options.description }),
-    }),
-    endYear: year,
-  }
-}
-
-function gregorianDate(month: number, day: number): AnnualDate {
-  return { calendar: 'gregorian', day, month }
 }
 
 function matchesAnnualDate(dateKey: string, annualDate: AnnualDate) {
@@ -222,10 +178,11 @@ function matchesAnnualDate(dateKey: string, annualDate: AnnualDate) {
   return (
     chineseDate.month === annualDate.month &&
     chineseDate.day === annualDate.day &&
-    chineseDate.leapMonth === Boolean(annualDate.leapMonth)
+    chineseDate.leapMonth === annualDate.leapMonth
   )
 }
 
+/** The lunar day a Gregorian day falls on. */
 function getChineseDate(dateKey: string) {
   const date = new Date(`${dateKey}T12:00:00Z`)
   const parts = Object.fromEntries(
