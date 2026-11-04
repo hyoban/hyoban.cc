@@ -191,8 +191,8 @@ function rollback() {
     const trip = tripRecordSchema.parse(collectionToTrip(record, all))
     writes.set(`trips/${trip.id}.json`, trip)
 
-    if (record.visibility || record.facets) {
-      lost.push(`${file}: its visibility and facets`)
+    if (record.visibility) {
+      lost.push(`${file}: its visibility`)
     }
   }
 

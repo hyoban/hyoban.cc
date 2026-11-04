@@ -88,12 +88,15 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   (足迹记录) from the footprints panel, beside what they are about. Theme and language have no
   setting; they follow the phone.
 - **记录项与公开** (`moments://items`) opens on the 记录项, the modules the spec defines
-  (`data/spec/Modules.kt`, mirroring `modules` in `@hyoban/data-spec/entry`): 足迹, 账本, 东西
+  (`data/spec/Modules.kt`, generated from `modules` in `@hyoban/data-spec/entry` by
+  `vp run data:tables`): 足迹, 账本, 东西
   (设备 and 订阅), 车, 美食 and 签到, each a switch, all on until turned off. One turned off is
   put away everywhere: its rows on 我, its pages, its records on the timeline, a day, a trip,
   a Moment, the search's kinds and the map, its chip under 加一项, its sources under 导入, the
   side key's payment action and the widgets' counts (导入 lists the sources left, and goes
-  from 我 with none); its background work stops (the
+  from 我 with none), and a link to one of its pages (`moments://ledger`, a widget's, a
+  notification's) opens the timeline instead, `moments://new-bill` a Moment to write; its
+  background work stops (the
   footprints' recording and connection reminders, 自动记账), and its data stays on the phone,
   so turning it on again brings everything back as it was, the recording included. Under the
   modules, each book's and the footprints' publishing defaults (below, Ledger and Footprints).

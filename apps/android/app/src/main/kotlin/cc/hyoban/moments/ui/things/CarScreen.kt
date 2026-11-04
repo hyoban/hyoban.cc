@@ -62,11 +62,11 @@ const val CAR_ID = "zeekr-007gt"
  */
 @Composable
 fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Unit, titleMenu: TitleMenu? = null) {
-    val second by container.repository.second.collectAsStateWithLifecycle()
+    val records by container.repository.records.collectAsStateWithLifecycle()
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val car = remember(entries) { Things.devices(entries.values).firstOrNull { it.id == CAR_ID } }
-    val months = remember(second) { Vehicle.months(second.vehicleMonths.values, CAR_ID) }
-    val assisted = remember(second) { Vehicle.assisted(second.vehicleAssisted.values, CAR_ID) }
+    val months = remember(records) { Vehicle.months(records.vehicleMonths.values, CAR_ID) }
+    val assisted = remember(records) { Vehicle.assisted(records.vehicleAssisted.values, CAR_ID) }
     val charges = remember(entries) { Vehicle.charges(entries.values, CAR_ID) }
     // The newest month with a report first: the current one may only have its days so far.
     var index by rememberSaveable { mutableIntStateOf(-1) }

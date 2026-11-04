@@ -215,7 +215,7 @@ class MomentsRepositoryTest {
         assertEquals(whole.moments.value, repository.moments.value)
         assertEquals(whole.trips.value, repository.trips.value)
         assertEquals(whole.places.value, repository.places.value)
-        assertEquals(whole.second.value, repository.second.value)
+        assertEquals(whole.records.value, repository.records.value)
         assertEquals(listOf("D", "B", "A"), repository.moments.value.map { it.uid })
         assertEquals("改过的", repository.trips.value.single().title)
     }

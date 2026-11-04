@@ -305,7 +305,7 @@ object Entries {
 
     private val collectionKeys = setOf(
         "uid", "slug", "kind", "title", "span", "include", "exclude", "covers", "visibility",
-        "facets", "route", "music", "note", "createdAt", "updatedAt",
+        "route", "music", "note", "createdAt", "updatedAt",
     )
 
     /**

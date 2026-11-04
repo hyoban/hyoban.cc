@@ -77,7 +77,7 @@ class TimelineBills(
     /** What each day spent, `YYYY-MM-DD` to cents, in [currency]. */
     val spent: Map<String, Long> = emptyMap(),
     val currency: String = "CNY",
-    /** The car's charges, from the API's second shape, by day. */
+    /** The car's charges, from the API's entries, by day. */
     val charges: Map<String, List<Charge>> = emptyMap(),
     /** The devices bought and the subscriptions paid, by day. */
     val things: Map<String, List<ThingRecord>> = emptyMap(),
@@ -118,12 +118,12 @@ enum class FeedKind { ALL, MOMENTS, BILLS, CHARGES }
 @Composable
 fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, filter: TimeFilter, kind: FeedKind = FeedKind.ALL): TimelineBills {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val second by container.repository.second.collectAsStateWithLifecycle()
+    val records by container.repository.records.collectAsStateWithLifecycle()
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val allCheckins by container.repository.checkins.collectAsStateWithLifecycle()
     // Only the records of modules that are on (记录项与公开).
     val off = LocalSettings.current.modulesOff
-    return remember(ledger, second, entries, allCheckins, moments, filter, kind, off) {
+    return remember(ledger, records, entries, allCheckins, moments, filter, kind, off) {
         val inFilter = { day: String ->
             (filter.year == null || day.take(4).toInt() == filter.year) && (filter.month == null || day.substring(5, 7).toInt() == filter.month)
         }
@@ -133,7 +133,7 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
                     ThingRecord(it.uid, it.paid.toString(), false, it.period == cc.hyoban.moments.data.things.Period.ONCE, it.name, it.price, it.currency)
                 }
             ).filter { inFilter(it.day) }.groupBy { it.day }
-        val charges = if ((kind != FeedKind.ALL && kind != FeedKind.CHARGES) || Module.CAR.key in off) emptyMap() else second.entries.values.mapNotNull { entry ->
+        val charges = if ((kind != FeedKind.ALL && kind != FeedKind.CHARGES) || Module.CAR.key in off) emptyMap() else records.entries.values.mapNotNull { entry ->
             val charge = (entry["parts"] as? kotlinx.serialization.json.JsonObject)?.get("charge") as? kotlinx.serialization.json.JsonObject
                 ?: return@mapNotNull null
             val at = (entry["at"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null

@@ -184,13 +184,13 @@ fun MomentScreen(
         val screenWidth = maxWidth
         val screenHeight = maxHeight
         val scroll = rememberScrollState()
-        val second by container.repository.second.collectAsStateWithLifecycle()
+        val records by container.repository.records.collectAsStateWithLifecycle()
         val details: @Composable () -> Unit = {
             MomentDetails(
                 moment, places, trip, moments, trips, urls, pager, onPlace, onTrip, onDay,
                 changed = container.repository.isChanged(moment.uid),
                 bills = momentBillRows(ledger, moment, onBill, onNewBill),
-                parts = second.entries[moment.uid]?.get("parts") as? kotlinx.serialization.json.JsonObject,
+                parts = records.entries[moment.uid]?.get("parts") as? kotlinx.serialization.json.JsonObject,
                 onPartPrivate = { plugin: String, private: Boolean ->
                     val own = (moment.extra[cc.hyoban.moments.data.spec.Entries.PART_VISIBILITY] as? kotlinx.serialization.json.JsonObject).orEmpty()
                     val next = if (private) own + (plugin to kotlinx.serialization.json.JsonPrimitive("private")) else own - plugin

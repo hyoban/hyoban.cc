@@ -339,7 +339,7 @@ private fun TripFacets(
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val trips by container.shownTrips.collectAsStateWithLifecycle()
-    val second by container.repository.second.collectAsStateWithLifecycle()
+    val records by container.repository.records.collectAsStateWithLifecycle()
     val carOn = LocalSettings.current.isOn(Module.CAR)
     val spendingOn = LocalSettings.current.isOn(Module.LEDGER)
     val km = remember(route) {
@@ -347,8 +347,8 @@ private fun TripFacets(
             segment.line.zipWithNext { (lng1, lat1), (lng2, lat2) -> haversineKm(lat1, lng1, lat2, lng2) }.sum()
         }
     }
-    val charges = remember(second, trip, carOn) {
-        if (!carOn) emptyList() else second.entries.values.mapNotNull { entry ->
+    val charges = remember(records, trip, carOn) {
+        if (!carOn) emptyList() else records.entries.values.mapNotNull { entry ->
             val at = (entry["at"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
             val charge = (entry["parts"] as? kotlinx.serialization.json.JsonObject)?.get("charge") as? kotlinx.serialization.json.JsonObject
             if (charge == null || at.take(10) < trip.start || at.take(10) > trip.end) null

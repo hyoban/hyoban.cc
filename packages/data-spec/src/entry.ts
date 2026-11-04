@@ -40,7 +40,11 @@ export const entryPointSchema = z.looseObject({
   from: z.enum(['photo', 'track', 'device', 'manual', 'place']),
 })
 
-/** What every part carries: its plugin's version, and who sees it when not its entry's say. */
+/**
+ * What every part carries: the plugin's `version` it was written at, and who sees it when not
+ * its entry's say. Every plugin is at 1; a part changed in any way but adding an optional
+ * field moves it, so a reader can tell a part it can't read, as `SCHEMA_VERSION` does a record.
+ */
 const partBase = {
   v: count,
   visibility: audienceSchema.optional(),
@@ -239,8 +243,6 @@ export const collectionSchema = z
     /** Photos for its cover, best first. */
     covers: z.array(z.looseObject({ entry: ulid, media: ulid })).default([]),
     visibility: audienceSchema.optional(),
-    /** Facets set by hand; the rest are worked out. */
-    facets: z.record(z.string(), z.unknown()).optional(),
     route: routeHintsSchema.optional(),
     /** A track from apps/web/src/data/music.ts. */
     music: id.optional(),
@@ -296,76 +298,62 @@ export type Track = z.output<typeof trackSchema>
 export type TrackShare = z.output<typeof trackShareSchema>
 export type PublicTrack = z.output<typeof publicTrackSchema>
 
-// Plugins: the data half (its part, default audience, public fields, search text and facets)
-// shared by the site, the API and the app; each client registers its own UI for them.
+// Plugins: the data half (its part, its version, its default audience, its public fields and
+// whether it keeps to the phone) shared by the site, the API and the app; each client has its
+// own UI for the parts it knows, and keeps the rest as they came.
 
 export type PluginDefault = 'inherit' | Audience
 
-export interface Plugin<Part = Record<string, unknown>> {
+export interface Plugin {
   id: string
   version: number
   /** `inherit` follows the entry. */
   defaultVisibility: PluginDefault
   /** The only fields a public part keeps, besides `v`; all of them when left out. */
   publicFields?: readonly string[]
-  /** A private part of it stays on the phone rather than going to the API. */
+  /** A private part of it stays on the phone rather than going to the API, and a public one goes by its public fields alone. */
   staysOnDevice?: boolean
-  /** Plain words for a reader that doesn't know the plugin. */
-  fallback?: (part: Part) => string
 }
 
-export function definePlugin<Part>(plugin: Plugin<Part>) {
+export function definePlugin(plugin: Plugin) {
   return plugin
 }
 
-type Parts = {
-  [
-    K in 'text' | 'media' | 'food' | 'bill' | 'charge' | 'device' | 'subscription' | 'checkin'
-  ]: NonNullable<z.output<typeof entryPartsSchema>[K]>
-}
-
 export const plugins = {
-  text: definePlugin<Parts['text']>({
+  text: definePlugin({
     id: 'text',
     version: 1,
     defaultVisibility: 'inherit',
-    fallback: (part) => part.text,
   }),
-  media: definePlugin<Parts['media']>({
+  media: definePlugin({
     id: 'media',
     version: 1,
     defaultVisibility: 'inherit',
-    fallback: (part) => `${part.items.length} 张照片`,
   }),
-  food: definePlugin<Parts['food']>({
+  food: definePlugin({
     id: 'food',
     version: 1,
     defaultVisibility: 'inherit',
-    fallback: (part) => part.dishes.join('、'),
   }),
-  bill: definePlugin<Parts['bill']>({
+  bill: definePlugin({
     id: 'bill',
     version: 1,
     defaultVisibility: 'private',
     publicFields: ['kind', 'amount', 'currency', 'category', 'note'],
     staysOnDevice: true,
-    fallback: (part) => `${part.category ?? ''} ${part.amount} ${part.currency}`.trim(),
   }),
-  charge: definePlugin<Parts['charge']>({
+  charge: definePlugin({
     id: 'charge',
     version: 1,
     defaultVisibility: 'inherit',
     publicFields: ['type', 'energyWh', 'cost', 'durationSeconds', 'durationMin'],
-    fallback: (part) =>
-      `充电 ${part.energyWh === undefined ? '' : `${part.energyWh / 1000} kWh`}`.trim(),
   }),
-  device: definePlugin<Parts['device']>({
+  device: definePlugin({
     id: 'device',
     version: 1,
     defaultVisibility: 'inherit',
-    fallback: (part) => `买了 ${part.name}`,
   }),
-  subscription: definePlugin<Parts['subscription']>({
+  subscription: definePlugin({
     id: 'subscription',
     version: 1,
     defaultVisibility: 'inherit',
@@ -380,16 +368,14 @@ export const plugins = {
       'ended',
       'note',
     ],
-    fallback: (part) => `订阅 ${part.name}`,
   }),
-  checkin: definePlugin<Parts['checkin']>({
+  checkin: definePlugin({
     id: 'checkin',
     version: 1,
     defaultVisibility: 'inherit',
     publicFields: ['venue', 'alias'],
-    fallback: (part) => `在 ${part.venue}`,
   }),
-} satisfies Record<string, Plugin<never>>
+} satisfies Record<string, Plugin>
 
 export type PluginId = keyof typeof plugins
 
@@ -428,8 +414,8 @@ export function getPluginModule(pluginId: string): ModuleId | undefined {
   return modules.find((module) => (module.plugins as readonly string[]).includes(pluginId))?.id
 }
 
-function getPlugin(id: string): Plugin<never> | undefined {
-  return (plugins as Record<string, Plugin<never>>)[id]
+function getPlugin(id: string): Plugin | undefined {
+  return (plugins as Record<string, Plugin>)[id]
 }
 
 // Who sees what. An entry is public unless it says it is private. A part of a public entry
@@ -460,6 +446,19 @@ export function getPartAudience(
   return part?.visibility ?? container ?? (fallback === 'inherit' ? 'public' : fallback)
 }
 
+/** A part down to its plugin's public fields, besides `v` and its own say; whole when the plugin names none. */
+function pickPublicFields(pluginId: string, part: Record<string, unknown>) {
+  const fields = getPlugin(pluginId)?.publicFields
+
+  return fields
+    ? Object.fromEntries(
+        Object.entries(part).filter(
+          ([key]) => key === 'v' || key === 'visibility' || fields.includes(key),
+        ),
+      )
+    : part
+}
+
 /**
  * What of an entry the public sees: private parts gone and public ones down to their public
  * fields; undefined when the entry is private, or every part it had is.
@@ -483,14 +482,7 @@ export function getPublicEntry<T extends Entry>(entry: T): T | undefined {
       continue
     }
 
-    const fields = getPlugin(pluginId)?.publicFields
-    parts[pluginId] = fields
-      ? Object.fromEntries(
-          Object.entries(part as Record<string, unknown>).filter(
-            ([key]) => key === 'v' || key === 'visibility' || fields.includes(key),
-          ),
-        )
-      : part
+    parts[pluginId] = pickPublicFields(pluginId, part as Record<string, unknown>)
   }
 
   if (had > 0 && Object.keys(parts).length === 0) {
@@ -500,29 +492,40 @@ export function getPublicEntry<T extends Entry>(entry: T): T | undefined {
   return { ...entry, parts }
 }
 
-/** What of an entry leaves the phone: the private parts of plugins that stay on it taken out. */
+/**
+ * What of an entry leaves the phone: of a plugin that stays on it, a private part is taken out
+ * and a public one goes by its public fields alone, so nothing of the phone's own (a bill's
+ * account or book) reaches the API even when sent; every other part goes as it is.
+ */
 export function getUploadEntry<T extends Entry>(
   entry: T,
   containers: Record<string, Audience> = {},
 ): T {
-  const parts = Object.fromEntries(
-    Object.entries(entry.parts).filter(([pluginId, part]) => {
-      if (!getPlugin(pluginId)?.staysOnDevice) {
-        return true
-      }
+  const parts: Record<string, unknown> = {}
 
-      return (
-        getPartAudience(
-          entry,
-          pluginId,
-          part as { visibility?: Audience },
-          containers[pluginId],
-        ) === 'public'
-      )
-    }),
-  )
+  for (const [pluginId, part] of Object.entries(entry.parts)) {
+    if (part === undefined) {
+      continue
+    }
 
-  return { ...entry, parts }
+    if (!getPlugin(pluginId)?.staysOnDevice) {
+      parts[pluginId] = part
+      continue
+    }
+
+    const audience = getPartAudience(
+      entry,
+      pluginId,
+      part as { visibility?: Audience },
+      containers[pluginId],
+    )
+
+    if (audience === 'public') {
+      parts[pluginId] = pickPublicFields(pluginId, part as Record<string, unknown>)
+    }
+  }
+
+  return { ...entry, parts: parts as T['parts'] }
 }
 
 /** An entry with nothing but its moment and point: a place passed, a stop confirmed. */
@@ -558,71 +561,6 @@ export function isWithin(at: string, start: string, end: string) {
   }
 
   return Date.parse(at) <= Date.parse(end)
-}
-
-// Facets: what a collection adds up to, from its members' parts. Only what the reader can
-// see goes in: the app passes everything, the site the public entries alone.
-
-export interface CollectionFacets {
-  spending?: { amount: number; currency: string; bills: number }
-  charging?: { sessions: number; energyWh: number; cost: number }
-  food?: { meals: number; good: number }
-  places?: { count: number }
-  distance?: { metres: number }
-}
-
-export function getCollectionFacets(
-  members: readonly Entry[],
-  tracks: readonly Pick<PublicTrack, 'distance'>[] = [],
-): CollectionFacets {
-  const facets: CollectionFacets = {}
-  const bills = members.flatMap((entry) => (entry.parts.bill ? [entry.parts.bill] : []))
-  const expenses = bills.filter((bill) => bill.kind === 'expense')
-
-  if (expenses.length > 0) {
-    facets.spending = {
-      amount: round(expenses.reduce((sum, bill) => sum + bill.amount, 0)),
-      currency: expenses[0]!.currency,
-      bills: expenses.length,
-    }
-  }
-
-  const charges = members.flatMap((entry) => (entry.parts.charge ? [entry.parts.charge] : []))
-
-  if (charges.length > 0) {
-    facets.charging = {
-      sessions: charges.length,
-      energyWh: charges.reduce((sum, charge) => sum + (charge.energyWh ?? 0), 0),
-      cost: round(charges.reduce((sum, charge) => sum + (charge.cost ?? 0), 0)),
-    }
-  }
-
-  const meals = members.flatMap((entry) => (entry.parts.food ? [entry.parts.food] : []))
-
-  if (meals.length > 0) {
-    facets.food = {
-      meals: meals.length,
-      good: meals.filter((meal) => meal.verdict === 'good').length,
-    }
-  }
-
-  const places = new Set(members.flatMap((entry) => (entry.place ? [entry.place] : [])))
-
-  if (places.size > 0) {
-    facets.places = { count: places.size }
-  }
-
-  const metres = tracks.reduce((sum, track) => sum + (track.distance ?? 0), 0)
-
-  if (metres > 0) {
-    facets.distance = { metres: Math.round(metres) }
-  }
-
-  return facets
-}
-
-function round(value: number) {
-  return Math.round(value * 100) / 100
 }
 
 // From the first shape and back. A Moment is an entry of words, photos and a meal; a trip a
@@ -822,7 +760,6 @@ const COLLECTION_KEYS = new Set([
   'exclude',
   'covers',
   'visibility',
-  'facets',
   'route',
   'music',
   'note',

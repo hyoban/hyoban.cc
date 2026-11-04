@@ -135,6 +135,7 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.MainActivity
 import cc.hyoban.moments.R
 import cc.hyoban.moments.Settings
+import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
@@ -612,7 +613,7 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
             } else if (intent.data?.host == ONBOARDING_HOST) {
                 onboarding = true
             } else {
-                val route = intent.data?.let(::routeOf) ?: return@collect
+                val route = intent.data?.let(::routeOf)?.let { allowedRoute(it, container.settings::isOn) } ?: return@collect
                 viewer = null
                 val tab = Tab.entries.indexOfFirst { it.route == route }
                 if (tab >= 0) selectTab(tab) else navController.goTo(opened(route))
@@ -1210,9 +1211,37 @@ private fun tabOf(route: Any): Any = when (route) {
     else -> Feed
 }
 
-/** The page a link opens, `moments://moment/{uid}` and the rest; null for one the app has no page for. */
 /** The link that opens 初次打开 again. */
 private const val ONBOARDING_HOST = "onboarding"
+
+/**
+ * The module a page is of (记录项与公开), or null for one that is every module's: the ledger's
+ * pages, the footprints' settings, and the things, the car's page the car's. Every page of a
+ * module, however reached, is put away with it ([allowedRoute]); the pages of none stay.
+ */
+fun moduleOf(route: Any): Module? = when (route) {
+    is LedgerHome, is LedgerEntry, is LedgerBill, is LedgerAccount, is LedgerAccountEdit, is LedgerSettings, is LedgerList -> Module.LEDGER
+    FootprintSettings -> Module.FOOTPRINTS
+    is Things -> when (route.kind) {
+        "car" -> Module.CAR
+        null -> null
+        else -> Module.THINGS
+    }
+    else -> null
+}
+
+/**
+ * [route] as the modules allow, [isOn] saying which are: a page of a module that is off is put
+ * away with it, so a link to it (a widget's, `moments://ledger`, a notification's) opens the
+ * Moments instead, and a bill to write alone with the ledger off opens a Moment to write.
+ */
+fun allowedRoute(route: Any, isOn: (Module) -> Boolean): Any = when {
+    route is NewMoment && route.bill && !isOn(Module.LEDGER) -> NewMoment()
+    moduleOf(route)?.let(isOn) == false -> Feed
+    else -> route
+}
+
+/** The page a link opens, `moments://moment/{uid}` and the rest; null for one the app has no page for. */
 
 fun routeOf(link: Uri): Any? {
     if (link.scheme != DEEP_LINK_SCHEME) return null

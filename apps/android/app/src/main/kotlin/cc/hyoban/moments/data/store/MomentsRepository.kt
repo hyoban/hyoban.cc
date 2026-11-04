@@ -100,13 +100,13 @@ class MomentsRepository(
     /** What publishing would change on the site. */
     val pending: StateFlow<PendingChanges> = _pending.asStateFlow()
 
-    private val _second = MutableStateFlow(SecondShape())
+    private val _records = MutableStateFlow(Records())
     /**
-     * The second shape's records beside the Moments and trips: the entries with no Moment (a
+     * The API's records beside the Moments and trips: the entries with no Moment (a
      * charge, a public bill, a mark) and the Moments with parts the first shape doesn't hold,
      * the collections and the public spans of the footprints.
      */
-    val second: StateFlow<SecondShape> = _second.asStateFlow()
+    val records: StateFlow<Records> = _records.asStateFlow()
 
     private val _entries = MutableStateFlow<Map<String, kotlinx.serialization.json.JsonObject>>(emptyMap())
 
@@ -182,7 +182,7 @@ class MomentsRepository(
                     // From the start the copy is new, read whole; after a revision only its rows changed.
                     if (since == 0L) readCopy() else takeRows(copied, first.revision)
                     // An entry the site now has as the phone changed it is the site's.
-                    val entries = _second.value.entries
+                    val entries = _records.value.entries
                     val settled = changedEntries.filter { (uid, entry) -> entries[uid] == entry }.keys
                     if (settled.isNotEmpty()) {
                         changedEntries = changedEntries - settled
@@ -219,16 +219,16 @@ class MomentsRepository(
 
     /**
      * What the screens are built from, read from the copy: the places, the entries with words
-     * as Moments, the trips worked out from the collections and their marks, and the second
-     * shape's records beside them.
+     * as Moments, the trips worked out from the collections and their marks, and the API's
+     * records beside them.
      */
     private fun readCopy() {
         fun objects(table: String) = copy.live(table).mapValues { parse(it.value) }
         copyEntries = objects("entries")
         apiPlaces = copy.live("places").mapValues { Spec.json.decodeFromString(Place.serializer(), it.value) }
-        _second.value = SecondShape(
+        _records.value = Records(
             copy.revision(),
-            copyEntries.filterValues(::beyondFirstShape),
+            copyEntries.filterValues(::isMoreThanMoment),
             objects("collections"),
             objects("tracks"),
             objects("vehicle_months"),
@@ -256,14 +256,14 @@ class MomentsRepository(
         copyEntries = merge(copyEntries, "entries", ::parse)
         val marksMoved = touched.any { uid -> listOfNotNull(before[uid], copyEntries[uid]).any(Entries::isMark) }
         apiPlaces = merge(apiPlaces, "places") { Spec.json.decodeFromString(Place.serializer(), it) }
-        val second = _second.value
-        _second.value = SecondShape(
+        val records = _records.value
+        _records.value = Records(
             revision,
-            second.entries - touched + touched.mapNotNull { uid -> copyEntries[uid]?.takeIf(::beyondFirstShape)?.let { uid to it } },
-            merge(second.collections, "collections", ::parse),
-            merge(second.tracks, "tracks", ::parse),
-            merge(second.vehicleMonths, "vehicle_months", ::parse),
-            merge(second.vehicleAssisted, "vehicle_assisted", ::parse),
+            records.entries - touched + touched.mapNotNull { uid -> copyEntries[uid]?.takeIf(::isMoreThanMoment)?.let { uid to it } },
+            merge(records.collections, "collections", ::parse),
+            merge(records.tracks, "tracks", ::parse),
+            merge(records.vehicleMonths, "vehicle_months", ::parse),
+            merge(records.vehicleAssisted, "vehicle_assisted", ::parse),
         )
         val collectionsMoved = "collections" in byTable
         all = if (collectionsMoved) {
@@ -279,7 +279,7 @@ class MomentsRepository(
     /** An entry's Moment if it has words; a Moment a trip takes in from outside its days names that trip, as the spec's entryToMoment has it. */
     private fun momentOf(entry: kotlinx.serialization.json.JsonObject): MomentRecord? {
         val moment = Entries.toMoment(entry) ?: return null
-        val trip = _second.value.collections.entries.firstOrNull { (_, collection) ->
+        val trip = _records.value.collections.entries.firstOrNull { (_, collection) ->
             moment.uid in Entries.strings(collection, "include") && moment.uid !in Entries.strings(collection, "exclude")
         }?.key
         return if (moment.trip == trip) moment else moment.copy(trip = trip)
@@ -287,14 +287,14 @@ class MomentsRepository(
 
     /** The trips, worked out from the collections and their marks. */
     private fun tripsOf(): List<TripRecord> =
-        _second.value.collections.values.map { Entries.toTrip(it, copyEntries.values) }.sortedWith(compareBy({ it.start }, { it.id }))
+        _records.value.collections.values.map { Entries.toTrip(it, copyEntries.values) }.sortedWith(compareBy({ it.start }, { it.id }))
 
     private fun kotlinx.serialization.json.JsonObject.text(key: String) =
         (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.content
 
     /** The entries the pages read: the copy's, with the phone's changes and deletions. */
     private fun showEntries() {
-        _entries.value = _second.value.entries - removedEntries + changedEntries
+        _entries.value = _records.value.entries - removedEntries + changedEntries
         _checkins.value = cc.hyoban.moments.data.things.Checkins.of(_entries.value.values)
     }
 
@@ -303,7 +303,7 @@ class MomentsRepository(
         val local = checkNotNull(local) { "No store for the phone's changes" }
         withContext(io) {
             val uid = entry.entryUid
-            val stored = _second.value.entries[uid]
+            val stored = _records.value.entries[uid]
             changedEntries = if (stored != null && JsonObjectsEqualApartFrom(stored, entry, "updatedAt")) changedEntries - uid else changedEntries + (uid to entry)
             removedEntries = removedEntries - uid
             local.writeChangedEntries(changedEntries, removedEntries)
@@ -317,7 +317,7 @@ class MomentsRepository(
         val local = checkNotNull(local) { "No store for the phone's changes" }
         withContext(io) {
             changedEntries = changedEntries - uid
-            if (uid in _second.value.entries) removedEntries = removedEntries + uid
+            if (uid in _records.value.entries) removedEntries = removedEntries + uid
             local.writeChangedEntries(changedEntries, removedEntries)
             showEntries()
             publish()
@@ -336,9 +336,9 @@ class MomentsRepository(
     }
 
     /** Whether an entry holds what the first shape's Moment of it doesn't: it is none, or has other parts. */
-    private fun beyondFirstShape(entry: kotlinx.serialization.json.JsonObject): Boolean {
+    private fun isMoreThanMoment(entry: kotlinx.serialization.json.JsonObject): Boolean {
         val parts = entry["parts"] as? kotlinx.serialization.json.JsonObject ?: return true
-        return !Entries.isMoment(entry) || parts.keys.any { it !in FIRST_SHAPE_PARTS }
+        return !Entries.isMoment(entry) || parts.keys.any { it !in MOMENT_PARTS }
     }
 
     /**
@@ -357,7 +357,7 @@ class MomentsRepository(
             apiPlaces = emptyMap()
             publishPlaces()
             apiTrips = emptyList()
-            _second.value = SecondShape()
+            _records.value = Records()
             showTrips()
             _error.value = null
             publish()
@@ -759,8 +759,8 @@ class MomentsRepository(
                     local?.writeChangedTrips(changedTrips)
                     // The site has the entries as sent; one changed again while this was sent stays to be published.
                     // The trips sent are the site's, so one made on the phone stays in sight until the copy has it.
-                    val second = _second.value
-                    _second.value = second.copy(entries = second.entries - goneThings + things, collections = second.collections + trips)
+                    val records = _records.value
+                    _records.value = records.copy(entries = records.entries - goneThings + things, collections = records.collections + trips)
                     apiTrips = tripsOf()
                     showTrips()
                     changedEntries = changedEntries.filter { (uid, entry) -> things[uid] != entry }
@@ -841,7 +841,7 @@ class MomentsRepository(
             changedEntries = changed
             local.writeChangedEntries(changedEntries, removedEntries)
         }
-        _second.value = _second.value.let { it.copy(entries = it.entries.mapValues { (_, entry) -> moved(entry) }) }
+        _records.value = _records.value.let { it.copy(entries = it.entries.mapValues { (_, entry) -> moved(entry) }) }
         showEntries()
         local.writePlaces(phonePlaces)
         local.writeKeptPlaces(keptPlaces)
@@ -876,8 +876,8 @@ class MomentsRepository(
             changedPlaces.mapNotNull { (id, place) -> apiPlaces[id]?.let { PlaceChange(id, it, place) } }.sortedBy { it.after.name },
             outside?.pending() ?: Outside(),
             changedTrips.map { (id, collection) -> TripChange(id, apiTrips.firstOrNull { it.id == id }, collection) },
-            changedEntries.map { (uid, entry) -> EntryChange(_second.value.entries[uid], entry) } +
-                removedEntries.mapNotNull { uid -> _second.value.entries[uid]?.let { EntryChange(it, null) } },
+            changedEntries.map { (uid, entry) -> EntryChange(_records.value.entries[uid], entry) } +
+                removedEntries.mapNotNull { uid -> _records.value.entries[uid]?.let { EntryChange(it, null) } },
         )
     }
 
@@ -907,7 +907,7 @@ class MomentsRepository(
 
     /** Whether a trip is private: by the phone's change to it, else as the API has it. */
     fun isTripPrivate(id: String): Boolean =
-        (changedTrips[id] ?: _second.value.collections[id])?.let(Entries::isPrivate) == true
+        (changedTrips[id] ?: _records.value.collections[id])?.let(Entries::isPrivate) == true
 
     /**
      * A trip's collection uid, which its public footprints name: its collection's own, as one
@@ -953,7 +953,7 @@ class MomentsRepository(
 
     /** A trip as its collection, with the phone's change to it. */
     fun tripCollection(id: String): kotlinx.serialization.json.JsonObject? =
-        changedTrips[id] ?: apiTrips.firstOrNull { it.id == id }?.let { Entries.collectionOf(it, _second.value.collections[id]) }
+        changedTrips[id] ?: apiTrips.firstOrNull { it.id == id }?.let { Entries.collectionOf(it, _records.value.collections[id]) }
 
     /** Keeps a change to a trip on the phone, its name, its days and who sees it, until it is published. */
     suspend fun editTrip(
@@ -972,7 +972,7 @@ class MomentsRepository(
             val made = changedTrips[id]?.takeIf { apiTrips.none { it.id == id } }
             val base = made ?: Entries.collectionOf(
                 apiTrips.firstOrNull { it.id == id } ?: error("Unknown trip $id"),
-                _second.value.collections[id],
+                _records.value.collections[id],
             )
             val now = cc.hyoban.moments.data.local.recordTime()
             val edited = Entries.editCollection(
@@ -1098,4 +1098,4 @@ private fun JsonObjectsEqualApartFrom(a: kotlinx.serialization.json.JsonObject, 
     (a - key) == (b - key)
 
 /** The parts a Moment of the first shape holds. */
-private val FIRST_SHAPE_PARTS = setOf("text", "media", "food")
+private val MOMENT_PARTS = setOf("text", "media", "food")

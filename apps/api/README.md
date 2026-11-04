@@ -70,8 +70,8 @@ each place is known by, the records as published, the uids deleted and the revis
   and never change. Media are kept as uploaded (`original: true`), and the site has
   Cloudflare resize them ([docs/assets.md](../../docs/assets.md)). The rules live in
   `@hyoban/data-spec/publish`.
-- **Privacy.** A private part of a plugin that keeps to the phone (a bill) is dropped even
-  when sent.
+- **Privacy.** Of a plugin that keeps to the phone (a bill), a private part is dropped even
+  when sent, and a public one is kept by its public fields alone (`getUploadEntry`).
 - **After a write the site shows**, the trips' routes are brought up to date when what they
   are built from changed, then `DEPLOY_HOOK_URL` is called so the site builds again.
 
