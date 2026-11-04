@@ -435,18 +435,31 @@ class MomentsRepository(
      * Sets a place's kind: one the phone made at once, one of the site's as a change kept
      * until it is published, taken back when it is set to the site's kind again.
      */
-    suspend fun setPlaceKind(id: String, kind: String) = lock.withLock {
+    suspend fun setPlaceKind(id: String, kind: String) = editPlace(id) { it.copy(kind = kind) }
+
+    /**
+     * Changes a place, by its id, so every Moment and entry at it stays there: one the phone
+     * made at once, one of the site's as a change kept until it is published, taken back when
+     * it is the site's again. Moved, it loses its division, which the API looks up again.
+     */
+    suspend fun editPlace(id: String, edit: (Place) -> Place) = lock.withLock {
         val local = checkNotNull(local) { "No store for the phone's own places" }
         withContext(io) {
             val own = phonePlaces[id]
             val site = apiPlaces[id]
+            fun edited(place: Place) = edit(place).let {
+                if (it.latitude == place.latitude && it.longitude == place.longitude) it else it.copy(division = null)
+            }
             when {
                 own != null -> {
-                    phonePlaces = phonePlaces + (id to own.copy(kind = kind))
+                    phonePlaces = phonePlaces + (id to edited(own))
                     local.writePlaces(phonePlaces)
                 }
                 site != null -> {
-                    changedPlaces = if (site.kind == kind) changedPlaces - id else changedPlaces + (id to site.copy(kind = kind))
+                    val place = edited(changedPlaces[id] ?: site).let {
+                        if (it.latitude == site.latitude && it.longitude == site.longitude) it.copy(division = site.division) else it
+                    }
+                    changedPlaces = if (place == site) changedPlaces - id else changedPlaces + (id to place)
                     local.writeChangedPlaces(changedPlaces)
                 }
                 else -> error("Unknown place $id")
@@ -456,7 +469,7 @@ class MomentsRepository(
         }
     }
 
-    /** Takes back a site's place's changed kind. */
+    /** Takes back a change to one of the site's places. */
     suspend fun revertPlace(id: String) = lock.withLock {
         withContext(io) {
             changedPlaces = changedPlaces - id
@@ -606,14 +619,14 @@ class MomentsRepository(
      */
     suspend fun publishPending(onProgress: (PublishProgress) -> Unit = {}) {
         val writer = checkNotNull(writer) { "No API to write to" }
-        val (written, known, own, deletions, kinds) = lock.withLock {
+        val (written, known, own, deletions, edits) = lock.withLock {
             // A change being taken back isn't published, whatever becomes of it.
             Snapshot(phone.values.filter { it.uid !in holding }.sortedWith(oldestFirst), apiPlaces, phonePlaces, (removed - holding).toList(), changedPlaces)
         }
         val extra = outside?.pending() ?: Outside()
         val trips = lock.withLock { changedTrips }
         val (things, goneThings) = lock.withLock { changedEntries to removedEntries }
-        if (written.isEmpty() && deletions.isEmpty() && kinds.isEmpty() && extra.size == 0 && trips.isEmpty() && things.isEmpty() && goneThings.isEmpty()) return
+        if (written.isEmpty() && deletions.isEmpty() && edits.isEmpty() && extra.size == 0 && trips.isEmpty() && things.isEmpty() && goneThings.isEmpty()) return
         // A bill of a Moment goes as a part of it, the Moment sent again with it (or without it,
         // taken off) when it isn't among the changes already; a bill alone is an entry of its own.
         val (ofMoments, alone) = lock.withLock {
@@ -625,11 +638,11 @@ class MomentsRepository(
         val moments = written + carriers
         val parts = ofMoments.filter { it.part != null }.groupBy { it.txn.moment!! }
             .mapValues { (_, bills) -> mapOf("bill" to bills.first().part!!) }
-        // The site's places with a changed kind go under their own ids, which the API takes the kind of.
+        // The site's places changed here go under their own ids, which the API takes the name, point and kind of.
         // An entry that isn't a Moment, as an import's check-in, may be at one of the phone's places too.
         val entryPlaces = things.values.mapNotNull { (it["place"] as? kotlinx.serialization.json.JsonPrimitive)?.content }
         val places = (moments.flatMap { it.places } + entryPlaces).distinct().filter { it !in known }
-            .associateWith { id -> own[id] ?: error("Unknown place $id") } + kinds
+            .associateWith { id -> own[id] ?: error("Unknown place $id") } + edits
         // A live photo sends its still and its motion, each an upload of its own; a video only
         // itself, its still on the phone left for the site to take from it.
         val originals = moments.flatMap { moment ->
@@ -724,9 +737,9 @@ class MomentsRepository(
         lock.withLock {
             withContext(io) {
                 apiPlaces = apiPlaces + applied.places.filterValues { it !in apiPlaces }.entries.associate { (given, id) -> id to places.getValue(given) } +
-                    kinds.mapValues { (id, place) -> apiPlaces[id]?.copy(kind = place.kind) ?: place }
-                // A kind changed again while this was sent stays to be published.
-                changedPlaces = changedPlaces.filter { (id, place) -> kinds[id] != place }
+                    edits
+                // A place changed again while this was sent stays to be published.
+                changedPlaces = changedPlaces.filter { (id, place) -> edits[id] != place }
                 local?.writeChangedPlaces(changedPlaces)
                 for (saved in applied.moments) {
                     keep(saved)
@@ -748,7 +761,7 @@ class MomentsRepository(
         val known: Map<String, Place>,
         val own: Map<String, Place>,
         val deletions: List<String>,
-        val kinds: Map<String, Place>,
+        val edits: Map<String, Place>,
     )
 
     /** One of the site's Moments as the API answered it, shown until the copy has it from the rows. */

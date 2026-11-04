@@ -431,6 +431,10 @@
     <string name="food_each">人均 ¥%1$d</string>
     <string name="food_none">没有</string>
     <string name="change_place_kind">类型</string>
+    <string name="action_edit_place">编辑地点</string>
+    <string name="change_place_name">名称</string>
+    <string name="change_place_point">位置</string>
+    <string name="change_place_moved">移动了 %1$s</string>
     <string name="change_food">美食</string>
     <string name="note_change_recreates">网站上已经没有这个时刻了。发布后会按下面的样子重新放上去。</string>
     <string name="note_change_nothing">内容和网站上的一样</string>

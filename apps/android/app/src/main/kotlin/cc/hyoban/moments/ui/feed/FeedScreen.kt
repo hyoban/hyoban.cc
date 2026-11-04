@@ -783,6 +783,8 @@ fun PlaceScreen(
     val bills = remember(checkins) { TimelineBills(checkins = checkins.groupBy { it.at.take(10) }) }
 
     val place = places[id]
+    // Its name, point and kind changed in the place picker, every Moment at it staying there.
+    var editing by rememberSaveable { mutableStateOf(false) }
     // On a phone on its side, the place on a map down the start half and its Moments beside it,
     // its name heading them rather than standing over the map's edge (H10).
     val sideways = isPhoneLandscape() && place != null
@@ -814,9 +816,15 @@ fun PlaceScreen(
                         Icon(AppIcons.Directions, contentDescription = stringResource(R.string.action_navigate))
                     }
                 }
+                Tooltip(stringResource(R.string.action_edit_place), below = true) {
+                    IconButton(onClick = { editing = true }, modifier = Modifier.testTag("edit_place")) {
+                        Icon(AppIcons.Pen, contentDescription = stringResource(R.string.action_edit_place))
+                    }
+                }
             }
         },
     ) {
+        if (editing) cc.hyoban.moments.ui.compose.EditPlace(container, id, onDismiss = { editing = false })
         // The place is the page's title, so its cards name only the other places they were at.
         val ledgerNav = LocalLedgerNav.current
         val feed: @Composable (Modifier) -> Unit = { feedModifier ->

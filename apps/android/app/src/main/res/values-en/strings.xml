@@ -454,6 +454,10 @@
     <string name="food_each" tools:ignore="PluralsCandidate">¥%1$d each</string>
     <string name="food_none">None</string>
     <string name="change_place_kind">kind</string>
+    <string name="action_edit_place">Edit place</string>
+    <string name="change_place_name">name</string>
+    <string name="change_place_point">location</string>
+    <string name="change_place_moved">Moved %1$s</string>
     <string name="change_food">food</string>
     <string name="note_change_recreates">The site no longer has this Moment. Publishing puts it back as shown below.</string>
     <string name="note_change_nothing">Same as on the site</string>

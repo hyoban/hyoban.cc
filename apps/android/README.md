@@ -168,6 +168,11 @@ except in 演示模式.
   icon in the list. A place picked from AMap or Tencent keeps that service's id as its
   `source`, so finding it again chooses the place already kept rather than a new one beside it. A place shared from Amap (Here (作为时刻的地点), or 保存为地点 to
   only keep it) is followed from its short link and shifted from GCJ-02 back to WGS 84.
+- A place's page edits it (编辑地点) in the same picker, opened on the place as it is with no
+  other place offered: the pin moved, the choice renamed or given another kind. It keeps its
+  id, so its Moments, check-ins and bills stay at it. One of the phone's changes at once; one
+  of the site's is a change under 改过的地点 until published, which the API takes the name,
+  point and kind of, looking its division up again and routing its trips again when it moved.
 
 New Moments and places live under the app's `local/` directory in the spec's layout, the
 places with provisional ids (`p-<ulid>`), marked 未发布 until published.

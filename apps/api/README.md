@@ -62,7 +62,9 @@ each place is known by, the records as published, the uids deleted and the revis
   the place of that venue if there is one; places near each other or of one name stay apart.
   Any other is added, a provisional `p-<ulid>` getting an id from its name's pinyin, and its province,
   city and district looked up from DataV's GeoAtlas (`DIVISIONS_URL`), or left for
-  `vp run places:locate` when that fails. An entry names one place at most.
+  `vp run places:locate` when that fails. A known place sent under its own id takes the name,
+  point and kind sent with it and keeps the rest; moved, its division is looked up again and
+  the trips' routes are worked out again. An entry names one place at most.
 - **Publishing.** A draft takes a `published` block with the time, and its originals move to
   `moments/<uid>/<media uid>.<ext>` (`getMediaKey`). The `published` blocks are the server's
   and never change. Media are kept as uploaded (`original: true`), and the site has

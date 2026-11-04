@@ -421,7 +421,7 @@ class AppContainer(context: Context) {
         }
     }
 
-    /** Takes back a site's place's changed kind, not yet published. */
+    /** Takes back a change to one of the site's places, not yet published. */
     fun revertPlace(id: String) {
         scope.launch { repository.revertPlace(id) }
     }

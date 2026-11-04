@@ -254,7 +254,7 @@ export async function applyEntryChanges(
   }
 
   const statements: Statement[] = []
-  const placeIds = await namePlaces(context, givenPlaces, state.places, statements)
+  const { placeIds, moved } = await namePlaces(context, givenPlaces, state.places, statements)
   const records = inputs.map((input) => {
     const named = input.place ? { ...input, place: placeIds[input.place] ?? input.place } : input
 
@@ -278,7 +278,7 @@ export async function applyEntryChanges(
   let saved: Entry[]
   let revision: number | undefined
   let changesRoutes =
-    deleted.length > 0 || givenCollections.length > 0 || deletedCollections.length > 0
+    moved || deleted.length > 0 || givenCollections.length > 0 || deletedCollections.length > 0
 
   for (const uid of deleted) {
     statements.push(context.db.prepare(deleteSql('entries')).bind(context.now, uid))
