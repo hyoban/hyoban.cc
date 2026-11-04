@@ -155,11 +155,13 @@ installation or a site deployment.
 
 ## Repository skills
 
-Read the relevant skill only when the task calls for it. Both agents can use:
+Skills live in `.agents/skills`; `.claude/skills` holds only a relative symlink to
+each, so add a new skill there and link it. Read the relevant skill only when the
+task calls for it. Both agents can use:
 
 - [create-moment](.agents/skills/create-moment/SKILL.md) for recording Moments from
   exact user text and media.
-- [zeekr-data](.claude/skills/zeekr-data/SKILL.md) for capturing and validating car
+- [zeekr-data](.agents/skills/zeekr-data/SKILL.md) for capturing and validating car
   data from the phone.
 
 <!--VITE PLUS START-->

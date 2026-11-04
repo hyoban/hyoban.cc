@@ -1,4 +1,4 @@
-"""Run with python3 -m unittest discover -s .claude/skills/zeekr-data/scripts."""
+"""Run with python3 -m unittest discover -s .agents/skills/zeekr-data/scripts."""
 
 import copy
 import datetime as dt
