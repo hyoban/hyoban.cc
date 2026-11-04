@@ -4,23 +4,22 @@ import SitePage from '@/components/SitePage.astro'
 import generatedMedia from '@/data/media.generated.json'
 import mediaRecommendations from '@/data/media-recommendations.json'
 import Layout from '@/layouts/Layout.astro'
-import { compareMediaItems, getMediaItemKey } from '@/media'
+import { compareMediaItems, DEFAULT_MEDIA_CATEGORY, getMediaCategoryPath, getMediaItemKey, type MediaCategory, mediaCategories } from '@/media'
 import { formatDuration, getMusicTracks } from '@/music'
 import { getPageCardPath, getPageTitle, MEDIA_TEXT } from '@/page-cards'
 
+export function getStaticPaths() {
+  return mediaCategories.map(category => ({
+    params: { category: category.value === DEFAULT_MEDIA_CATEGORY ? undefined : category.value },
+    props: { category: category.value },
+  }))
+}
+
+const { category: currentCategory } = Astro.props as { category: MediaCategory }
 const pageTitle = getPageTitle(MEDIA_TEXT)
 const pageDescription = MEDIA_TEXT.description
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p'
 const ANIMATION_GENRE_ID = 16
-const mediaCategories = [
-  { label: '动漫', value: 'anime' },
-  { label: '电视剧', value: 'tv' },
-  { label: 'TVB', value: 'tvb' },
-  { label: '电影', value: 'movie' },
-  { label: '音乐', value: 'music' },
-] as const
-
-type MediaCategory = typeof mediaCategories[number]['value']
 
 type MediaRecommendation = {
   doubanId?: number
@@ -203,31 +202,29 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
 
 ---
 
-<Layout title={pageTitle} description={pageDescription} image={await getPageCardPath(Astro.url.pathname)}>
-  <Fragment slot="head">
-    <script is:inline data-astro-rerun>
-      const mediaCategory = new URL(window.location.href).searchParams.get('category')
-      document.documentElement.dataset.mediaCategory = ['anime', 'tv', 'tvb', 'movie', 'music'].includes(mediaCategory)
-        ? mediaCategory
-        : 'anime'
-    </script>
-  </Fragment>
+<Layout title={pageTitle} description={pageDescription} image={await getPageCardPath('/media/')}>
+  {
+    currentCategory === DEFAULT_MEDIA_CATEGORY && (
+      <Fragment slot="head">
+        {/* Links from before the categories had their own pages: /media/?category=movie. */}
+        <script is:inline data-astro-rerun>
+          const category = new URL(location.href).searchParams.get('category')
+          if (['tv', 'tvb', 'movie', 'music'].includes(category)) location.replace(`/media/${category}/`)
+        </script>
+      </Fragment>
+    )
+  }
 
   <SitePage title={MEDIA_TEXT.heading} description={pageDescription}>
 
-    <nav
-      class="media-filters"
-      aria-label="分类过滤"
-      data-media-filters
-    >
+    <nav class="media-filters" aria-label="分类过滤">
       {
         mediaCategories.map(category => (
           <a
-            href={`/media/?category=${category.value}`}
+            href={getMediaCategoryPath(category.value)}
             class="media-filter"
-            aria-controls="media-list"
-            aria-current={category.value === 'anime' ? 'true' : undefined}
-            data-media-filter={category.value}
+            aria-current={category.value === currentCategory ? 'page' : undefined}
+            data-astro-history="replace"
           >
             {category.label}
             <span class="media-filter__count">{mediaCategoryCounts.get(category.value)}</span>
@@ -236,10 +233,10 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
       }
     </nav>
 
-    <ol id="media-list" class="media-list">
+    <ol class="media-list">
       {
-        mediaWorks.map(work => (
-          <li class="media-item" data-media-category={work.categories.join(' ')}>
+        mediaWorks.filter(work => work.categories.includes(currentCategory)).map(work => (
+          <li>
             <article class="media-work">
               <div class="media-work__body">
                 {
@@ -298,8 +295,8 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
         ))
       }
       {
-        musicTracks.map(track => (
-          <li class="media-item" data-media-category="music">
+        currentCategory === 'music' && musicTracks.map(track => (
+          <li>
             <article class="music-track">
               {
                 track.coverUrl && (
@@ -333,54 +330,6 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
   </SitePage>
 </Layout>
 
-<script>
-  const DEFAULT_MEDIA_CATEGORY = 'anime'
-  const MEDIA_CATEGORIES = new Set(['tv', 'tvb', 'movie', 'anime', 'music'])
-
-  function getMediaCategoryFromUrl() {
-    const category = new URL(window.location.href).searchParams.get('category')
-
-    return category && MEDIA_CATEGORIES.has(category)
-      ? category
-      : DEFAULT_MEDIA_CATEGORY
-  }
-
-  function updateMediaCategoryUrl(category: string) {
-    const url = new URL(window.location.href)
-    url.searchParams.set('category', category)
-    // Keeping the router's state, where the page was among the rest.
-    window.history.replaceState(history.state, '', url)
-  }
-
-  function initializeMediaFilters() {
-    const filters = document.querySelector('[data-media-filters]')
-
-    if (!filters) {
-      return
-    }
-
-    const filterLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-media-filter]'))
-    const initialCategory = getMediaCategoryFromUrl()
-
-    document.documentElement.dataset.mediaCategory = initialCategory
-
-    filterLinks.forEach((link) => {
-      if (link.dataset.mediaFilter === initialCategory) {
-        link.setAttribute('aria-current', 'true')
-      } else {
-        link.removeAttribute('aria-current')
-      }
-    })
-
-    if (new URL(window.location.href).searchParams.get('category') !== initialCategory) {
-      updateMediaCategoryUrl(initialCategory)
-    }
-  }
-
-  document.addEventListener('astro:page-load', initializeMediaFilters)
-  initializeMediaFilters()
-</script>
-
 <style>
   .media-filters {
     display: flex;
@@ -393,7 +342,6 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
     scrollbar-width: none;
   }
 
-  /* The current one is set dark by the global styles below, from the page's category. */
   .media-filter {
     display: inline-flex;
     flex-shrink: 0;
@@ -403,6 +351,10 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
     color: var(--color-tx-2);
     text-decoration: none;
     transition: color 150ms var(--ease);
+
+    &[aria-current='page'] {
+      color: var(--color-tx);
+    }
 
     @media (hover: hover) {
       &:hover {
@@ -566,25 +518,5 @@ function getCreator(type: GeneratedMediaItem['type'], data: TmdbDetails) {
   .music-track__duration {
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
-  }
-</style>
-
-<style is:global>
-  html:not([data-media-category]) [data-media-category]:not([data-media-category~='anime']),
-  html[data-media-category='anime'] [data-media-category]:not([data-media-category~='anime']),
-  html[data-media-category='tv'] [data-media-category]:not([data-media-category~='tv']),
-  html[data-media-category='tvb'] [data-media-category]:not([data-media-category~='tvb']),
-  html[data-media-category='movie'] [data-media-category]:not([data-media-category~='movie']),
-  html[data-media-category='music'] [data-media-category]:not([data-media-category~='music']) {
-    display: none;
-  }
-
-  html:not([data-media-category]) [data-media-filter='anime'],
-  html[data-media-category='anime'] [data-media-filter='anime'],
-  html[data-media-category='tv'] [data-media-filter='tv'],
-  html[data-media-category='tvb'] [data-media-filter='tvb'],
-  html[data-media-category='movie'] [data-media-filter='movie'],
-  html[data-media-category='music'] [data-media-filter='music'] {
-    color: var(--color-tx);
   }
 </style>
