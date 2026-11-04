@@ -7,7 +7,6 @@ import {
   collectionToTrip,
   entrySchema,
   entryToMoment,
-  getCollectionFacets,
   getDeviceIssues,
   getEntryAudience,
   getPartAudience,
@@ -177,6 +176,30 @@ test('a private bill stays on the phone, a public one goes', () => {
   assert.equal(getUploadEntry(entry).parts.bill, undefined)
   assert.ok(getUploadEntry(entry, { bill: 'public' }).parts.bill)
   assert.ok(getUploadEntry(entry).parts.text)
+
+  // A public bill goes by its public fields alone, even when sent whole.
+  const whole = entrySchema.parse({
+    ...base,
+    parts: {
+      bill: {
+        v: 1,
+        visibility: 'public',
+        amount: 9,
+        currency: 'CNY',
+        account: 'wechat',
+        book: 'daily',
+      },
+      food: { v: 1, dishes: ['面'], cost: 9 },
+    },
+  })
+  assert.deepEqual(getUploadEntry(whole).parts.bill, {
+    v: 1,
+    visibility: 'public',
+    kind: 'expense',
+    amount: 9,
+    currency: 'CNY',
+  })
+  assert.deepEqual(getUploadEntry(whole).parts.food, whole.parts.food)
 })
 
 test('a collection holds its span, its includes and not its excludes', () => {
@@ -194,26 +217,6 @@ test('a collection holds its span, its includes and not its excludes', () => {
   assert.ok(!isInCollection(collection, { uid: base.uid, at: '2026-09-17' }))
   assert.ok(isInCollection(collection, { uid: getStableUlid(at, 'in'), at: '2025-01-01' }))
   assert.ok(!isInCollection(collection, { uid: getStableUlid(at, 'out'), at: '2026-09-13' }))
-})
-
-test('a collection adds up what its members spent, charged and ate', () => {
-  const members = [
-    entrySchema.parse({ ...base, parts: { bill: { v: 1, amount: 10.1, currency: 'CNY' } } }),
-    entrySchema.parse({
-      ...base,
-      parts: { bill: { v: 1, amount: 0.2, currency: 'CNY' } },
-      place: 'a',
-    }),
-    entrySchema.parse({ ...base, parts: { charge: { v: 1, energyWh: 30000, cost: 20 } } }),
-    entrySchema.parse({ ...base, parts: { food: { v: 1, verdict: 'good' } }, place: 'a' }),
-  ]
-  assert.deepEqual(getCollectionFacets(members, [{ distance: 1234.5 }]), {
-    spending: { amount: 10.3, currency: 'CNY', bills: 2 },
-    charging: { sessions: 1, energyWh: 30000, cost: 20 },
-    food: { meals: 1, good: 1 },
-    places: { count: 1 },
-    distance: { metres: 1235 },
-  })
 })
 
 test('a device id names one device, and a charge names a device that is', () => {

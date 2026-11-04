@@ -98,13 +98,6 @@
         "private"
       ]
     },
-    "facets": {
-      "type": "object",
-      "propertyNames": {
-        "type": "string"
-      },
-      "additionalProperties": {}
-    },
     "route": {
       "type": "object",
       "properties": {

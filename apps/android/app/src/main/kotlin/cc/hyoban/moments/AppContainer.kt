@@ -139,11 +139,11 @@ class AppContainer(context: Context) {
      * routed, the phone's.
      */
     val tripRoutes: kotlinx.coroutines.flow.StateFlow<Map<String, List<cc.hyoban.moments.data.trips.RouteSegment>>> =
-        kotlinx.coroutines.flow.combine(routes.routes, repository.second, repository.trips, phoneLegs, phoneRoutes.lines) { roads, second, trips, legs, lines ->
+        kotlinx.coroutines.flow.combine(routes.routes, repository.records, repository.trips, phoneLegs, phoneRoutes.lines) { roads, records, trips, legs, lines ->
             val own = legs.mapValues { (_, tripLegs) -> cc.hyoban.moments.data.trips.segmentsOf(tripLegs, lines) }.filterValues { it.isNotEmpty() }
             roads + own + trips.mapNotNull { trip ->
                 val uid = repository.tripUid(trip)
-                val track = second.tracks.values.firstOrNull { (it["collection"] as? kotlinx.serialization.json.JsonPrimitive)?.content == uid }
+                val track = records.tracks.values.firstOrNull { (it["collection"] as? kotlinx.serialization.json.JsonPrimitive)?.content == uid }
                     ?: return@mapNotNull null
                 val stretches = (track["segments"] as? kotlinx.serialization.json.JsonArray).orEmpty().mapNotNull { segment ->
                     (segment as? kotlinx.serialization.json.JsonObject)?.get("coordinates")?.let { it as? kotlinx.serialization.json.JsonArray }

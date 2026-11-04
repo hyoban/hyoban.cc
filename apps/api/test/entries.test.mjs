@@ -81,7 +81,7 @@ test('the feed hands out every entry, private ones too', async () => {
   assert.equal((await get(env, `/v2/entries/${hidden.uid}`, { auth: null })).status, 401)
 })
 
-test('a bill comes back whole, and a private one alone never comes', async () => {
+test('a public bill comes back by its public fields, and a private one alone never comes', async () => {
   const { env } = setUpWithData()
   const meal = {
     uid: uid('meal'),
@@ -124,8 +124,6 @@ test('a bill comes back whole, and a private one alone never comes', async () =>
     amount: 18,
     currency: 'CNY',
     category: '餐饮',
-    account: 'acct',
-    book: 'book',
     kind: 'expense',
   })
 

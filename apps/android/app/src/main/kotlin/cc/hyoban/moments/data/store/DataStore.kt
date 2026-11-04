@@ -10,8 +10,8 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonObject
 import java.io.File
 
-/** The second shape's records the copy holds beside the Moments and trips: entries by uid, collections by their key (slug, else uid in lowercase), public tracks by uid. */
-data class SecondShape(
+/** The API's records the copy holds beside the Moments and trips: entries by uid, collections by their key (slug, else uid in lowercase), public tracks by uid. */
+data class Records(
     val revision: Long = 0,
     val entries: Map<String, JsonObject> = emptyMap(),
     val collections: Map<String, JsonObject> = emptyMap(),
