@@ -10,6 +10,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.ResponseBody.Companion.toResponseBody
 import cc.hyoban.moments.data.local.amapKind
+import cc.hyoban.moments.data.local.amapTypecode
 import cc.hyoban.moments.data.local.kindOf
 import cc.hyoban.moments.data.local.landmarks
 import cc.hyoban.moments.data.local.nameAt
@@ -105,7 +106,7 @@ class PlaceSearchTest {
         assertEquals(PlaceKind.FOOD, kindOf(found[0]))
         assertEquals(PlaceKind.WORK, kindOf(found[1]))
         assertEquals(found, landmarks(found), "every one of them a landmark")
-        assertFailsWith<java.io.IOException>("calls used up are an error, so Photon answers") {
+        assertFailsWith<cc.hyoban.moments.data.local.CallsUsedUp>("calls used up are an error, so Photon answers") {
             parseTencent("""{"status":121,"message":"此key每日调用量已达到上限"}""")
         }
     }
@@ -139,9 +140,68 @@ class PlaceSearchTest {
             """.trimIndent(),
         )
         assertEquals(listOf("某某咖啡"), tips.map { it.name })
-        assertFailsWith<java.io.IOException>("calls used up are an error, so Tencent or Photon answers") {
+        assertFailsWith<cc.hyoban.moments.data.local.CallsUsedUp>("calls used up are an error, so Tencent or Photon answers") {
             parseAmap("""{"status":"0","info":"DAILY_QUERY_OVER_LIMIT","infocode":"10003"}""")
         }
+    }
+
+    @Test
+    fun `what is around comes from reverse geocoding, nearest first, kinds read from AMap's words`() {
+        val amap = parseAmap(
+            """
+            {"status":"1","info":"OK","infocode":"10000","regeocode":{"formatted_address":"某市某区","pois":[
+              {"id":"B0TEST0003","name":"某某公园","type":"风景名胜;公园广场;公园","distance":"120.5","address":"某路 3 号","location":"121.4,31.2"},
+              {"id":"B0TEST0004","name":"某某咖啡(某路店)","type":"餐饮服务;咖啡厅;咖啡厅","distance":"12.0","address":[],"location":"121.4,31.2"},
+              {"id":"B0TEST0005","name":"某某寺","type":"风景名胜;风景名胜;寺庙道观","distance":"300","location":"121.4,31.2"},
+              {"id":"B0TEST0006","name":"某某委员会","type":"政府机构及社会团体;政府机关;政府机关","distance":"30","location":"121.4,31.2"}
+            ]}}
+            """.trimIndent(),
+        )
+        assertEquals(listOf("某某咖啡(某路店)", "某某委员会", "某某公园", "某某寺"), amap.map { it.name })
+        assertEquals(listOf(PlaceKind.CAFE, null, PlaceKind.PARK, PlaceKind.TEMPLE), amap.map { it.placeKind })
+        assertEquals(PlaceSource("amap", "B0TEST0004"), amap[0].source)
+        assertEquals("050500", amapTypecode("餐饮服务;咖啡厅;星巴克咖啡"))
+        assertEquals("080304", amapTypecode("体育休闲服务;娱乐场所;酒吧"))
+        assertEquals("050000", amapTypecode("餐饮服务;某种餐厅;某种餐厅"))
+        assertNull(amapTypecode("地名地址信息;热点地名;热点地名"))
+        val tencent = parseTencent(
+            """
+            {"status":0,"message":"Success","result":{"address":"某市某区","poi_count":1,"pois":[
+              {"id":"1000000000000000001","title":"某某茶饮","address":"某街 4 号","category":"美食:冷饮店","location":{"lat":31.2,"lng":121.4},"_distance":8.5}
+            ]}}
+            """.trimIndent(),
+        )
+        assertEquals(listOf("某某茶饮"), tencent.map { it.name })
+        assertEquals(PlaceKind.TEA, tencent[0].placeKind)
+        assertEquals(PlaceSource("tencent", "1000000000000000001"), tencent[0].source)
+    }
+
+    @Test
+    fun `the places around come from the place searches first, the reverse geocoders once their calls are used up`() {
+        val asked = mutableListOf<String>()
+        val client = okhttp3.OkHttpClient.Builder().addInterceptor { chain ->
+            val url = chain.request().url
+            asked += url.encodedPath
+            val body = when (url.encodedPath) {
+                "/v5/place/around" -> """{"status":"0","info":"DAILY_QUERY_OVER_LIMIT","infocode":"10003"}"""
+                "/ws/place/v1/explore" -> """{"status":121,"message":"此key每日调用量已达到上限"}"""
+                "/v3/geocode/regeo" -> """{"status":"1","regeocode":{"pois":[]}}"""
+                else -> """{"status":0,"result":{"pois":[{"title":"某某店","location":{"lat":31.2,"lng":121.4}}]}}"""
+            }
+            okhttp3.Response.Builder().request(chain.request()).protocol(okhttp3.Protocol.HTTP_1_1).code(200).message("OK")
+                .body(body.toResponseBody()).build()
+        }.build()
+        fun search(tencentFirst: Boolean) = PlaceSearch({ "https://photon.invalid" }, { "t" }, { "a" }, { tencentFirst }, client)
+        val places = search(tencentFirst = false)
+        val first = kotlinx.coroutines.runBlocking { places.china(Fix(31.2, 121.4)) }
+        assertEquals(listOf("某某店"), first?.map { it.name })
+        assertEquals(listOf("/v5/place/around", "/ws/place/v1/explore", "/v3/geocode/regeo", "/ws/geocoder/v1/"), asked)
+        asked.clear()
+        kotlinx.coroutines.runBlocking { places.china(Fix(31.3, 121.5)) }
+        assertEquals(listOf("/v3/geocode/regeo", "/ws/geocoder/v1/"), asked, "the used-up place searches aren't asked again today")
+        asked.clear()
+        kotlinx.coroutines.runBlocking { search(tencentFirst = true).china(Fix(31.2, 121.4)) }
+        assertEquals(listOf("/ws/place/v1/explore", "/v5/place/around", "/ws/geocoder/v1/"), asked, "Tencent chosen, each pair turns round")
     }
 
     @Test
