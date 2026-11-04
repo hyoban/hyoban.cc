@@ -429,6 +429,16 @@
         <item quantity="one">%1$d change</item>
         <item quantity="other">%1$d changes</item>
     </plurals>
+    <string name="action_cancel_publish">Cancel publishing</string>
+    <string name="action_clear_changes">Clear all changes</string>
+    <string name="dialog_clear_changes">Clear all changes?</string>
+    <string name="dialog_clear_changes_note">Every change goes back to what the site has.</string>
+    <plurals name="dialog_clear_changes_deletes">
+        <item quantity="one">%1$d Moment written here is deleted from the phone with its photos, for good; every other change goes back to what the site has.</item>
+        <item quantity="other">%1$d Moments written here are deleted from the phone with their photos, for good; every other change goes back to what the site has.</item>
+    </plurals>
+    <string name="message_publish_cancelled">Publishing cancelled; what wasn\'t sent is still on the phone</string>
+    <string name="message_changes_cleared">All changes cleared</string>
     <string name="empty_changes">Nothing to publish. New Moments, and edits or deletions of the site’s Moments, wait here first.</string>
     <string name="section_added">New</string>
     <string name="section_changed">Edited</string>

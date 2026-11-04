@@ -48,7 +48,10 @@ import java.util.concurrent.TimeUnit
 class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     private val container get() = (applicationContext as MomentsApplication).container
 
-    override suspend fun getForegroundInfo(): ForegroundInfo = foregroundInfo(applicationContext, null)
+    override suspend fun getForegroundInfo(): ForegroundInfo = foregroundInfo(applicationContext, null, cancelIntent())
+
+    /** Cancels this publish from its notification, as 取消发布 on the changes page does. */
+    private fun cancelIntent(): PendingIntent = WorkManager.getInstance(applicationContext).createCancelPendingIntent(id)
 
     @OptIn(FlowPreview::class)
     override suspend fun doWork(): Result = coroutineScope {
@@ -60,7 +63,7 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val progress = MutableStateFlow<PublishProgress?>(null)
         // The system takes a few updates a second at most; one a second says as much.
         val shown = launch {
-            progress.filterNotNull().sample(NOTIFICATION_EVERY_MS).collect { runCatching { setForeground(foregroundInfo(context, it)) } }
+            progress.filterNotNull().sample(NOTIFICATION_EVERY_MS).collect { runCatching { setForeground(foregroundInfo(context, it, cancelIntent())) } }
         }
         try {
             container.runPublish { progress.value = it }
@@ -106,6 +109,14 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             WorkManager.getInstance(context).enqueueUniqueWork(NAME, ExistingWorkPolicy.REPLACE, request)
         }
 
+        /**
+         * Stops the publish running or waiting: what was uploaded stays uploaded, and the change
+         * set, once it is on its way, still goes through.
+         */
+        fun cancel(context: Context) {
+            WorkManager.getInstance(context).cancelUniqueWork(NAME)
+        }
+
         /** A dropped or stalled link, which the next try may get through, not what the API said. */
         private fun isNetwork(error: Exception) = error is IOException && error !is HttpException && error !is NoTokenException
 
@@ -125,13 +136,14 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
 
-        private fun foregroundInfo(context: Context, progress: PublishProgress?): ForegroundInfo {
+        private fun foregroundInfo(context: Context, progress: PublishProgress?, cancel: PendingIntent): ForegroundInfo {
             val notification = NotificationCompat.Builder(context, channel(context))
                 .setSmallIcon(R.drawable.ic_notification_upload)
                 .setContentTitle(context.getString(R.string.notification_publishing))
                 .setContentText(progress?.let { publishingText(context, it) })
                 .setProgress(PROGRESS_MAX, ((progress?.fraction ?: 0f) * PROGRESS_MAX).toInt(), progress == null)
                 .setContentIntent(openApp(context))
+                .addAction(0, context.getString(R.string.action_cancel_publish), cancel)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setSilent(true)

@@ -19,6 +19,7 @@ import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
+import cc.hyoban.moments.data.store.undo
 import cc.hyoban.moments.data.store.DataStore
 import cc.hyoban.moments.data.store.MomentsRepository
 import cc.hyoban.moments.data.store.PublishProgress
@@ -360,6 +361,31 @@ class AppContainer(context: Context) {
         } finally {
             _publishing.value = null
             Widgets.update(appContext)
+        }
+    }
+
+    /** Stops publishing, running or waiting for the network; the changes not yet sent stay on the phone. */
+    fun cancelPublish() {
+        if (_publishing.value == null) return
+        PublishWorker.cancel(appContext)
+        _publishing.value = null
+        say(appContext.getString(R.string.message_publish_cancelled))
+    }
+
+    /**
+     * Takes back every change waiting to publish: the Moments written on the phone deleted, the
+     * site's records as the site has them, and each bill going public or private as it was.
+     */
+    fun clearChanges() {
+        if (_publishing.value != null) return
+        scope.launch {
+            repository.clearChanges()
+            for (change in repository.pending.value.outside.bills) {
+                val visibility = change.undo() ?: continue
+                ledger.saveTxn(change.txn.copy(visibility = visibility))
+            }
+            Widgets.update(appContext)
+            say(appContext.getString(R.string.message_changes_cleared))
         }
     }
 
