@@ -23,11 +23,13 @@ import cc.hyoban.moments.data.store.DataStore
 import cc.hyoban.moments.data.store.MomentsRepository
 import cc.hyoban.moments.data.store.PublishProgress
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /** The copy on the phone follows the API's rows, page by page, and survives a restart. */
@@ -95,6 +97,8 @@ class MomentsRepositoryTest {
         var revision: Long? = null
         /** The trips the last change set sent, as collections. */
         var collections: List<kotlinx.serialization.json.JsonObject> = emptyList()
+        /** Runs as a change set is sent, before the API answers. */
+        var sending: (suspend () -> Unit)? = null
 
         /** A photo's original by its uid, a live photo's motion as `<uid>/video`. */
         private fun key(mediaUid: String, part: UploadPart) = if (part == UploadPart.IMAGE) mediaUid else "$mediaUid/${part.path}"
@@ -116,6 +120,7 @@ class MomentsRepositoryTest {
         }
 
         override suspend fun applyChanges(changes: ChangeSet): AppliedChanges {
+            sending?.invoke()
             calls += "changes places=${changes.places.keys} moments=${changes.moments.map { "${it.uid} ${it.places}" }} deleted=${changes.deleted}"
             collections = changes.collections
             val places = changes.places.keys.associateWith { if (it.startsWith("p-")) "hu-bian" else it }
@@ -516,6 +521,59 @@ class MomentsRepositoryTest {
         assertEquals(listOf("changes places=[nanjing] moments=[] deleted=[]"), writer.calls)
         assertEquals("别处", repository.places.value["nanjing"]?.name, "the site's now")
         assertEquals(0, repository.pending.value.size)
+    }
+
+    @Test
+    fun `clearing the changes deletes what was written here and takes back the rest`() = runBlocking {
+        val repository = repository()
+        api.put(moment("S", "2026-10-01", text = "the site's"))
+        api.put(moment("T", "2026-10-02", text = "to delete"))
+        repository.load()
+        repository.refresh()
+        val photo = File(localDirectory, "media/P.jpg").apply { parentFile.mkdirs(); writeText("photo") }
+        repository.addLocal(
+            moment("L", "2026-10-03", text = "written here", published = false).copy(
+                places = listOf("p-made"),
+                media = listOf(MomentMedia("P", MediaType.IMAGE, local = LocalMedia(photo.toURI().toString(), copied = true))),
+            ),
+            "p-made" to Place("湖边", 32.0, 118.8),
+        )
+        repository.updateLocal(checkNotNull(repository.moment("S")).copy(text = "changed"))
+        repository.delete("T")
+        repository.editPlace("nanjing") { it.copy(name = "别处") }
+        assertEquals(4, repository.pending.value.size)
+
+        repository.clearChanges()
+
+        assertEquals(0, repository.pending.value.size)
+        assertEquals(null, repository.moment("L"), "what was written here is gone")
+        assertFalse(photo.exists(), "with its photo's copy")
+        assertEquals(null, repository.places.value["p-made"], "and the place only it was at")
+        assertEquals("the site's", repository.moment("S")?.text)
+        assertEquals("to delete", repository.moment("T")?.text, "a deletion undone")
+        assertEquals("南京", repository.places.value["nanjing"]?.name)
+
+        val restarted = repository()
+        restarted.load()
+        assertEquals(0, restarted.pending.value.size, "and it outlasts a restart")
+    }
+
+    @Test
+    fun `a publish cancelled as its change set goes still notes what the site took`() = runBlocking {
+        val writer = FakeWriter()
+        val repository = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer)
+        repository.load()
+        repository.addLocal(moment("L", "2026-10-02", text = "written here", published = false))
+        lateinit var publishing: kotlinx.coroutines.Job
+        writer.sending = {
+            publishing.cancel()
+            kotlinx.coroutines.delay(10)
+        }
+        publishing = launch(Dispatchers.Default) { repository.publishPending() }
+        publishing.join()
+
+        assertEquals(1, writer.calls.count { it.startsWith("changes") })
+        assertEquals(0, repository.pending.value.size, "the site has it, so the phone doesn't call it unpublished")
     }
 
     @Test

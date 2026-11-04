@@ -82,6 +82,17 @@ fun Ledger.pendingBills(): List<BillChange> = txns.mapNotNull { txn ->
     if (part?.toString() == txn.published) null else BillChange(txn, part, categoryLabel(txn).orEmpty())
 }
 
+/**
+ * The visibility that takes this change back, saying again what the site has: private for a
+ * bill going public, public for one going private; null for a public bill that changed, which
+ * has no undo.
+ */
+fun BillChange.undo(): String? = when {
+    part == null -> "public"
+    txn.published == null -> "private"
+    else -> null
+}
+
 /** A bill alone as an entry, at its local time. */
 fun BillChange.entry(): JsonObject = Entries.bill(
     uid = uid,

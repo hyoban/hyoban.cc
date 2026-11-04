@@ -406,6 +406,15 @@
     <plurals name="count_changes">
         <item quantity="other">%1$d 项更改</item>
     </plurals>
+    <string name="action_cancel_publish">取消发布</string>
+    <string name="action_clear_changes">清除全部更改</string>
+    <string name="dialog_clear_changes">清除全部更改？</string>
+    <string name="dialog_clear_changes_note">所有改动都会撤回成网站上的样子。</string>
+    <plurals name="dialog_clear_changes_deletes">
+        <item quantity="other">%1$d 条新写的时刻会连同照片从手机上删掉，无法恢复；其余改动撤回成网站上的样子。</item>
+    </plurals>
+    <string name="message_publish_cancelled">已取消发布，没发出去的改动还在手机上</string>
+    <string name="message_changes_cleared">已清除全部更改</string>
     <string name="empty_changes">没有要发布的更改。新写的时刻，以及对网站上时刻的编辑和删除，都会先留在这里。</string>
     <string name="section_added">新写的</string>
     <string name="section_changed">改过的</string>

@@ -103,6 +103,11 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.data.spec.showcase
 import cc.hyoban.moments.data.store.Change
+import cc.hyoban.moments.ui.components.Tooltip
+import cc.hyoban.moments.ui.design.AlertDialog
+import cc.hyoban.moments.ui.design.IconButton
+import androidx.compose.runtime.saveable.rememberSaveable
+import cc.hyoban.moments.data.store.undo
 import cc.hyoban.moments.data.store.PlaceChange
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.distance
@@ -145,6 +150,8 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
     val context = LocalContext.current
     val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { container.publishPending() }
 
+    // Asked first, as clearing deletes what was written on the phone.
+    var clearing by rememberSaveable { mutableStateOf(false) }
     // Back to where it was opened from once everything is published.
     var started by remember { mutableStateOf(false) }
     val haptics = rememberHaptics()
@@ -163,7 +170,48 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
         onBack,
         Modifier.background(AppColors.page),
         subtitle = if (pending.size == 0 || sideways) null else pluralStringResource(R.plurals.count_changes, pending.size, pending.size),
+        actions = {
+            // While it publishes, a way to stop it; otherwise, with changes waiting, a way to drop them all.
+            if (busy) {
+                Tooltip(stringResource(R.string.action_cancel_publish), below = true) {
+                    IconButton(onClick = container::cancelPublish, modifier = Modifier.testTag("cancel_publish")) {
+                        Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_cancel_publish))
+                    }
+                }
+            } else if (pending.size > 0) {
+                Tooltip(stringResource(R.string.action_clear_changes), below = true) {
+                    IconButton(onClick = { clearing = true }, modifier = Modifier.testTag("clear_changes")) {
+                        Icon(AppIcons.Trash, contentDescription = stringResource(R.string.action_clear_changes))
+                    }
+                }
+            }
+        },
     ) {
+        if (clearing) {
+            AlertDialog(
+                onDismissRequest = { clearing = false },
+                title = { Text(stringResource(R.string.dialog_clear_changes)) },
+                text = {
+                    Text(
+                        if (pending.added.isEmpty()) {
+                            stringResource(R.string.dialog_clear_changes_note)
+                        } else {
+                            pluralStringResource(R.plurals.dialog_clear_changes_deletes, pending.added.size, pending.added.size)
+                        },
+                    )
+                },
+                dismissButton = { TextButton(onClick = { clearing = false }) { Text(stringResource(R.string.action_cancel)) } },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            clearing = false
+                            container.clearChanges()
+                        },
+                        modifier = Modifier.testTag("confirm_clear_changes"),
+                    ) { Text(stringResource(R.string.action_clear), color = tokens.danger) }
+                },
+            )
+        }
         // On a phone on its side, how many and what stays on the phone stand in a column at the
         // start, the changes beside it (H16).
         val list: @Composable () -> Unit = { PageWidth(maxColumns = 1) { columns ->
@@ -273,13 +321,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                     }
                 }
                 section(R.string.section_visibility, pending.outside.bills, key = { "bill-${it.uid}" }) { change ->
-                    // Taken back by saying again what the site has: private for a bill going
-                    // public, public for one going private; a public bill that changed has no undo.
-                    val revert = when {
-                        change.part == null -> "public"
-                        change.txn.published == null -> "private"
-                        else -> null
-                    }?.let { visibility ->
+                    val revert = change.undo()?.let { visibility ->
                         { container.scope.launch { container.ledger.saveTxn(change.txn.copy(visibility = visibility)) }; Unit }
                     }?.takeUnless { busy }
                     SwipeToRevert(revert) { OutsideCard(change.label, formatDate(change.txn.dateKey), billAmount(change), stringResource(if (change.part == null) R.string.changes_bill_private else R.string.changes_bill_public_note), revert) }

@@ -17,6 +17,7 @@ import cc.hyoban.moments.data.spec.Spec
 import cc.hyoban.moments.data.spec.entryUid
 import cc.hyoban.moments.data.spec.TripRecord
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -469,6 +470,35 @@ class MomentsRepository(
         }
     }
 
+    /**
+     * Takes back every change kept on the phone: the Moments written here deleted, their
+     * photos' copies and the places only they were at with them, and the site's Moments,
+     * places, trips and entries as the site has them again, deletions undone.
+     */
+    suspend fun clearChanges() = lock.withLock {
+        withContext(io) {
+            phone.values.toList().forEach(::forgetLocal)
+            removed = emptySet()
+            setAside = emptySet()
+            holding = emptySet()
+            changedPlaces = emptyMap()
+            changedTrips = emptyMap()
+            changedEntries = emptyMap()
+            removedEntries = emptySet()
+            local?.run {
+                writeRemoved(removed)
+                writeChangedPlaces(changedPlaces)
+                writeChangedTrips(changedTrips)
+                writeChangedEntries(changedEntries, removedEntries)
+            }
+            writeHeld()
+            showTrips()
+            showEntries()
+            publishPlaces()
+            publish()
+        }
+    }
+
     /** Takes back a change to one of the site's places. */
     suspend fun revertPlace(id: String) = lock.withLock {
         withContext(io) {
@@ -654,7 +684,7 @@ class MomentsRepository(
             }
         }
         val total = originals.size + 1
-        val applied = withContext(io) {
+        withContext(io) {
             val files = originals.map { (uid, media, part) ->
                 val uri = if (part == UploadPart.VIDEO) media.local?.videoUri else media.local?.uri
                 val file = uri?.let { runCatching { File(URI(it)) }.getOrNull() }?.takeIf(File::isFile)
@@ -703,57 +733,63 @@ class MomentsRepository(
                     }
                 }.awaitAll()
             }
-            writer.applyChanges(
-                ChangeSet(
-                    places,
-                    moments,
-                    deletions + alone.filter { it.part == null }.map { it.uid } + goneThings,
-                    entries = alone.filter { it.part != null }.map { it.entry() } + things.values,
-                    parts = parts,
-                    tracks = extra.tracks.mapNotNull { it.line },
-                    deletedTracks = extra.tracks.filter { it.line == null }.map { it.share.uid },
-                    collections = trips.values.toList(),
-                ),
-            )
         }
-        outside?.published(extra)
-        lock.withLock {
-            withContext(io) {
-                // A trip changed again while this was sent stays to be published.
-                changedTrips = changedTrips.filter { (id, collection) -> trips[id] != collection }
-                local?.writeChangedTrips(changedTrips)
-                // The site has the entries as sent; one changed again while this was sent stays to be published.
-                // The trips sent are the site's, so one made on the phone stays in sight until the copy has it.
-                val second = _second.value
-                _second.value = second.copy(entries = second.entries - goneThings + things, collections = second.collections + trips)
-                apiTrips = tripsOf()
-                showTrips()
-                changedEntries = changedEntries.filter { (uid, entry) -> things[uid] != entry }
-                removedEntries = removedEntries - goneThings
-                local?.writeChangedEntries(changedEntries, removedEntries)
-                showEntries()
+        // Once the change set is on its way it goes through and the phone notes it: a cancel
+        // coming as it is sent can't leave the site with what the phone still calls unpublished.
+        withContext(NonCancellable) {
+            val applied = withContext(io) {
+                writer.applyChanges(
+                    ChangeSet(
+                        places,
+                        moments,
+                        deletions + alone.filter { it.part == null }.map { it.uid } + goneThings,
+                        entries = alone.filter { it.part != null }.map { it.entry() } + things.values,
+                        parts = parts,
+                        tracks = extra.tracks.mapNotNull { it.line },
+                        deletedTracks = extra.tracks.filter { it.line == null }.map { it.share.uid },
+                        collections = trips.values.toList(),
+                    ),
+                )
             }
-        }
-        lock.withLock {
-            withContext(io) {
-                apiPlaces = apiPlaces + applied.places.filterValues { it !in apiPlaces }.entries.associate { (given, id) -> id to places.getValue(given) } +
-                    edits
-                // A place changed again while this was sent stays to be published.
-                changedPlaces = changedPlaces.filter { (id, place) -> edits[id] != place }
-                local?.writeChangedPlaces(changedPlaces)
-                for (saved in applied.moments) {
-                    keep(saved)
-                    phone[saved.uid]?.let(::forgetLocal)
+            outside?.published(extra)
+            lock.withLock {
+                withContext(io) {
+                    // A trip changed again while this was sent stays to be published.
+                    changedTrips = changedTrips.filter { (id, collection) -> trips[id] != collection }
+                    local?.writeChangedTrips(changedTrips)
+                    // The site has the entries as sent; one changed again while this was sent stays to be published.
+                    // The trips sent are the site's, so one made on the phone stays in sight until the copy has it.
+                    val second = _second.value
+                    _second.value = second.copy(entries = second.entries - goneThings + things, collections = second.collections + trips)
+                    apiTrips = tripsOf()
+                    showTrips()
+                    changedEntries = changedEntries.filter { (uid, entry) -> things[uid] != entry }
+                    removedEntries = removedEntries - goneThings
+                    local?.writeChangedEntries(changedEntries, removedEntries)
+                    showEntries()
                 }
-                all = all - deletions.toSet()
-                removed = removed - deletions.toSet()
-                local?.writeRemoved(removed)
-                adoptPlaces(applied.places)
-                publishPlaces()
-                publish()
             }
+            lock.withLock {
+                withContext(io) {
+                    apiPlaces = apiPlaces + applied.places.filterValues { it !in apiPlaces }.entries.associate { (given, id) -> id to places.getValue(given) } +
+                        edits
+                    // A place changed again while this was sent stays to be published.
+                    changedPlaces = changedPlaces.filter { (id, place) -> edits[id] != place }
+                    local?.writeChangedPlaces(changedPlaces)
+                    for (saved in applied.moments) {
+                        keep(saved)
+                        phone[saved.uid]?.let(::forgetLocal)
+                    }
+                    all = all - deletions.toSet()
+                    removed = removed - deletions.toSet()
+                    local?.writeRemoved(removed)
+                    adoptPlaces(applied.places)
+                    publishPlaces()
+                    publish()
+                }
+            }
+            onProgress(PublishProgress(total, total))
         }
-        onProgress(PublishProgress(total, total))
     }
 
     private data class Snapshot(

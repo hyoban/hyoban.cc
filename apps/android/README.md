@@ -188,7 +188,12 @@ what changed and takes a change back. 全部发布到网站 runs as WorkManager 
 foreground service with a progress notification, waiting out a dropped link: it uploads
 the new originals a few at a time, then sends everything else as one `POST /v2/changes`,
 which the API takes whole or not at all. What is published
-leaves the phone's store for the site's.
+leaves the phone's store for the site's. 取消发布, on the page or the notification, stops it
+while it uploads or waits: what was uploaded stays for the next try, and a change set
+already on its way still goes through and is noted. 清除全部更改 takes back everything
+waiting, after asking: the Moments written on the phone are deleted with their photos'
+copies, and the site's records, places, trips and bills go back to what the site has.
+A public bill whose words or amount changed, and a footprint span, stay to be published.
 
 ## Backup
 
