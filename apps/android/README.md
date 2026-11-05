@@ -336,7 +336,8 @@ to be reimbursed or left out of the sums, and the Moment, place and trip it belo
 bill with no place is placed by the footprints nearest its time (within a quarter of an
 hour, good to 100 m), named through Photon from the point alone and kept in
 `footprints.sqlite`; its + opens the new Moment's place picker on that point, and the place
-kept or chosen there becomes the bill's. An account's 校准余额 sets its balance by moving its
+kept or chosen there becomes the bill's. The bill's own place is chosen in that picker too,
+opening on its place, else that point, else where the phone is. An account's 校准余额 sets its balance by moving its
 opening balance.
 
 The ledger meets the Moments: a Moment's page lists its bills, a meal with no bill offers
