@@ -4,17 +4,11 @@ import cc.hyoban.moments.data.spec.Module
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.snapshotFlow
 import cc.hyoban.moments.data.api.MomentsApi
-import cc.hyoban.moments.data.local.AmapShare
 import cc.hyoban.moments.data.local.Photos
 import cc.hyoban.moments.data.local.PlaceSearch
-import cc.hyoban.moments.data.local.SAME_PLACE_METRES
-import cc.hyoban.moments.data.local.SharedPlace
 import cc.hyoban.moments.data.local.Ulid
-import cc.hyoban.moments.data.local.coordinatesName
-import cc.hyoban.moments.data.local.nearestPlaces
 import cc.hyoban.moments.data.local.newPlaceId
 import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.media.MediaUrls
@@ -285,48 +279,6 @@ class AppContainer(context: Context) {
         }
     }
 
-    private val _sharedPlace = MutableStateFlow<SharedPlace?>(null)
-
-    /** A place shared into the app from a map, until a new Moment takes it. */
-    val sharedPlace: StateFlow<SharedPlace?> = _sharedPlace.asStateFlow()
-
-    /** Finds the place in a text shared from a map, following its link; says so when there is none. */
-    fun receiveSharedPlace(text: String) {
-        scope.launch {
-            val place = AmapShare.resolve(text)
-            if (place != null) {
-                _sharedPlace.value = place
-            } else {
-                say(appContext.getString(R.string.error_shared_place))
-            }
-        }
-    }
-
-    /**
-     * Keeps the place in a text shared from a map as a place of the phone's own, and says
-     * so; one of the same name close by is already kept, and isn't kept twice. The app isn't
-     * opened for it, so it says so in a toast, there being no page for a snackbar.
-     */
-    fun saveSharedPlace(text: String) {
-        scope.launch {
-            val shared = AmapShare.resolve(text)
-            if (shared == null) {
-                Toast.makeText(appContext, R.string.error_shared_place, Toast.LENGTH_LONG).show()
-                return@launch
-            }
-            repository.loaded.first { it }
-            val name = shared.name ?: coordinatesName(shared.fix)
-            val places = repository.places.value
-            val same = nearestPlaces(places, shared.fix, limit = 3)
-                .firstOrNull { (id, metres) -> metres <= SAME_PLACE_METRES && places.getValue(id).name == name }
-            if (same == null) {
-                repository.addLocalPlace(newPlaceId(), Place(name, shared.fix.latitude, shared.fix.longitude, createdAt = recordTime()))
-            }
-            val message = if (same == null) R.string.message_place_saved else R.string.message_place_known
-            Toast.makeText(appContext, appContext.getString(message, name), Toast.LENGTH_SHORT).show()
-        }
-    }
-
     private val _sharedPhotos = MutableStateFlow<List<Uri>>(emptyList())
 
     /** Photos and videos shared into the app from the gallery, as the app's own copies, until a new Moment takes them. */
@@ -366,9 +318,6 @@ class AppContainer(context: Context) {
 
     /** The photos shared into the app, taken so they are used once. */
     fun takeSharedPhotos(): List<Uri> = _sharedPhotos.getAndUpdate { emptyList() }
-
-    /** The place shared into the app, taken so it is used once. */
-    fun takeSharedPlace(): SharedPlace? = _sharedPlace.getAndUpdate { null }
 
     /** Keeps a Moment written on the phone, and draws the widgets again with it. */
     suspend fun addLocal(moment: MomentRecord, place: Pair<String, Place>?) {

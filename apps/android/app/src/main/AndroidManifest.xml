@@ -114,9 +114,8 @@
             android:supportsPictureInPicture="true"
             android:exported="false" />
 
-        <!-- A place shared from a map, Amap's among them, or photos from the gallery: it
-             draws nothing, and opens the app on a new Moment with them, or gives them to the
-             Moment being written. -->
+        <!-- Photos from the gallery, or iCost's bill export: it draws nothing, and opens the
+             app on a new Moment with the photos, or gives them to the Moment being written. -->
         <activity
             android:name=".ShareActivity"
             android:excludeFromRecents="true"
@@ -124,11 +123,6 @@
             android:noHistory="true"
             android:taskAffinity=""
             android:theme="@android:style/Theme.Translucent.NoTitleBar">
-            <intent-filter android:label="@string/share_as_place">
-                <action android:name="android.intent.action.SEND" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/plain" />
-            </intent-filter>
             <!-- Photos and videos from the gallery, one or several, for a new Moment; both at
                  once come as */*, which any filter with a type matches. -->
             <intent-filter android:label="@string/share_as_moment">
@@ -162,18 +156,6 @@
             </intent-filter>
             <meta-data android:name="android.accessibilityservice" android:resource="@xml/share_accessibility" />
         </service>
-
-        <!-- The same, keeping the shared place on its own and leaving the map in front. -->
-        <activity-alias
-            android:name=".SavePlaceActivity"
-            android:exported="true"
-            android:targetActivity=".ShareActivity">
-            <intent-filter android:label="@string/share_save_place">
-                <action android:name="android.intent.action.SEND" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/plain" />
-            </intent-filter>
-        </activity-alias>
 
         <!-- The home screen's widgets: a Moment from this day in an earlier year, the trip, and the heatmap. -->
         <receiver

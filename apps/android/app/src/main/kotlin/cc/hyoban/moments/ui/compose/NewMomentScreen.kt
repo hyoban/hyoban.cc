@@ -124,12 +124,9 @@ import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.PhotoInfo
 import cc.hyoban.moments.data.local.Photos
 import cc.hyoban.moments.data.local.Refusal
-import cc.hyoban.moments.data.local.SAME_PLACE_METRES
-import cc.hyoban.moments.data.local.SharedPlace
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.data.local.coordinatesName
 import cc.hyoban.moments.data.local.fix
-import cc.hyoban.moments.data.local.nearestPlaces
 import cc.hyoban.moments.data.local.newPlaceId
 import cc.hyoban.moments.data.local.parseStamp
 import cc.hyoban.moments.data.local.recordTime
@@ -247,8 +244,6 @@ fun NewMomentScreen(
     val openedAt = remember { OffsetDateTime.now() }
     var chosenTime by remember { mutableStateOf(originalTime) }
     var chosenPlace by remember { mutableStateOf(originalPlace) }
-    // The place last shared in, to say where the place came from while it is still that one.
-    var sharedFrom by remember { mutableStateOf<PlaceChoice?>(null) }
     var geocoded by remember { mutableStateOf<Pair<Fix, Around>?>(null) }
     var saving by remember { mutableStateOf(false) }
     var editingTime by remember { mutableStateOf(false) }
@@ -303,17 +298,6 @@ fun NewMomentScreen(
     val around = geocoded?.takeIf { it.first == fix }?.second
     val suggestedName = fix?.let { at -> around?.name ?: coordinatesName(at) }
     val place: PlaceChoice = chosenPlace ?: if (fix != null && suggestedName != null) PlaceChoice.New(suggestedName, fix, around?.kind) else PlaceChoice.None
-
-    // A place shared in from a map, now or while this page is open, is the Moment's place.
-    val shared by container.sharedPlace.collectAsStateWithLifecycle()
-    LaunchedEffect(shared) {
-        // A Moment being changed leaves a shared place to a new one.
-        val place = shared?.takeIf { original == null } ?: return@LaunchedEffect
-        container.takeSharedPlace()
-        chosenPlace = sharedChoice(place, places)
-        sharedFrom = chosenPlace
-        editingPlace = false
-    }
 
     // Photos shared in from the gallery, now or while this page is open, join the Moment's.
     val sharedPhotos by container.sharedPhotos.collectAsStateWithLifecycle()
@@ -525,7 +509,6 @@ fun NewMomentScreen(
                                 listOfNotNull(kind?.let { stringResource(it.label) }, stringResource(
                                     when {
                                         original != null && chosenPlace == originalPlace -> R.string.source_saved
-                                        chosenPlace != null && chosenPlace == sharedFrom -> R.string.source_shared
                                         chosenPlace != null -> R.string.source_chosen
                                         photoFix != null -> R.string.source_photo
                                         else -> R.string.place_unchosen
@@ -697,15 +680,6 @@ fun NewMomentScreen(
 /** How wide the words stand at the start on a phone on its side, the rest of the Moment beside them. */
 private val WORDS_COLUMN = 360.dp
 
-/**
- * A shared place as the Moment's: the known place it is, when one with its name is
- * within a stone's throw; else a new place under its name.
- */
-private fun sharedChoice(place: SharedPlace, places: Map<String, Place>): PlaceChoice {
-    val same = nearestPlaces(places, place.fix, limit = 3)
-        .firstOrNull { (id, metres) -> metres <= SAME_PLACE_METRES && places.getValue(id).name == place.name }
-    return same?.let { PlaceChoice.Known(it.first) } ?: PlaceChoice.New(place.name ?: coordinatesName(place.fix), place.fix)
-}
 
 /**
  * The photos picked, in a row, each with a button to take it out, a motion photo marked
