@@ -127,6 +127,7 @@ import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.isExpandedWidth
 import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.format.formatDay
+import cc.hyoban.moments.ui.compose.icon
 import cc.hyoban.moments.ui.ledger.LocalLedgerNav
 import cc.hyoban.moments.ui.map.navigateTo
 import cc.hyoban.moments.ui.moment.MomentScreen
@@ -627,7 +628,11 @@ private fun DayHead(
     }
 }
 
-/** The day's footprints on a map, the places it was at and each bill where it was paid. */
+/**
+ * The day's footprints on a map, and on them its Moments and check-ins by their place's kind and
+ * its bills by their category, each a badge without words where it was: its place, a bill's Moment's or the
+ * check-in it was paid in; else where the footprints were then, within a few minutes.
+ */
 @Composable
 private fun DayMap(
     date: String,
@@ -641,16 +646,37 @@ private fun DayMap(
     val stretches = remember(points) {
         cc.hyoban.moments.footprints.trackSegments(points, budget = 2000).filter { it.size > 1 }.map { stretch -> stretch.map { it.longitude to it.latitude } }
     }
-    val dots = remember(moments, places) { moments.flatMap { it.places }.mapNotNull { places[it] }.map { org.maplibre.android.geometry.LatLng(it.latitude, it.longitude) } }
-    // Each bill where the footprints were when it was paid, within a few minutes.
-    val rings = remember(points, bills) {
-        bills.loose[date].orEmpty().mapNotNull { txn ->
-            points.minByOrNull { kotlin.math.abs(it.time - txn.time) }
-                ?.takeIf { kotlin.math.abs(it.time - txn.time) <= BILL_NEAR_MS }
+    val dayMoments = remember(moments, date) { moments.filter { it.occurredAt.startsWith(date) } }
+    val checkins = bills.checkins[date].orEmpty()
+    val dayBills = remember(bills, dayMoments, date) {
+        (bills.loose[date].orEmpty() + dayMoments.flatMap { bills.linked[it.uid].orEmpty() }).distinctBy { it.id }
+    }
+    val marks = remember(points, dayMoments, places, checkins, dayBills) {
+        fun placed(id: String?) = id?.let(places::get)?.let { org.maplibre.android.geometry.LatLng(it.latitude, it.longitude) }
+        fun tracked(time: Long?) = time?.let { t ->
+            points.minByOrNull { kotlin.math.abs(it.time - t) }?.takeIf { kotlin.math.abs(it.time - t) <= BILL_NEAR_MS }
                 ?.let { org.maplibre.android.geometry.LatLng(it.latitude, it.longitude) }
         }
+        fun millis(at: String) = runCatching { java.time.OffsetDateTime.parse(at).toInstant().toEpochMilli() }.getOrNull()
+        val byUid = dayMoments.associateBy { it.uid }
+        // A Moment and a check-in show their place's kind, a bill its category, as their rows do.
+        fun kindIcon(id: String?) = id?.let(places::get)?.let { cc.hyoban.moments.data.spec.PlaceKind.of(it.kind) }?.icon
+        dayMoments.mapNotNull { moment ->
+            val at = placed(moment.places.firstOrNull()) ?: tracked(millis(moment.occurredAt)) ?: return@mapNotNull null
+            cc.hyoban.moments.ui.map.DayMark(at, cc.hyoban.moments.ui.map.DayMark.Kind.MOMENT, kindIcon(moment.places.firstOrNull()) ?: AppIcons.Pin)
+        } + checkins.mapNotNull { checkin ->
+            val at = placed(checkin.place) ?: checkin.span?.let { tracked((it.first + it.last) / 2) } ?: return@mapNotNull null
+            cc.hyoban.moments.ui.map.DayMark(at, cc.hyoban.moments.ui.map.DayMark.Kind.CHECKIN, kindIcon(checkin.place) ?: AppIcons.Flag)
+        } + dayBills.mapNotNull { txn ->
+            val at = placed(txn.place)
+                ?: placed(txn.moment?.let(byUid::get)?.places?.firstOrNull())
+                ?: placed(checkins.filter { it.place != null && it.span?.contains(txn.time) == true }.minByOrNull { it.span!!.last - it.span!!.first }?.place)
+                ?: tracked(txn.time)
+                ?: return@mapNotNull null
+            cc.hyoban.moments.ui.map.DayMark(at, cc.hyoban.moments.ui.map.DayMark.Kind.BILL, cc.hyoban.moments.ui.ledger.txnIcon(txn, bills.ledger))
+        }
     }
-    cc.hyoban.moments.ui.map.DayTrackMap(stretches, dots, modifier.testTag("day_track"), rings = rings, topInset = topInset)
+    cc.hyoban.moments.ui.map.DayTrackMap(stretches, marks, modifier.testTag("day_track"), topInset = topInset)
 }
 
 /** How wide the conversation stands beside the tabs on a phone on its side, the day's map beside it. */

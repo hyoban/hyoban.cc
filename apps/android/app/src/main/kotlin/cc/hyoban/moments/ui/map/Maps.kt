@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.VectorPainter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.Density
@@ -35,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -193,6 +195,7 @@ private const val FOOTPRINT_STAYS = "footprint-stays"
 private const val ROUTES_DASHED = "routes-dashed"
 private const val STOPS = "stops"
 private const val RINGS = "rings"
+private const val MARKS = "marks"
 private const val FOG = "fog"
 private const val FOG_MAX_ZOOM = 10
 private const val FOG_WATER = "fog-water"
@@ -1330,6 +1333,10 @@ private fun PointsMap(
     topInset: Dp = 0.dp,
     /** As close as it frames them. */
     closest: Double = CLOSEST,
+    /** A day's Moments, bills and check-ins, each a badge of its icon. */
+    marks: List<DayMark> = emptyList(),
+    /** Each badge's picture, by [DayMark.image]. */
+    markImages: Map<String, android.graphics.Bitmap> = emptyMap(),
 ) {
     val line = color.toArgb()
     val gap = gapColor.toArgb()
@@ -1337,7 +1344,7 @@ private fun PointsMap(
     val inset = edges(padding, padding + topInset, padding, padding)
     // What it shows can change while it stays, the timeline's map moving from one day to the next:
     // the map is built once, and only its lines, dots and framing follow, so it never goes blank.
-    val shown = PointsShown(points, lines, rings)
+    val shown = PointsShown(points, lines, rings, marks, markImages)
     var map by remember { mutableStateOf<Pair<MapLibreMap, Style>?>(null) }
     val drawn = remember { arrayOfNulls<PointsShown>(1) }
     val latest by rememberUpdatedState(shown)
@@ -1349,7 +1356,15 @@ private fun PointsMap(
         )
         style.getSourceAs<GeoJsonSource>(STOPS)?.setGeoJson(FeatureCollection.fromFeatures(data.points.map { Feature.fromGeometry(it.point) }))
         style.getSourceAs<GeoJsonSource>(RINGS)?.setGeoJson(FeatureCollection.fromFeatures(data.rings.map { Feature.fromGeometry(it.point) }))
-        val framed = data.points + data.rings + data.lines.flatMap { segment -> segment.line.map { (longitude, latitude) -> LatLng(latitude, longitude) } }
+        data.markImages.forEach { (name, image) -> style.addImage(name, image) }
+        style.getSourceAs<GeoJsonSource>(MARKS)?.setGeoJson(
+            FeatureCollection.fromFeatures(
+                data.marks.map { mark ->
+                    Feature.fromGeometry(mark.at.point).apply { addStringProperty("icon", mark.image) }
+                },
+            ),
+        )
+        val framed = data.points + data.rings + data.marks.map { it.at } + data.lines.flatMap { segment -> segment.line.map { (longitude, latitude) -> LatLng(latitude, longitude) } }
         if (framed.isNotEmpty()) ready.frame(framed, inset, closest)
         drawn[0] = data
     }
@@ -1391,6 +1406,9 @@ private fun PointsMap(
                 circleStrokeColor(line),
             ),
         )
+        // A day's marks, without words: each a badge of its icon, drawn into the style as it fills.
+        style.addSource(GeoJsonSource(MARKS))
+        style.addLayer(SymbolLayer(MARKS, MARKS).withProperties(iconImage(get("icon")), iconAllowOverlap(true), iconIgnorePlacement(true)))
         // Drawn before the first frame, so a new map opens already showing them.
         fill(ready, style, latest)
         map = ready to style
@@ -1403,20 +1421,76 @@ private fun PointsMap(
 }
 
 /** What a [PointsMap] shows: its dots, its lines and its rings. */
-private data class PointsShown(val points: List<LatLng>, val lines: List<RouteSegment>, val rings: List<LatLng>)
+private data class PointsShown(
+    val points: List<LatLng>,
+    val lines: List<RouteSegment>,
+    val rings: List<LatLng>,
+    val marks: List<DayMark> = emptyList(),
+    val markImages: Map<String, android.graphics.Bitmap> = emptyMap(),
+)
+
+/**
+ * Something of a day marked on its map: a Moment, a bill or a check-in, where it was, and the
+ * icon on its badge (a place's kind, a bill's category).
+ */
+data class DayMark(val at: LatLng, val kind: Kind, val icon: ImageVector) {
+    enum class Kind { MOMENT, BILL, CHECKIN }
+
+    /** Its badge's name in the map's style: one per kind and icon. */
+    val image: String get() = "mark-${kind.name}-${icon.name}"
+}
+
+private val MARK_SIZE = 22.dp
+private val MARK_ICON = 14.dp
+
+/**
+ * A mark's badge: a Moment's icon on the accent, a check-in's on the ink, each in a ring of the
+ * page's colour; a bill's in the ink on the page's colour, in an ink ring, as the rings were.
+ */
+private fun markImage(painter: VectorPainter, kind: DayMark.Kind, density: Density, accent: Color, ink: Color, paper: Color): android.graphics.Bitmap {
+    val size = with(density) { MARK_SIZE.toPx() }
+    val image = ImageBitmap(size.roundToInt(), size.roundToInt())
+    val (fill, edge, glyph) = when (kind) {
+        DayMark.Kind.MOMENT -> Triple(accent, paper, paper)
+        DayMark.Kind.CHECKIN -> Triple(ink, paper, paper)
+        DayMark.Kind.BILL -> Triple(paper, ink, ink)
+    }
+    CanvasDrawScope().draw(density, LayoutDirection.Ltr, Canvas(image), Size(size, size)) {
+        drawCircle(edge)
+        drawCircle(fill, radius = size / 2 - 1.5.dp.toPx())
+        val icon = MARK_ICON.toPx()
+        translate((size - icon) / 2, (size - icon) / 2) {
+            with(painter) { draw(Size(icon, icon), colorFilter = ColorFilter.tint(glyph)) }
+        }
+    }
+    // Drawn at the screen's density, so the map shows it at its size in dp.
+    return image.asAndroidBitmap().apply { this.density = (density.density * DisplayMetrics.DENSITY_DEFAULT).roundToInt() }
+}
 
 /**
  * A day's recorded track: each unbroken stretch a solid line in the track's colour, the gaps
- * between them (no signal, not recorded) dotted, never guessed; [points] the day's Moments, as
- * dots, and [rings] its bills.
+ * between them (no signal, not recorded) dotted, never guessed; [marks] its Moments, bills and
+ * check-ins where they were, as dots without words.
  */
 @Composable
-fun DayTrackMap(stretches: List<List<Pair<Double, Double>>>, points: List<LatLng>, modifier: Modifier = Modifier, rings: List<LatLng> = emptyList(), topInset: Dp = 0.dp) {
+fun DayTrackMap(stretches: List<List<Pair<Double, Double>>>, marks: List<DayMark>, modifier: Modifier = Modifier, topInset: Dp = 0.dp) {
     val lines = remember(stretches) {
         stretches.map { RouteSegment(it, straight = false) } +
             stretches.zipWithNext { a, b -> RouteSegment(listOf(a.last(), b.first()), straight = true) }
     }
-    PointsMap(points, lines, dot = 4f, padding = 32.dp, modifier = modifier, interactive = false, color = cc.hyoban.moments.ui.theme.tokens.tx, gapColor = cc.hyoban.moments.ui.theme.tokens.tx3, width = 4f, rings = rings, topInset = topInset, closest = TRACK_CLOSEST)
+    // Each kind and icon drawn once into a badge for the map; bills first, so a Moment or a
+    // check-in at the same spot stands over them.
+    val density = LocalDensity.current
+    val accent = tokens.accent
+    val ink = tokens.tx
+    val paper = tokens.bg
+    val ordered = remember(marks) { marks.sortedBy { it.kind != DayMark.Kind.BILL } }
+    val badges = ordered.map { it.kind to it.icon }.distinct()
+    val painters = badges.map { (kind, icon) -> key(kind, icon) { rememberVectorPainter(icon) } }
+    val images = remember(badges, accent, ink, paper, density) {
+        badges.zip(painters).associate { (badge, painter) -> "mark-${badge.first.name}-${badge.second.name}" to markImage(painter, badge.first, density, accent, ink, paper) }
+    }
+    PointsMap(emptyList(), lines, dot = 4f, padding = 32.dp, modifier = modifier, interactive = false, color = tokens.tx, gapColor = tokens.tx3, width = 4f, topInset = topInset, closest = TRACK_CLOSEST, marks = ordered, markImages = images)
 }
 
 private const val PICK_PLACES = "pick-places"
