@@ -79,6 +79,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import cc.hyoban.moments.data.local.Fix
+import cc.hyoban.moments.ui.compose.ChoosePlace
+import cc.hyoban.moments.ui.compose.PlaceChoice
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -657,9 +661,18 @@ internal fun BillFields(
                 sheet = null
             }
         }
-        Sheet.Place -> PlaceSheet(places.mapValues { it.value.name }, ledger.placeUses, onDismiss = { sheet = null }) { id ->
-            draft.place = id
-            sheet = null
+        // On the map, as a Moment's place is: on the bill's place, else where the footprints
+        // put it then, else where the phone is.
+        Sheet.Place -> {
+            val time = at.toInstant().toEpochMilli()
+            // Opened once the footprints have answered, as the picker opens where it is first told.
+            val spot by produceState<Result<Fix?>?>(null, time) { value = Result.success(container.billPlaces.pointAt(time)) }
+            spot?.let { found ->
+                val current = draft.place?.takeIf { it in places }?.let { PlaceChoice.Known(it) } ?: PlaceChoice.None
+                ChoosePlace(container, current, found.getOrNull(), onDismiss = { sheet = null }) { id, _ ->
+                    draft.place = id
+                }
+            }
         }
         Sheet.Trip -> ChoiceSheet(trips.sortedByDescending { it.start }.map { it.id to it.title }, onDismiss = { sheet = null }) { id ->
             draft.tripChosen = true
@@ -1239,32 +1252,6 @@ fun ChoiceSheet(options: List<Pair<String, String>>, onDismiss: () -> Unit, empt
             items(options, key = { it.first }) { (id, label) ->
                 ListItem(
                     headlineContent = { Text(label, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier.clickable { onPick(id) },
-                )
-            }
-        }
-    }
-}
-
-/** The places, those the latest bills were at most first, then by name, searched as typed, as a modal bottom sheet. */
-@Composable
-private fun PlaceSheet(places: Map<String, String>, uses: Map<String, Int>, onDismiss: () -> Unit, onPick: (String) -> Unit) {
-    var query by remember { mutableStateOf("") }
-    val shown = remember(places, query) { places.entries.filter { query.isBlank() || it.value.contains(query.trim(), ignoreCase = true) }.sortedWith(compareByDescending<Map.Entry<String, String>> { uses[it.key] ?: 0 }.thenBy { it.value }).take(200) }
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet) {
-        OutlinedTextField(
-            query,
-            { query = it },
-            label = { Text(stringResource(R.string.action_search)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = Space.xl),
-        )
-        LazyColumn(Modifier.padding(bottom = Space.l)) {
-            items(shown, key = { it.key }) { (id, name) ->
-                ListItem(
-                    headlineContent = { Text(name) },
-                    leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     modifier = Modifier.clickable { onPick(id) },
                 )

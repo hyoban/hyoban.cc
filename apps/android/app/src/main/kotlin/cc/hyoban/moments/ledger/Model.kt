@@ -239,9 +239,6 @@ data class Ledger(
     /** How many of the latest bills each category is in, a first-level one with its second-level ones'. */
     val categoryUses: Map<String, Int> by lazy { usesOf { listOf(it.category, topCategory(it.category)) } }
 
-    /** How many of the latest bills each place is in. */
-    val placeUses: Map<String, Int> by lazy { usesOf { listOf(it.place) } }
-
     /** The currencies a bill can be in, the latest bills' most used first, then the common ones and the rest. */
     val currenciesByUse: List<String> by lazy {
         val uses = usesOf { listOf(it.currency) }

@@ -261,7 +261,7 @@ class LedgerTest {
         assertEquals(listOf("c", "b", "a"), Ledger(accounts = accounts, txns = txns).accountsByUse.map { it.id })
     }
 
-    @Test fun picksTheMostUsedCategoriesPlacesAndCurrenciesFirst() {
+    @Test fun picksTheMostUsedCategoriesAndCurrenciesFirst() {
         val categories = listOf(Category("food", "book", CategoryType.EXPENSE, "餐饮"), Category("snack", "book", CategoryType.EXPENSE, "零食", parent = "food"))
         val txns = listOf(
             Txn("1", "book", TxnKind.EXPENSE, 2, 480, 100, "JPY", category = "snack", place = "p1"),
@@ -270,7 +270,6 @@ class LedgerTest {
         )
         val ledger = Ledger(categories = categories, txns = txns)
         assertEquals(mapOf("food" to 2, "snack" to 1), ledger.categoryUses)
-        assertEquals(mapOf("p1" to 2, "p2" to 1), ledger.placeUses)
         assertEquals(listOf("JPY", "ISK", "CNY", "USD"), ledger.currenciesByUse.take(4))
     }
 
