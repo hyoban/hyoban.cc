@@ -1061,7 +1061,6 @@
     <string name="me_footer">%1$s %2$s The cat on the icon is Mantou</string>
     <string name="sync_title">Sync and sources</string>
     <string name="section_site">Site</string>
-    <string name="section_media">Media</string>
     <string name="me_sync_token_set">Token set</string>
     <string name="me_sync_token_unset">No token, can’t sync</string>
     <string name="me_sync_no_api">No API connected</string>

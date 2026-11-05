@@ -133,7 +133,6 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                 }
                 Section(stringResource(R.string.section_site), rows.subList(0, 1), 0, stringResource(R.string.settings_api_note), extra = listOf(token, refresh)) { editing = it }
                 BackupSection(container.backup, onEdit = { editingBackup = true }, onRestore = { restoring = true })
-                Section(stringResource(R.string.section_media), rows.subList(1, 2), 1, null) { editing = it }
                 // The keys the place picker asks AMap and Tencent with in China, kept beside the map's styles, and,
                 // with both, which it asks first: a menu under the row.
                 val chinaPlaces: Segment = { shapes ->
@@ -184,7 +183,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                         modifier = Modifier.testTag("tencent_key"),
                     ) { Text(stringResource(R.string.setting_tencent_key)) }
                 }
-                Section(stringResource(R.string.section_map), rows.subList(2, 4), 2, stringResource(R.string.settings_map_note), extra = listOfNotNull(amapKey, tencentKey, chinaPlaces.takeIf { settings.amapKey.isSet && settings.tencentMapKey.isSet })) { editing = it }
+                Section(stringResource(R.string.section_map), rows.subList(1, 3), 1, stringResource(R.string.settings_map_note), extra = listOfNotNull(amapKey, tencentKey, chinaPlaces.takeIf { settings.amapKey.isSet && settings.tencentMapKey.isSet })) { editing = it }
                 UpdateSection(container.updates, container.scope)
             }
         }
