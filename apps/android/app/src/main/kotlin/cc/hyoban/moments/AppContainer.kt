@@ -105,7 +105,10 @@ class AppContainer(context: Context) {
         tencentFirst = { settings.chinaPlaces.value == CHINA_PLACES_TENCENT },
     )
     /** Where each bill was paid, by the footprints. */
-    val billPlaces = cc.hyoban.moments.footprints.BillPlaces(footprints, placeSearch) { settings.isOn(Module.FOOTPRINTS) }
+    val billPlaces = cc.hyoban.moments.footprints.BillPlaces(
+        footprints, placeSearch, repository.places, repository.checkins,
+        checkinsOn = { settings.isOn(Module.CHECKIN) },
+    ) { settings.isOn(Module.FOOTPRINTS) }
     /** The trips' routes along the roads, from the API. */
     val routes = TripRoutes({ settings.apiUrl.value }, File(context.filesDir, "routes.json"), token = { settings.apiToken.value })
 
@@ -258,6 +261,28 @@ class AppContainer(context: Context) {
 
     private fun say(text: String) {
         _messages.trySend(Message(text))
+    }
+
+    /**
+     * Offers [place], a check-in's just kept from a stay, to the bills paid in that stay from
+     * [start] to [end] that have no place of their own nor a Moment's; nothing is said when
+     * there are none or the ledger is off.
+     */
+    fun offerPlaceToBills(place: String, start: Long, end: Long) {
+        if (!settings.isOn(Module.LEDGER)) return
+        scope.launch {
+            val bills = ledger.ledger.value.txns.filter {
+                it.kind != cc.hyoban.moments.ledger.TxnKind.TRANSFER && it.place == null && it.moment == null && it.time in start..end
+            }
+            if (bills.isEmpty()) return@launch
+            _messages.send(
+                Message(
+                    appContext.resources.getQuantityString(R.plurals.message_checkin_bills, bills.size, bills.size),
+                    action = appContext.getString(R.string.ledger_use_place),
+                    onAction = { scope.launch { ledger.saveTxns(bills.map { it.copy(place = place) }) } },
+                ),
+            )
+        }
     }
 
     private val _sharedPlace = MutableStateFlow<SharedPlace?>(null)

@@ -84,8 +84,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
     val moment = txn.moment?.let { uid -> moments.firstOrNull { it.uid == uid } }
     val placeId = txn.place ?: moment?.places?.firstOrNull()
     val tripId = txn.trip ?: moment?.let { tripOf(it, trips)?.id }
-    val footprintPlace = cc.hyoban.moments.footprints.footprintPlace(txn)
-    val billPlaces = cc.hyoban.moments.footprints.LocalBillPlaces.current
+    val spot = cc.hyoban.moments.footprints.billSpot(txn)
     // The footprints' spot and its name, while it is being kept as a place in the place picker.
     var keeping by remember { mutableStateOf<Pair<cc.hyoban.moments.data.local.Fix, String>?>(null) }
     keeping?.let { (point, name) ->
@@ -145,22 +144,33 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
 
                 val details = buildList<@Composable (ListItemShapes) -> Unit> {
                     add { shapes -> InfoRow(shapes, AppIcons.Calendar, stringResource(R.string.ledger_time), formatDay(txn.dateKey) + " " + txn.local.format(DateTimeFormatter.ofPattern("HH:mm"))) }
-                    // Where the footprints were then, for a bill with no place of its own; its day's page shows them.
-                    // Kept as a place, it becomes the bill's.
-                    footprintPlace?.let { name ->
+                    // Where it was, for a bill with no place of its own: its check-in's place, else the
+                    // footprints' spot; its day's page shows them. Taken, a known place is the bill's at
+                    // once, and a spot only named is kept as a new place first.
+                    spot?.let { spot ->
+                        val fromCheckin = spot.from == cc.hyoban.moments.footprints.BillSpot.From.CHECKIN
                         add { shapes ->
                             SegmentedListItem(
                                 onClick = { nav.day(txn.dateKey) },
                                 shapes = shapes,
                                 colors = segmentColors(),
-                                leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
-                                overlineContent = { Text(stringResource(R.string.ledger_footprint_place)) },
+                                leadingContent = { Icon(if (fromCheckin) AppIcons.Flag else AppIcons.Pin, contentDescription = null) },
+                                overlineContent = { Text(stringResource(if (fromCheckin) R.string.ledger_checkin_place else R.string.ledger_footprint_place)) },
                                 trailingContent = {
-                                    IconButton(onClick = { scope.launch { billPlaces?.pointAt(txn.time)?.let { keeping = it to name } } }, modifier = Modifier.testTag("bill_save_place")) {
-                                        Icon(AppIcons.Plus, contentDescription = stringResource(R.string.share_save_place))
+                                    val known = spot.place
+                                    IconButton(
+                                        onClick = {
+                                            scope.launch {
+                                                if (known != null) container.ledger.saveTxn(txn.copy(place = known))
+                                                else spot.point?.let { keeping = it to spot.name }
+                                            }
+                                        },
+                                        modifier = Modifier.testTag("bill_save_place"),
+                                    ) {
+                                        Icon(AppIcons.Plus, contentDescription = stringResource(if (known != null) R.string.ledger_use_place else R.string.share_save_place))
                                     }
                                 },
-                            ) { Text(name, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                            ) { Text(spot.name, maxLines = 2, overflow = TextOverflow.Ellipsis) }
                         }
                     }
                     if (txn.kind == TxnKind.TRANSFER) {

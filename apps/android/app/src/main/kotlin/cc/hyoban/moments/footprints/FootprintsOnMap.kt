@@ -48,7 +48,7 @@ import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.Visibility
 import cc.hyoban.moments.data.spec.entryUid
 import cc.hyoban.moments.ui.compose.KeepPlace
-import java.time.OffsetDateTime
+import cc.hyoban.moments.ui.theme.tokens
 import android.widget.Toast
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -143,6 +143,13 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                 ?.takeIf { (_, metres) -> metres <= SAME_PLACE_METRES }?.let { (id, _) -> stay.start to places.getValue(id).name }
         }.toMap()
     }
+    // The check-in over each stay, by its start, kept from it or Swarm's: that stay is kept already.
+    val checkinsOn = LocalSettings.current.isOn(Module.CHECKIN)
+    val checkins by container.repository.checkins.collectAsStateWithLifecycle()
+    val keptStays = remember(view.parts, checkins, checkinsOn) {
+        if (!checkinsOn) emptyMap()
+        else view.parts.filterIsInstance<TrackStay>().mapNotNull { stay -> checkins.overlapping(stay.start, stay.end).firstOrNull()?.let { stay.start to it } }.toMap()
+    }
     // A stay kept as a place or a check-in there, named as a bill's spot is, and the name to give it.
     var keeping by remember { mutableStateOf<Pair<TrackStay, String>?>(null) }
     fun keep(stay: TrackStay) {
@@ -152,11 +159,15 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
     keeping?.let { (stay, name) ->
         val keepCheckin: suspend (String, String) -> Unit = { place, venue ->
             val entry = stayCheckin(stay, place, venue)
-            // A check-in already there over the stay, Swarm's or one kept before, is that visit.
-            val other = container.repository.checkins.value.byDay[recordStamp(stay.start).take(10)].orEmpty()
-                .any { it.uid != entry.entryUid && runCatching { OffsetDateTime.parse(it.at).toInstant().toEpochMilli() in stay.start..stay.end }.getOrDefault(false) }
+            // A check-in already there over the stay, Swarm's or one kept before, is that visit,
+            // whichever day it started on.
+            val other = container.repository.checkins.value.overlapping(stay.start, stay.end).any { it.uid != entry.entryUid }
             if (other) Toast.makeText(context, R.string.message_checkin_known, Toast.LENGTH_SHORT).show()
-            else container.repository.saveEntry(entry)
+            else {
+                container.repository.saveEntry(entry)
+                // The bills paid while there, with no place, may take this one.
+                container.offerPlaceToBills(place, stay.start, stay.end)
+            }
         }
         // Kept as a check-in only while check-ins are on (记录项与公开).
         KeepPlace(container, Fix(stay.latitude, stay.longitude), name, onDismiss = { keeping = null }, onCheckin = keepCheckin.takeIf { LocalSettings.current.isOn(Module.CHECKIN) })
@@ -395,7 +406,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                             val (icon, title, supporting) = when (part) {
                                 is TrackStay -> Triple(AppIcons.Pin,
                                     stringResource(R.string.footprints_stay) + " " + duration(part.end - part.start),
-                                    listOfNotNull(span, stayNames[part.start]).joinToString(" "))
+                                    listOfNotNull(span, keptStays[part.start]?.venue ?: stayNames[part.start]).joinToString(" "))
                                 is TrackMove -> Triple(
                                     when (part.mode) { TravelMode.WALK -> AppIcons.Walk; TravelMode.CYCLE -> AppIcons.Bike; TravelMode.DRIVE -> AppIcons.Car },
                                     stringResource(when (part.mode) {
@@ -416,7 +427,10 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                                 leadingContent = { Icon(icon, contentDescription = null) },
                                 supportingContent = { Text(supporting) },
                                 trailingContent = {
-                                    if (part is TrackStay) {
+                                    if (part is TrackStay && part.start in keptStays) {
+                                        Icon(AppIcons.Flag, contentDescription = stringResource(R.string.footprints_stay_kept), tint = tokens.tx3,
+                                            modifier = Modifier.minimumInteractiveComponentSize().testTag("footprints_stay_kept_${part.start}"))
+                                    } else if (part is TrackStay) {
                                         IconButton(onClick = { keep(part) }, modifier = Modifier.testTag("footprints_save_place_${part.start}")) {
                                             Icon(AppIcons.Plus, contentDescription = stringResource(R.string.share_save_place))
                                         }
