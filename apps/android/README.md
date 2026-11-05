@@ -420,9 +420,10 @@ reported instead. The settings and the original action stay out of Android's bac
 
 The footprints are GPS tracks kept on the phone alone, in
 `noBackupFilesDir/footprints.sqlite` (`footprints/FootprintStore`), outside sync and backup.
-地图 → 足迹 opens a panel to record, pick a day or trip, export GPX and delete (importing is in
-我 → 导入); 足迹记录 (`moments://footprint-settings`), from 我 or the panel's settings button, sets
-how recording behaves.
+地图 → 足迹 opens a panel to record, pick a day or trip, export GPX and delete — while recording,
+anything but today and the running trip (importing is in 我 → 导入); 足迹记录
+(`moments://footprint-settings`), from 我 or the panel's settings button, sets how recording
+behaves.
 
 - **Recording.** 日常自动记录 runs until turned off; 单次行程 marks a trip over the same
   samples; 暂停所有记录 pauses both. A foreground service with precise location asks for a

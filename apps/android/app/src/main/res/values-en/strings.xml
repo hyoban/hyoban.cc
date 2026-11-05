@@ -552,7 +552,7 @@
     <string name="footprints_export_all_raw">Export all raw samples as GPX</string>
     <string name="footprints_export_all_raw_note">Every sample of every day: a full backup to import again.</string>
     <string name="footprints_delete">Delete this track</string>
-    <string name="footprints_delete_note">Turn off daily recording and end the active trip before deleting. Export a backup first; uninstalling the app removes local tracks.</string>
+    <string name="footprints_delete_note">While recording, today and the active trip can\'t be deleted. Export a backup first; uninstalling the app removes local tracks.</string>
     <string name="footprints_delete_confirm">This cannot be undone. Days and trips share samples; deleting also removes those samples from the other views.</string>
     <string name="footprints_cancel">Cancel</string>
     <string name="footprints_background_options">Background recording</string>
