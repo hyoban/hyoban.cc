@@ -23,7 +23,7 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 // Backing the phone's databases up to a WebDAV directory of the owner's: once a day while
-// 每天自动备份 is on, or when 立即备份 is tapped, as WorkManager's work. Only the newest
+// 每天自动备份 is turned on (it starts off), or when 立即备份 is tapped, as WorkManager's work. Only the newest
 // backups are kept there. 从备份恢复 fetches one back and starts the app again to put it in place.
 
 /** Why the last backup didn't get there, said on the page in the owner's words. */
@@ -45,8 +45,8 @@ class Backup(private val context: Context) {
 
     val configured get() = url.isSet
 
-    /** Whether it backs up once a day by itself; on until turned off. */
-    var auto: Boolean by mutableStateOf(prefs.getBoolean("auto", true))
+    /** Whether it backs up once a day by itself; off until turned on, so setting a directory backs nothing up. */
+    var auto: Boolean by mutableStateOf(prefs.getBoolean("auto", false))
         private set
 
     private val _status = MutableStateFlow(readStatus())
@@ -84,8 +84,8 @@ class Backup(private val context: Context) {
     fun backUpNow() = BackupWorker.enqueueNow(context)
 
     /** The backups in the directory, newest first. */
-    suspend fun backups(): List<String> = withContext(Dispatchers.IO) {
-        dav().list().filter(BackupArchive::isBackup).sortedDescending()
+    suspend fun backups(): List<DavFile> = withContext(Dispatchers.IO) {
+        dav().list().filter { BackupArchive.isBackup(it.name) }.sortedByDescending { it.name }
     }
 
     /**
@@ -126,7 +126,7 @@ class Backup(private val context: Context) {
                 val dav = dav()
                 dav.makeDirectory()
                 dav.put(name, zip)
-                BackupArchive.beyond(dav.list(), KEEP).forEach(dav::delete)
+                BackupArchive.beyond(dav.list().map { it.name }, KEEP).forEach(dav::delete)
                 record(null)
             } catch (error: Exception) {
                 Log.w(TAG, "Backup failed", error)

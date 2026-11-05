@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.settings
 
 import android.content.Context
+import android.text.format.Formatter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,6 +38,7 @@ import cc.hyoban.moments.backup.Backup
 import cc.hyoban.moments.backup.BackupArchive
 import cc.hyoban.moments.backup.BackupFailure
 import cc.hyoban.moments.backup.BackupStatus
+import cc.hyoban.moments.backup.DavFile
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.AppIcons
@@ -164,13 +166,13 @@ fun RestoreDialog(backup: Backup, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     // Null while the list is read; a failure says why it couldn't be read or restored.
-    var backups by remember { mutableStateOf<List<String>?>(null) }
+    var backups by remember { mutableStateOf<List<DavFile>?>(null) }
     var failure by remember { mutableStateOf<String?>(null) }
     var picked by remember { mutableStateOf<String?>(null) }
     var restoring by remember { mutableStateOf(false) }
     LaunchedEffect(backup) {
         try {
-            backups = backup.backups().also { picked = it.firstOrNull() }
+            backups = backup.backups().also { picked = it.firstOrNull()?.name }
         } catch (error: Exception) {
             if (error is kotlinx.coroutines.CancellationException) throw error
             backups = emptyList()
@@ -186,10 +188,12 @@ fun RestoreDialog(backup: Backup, onDismiss: () -> Unit) {
                 when {
                     list == null -> Spinner(Modifier.size(24.dp))
                     list.isEmpty() && failure == null -> Text(stringResource(R.string.restore_none))
-                    else -> list.forEach { name ->
+                    else -> list.forEach { file ->
+                        val name = file.name
                         val at = BackupArchive.madeAt(name)
                         ListItem(
                             headlineContent = { Text(at?.let { timeText(context, it) } ?: name) },
+                            supportingContent = file.size?.let { size -> { Text(Formatter.formatShortFileSize(context, size)) } },
                             trailingContent = if (name == picked) {
                                 { Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent) }
                             } else {

@@ -227,10 +227,10 @@ backup leaves out). `backup/BackupArchive` writes one zip, `here-backup-<yyyyMMd
 under `databases/` the ledger, the footprints and the copy of the API's records, each a
 consistent copy made by SQLite's `VACUUM INTO`, with the footprints' reminders and companions;
 under `local/` the unpublished Moments and places, without `local/media/`. Photos, videos and
-the tokens stay out. 每天自动备份, on until turned off, backs up once a day as WorkManager's
+the tokens stay out. 每天自动备份, off until turned on (setting the directory backs nothing up by itself), backs up once a day as WorkManager's
 periodic work on a network with the battery not low; 立即备份 backs up at once. After each
 backup the directory keeps the newest seven and deletes the rest, leaving other files alone.
-从备份恢复 lists the backups in the directory, newest first; restoring the one picked
+从备份恢复 lists the backups in the directory, newest first, each with its size when the server gives one; restoring the one picked
 downloads it, unpacks only what a backup holds into `noBackupFilesDir/restore/` and starts
 the app again. As the app starts, before anything opens the databases,
 `BackupArchive.restoreStaged` moves the ledger, the footprints, the copy, the footprints'
