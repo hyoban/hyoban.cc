@@ -163,7 +163,7 @@ fun MomentFeed(
     val timeline = remember(days, bills, tracks.days, oldestFirst, chat, chronological) {
         val byDay = days.toMap()
         (byDay.keys + bills.loose.keys + bills.charges.keys + bills.things.keys + bills.checkins.keys).sortedDescending().let { if (chronological) it.reversed() else it }.map { day ->
-            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty(), bills.things[day].orEmpty(), bills.checkins[day].orEmpty()).let { if (oldestFirst || chat) it.reversed() else it }
+            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty(), bills.things[day].orEmpty(), bills.checkins[day].orEmpty(), oldestFirst = oldestFirst || chat)
             Triple(day, byDay[day].orEmpty(), if (day in tracks.days) items + DayItem.Track(day) else items)
         }
     }
