@@ -367,14 +367,9 @@
     <string name="place_group_transport">交通</string>
     <string name="place_group_life">生活</string>
     <string name="place_drag_hint">拖动地图，把图钉放到这个时刻发生的地方</string>
-    <string name="share_as_place">作为时刻的地点</string>
-    <string name="error_shared_place">没能从分享里认出地点</string>
-    <string name="source_shared">来自分享</string>
     <string name="action_save_checkin">保存为签到</string>
     <string name="message_checkin_known">这段停留已有签到</string>
     <string name="share_save_place">保存为地点</string>
-    <string name="message_place_saved">已保存地点「%1$s」</string>
-    <string name="message_place_known">已经有地点「%1$s」了</string>
     <string name="title_edit_moment">编辑时刻</string>
     <string name="action_edit_moment">编辑这个时刻</string>
     <string name="action_more">更多</string>

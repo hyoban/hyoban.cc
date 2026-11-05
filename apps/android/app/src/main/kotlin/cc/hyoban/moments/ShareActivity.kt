@@ -10,11 +10,10 @@ import kotlinx.coroutines.launch
 
 /**
  * Where what other apps share arrives, drawing nothing and leaving their task as it was.
- * A place shared from a map is handed to the app to find, and photos and videos shared from
- * the gallery are copied in while this activity may still read them; either way the app comes
- * forward on a new Moment, or on the one being written, which takes them. iCost's bill export
- * or backup is copied in and the app comes forward on the ledger's import. Shared to
- * 保存为地点 ([SAVE_ALIAS]), a place is only kept, and the map stays in front.
+ * Photos and videos shared from the gallery are copied in while this activity may still read
+ * them, and the app comes forward on a new Moment, or on the one being written, which takes
+ * them. iCost's bill export or backup is copied in and the app comes forward on the ledger's
+ * import.
  */
 class ShareActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,7 +21,6 @@ class ShareActivity : ComponentActivity() {
         val container = (application as MomentsApplication).container
         val photos = sharedStreams()
         val sheet = sharedSheet()
-        val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: intent.getStringExtra(Intent.EXTRA_SUBJECT)
         when {
             sheet != null -> lifecycleScope.launch {
                 // Copied now, while the share lets it be read, and imported from the ledger's settings.
@@ -36,15 +34,6 @@ class ShareActivity : ComponentActivity() {
             photos.isNotEmpty() -> lifecycleScope.launch {
                 // Read now: the permission to read them goes with this activity.
                 container.receiveSharedPhotos(photos)
-                openMoment()
-                finish()
-            }
-            text != null && intent.component?.className == SAVE_ALIAS -> {
-                container.saveSharedPlace(text)
-                finish()
-            }
-            text != null -> {
-                container.receiveSharedPlace(text)
                 openMoment()
                 finish()
             }
@@ -67,7 +56,7 @@ class ShareActivity : ComponentActivity() {
 
     /** A file shared or opened with the app: iCost's bill export or backup, for the ledger. */
     private fun sharedSheet(): Uri? {
-        if (sharedMedia || intent.type == "text/plain") return null
+        if (sharedMedia) return null
         if (intent.action == Intent.ACTION_VIEW) return intent.data
         @Suppress("DEPRECATION")
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -100,10 +89,5 @@ class ShareActivity : ComponentActivity() {
             Intent(this, MainActivity::class.java).setAction(MainActivity.ACTION_NEW_MOMENT)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
         )
-    }
-
-    companion object {
-        /** The share target that only keeps the place, an alias of this activity. */
-        const val SAVE_ALIAS = "cc.hyoban.moments.SavePlaceActivity"
     }
 }
