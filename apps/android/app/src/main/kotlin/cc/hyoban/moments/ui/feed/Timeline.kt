@@ -179,7 +179,7 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
 }
 
 /** What the timeline lists of the ledger: money out and in, and money back. */
-private val SHOWN_KINDS = setOf(TxnKind.EXPENSE, TxnKind.INCOME, TxnKind.REFUND, TxnKind.REIMBURSEMENT)
+internal val SHOWN_KINDS = setOf(TxnKind.EXPENSE, TxnKind.INCOME, TxnKind.REFUND, TxnKind.REIMBURSEMENT)
 
 /** One day's spending, for its pill; null when it spent nothing. */
 @Composable

@@ -127,10 +127,7 @@ import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.isExpandedWidth
 import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.format.formatDay
-import cc.hyoban.moments.ui.ledger.LedgerFilter
 import cc.hyoban.moments.ui.ledger.LocalLedgerNav
-import cc.hyoban.moments.ui.ledger.SpendingCard
-import cc.hyoban.moments.ui.ledger.SpendingOf
 import cc.hyoban.moments.ui.map.navigateTo
 import cc.hyoban.moments.ui.moment.MomentScreen
 import cc.hyoban.moments.ui.publish.PendingChangesRow
@@ -768,6 +765,9 @@ private val DAY_MAP = 320.dp
 /** How far from a bill's time the footprints may be to put it on the map. */
 private const val BILL_NEAR_MS = 10 * 60_000L
 
+/** Something a place's page does from its top: a button over its map, or in its bar on a phone on its side. */
+private class PlaceAction(val icon: androidx.compose.ui.graphics.vector.ImageVector, val label: String, val tag: String, val onClick: () -> Unit)
+
 /** The Moments at one place, newest first. */
 @Composable
 fun PlaceScreen(
@@ -785,7 +785,32 @@ fun PlaceScreen(
     // Its check-ins alone, among its Moments by their days.
     val allCheckins by container.repository.checkins.collectAsStateWithLifecycle()
     val checkins = if (LocalSettings.current.isOn(Module.CHECKIN)) allCheckins.byPlace[id].orEmpty() else emptyList()
-    val bills = remember(checkins) { TimelineBills(checkins = checkins.groupBy { it.at.take(10) }) }
+    // Its bills among them, as the timeline has them: a Moment's on its card, the rest by their
+    // days; what was spent there heads the page beside its counts.
+    val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
+    val ledgerOn = LocalSettings.current.isOn(Module.LEDGER)
+    val currency = ledger.book?.currency ?: "CNY"
+    val placeBills = remember(ledger, all, id, ledgerOn) {
+        if (!ledgerOn) emptyList() else {
+            val shown = ledger.books.filterNot { it.archived }.mapTo(HashSet()) { it.id }
+            cc.hyoban.moments.ledger.txnsOfPlace(ledger, id, all.associateBy { it.uid }).filter { it.book in shown && it.kind in SHOWN_KINDS }
+        }
+    }
+    val bills = remember(checkins, placeBills, moments, ledger, currency) {
+        val uids = moments.mapTo(HashSet()) { it.uid }
+        val (withMoment, without) = placeBills.partition { it.moment != null && it.moment in uids }
+        TimelineBills(
+            ledger,
+            linked = withMoment.groupBy { it.moment!! }.mapValues { (_, txns) -> txns.sortedBy { it.time } },
+            loose = without.groupBy { it.dateKey },
+            spent = placeBills.groupBy { it.dateKey }.mapValues { (_, txns) -> cc.hyoban.moments.ledger.spendingOf(ledger, txns, currency).expense },
+            currency = currency,
+            checkins = checkins.groupBy { it.at.take(10) },
+        )
+    }
+    val spent = remember(placeBills, ledger, currency) {
+        placeBills.takeIf { it.isNotEmpty() }?.let { cc.hyoban.moments.ledger.spendingOf(ledger, it, currency).expense }?.takeIf { it > 0 }
+    }
 
     val place = places[id]
     // Its name, point and kind changed in the place picker, every Moment at it staying there.
@@ -797,63 +822,89 @@ fun PlaceScreen(
     val about = listOfNotNull(
         PlaceKind.of(place?.kind)?.let { stringResource(it.label) },
         place?.division?.label(),
-    ).plus(placeCounts(moments.size, checkins.size)).joinToString(" ")
-    SubPage(
-        place?.name ?: id,
-        onBack,
-        Modifier.background(AppColors.page),
-        subtitle = about.takeUnless { sideways },
-        centre = if (sideways) { {} } else null,
-        actions = {
-            // On the map tab, its panel up, and the way there, as from that panel.
-            if (place != null) {
-                val context = LocalContext.current
-                val resources = LocalResources.current
-                val show = rememberShowMessage()
-                val onMapLabel = stringResource(R.string.action_show_on_map)
-                Tooltip(onMapLabel, below = true) {
-                    IconButton(onClick = { onMap(id) }, modifier = Modifier.testTag("show_on_map")) {
-                        Icon(AppIcons.Map, contentDescription = onMapLabel)
-                    }
-                }
-                Tooltip(stringResource(R.string.action_navigate), below = true) {
-                    IconButton(onClick = { if (!navigateTo(context, place)) show(resources.getString(R.string.no_map_app)) }, modifier = Modifier.testTag("navigate")) {
-                        Icon(AppIcons.Directions, contentDescription = stringResource(R.string.action_navigate))
-                    }
-                }
-                Tooltip(stringResource(R.string.action_edit_place), below = true) {
-                    IconButton(onClick = { editing = true }, modifier = Modifier.testTag("edit_place")) {
-                        Icon(AppIcons.Pen, contentDescription = stringResource(R.string.action_edit_place))
-                    }
-                }
-            }
+    ).plus(placeCounts(moments.size, checkins.size))
+        .plus(listOfNotNull(spent?.let { stringResource(R.string.ledger_spent, cc.hyoban.moments.ui.ledger.money(it, currency)) }))
+        .joinToString(" ")
+    val ledgerNav = LocalLedgerNav.current
+    val context = LocalContext.current
+    val resources = LocalResources.current
+    val show = rememberShowMessage()
+    // On the map tab, its panel up; the way there, as from that panel; and its name, point and kind.
+    val actions = if (place == null) emptyList() else listOf(
+        PlaceAction(AppIcons.Map, stringResource(R.string.action_show_on_map), "show_on_map") { onMap(id) },
+        PlaceAction(AppIcons.Directions, stringResource(R.string.action_navigate), "navigate") {
+            if (!navigateTo(context, place)) show(resources.getString(R.string.no_map_app))
         },
-    ) {
-        if (editing) cc.hyoban.moments.ui.compose.EditPlace(container, id, onDismiss = { editing = false })
-        // The place is the page's title, so its cards name only the other places they were at.
-        val ledgerNav = LocalLedgerNav.current
-        val feed: @Composable (Modifier) -> Unit = { feedModifier ->
-            MomentFeed(moments, places, trips, container.mediaUrls, onMoment, feedModifier, onDay = onDay, hidePlace = id, bills = bills) {
-                if (sideways) item("name") {
-                    Column(Modifier.padding(horizontal = Space.gutter).padding(bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
-                        Text(place?.name ?: id, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
-                        Text(about, style = AppTheme.typography.caption, color = tokens.tx2)
+        PlaceAction(AppIcons.Pen, stringResource(R.string.action_edit_place), "edit_place") { editing = true },
+    )
+    if (editing) cc.hyoban.moments.ui.compose.EditPlace(container, id, onDismiss = { editing = false })
+    // The place is the page's title, so its cards name only the other places they were at.
+    val feed: @Composable (Modifier, FeedLeading.() -> Unit) -> Unit = { feedModifier, head ->
+        MomentFeed(
+            moments, places, trips, container.mediaUrls, onMoment, feedModifier,
+            onDay = onDay, hidePlace = id, bills = bills, onBill = { ledgerNav?.bill?.invoke(it) },
+            leading = head,
+        )
+    }
+    if (sideways && place != null) {
+        // On a phone on its side, the place on a map down the start half and its Moments beside it,
+        // its name heading them rather than standing over the map's edge (H10).
+        SubPage(
+            place.name,
+            onBack,
+            Modifier.background(AppColors.page),
+            centre = {},
+            actions = {
+                actions.forEach { action ->
+                    Tooltip(action.label, below = true) {
+                        IconButton(onClick = action.onClick, modifier = Modifier.testTag(action.tag)) { Icon(action.icon, contentDescription = action.label) }
                     }
                 }
-                // What was spent there, from the ledger kept on the phone.
-                item("spending") {
-                    SpendingCard(container, SpendingOf.Place(id), onOpen = { ledgerNav?.list(LedgerFilter(place = id)) }, Modifier.padding(top = Space.s, bottom = Space.s))
+            },
+        ) {
+            MediaBeside(media = { half -> cc.hyoban.moments.ui.map.PlaceMap(place, half, topInset = FLOATING_BAR) }) { half ->
+                Box(half) {
+                    CompositionLocalProvider(LocalRailSpace provides RailSpace(0.dp, 0.dp, clearOfInsets = true)) {
+                        feed(Modifier.fillMaxSize()) {
+                            item("name") {
+                                Column(Modifier.padding(horizontal = Space.gutter).padding(bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+                                    Text(place.name, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
+                                    Text(about, style = AppTheme.typography.caption, color = tokens.tx2)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        if (sideways && place != null) {
-            MediaBeside(media = { half -> cc.hyoban.moments.ui.map.PlaceMap(place, half, topInset = FLOATING_BAR) }) { half ->
-                Box(half) {
-                    CompositionLocalProvider(LocalRailSpace provides RailSpace(0.dp, 0.dp, clearOfInsets = true)) { feed(Modifier.fillMaxSize()) }
+    } else {
+        // Where it is across the top, under the status bar, as a day's page opens on its footprints
+        // (10); back and its actions float over the map, its name and counts under it.
+        val height = minOf(DAY_MAP, cc.hyoban.moments.ui.components.windowHeight() / 2)
+        Box(Modifier.fillMaxSize().background(AppColors.page)) {
+            feed(Modifier) {
+                item("head") {
+                    Column(Modifier.fillMaxWidth()) {
+                        if (place != null) {
+                            cc.hyoban.moments.ui.map.PlaceMap(
+                                place,
+                                Modifier.fillMaxWidth().height(height).testTag("place_map"),
+                                topInset = minOf(WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + FLOATING_BAR, height / 4),
+                            )
+                        } else {
+                            Spacer(Modifier.statusBarsPadding().height(FLOATING_BAR))
+                        }
+                        Column(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.l, bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+                            Text(place?.name ?: id, style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
+                            if (about.isNotEmpty()) Text(about, style = AppTheme.typography.caption, color = tokens.tx2)
+                        }
+                    }
                 }
             }
-        } else {
-            feed(Modifier)
+            FloatingBack(onBack, Modifier.align(Alignment.TopStart))
+            Row(Modifier.align(Alignment.TopEnd)) {
+                actions.forEach { action -> FloatingButton(action.icon, action.label, action.onClick, tag = action.tag) }
+            }
         }
     }
 }
