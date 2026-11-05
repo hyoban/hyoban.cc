@@ -333,10 +333,14 @@ reimbursement written from its expense. `moments://new-bill`, or the ledger's +,
 on a keypad (sums like `12+3.4` add up). It has an amount in any currency, a category, one
 account or several with their shares, its time and book, discounts and fees, whether it is
 to be reimbursed or left out of the sums, and the Moment, place and trip it belongs to. A
-bill with no place is placed by the footprints nearest its time (within a quarter of an
-hour, good to 100 m), named through Photon from the point alone and kept in
-`footprints.sqlite`; its + opens the new Moment's place picker on that point, and the place
-kept or chosen there becomes the bill's. The bill's own place is chosen in that picker too,
+bill with no place nor a Moment's is shown where it was: at the place of the check-in whose
+time covers it (one with no end covering a quarter of an hour either side, the shortest when
+several do), shown as 签到位置; else by the footprints nearest its time (within a quarter of an
+hour, good to 100 m), as 足迹位置, which is one of the phone's places within 100 m when there is
+one, else named through Photon from the point alone and kept in `footprints.sqlite`. Both are
+only shown until its + takes them: a known place becomes the bill's at once, and a spot only
+named opens the new Moment's place picker on that point, the place kept or chosen there
+becoming the bill's. The bill's own place is chosen in that picker too,
 opening on its place, else that point, else where the phone is. An account's 校准余额 sets its balance by moving its
 opening balance.
 
@@ -459,8 +463,11 @@ how recording behaves.
   leaves for it), and frames one on the map when tapped; a stay's + opens the same picker on
   its middle, named as a bill's spot is, to keep it as a place of the phone's, or with 保存为签到
   as a private check-in there too (`source.app` `phone`), from the stay's start to its end,
-  its uid made from the start so keeping it again changes it; a check-in already within the
-  stay, Swarm's or another, is that visit, and none is added.
+  its uid made from the start so keeping it again changes it; a check-in whose time meets the
+  stay's, Swarm's or another, one begun the day before included, is that visit, and none is
+  added. Such a stay is listed with that check-in's venue and a grey flag in place of its +.
+  Kept as a check-in, its bills with no place nor a Moment's, if any, are offered its place in
+  a message, 用这个地点.
 - **Notification.** Its icon shows the state (recording, waiting for a fix, location off).
   On Android 16 and later it asks to be a Live Update; on ColorOS that also needs
   流体云显示实时活动, linked from 足迹记录 → 状态栏显示.

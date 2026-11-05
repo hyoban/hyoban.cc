@@ -754,6 +754,13 @@
     <string name="ledger_link_moment">Moment</string>
     <string name="ledger_link_place">Place</string>
     <string name="ledger_footprint_place">Where, by footprints</string>
+    <string name="ledger_checkin_place">Where, by a check-in</string>
+    <string name="ledger_use_place">Use this place</string>
+    <string name="footprints_stay_kept">Saved as a check-in</string>
+    <plurals name="message_checkin_bills">
+        <item quantity="one">%d bill in this stay has no place</item>
+        <item quantity="other">%d bills in this stay have no place</item>
+    </plurals>
     <string name="ledger_link_trip">Trip</string>
     <string name="ledger_choose">Choose</string>
     <string name="ledger_choose_account">Choose account</string>

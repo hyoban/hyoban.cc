@@ -728,6 +728,12 @@
     <string name="ledger_link_moment">时刻</string>
     <string name="ledger_link_place">地点</string>
     <string name="ledger_footprint_place">足迹位置</string>
+    <string name="ledger_checkin_place">签到位置</string>
+    <string name="ledger_use_place">用这个地点</string>
+    <string name="footprints_stay_kept">已存为签到</string>
+    <plurals name="message_checkin_bills">
+        <item quantity="other">这段时间有 %d 笔账单没有地点</item>
+    </plurals>
     <string name="ledger_link_trip">旅程</string>
     <string name="ledger_choose">选择</string>
     <string name="ledger_choose_account">选择账户</string>
