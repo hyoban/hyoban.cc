@@ -493,7 +493,10 @@ behaves.
 足迹记录 → 连接自动控制 starts and pauses recording by connections the user picks, none by
 default: joining a chosen Wi-Fi pauses and leaving all of them starts; connecting a chosen
 Bluetooth device starts and disconnecting the last pauses, and Bluetooth wins over Wi-Fi.
-Changes settle for five seconds; a manual choice made since always wins. A `specialUse`
+Changes settle for five seconds; a manual choice made since always wins, except that
+starting recording by hand (daily, resuming or a trip) on a chosen Wi-Fi with no chosen
+device connected pauses it again. Turning the automation on or changing what it watches
+starts or pauses once by the connections then, Bluetooth first. A `specialUse`
 foreground service watches the connections without scanning or asking for fixes, and on
 Android 16 a chosen device can be associated through `CompanionDeviceService` to wake it.
 It needs precise and background location, and Nearby devices for Bluetooth. Its settings

@@ -68,7 +68,7 @@ fun ConnectionAutomationSettings(container: AppContainer) {
     }
     fun save(next: ConnectionRules) = work(persistent = true) {
         withContext(Dispatchers.IO) { store.save(next) }
-        ConnectionReminderService.sync(context)
+        ConnectionReminderService.sync(context, apply = true)
     }
     fun openPicker(kind: String) = work {
         choices = withContext(Dispatchers.IO) {

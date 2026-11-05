@@ -74,6 +74,22 @@ class ConnectionTransitions(private val rules: ConnectionRules) {
             else bluetoothNow[signal.id] == false && bluetoothNow.values.none { it }
     }
 
+    /** Whether [steady] reflects the connections now: no Wi-Fi identity unknown or still being looked up. */
+    val steadyKnown get() = rules.wifi.isEmpty() || (!wifiResolving && wifiNow != null)
+
+    /**
+     * What the connections say now, not what changed: a chosen Bluetooth device starts, else a
+     * chosen Wi-Fi pauses and being on none of them starts. Nothing chosen and connected
+     * without Wi-Fi rules says nothing.
+     */
+    fun steady(): ConnectionSignal? {
+        bluetoothNow.filterValues { it }.keys.minOrNull()?.let { return ConnectionSignal(ConnectionKind.BLUETOOTH, it, true) }
+        if (!steadyKnown || rules.wifi.isEmpty()) return null
+        val now = wifiNow ?: return null
+        return if (now.isNotEmpty()) ConnectionSignal(ConnectionKind.WIFI, now.min(), true)
+            else ConnectionSignal(ConnectionKind.WIFI, rules.wifi.min(), false)
+    }
+
     /** Consume the settled changes and return at most one action, with Bluetooth taking priority. */
     fun settle(state: RecordingState, manual: Boolean = false): ConnectionSignal? {
         val changes = mutableListOf<ConnectionSignal>()
