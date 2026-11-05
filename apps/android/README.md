@@ -197,7 +197,8 @@ except in 演示模式.
   point and kind of, looking its division up again and routing its trips again when it moved.
 
 New Moments and places live under the app's `local/` directory in the spec's layout, the
-places with provisional ids (`p-<ulid>`), marked 未发布 until published.
+places with ids of their own (`p-<ulid>`), marked 未发布 until published. A place keeps its id
+when it is published, so whatever names it (Moments, check-ins, bills) stays at it.
 
 ## Publishing
 

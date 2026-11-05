@@ -58,9 +58,10 @@ stamps the manifest's `updatedAt`; one that doesn't fit changes nothing (a 422 n
 missing original), and one that changes nothing takes no revision. The answer gives the id
 each place is known by, the records as published, the uids deleted and the revision taken.
 
-- **Places.** A known id is that place, and one brought in from a Swarm venue (`source`) is
-  the place of that venue if there is one; places near each other or of one name stay apart.
-  Any other is added, a provisional `p-<ulid>` getting an id from its name's pinyin, and its
+- **Places.** A place keeps the id it is sent with, the app's `p-<ulid>` included, so its
+  bills, check-ins and Moments never need moving: a known id is that place, and any other is
+  added. Places near each other, of one name or of one Swarm venue stay apart; choosing a
+  known one is the app's to do as the place is picked. A new place has its
   province, city and district looked up from DataV's GeoAtlas (`DIVISIONS_URL`), or left for
   `vp run places:locate` when that fails. A known place sent under its own id takes the
   name, point and kind sent with it and keeps the rest; moved, its division is looked up

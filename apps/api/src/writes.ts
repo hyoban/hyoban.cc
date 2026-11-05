@@ -12,12 +12,7 @@ import { type LimitFunction } from 'p-limit'
 import { getUploadKey, type Bucket, type UploadPart } from './bucket.ts'
 import { revisionQuery, toRevision, type Database, type Statement } from './database.ts'
 import { HttpError, validate } from './http.ts'
-import {
-  PROVISIONAL_PLACE_PATTERN,
-  getExtension,
-  getPlaceId,
-  matchPlace,
-} from '@hyoban/data-spec/publish'
+import { getExtension } from '@hyoban/data-spec/publish'
 import { BUMP_REVISION, placeRow, upsertSql, type Row, type Table } from './rows.ts'
 
 // The write side, as the recording app commits what it kept on the phone: the originals
@@ -49,9 +44,10 @@ export interface WriteResult<T> {
 }
 
 /**
- * The places a change set sends, each by the id it is known by: a known id stays, one near or
- * named as a known place takes that one's, and any other is added, the app's provisional
- * `p-<ulid>` spelled from its name. A known place sent under its own id takes the name, point
+ * The places a change set sends, each kept under the id it is sent with, so whatever names it
+ * on the phone names it here: a known id is that place, and any other is added. Places near
+ * each other, of one name or of one venue stay apart; choosing a known one is the app's to do
+ * as the place is picked. A known place sent under its own id takes the name, point
  * and kind it is sent with, and keeps everything else; moved, its division is looked up again.
  * What it writes goes in `statements`; `places` takes the new. Says whether a known place
  * moved, as the trips' routes are worked out from the places' points.
@@ -66,24 +62,21 @@ export async function namePlaces(
   let moved = false
 
   for (const [given, value] of Object.entries(givenPlaces)) {
-    const provisional = PROVISIONAL_PLACE_PATTERN.test(given)
-
-    if (!provisional && !PLACE_ID.test(given)) {
+    if (!PLACE_ID.test(given)) {
       throw new HttpError(422, `${given} isn't a place id.`)
     }
 
     const place = validate(placeSchema, value)
-    const match = matchPlace(provisional ? getPlaceId(place.name, places) : given, place, places)
+    const stored = places[given]
 
-    placeIds[given] = match.id
+    placeIds[given] = given
 
-    if (match.status === 'new') {
+    if (!stored) {
       const located = await withDivision(context, place)
 
-      places[match.id] = located
-      statements.push(upsert(context.db, 'places', placeRow(match.id, located)))
-    } else if (match.status === 'known') {
-      const stored = places[match.id]!
+      places[given] = located
+      statements.push(upsert(context.db, 'places', placeRow(given, located)))
+    } else {
       const moves = place.latitude !== stored.latitude || place.longitude !== stored.longitude
       const edited = withKind(
         { ...stored, name: place.name, latitude: place.latitude, longitude: place.longitude },
@@ -97,8 +90,8 @@ export async function namePlaces(
       const changed = moves ? await withDivision(context, edited) : edited
 
       if (JSON.stringify(changed) !== JSON.stringify(stored)) {
-        places[match.id] = changed
-        statements.push(upsert(context.db, 'places', placeRow(match.id, changed)))
+        places[given] = changed
+        statements.push(upsert(context.db, 'places', placeRow(given, changed)))
         moved ||= moves
       }
     }

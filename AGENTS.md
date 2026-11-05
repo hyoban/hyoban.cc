@@ -128,9 +128,11 @@ even when starting from the repository root.
   only the approved statistical projection belongs in `data/zeekr/`. The car's data, its
   statistics and its charges, comes only from that import; nothing edits it by hand, the app
   included: a wrong value is fixed by capturing and importing again.
-- Publishing never merges places by nearness or name: two shops in one mall are two places.
-  A known id is that place, a Swarm venue's place is found by its `source`, and picking a
-  known place is the app's to do when the place is chosen.
+- Publishing never merges or renames places: two shops in one mall are two places. A place
+  keeps the id it was made with, the app's `p-<ulid>` included, never one spelled from its
+  name, so what names it on the phone (bills too) needs no moving. A known id is that place;
+  finding a Swarm venue's place by its `source`, or any known place, is the app's to do when
+  the place is chosen.
 - Trips' routes come from routers that need no key (Valhalla for drives, OpenRailRouting
   for trains), so the app can route its own trips as the API does; don't bring a keyed
   router back.

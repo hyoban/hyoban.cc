@@ -189,7 +189,7 @@ object Swarm {
     /**
      * Each venue's place, by Swarm's venue id: the one of [known] made for it before, else a new
      * one of the phone's, named by the venue's local name where it has one, at the point of its
-     * most accurate check-in, its provisional id made from its first check-in so that importing
+     * most accurate check-in, its id made from its first check-in so that importing
      * again names it the same. Gives the ids, and the places among them that are new.
      */
     fun places(checkins: List<SwarmCheckin>, known: Map<String, Place>, now: String): Pair<Map<String, String>, Map<String, Place>> {
