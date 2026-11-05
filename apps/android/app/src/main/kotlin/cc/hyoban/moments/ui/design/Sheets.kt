@@ -40,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.shape.CornerBasedShape
@@ -149,6 +150,37 @@ fun ModalBottomSheet(
                     if (offset.value > travel / 3 || velocity > 2000f) leave() else offset.animateTo(0f, spring(dampingRatio = 1f, stiffness = 500f))
                 }
             }
+            // Moves it out by [out] (in, when negative) within its travel; what it took.
+            val move = { out: Float ->
+                val before = offset.value.coerceIn(0f, travel.coerceAtLeast(0f))
+                val after = (before + out).coerceIn(0f, travel.coerceAtLeast(0f))
+                haptics.across(before, after, travel / 3)
+                scope.launch { offset.snapTo(after) }
+                after - before
+            }
+            val currentMove by rememberUpdatedState(move)
+            val currentSettle by rememberUpdatedState(settle)
+            // A list in it scrolls until it is at its top; the rest of the drag takes the sheet down,
+            // and back up it goes before the list scrolls again. Its fling's leftover never does.
+            val drag = remember {
+                object : NestedScrollConnection {
+                    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                        if (available.y >= 0f || source != NestedScrollSource.UserInput || offset.value <= 0f) return Offset.Zero
+                        return Offset(0f, currentMove(available.y))
+                    }
+
+                    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                        if (available.y <= 0f || source != NestedScrollSource.UserInput) return Offset.Zero
+                        return Offset(0f, currentMove(available.y))
+                    }
+
+                    override suspend fun onPreFling(available: Velocity): Velocity {
+                        if (offset.value <= 0f) return Velocity.Zero
+                        currentSettle(available.y)
+                        return available
+                    }
+                }
+            }
             Column(
                 modifier
                     .then(
@@ -171,16 +203,12 @@ fun ModalBottomSheet(
                     .background(containerColor)
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
                     .draggable(
-                        rememberDraggableState { delta ->
-                            val out = if (side && !ltr) -delta else delta
-                            val before = offset.value
-                            val after = (before + out).coerceIn(0f, travel)
-                            haptics.across(before, after, travel / 3)
-                            scope.launch { offset.snapTo(after) }
-                        },
+                        rememberDraggableState { delta -> move(if (side && !ltr) -delta else delta) },
                         if (side) Orientation.Horizontal else Orientation.Vertical,
                         onDragStopped = { velocity -> settle(if (side && !ltr) -velocity else velocity) },
                     )
+                    // On its side it goes sideways, across the way its list scrolls.
+                    .then(if (side) Modifier else Modifier.nestedScroll(drag))
                     .then(if (side) Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End + WindowInsetsSides.Vertical)).padding(top = Space.l) else Modifier.navigationBarsPadding())
                     .imePadding(),
             ) {
