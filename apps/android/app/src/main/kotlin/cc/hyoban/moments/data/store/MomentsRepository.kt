@@ -816,7 +816,8 @@ class MomentsRepository(
 
     /**
      * The phone's places the API now has, by their ids there: gone from the phone's, and
-     * the phone's other Moments and the entries at them moved to the API's ids.
+     * the phone's other Moments and the entries at them moved to the API's ids. The API keeps
+     * the id a place is sent with, so this moves nothing but what an older API renamed.
      */
     private fun adoptPlaces(ids: Map<String, String>) {
         val local = local ?: return

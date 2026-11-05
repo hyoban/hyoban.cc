@@ -67,7 +67,7 @@ async function publishDock(env) {
   return commit(env, { places: { [made]: dock }, moments: [draft] })
 }
 
-test('a new place stays apart from a known one however near or alike; one the app made is named by its pinyin', async () => {
+test('a new place keeps the id it is sent with and stays apart from a known one however near or alike', async () => {
   const { env } = setUpWithData()
   const nanjing = snapshot.places.nanjing
   const { status, body } = await commit(env, {
@@ -82,18 +82,18 @@ test('a new place stays apart from a known one however near or alike; one the ap
   assert.deepEqual(body.places, {
     'nanjing-2': 'nanjing-2',
     'somewhere-else': 'somewhere-else',
-    [made]: 'ce-shi-ma-tou',
+    [made]: made,
   })
   assert.deepEqual(
     (await get(env, '/v2/places/nanjing')).body,
     nanjing,
     'the known place is as it was',
   )
-  assert.equal((await get(env, '/v2/places/ce-shi-ma-tou')).body.name, '测试码头')
+  assert.equal((await get(env, `/v2/places/${made}`)).body.name, '测试码头')
   assert.equal((await get(env, '/v2/places/somewhere-else')).body.name, nanjing.name)
 })
 
-test('a place from a Swarm venue is that venue’s alone, however near or alike another is', async () => {
+test('a place from a Swarm venue keeps its own id, another of the same venue too', async () => {
   const { env } = setUpWithData()
   const nanjing = snapshot.places.nanjing
   const venue = {
@@ -102,30 +102,14 @@ test('a place from a Swarm venue is that venue’s alone, however near or alike 
     longitude: nanjing.longitude,
     source: { app: 'swarm', venue: 'v1' },
   }
-  const first = await commit(env, { places: { 'p-01m2m39jfrtecgk13xngmx8864': venue } })
+  const first = 'p-01m2m39jfrtecgk13xngmx8864'
+  const second = 'p-01m2m3hw3ry3kwpp7kxsb6gsng'
+  const sent = await commit(env, { places: { [first]: venue, [second]: venue } })
 
-  assert.equal(first.status, 200)
-  const id = first.body.places['p-01m2m39jfrtecgk13xngmx8864']
-  assert.notEqual(id, 'nanjing', 'not the known place it stands on')
-  assert.deepEqual((await get(env, `/v2/places/${id}`)).body.source, venue.source)
-
-  const again = await commit(env, {
-    places: {
-      'p-01m2m3hw3ry3kwpp7kxsb6gsng': { ...venue, name: '别的名字' },
-      'p-01m2m4tpr8ev0n3n7cr60w8cjg': { ...venue, source: { app: 'swarm', venue: 'v2' } },
-    },
-  })
-
-  assert.equal(
-    again.body.places['p-01m2m3hw3ry3kwpp7kxsb6gsng'],
-    id,
-    'the same venue again is its place',
-  )
-  assert.notEqual(
-    again.body.places['p-01m2m4tpr8ev0n3n7cr60w8cjg'],
-    id,
-    'another venue is another place',
-  )
+  assert.equal(sent.status, 200)
+  assert.deepEqual(sent.body.places, { [first]: first, [second]: second })
+  assert.deepEqual((await get(env, `/v2/places/${first}`)).body.source, venue.source)
+  assert.deepEqual((await get(env, `/v2/places/${second}`)).body.source, venue.source)
 })
 
 test('a known place sent under its own id takes its name, point and kind, and keeps the rest', async () => {
@@ -206,7 +190,7 @@ test('a new place is kept with the division it is in, and without one when that 
     const first = await commit(located, { places: { 'p-01k7zq9x3m4n5p6q7r8s9t0v1a': lake } })
 
     assert.equal(first.status, 200)
-    assert.deepEqual((await get(env, '/v2/places/jing-hu')).body, {
+    assert.deepEqual((await get(env, '/v2/places/p-01k7zq9x3m4n5p6q7r8s9t0v1a')).body, {
       name: '镜湖',
       latitude: 31.35,
       longitude: 118.43,
@@ -221,7 +205,7 @@ test('a new place is kept with the division it is in, and without one when that 
     const second = await commit(located, { places: { 'p-01k7zq9x3m4n5p6q7r8s9t0v1b': plaza } })
 
     assert.equal(second.status, 200)
-    assert.deepEqual((await get(env, '/v2/places/zhong-shan-guang-chang')).body, plaza)
+    assert.deepEqual((await get(env, '/v2/places/p-01k7zq9x3m4n5p6q7r8s9t0v1b')).body, plaza)
   } finally {
     globalThis.fetch = realFetch
   }
@@ -399,11 +383,7 @@ test('the changes go as one write: places, Moments published, deletions, the sit
 
   try {
     assert.equal((await commit(env, changes)).status, 422, 'the photo is not uploaded yet')
-    assert.equal(
-      (await get(env, '/v2/places/ce-shi-ma-tou')).status,
-      404,
-      'and nothing was written',
-    )
+    assert.equal((await get(env, `/v2/places/${made}`)).status, 404, 'and nothing was written')
     assert.equal((await getMoment(env, target.uid)).status, 200)
 
     await upload(env, draft.uid, draft.media[0].uid, 'image', photo, 'image/jpeg')
@@ -415,13 +395,13 @@ test('the changes go as one write: places, Moments published, deletions, the sit
 
     assert.equal(applied.status, 200, JSON.stringify(applied.body))
     assert.equal(applied.body.revision, before + 1, 'the revision the write took')
-    assert.deepEqual(applied.body.places, { [made]: 'ce-shi-ma-tou' })
+    assert.deepEqual(applied.body.places, { [made]: made })
     assert.deepEqual(applied.body.deleted, [target.uid], 'one already gone is left out')
     assert.deepEqual(
       applied.body.moments.map((moment) => [moment.uid, moment.places]),
       [
         [draft.uid, ['nanjing']],
-        [words.uid, ['ce-shi-ma-tou']],
+        [words.uid, [made]],
       ],
     )
     assert.ok(bucket.objects.has(applied.body.moments[0].media[0].published.key))
