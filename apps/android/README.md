@@ -464,6 +464,11 @@ how recording behaves.
 - **Notification.** Its icon shows the state (recording, waiting for a fix, location off).
   On Android 16 and later it asks to be a Live Update; on ColorOS that also needs
   流体云显示实时活动, linked from 足迹记录 → 状态栏显示.
+- **Background allowances.** 足迹记录's 需要 lists what is missing (notifications, Live
+  Updates, unrestricted battery, background location, physical activity), and the
+  footprints' last onboarding step shows the same; battery opens the system's own dialog.
+  ColorOS's auto-start can't be read, so on OPPO, OnePlus and realme it is a row of its own
+  in 后台记录 and onboarding, opening the app's page.
 - **Diagnostics.** `noBackupFilesDir/footprint-diagnostics/` keeps two rotating JSONL files
   of 8 MiB, about two days, with each request, fix, filter decision and state change, never
   a coordinate, network name or token. 足迹记录 → 诊断 → 导出诊断日志 exports them with a replay of the
