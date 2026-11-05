@@ -1018,7 +1018,6 @@
     <string name="me_footer">%1$s %2$s 图标里的猫是馒头</string>
     <string name="sync_title">同步与来源</string>
     <string name="section_site">网站</string>
-    <string name="section_media">媒体</string>
     <string name="me_sync_token_set">令牌已设置</string>
     <string name="me_sync_token_unset">没有令牌，不能同步</string>
     <string name="me_sync_no_api">未连接 API</string>
