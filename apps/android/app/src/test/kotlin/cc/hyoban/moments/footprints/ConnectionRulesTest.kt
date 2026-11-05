@@ -238,4 +238,35 @@ class ConnectionRulesTest {
         assertNull(e.settle(on))
         assertFalse(e.restoreBluetoothTransition("Other", false, true))
     }
+
+    @Test fun steadyStateSaysWhatTheConnectionsAreNow() {
+        val e = engine()
+        assertFalse(e.steadyKnown)
+        assertNull(e.steady())
+        e.wifi(setOf("Home", "Cafe"), seed = true)
+        assertTrue(e.steadyKnown)
+        assertEquals("pause", requireNotNull(e.steady()).command(on))
+        e.resolvingWifi(true)
+        assertFalse(e.steadyKnown)
+        assertNull(e.steady())
+        e.resolvingWifi(false)
+        // A chosen Bluetooth device wins over a chosen Wi-Fi.
+        e.bluetooth("B", true, seed = true)
+        assertEquals("daily_on", requireNotNull(e.steady()).command(off))
+        e.bluetooth("B", false)
+        e.wifi(setOf("Cafe"))
+        assertEquals("daily_on", requireNotNull(e.steady()).command(off))
+        assertNull(e.steady()!!.command(on))
+        // Unknown identities say nothing rather than a departure.
+        e.wifi(null)
+        assertNull(e.steady())
+    }
+
+    @Test fun withoutWifiRulesOnlyAConnectedDeviceSaysAnything() {
+        val e = ConnectionTransitions(rules.copy(wifi = emptySet()))
+        assertTrue(e.steadyKnown)
+        assertNull(e.steady())
+        e.bluetooth("A", true, seed = true)
+        assertEquals("daily_on", requireNotNull(e.steady()).command(off))
+    }
 }

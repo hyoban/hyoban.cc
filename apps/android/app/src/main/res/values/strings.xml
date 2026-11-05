@@ -572,7 +572,7 @@
     <string name="connection_automation_wifi_unknown">暂时无法识别 Wi-Fi 名称，请检查定位权限和系统定位开关</string>
     <string name="connection_automation_choose_first">先选择下方的 Wi-Fi 或蓝牙设备</string>
     <string name="connection_automation_rules">Wi-Fi：连接所选网络时自动暂停，离开全部所选网络时自动开启。\n蓝牙：连接任一所选设备时自动开启，全部断开时自动暂停。\n蓝牙优先：只要连着所选蓝牙设备，Wi-Fi 不会暂停记录；同时断开时也按蓝牙规则暂停。\n开启时继续暂停的行程或日常记录；都未开启时启用日常记录。</string>
-    <string name="connection_automation_monitor_note">连接变化稳定 5 秒后执行，无需确认。首次启动只识别当前连接，不改变记录状态；手动操作会取消待执行动作，直到下次连接变化再应用规则。\n监听通过常驻通知在后台运行，不主动采集轨迹或扫描设备。设置和执行日志仅保存在本机。</string>
+    <string name="connection_automation_monitor_note">连接变化稳定 5 秒后执行，无需确认。开启或修改规则时，按当前连接启动或暂停一次；之后重新启动监听只识别当前连接，不改变记录状态。手动开始记录时，如果连着已选的 Wi-Fi 而没有连已选的蓝牙设备，会随即暂停；其他手动操作会取消待执行动作，直到下次连接变化再应用规则。\n监听通过常驻通知在后台运行，不主动采集轨迹或扫描设备。设置和执行日志仅保存在本机。</string>
     <string name="connection_automation_permission_help">自动开启记录需要精确定位、始终允许定位及系统定位开关，并允许通知。蓝牙规则还需要附近设备权限。授权后请再次开启连接自动控制。</string>
     <string name="connection_automation_location_settings">系统定位设置</string>
     <string name="connection_automation_wifi_title">选择 Wi-Fi</string>

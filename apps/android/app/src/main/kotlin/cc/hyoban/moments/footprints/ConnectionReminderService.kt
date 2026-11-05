@@ -51,6 +51,8 @@ class ConnectionReminderService : Service() {
     private var changeVersion = 0
     private var permissionState = false
     private var recording: RecordingState? = null
+    /** The rules were just changed by the owner: act once on what the connections say now. */
+    private var applyPending = false
 
     override fun onCreate() {
         super.onCreate()
@@ -73,13 +75,15 @@ class ConnectionReminderService : Service() {
             container.footprints.revision.collect {
                 post {
                     val state = withContext(Dispatchers.IO) { container.footprints.state() }
-                    if (recording != null && recording != state) {
+                    val before = recording
+                    if (before != null && before != state) {
                         // Manual changes take precedence over any unsettled connection event.
                         debounce?.cancel()
                         changeVersion++
                         transitions.settle(state, manual = true)
                     }
                     recording = state
+                    if (before != null && started(before, state)) pauseOnChosenWifi(state)
                 }
             }
         }
@@ -108,6 +112,7 @@ class ConnectionReminderService : Service() {
             val previous = if (intent.hasExtra("companion_previous")) intent.getBooleanExtra("companion_previous", false) else null
             companionSignal(signal, previous, cold = true)
         }
+        if (intent?.getBooleanExtra(EXTRA_APPLY, false) == true) post { applyNow() }
         return START_STICKY
     }
 
@@ -188,6 +193,27 @@ class ConnectionReminderService : Service() {
             connectivity.registerNetworkCallback(NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(), callback!!)
         }
         if (value.bluetooth.isNotEmpty()) seedBluetooth(generation)
+        if (applyPending) changed()
+    }
+
+    private fun applyNow() {
+        applyPending = true
+        // Before the rules are watched, configure starts the wait itself.
+        if (configured && rules.enabled && permissionState) changed()
+    }
+
+    /** Recording just began, or a trip did, by the owner's hand rather than a connection. */
+    private fun started(before: RecordingState, after: RecordingState) =
+        after.recording && (!before.recording || (after.session != null && after.session != before.session))
+
+    /** Started on a chosen Wi-Fi with no chosen Bluetooth device: pause, as joining it would. */
+    private suspend fun pauseOnChosenWifi(state: RecordingState) {
+        if (!rules.enabled || !permissionState || !transitions.steadyKnown) return
+        val signal = transitions.steady()?.takeIf { !it.start } ?: return
+        val applied = RecordingService.control(this, "pause", expectedState = state, source = signal.kind.name.lowercase())
+        diagnostic("connection_action", "kind" to signal.kind.name, "connected" to signal.connected,
+            "action" to "pause", "accepted" to applied, "reason" to "started_on_chosen")
+        recording = withContext(Dispatchers.IO) { container.footprints.state() }
     }
 
     private fun updateWifi(seed: Boolean) {
@@ -316,7 +342,10 @@ class ConnectionReminderService : Service() {
                     diagnostic("connection_action_skipped", "reason" to "recording_changed")
                     return@post
                 }
-                val signal = transitions.settle(state) ?: return@post
+                val settled = transitions.settle(state)
+                val signal = settled ?: if (applyPending && transitions.steadyKnown) transitions.steady() else null
+                if (settled != null || transitions.steadyKnown) applyPending = false
+                if (signal == null) return@post
                 val action = signal.command(state) ?: return@post
                 val applied = RecordingService.control(this@ConnectionReminderService, action, expectedState = state,
                     source = signal.kind.name.lowercase())
@@ -396,7 +425,10 @@ class ConnectionReminderService : Service() {
             }
         }
 
-        suspend fun sync(context: Context) {
+        private const val EXTRA_APPLY = "apply_rules"
+
+        /** [apply]: the owner just changed the rules, so start or pause once by the connections now. */
+        suspend fun sync(context: Context, apply: Boolean = false) {
             val app = context.applicationContext
             val rules = withContext(Dispatchers.IO) { (app as MomentsApplication).container.connectionRules.load() }
             CompanionConnections.sync(app, rules)
@@ -405,10 +437,11 @@ class ConnectionReminderService : Service() {
             } else {
                 val service = live
                 if (service == null) {
-                    try { ContextCompat.startForegroundService(app, Intent(app, ConnectionReminderService::class.java)) }
+                    try { ContextCompat.startForegroundService(app, Intent(app, ConnectionReminderService::class.java).putExtra(EXTRA_APPLY, apply)) }
                     catch (_: Exception) { _status.value = R.string.connection_automation_error }
                 } else service.post {
                     if (service.permissionState != app.connectionAutomationAllowed(rules)) service.configure(rules)
+                    if (apply) service.applyNow()
                 }
             }
         }
