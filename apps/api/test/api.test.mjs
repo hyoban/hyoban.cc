@@ -250,7 +250,11 @@ test('every request needs a token, and methods, paths and queries are checked', 
     ).status,
     405,
   )
-  assert.deepEqual((await get(env, '/')).body, { name: 'hyoban.cc', revision: 1 })
+  assert.deepEqual((await get(env, '/')).body, {
+    name: 'hyoban.cc',
+    revision: 1,
+    assets: 'https://image.hyoban.cc',
+  })
 })
 
 test('POST /v2/build has the site built again', async () => {

@@ -121,6 +121,10 @@ data class RowsPageRow(val table: String, val key: String, val rev: Long, val de
     fun toCopyRow() = CopyRow(table, key, rev, deletedAt, record.toString())
 }
 
+/** What the API says of itself (`GET /`): its name, its revision and where its photos and videos are served from, none from an API from before it said. */
+@Serializable
+data class ApiSite(val name: String, val revision: Long, val assets: String? = null)
+
 /** What the app reads the records from; the tests stand in for the API with their own. */
 interface MomentsSource {
     /** The rows that changed after revision [since], or from [cursor] when it continues a read. */
@@ -139,6 +143,9 @@ class MomentsApi(
 ) : MomentsSource, MomentsWriter {
     override suspend fun rows(since: Long, cursor: String?): RowsPage =
         get(if (cursor != null) "/v2/rows?cursor=$cursor&limit=500" else "/v2/rows?since=$since&limit=500", RowsPage.serializer())
+
+    /** What the API says of itself. */
+    suspend fun site(): ApiSite = get("/", ApiSite.serializer())
 
     override suspend fun uploaded(momentUid: String, mediaUid: String, part: UploadPart): String? = withContext(io) {
         val path = "/v2/entries/$momentUid/media/$mediaUid/${part.path}"

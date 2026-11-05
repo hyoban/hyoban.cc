@@ -494,8 +494,9 @@ are `noBackupFilesDir/connection-reminders.json` and `companion-connections.json
 - **Video.** The viewer goes picture-in-picture when the app is left while a video plays.
   A photo that can't be fetched there says so, with 重试.
 - **Language and appearance.** Always the phone's: Chinese, or English when the phone speaks
-  it, and light or dark as the system is. The API and the media origin have no default and
-  are set in 我 → 同步与来源; the map's styles default to `BuildConfig` and can be changed there
+  it, and light or dark as the system is. The API has no default and is set in 我 → 同步与来源,
+  and the origin the photos and videos are served from is what the API says at `GET /`, asked
+  after each sync and kept; the map's styles default to `BuildConfig` and can be changed there
   too, beside the AMap and Tencent keys, which have none either and stays on the phone, out
   of the backup.
 - **Maps.** OpenFreeMap's vector tiles drawn by MapLibre, needing no key.

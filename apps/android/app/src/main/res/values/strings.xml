@@ -162,7 +162,6 @@
     <string name="section_route">路线</string>
     <string name="section_map">地图</string>
     <string name="setting_api_url">API 地址</string>
-    <string name="setting_asset_origin">图片与视频地址</string>
     <string name="setting_map_style_light">浅色地图样式</string>
     <string name="setting_map_style_dark">深色地图样式</string>
     <string name="setting_tencent_key">腾讯地图 Key</string>

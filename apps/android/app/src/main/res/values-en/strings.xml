@@ -165,7 +165,6 @@
     <string name="section_route">Route</string>
     <string name="section_map">Map</string>
     <string name="setting_api_url">API address</string>
-    <string name="setting_asset_origin">Photo and video address</string>
     <string name="setting_map_style_light">Light map style</string>
     <string name="setting_map_style_dark">Dark map style</string>
     <string name="setting_tencent_key">Tencent Maps key</string>
