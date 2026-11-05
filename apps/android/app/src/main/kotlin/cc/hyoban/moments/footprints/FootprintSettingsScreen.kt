@@ -90,19 +90,33 @@ fun FootprintSettingsScreen(container: AppContainer, onBack: () -> Unit) {
 @Composable
 private fun NeedsSettings() {
     val context = LocalContext.current
-    fun read() = Triple(
-        androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled(),
+    fun read() = listOf(
+        BackgroundAllowances.notifications(context),
         !RecordingService.hasPreciseLocation(context) || context.granted(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION),
         !ActivityTransitions.enabled(context) || ActivityTransitions.permitted(context),
+        BackgroundAllowances.liveUpdates(context),
+        BackgroundAllowances.unrestrictedBattery(context),
     )
     var state by androidx.compose.runtime.remember { mutableStateOf(read()) }
     androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { state = read() }
-    val (notifying, background, activity) = state
+    val (notifying, background, activity, live, battery) = state
     val rows = buildList<cc.hyoban.moments.ui.settings.Segment> {
         if (!notifying) add { shapes ->
             ActionRow(AppIcons.Bell, stringResource(R.string.onboarding_notifications), shapes,
                 supporting = stringResource(R.string.footprints_needs_notifications), tag = "footprints_needs_notifications", external = true) {
-                context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName))
+                BackgroundAllowances.openNotifications(context)
+            }
+        }
+        if (!live) add { shapes ->
+            ActionRow(AppIcons.Stream, stringResource(R.string.footprints_needs_live), shapes,
+                supporting = stringResource(R.string.footprints_needs_live_note), tag = "footprints_needs_live", external = true) {
+                BackgroundAllowances.openLiveUpdates(context)
+            }
+        }
+        if (!battery) add { shapes ->
+            ActionRow(AppIcons.BatteryCharging, stringResource(R.string.footprints_needs_battery), shapes,
+                supporting = stringResource(R.string.footprints_needs_battery_note), tag = "footprints_needs_battery", external = true) {
+                BackgroundAllowances.requestUnrestrictedBattery(context)
             }
         }
         if (!background) add { shapes ->
@@ -168,7 +182,7 @@ private fun StatusBarSettings() {
     ) { explaining = false }
 }
 
-/** What keeps recording going in the background: the app's system settings. */
+/** What keeps recording going in the background: ColorOS's auto-start, or the app's system settings elsewhere. */
 @Composable
 private fun BackgroundSettings() {
     val context = LocalContext.current
@@ -176,7 +190,12 @@ private fun BackgroundSettings() {
         stringResource(R.string.footprints_background_options),
         stringResource(R.string.footprints_background_note),
         listOf(
-            { shapes ->
+            if (BackgroundAllowances.autoStartSettings) { shapes ->
+                ActionRow(AppIcons.Refresh, stringResource(R.string.footprints_auto_start), shapes,
+                    supporting = stringResource(R.string.footprints_auto_start_path), tag = "footprints_auto_start", external = true) {
+                    BackgroundAllowances.openAutoStart(context)
+                }
+            } else { shapes ->
                 ActionRow(AppIcons.BatteryCharging, stringResource(R.string.footprints_settings), shapes, external = true) {
                     context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
                 }

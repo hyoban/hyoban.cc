@@ -51,6 +51,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.R
+import cc.hyoban.moments.footprints.BackgroundAllowances
 import cc.hyoban.moments.Setting
 import cc.hyoban.moments.footprints.RecordingService
 import cc.hyoban.moments.ui.components.AppColors
@@ -350,9 +351,13 @@ private fun Background(onBack: () -> Unit, onDone: () -> Unit) {
     val context = LocalContext.current
     var background by remember { mutableStateOf(context.hasPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) }
     var notifying by remember { mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled()) }
+    var live by remember { mutableStateOf(BackgroundAllowances.liveUpdates(context)) }
+    var battery by remember { mutableStateOf(BackgroundAllowances.unrestrictedBattery(context)) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         background = context.hasPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         notifying = NotificationManagerCompat.from(context).areNotificationsEnabled()
+        live = BackgroundAllowances.liveUpdates(context)
+        battery = BackgroundAllowances.unrestrictedBattery(context)
     }
     StepPage(stringResource(R.string.onboarding_footprints), onBack, actions = {
         Button(onClick = onDone, modifier = Modifier.fillMaxWidth().testTag("onboarding_done")) { Text(stringResource(R.string.onboarding_done)) }
@@ -386,7 +391,45 @@ private fun Background(onBack: () -> Unit, onDone: () -> Unit) {
                     },
                 ) { Text(stringResource(R.string.onboarding_notifications)) }
             }
+            if (Build.VERSION.SDK_INT >= 36 && notifying) add { shapes ->
+                AllowanceRow(AppIcons.Stream, R.string.footprints_needs_live, R.string.footprints_needs_live_note, live, shapes, "onboarding_live") {
+                    BackgroundAllowances.openLiveUpdates(context)
+                }
+            }
+            add { shapes ->
+                AllowanceRow(AppIcons.BatteryCharging, R.string.footprints_needs_battery, R.string.footprints_needs_battery_note, battery, shapes, "onboarding_battery") {
+                    BackgroundAllowances.requestUnrestrictedBattery(context)
+                }
+            }
+            if (BackgroundAllowances.autoStartSettings) add { shapes ->
+                SegmentedListItem(
+                    onClick = { BackgroundAllowances.openAutoStart(context) },
+                    shapes = shapes,
+                    colors = segmentColors(),
+                    leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
+                    supportingContent = { Text(stringResource(R.string.footprints_auto_start_path)) },
+                    trailingContent = { Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                    modifier = Modifier.testTag("onboarding_auto_start"),
+                ) { Text(stringResource(R.string.footprints_auto_start)) }
+            }
         }
         SegmentedGroup(null, null, rows)
     }
+}
+
+/** A system allowance on the footprints' last step: allowed, it is checked and does nothing; otherwise it opens the system's settings. */
+@Composable
+private fun AllowanceRow(icon: ImageVector, title: Int, off: Int, allowed: Boolean, shapes: cc.hyoban.moments.ui.design.ListItemShapes, tag: String, onOpen: () -> Unit) {
+    SegmentedListItem(
+        onClick = { if (!allowed) onOpen() },
+        shapes = shapes,
+        colors = segmentColors(),
+        leadingContent = { Icon(icon, contentDescription = null) },
+        supportingContent = { Text(stringResource(if (allowed) R.string.onboarding_allowed else off)) },
+        trailingContent = {
+            if (allowed) Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent)
+            else Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp))
+        },
+        modifier = Modifier.testTag(tag),
+    ) { Text(stringResource(title)) }
 }

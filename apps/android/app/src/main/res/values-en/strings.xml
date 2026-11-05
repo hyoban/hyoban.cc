@@ -534,7 +534,7 @@
     <string name="footprints_location_off">Location is off. Recording resumes when it is enabled.</string>
     <string name="footprints_permission_needed">Allow precise location in app settings, then resume recording.</string>
     <string name="footprints_error">Operation failed. Check permissions and available storage, then retry.</string>
-    <string name="footprints_background_note">Background recording uses a persistent notification. Allow location all the time to resume after a reboot. If your phone restricts background activity, allow it in battery settings. Reopen the app after force stopping it.</string>
+    <string name="footprints_background_note">Background recording uses a persistent notification. Allow location all the time to resume after a reboot. Reopen the app after force stopping it.</string>
     <string name="footprints_settings">Open app settings</string>
     <string name="footprints_active_trip">In progress</string>
     <string name="footprints_stats">%1$.2f km %2$s %3$d min of connected track</string>
@@ -1314,6 +1314,12 @@
     <string name="footprints_needs_activity_note">Activity recognition needs it</string>
     <string name="footprints_needs_location">Location</string>
     <string name="footprints_needs_location_note">Only while using the app: stops in the background</string>
+    <string name="footprints_needs_live">Live Updates</string>
+    <string name="footprints_needs_live_note">Off: no recording status in the status bar</string>
+    <string name="footprints_needs_battery">Unrestricted battery</string>
+    <string name="footprints_needs_battery_note">Restricted: the system may stop recording when locked</string>
+    <string name="footprints_auto_start">Auto-start</string>
+    <string name="footprints_auto_start_path">App info › Battery usage › Allow auto launch, to resume after a reboot</string>
     <string name="place_no_location">Location is off</string>
     <string name="place_no_location_note">Drag the map to choose, or allow it in system settings</string>
     <!-- 更新 on 同步与来源, its notification and the sheet before 安装未知应用. -->

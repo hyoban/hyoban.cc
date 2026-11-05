@@ -510,7 +510,7 @@
     <string name="footprints_location_off">系统定位已关闭，开启后继续记录</string>
     <string name="footprints_permission_needed">需要精确位置权限，请在应用设置中允许后恢复记录。</string>
     <string name="footprints_error">操作失败，请检查权限和存储空间后重试。</string>
-    <string name="footprints_background_note">后台记录会显示常驻通知。允许「始终使用位置」可在重启手机后自动恢复；若系统限制后台运行，请在电池设置中允许本应用后台运行。强行停止后需重新打开应用。</string>
+    <string name="footprints_background_note">后台记录会显示常驻通知。允许「始终使用位置」可在重启手机后自动恢复。强行停止后需重新打开应用。</string>
     <string name="footprints_settings">打开应用设置</string>
     <string name="footprints_active_trip">进行中</string>
     <string name="footprints_stats">%1$.2f 公里 %2$s 有效轨迹 %3$d 分钟</string>
@@ -1318,6 +1318,12 @@
     <string name="footprints_needs_activity_note">活动识别增强要用</string>
     <string name="footprints_needs_location">位置</string>
     <string name="footprints_needs_location_note">只在使用 App 时允许：切到后台就会停</string>
+    <string name="footprints_needs_live">实时活动</string>
+    <string name="footprints_needs_live_note">关着：状态栏和流体云不显示记录状态</string>
+    <string name="footprints_needs_battery">电池不受限制</string>
+    <string name="footprints_needs_battery_note">受限制：锁屏后系统可能停掉记录</string>
+    <string name="footprints_auto_start">自启动</string>
+    <string name="footprints_auto_start_path">应用信息 › 耗电管理 › 允许自动启动，重启后才能接着记</string>
     <string name="place_no_location">定位没有打开</string>
     <string name="place_no_location_note">拖动地图选，或在系统设置里允许</string>
     <!-- 更新 on 同步与来源, its notification and the sheet before 安装未知应用. -->
