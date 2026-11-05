@@ -2,7 +2,10 @@ package cc.hyoban.moments.ui.design
 
 import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseOut
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -18,8 +21,9 @@ import dev.chrisbanes.haze.blur.hazeBlur
 // The page passing under what stays over it at the screen's top and bottom, the status bar and
 // the top bar's circles, the tab bar, softened as the system softens a scroll edge: blurred as
 // much as `Blur.edge` at the screen's edge and less and less to none where the edge ends, under
-// a veil of the page's own colour that thins the same way and keeps what is over it clear.
-// Where blur can't be drawn, the veil alone.
+// a veil of the page's own colour that keeps what is over it clear: at the top it holds across the
+// status bar, whose clock and icons a black photo passing under would otherwise take to 2.3:1,
+// and thins below it; at the bottom it thins as the blur does. Where blur can't be drawn, the veil alone.
 
 /**
  * Draws behind this the page under it, which [source] marks with `hazeSource`, softened most at
@@ -46,8 +50,18 @@ fun Modifier.edgeBlur(source: HazeState, top: Boolean, veil: Float = EDGE_VEIL):
     val page = tokens.bg
     val edge = page.copy(alpha = veil)
     val clear = page.copy(alpha = 0f)
+    val status = WindowInsets.statusBars.getTop(LocalDensity.current).toFloat()
     return hazeBlur(HazeInput.Sources(source), style)
-        .background(Brush.verticalGradient(if (top) listOf(edge, clear) else listOf(clear, edge)))
+        .drawWithCache {
+            val brush = if (top) {
+                // Whole across the status bar, then thinning to none where the edge ends.
+                val hold = if (size.height > 0f) (status / size.height).coerceIn(0f, 0.9f) else 0f
+                Brush.verticalGradient(0f to edge, hold to edge, 1f to clear)
+            } else {
+                Brush.verticalGradient(listOf(clear, edge))
+            }
+            onDrawBehind { drawRect(brush) }
+        }
 }
 
 /** How much of the page's colour veils the softened edge where it is strongest. */
