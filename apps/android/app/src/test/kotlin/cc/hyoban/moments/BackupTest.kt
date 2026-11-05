@@ -1,6 +1,7 @@
 package cc.hyoban.moments
 
 import cc.hyoban.moments.backup.BackupArchive
+import cc.hyoban.moments.backup.DavFile
 import cc.hyoban.moments.backup.WebDav
 import java.time.LocalDateTime
 import kotlin.test.Test
@@ -45,10 +46,13 @@ class BackupTest {
             <d:multistatus xmlns:d="DAV:">
               <d:response><d:href>/dav/here/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/></d:resourcetype></d:prop></d:propstat></d:response>
               <d:response><d:href>/dav/here/old/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/></d:resourcetype></d:prop></d:propstat></d:response>
-              <d:response><d:href>/dav/here/here-backup-20260101-030000.zip</d:href><d:propstat><d:prop><d:resourcetype/></d:prop></d:propstat></d:response>
+              <d:response><d:href>/dav/here/here-backup-20260101-030000.zip</d:href><d:propstat><d:prop><d:resourcetype/><d:getcontentlength>2048</d:getcontentlength></d:prop></d:propstat></d:response>
               <D:response xmlns:D="DAV:"><D:href>https://dav.example.com/dav/here/a%20note.txt</D:href><D:propstat><D:prop><D:resourcetype/></D:prop></D:propstat></D:response>
             </d:multistatus>
         """.trimIndent()
-        assertEquals(listOf("here-backup-20260101-030000.zip", "a note.txt"), WebDav.names(xml.byteInputStream(), "/dav/here/"))
+        assertEquals(
+            listOf(DavFile("here-backup-20260101-030000.zip", 2048), DavFile("a note.txt", null)),
+            WebDav.files(xml.byteInputStream(), "/dav/here/"),
+        )
     }
 }
