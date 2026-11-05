@@ -189,8 +189,9 @@ except in 演示模式.
   娱乐, 交通, 生活, 地区), for a known place too: a café, a metro station or a park rather than only
   food, transport or a sight, each with its icon in the list. A place picked from AMap or
   Tencent keeps that service's id as its `source`, so finding it again chooses the place
-  already kept rather than a new one beside it. Their points come in GCJ-02 and are shifted
-  back to WGS 84.
+  already kept rather than a new one beside it. Their points come in GCJ-02 in the mainland,
+  Hong Kong and Macau, and are shifted back to WGS 84 there; in Taiwan and abroad they are kept
+  as given. Where that is, the city outlines say (`gcj-area.json`, from `vp run map:cities`).
 - A place's page edits it (编辑地点) in the same picker, opened on the place as it is with no
   other place offered: the pin moved, the choice renamed or given another kind. It keeps its
   id, so its Moments, check-ins and bills stay at it. One of the phone's changes at once; one

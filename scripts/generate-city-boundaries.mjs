@@ -4,17 +4,29 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { toWgs84 } from '@hyoban/data-spec/division'
+
 // The cities the map's fog of war lights, from Aliyun DataV's GeoAtlas: every
 // prefecture-level city, with Beijing, Tianjin, Shanghai, Chongqing, Hong Kong, Macau
 // and Taiwan each one region, simplified together by mapshaper so neighbours still
 // meet; and the rest of the world as one more region, never lit. The site serves it at
-// /map/cities.json and the Android app ships it as an asset.
+// /map/cities.json and the Android app ships it as an asset. DataV draws them in GCJ-02, as
+// AMap does, but for Taiwan, where AMap keeps WGS-84; they are shifted back to WGS-84,
+// where the map and the places are.
+//
+// The same outlines, all but Taiwan's, joined and coarser, are where AMap and Tencent give
+// GCJ-02, which the Android app reads as a resource to know whose points to shift.
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const output = join(root, 'apps/web/src/data/boundaries/cities.json')
+const areaOutput = join(root, 'apps/android/app/src/main/resources/gcj-area.json')
 const source = 'https://geo.datav.aliyun.com/areas_v3/bound'
 // Provinces taken whole: their own features are districts.
 const WHOLE = new Set(['11', '12', '31', '50', '71', '81', '82'])
+// Taiwan, which DataV, like AMap, draws in WGS-84.
+const TAIWAN = '71'
+// How far apart the GCJ-02 area's points may be, in metres: a border a kilometre off.
+const AREA_INTERVAL = 1000
 const MAPSHAPER = 'mapshaper@0.6.102'
 // The share of the boundaries' points kept.
 const SIMPLIFY = '30%'
@@ -47,11 +59,15 @@ const regions = [
   ...provinces.features.filter(({ properties }) =>
     WHOLE.has(String(properties.adcode).slice(0, 2)),
   ),
-].map(({ geometry, properties }) => ({
-  geometry,
-  properties: { id: String(properties.adcode), name: properties.name },
-  type: 'Feature',
-}))
+].map(({ geometry, properties }) => {
+  const id = String(properties.adcode)
+
+  return {
+    geometry: id.startsWith(TAIWAN) ? geometry : toWgsGeometry(geometry),
+    properties: { id, name: properties.name },
+    type: 'Feature',
+  }
+})
 
 const work = await mkdtemp(join(tmpdir(), 'city-boundaries-'))
 
@@ -96,6 +112,21 @@ try {
     outline,
   )
 
+  const area = join(work, 'gcj-area.json')
+  mapshaper(
+    simplified,
+    '-filter',
+    `!id.startsWith('${TAIWAN}')`,
+    '-dissolve',
+    '-simplify',
+    `interval=${AREA_INTERVAL}`,
+    'keep-shapes',
+    '-o',
+    'format=geojson',
+    'precision=0.001',
+    area,
+  )
+
   const { features } = JSON.parse(await readFile(simplified, 'utf8'))
   // Written as bare geometries, having no properties left to keep: each piece of the
   // world a region of its own, so the fog sweeps across the world as across the cities.
@@ -115,8 +146,24 @@ try {
   await mkdir(join(root, 'apps/web/src/data/boundaries'), { recursive: true })
   await writeFile(output, `${JSON.stringify({ features: centred, type: 'FeatureCollection' })}\n`)
   console.log(`${features.length} cities written to ${output}`)
+
+  const joined = JSON.parse(await readFile(area, 'utf8'))
+  const geometry = joined.geometries?.[0] ?? joined.features[0].geometry
+  await mkdir(join(root, 'apps/android/app/src/main/resources'), { recursive: true })
+  await writeFile(areaOutput, `${JSON.stringify(geometry)}\n`)
+  console.log(`GCJ-02 area written to ${areaOutput}`)
 } finally {
   await rm(work, { force: true, recursive: true })
+}
+
+/** A DataV outline, in GCJ-02, shifted back to WGS-84 point by point. */
+function toWgsGeometry(geometry) {
+  const ring = (points) => points.map(([longitude, latitude]) => toWgs84(longitude, latitude))
+  const polygon = (rings) => rings.map(ring)
+
+  return geometry.type === 'Polygon'
+    ? { ...geometry, coordinates: polygon(geometry.coordinates) }
+    : { ...geometry, coordinates: geometry.coordinates.map(polygon) }
 }
 
 /**

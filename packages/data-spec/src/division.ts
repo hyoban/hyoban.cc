@@ -193,6 +193,28 @@ function distanceTo(geometry: Geometry, [x, y]: readonly [number, number]) {
   return best
 }
 
+/**
+ * A GCJ-02 point back in WGS-84, to well within a metre: `toGcj02` undone by iterating on
+ * it, as GCJ-02 has no closed inverse.
+ */
+export function toWgs84(longitude: number, latitude: number): [number, number] {
+  let guess: [number, number] = [longitude, latitude]
+
+  for (let step = 0; step < 10; step += 1) {
+    const [shiftedLongitude, shiftedLatitude] = toGcj02(guess[0], guess[1])
+    const dLongitude = shiftedLongitude - longitude
+    const dLatitude = shiftedLatitude - latitude
+
+    guess = [guess[0] - dLongitude, guess[1] - dLatitude]
+
+    if (Math.abs(dLongitude) < 1e-9 && Math.abs(dLatitude) < 1e-9) {
+      break
+    }
+  }
+
+  return guess
+}
+
 /** The standard WGS-84 to GCJ-02 shift, applied everywhere: only China's outlines are read. */
 export function toGcj02(longitude: number, latitude: number): [number, number] {
   const a = 6378245
