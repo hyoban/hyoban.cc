@@ -62,7 +62,7 @@ class Settings(context: Context) {
     /** The owner's token, with which the app publishes, changes and deletes the site's Moments. */
     val apiToken = Token(File(context.noBackupFilesDir, "api-token"))
 
-    /** The origin the published photos and videos are served from; none until set. */
+    /** The origin the published photos and videos are served from, as the API last said it; none until it has. */
     val assetOrigin = Setting(prefs, "asset_origin", "")
 
     /** Whether the app reads from and publishes to an API: it has one, and the token every request needs. */

@@ -71,7 +71,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 // Where the app reads from and what lets it write, a page under 我: rows grouped on one surface
 // under a small caption, a note under the group, and a tap on a row opening a dialog to change it.
 
-/** 同步与来源: the API, its token and reading from it again; where the photos come from; the map's styles. */
+/** 同步与来源: the API, its token and reading from it again; the map's styles. */
 @Composable
 fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
     val settings = container.settings
@@ -84,7 +84,6 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
     var restoring by rememberSaveable { mutableStateOf(false) }
     val rows = listOf(
         Row(settings.apiUrl, R.string.setting_api_url, AppIcons.Cloud) { container.changeApi(it) },
-        Row(settings.assetOrigin, R.string.setting_asset_origin, AppIcons.Image) { settings.assetOrigin.set(it) },
         Row(settings.mapStyleLight, R.string.setting_map_style_light, AppIcons.Sun) { settings.mapStyleLight.set(it) },
         Row(settings.mapStyleDark, R.string.setting_map_style_dark, AppIcons.Moon) { settings.mapStyleDark.set(it) },
     )

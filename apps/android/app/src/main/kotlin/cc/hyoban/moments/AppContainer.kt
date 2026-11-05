@@ -212,6 +212,7 @@ class AppContainer(context: Context) {
         val before = settings.apiUrl.value
         settings.apiUrl.set(url)
         if (settings.apiUrl.value == before) return
+        settings.assetOrigin.set("")
         scope.launch {
             repository.clear()
             routes.clear()
@@ -232,7 +233,10 @@ class AppContainer(context: Context) {
             repository.clear()
             routes.clear()
             repository.refresh()
-                .onSuccess { revision -> routes.refresh(revision) }
+                .onSuccess { revision ->
+                    readAssetOrigin()
+                    routes.refresh(revision)
+                }
                 .onFailure {
                     settings.apiUrl.set(before.first)
                     settings.apiToken.set(before.second)
@@ -480,12 +484,24 @@ class AppContainer(context: Context) {
         scope.launch { repository.revertPlace(id) }
     }
 
+    /** Where the API says its photos and videos are served from; kept as it was when it can't be asked or doesn't say. */
+    private suspend fun readAssetOrigin() {
+        runCatching { api.site() }
+            .onSuccess { site -> site.assets?.let(settings.assetOrigin::set) }
+            .onFailure { Log.w("Moments", "Couldn't read where the photos are served from", it) }
+    }
+
     /** What the widgets were last drawn from, and on which day, so a refresh that brought nothing new leaves them be. */
     private var widgetsDrawn: Triple<Any, Any, LocalDate>? = null
 
     private suspend fun refreshAll() {
         // Without an API and its token the app is the phone's alone, and asks nothing of the network.
-        if (settings.connected) repository.refresh().onSuccess { revision -> routes.refresh(revision) }
+        if (settings.connected) {
+            repository.refresh().onSuccess { revision ->
+                readAssetOrigin()
+                routes.refresh(revision)
+            }
+        }
         // The widgets show what the sync brought, or what was on the phone if it failed; the
         // same Moments and trips on the same day draw them the same, so they aren't again.
         val drawn = Triple(repository.moments.value, repository.trips.value, LocalDate.now())

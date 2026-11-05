@@ -1,4 +1,4 @@
-import { SITE_HOST } from './site.ts'
+import { IMAGE_ORIGIN, SITE_HOST } from './site.ts'
 import type { Place } from '@hyoban/data-spec'
 import { createDataVChildren, locateDivision } from '@hyoban/data-spec/division'
 import { authorize } from './auth.ts'
@@ -91,7 +91,7 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
 
   if (version === undefined) {
     return method === 'GET'
-      ? json({ name: SITE_HOST, revision: await readRevision(db) })
+      ? json({ name: SITE_HOST, revision: await readRevision(db), assets: IMAGE_ORIGIN })
       : notAllowed('GET')
   }
 

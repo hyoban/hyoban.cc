@@ -14,7 +14,7 @@ is public itself, as `getPublicEntry` does.
 
 | Path                                          | Returns                                                                                                                 |
 | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `GET /`                                       | `{ name, revision }`                                                                                                    |
+| `GET /`                                       | `{ name, revision, assets }`, `assets` the origin the photos and videos are served from                                 |
 | `GET /v2/rows?since=&limit=`                  | every row of every table, deleted ones too, for a copy of D1 row for row                                                |
 | `GET /v2/entries/:uid`                        | one entry                                                                                                               |
 | `GET /v2/collections`, `/v2/collections/:key` | `{ revision, collections }` by start date, or one by its slug (else its uid)                                            |
