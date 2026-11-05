@@ -119,7 +119,9 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
 
 The pages lead to each other wherever they can: a place or a trip to the map, a day's pill
 to the day, a Moment's menu to its place, trip and day. A day's page opens on that day's
-footprints on a map, its bills and charges read down by their times, and today's says 还在记录
+footprints on a map, its Moments and check-ins marked on it by their place's kind and its bills by
+their category, as icons without words (each at its place, a bill at its Moment's or the check-in it was paid in, else where the
+footprints were within ten minutes), its bills and charges read down by their times, and today's says 还在记录
 while the footprints are recording. A trip's days and each day's Moments read from earliest
 to latest. A trip's page has 回放旅程, which plays the trip back as the site's player does
 (`packages/trip-map/src/player`): the route never still, a vehicle at its tip, a card per
