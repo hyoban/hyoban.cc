@@ -528,7 +528,7 @@
     <string name="footprints_export_all_raw">导出全部原始采样 GPX</string>
     <string name="footprints_export_all_raw_note">所有日期的全部采样，可作为完整备份再导入。</string>
     <string name="footprints_delete">删除当前轨迹</string>
-    <string name="footprints_delete_note">关闭日常记录并结束单次行程后可删除。建议先导出备份；卸载应用会丢失本机轨迹。</string>
+    <string name="footprints_delete_note">记录时，今天和进行中的单次行程不能删除。建议先导出备份；卸载应用会丢失本机轨迹。</string>
     <string name="footprints_delete_confirm">删除后无法恢复。轨迹点由日期和单次行程共用，删除也会移除其他视图中的相同轨迹点。</string>
     <string name="footprints_cancel">取消</string>
     <string name="footprints_background_options">后台记录</string>

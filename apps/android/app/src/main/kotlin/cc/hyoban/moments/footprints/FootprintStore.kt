@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
 import java.io.Writer
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.util.UUID
 
@@ -339,9 +340,25 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         }
     }
 
+    /**
+     * While recording, only what recording no longer writes to may go: no sample of [today]
+     * and none of the running trip, nor the running trip itself.
+     */
+    @Synchronized fun deletable(selection: TrackSelection, today: String = LocalDate.now().toString()): Boolean {
+        val state = state()
+        if (!state.requested) return true
+        if (selection.session != null && selection.session == state.session) return false
+        val (where, args) = where(selection)
+        val (written, writtenArgs) = state.session?.let { "(day=? OR session=?)" to arrayOf(today, it) } ?: ("day=?" to arrayOf(today))
+        return readableDatabase.rawQuery(
+            "SELECT EXISTS(SELECT 1 FROM points WHERE ($where) AND $written)", args + writtenArgs,
+        ).use { it.moveToFirst(); it.getInt(0) == 0 }
+    }
+
     /** Samples are shared: deletion of a day or trip also removes those samples from other views. */
     @Synchronized fun delete(selection: TrackSelection) {
-        check(!state().requested) { "Stop recording before deleting tracks" }
+        check(deletable(selection)) { "Recording still writes to these tracks" }
+        val running = state().session
         val (where, args) = where(selection)
         val db = writableDatabase
         db.transaction {
@@ -355,7 +372,8 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
             }
             db.delete("points", where, args)
             if (selection.session != null) db.delete("sessions", "id=?", arrayOf(selection.session))
-            db.execSQL("DELETE FROM sessions WHERE id NOT IN (SELECT session FROM points WHERE session IS NOT NULL)")
+            // A running trip may have no sample yet; it stays.
+            db.execSQL("DELETE FROM sessions WHERE id<>? AND id NOT IN (SELECT session FROM points WHERE session IS NOT NULL)", arrayOf<Any>(running ?: ""))
         }
         _revision.value++
     }

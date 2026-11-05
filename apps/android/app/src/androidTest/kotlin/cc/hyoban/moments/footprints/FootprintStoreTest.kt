@@ -109,4 +109,31 @@ class FootprintStoreTest {
         assertEquals(0, summary.getValue("raw_samples").jsonPrimitive.int)
         assertEquals(JsonNull, summary.getValue("recorded_day"))
     }
+
+    @Test fun whileRecordingOnlyPastDaysOutsideTheRunningTripCanBeDeleted() {
+        val store = open()
+        val db = store.writableDatabase
+        fun point(time: Long, day: String, session: String?) = db.execSQL(
+            "INSERT INTO points (time,day,lat,lon,accuracy,segment,session) VALUES (?, ?, 31, 121, 10, 'test', ?)", arrayOf<Any?>(time, day, session))
+        point(1_800_000_000_000L, "2026-10-24", null)
+        store.command("daily_on")
+        store.command("start_trip")
+        val trip = store.state().session!!
+        point(1_800_090_000_000L, "2026-10-25", trip)
+        point(1_800_100_000_000L, "2026-10-26", null)
+        val today = "2026-10-26"
+        assertTrue(store.deletable(TrackSelection(day = "2026-10-24"), today))
+        assertFalse(store.deletable(TrackSelection(day = "2026-10-25"), today))
+        assertFalse(store.deletable(TrackSelection(day = today), today))
+        assertFalse(store.deletable(TrackSelection(session = trip), today))
+        store.command("end_trip")
+        assertTrue(store.deletable(TrackSelection(day = "2026-10-25"), today))
+        store.command("start_trip")
+        val empty = store.state().session!!
+        store.delete(TrackSelection(day = "2026-10-24"))
+        assertEquals(2, count(store))
+        // The new trip has no sample yet and keeps going.
+        assertEquals(1, db.rawQuery("SELECT count(*) FROM sessions WHERE id=?", arrayOf(empty)).use { it.moveToFirst(); it.getInt(0) })
+        assertEquals(empty, store.state().session)
+    }
 }

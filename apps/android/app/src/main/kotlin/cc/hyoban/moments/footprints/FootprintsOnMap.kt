@@ -68,6 +68,7 @@ private data class TrackView(
     val stats: TrackStats = TrackStats(0.0, 0),
     val parts: List<TrackPart> = emptyList(),
     val drawing: FootprintDrawing = FootprintDrawing(),
+    val deletable: Boolean = false,
 )
 
 /** Controls and selection live with the map, even while the bottom panel is closed. */
@@ -128,7 +129,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             view = withContext(Dispatchers.IO) {
                 val points = store.points(selection)
                 val parts = trackParts(points, if (points.isEmpty()) emptyList() else store.activities(points.first().time - ACTIVITY_LOOKBACK_MS, points.last().time))
-                TrackView(store.state(), store.history(), points, trackStats(points), parts, footprintDrawing(points, parts))
+                TrackView(store.state(), store.history(), points, trackStats(points), parts, footprintDrawing(points, parts), store.deletable(selection))
             }
             loaded = true
         } catch (e: CancellationException) { throw e } catch (_: Exception) {
@@ -367,7 +368,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                         { shapes ->
                             ActionRow(AppIcons.Trash, stringResource(R.string.footprints_delete), shapes,
                                 supporting = stringResource(R.string.footprints_delete_note),
-                                enabled = loaded && !busy && !state.requested && (selection.day in view.history.days || session != null)) {
+                                enabled = loaded && !busy && view.deletable && (selection.day in view.history.days || session != null)) {
                                 deleting = selection
                             }
                         },
