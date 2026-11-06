@@ -9,7 +9,7 @@ and the pieces around it that record and serve them.
 ├─ apps/web/               the Astro site (@hyoban/web; its DESIGN.md describes how it looks)
 ├─ data/                   the car's records, and a local copy of the API's (docs/data.md)
 ├─ apps/api/               Cloudflare Worker serving the records from D1 (@hyoban/api)
-├─ apps/android/           这里, the Android app that reads and writes Moments (Gradle)
+├─ apps/android/           Here, the Android app that reads and writes Moments (Gradle)
 ├─ packages/data-spec/     the Zod schemas every side shares (@hyoban/data-spec)
 ├─ packages/trip-map/      the map page and trip player (@hyoban/trip-map)
 ├─ packages/drawer/        the calendar's and map's drawers (@hyoban/drawer)
