@@ -109,6 +109,8 @@ export function createPlaceMarkers({
   const clusterMarkers = new Map<number, ClusterMarkerEntry>()
   // The year or month picked: only the places with Moments then are on the map.
   let period: Period | undefined
+  // The places of the trip whose sidebar is open: the only ones left on the map then.
+  let tripPlaces: ReadonlySet<string> | undefined
   // Focus put back on a marker as the drawer closes shouldn't pop its name up.
   let quietFocus = false
   // The shown places, gathered at each zoom.
@@ -131,11 +133,23 @@ export function createPlaceMarkers({
     }
 
     if (shown) {
-      entry.marker.addTo(map)
+      placeOnMap(map, entry)
     } else {
       entry.popup.remove()
       entry.marker.remove()
     }
+  }
+
+  /**
+   * Adds a dot to the map already where it belongs: Mapbox moves it there only on the
+   * map's next frame, which during a quick drag leaves a new one in the map's corner, or
+   * one shown again where it last was, for a moment.
+   */
+  function placeOnMap(map: mapboxgl.Map, entry: MarkerEntry | ClusterMarkerEntry) {
+    const point = map.project(entry.coordinates).round()
+
+    entry.button.style.transform = `translate(${point.x}px, ${point.y}px) translate(-50%, -50%) translate(${entry.nudge.x}px, ${entry.nudge.y}px)`
+    entry.marker.addTo(map)
   }
 
   /** Where a dot sits once pushed aside, for its name to hang over. */
@@ -368,18 +382,28 @@ export function createPlaceMarkers({
   }
 
   function isPlaceShown(place: PlaceMarker) {
-    return !period || place.months.some((month) => isInPeriod(month, period!))
+    return (
+      (!tripPlaces || tripPlaces.has(place.id)) &&
+      (!period || place.months.some((month) => isInPeriod(month, period!)))
+    )
   }
 
-  /** The places the picked period leaves on the map; every one without a period. */
+  /** The places the picked period and trip leave on the map; every one without them. */
   function getShownPlaces() {
-    return period ? places.filter(isPlaceShown) : places
+    return period || tripPlaces ? places.filter(isPlaceShown) : places
   }
 
-  /** Whether the picked period leaves this place on the map. */
+  /** Whether the picked period and trip leave this place on the map. */
   function isShown(id: string) {
     const place = placesById.get(id)
     return place !== undefined && isPlaceShown(place)
+  }
+
+  function refilter() {
+    index = createIndex()
+    // The clusters are numbered afresh with the new places.
+    clearClusterMarkers()
+    sync()
   }
 
   /** Gathers the shown places at every zoom, as Mapbox's clustered sources do. */
@@ -656,14 +680,17 @@ export function createPlaceMarkers({
       button,
       coordinates: cluster.coordinates,
       dot,
-      marker: new mapboxgl.Marker({ anchor: 'center', element: button })
-        .setLngLat(cluster.coordinates)
-        .addTo(map),
+      marker: new mapboxgl.Marker({ anchor: 'center', element: button }).setLngLat(
+        cluster.coordinates,
+      ),
       members,
       nudge: { x: 0, y: 0 },
       popup,
       radius: DOT_RADIUS.cluster,
     }
+
+    placeOnMap(map, entry)
+
     const showPopup = () =>
       popup.setLngLat(getNudgedLngLat(map, entry.coordinates, entry.nudge)).addTo(map)
     const hidePopup = () => popup.remove()
@@ -799,10 +826,16 @@ export function createPlaceMarkers({
      */
     setPeriod(next: Period | undefined) {
       period = next
-      index = createIndex()
-      // The clusters are numbered afresh with the new places.
-      clearClusterMarkers()
-      sync()
+      refilter()
+    },
+    /** Leaves only a trip's own places on the map, or every place again. */
+    setTripPlaces(next: readonly string[] | undefined) {
+      if (!next && !tripPlaces) {
+        return
+      }
+
+      tripPlaces = next && new Set(next)
+      refilter()
     },
   }
 }
