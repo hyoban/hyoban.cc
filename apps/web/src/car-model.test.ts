@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vite-plus/test'
-import { getCarDays } from './car-model.ts'
+import { getCarDays, sumCarDays } from './car-model.ts'
 
 const level = (meters: number) => (meters === 0 ? 0 : meters < 50_000 ? 1 : 4)
 
@@ -39,5 +39,19 @@ describe('getCarDays', () => {
         level,
       )?.levels,
     ).toBe('14')
+  })
+})
+
+describe('sumCarDays', () => {
+  test('counts a day as driven from five kilometres on', () => {
+    const sums = sumCarDays([
+      [3_000, 0, 0],
+      [5_000, 0, 0],
+      [0, 0, 0],
+      [42_000, 0, 0],
+    ])
+
+    expect(sums.map(({ driven }) => driven)).toEqual([0, 1, 1, 2])
+    expect(sums.at(-1)?.meters).toBe(50_000)
   })
 })

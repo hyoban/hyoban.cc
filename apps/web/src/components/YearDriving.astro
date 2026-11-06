@@ -1,7 +1,7 @@
 ---
 import CarModel from '@/components/CarModel.astro'
 import YearClock from '@/components/YearClock.astro'
-import { formatCarDate, getCarDays } from '@/car-model'
+import { formatCarDate, getCarDays, isDrivenDay } from '@/car-model'
 import { formatKilometers, getCarSummary } from '@/car'
 import { DELIVERED_ON, getDistanceLevel, getYearWeeks, type Outing } from '@/data/vehicle'
 import {
@@ -44,7 +44,7 @@ const heatYears =
     : [year]
 const days = [...car.days].filter(([date]) => inYear(date))
 const distance = days.reduce((total, [, meters]) => total + meters, 0)
-const drivenDays = days.filter(([, meters]) => meters > 0).length
+const drivenDays = days.filter(([, meters]) => isDrivenDay(meters)).length
 const charges = car.charges.filter((charge) => inYear(charge.startedAt))
 const fast = charges.filter((charge) => charge.type === 'DC').length
 const chargedKwh = charges.reduce((total, charge) => total + charge.energyWh, 0) / 1000
@@ -95,7 +95,7 @@ const ownedDays = Math.round((Date.parse(ownedUntil) - Date.parse(DELIVERED_ON))
 const ownedDriving = [...car.days].filter(([date]) => date <= ownedUntil)
 const ownedMeters = ownedDriving.reduce((total, [, meters]) => total + meters, 0)
 // Shared out over the days it was driven, not every day it was owned.
-const ownedDrivenDays = ownedDriving.filter(([, meters]) => meters > 0).length
+const ownedDrivenDays = ownedDriving.filter(([, meters]) => isDrivenDay(meters)).length
 const ownership: Tile[] | false = ownedCost.total > 0 && [
   { label: `提车 ${formatNumber(ownedDays)} 天`, value: formatYuan(ownedCost.total), note: '含购车' },
   ...(ownedDrivenDays > 0

@@ -26,11 +26,17 @@ describe('findOutings', () => {
 
   test('takes a trip’s dates and every run it overlaps', () => {
     const trip = { end: '2026-05-05', id: 'may-day', start: '2026-05-01', title: '五一' }
-    const days = [day('2026-04-30', 50), day('2026-05-01', 500), day('2026-05-05', 160)]
+    const days = [
+      day('2026-04-30', 50),
+      day('2026-05-01', 500),
+      day('2026-05-03', 4),
+      day('2026-05-05', 160),
+    ]
     const [outing] = findOutings(days, [], [trip], [])
 
+    // The 4 km day adds to the distance but isn't a day driven.
     expect(outing).toMatchObject({
-      distanceMeters: 660_000,
+      distanceMeters: 664_000,
       drivenDays: 2,
       end: '2026-05-05',
       start: '2026-05-01',
