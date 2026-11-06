@@ -1,12 +1,13 @@
 ---
 import { getPlaceShard, PLACE_SHARDS } from '@hyoban/trip-map'
+import CheckinEntry from '@/components/CheckinEntry.astro'
 import MomentEntry from '@/components/MomentEntry.astro'
-import { getMappedLocationGroups, getMoments } from '@/moments'
+import { getMappedLocationGroups, getMoments, isMapCheckin } from '@/moments'
 
 // The drawer content for the map's places, a few to a file rather than a file each: a
 // `<template>` per place, in the file getPlaceShard puts it in, which the map fetches
 // the first time one of them opens, so the map page doesn't carry every place's
-// Moments up front.
+// Moments up front. Its check-ins sit among them, a line each.
 export const partial = true
 
 export async function getStaticPaths() {
@@ -24,9 +25,9 @@ const { groups } = Astro.props
 {groups.map(group => (
   <template data-trip-map-place={group.id}>
     <div class="trip-map-drawer__moments">
-      {group.moments.map(moment => (
-        <MomentEntry date="year" exceptLocation={group.id} moment={moment} />
-      ))}
+      {group.moments.map(record => isMapCheckin(record)
+        ? <CheckinEntry checkin={record} />
+        : <MomentEntry date="year" exceptLocation={group.id} moment={record} />)}
     </div>
   </template>
 ))}

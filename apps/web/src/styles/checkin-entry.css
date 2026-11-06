@@ -1,0 +1,41 @@
+/* A check-in's line in a map place's drawer (CheckinEntry.astro). The drawer comes in a
+   partial page, which carries no styles of its own, so the map page imports these. */
+
+.checkin-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-block: 1rem;
+  color: var(--color-tx-2);
+  font-size: 0.75rem;
+  line-height: 1rem;
+
+  & .i-lucide-map-pin-check-inside {
+    flex-shrink: 0;
+    color: var(--color-tx-3);
+    font-size: 0.875rem;
+  }
+
+  & time {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    white-space: nowrap;
+  }
+}
+
+.checkin-entry__venue {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--color-tx);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkin-entry__alias {
+  margin-left: 0.5em;
+  color: var(--color-tx-3);
+}
+
+:is(.moment-entry, .checkin-entry) + :is(.moment-entry, .checkin-entry) {
+  border-top: 1px solid var(--color-border);
+}
