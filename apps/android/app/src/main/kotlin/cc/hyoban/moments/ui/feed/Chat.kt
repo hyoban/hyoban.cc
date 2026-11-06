@@ -254,10 +254,12 @@ fun RecordsBubble(
     if (shown.isEmpty()) return
     val single = shown.size == 1
     val openThing = LocalThingNav.current
+    val openCheckin = LocalCheckinNav.current
     val open: (() -> Unit)? = when (val only = shown.singleOrNull()) {
         is RecordLine.Bill -> ({ onBill(only.txn.id) })
         is RecordLine.ThingLine -> openThing?.let { { it(only.thing.uid) } }
-        is RecordLine.Track, is RecordLine.ChargeLine, is RecordLine.CheckinLine -> onDay
+        is RecordLine.CheckinLine -> openCheckin?.let { { it(only.checkin.uid) } } ?: onDay
+        is RecordLine.Track, is RecordLine.ChargeLine -> onDay
         null -> onDay
     }
     val large = isLargeFont()

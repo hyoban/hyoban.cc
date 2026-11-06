@@ -463,6 +463,12 @@
     <string name="change_food">food</string>
     <string name="note_change_recreates">The site no longer has this Moment. Publishing puts it back as shown below.</string>
     <string name="note_change_nothing">Same as on the site</string>
+    <string name="change_none">None</string>
+    <string name="change_yes">Yes</string>
+    <string name="change_no">No</string>
+    <string name="change_repeat">Repeats</string>
+    <string name="change_count">Counts</string>
+    <string name="change_link">Link</string>
     <string name="label_photo_added">Photo added</string>
     <string name="label_photo_utility">Not used as a cover</string>
     <string name="label_photo_removed">Photo removed</string>
@@ -969,6 +975,7 @@
     <string name="trip_delete">Delete trip</string>
     <string name="trip_delete_confirm">Delete this trip? Its Moments stay.</string>
     <string name="filter_moments">Moments</string>
+    <string name="filter_checkins">Check-ins</string>
     <string name="part_private">%1$s private</string>
     <string name="trip_edit_members">What it holds</string>
     <string name="trip_edit_around">The days either side</string>
@@ -1171,6 +1178,7 @@
     <string name="occasion_first_label">The first day\'s name</string>
     <string name="occasion_note">Note</string>
     <string name="occasion_public_note">Marked on the site\'s calendar</string>
+    <string name="checkin_public_note">Marked on the site\'s map</string>
     <string name="occasion_today">Today</string>
     <string name="occasion_in_days">In %d days</string>
     <string name="occasion_days_ago">%d days ago</string>
@@ -1196,13 +1204,13 @@
     <string name="import_none">Every item is turned off, so there is nothing to import into. Turn on check-ins, the ledger or footprints under Items and visibility, then import.</string>
     <string name="swarm_import">Import from Swarm</string>
     <string name="swarm_import_note">The .zip Swarm exports</string>
-    <string name="swarm_import_explain">Check-ins come in private: those with words or photos as Moments, the rest as check-ins alone, each venue a place. Importing the same export again adds only what is new.</string>
+    <string name="swarm_import_explain">Check-ins with words or photos come in as private Moments, the rest as public check-ins alone, each venue a place. Importing the same export again adds only what is new.</string>
     <string name="swarm_reading">Reading…</string>
     <string name="swarm_copying">Copying photos %1$d / %2$d</string>
     <string name="swarm_import_summary">%1$d check-ins: %2$d as Moments, %3$d as check-ins alone, %5$d new places, %4$d photos copied.</string>
     <string name="swarm_import_known">%d of them were imported before and weren\'t added again.</string>
-    <string name="swarm_import_private">All private; review them in the changes before publishing.</string>
-    <string name="swarm_import_private_alone">All private.</string>
+    <string name="swarm_import_private">The Moments are private and the check-ins public; review them in the changes before publishing.</string>
+    <string name="swarm_import_private_alone">The Moments are private and the check-ins public.</string>
     <string name="swarm_import_failed">Can\'t read this file. Choose the .zip Swarm exports.</string>
     <string name="setting_webdav">WebDAV</string>
     <string name="webdav_directory">Directory address</string>

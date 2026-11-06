@@ -439,6 +439,12 @@
     <string name="change_food">美食</string>
     <string name="note_change_recreates">网站上已经没有这个时刻了。发布后会按下面的样子重新放上去。</string>
     <string name="note_change_nothing">内容和网站上的一样</string>
+    <string name="change_none">无</string>
+    <string name="change_yes">是</string>
+    <string name="change_no">否</string>
+    <string name="change_repeat">重复</string>
+    <string name="change_count">计数</string>
+    <string name="change_link">链接</string>
     <string name="label_photo_added">新加的照片</string>
     <string name="label_photo_utility">不用作封面</string>
     <string name="label_photo_removed">去掉的照片</string>
@@ -928,6 +934,7 @@
     <string name="trip_delete">删除旅程</string>
     <string name="trip_delete_confirm">删除这段旅程？里面的时刻不受影响。</string>
     <string name="filter_moments">时刻</string>
+    <string name="filter_checkins">签到</string>
     <string name="part_private">%1$s私有</string>
     <string name="trip_edit_members">包含的记录</string>
     <string name="trip_edit_around">前后两天</string>
@@ -1127,6 +1134,7 @@
     <string name="occasion_first_label">第一天叫</string>
     <string name="occasion_note">备注</string>
     <string name="occasion_public_note">标在网站的日历上</string>
+    <string name="checkin_public_note">标在网站的地图上</string>
     <string name="occasion_today">今天</string>
     <string name="occasion_in_days">还有 %d 天</string>
     <string name="occasion_days_ago">%d 天前</string>
@@ -1199,13 +1207,13 @@
     <string name="import_none">记录项都关掉了，没有可导入的。在「记录项与公开」里打开签到、账本或足迹，再来导入。</string>
     <string name="swarm_import">从 Swarm 导入</string>
     <string name="swarm_import_note">Swarm 导出的 .zip</string>
-    <string name="swarm_import_explain">签到都导入成私有的：写了字或带照片的成为时刻，其余只记下签到，每家店成为一个地点。再导入同一份导出，只添上新的。</string>
+    <string name="swarm_import_explain">写了字或带照片的签到成为私有的时刻，其余只记下签到，公开；每家店成为一个地点。再导入同一份导出，只添上新的。</string>
     <string name="swarm_reading">正在读取…</string>
     <string name="swarm_copying">正在复制照片 %1$d / %2$d</string>
     <string name="swarm_import_summary">%1$d 次签到：%2$d 条成为时刻，%3$d 次只记下签到，新建了 %5$d 个地点，复制了 %4$d 张照片。</string>
     <string name="swarm_import_known">其中 %d 次之前已经导入过，没有再添。</string>
-    <string name="swarm_import_private">都是私有的，在发布更改里看过再发布。</string>
-    <string name="swarm_import_private_alone">都是私有的。</string>
+    <string name="swarm_import_private">时刻是私有的，签到是公开的，在发布更改里看过再发布。</string>
+    <string name="swarm_import_private_alone">时刻是私有的，签到是公开的。</string>
     <string name="swarm_import_failed">无法读取这个文件，请选择 Swarm 导出的 .zip</string>
     <string name="setting_webdav">WebDAV</string>
     <string name="webdav_directory">目录地址</string>

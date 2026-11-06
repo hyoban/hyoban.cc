@@ -5,13 +5,13 @@ import android.util.Log
 import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.local.stamp
 import cc.hyoban.moments.data.spec.Entries
+import cc.hyoban.moments.data.spec.Visibility
 import cc.hyoban.moments.data.spec.LocalMedia
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.Spec
-import cc.hyoban.moments.data.spec.Visibility
 import cc.hyoban.moments.data.store.MomentsRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +24,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
@@ -42,8 +43,8 @@ import java.util.zip.ZipInputStream
 // Swarm's (Foursquare's) data export, a zip of JSON files and a `pix/` of the photos: the
 // check-ins (`checkins<n>.json`), the photos of them (`photos<n>.json`), and more that isn't
 // read (the account, friends, devices, the visits it noticed, comments that name no check-in).
-// Each check-in comes in private: one with words or photos as a Moment, the rest as an entry
-// with its check-in alone. Its point is Swarm's, WGS-84 as the spec's are, and its uids are
+// One with words or photos comes in as a private Moment; the rest as an entry with its check-in
+// alone, public unless Swarm kept it private, and kept off the site from its sheet. Its point is Swarm's, WGS-84 as the spec's are, and its uids are
 // made from its time and Swarm's id, so importing the export again adds only what is new.
 
 /** A photo of a check-in, by its file under `pix/`. */
@@ -64,6 +65,8 @@ data class SwarmCheckin(
     /** The words written with it, as written. */
     val shout: String?,
     val photos: List<SwarmPhoto>,
+    /** Kept to oneself in Swarm, and so kept off the site here too. */
+    val private: Boolean = false,
 ) {
     val uid: String get() = Entries.stableUlid(at, "swarm:$id")
 
@@ -121,6 +124,7 @@ object Swarm {
                 venueId = venue.text("id"),
                 shout = checkin.text("shout"),
                 photos = photos[id].orEmpty().sortedBy { it.at }.map { it.copy(at = local(it.at, offset)) },
+                private = (checkin["private"] as? JsonPrimitive)?.booleanOrNull == true || checkin.text("visibility") == "private",
             )
         }.distinctBy { it.id }.sortedBy { it.at }
     }
@@ -252,14 +256,14 @@ object Swarm {
         )
     }
 
-    /** A check-in with neither words nor photos as a private entry of its check-in alone, at its venue's [place]. */
+    /** A check-in with neither words nor photos as an entry of its check-in alone, at its venue's [place]: public, unless Swarm kept it private. */
     fun entry(checkin: SwarmCheckin, now: String, place: String?): JsonObject = buildJsonObject {
         put("uid", checkin.uid)
         put("at", checkin.at)
         put("point", point(checkin))
         place?.let { put("place", it) }
         put("parts", buildJsonObject { put("checkin", part(checkin)) })
-        put("visibility", Visibility.PRIVATE.value)
+        if (checkin.private) put("visibility", Visibility.PRIVATE.value)
         put("createdAt", now)
         put("updatedAt", now)
     }

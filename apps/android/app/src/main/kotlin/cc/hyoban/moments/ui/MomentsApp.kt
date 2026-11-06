@@ -481,6 +481,9 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
             }
         }
     }
+    // A check-in's record, on the timeline, a day or a place, opens its sheet over the page.
+    var openCheckin by rememberSaveable { mutableStateOf<String?>(null) }
+    val checkinNav: (String) -> Unit = remember { { uid -> openCheckin = uid } }
     val ledgerNav = remember(navController) {
         LedgerNav(
             bill = { navController.goTo(LedgerBill(it)) },
@@ -656,6 +659,7 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                         LocalNavController provides navController,
                         LocalLedgerNav provides ledgerNav,
                         cc.hyoban.moments.ui.feed.LocalThingNav provides thingNav,
+                        cc.hyoban.moments.ui.feed.LocalCheckinNav provides checkinNav,
                     ) {
                         // The pages, made once, and a link's page put over its tab before the first
                         // frame, as the NavHost below would set them up: the app opens on it
@@ -902,6 +906,9 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                     onBack = closeViewer,
                                 )
                             }
+                        }
+                        openCheckin?.let { uid ->
+                            cc.hyoban.moments.ui.feed.CheckinSheet(container, uid) { openCheckin = null }
                         }
                         if (onboarding) cc.hyoban.moments.ui.onboarding.OnboardingScreen(container) {
                             container.settings.onboarded = true
