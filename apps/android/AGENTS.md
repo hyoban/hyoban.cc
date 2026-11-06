@@ -82,7 +82,13 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   what they are, not by Compose or Material), and record only where Android implements it.
   Desktops (Mac, the web on a computer) keep its look but take a desktop's structure, a sidebar,
   toolbars, hover, context menus and shortcuts, as the page canvas's desktop boards (D, beside each
-  page) and the design system's Desktop cards draw them. Its tokens come from `packages/design-tokens`, the one
+  page) and the design system's Desktop cards draw them. Tablets (iPad, Android tablets) stay touch,
+  sized by the window, not the device: wider than 1024 a touch sidebar and list beside detail, 600–1023
+  the sidebar as a rail and one pane, narrower the phone's layout; a side panel or a centred sheet in
+  place of a bottom sheet, as the canvas's Pad boards (TV portrait, T landscape) and the design
+  system's Pad cards draw them. Each canvas row reads phone portrait, phone landscape (H), Pad
+  portrait, Pad landscape, desktop (D).
+  Its tokens come from `packages/design-tokens`, the one
   source for every platform: `vp run design:tokens` at the root generates `ui/theme/Tokens.kt`
   (colours, spacing, corners, shadows, opacities, type, springs), which is never edited by
   hand; change `tokens.json` there, regenerate, and publish it to the artifact. Text takes
