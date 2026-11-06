@@ -51,8 +51,6 @@ android {
         // The map's styles in light and dark, what the app draws until its settings say otherwise.
         // There is no API or media origin of the build's own: the app works on the phone alone
         // until one is set under 同步与来源.
-        buildConfigField("String", "MAP_STYLE_LIGHT", "\"https://tiles.openfreemap.org/styles/positron\"")
-        buildConfigField("String", "MAP_STYLE_DARK", "\"https://tiles.openfreemap.org/styles/dark\"")
         // Where places are searched for by name and found around a pin: Photon, over the
         // same OpenStreetMap data the map draws.
         buildConfigField("String", "PLACE_SEARCH_URL", "\"https://photon.komoot.io\"")

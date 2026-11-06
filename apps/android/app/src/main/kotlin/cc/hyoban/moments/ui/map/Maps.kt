@@ -567,6 +567,10 @@ private fun quietRoads(style: Style) {
  * theme or the style set for it changes; [onReady] gets it once its style has loaded and it has its size. Unless
  * [interactive], it takes no touches, so a list around it still scrolls.
  */
+/** The map's style, OpenFreeMap's, light or dark with the app. */
+internal fun mapStyle(dark: Boolean) =
+    if (dark) "https://tiles.openfreemap.org/styles/dark" else "https://tiles.openfreemap.org/styles/positron"
+
 @Composable
 internal fun MapLibreView(
     modifier: Modifier,
@@ -578,7 +582,7 @@ internal fun MapLibreView(
     onReady: (map: MapLibreMap, style: Style, fresh: Boolean) -> Unit,
 ) {
     val context = LocalContext.current
-    val styleUri = LocalSettings.current.mapStyle(LocalDarkTheme.current)
+    val styleUri = mapStyle(LocalDarkTheme.current)
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val ready by rememberUpdatedState(onReady)
     var map by remember { mutableStateOf<MapLibreMap?>(null) }
