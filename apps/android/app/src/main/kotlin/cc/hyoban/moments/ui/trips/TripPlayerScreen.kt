@@ -560,7 +560,7 @@ private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<Mom
 @Composable
 private fun DayCard(slide: PlaybackSlide.Day) {
     Column(Modifier.padding(horizontal = Space.xs, vertical = Space.xs)) {
-        Text(stringResource(R.string.trip_day, slide.day), style = AppTheme.typography.label, color = tokens.accent)
+        Text(stringResource(R.string.trip_day, slide.day), style = AppTheme.typography.label, color = tokens.tx2)
         Text(formatDay(slide.dateKey), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
         if (slide.places.isNotEmpty()) {
             Text(slide.places.joinToString(" → "), style = AppTheme.typography.body, color = tokens.tx2)

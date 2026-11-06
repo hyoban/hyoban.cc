@@ -484,8 +484,8 @@ behaves.
   of 8 MiB, about two days, with each request, fix, filter decision and state change, never
   a coordinate, network name or token. 足迹记录 → 诊断 → 导出诊断日志 exports them with a replay of the
   latest day through the current filter.
-- **Publishing.** A trip's page has 公开这段旅程的轨迹: at the next 全部发布到网站 its line goes
-  out simplified to 30 m (`track_shares`), and the site draws the trip along it. The raw
+- **Publishing.** 编辑旅程 has 轨迹私有, and the trip's page shows it as a small label while it's
+  on. Turned off and saved, at the next 全部发布到网站 its line goes out simplified to 30 m (`track_shares`), and the site draws the trip along it. The raw
   samples never leave the phone.
 
 ### Connection automation

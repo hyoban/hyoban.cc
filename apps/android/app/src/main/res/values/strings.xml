@@ -867,7 +867,8 @@
     <string name="changes_tracks">轨迹</string>
     <string name="changes_track_removed">不再公开，会从网站删除</string>
     <string name="changes_track_public">公开 %1$s</string>
-    <string name="trip_track_public">公开这段旅程的轨迹</string>
+    <string name="trip_track_private">轨迹私有</string>
+    <string name="trip_track_private_note">关掉后，网站上的路线换成精简过的真实轨迹</string>
     <string name="trip_track_public_note">网站上的路线换成精简过的真实轨迹</string>
     <string name="items_title">记录项与公开</string>
     <string name="items_books">账本</string>

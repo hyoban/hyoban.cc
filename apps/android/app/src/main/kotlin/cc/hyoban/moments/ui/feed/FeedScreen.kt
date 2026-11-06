@@ -606,20 +606,11 @@ private fun DayHead(
                 if (moving && metres != null && millis != null) stringResource(R.string.day_track_stats, metres / 1000, millis / 60_000) else null,
                 daySpent(bills, date)?.let { stringResource(R.string.ledger_expense_short, it) },
             ).joinToString(" ")
-            // Still recording is a state, so in the accent, after the figures it keeps growing.
+            // Still recording after the figures it keeps growing, in the line's own colour, as the word says it.
             val still = if (recording) stringResource(R.string.day_still_recording) else null
-            val accent = tokens.accent
             if (line.isNotEmpty() || still != null) {
                 Text(
-                    androidx.compose.ui.text.buildAnnotatedString {
-                        append(line)
-                        if (still != null) {
-                            if (line.isNotEmpty()) append(" ")
-                            pushStyle(androidx.compose.ui.text.SpanStyle(color = accent))
-                            append(still)
-                            pop()
-                        }
-                    },
+                    listOfNotNull(line.ifEmpty { null }, still).joinToString(" "),
                     style = AppTheme.typography.caption,
                     color = tokens.tx2,
                 )

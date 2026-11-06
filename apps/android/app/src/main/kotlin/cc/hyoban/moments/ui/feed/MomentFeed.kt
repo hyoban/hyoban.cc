@@ -380,8 +380,8 @@ fun DayHeader(day: String, description: String, onClick: (() -> Unit)?, modifier
             itemVerticalAlignment = Alignment.Bottom,
         ) {
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                // Today's in the accent, the one day the timeline marks.
-                Text(date.dayOfMonth.toString(), style = AppTheme.typography.title, color = if (date == java.time.LocalDate.now()) tokens.accent else tokens.tx, modifier = Modifier.alignByBaseline())
+                // Every day's figure in the ink, today's too: the date says which day it is.
+                Text(date.dayOfMonth.toString(), style = AppTheme.typography.title, color = tokens.tx, modifier = Modifier.alignByBaseline())
                 Text(weekday, style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.alignByBaseline())
             }
             note?.let {

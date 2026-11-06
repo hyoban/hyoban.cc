@@ -104,14 +104,13 @@ fun money(cents: Long, currency: String): String =
 fun signedMoney(cents: Long, currency: String, incoming: Boolean): String =
     (if (incoming) "+" else "−") + money(cents, currency)
 
-/** Whether a bill brings money in, as its amount is coloured and signed. */
+/** Whether a bill brings money in, as its amount is signed. */
 val Txn.incoming: Boolean get() = kind == TxnKind.INCOME || kind == TxnKind.REFUND || kind == TxnKind.REIMBURSEMENT
 
-/** The colour of a bill's amount: income in its own colour, a transfer in the secondary text's, the rest plain. */
+/** The colour of a bill's amount: a transfer in the secondary text's, the rest plain, income told by its plus. */
 @Composable
 fun amountColor(txn: Txn): Color = when {
     txn.kind == TxnKind.TRANSFER -> tokens.tx2
-    txn.incoming -> tokens.income
     else -> tokens.tx
 }
 
