@@ -165,6 +165,7 @@ export function getTripSummary(trip: Trip<TripMoment>): TripSummary {
   return {
     end: trip.end,
     id: trip.id,
+    places: [...new Set(trip.stops.flatMap((stop) => stop.locations.map(({ id }) => id)))],
     segments: segments.map(({ line, straight }) => ({
       line: simplifyLine(line, OVERVIEW_TOLERANCE).map(
         ([longitude, latitude]) => [round(longitude), round(latitude)] as [number, number],

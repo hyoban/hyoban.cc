@@ -666,6 +666,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
       drawer.close({ restoreFocus: false })
       tripList?.close({ restoreFocus: false, restoreView: false })
+      // Only the trip's own places stay beside its route.
+      markers.setTripPlaces(trip.places ?? [])
       tripDetails.show(trip, { focus: selectOptions.focus !== false })
       pickRoute(openId)
       tripScroll?.start(openId)
@@ -740,6 +742,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     tripDetails.close()
     tripScroll?.stop()
     pickRoute(undefined)
+    markers.setTripPlaces(undefined)
   }
 
   /**

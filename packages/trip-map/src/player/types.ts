@@ -143,6 +143,8 @@ export type Slide = TripSlide<TripDataStop>
 export type TripSummary = {
   end: string
   id: string
+  /** The places of its stops, by id: the only ones on the map while its sidebar is open. */
+  places?: string[]
   /** Stretches of the route: drives, and the ferries or flights drawn dashed. */
   segments: { line: [number, number][]; straight: boolean }[]
   start: string
