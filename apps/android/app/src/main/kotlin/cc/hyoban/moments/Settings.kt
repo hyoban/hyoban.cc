@@ -68,12 +68,6 @@ class Settings(context: Context) {
     /** Whether the app reads from and publishes to an API: it has one, and the token every request needs. */
     val connected get() = apiUrl.isSet && apiToken.isSet
 
-    /** The map's style in light and in dark, as MapLibre style URLs. */
-    val mapStyleLight = Setting(prefs, "map_style_light", BuildConfig.MAP_STYLE_LIGHT)
-    val mapStyleDark = Setting(prefs, "map_style_dark", BuildConfig.MAP_STYLE_DARK)
-
-    fun mapStyle(dark: Boolean) = (if (dark) mapStyleDark else mapStyleLight).value
-
     /** The owner's own Tencent Location Service key, with which the place picker asks Tencent what is around in China; none, it asks Photon. */
     val tencentMapKey = Token(File(context.noBackupFilesDir, "tencent-map-key"))
 
