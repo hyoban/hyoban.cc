@@ -75,6 +75,11 @@ export function getCarDays(
   return { start, days, levels }
 }
 
+/** A day of at least this many metres counts as a day driven; a shorter one only moved the car. */
+export const DRIVEN_DAY_METERS = 5_000
+
+export const isDrivenDay = (meters: number) => meters >= DRIVEN_DAY_METERS
+
 /** What had been driven, charged and spent by the end of each of a year's days, and on how
  * many days it had been driven. */
 export function sumCarDays(days: CarYear['days']) {
@@ -85,7 +90,7 @@ export function sumCarDays(days: CarYear['days']) {
       meters: sum.meters + meters,
       wh: sum.wh + wh,
       fen: sum.fen + fen,
-      driven: sum.driven + (meters > 0 ? 1 : 0),
+      driven: sum.driven + (isDrivenDay(meters) ? 1 : 0),
     }
     sums.push(sum)
   }

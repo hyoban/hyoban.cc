@@ -1,4 +1,5 @@
 import { vehicleMonthSchema, type VehicleCharge, type VehicleMonth } from '@hyoban/data-spec'
+import { isDrivenDay } from '../car-model.ts'
 import { dataRoot, listJsonFiles, readJson } from './store.ts'
 
 // The site's view of data/zeekr: each day's distance from the monthly records, and
@@ -44,7 +45,7 @@ export interface Outing {
   start: string
   end: string
   distanceMeters: number
-  /** Days driven, of the days between start and end. */
+  /** Days driven, of the days between start and end, five kilometres or more each. */
   drivenDays: number
   /** DC sessions on its days: charging on the road. */
   fastCharges: number
@@ -135,7 +136,7 @@ export function findOutings(
       return {
         cities: [...new Set(locations.map((location) => location.city))],
         distanceMeters: runDays.reduce((total, day) => total + day.distanceMeters, 0),
-        drivenDays: runDays.filter((day) => day.distanceMeters > 0).length,
+        drivenDays: runDays.filter((day) => isDrivenDay(day.distanceMeters)).length,
         end: run.end,
         fastCharges: charges.filter(
           (charge) => charge.type === 'DC' && inRun(charge.startedAt.slice(0, 10)),
