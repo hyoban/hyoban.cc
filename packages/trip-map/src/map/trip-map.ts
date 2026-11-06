@@ -779,6 +779,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
     drawer.trigger = trigger
     setSelectionUrl(`${urls.getMapPath(markers.period, id)}${window.location.search}`)
+    // The place takes the trip's sidebar's side, its route and its hold on the places.
+    closeTripDetails()
+    syncDocumentTitle()
     drawer.open(place, { trigger })
   }
 
