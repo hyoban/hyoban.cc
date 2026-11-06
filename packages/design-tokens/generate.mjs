@@ -1,16 +1,22 @@
-import { readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { renderKotlin } from './src/kotlin.mjs'
+import { renderSwift } from './src/swift.mjs'
 
 // Writes the platforms' code from tokens.json and motion.json, the one source of the design's
-// values: for now the Android app's ui/theme/Tokens.kt.
+// values: the Android app's ui/theme/Tokens.kt and the Apple apps' HereKit Tokens.swift.
 
 export const kotlinFile = fileURLToPath(
   new URL(
     '../../apps/android/app/src/main/kotlin/cc/hyoban/moments/ui/theme/Tokens.kt',
     import.meta.url,
   ),
+)
+
+export const swiftFile = fileURLToPath(
+  new URL('../../apps/apple/Sources/HereKit/Generated/Tokens.swift', import.meta.url),
 )
 
 export async function readTokens() {
@@ -20,6 +26,12 @@ export async function readTokens() {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const { tokens, motion } = await readTokens()
-  await writeFile(kotlinFile, renderKotlin(tokens, motion))
-  console.log(`Wrote ${kotlinFile}`)
+  for (const [file, text] of [
+    [kotlinFile, renderKotlin(tokens, motion)],
+    [swiftFile, renderSwift(tokens, motion)],
+  ]) {
+    await mkdir(dirname(file), { recursive: true })
+    await writeFile(file, text)
+    console.log(`Wrote ${file}`)
+  }
 }

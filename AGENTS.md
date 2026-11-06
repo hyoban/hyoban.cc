@@ -56,18 +56,19 @@ even when starting from the repository root.
 
 ## Workspace
 
-| Area                | Source and reference                                                                                                                                      |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Website             | Astro and plain CSS in `apps/web` (`@hyoban/web`); [its DESIGN.md](apps/web/DESIGN.md) defines its visual language.                                       |
-| Map and trip player | `packages/trip-map` (`@hyoban/trip-map`); its [README](packages/trip-map/README.md) describes the markup and data contract.                               |
-| Drawers             | `packages/drawer` (`@hyoban/drawer`), a plain DOM port of Base UI's Drawer with shadcn/ui CSS; used by the calendar and bundled into trip-map.            |
-| Design tokens       | `packages/design-tokens`: the design system's tokens, springs and icon source for every platform; `vp run design:tokens` generates Android's `Tokens.kt`. |
-| Shared data model   | Plain Zod schemas in `packages/data-spec`, used by the site, scripts and API; `vp run data:schema` generates `data/schema`.                               |
-| API                 | Cloudflare Worker with D1 and R2 in `apps/api`; see its [README](apps/api/README.md) for endpoints and local setup.                                       |
-| Android             | Kotlin, Compose and Gradle in `apps/android`; read its [AGENTS.md](apps/android/AGENTS.md) and [README](apps/android/README.md).                          |
-| Data and media      | `data/`, `scripts/`, [docs/data.md](docs/data.md) and [docs/assets.md](docs/assets.md).                                                                   |
-| Site identity       | `site.config.json`; [FORKING.md](FORKING.md) says what a fork changes.                                                                                    |
-| Deployment          | Cloudflare Workers Builds and GitHub Actions; [docs/deploy.md](docs/deploy.md).                                                                           |
+| Area                | Source and reference                                                                                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Website             | Astro and plain CSS in `apps/web` (`@hyoban/web`); [its DESIGN.md](apps/web/DESIGN.md) defines its visual language.                                                                  |
+| Map and trip player | `packages/trip-map` (`@hyoban/trip-map`); its [README](packages/trip-map/README.md) describes the markup and data contract.                                                          |
+| Drawers             | `packages/drawer` (`@hyoban/drawer`), a plain DOM port of Base UI's Drawer with shadcn/ui CSS; used by the calendar and bundled into trip-map.                                       |
+| Design tokens       | `packages/design-tokens`: the design system's tokens, springs and icon source for every platform; `vp run design:tokens` generates Android's `Tokens.kt` and Apple's `Tokens.swift`. |
+| Shared data model   | Plain Zod schemas in `packages/data-spec`, used by the site, scripts and API; `vp run data:schema` generates `data/schema`.                                                          |
+| API                 | Cloudflare Worker with D1 and R2 in `apps/api`; see its [README](apps/api/README.md) for endpoints and local setup.                                                                  |
+| Android             | Kotlin, Compose and Gradle in `apps/android`; read its [AGENTS.md](apps/android/AGENTS.md) and [README](apps/android/README.md).                                                     |
+| Apple               | SwiftUI for iPhone, iPad and Mac in `apps/apple`, for now the `HereKit` package of generated tokens, icons and tables; see its [README](apps/apple/README.md).                       |
+| Data and media      | `data/`, `scripts/`, [docs/data.md](docs/data.md) and [docs/assets.md](docs/assets.md).                                                                                              |
+| Site identity       | `site.config.json`; [FORKING.md](FORKING.md) says what a fork changes.                                                                                                               |
+| Deployment          | Cloudflare Workers Builds and GitHub Actions; [docs/deploy.md](docs/deploy.md).                                                                                                      |
 
 ## Data shared by Web and App
 
@@ -77,7 +78,7 @@ even when starting from the repository root.
   private), else its entry's; an entry is public unless it says otherwise. The plugins are
   grouped into modules (`modules` there: footprints, ledger, things, car, food, check-ins, occasions),
   what the app lets the owner turn on or off as one in 记录项与公开; `vp run data:tables`
-  generates Android's `data/spec/Modules.kt` from them. A module off hides its rows, pages
+  generates Android's `data/spec/Modules.kt` and Apple's `Modules.swift` from them. A module off hides its rows, pages
   and records and stops its background work, and its data stays: gate a new screen, part or
   service by its module (`Settings.isOn`), and a new page of a module in `moduleOf`, which
   keeps a link to it from opening it while the module is off.
@@ -159,6 +160,9 @@ and run the relevant Moment or Zeekr audits when changing their data.
 
 Android uses its Gradle wrapper, not Vite+. Root checks do not build or test Kotlin;
 run the Android checks in its guide when changes affect the app or its API contract.
+The Apple apps use SwiftPM and Xcode: run `swift test` in `apps/apple` when changing it or
+what generates its code. A generator writes every platform's file at once, and each
+platform's code under its `Generated` name is never edited by hand.
 Documentation-only changes need formatting and link/import checks, not a phone
 installation or a site deployment.
 

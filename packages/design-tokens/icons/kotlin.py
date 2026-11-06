@@ -1,42 +1,14 @@
 # Writes the Android app's ui/design/AppIcons.kt from icons.py (python3 packages/design-tokens/icons/kotlin.py): each icon an ImageVector of stroked (the set's
 # STROKE, round) and filled paths, circles, rects and lines turned into path data; a fill may be even-odd, to cut holes.
-import importlib.util, re, os
+import importlib.util, os
+
+from svg import MIRROR, to_path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location('icons', os.path.join(HERE, 'icons.py'))
 m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
 
-MIRROR = {'arrow-left', 'arrow-right', 'chevron-left', 'chevron-right', 'sub-arrow', 'external', 'undo', 'backspace', 'volume', 'volume-off'}
-
-
-def num(v):
-    f = float(v)
-    return ('%g' % f)
-
-
-def to_path(el):
-    filled = ('evenodd' if 'fill-rule="evenodd"' in el else True) if 'class="f"' in el else False
-    tag = re.match(r'<(\w+)', el).group(1)
-    a = dict(re.findall(r'([\w-]+)="([^"]*)"', el))
-    if tag == 'path':
-        d = a['d']
-    elif tag == 'circle':
-        cx, cy, r = float(a['cx']), float(a['cy']), float(a['r'])
-        d = f'M{num(cx - r)} {num(cy)}a{num(r)} {num(r)} 0 1 0 {num(2 * r)} 0a{num(r)} {num(r)} 0 1 0 {num(-2 * r)} 0z'
-    elif tag == 'rect':
-        x, y, w, h = (float(a[k]) for k in ('x', 'y', 'width', 'height'))
-        r = min(float(a.get('rx', 0)), w / 2, h / 2)
-        if r == 0:
-            d = f'M{num(x)} {num(y)}h{num(w)}v{num(h)}h{num(-w)}z'
-        else:
-            d = (f'M{num(x + r)} {num(y)}H{num(x + w - r)}A{num(r)} {num(r)} 0 0 1 {num(x + w)} {num(y + r)}'
-                 f'V{num(y + h - r)}A{num(r)} {num(r)} 0 0 1 {num(x + w - r)} {num(y + h)}'
-                 f'H{num(x + r)}A{num(r)} {num(r)} 0 0 1 {num(x)} {num(y + h - r)}'
-                 f'V{num(y + r)}A{num(r)} {num(r)} 0 0 1 {num(x + r)} {num(y)}z')
-    else:
-        raise ValueError(tag)
-    return d, filled
 
 
 def camel(name):

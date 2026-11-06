@@ -7,8 +7,10 @@ draws the app's icon set on a 24 grid.
 
 These files are the one source. `vp run design:tokens` at the root writes the Android app's
 `ui/theme/Tokens.kt`, and `python3 packages/design-tokens/icons/kotlin.py` its
-`ui/design/AppIcons.kt`; an iOS or web build will get a generator of its own beside them. Never
-edit the generated files by hand.
+`ui/design/AppIcons.kt`. For the Apple apps the same command writes `apps/apple`'s
+`HereKit/Generated/Tokens.swift`, and `python3 packages/design-tokens/icons/swift.py` its
+`AppIcons.swift` (`icons/svg.py` holds what both icon generators share). A web build will get a
+generator of its own beside them. Never edit the generated files by hand.
 
 `tokens.json` is the design-system artifact's `project/tokens.json` too, in the shape that page
 reads: change it here, regenerate, then publish the same file to the artifact. The year colours

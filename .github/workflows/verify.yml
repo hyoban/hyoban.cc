@@ -65,3 +65,11 @@ jobs:
           java-version: 17
       - uses: gradle/actions/setup-gradle@v5
       - run: ./gradlew :app:testDebugUnitTest :app:assembleDebug --no-daemon
+  apple:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      # The icons' generator is Python, outside `pnpm test`: regenerate and fail on a difference.
+      - run: python3 packages/design-tokens/icons/swift.py && git diff --exit-code
+      - run: swift test
+        working-directory: apps/apple
