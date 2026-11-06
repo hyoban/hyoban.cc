@@ -65,10 +65,10 @@ dashboard; they stream with `npx wrangler tail hyoban-cc-api`.
 
 ## GitHub Actions
 
-| Workflow        | When                        | Does                                                                                                 |
-| --------------- | --------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `verify.yml`    | push to `main`, PRs, weekly | `pnpm test`, `pnpm check`, Moment audits, `pnpm build`; the Android app's unit tests and debug build |
-| `r2-backup.yml` | push to `main`, by hand     | a snapshot of the R2 bucket, in Git LFS on the `r2-backup` branch                                    |
+| Workflow        | When                        | Does                                                                                                                        |
+| --------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `verify.yml`    | push to `main`, PRs, weekly | `pnpm test`, `pnpm check`, Moment audits, `pnpm build`; the Android app's unit tests and debug build; HereKit's Swift tests |
+| `r2-backup.yml` | push to `main`, by hand     | a snapshot of the R2 bucket, in Git LFS on the `r2-backup` branch                                                           |
 
 `verify.yml` exports the API into `data/` to audit every Moment, builds the site from the
 API, its share cards kept between runs in the Actions cache as Workers Builds keeps them,
