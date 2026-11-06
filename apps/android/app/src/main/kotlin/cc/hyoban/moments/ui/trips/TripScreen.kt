@@ -1,7 +1,6 @@
 package cc.hyoban.moments.ui.trips
 
 import cc.hyoban.moments.data.spec.Module
-import cc.hyoban.moments.ui.design.rememberHaptics
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.CompositionLocalProvider
 import cc.hyoban.moments.ui.LocalSettings
@@ -78,8 +77,6 @@ import cc.hyoban.moments.ui.theme.fill
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.size
 import kotlin.math.roundToInt
-import cc.hyoban.moments.ui.design.AppSwitch
-import androidx.compose.foundation.selection.toggleable
 
 /**
  * One trip, a pushed page under its top app bar: what it covered, its route on a map
@@ -111,18 +108,39 @@ fun TripScreen(
     val dayLabel = { day: String -> resources.getString(R.string.trip_day, daysBetween(trip.start, day)) + " " + formatDay(day) }
     // 第 n 天 at the end of each day's header.
     val dayNote = { day: String -> resources.getString(R.string.trip_day, daysBetween(trip.start, day)) }
+    // What of it stays off the site, said as a property, not a switch: the trip, or else its track
+    // while its footprints aren't public (with an API to publish to). The switches are in 编辑旅程.
+    val tripPrivate = remember(trips, trip.id) { container.repository.isTripPrivate(trip.id) }
+    val trackShared = rememberTrackShared(container, trip)
+    val privateTag = when {
+        tripPrivate -> stringResource(R.string.visibility_private)
+        connected && footprintsOn && trackShared == false -> stringResource(R.string.trip_track_private)
+        else -> null
+    }
     // The title is the bar's; under it, what the trip covered.
     val sideways = isPhoneLandscape()
     val summary: @Composable () -> Unit = {
         Column(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.xs, bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.m)) {
             // On its side the bar's middle stands over the map's edge, so the name heads the column instead.
-            if (sideways) Text(trip.title, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
+            if (sideways) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                    Text(trip.title, style = AppTheme.typography.title, modifier = Modifier.alignByBaseline().semantics { heading() })
+                    privateTag?.let { PrivateTag(it, Modifier.alignByBaseline()) }
+                }
+            }
             TripSubhead(trip, moments.size, places = stops.distinctBy { it.placeId }.size)
-            if (moments.isNotEmpty()) {
-                cc.hyoban.moments.ui.design.Button(onClick = { onPlay(trip.id) }, modifier = Modifier.testTag("play_trip")) {
-                    Icon(AppIcons.Play, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(Space.xs))
-                    Text(stringResource(R.string.action_play_trip))
+            // Upright the name is the bar's, so what stays private sits beside the page's one button.
+            val tagHere = privateTag.takeIf { !sideways }
+            if (moments.isNotEmpty() || tagHere != null) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
+                    if (moments.isNotEmpty()) {
+                        cc.hyoban.moments.ui.design.Button(onClick = { onPlay(trip.id) }, modifier = Modifier.testTag("play_trip")) {
+                            Icon(AppIcons.Play, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(Space.xs))
+                            Text(stringResource(R.string.action_play_trip))
+                        }
+                    }
+                    tagHere?.let { PrivateTag(it) }
                 }
             }
         }
@@ -238,8 +256,6 @@ fun TripScreen(
                     ) {
                         item(key = "summary") { summary() }
                         if (ledgerOn) item(key = "spending") { spending() }
-                        // Public footprints only go out with a publish, so with no API there is no switch.
-                        if (connected && footprintsOn) item(key = "track") { TrackShareRow(container, trip) }
                         if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(3) }
                     }
                     }
@@ -263,7 +279,6 @@ fun TripScreen(
                 ) {
                     item(key = "summary") { summary() }
                     if (ledgerOn) item(key = "spending") { spending() }
-                    if (connected && footprintsOn) item(key = "track") { TrackShareRow(container, trip) }
                     if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(5) }
                     item(key = "map") { routeCard(Modifier, Modifier.height(240.dp)) }
                     item(key = "gap") { Spacer(Modifier.height(Space.s)) }
@@ -273,54 +288,48 @@ fun TripScreen(
     }
 }
 
-/**
- * Whether the trip's footprints are public: on, a span following the trip goes out with the
- * next publish, simplified, and the site draws the trip's route from it; off, it is taken back.
- */
+/** Whether the trip's footprints are public, null until it is known. */
 @Composable
-private fun TrackShareRow(container: AppContainer, trip: cc.hyoban.moments.data.spec.TripRecord) {
+internal fun rememberTrackShared(container: AppContainer, trip: cc.hyoban.moments.data.spec.TripRecord): Boolean? {
     val revision by container.footprints.revision.collectAsStateWithLifecycle()
     val collection = remember(trip) { container.repository.tripUid(trip) }
-    val share by androidx.compose.runtime.produceState<cc.hyoban.moments.footprints.TrackShare?>(null, revision, collection) {
+    val shared by androidx.compose.runtime.produceState<Boolean?>(null, revision, collection) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            container.footprints.shares().firstOrNull { it.collection == collection && !it.removed }
+            container.footprints.shares().any { it.collection == collection && !it.removed }
         }
     }
-    val scope = rememberCoroutineScope()
-    val haptics = rememberHaptics()
-    val toggle = { on: Boolean ->
-        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            val current = share
-            if (on) {
-                val zone = java.time.ZoneId.systemDefault()
-                container.footprints.saveShare(
-                    cc.hyoban.moments.footprints.TrackShare(
-                        uid = current?.uid ?: cc.hyoban.moments.data.local.Ulid.next(),
-                        start = java.time.LocalDate.parse(trip.start).atStartOfDay(zone).toInstant().toEpochMilli(),
-                        end = java.time.LocalDate.parse(trip.end).plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1,
-                        collection = collection,
-                    ),
-                )
-            } else if (current != null) {
-                container.footprints.removeShare(current.uid)
-            }
+    return shared
+}
+
+/**
+ * Makes the trip's footprints public or takes them back: on, a span following the trip goes out
+ * with the next publish, simplified, and the site draws the trip's route from it; off, it is taken back.
+ */
+internal suspend fun setTrackShared(container: AppContainer, trip: cc.hyoban.moments.data.spec.TripRecord, on: Boolean) =
+    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val collection = container.repository.tripUid(trip)
+        val current = container.footprints.shares().firstOrNull { it.collection == collection && !it.removed }
+        if (on) {
+            val zone = java.time.ZoneId.systemDefault()
+            container.footprints.saveShare(
+                cc.hyoban.moments.footprints.TrackShare(
+                    uid = current?.uid ?: cc.hyoban.moments.data.local.Ulid.next(),
+                    start = java.time.LocalDate.parse(trip.start).atStartOfDay(zone).toInstant().toEpochMilli(),
+                    end = java.time.LocalDate.parse(trip.end).plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1,
+                    collection = collection,
+                ),
+            )
+        } else if (current != null) {
+            container.footprints.removeShare(current.uid)
         }
-        Unit
     }
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .toggleable(share != null, role = androidx.compose.ui.semantics.Role.Switch) { haptics.toggle(it); toggle(it) }
-            .padding(horizontal = Space.gutter, vertical = Space.m)
-            .testTag("trip_track_public"),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
-            Text(stringResource(R.string.trip_track_public), style = AppTheme.typography.body)
-            Text(stringResource(R.string.trip_track_public_note), style = AppTheme.typography.caption, color = tokens.tx2)
-        }
-        Spacer(Modifier.width(Space.m))
-        AppSwitch(share != null)
+
+/** What of a trip stays private, as a small label in the caption's grey. */
+@Composable
+private fun PrivateTag(text: String, modifier: Modifier = Modifier) {
+    Row(modifier.testTag("trip_private_tag"), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+        Icon(AppIcons.EyeOff, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(14.dp))
+        Text(text, style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1)
     }
 }
 

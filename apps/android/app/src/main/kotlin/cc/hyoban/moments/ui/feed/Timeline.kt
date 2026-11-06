@@ -51,9 +51,6 @@ import cc.hyoban.moments.ui.ledger.money
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.trips.tripSummary
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import cc.hyoban.moments.R
@@ -425,8 +422,8 @@ fun TripBanner(trip: TripRecord, count: Int, onClick: () -> Unit, modifier: Modi
 }
 
 /**
- * A trip's line under its name: its dates, days and Moments, or, while it goes on, the state in the
- * accent first, the day it began and which day this is.
+ * A trip's line under its name: its dates, days and Moments, or, while it goes on, the state first
+ * (in the line's own colour, as the word says it), the day it began and which day this is.
  */
 @Composable
 private fun tripBannerSummary(trip: TripRecord, count: Int): AnnotatedString {
@@ -434,18 +431,14 @@ private fun tripBannerSummary(trip: TripRecord, count: Int): AnnotatedString {
     val ongoing = runCatching { !today.isBefore(LocalDate.parse(trip.start)) && !today.isAfter(LocalDate.parse(trip.end)) }.getOrDefault(false)
     if (!ongoing) return AnnotatedString(tripSummary(trip, count))
     val day = daysBetween(trip.start, today.toString())
-    val accent = tokens.accent
-    val rest = listOf(
-        stringResource(R.string.trip_since, formatDate(trip.start)),
-        stringResource(R.string.trip_day, day),
-        pluralStringResource(R.plurals.count_moments, count, count),
-    ).joinToString(" ")
-    val ongoingLabel = stringResource(R.string.trip_ongoing)
-    return buildAnnotatedString {
-        withStyle(SpanStyle(color = accent)) { append(ongoingLabel) }
-        append(" ")
-        append(rest)
-    }
+    return AnnotatedString(
+        listOf(
+            stringResource(R.string.trip_ongoing),
+            stringResource(R.string.trip_since, formatDate(trip.start)),
+            stringResource(R.string.trip_day, day),
+            pluralStringResource(R.plurals.count_moments, count, count),
+        ).joinToString(" "),
+    )
 }
 
 /** A day's footprints as the timeline lists them: the line, its stretches in lon/lat, and how far and long it moved. */

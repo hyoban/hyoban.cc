@@ -905,7 +905,8 @@
     <string name="changes_tracks">Tracks</string>
     <string name="changes_track_removed">No longer public: taken off the site</string>
     <string name="changes_track_public">Public %1$s</string>
-    <string name="trip_track_public">Make this trip’s track public</string>
+    <string name="trip_track_private">Track private</string>
+    <string name="trip_track_private_note">Turned off, the site draws the route from the recorded track, simplified</string>
     <string name="trip_track_public_note">The site draws its route from the recorded track, simplified</string>
     <string name="items_title">Items and visibility</string>
     <string name="items_books">Books</string>
