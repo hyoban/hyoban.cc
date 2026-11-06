@@ -76,7 +76,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 
 ## Design
 
-- The app follows its own design system, the 「这里 App 设计系统」 artifact, not Material 3:
+- The app follows its own design system, the 「Here App 设计系统」 artifact, not Material 3:
   the site's restraint on a phone. The design is platform-neutral, one design for the iOS,
   Android and web versions to come: keep Android-only conventions out of it (name things by
   what they are, not by Compose or Material), and record only where Android implements it. Its tokens come from `packages/design-tokens`, the one
@@ -91,7 +91,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   components or icon packs back.
 - Design first, and the two kept in step: a change to what the app shows or how it behaves
   goes into the design first, and the code follows it: a page's artboards and its note go in
-  the 「这里 App 页面设计稿」 canvas, which holds every page, and the component cards it uses,
+  the 「Here App 页面设计稿」 canvas, which holds every page, and the component cards it uses,
   or a new card for a new part, go in the design system, which holds only components. Where
   building it shows the design wrong or not workable, change the design in the same task
   rather than leave the code to differ. Before a task ends, the artboards and cards it touched

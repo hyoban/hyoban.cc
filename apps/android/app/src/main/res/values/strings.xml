@@ -466,7 +466,7 @@
     <string name="reason_unknown">发生了意外错误</string>
 
     <string name="share_assist_enable_service">开启分享与记账助手无障碍服务</string>
-    <string name="share_assist_service_description">分享：只在你从「这里」发起辅助分享时，读取此次目标应用的分享界面并执行适配步骤。完成填写后停在发送前，不保存聊天内容。目前支持 Telegram、Threads 照片分享和 Instagram 帖子的说明，超时未完成就停止。\n\n自动记账：在记账设置中打开后，读取微信和支付宝显示的支付成功页和账单详情，用通知提醒你记一笔。只读取，不点击、不输入，页面内容不保存，也不会离开手机。</string>
+    <string name="share_assist_service_description">分享：只在你从「Here」发起辅助分享时，读取此次目标应用的分享界面并执行适配步骤。完成填写后停在发送前，不保存聊天内容。目前支持 Telegram、Threads 照片分享和 Instagram 帖子的说明，超时未完成就停止。\n\n自动记账：在记账设置中打开后，读取微信和支付宝显示的支付成功页和账单详情，用通知提醒你记一笔。只读取，不点击、不输入，页面内容不保存，也不会离开手机。</string>
     <string name="share_assist_photos_only">此次没有选择照片，将使用普通文字分享。</string>
     <string name="share_assist_cancel">停止自动填写</string>
     <string name="share_assist_service_required">请先开启无障碍服务，或关闭分享助手以手动分享</string>
@@ -952,7 +952,7 @@
     </plurals>
 
     <string name="payment_capture_opened">已打开记账确认</string>
-    <string name="payment_capture_disconnected">请先开启「这里」的分享与记账助手无障碍服务</string>
+    <string name="payment_capture_disconnected">请先开启「Here」的分享与记账助手无障碍服务</string>
     <string name="payment_capture_busy">分享助手正在运行，请稍后再试</string>
     <string name="payment_capture_locked">请解锁后再读取支付页面</string>
     <string name="payment_capture_not_found">当前页面未识别到微信或支付宝的已付款账单</string>
@@ -1239,7 +1239,7 @@
     <string name="restore_failed">恢复失败：%1$s</string>
     <string name="restore_list_failed">读不到备份：%1$s</string>
     <string name="settings_backup_note">把手机上的数据库打成一个 zip 传到这个 WebDAV 目录：记账、足迹、未发布的时刻和网站的副本，不带照片和视频，也不带 API 令牌。恢复时选一份替换这些数据，换下来的在手机上留一份。</string>
-    <string name="onboarding_name">这里</string>
+    <string name="onboarding_name">Here</string>
     <string name="onboarding_line">记下在哪里、做了什么。时刻、地点和旅程，还有只留在这台手机上的账本和足迹。</string>
     <string name="onboarding_start">开始</string>
     <string name="onboarding_preview_day">今天</string>

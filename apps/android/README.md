@@ -2,7 +2,7 @@
 
 The app that keeps the site's Moments, places and trips on the phone, lets new ones be
 written there, and adds what stays the phone's own: a ledger and GPS footprints. Its look
-is the app's design system (the 「这里 App 设计系统」 artifact, mirrored in `ui/theme`).
+is the app's design system (the 「Here App 设计系统」 artifact, mirrored in `ui/theme`).
 
 ## Reading
 

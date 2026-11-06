@@ -38,7 +38,8 @@ even when starting from the repository root.
   string resources and message tables, not inline in code.
 - Preserve the user's Moment text exactly. Write media alt text in Chinese. UI copy
   and accessibility labels are Chinese first; Android also keeps English strings in
-  `values-en`.
+  `values-en`. The app is called Here in every language, in code, copy and the design
+  artifacts alike, never 这里 (which stays only as the ordinary word).
 
 ## Commits and reviews
 
