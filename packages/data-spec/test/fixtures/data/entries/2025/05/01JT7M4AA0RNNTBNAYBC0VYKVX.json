@@ -1,0 +1,22 @@
+{
+  "uid": "01JT7M4AA0RNNTBNAYBC0VYKVX",
+  "at": "2025-05-02T12:30:00+08:00",
+  "place": "xiao-mian-guan",
+  "parts": {
+    "checkin": {
+      "v": 1,
+      "venue": "Noodle House",
+      "alias": "小面馆",
+      "source": {
+        "app": "swarm",
+        "checkin": "5f0c000000000000000000a1",
+        "venue": "4b0000000000000000000001"
+      }
+    }
+  },
+  "published": {
+    "at": "2025-05-02T12:30:00+08:00"
+  },
+  "createdAt": "2025-05-02T12:30:00+08:00",
+  "updatedAt": "2025-05-02T12:30:00+08:00"
+}

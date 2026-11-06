@@ -28,7 +28,9 @@ data/
   subscription on the day it was last paid, or for software bought once the day it was first
   written down. The use page lists both from these entries. A check-in is brought in from
   Swarm, its `source` that app's ids, or made on the phone from a stay of the footprints
-  (`source.app` `phone`), private, from the stay's start to its `end`. An occasion is a day
+  (`source.app` `phone`), from the stay's start to its `end`; either is public unless
+  Swarm kept it private or the phone made it so. The map dots a
+  public one at its place among the Moments there, by its venue alone. An occasion is a day
   that matters (a birthday, an anniversary, a deadline), on the entry of the day it started:
   with `repeat` it comes round each year, by the Gregorian or the lunar calendar, counted in
   岁 or 周年 or not at all; without, it is that one day. The calendar marks them. It is named by its

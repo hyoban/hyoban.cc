@@ -132,8 +132,35 @@ export function readOccasions(
   }))
 }
 
+export type CheckinPart = NonNullable<EntryParts['checkin']>
+
+/**
+ * The check-ins the public sees, at a named place and published, for the map: each with its
+ * entry's uid, moment, place and order. One with words is its Moment's, and the Moment shows it.
+ */
+export function readCheckins(root = getDataRoot()): (CheckinPart & {
+  uid: string
+  at: string
+  place: string
+  order?: number
+})[] {
+  return readPublicParts('checkin', root).flatMap(({ entry, part }) =>
+    entry.place && entry.published && !isMomentEntry(entry)
+      ? [
+          {
+            ...part,
+            uid: entry.uid,
+            at: entry.at,
+            place: entry.place,
+            ...(entry.order === undefined ? {} : { order: entry.order }),
+          },
+        ]
+      : [],
+  )
+}
+
 /** The public entries with a part of this plugin, and that part as the public sees it. */
-function readPublicParts<K extends 'device' | 'subscription' | 'occasion'>(
+function readPublicParts<K extends 'device' | 'subscription' | 'occasion' | 'checkin'>(
   plugin: K,
   root: string,
 ) {

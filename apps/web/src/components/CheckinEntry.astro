@@ -1,0 +1,24 @@
+---
+import type { MapCheckin } from '@/moments'
+
+interface Props {
+  checkin: MapCheckin
+}
+
+const { checkin } = Astro.props
+const weekdayFormatter = new Intl.DateTimeFormat('zh-CN', { timeZone: 'UTC', weekday: 'short' })
+const [year, month, day] = checkin.dateKey.split('-').map(part => Number.parseInt(part, 10))
+const dayLabel = `${year}/${month}/${day} ${weekdayFormatter.format(new Date(`${checkin.dateKey}T00:00:00Z`))}`
+---
+
+<!-- A check-in in its place's drawer: one quiet line, the day and time it was there and
+     the venue by its name, among the place's Moments. -->
+<article class="checkin-entry">
+  <span class="i-lucide-map-pin-check-inside" aria-hidden="true" />
+  <span class="sr-only">签到</span>
+  <time datetime={checkin.occurredAt}>{dayLabel}{checkin.occurredLabel && ` ${checkin.occurredLabel}`}</time>
+  <span class="checkin-entry__venue">
+    {checkin.venue}
+    {checkin.alias && <span class="checkin-entry__alias">{checkin.alias}</span>}
+  </span>
+</article>

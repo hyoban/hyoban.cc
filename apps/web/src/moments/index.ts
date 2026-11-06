@@ -18,7 +18,7 @@ import {
   type PublishedVideo,
 } from '@hyoban/data-spec'
 import { trips } from '@/data/trips'
-import { readPublicTracks, readRoutes } from '@/data/store'
+import { readCheckins, readPublicTracks, readRoutes } from '@/data/store'
 import {
   getTripOdometer,
   getVehicleCharges,
@@ -81,6 +81,29 @@ export type Moment = {
   uid: string
 }
 
+/** A check-in the public sees, as the map dots it at its place beside the Moments there. */
+export type MapCheckin = {
+  dateKey: string
+  /** The venue's other name, often the local one. */
+  alias?: string
+  /** Its uid in lowercase. */
+  id: string
+  /** Its place, the one it was at. */
+  locations: [ResolvedMomentLocation]
+  occurredAt: string
+  occurredLabel?: string
+  order?: number
+  uid: string
+  venue: string
+}
+
+/** What the map dots at a place: its Moments and its check-ins. */
+export type MapRecord = Moment | MapCheckin
+
+export function isMapCheckin(record: MapRecord): record is MapCheckin {
+  return 'venue' in record
+}
+
 export type ResolvedMomentLocation = MapLocation & {
   id: LocationId
 }
@@ -92,7 +115,7 @@ export function getMoments() {
   return momentsPromise
 }
 
-export function getActiveDateKeys(moments: Moment[]) {
+export function getActiveDateKeys(moments: readonly Pick<MapRecord, 'dateKey'>[]) {
   return [...new Set(moments.map((moment) => moment.dateKey))]
 }
 
@@ -122,14 +145,41 @@ export function getArchiveMonthKeys(moments: Moment[]) {
   return months
 }
 
-export function getMappedLocationGroups(moments: Moment[]) {
-  return groupMomentsByLocation(locations, moments)
+let checkins: MapCheckin[] | undefined
+
+/** The check-ins the public sees, oldest first. */
+export function getCheckins() {
+  checkins ??= readCheckins()
+    .map((checkin): MapCheckin => {
+      const locationId = checkin.place as LocationId
+
+      return {
+        dateKey: checkin.at.slice(0, 10),
+        ...(checkin.alias ? { alias: checkin.alias } : {}),
+        id: checkin.uid.toLowerCase(),
+        locations: [{ id: locationId, ...getLocation(locations, locationId) }],
+        occurredAt: checkin.at,
+        ...(checkin.at.length > 10 ? { occurredLabel: checkin.at.slice(11, 16) } : {}),
+        ...(checkin.order === undefined ? {} : { order: checkin.order }),
+        uid: checkin.uid,
+        venue: checkin.venue,
+      }
+    })
+    .sort(compareMoments)
+  return checkins
 }
 
-/** The months the map can be narrowed to, `2025-06`: those with Moments, in its years. */
+/** The places on the map, each with its Moments and the check-ins there, newest first. */
+export function getMappedLocationGroups(moments: Moment[]) {
+  return groupMomentsByLocation<MapRecord>(locations, [...moments, ...getCheckins()])
+}
+
+/** The months the map can be narrowed to, `2025-06`: those with Moments or check-ins, in its years. */
 export function getMapMonthKeys(moments: Moment[]) {
   const years = new Set(getMapYears(moments))
-  const monthKeys = new Set(getActiveDateKeys(moments).map((dateKey) => dateKey.slice(0, 7)))
+  const monthKeys = new Set(
+    getActiveDateKeys([...moments, ...getCheckins()]).map((dateKey) => dateKey.slice(0, 7)),
+  )
 
   return [...monthKeys].filter((key) => years.has(Number.parseInt(key.slice(0, 4), 10)))
 }

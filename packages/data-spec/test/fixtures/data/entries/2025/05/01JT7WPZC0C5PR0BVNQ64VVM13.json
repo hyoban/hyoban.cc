@@ -1,0 +1,20 @@
+{
+  "uid": "01JT7WPZC0C5PR0BVNQ64VVM13",
+  "at": "2025-05-02T15:00:00+08:00",
+  "place": "wai-tan",
+  "parts": {
+    "checkin": {
+      "v": 1,
+      "venue": "外滩",
+      "source": {
+        "app": "phone"
+      }
+    }
+  },
+  "visibility": "private",
+  "published": {
+    "at": "2025-05-02T15:00:00+08:00"
+  },
+  "createdAt": "2025-05-02T15:00:00+08:00",
+  "updatedAt": "2025-05-02T15:00:00+08:00"
+}
