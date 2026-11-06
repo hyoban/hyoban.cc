@@ -11,7 +11,8 @@ ids and media keys. `vp run data:schema` at the root writes them out as JSON Sch
 `data/schema`. `src/tables.ts` is the tables D1 and the app's copy keep the records in, a
 key, a revision, when deleted and the record's JSON, with the other columns SQLite works
 out from the record; `vp run data:tables` writes them out as `apps/api/schema.sql` and the
-app's `CopyTables.kt`, and the modules of `src/entry.ts` as the app's `Modules.kt`.
+app's `CopyTables.kt` and the Apple apps' `CopyTables.swift`, and the modules of `src/entry.ts`
+as `Modules.kt` and `Modules.swift`.
 
 Every object is loose, so a field one side doesn't know yet travels through the other
 untouched. Changes only add optional fields; any other change bumps `SCHEMA_VERSION`.
