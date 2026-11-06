@@ -79,7 +79,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - The app follows its own design system, the 「Here App 设计系统」 artifact, not Material 3:
   the site's restraint on a phone. The design is platform-neutral, one design for the iOS,
   Android and web versions to come: keep Android-only conventions out of it (name things by
-  what they are, not by Compose or Material), and record only where Android implements it. Its tokens come from `packages/design-tokens`, the one
+  what they are, not by Compose or Material), and record only where Android implements it.
+  Desktops (Mac, the web on a computer) keep its look but take a desktop's structure, a sidebar,
+  toolbars, hover, context menus and shortcuts, as the page canvas's desktop boards (D, beside each
+  page) and the design system's Desktop cards draw them. Its tokens come from `packages/design-tokens`, the one
   source for every platform: `vp run design:tokens` at the root generates `ui/theme/Tokens.kt`
   (colours, spacing, corners, shadows, opacities, type, springs), which is never edited by
   hand; change `tokens.json` there, regenerate, and publish it to the artifact. Text takes
