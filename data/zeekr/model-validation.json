@@ -14,18 +14,27 @@
       "id": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
       "file": "sources/zeekr-2026-11-01-084929.json",
       "sha256": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9"
+    },
+    {
+      "id": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+      "file": "sources/zeekr-api-2026-11-07-014244.json",
+      "sha256": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8"
     }
   ],
   "counts": {
-    "captures": 3,
+    "captures": 4,
     "months": 15,
     "days": 266,
     "chargingSessions": 94,
     "monthlyAssistance": 4,
-    "cumulativeAssistance": 2
+    "cumulativeAssistance": 3
   },
-  "checksPassed": 2047,
+  "checksPassed": 3557,
   "warnings": [
+    {
+      "scope": "zeekr-007gt/2025-08",
+      "message": "Some daily drivingEnergyWh values are absent; no zero was substituted."
+    },
     {
       "scope": "zeekr-007gt/2025-11",
       "message": "Some daily drivingEnergyWh values are absent; no zero was substituted."
@@ -67,12 +76,12 @@
       "scope": "zeekr-007gt/2026-04",
       "message": "Identical source charging rows retained.",
       "first": {
-        "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
         "pointer": "/charging/months/6/sessions/4",
         "method": "screen"
       },
       "duplicate": {
-        "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
         "pointer": "/charging/months/6/sessions/5",
         "method": "screen"
       }

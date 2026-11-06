@@ -1,13 +1,13 @@
 {
   "deviceId": "zeekr-007gt",
   "month": "2026-02",
-  "capturedAt": "2026-11-01T08:49:32+08:00",
+  "capturedAt": "2026-11-07T01:42:44+08:00",
   "report": {
     "distanceMeters": 1924000,
     "durationSeconds": 140040,
     "tripCount": 81,
     "longestTripMeters": 342000,
-    "longestTripDurationSeconds": 20160,
+    "longestTripDurationSeconds": 20220,
     "energyWh": 350700,
     "drivingEnergyWh": 320900,
     "reportedConsumption": {
@@ -26,8 +26,8 @@
       "drivingEnergyWh": 25700,
       "parkedEnergyWh": 1300,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/0",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/0",
         "method": "share_report"
       }
     },
@@ -39,8 +39,8 @@
       "drivingEnergyWh": 3600,
       "parkedEnergyWh": 2400,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/1",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/1",
         "method": "share_report"
       }
     },
@@ -52,8 +52,8 @@
       "drivingEnergyWh": 24200,
       "parkedEnergyWh": 2100,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/2",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/2",
         "method": "share_report"
       }
     },
@@ -65,8 +65,8 @@
       "drivingEnergyWh": 7900,
       "parkedEnergyWh": 1100,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/3",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/3",
         "method": "share_report"
       }
     },
@@ -78,8 +78,8 @@
       "drivingEnergyWh": 0,
       "parkedEnergyWh": 800,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/4",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/4",
         "method": "share_report"
       }
     },
@@ -91,8 +91,8 @@
       "drivingEnergyWh": 70200,
       "parkedEnergyWh": 2300,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/5",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/5",
         "method": "share_report"
       }
     },
@@ -104,8 +104,8 @@
       "drivingEnergyWh": 4300,
       "parkedEnergyWh": 200,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/6",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/6",
         "method": "share_report"
       }
     },
@@ -117,8 +117,8 @@
       "drivingEnergyWh": 6600,
       "parkedEnergyWh": 2400,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/7",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/7",
         "method": "share_report"
       }
     },
@@ -130,8 +130,8 @@
       "drivingEnergyWh": 17300,
       "parkedEnergyWh": 2200,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/8",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/8",
         "method": "share_report"
       }
     },
@@ -143,8 +143,8 @@
       "drivingEnergyWh": 64400,
       "parkedEnergyWh": 4600,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/9",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/9",
         "method": "share_report"
       }
     },
@@ -156,8 +156,8 @@
       "drivingEnergyWh": 0,
       "parkedEnergyWh": 3000,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/10",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/10",
         "method": "share_report"
       }
     },
@@ -169,8 +169,8 @@
       "drivingEnergyWh": 49400,
       "parkedEnergyWh": 3100,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/11",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/11",
         "method": "share_report"
       }
     },
@@ -182,8 +182,8 @@
       "drivingEnergyWh": 30500,
       "parkedEnergyWh": 300,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/12",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/12",
         "method": "share_report"
       }
     },
@@ -195,8 +195,8 @@
       "drivingEnergyWh": 1200,
       "parkedEnergyWh": 1100,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/13",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/13",
         "method": "share_report"
       }
     },
@@ -208,8 +208,8 @@
       "drivingEnergyWh": 4600,
       "parkedEnergyWh": 700,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/14",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/14",
         "method": "share_report"
       }
     },
@@ -221,8 +221,8 @@
       "drivingEnergyWh": 9000,
       "parkedEnergyWh": 2300,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/15",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/15",
         "method": "share_report"
       }
     },
@@ -234,8 +234,8 @@
       "drivingEnergyWh": 2000,
       "parkedEnergyWh": 300,
       "source": {
-        "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-        "pointer": "/trips/months/7/daily/16",
+        "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+        "pointer": "/trips/months/8/daily/16",
         "method": "share_report"
       }
     }
@@ -252,7 +252,7 @@
         "energyWh": 56700,
         "durationSeconds": 29100,
         "source": {
-          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
           "pointer": "/charging/months/8/sessions/0",
           "method": "screen"
         }
@@ -263,7 +263,7 @@
         "energyWh": 53700,
         "durationSeconds": 27540,
         "source": {
-          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
           "pointer": "/charging/months/8/sessions/1",
           "method": "screen"
         }
@@ -274,7 +274,7 @@
         "energyWh": 2100,
         "durationSeconds": 1140,
         "source": {
-          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
           "pointer": "/charging/months/8/sessions/2",
           "method": "screen"
         }
@@ -285,7 +285,7 @@
         "energyWh": 38100,
         "durationSeconds": 1440,
         "source": {
-          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
           "pointer": "/charging/months/8/sessions/3",
           "method": "screen"
         }
@@ -296,7 +296,7 @@
         "energyWh": 44400,
         "durationSeconds": 1380,
         "source": {
-          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
           "pointer": "/charging/months/8/sessions/4",
           "method": "screen"
         }
@@ -307,7 +307,7 @@
         "energyWh": 44400,
         "durationSeconds": 1380,
         "source": {
-          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
           "pointer": "/charging/months/8/sessions/5",
           "method": "screen"
         }
@@ -318,7 +318,7 @@
         "energyWh": 20700,
         "durationSeconds": 660,
         "source": {
-          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
           "pointer": "/charging/months/8/sessions/6",
           "method": "screen"
         }
@@ -329,7 +329,7 @@
         "energyWh": 17300,
         "durationSeconds": 420,
         "source": {
-          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
           "pointer": "/charging/months/8/sessions/7",
           "method": "screen"
         }
@@ -340,7 +340,7 @@
         "energyWh": 53600,
         "durationSeconds": 27540,
         "source": {
-          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
           "pointer": "/charging/months/8/sessions/8",
           "method": "screen"
         }
@@ -351,7 +351,7 @@
         "energyWh": 30000,
         "durationSeconds": 660,
         "source": {
-          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
           "pointer": "/charging/months/8/sessions/9",
           "method": "screen"
         }
@@ -362,7 +362,7 @@
         "energyWh": 50200,
         "durationSeconds": 1260,
         "source": {
-          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
           "pointer": "/charging/months/8/sessions/10",
           "method": "screen"
         }
@@ -373,7 +373,7 @@
         "energyWh": 50900,
         "durationSeconds": 1320,
         "source": {
-          "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+          "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
           "pointer": "/charging/months/8/sessions/11",
           "method": "screen"
         }
@@ -382,22 +382,22 @@
   },
   "sources": [
     {
-      "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-      "pointer": "/trips/months/7/report",
+      "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+      "pointer": "/trips/months/8/report",
       "method": "screen"
     },
     {
-      "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-      "pointer": "/trips/months/7/daily",
+      "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+      "pointer": "/trips/months/8/daily",
       "method": "share_report"
     },
     {
-      "captureId": "78d00e0513d78c7a47a42cd4eb17e4f361edcda768c30bbf2c811ddb5eb4ea69",
-      "pointer": "/trips/months/7/share_data",
+      "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+      "pointer": "/trips/months/8/share_data",
       "method": "share_report"
     },
     {
-      "captureId": "5789de00c42eaaaebedc6327c45e71ac439a44ba0b017d316482ba3c81b02dd9",
+      "captureId": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
       "pointer": "/charging/months/8",
       "method": "screen"
     }
