@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -126,6 +128,13 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                         color = amountColor(txn),
                         modifier = Modifier.testTag("bill_amount"),
                     )
+                    // Who sees it, said as a property while it stays off the site; 编辑 changes it.
+                    if ((txn.kind == TxnKind.EXPENSE || txn.kind == TxnKind.INCOME) && !ledger.isPublic(txn)) {
+                        Row(Modifier.padding(top = Space.xs).testTag("bill_private"), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                            Icon(AppIcons.EyeOff, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(14.dp))
+                            Text(stringResource(R.string.visibility_private), style = AppTheme.typography.caption, color = tokens.tx2)
+                        }
+                    }
                     if (txn.discount > 0 && txn.kind == TxnKind.EXPENSE) {
                         Text(
                             stringResource(R.string.ledger_saved, money(txn.discount, txn.currency), money(txn.amount + txn.discount, txn.currency)),
@@ -207,20 +216,6 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                     if (txn.excluded) add { shapes -> InfoRow(shapes, AppIcons.Block, stringResource(R.string.ledger_excluded), stringResource(R.string.ledger_excluded_note)) }
                 }
                 SegmentedGroup(null, null, details)
-
-                // Who sees it: its book's say for new bills, until it says otherwise itself.
-                if (txn.kind == cc.hyoban.moments.ledger.TxnKind.EXPENSE || txn.kind == cc.hyoban.moments.ledger.TxnKind.INCOME) {
-                    val public = ledger.isPublic(txn)
-                    SegmentedGroup(
-                        null,
-                        stringResource(if (public) R.string.changes_bill_public_note else R.string.moment_private_note),
-                        listOf { shapes ->
-                            cc.hyoban.moments.ui.settings.SwitchRow(public, AppIcons.Eye, stringResource(R.string.visibility_public), "bill_public", shapes) {
-                                scope.launch { container.ledger.saveTxn(txn.copy(visibility = if (public) "private" else "public")) }
-                            }
-                        },
-                    )
-                }
 
                 // Where it leads among the Moments' pages.
                 val links = buildList<@Composable (ListItemShapes) -> Unit> {
