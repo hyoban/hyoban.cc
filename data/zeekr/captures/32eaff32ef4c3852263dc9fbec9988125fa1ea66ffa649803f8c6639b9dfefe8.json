@@ -1,0 +1,11 @@
+{
+  "id": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+  "deviceId": "zeekr-007gt",
+  "capturedAt": "2026-11-07T01:42:44+08:00",
+  "timezone": "Asia/Shanghai",
+  "raw": {
+    "file": "sources/zeekr-api-2026-11-07-014244.json",
+    "sha256": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
+    "redacted": true
+  }
+}
