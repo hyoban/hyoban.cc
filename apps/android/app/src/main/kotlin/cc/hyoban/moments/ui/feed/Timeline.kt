@@ -106,7 +106,7 @@ data class ThingRecord(val uid: String, val day: String, val device: Boolean, va
 val LocalThingNav = androidx.compose.runtime.staticCompositionLocalOf<((String) -> Unit)?> { null }
 
 /** What the timeline shows, as its filter row chooses: everything, or one plugin's records. */
-enum class FeedKind { ALL, MOMENTS, BILLS, CHARGES }
+enum class FeedKind { ALL, MOMENTS, BILLS, CHARGES, CHECKINS }
 
 /**
  * The bills to show beside [moments], of every book the ledger keeps open (all but the archived),
@@ -147,7 +147,7 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
                 (filter.month == null || charge.at.substring(5, 7).toInt() == filter.month)
         }.groupBy { it.at.take(10) }
         // The phone's own too, an import's waiting to be published among them.
-        val checkins = if (kind != FeedKind.ALL || Module.CHECKIN.key in off) emptyMap() else allCheckins.byDay.filterKeys(inFilter)
+        val checkins = if ((kind != FeedKind.ALL && kind != FeedKind.CHECKINS) || Module.CHECKIN.key in off) emptyMap() else allCheckins.byDay.filterKeys(inFilter)
         val book = ledger.book
         if (book == null || (kind != FeedKind.ALL && kind != FeedKind.BILLS) || Module.LEDGER.key in off) {
             return@remember TimelineBills(ledger, emptyMap(), emptyMap(), emptyMap(), book?.currency ?: "CNY", charges, things, checkins)
@@ -229,14 +229,15 @@ fun ChargeRow(charge: Charge, modifier: Modifier = Modifier) {
     )
 }
 
-/** A check-in as a row on the page: its time, and the venue it was at, or on a page of that place its day. */
+/** A check-in as a row on the page: its time, and the venue it was at, or on a page of that place its day; a tap opens its sheet. */
 @Composable
 fun CheckinRow(checkin: Checkin, modifier: Modifier = Modifier, withDate: Boolean = false) {
+    val open = LocalCheckinNav.current
     PageRow(
         leading = { Icon(AppIcons.Pin, contentDescription = null) },
         title = checkinTitle(checkin, withDate),
-        supporting = null,
-        onClick = null,
+        supporting = if (checkin.private) stringResource(R.string.visibility_private) else null,
+        onClick = open?.let { { it(checkin.uid) } },
         modifier = modifier.testTag("checkin_${checkin.uid}"),
         time = formatTime(checkin.at).orEmpty(),
     )

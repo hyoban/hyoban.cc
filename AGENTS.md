@@ -126,7 +126,9 @@ even when starting from the repository root.
   public bill publishes its kind, amount, currency, category and note alone, never its account or
   balance. Spans of the footprints can be made public (编辑旅程 has a switch), and
   only their line, simplified, is published; the raw samples never leave the phone. A stay
-  kept as a check-in, by hand, is a private check-in entry like Swarm's, its point the stay's middle. Raw Zeekr captures and report links stay under `.private/`;
+  kept as a check-in, by hand, is a check-in entry like Swarm's, its point the stay's middle. A check-in
+  starts public, so the site's map dots it at its place, unless Swarm kept it private; its sheet on the phone
+  makes it private. Raw Zeekr captures and report links stay under `.private/`;
   only the approved statistical projection belongs in `data/zeekr/`. The car's data, its
   statistics and its charges, comes only from that import; nothing edits it by hand, the app
   included: a wrong value is fixed by capturing and importing again.

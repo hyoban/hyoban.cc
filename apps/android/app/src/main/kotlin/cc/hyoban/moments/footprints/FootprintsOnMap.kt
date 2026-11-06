@@ -45,7 +45,6 @@ import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.coordinatesName
 import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.spec.Entries
-import cc.hyoban.moments.data.spec.Visibility
 import cc.hyoban.moments.data.spec.entryUid
 import cc.hyoban.moments.ui.compose.KeepPlace
 import cc.hyoban.moments.ui.theme.tokens
@@ -526,8 +525,8 @@ private fun stamp(time: Long): String = Instant.ofEpochMilli(time).atZone(ZoneId
 private fun recordStamp(time: Long): String = cc.hyoban.moments.data.local.stamp(Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).toOffsetDateTime())
 
 /**
- * A stay kept as a private check-in at [place], called [venue]: from its start to its end, at
- * its middle as the footprints have it. Its uid is made from its start, so keeping it again
+ * A stay kept as a check-in at [place], called [venue], public until its sheet says otherwise:
+ * from its start to its end, at its middle as the footprints have it. Its uid is made from its start, so keeping it again
  * changes that one rather than adding another.
  */
 private fun stayCheckin(stay: TrackStay, place: String, venue: String): JsonObject {
@@ -550,7 +549,6 @@ private fun stayCheckin(stay: TrackStay, place: String, venue: String): JsonObje
                 put("source", buildJsonObject { put("app", "phone") })
             })
         })
-        put("visibility", Visibility.PRIVATE.value)
         put("createdAt", now)
         put("updatedAt", now)
     }

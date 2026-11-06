@@ -102,6 +102,10 @@ class SwarmTest {
         assertEquals(setOf("checkin"), alone.getValue("parts").jsonObject.keys)
         assertNull(Entries.toMoment(alone))
         assertFalse(Entries.isMark(alone))
+        assertFalse(Entries.isPrivate(alone), "a check-in alone comes in public")
+        val kept = lake.copy(shout = null, photos = emptyList())
+        assertTrue(kept.private)
+        assertTrue(Entries.isPrivate(Swarm.entry(kept, now, null)), "unless Swarm kept it private")
     }
 
     @Test

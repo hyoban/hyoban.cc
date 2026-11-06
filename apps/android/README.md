@@ -141,16 +141,16 @@ Moments with places, not the footprints; nothing leaves the phone. Home is where
 fall on the most days around each one, so it follows a move; 我 → 家 (`moments://homes`)
 shows it and takes more by hand, a city or a whole province each. The best come first, by
 photos and days with records, each named after the cities visited, with the holiday it spans
-(国庆香港) or 一日 or 周末 (南京一日). Its + adds it as it is, private as the check-ins it came
-from; opened, it is 新建旅程 with its days and name filled in; one dismissed doesn't come back.
+(国庆香港) or 一日 or 周末 (南京一日). Its + adds it as it is, private; opened, it is 新建旅程 with its days and name filled in; one dismissed doesn't come back.
 The thresholds live in the code and its tests.
 
 No page has a bar: its way back and actions float as circles over it, its title large
 under them. On a wide window the map's trips stand in a column and bottom panels open as
 dialogs.
 
-The search (`moments://search`) filters by kind (Moments, bills, charges) and by year and
-month, and lists what it finds under its years; with nothing to list it says why and
+The search (`moments://search`) filters by kind (Moments, bills, charges, check-ins, each
+while its module is on) and by year and month, and lists what it finds under its years; a
+check-in matches by its venue or its place's name and opens its sheet; with nothing to list it says why and
 what to try next.
 
 ## Writing a Moment
@@ -209,8 +209,10 @@ backups leave out). Without them there is nothing to publish to: the card for it
 and nothing is marked 未发布, on the timeline or on a Moment's page, until they are set. With
 them the site's Moments can be changed and deleted too. Nothing reaches the site as it is
 saved: new, changed and deleted Moments, changed places, public bills, trips and footprint
-spans wait on the phone, past a restart. 发布更改, from the card at the top of 我, lists them,
-shows what changed and takes a change back. 全部发布到网站 runs as WorkManager work in a foreground
+spans, check-ins, occasions and things wait on the phone, past a restart. 发布更改, from the card
+at the top of 我, lists them, shows what changed, each field of a changed Moment, place,
+check-in, occasion, device or subscription struck through beside what it is now, and takes a
+change back. 全部发布到网站 runs as WorkManager work in a foreground
 service with a progress notification, waiting out a dropped link: it uploads the new
 originals a few at a time, then sends everything else as one `POST /v2/changes`, which the
 API takes whole or not at all. What is published leaves the phone's store for the site's.
@@ -266,16 +268,18 @@ ledger keeps its own button for iCost, and an iCost file shared in still opens �
 从 Swarm 导入, under 我 → 导入, reads the .zip Swarm (Foursquare) exports
 (`data/swarm/Swarm.kt`): its `checkins*.json`, and `photos*.json` with the `pix/` they name;
 the account, friends, devices, visits and comments in it are left alone. Each check-in comes
-in private, at its time in the offset it was made at and its point as Swarm has it (WGS-84),
+in at its time in the offset it was made at and its point as Swarm has it (WGS-84),
 with a `checkin` part naming its venue and Swarm's ids. One with words or photos becomes a
-Moment of the phone's, its words as written and its photos copied into `local/media/`; the
-rest are entries of their check-in alone, a line 签到 <venue> in the timeline's records. Each
+private Moment of the phone's, its words as written and its photos copied into `local/media/`; the
+rest are entries of their check-in alone, a line 签到 <venue> in the timeline's records, public unless Swarm kept it private. Each
 venue becomes a place of the phone's, kept on its own, named by its local name where Swarm keeps
 one beside the English it exports, at its most accurate check-in's point, with the venue in its
 `source`; a venue imported before keeps the place it has, the site's once published. The map
 counts a place's check-ins with its Moments, and its sheet and page list them. Their
 uids are made from the time and Swarm's id, so importing the same export again adds only what
-is new and copies no photo twice. All of it waits with the other unpublished changes for
+is new and copies no photo twice. Tapping a check-in, in the timeline, a day or a place, opens
+its sheet: its venue, when, and a 公开 switch, kept as a change at once, the site's map dotting
+it while public. All of it waits with the other unpublished changes for
 发布更改. Check a change to the importer against a real export with
 `SWARM_EXPORT=<zip> ./gradlew :app:testDebugUnitTest --tests '*SwarmTest*'`, and never commit it.
 
@@ -466,7 +470,7 @@ behaves.
   and top speed, names a stay after one of the phone's own places within 300 m (no request
   leaves for it), and frames one on the map when tapped; a stay's + opens the same picker on
   its middle, named as a bill's spot is, to keep it as a place of the phone's, or with 保存为签到
-  as a private check-in there too (`source.app` `phone`), from the stay's start to its end,
+  as a public check-in there too (`source.app` `phone`), from the stay's start to its end,
   its uid made from the start so keeping it again changes it; a check-in whose time meets the
   stay's, Swarm's or another, one begun the day before included, is that visit, and none is
   added. Such a stay is listed with that check-in's venue and a grey flag in place of its +.

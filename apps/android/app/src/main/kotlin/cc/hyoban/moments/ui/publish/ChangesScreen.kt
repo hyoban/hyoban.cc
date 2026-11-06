@@ -296,6 +296,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                                 },
                             ),
                             revert,
+                            diffs = change.before?.let { before -> change.after?.let { after -> entryDiffs(before, after, places) } },
                         )
                     }
                 }
@@ -316,6 +317,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                                 },
                             ),
                             revert,
+                            diffs = change.before?.let { before -> change.after?.let { after -> entryDiffs(before, after, places) } },
                         )
                     }
                 }
@@ -338,6 +340,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                                 },
                             ),
                             revert,
+                            diffs = change.before?.let { before -> change.after?.let { after -> entryDiffs(before, after, places) } },
                         )
                     }
                 }
@@ -646,9 +649,13 @@ private fun billAmount(change: cc.hyoban.moments.data.store.BillChange): String 
     return "$sign${change.txn.currency} ${"%.2f".format(change.txn.amount / 100.0)}"
 }
 
-/** A bill or a span of footprints going public or private: what it is, when, its figure, and what will happen. */
+/**
+ * A bill or a span of footprints going public or private, or an entry the phone changed: what it
+ * is, when, its figure, what will happen, and for a changed entry what it changed, each field from
+ * what it was ([diffs], null for one new or deleted).
+ */
 @Composable
-private fun OutsideCard(title: String, date: String?, figure: String?, note: String, onRevert: (() -> Unit)?) {
+private fun OutsideCard(title: String, date: String?, figure: String?, note: String, onRevert: (() -> Unit)?, diffs: List<EntryDiff>? = null) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -664,6 +671,12 @@ private fun OutsideCard(title: String, date: String?, figure: String?, note: Str
             style = AppTheme.typography.caption,
             color = tokens.tx2,
         )
+        if (diffs != null) {
+            Column(Modifier.padding(top = Space.s), verticalArrangement = Arrangement.spacedBy(Space.m)) {
+                if (diffs.isEmpty()) Text(stringResource(R.string.note_change_nothing), style = AppTheme.typography.body, color = tokens.tx2)
+                diffs.forEach { diff -> Field(diff.label) { FromTo(diff.from, diff.to, diff.icon) } }
+            }
+        }
         CardActions(onRevert?.let { revert -> { RevertButton(revert) } })
     }
 }

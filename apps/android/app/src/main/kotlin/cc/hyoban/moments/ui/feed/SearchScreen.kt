@@ -97,10 +97,10 @@ import cc.hyoban.moments.ui.theme.fill
 /**
  * Searching everything recorded, full screen on a phone: a destination of its own, the field
  * at the top on the surface, focused and ready to type, back leaving it; under it the filters
- * the timeline gave up, what kind (Moments, bills, charges, each with how many) and when (a
+ * the timeline gave up, what kind (Moments, bills, charges, check-ins, each with how many) and when (a
  * year, then a month); what matches below as a list, said how many, newest first. A Moment
  * matches by its words, the names of its places or its trip's title, a bill by its category
- * and note; with nothing typed, a filter chosen lists all it lets through.
+ * and note, a check-in by its venue or its place's name; with nothing typed, a filter chosen lists all it lets through.
  */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
@@ -117,6 +117,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
         when (it) {
             FeedKind.BILLS -> settings.isOn(Module.LEDGER)
             FeedKind.CHARGES -> settings.isOn(Module.CAR)
+            FeedKind.CHECKINS -> settings.isOn(Module.CHECKIN)
             else -> true
         }
     }
@@ -140,18 +141,26 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
         }
     }
     val matchedCharges = remember(records, text) { if (text.isEmpty()) records.charges.values.flatten() else emptyList() }
-    val found = remember(kind, matchedMoments, matchedBills, matchedCharges, searching) {
+    val matchedCheckins = remember(records, places, text) {
+        records.checkins.values.flatten().filter { checkin ->
+            text.isEmpty() || checkin.venue.contains(text, ignoreCase = true) ||
+                checkin.place?.let { places[it] }?.name?.contains(text, ignoreCase = true) == true
+        }
+    }
+    val found = remember(kind, matchedMoments, matchedBills, matchedCharges, matchedCheckins, searching) {
         if (!searching) emptyList() else buildList<Found> {
             if (kind == FeedKind.ALL || kind == FeedKind.MOMENTS) matchedMoments.forEach { add(Found.Moment(it)) }
             if (kind == FeedKind.ALL || kind == FeedKind.BILLS) matchedBills.forEach { add(Found.Bill(it)) }
             if (kind == FeedKind.ALL || kind == FeedKind.CHARGES) matchedCharges.forEach { add(Found.ChargeFound(it)) }
+            if (kind == FeedKind.ALL || kind == FeedKind.CHECKINS) matchedCheckins.forEach { add(Found.CheckinFound(it)) }
         }.sortedByDescending { it.at }
     }
     val counts = mapOf(
-        FeedKind.ALL to matchedMoments.size + matchedBills.size + matchedCharges.size,
+        FeedKind.ALL to matchedMoments.size + matchedBills.size + matchedCharges.size + matchedCheckins.size,
         FeedKind.MOMENTS to matchedMoments.size,
         FeedKind.BILLS to matchedBills.size,
         FeedKind.CHARGES to matchedCharges.size,
+        FeedKind.CHECKINS to matchedCheckins.size,
     )
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -206,6 +215,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                             FeedKind.MOMENTS -> R.string.filter_moments
                             FeedKind.BILLS -> R.string.section_bill
                             FeedKind.CHARGES -> R.string.part_charge
+                            FeedKind.CHECKINS -> R.string.filter_checkins
                         },
                     )
                     val figures = AppTheme.typography.caption.fontFamily
@@ -289,6 +299,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                                 is Found.Moment -> SearchResult(item.moment, text, places, trips, container.mediaUrls, row) { onMoment(item.moment.uid) }
                                 is Found.Bill -> SearchBill(item.txn, ledger, row) { onBill(item.txn.id) }
                                 is Found.ChargeFound -> SearchCharge(item.charge, row)
+                                is Found.CheckinFound -> SearchCheckin(item.checkin, text, places, row)
                             }
                         }
                     }
@@ -321,7 +332,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
     }
 }
 
-/** One thing the search found: a Moment, a bill or a charge, newest first by [at]. */
+/** One thing the search found: a Moment, a bill, a charge or a check-in, newest first by [at]. */
 private sealed interface Found {
     val key: String
     val at: String
@@ -339,6 +350,11 @@ private sealed interface Found {
     data class ChargeFound(val charge: Charge) : Found {
         override val key get() = "charge-${charge.uid}"
         override val at get() = charge.at
+    }
+
+    data class CheckinFound(val checkin: cc.hyoban.moments.data.things.Checkin) : Found {
+        override val key get() = "checkin-${checkin.uid}"
+        override val at get() = checkin.at
     }
 }
 
@@ -472,6 +488,35 @@ private fun SearchCharge(charge: Charge, modifier: Modifier) {
                 stringResource(if (charge.dc) R.string.charge_dc else R.string.charge_ac),
                 charge.kwh?.let { "%.1f kWh".format(it) },
                 charge.minutes?.let { pluralStringResource(R.plurals.charge_minutes, it, it) },
+            ).joinToString(" "),
+            style = AppTheme.typography.caption,
+            color = tokens.tx2,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/**
+ * A check-in found: its venue, what was searched for marked, and under it its day and its place
+ * when that is named otherwise, 私有 when kept off the site; a tap opens its sheet.
+ */
+@Composable
+private fun SearchCheckin(checkin: cc.hyoban.moments.data.things.Checkin, text: String, places: Map<String, Place>, modifier: Modifier) {
+    val open = LocalCheckinNav.current
+    val mark = SpanStyle(background = tokens.accentSoft)
+    SearchRow(
+        lead = { Icon(AppIcons.Pin, contentDescription = null, tint = tokens.tx2) },
+        onClick = open?.let { { it(checkin.uid) } },
+        modifier = modifier.testTag("checkin_${checkin.uid}"),
+        trailing = { formatTime(checkin.at)?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx3) } },
+    ) {
+        Text(marked(checkin.venue, text, mark), style = AppTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+            listOfNotNull(
+                formatDate(checkin.at, ownYear(checkin.at)),
+                checkin.place?.let { places[it]?.name }?.takeIf { it != checkin.venue },
+                if (checkin.private) stringResource(R.string.visibility_private) else null,
             ).joinToString(" "),
             style = AppTheme.typography.caption,
             color = tokens.tx2,

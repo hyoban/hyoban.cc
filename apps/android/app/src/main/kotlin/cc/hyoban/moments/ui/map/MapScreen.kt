@@ -523,7 +523,7 @@ private fun MapContent(
                 suggestions = suggestions,
                 onSuggestion = onSuggestedTrip,
                 onDismiss = { settings.dismissTrip(it.key) },
-                // Added in one tap, private as the check-ins it was found in, its page there to change it.
+                // Added in one tap, private, its page there to change it.
                 onAdd = { suggestion ->
                     // Once each, however many times it's tapped before it goes, and not the next
                     // one that moves up under the finger as it goes.
