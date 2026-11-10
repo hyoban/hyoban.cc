@@ -23,11 +23,6 @@ import cc.hyoban.moments.ui.components.floatingElevation
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.ExtendedFloatingActionButton
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
@@ -82,7 +77,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -93,9 +87,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.ui.compose.formatDistance
 import cc.hyoban.moments.data.spec.entryUid
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
@@ -112,7 +106,6 @@ import cc.hyoban.moments.data.store.undo
 import cc.hyoban.moments.data.store.PlaceChange
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.distance
-import cc.hyoban.moments.ui.compose.formatDistance
 import cc.hyoban.moments.data.store.PublishProgress
 import cc.hyoban.moments.publish.publishingText
 import cc.hyoban.moments.ui.LocalSnackbarLift
@@ -142,14 +135,13 @@ import cc.hyoban.moments.ui.theme.fill
  * of it, the only way the app writes to the site.
  */
 @Composable
-fun ChangesScreen(container: PhoneContainer, onMoment: (String) -> Unit, onBack: () -> Unit) {
+fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val publishing by container.publishing.collectAsStateWithLifecycle()
     val urls = container.mediaUrls
     val busy = publishing != null
-    val context = LocalContext.current
-    val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { container.publishPending() }
+    val publish = cc.hyoban.moments.ui.LocalDevice.current.beforePublishing { container.publishPending() }
 
     // Asked first, as clearing deletes what was written on the phone.
     var clearing by rememberSaveable { mutableStateOf(false) }
@@ -347,7 +339,7 @@ fun ChangesScreen(container: PhoneContainer, onMoment: (String) -> Unit, onBack:
                 }
                 section(Res.string.section_visibility, pending.outside.bills, key = { "bill-${it.uid}" }) { change ->
                     val revert = change.undo()?.let { visibility ->
-                        { container.scope.launch { container.ledger.saveTxn(change.txn.copy(visibility = visibility)) }; Unit }
+                        { container.revertBill(change) }
                     }?.takeUnless { busy }
                     SwipeToRevert(revert) { OutsideCard(change.label, formatDate(change.txn.dateKey), billAmount(change), stringResource(if (change.part == null) Res.string.changes_bill_private else Res.string.changes_bill_public_note), revert) }
                 }
@@ -434,15 +426,7 @@ fun ChangesScreen(container: PhoneContainer, onMoment: (String) -> Unit, onBack:
             ExtendedFloatingActionButton(
                 onClick = {
                     if (progress == null) {
-                        // The notification that keeps publishing going in the background asks
-                        // once, on Android 13 and later; it publishes whatever the answer.
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        } else {
-                            container.publishPending()
-                        }
+                        publish()
                     }
                 },
                 shape = Corners.full,
@@ -453,7 +437,7 @@ fun ChangesScreen(container: PhoneContainer, onMoment: (String) -> Unit, onBack:
                 text = {
                     Text(
                         if (progress != null) {
-                            publishingText(LocalContext.current, progress)
+                            publishingText(progress)
                         } else {
                             stringResource(Res.string.label_publish_all)
                         },
@@ -505,7 +489,7 @@ private fun PublishingIndicator(progress: PublishProgress?, modifier: Modifier =
  * saying how many, how far publishing has got while it runs, opening them to look over.
  */
 @Composable
-fun PendingChangesRow(container: PhoneContainer, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     val publishing by container.publishing.collectAsStateWithLifecycle()
     Surface(
@@ -523,7 +507,7 @@ fun PendingChangesRow(container: PhoneContainer, onClick: () -> Unit, modifier: 
                 Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                     Text(
                         if (progress != null) {
-                            publishingText(LocalContext.current, progress)
+                            publishingText(progress)
                         } else {
                             pluralStringResource(Res.plurals.count_changes, pending.size, pending.size)
                         },

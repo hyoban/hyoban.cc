@@ -3,13 +3,7 @@ package cc.hyoban.moments.ui.settings
 import cc.hyoban.moments.res.*
 import org.jetbrains.compose.resources.StringResource
 import kotlinx.coroutines.CancellationException
-import android.util.Log
-import android.content.Context
-import cc.hyoban.moments.accessibility.ShareAccessibilityService
-import cc.hyoban.moments.footprints.ConnectionReminderService
-import cc.hyoban.moments.footprints.RecordingService
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.components.LocalTopClearance
@@ -28,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
@@ -50,7 +44,7 @@ import kotlinx.coroutines.withContext
  * page. Every bill and span can still say otherwise. Nothing here opens a page further down.
  */
 @Composable
-fun ItemsScreen(container: PhoneContainer, onBack: () -> Unit) {
+fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val revision by container.footprints.revision.collectAsStateWithLifecycle()
     val shares by produceState(0, revision) {
@@ -58,7 +52,7 @@ fun ItemsScreen(container: PhoneContainer, onBack: () -> Unit) {
     }
     val scope = rememberCoroutineScope()
     val settings = LocalSettings.current
-    val context = LocalContext.current
+    val device = cc.hyoban.moments.ui.LocalDevice.current
     SubPage(stringResource(Res.string.items_title), onBack, Modifier.background(AppColors.page)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
@@ -78,7 +72,7 @@ fun ItemsScreen(container: PhoneContainer, onBack: () -> Unit) {
                             val on = settings.isOn(module)
                             SwitchRow(on, moduleIcon(module), stringResource(moduleTitle(module)), "module_${module.key}", shapes) {
                                 settings.changeModule(module, !on)
-                                scope.launch { applyModule(context, module) }
+                                scope.launch { device.moduleChanged(module) }
                             }
                         }
                     },
@@ -143,24 +137,4 @@ fun moduleIcon(module: Module): ImageVector = when (module) {
     Module.FOOD -> AppIcons.Food
     Module.CHECKIN -> AppIcons.Pin
     Module.OCCASIONS -> AppIcons.Calendar
-}
-
-/**
- * Brings the phone's background work in line with [module] just turned on or off: the footprints'
- * recording and connection reminders stop while their module is off and come back as they were
- * set when it is on again; the payment reader listens for 自动记账 only while the ledger is on.
- */
-suspend fun applyModule(context: Context, module: Module) {
-    when (module) {
-        Module.FOOTPRINTS -> try {
-            RecordingService.control(context)
-            ConnectionReminderService.sync(context)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Log.w("Footprints", "Could not apply the footprints module", e)
-        }
-        Module.LEDGER -> ShareAccessibilityService.listenIdle()
-        else -> Unit
-    }
 }

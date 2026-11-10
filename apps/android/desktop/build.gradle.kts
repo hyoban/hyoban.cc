@@ -11,6 +11,8 @@ kotlin {
 
 // The cities the map's fog of war lights, the site's own file, as the phone takes it into its assets.
 sourceSets["main"].resources.srcDir(rootProject.file("../web/src/data/boundaries"))
+// Where China's shifted coordinates apply, the file the phone carries in its own resources.
+sourceSets["main"].resources.srcDir(rootProject.file("app/src/main/resources"))
 
 dependencies {
     implementation(project(":shared"))

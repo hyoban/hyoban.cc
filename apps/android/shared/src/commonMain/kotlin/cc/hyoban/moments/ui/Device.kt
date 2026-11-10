@@ -22,6 +22,12 @@ data class DayMark(val at: MapPoint, val kind: Kind, val icon: ImageVector) {
     enum class Kind { MOMENT, CHECKIN, BILL }
 }
 
+/** Starts asking for where the device is; [asked] says whether it has been asked before. */
+class LocationAsk(private val wasAsked: () -> Boolean, private val start: () -> Unit) {
+    val asked get() = wasAsked()
+    operator fun invoke() = start()
+}
+
 /**
  * What the pages ask of the device they run on, which the phone and the Mac each do their own
  * way: the maps, sharing and the menus that lead to it, and the pages not yet the same on both.
@@ -40,6 +46,45 @@ interface Device {
     /** The map a trip plays back on, keeping what it follows clear of [clear] at its edges. */
     @Composable fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modifier, credit: IntArray?)
 
+    /**
+     * A map to choose a place on, a pin standing at its middle: the known [places] as dots,
+     * [chosen] marked, one tapped told to [onPlace]; where the middle comes to rest told to
+     * [onCenter], with whether it was moved there by hand. Each new [target] flies it there.
+     */
+    @Composable fun PickerMap(
+        places: Map<String, Place>,
+        chosen: String?,
+        target: cc.hyoban.moments.ui.map.MapTarget?,
+        onCenter: (latitude: Double, longitude: Double, byUser: Boolean) -> Unit,
+        onPlace: (String) -> Unit,
+        modifier: Modifier,
+        onDrag: (Boolean) -> Unit,
+    )
+
+    /** Choosing photos for a Moment, [limit] at most: what was picked told to [onPicked], or [onDismiss] with none. */
+    @Composable fun PhotoPicker(container: AppContainer, limit: Int, onDismiss: () -> Unit, onPicked: (List<cc.hyoban.moments.data.local.PhotoRef>) -> Unit)
+
+    /** Asking for where the device is, as it asks: [onResult] hears whether it may be read. */
+    @Composable fun rememberLocationAsk(onResult: (Boolean) -> Unit): LocationAsk
+
+    /** Whether where the device is may be read now. */
+    fun canLocate(): Boolean
+
+    /** Where the device is, or null when it can't tell. */
+    suspend fun currentFix(): cc.hyoban.moments.data.local.Fix?
+
+    /** Opens the app's page in the system's settings, where what it may do is changed. */
+    fun openAppSettings()
+
+    /** Whether the device has a camera app of its own to open for a new photo. */
+    val hasCamera: Boolean
+
+    /** Opens the device's camera app; false when there is none. */
+    fun openCamera(): Boolean
+
+    /** Says [text] for a moment, over whatever is shown. */
+    fun toast(text: String)
+
     /** A Moment's menu, opened [at] where it was pressed; nothing while [at] is null. */
     @Composable fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: () -> Unit)
 
@@ -49,11 +94,20 @@ interface Device {
     /** A place's name, point and kind, to change. */
     @Composable fun EditPlace(container: AppContainer, id: String, onDismiss: () -> Unit)
 
-    /** The changes waiting to publish, as a row at the head of the timeline. */
-    @Composable fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Modifier)
+    /** 同步与来源's sections for where the device keeps things beside the API (the phone's backup and NAS), with their dialogs. */
+    @Composable fun StorageSettings(container: AppContainer)
+
+    /** 同步与来源's section for the app's own updates, where the device takes them itself. */
+    @Composable fun UpdateSettings(container: AppContainer)
+
+    /** What starts publishing: [publish] itself, after whatever the device asks first (the phone, to show its progress). */
+    @Composable fun beforePublishing(publish: () -> Unit): () -> Unit
 
     /** Told once the timeline has what it first shows, for what the device holds back until then. */
     @Composable fun TimelineReady(ready: Boolean)
+
+    /** Brings the device's background work in line with [module] just turned on or off. */
+    suspend fun moduleChanged(module: cc.hyoban.moments.data.spec.Module)
 
     /** Puts [text] on the clipboard. */
     fun copyText(text: String)

@@ -1,7 +1,5 @@
 package cc.hyoban.moments.ui.components
 
-import androidx.activity.BackEventCompat
-import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.shape.RoundedCornerShape
 import cc.hyoban.moments.ui.design.AppTheme
@@ -32,27 +30,7 @@ class PredictiveBack {
  * closes it from there, and called off, it settles back. A back key closes it at once.
  */
 @Composable
-fun rememberPredictiveBack(enabled: Boolean = true, onBack: () -> Unit): PredictiveBack {
-    val state = remember { PredictiveBack() }
-    val back by rememberUpdatedState(onBack)
-    val scope = rememberCoroutineScope()
-    val settle = AppTheme.motionScheme.fastSpatialSpec<Float>()
-    // Open again, it starts from rest rather than where the last gesture left it.
-    LaunchedEffect(enabled) { if (enabled) state.progress = 0f }
-    PredictiveBackHandler(enabled) { events ->
-        try {
-            events.collect { event ->
-                state.fromLeft = event.swipeEdge == BackEventCompat.EDGE_LEFT
-                state.progress = event.progress
-            }
-            back()
-        } catch (e: CancellationException) {
-            scope.launch { animate(state.progress, 0f, animationSpec = settle) { value, _ -> state.progress = value } }
-            throw e
-        }
-    }
-    return state
-}
+expect fun rememberPredictiveBack(enabled: Boolean = true, onBack: () -> Unit): PredictiveBack
 
 /**
  * A full-screen layer following [back], as Material 3 has one previewing its close: shrinking

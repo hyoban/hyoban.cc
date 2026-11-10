@@ -32,7 +32,7 @@ class LedgerStoreTest {
         val existing = Book("existing", "Existing book")
         LedgerStore(context).use { seed -> seed.saveBook(existing) }
         val ledger = LedgerStore(context).also { store = it }
-        val pending = async(start = CoroutineStart.UNDISPATCHED) { ledger.ensureBook("Default book", false) }
+        val pending = async(start = CoroutineStart.UNDISPATCHED) { ledger.ensureDefaultBook("Default book", false) }
         assertFalse(pending.isCompleted)
         ledger.load()
         assertEquals(existing, pending.await())
@@ -42,7 +42,7 @@ class LedgerStoreTest {
     @Test fun simultaneousFirstEntriesCreateOnlyOneBook() = runBlocking {
         val ledger = LedgerStore(context).also { store = it }
         ledger.load()
-        val books = List(8) { async(Dispatchers.Default) { ledger.ensureBook("Default book", false) } }.awaitAll()
+        val books = List(8) { async(Dispatchers.Default) { ledger.ensureDefaultBook("Default book", false) } }.awaitAll()
         assertEquals(1, books.map { it.id }.toSet().size)
         assertEquals(listOf(books.first()), ledger.ledger.value.books)
         assertEquals(defaultCategories("unused", false).size, ledger.ledger.value.categories.size)

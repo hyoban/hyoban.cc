@@ -126,7 +126,7 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
         }
     }
 
-    suspend fun saveTxn(txn: Txn) = write { it.replace("txns", txn.values()) }
+    override suspend fun saveTxn(txn: Txn) { write { it.replace("txns", txn.values()) } }
 
     /** Deletes bills, and the refunds and reimbursements of any of them with them. */
     suspend fun deleteTxns(ids: Collection<String>) = write { db ->
@@ -134,7 +134,7 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
         all.forEach { db.delete("txns", "id=?", arrayOf(it)) }
     }
 
-    suspend fun saveAccount(account: Account) = write { it.replace("accounts", account.values()) }
+    override suspend fun saveAccount(account: Account) { write { it.replace("accounts", account.values()) } }
 
     /** Deletes an account no bill uses. */
     suspend fun deleteAccount(id: String) = write { db ->
@@ -142,7 +142,7 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
         db.delete("accounts", "id=?", arrayOf(id))
     }
 
-    suspend fun saveBook(book: Book) = write { it.replace("books", book.values()) }
+    override suspend fun saveBook(book: Book) = write { it.replace("books", book.values()) }
 
     /** Waits for disk state before checking, then creates at most one initial book. */
     internal suspend fun ensureDefaultBook(defaultName: String, chinese: Boolean): Book {
@@ -179,7 +179,9 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
     /** Shows every book at once, a new bill still going to the one chosen last. */
     suspend fun showAllBooks() = write { allBooks = true }
 
-    suspend fun saveCategory(category: Category) = write { it.replace("categories", category.values()) }
+    override suspend fun saveCategory(category: Category) { write { it.replace("categories", category.values()) } }
+
+    override suspend fun ensureBook(defaultName: String, chinese: Boolean) { ensureDefaultBook(defaultName, chinese) }
 
     /** Deletes a category no bill uses, and its own second-level ones, which no bill may use either. */
     suspend fun deleteCategory(id: String) = write { db ->

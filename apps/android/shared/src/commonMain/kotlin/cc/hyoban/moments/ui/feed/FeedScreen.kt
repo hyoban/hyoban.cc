@@ -247,7 +247,7 @@ fun FeedScreen(
         }
         item(key = "changes") {
             AnimatedVisibility(publishable, enter = rowIn, exit = rowOut) {
-                cc.hyoban.moments.ui.LocalDevice.current.PendingChangesRow(container, onChanges, Modifier.padding(horizontal = Space.gutter, vertical = Space.s))
+                cc.hyoban.moments.ui.publish.PendingChangesRow(container, onClick = onChanges, modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s))
             }
         }
     }

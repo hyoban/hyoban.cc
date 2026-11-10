@@ -53,7 +53,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.CHINA_PLACES_AMAP
 import cc.hyoban.moments.CHINA_PLACES_TENCENT
 import cc.hyoban.moments.ui.design.DropdownMenu
@@ -74,16 +74,14 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 /** 同步与来源: the API, its token and reading from it again; the keys the map's place search uses. */
 @Composable
-fun SyncScreen(container: PhoneContainer, onBack: () -> Unit) {
+fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
     val settings = container.settings
+    val device = cc.hyoban.moments.ui.LocalDevice.current
     // The setting whose dialog is open, by its place in the list, so it stays open across a rotation.
     var editing by rememberSaveable { mutableStateOf<Int?>(null) }
     var editingToken by rememberSaveable { mutableStateOf(false) }
     var editingTencentKey by rememberSaveable { mutableStateOf(false) }
     var editingAmapKey by rememberSaveable { mutableStateOf(false) }
-    var editingBackup by rememberSaveable { mutableStateOf(false) }
-    var restoring by rememberSaveable { mutableStateOf(false) }
-    var editingNas by rememberSaveable { mutableStateOf(false) }
     val rows = listOf(
         Row(settings.apiUrl, Res.string.setting_api_url, AppIcons.Cloud) { container.changeApi(it) },
     )
@@ -132,8 +130,7 @@ fun SyncScreen(container: PhoneContainer, onBack: () -> Unit) {
                     ) { Text(stringResource(Res.string.action_refresh)) }
                 }
                 Section(stringResource(Res.string.section_site), rows.subList(0, 1), 0, stringResource(Res.string.settings_api_note), extra = listOf(token, refresh)) { editing = it }
-                BackupSection(container.backup, onEdit = { editingBackup = true }, onRestore = { restoring = true })
-                NasSection(container.nas) { editingNas = true }
+                device.StorageSettings(container)
                 // The keys the place picker asks AMap and Tencent with in China, kept beside the map's styles, and,
                 // with both, which it asks first: a menu under the row.
                 val chinaPlaces: Segment = { shapes ->
@@ -185,7 +182,7 @@ fun SyncScreen(container: PhoneContainer, onBack: () -> Unit) {
                     ) { Text(stringResource(Res.string.setting_tencent_key)) }
                 }
                 Section(stringResource(Res.string.section_map), emptyList(), 0, stringResource(Res.string.settings_map_note), extra = listOfNotNull(amapKey, tencentKey, chinaPlaces.takeIf { settings.amapKey.isSet && settings.tencentMapKey.isSet })) { editing = it }
-                UpdateSection(container.updates, container.scope)
+                device.UpdateSettings(container)
             }
         }
     }
@@ -209,40 +206,6 @@ fun SyncScreen(container: PhoneContainer, onBack: () -> Unit) {
             settings.amapKey.set(text)
             editingAmapKey = false
         }
-    }
-
-    if (editingBackup) {
-        val backup = container.backup
-        WebDavDialog(
-            backup,
-            onDismiss = { editingBackup = false },
-            onForget = {
-                backup.forget()
-                editingBackup = false
-            },
-        ) { url, user, password ->
-            backup.change(url, user, password)
-            editingBackup = false
-        }
-    }
-
-    if (editingNas) {
-        val nas = container.nas
-        NasDialog(
-            nas,
-            onDismiss = { editingNas = false },
-            onForget = {
-                nas.forget()
-                editingNas = false
-            },
-        ) { link, user, password ->
-            nas.change(link, user, password)
-            editingNas = false
-        }
-    }
-
-    if (restoring) {
-        RestoreDialog(container.backup) { restoring = false }
     }
 
     editing?.let { index ->

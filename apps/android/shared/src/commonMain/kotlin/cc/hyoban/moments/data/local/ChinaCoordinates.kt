@@ -23,7 +23,7 @@ import kotlin.math.sqrt
  * [AREA_MARGIN_METRES] of their coasts and borders, a pier or a boat off the shore. The
  * area is the city outlines' (scripts/generate-city-boundaries.mjs), a resource of its own.
  */
-internal fun inChina(fix: Fix): Boolean = GcjArea.holds(fix)
+fun inChina(fix: Fix): Boolean = GcjArea.holds(fix)
 
 /** A WGS 84 point as a map in China would give it. */
 fun wgsToGcj(fix: Fix): Fix = if (inChina(fix)) shifted(fix) else fix

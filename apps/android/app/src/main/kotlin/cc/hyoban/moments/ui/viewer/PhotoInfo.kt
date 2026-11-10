@@ -178,7 +178,7 @@ data class PhotoDetails(
 fun PhotoInfoPanel(container: PhoneContainer, details: PhotoDetails?, modifier: Modifier = Modifier, note: String? = null) {
     val context = LocalContext.current
     val place by produceState<String?>(null, details?.fix) {
-        value = details?.fix?.let { runCatching { container.placeSearch.around(context, it).name }.getOrNull() }
+        value = details?.fix?.let { runCatching { container.placeSearch.around(it).name }.getOrNull() }
     }
     CompositionLocalProvider(LocalTokens provides DarkTokens, LocalDarkTheme provides true) {
         Column(

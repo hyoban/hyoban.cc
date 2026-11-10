@@ -25,6 +25,12 @@ class DesktopContainer(root: File) : AppContainer(
     outside = NothingOutside,
 ) {
     override val ledger = cc.hyoban.moments.ledger.NoLedger
+    override val placeSearch = cc.hyoban.moments.data.local.PlaceSearch(
+        cc.hyoban.moments.data.local.PHOTON_URL,
+        tencentKey = { settings.tencentMapKey.value },
+        amapKey = { settings.amapKey.value },
+        tencentFirst = { settings.chinaPlaces.value == cc.hyoban.moments.CHINA_PLACES_TENCENT },
+    )
     override val footprints = cc.hyoban.moments.footprints.NoFootprints
 
     private var publish: Job? = null

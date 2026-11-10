@@ -59,6 +59,18 @@ abstract class AppContainer(
     /** The ledger the pages read; the phone's own, or none. */
     abstract val ledger: cc.hyoban.moments.ledger.LedgerSource
 
+    /** Photos shared into the app from elsewhere, until a new Moment takes them; none where the device has no such way in. */
+    open val sharedPhotos: StateFlow<List<cc.hyoban.moments.data.local.PhotoRef>> = MutableStateFlow(emptyList())
+
+    /** The photos shared into the app, taken so they are used once. */
+    open fun takeSharedPhotos(): List<cc.hyoban.moments.data.local.PhotoRef> = emptyList()
+
+    /** Where the device's own records put a bill paid at [time], or null where it keeps none. */
+    open suspend fun billPointAt(time: Long): cc.hyoban.moments.data.local.Fix? = null
+
+    /** Places by name and around a point, for a new Moment's place. */
+    abstract val placeSearch: cc.hyoban.moments.data.local.PlaceSearch
+
     /** The footprints the pages read; the phone's own, or none. */
     abstract val footprints: cc.hyoban.moments.footprints.Footprints
 
@@ -146,6 +158,11 @@ abstract class AppContainer(
 
     /** Puts back each of [bills] going public or private, which the device's own ledger keeps. */
     protected open suspend fun revertOutside(bills: List<BillChange>) {}
+
+    /** Takes back one bill's going public or private, as the changes' page does a swipe at a time. */
+    fun revertBill(change: BillChange) {
+        scope.launch { revertOutside(listOf(change)) }
+    }
 
     /**
      * Reads what the device kept and then the API, and routes the trips the API hasn't: called by

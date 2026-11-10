@@ -52,5 +52,5 @@ suspend fun LedgerStore.addBook(name: String, currency: String, chinese: Boolean
 }
 
 /** The book shown, made first with its categories when the ledger has none. */
-suspend fun LedgerStore.ensureBook(defaultName: String, chinese: Boolean): Book =
+suspend fun LedgerStore.ensureDefaultBook(defaultName: String, chinese: Boolean): Book =
     ensureDefaultBook(defaultName, chinese)

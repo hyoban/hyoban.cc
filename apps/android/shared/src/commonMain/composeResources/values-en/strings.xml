@@ -281,6 +281,8 @@
         <item quantity="one">%1$d day</item>
         <item quantity="other">%1$d days</item>
     </plurals>
+    <!-- The Mac sidebar's button that opens a new Moment. -->
+    <string name="action_record">Record</string>
     <string name="title_new_moment">New Moment</string>
     <string name="section_bill">Bill</string>
     <string name="action_new_moment">Record a Moment or a bill</string>

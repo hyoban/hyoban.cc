@@ -1,7 +1,11 @@
 package cc.hyoban.moments.ui.compose
 
+import cc.hyoban.moments.ui.components.BackHandler
+import cc.hyoban.moments.ui.components.predictiveBackScale
+import cc.hyoban.moments.ui.components.rememberPredictiveBack
+import cc.hyoban.moments.ui.map.MapTarget
+import cc.hyoban.moments.ui.map.PICK_ZOOM
 import cc.hyoban.moments.res.*
-import cc.hyoban.moments.ui.components.openAppSettings
 
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.only
@@ -30,11 +34,6 @@ import cc.hyoban.moments.ui.design.LocalContentColor
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
-import android.Manifest
-import android.content.pm.PackageManager
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -69,7 +68,6 @@ import cc.hyoban.moments.ui.design.ListItem
 import cc.hyoban.moments.ui.design.SearchField
 import cc.hyoban.moments.ui.design.Surface
 import cc.hyoban.moments.ui.theme.cardBorder
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.TextFieldState
@@ -85,8 +83,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalFocusManager
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.animation.AnimatedVisibility
-import cc.hyoban.moments.ui.components.predictiveBackScale
-import cc.hyoban.moments.ui.components.rememberPredictiveBack
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -105,18 +101,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.Found
 import cc.hyoban.moments.data.local.NEARBY_METRES
 import cc.hyoban.moments.data.local.PlaceSearch
 import cc.hyoban.moments.data.local.coordinatesName
-import cc.hyoban.moments.data.local.currentLocation
 import cc.hyoban.moments.data.local.distance
 import cc.hyoban.moments.data.local.fix
 import cc.hyoban.moments.data.local.kindOf
@@ -133,9 +126,6 @@ import kotlinx.serialization.json.put
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.FloatingBack
 import cc.hyoban.moments.ui.components.Tooltip
-import cc.hyoban.moments.ui.map.MapTarget
-import cc.hyoban.moments.ui.map.PICK_ZOOM
-import cc.hyoban.moments.ui.map.PickerMap
 import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.Space
@@ -146,7 +136,7 @@ import kotlinx.coroutines.launch
  * Where a Moment is: a known place, with the kind it is to take when that is changed, a new
  * one at [New.fix] under a name, or none.
  */
-internal sealed interface PlaceChoice {
+sealed interface PlaceChoice {
     data class Known(val id: String, val kind: PlaceKind? = null) : PlaceChoice
     /** A new place; [source] the map service's own id when it is a place one of them knows, picked from the list. */
     data class New(val name: String, val fix: Fix, val kind: PlaceKind? = null, val source: PlaceSource? = null) : PlaceChoice
@@ -154,7 +144,7 @@ internal sealed interface PlaceChoice {
 }
 
 /** The new place as a record made [at], its map service's id kept as its `source`. */
-internal fun PlaceChoice.New.toPlace(at: String): Place = Place(
+fun PlaceChoice.New.toPlace(at: String): Place = Place(
     name.trim().ifEmpty { coordinatesName(fix) },
     fix.latitude,
     fix.longitude,
@@ -164,14 +154,14 @@ internal fun PlaceChoice.New.toPlace(at: String): Place = Place(
 )
 
 /** The map service's id a known place came from, if it came from one. */
-internal fun Place.source(): PlaceSource? = (extra["source"] as? JsonObject)?.let { source ->
+fun Place.source(): PlaceSource? = (extra["source"] as? JsonObject)?.let { source ->
     val app = (source["app"] as? JsonPrimitive)?.contentOrNull
     val venue = (source["venue"] as? JsonPrimitive)?.contentOrNull
     if (app != null && venue != null) PlaceSource(app, venue) else null
 }
 
 /** The known places by the map service's id they came from, so a place found again is the one kept. */
-internal fun bySource(places: Map<String, Place>): Map<PlaceSource, String> =
+fun bySource(places: Map<String, Place>): Map<PlaceSource, String> =
     places.mapNotNull { (id, place) -> place.source()?.let { it to id } }.toMap()
 
 /**
@@ -183,7 +173,7 @@ internal fun bySource(places: Map<String, Place>): Map<PlaceSource, String> =
  * the app instead.
  */
 @Composable
-internal fun PlacePicker(
+fun PlacePicker(
     current: PlaceChoice,
     /** Where the Moment was worked out to be, to open on when nothing is chosen yet. */
     fix: Fix?,
@@ -196,7 +186,7 @@ internal fun PlacePicker(
     editing: Boolean = false,
     onPick: (PlaceChoice) -> Unit,
 ) {
-    val context = LocalContext.current
+    val device = cc.hyoban.moments.ui.LocalDevice.current
     val scope = rememberCoroutineScope()
     var pick by remember { mutableStateOf(current) }
     var named by remember { mutableStateOf(current is PlaceChoice.New) }
@@ -218,8 +208,7 @@ internal fun PlacePicker(
     val locate: () -> Unit = {
         locating = true
         scope.launch {
-            currentLocation(context)?.let { location ->
-                val here = Fix(location.latitude, location.longitude)
+            device.currentFix()?.let { here ->
                 named = false
                 typedName = false
                 kindChosen = false
@@ -230,14 +219,8 @@ internal fun PlacePicker(
         }
     }
     // Asked with the sheet first (PermissionSheet); refused, the map waits for a drag or a search.
-    val permission = cc.hyoban.moments.ui.components.rememberPermissionAsk(LOCATION_PERMISSIONS, cc.hyoban.moments.ui.components.PermissionWords(
-        AppIcons.Locate,
-        stringResource(Res.string.permission_locate_title),
-        stringResource(Res.string.permission_locate_body),
-        stringResource(Res.string.permission_not_now),
-        listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Pin, stringResource(Res.string.permission_locate_fact))),
-    )) { granted ->
-        if (granted) locate() else Toast.makeText(context, textOf(Res.string.error_location_permission), Toast.LENGTH_SHORT).show()
+    val permission = device.rememberLocationAsk { granted ->
+        if (granted) locate() else device.toast(textOf(Res.string.error_location_permission))
     }
     val askToLocate = { if (!locating) permission() }
     // The keyboard the Moment's words had goes, so the map shows. Opened with nothing chosen
@@ -247,7 +230,7 @@ internal fun PlacePicker(
     LaunchedEffect(Unit) {
         focusManager.clearFocus()
         // Opened on its own, it asks only the first time; after that only the locate button does.
-        if (opening == null && (!permission.asked || LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED })) askToLocate()
+        if (opening == null && (!permission.asked || device.canLocate())) askToLocate()
     }
     val fly = { to: Fix -> target = MapTarget(to.latitude, to.longitude, PICK_ZOOM) }
     val choose: (String) -> Unit = { id ->
@@ -298,7 +281,7 @@ internal fun PlacePicker(
         val last = lookedAround
         if (last != null && landmarks.isNotEmpty() && distance(last, at) < SAME_SPOT_METRES) return@LaunchedEffect
         delay(300)
-        val around = search.around(context, at)
+        val around = search.around(at)
         lookedAround = at
         landmarks = around.landmarks.take(LANDMARKS)
         val new = pick as? PlaceChoice.New
@@ -339,7 +322,7 @@ internal fun PlacePicker(
             results = results,
             near = pinned ?: opening ?: fix,
             locating = locating,
-            noLocation = !LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED },
+            noLocation = !device.canLocate(),
             // What was found stays, the choice above it, so another of them is a tap away.
             onFound = { found ->
                 chooseFound(found)
@@ -395,7 +378,7 @@ internal fun PlacePicker(
     }
     val mapArea: @Composable (Modifier) -> Unit = { areaModifier ->
         Box(areaModifier) {
-            PickerMap(
+            device.PickerMap(
                 places = places,
                 chosen = (pick as? PlaceChoice.Known)?.id,
                 target = target,
@@ -700,13 +683,13 @@ private fun PlaceCard(
 /** Location not given: a row saying so, the way to the app's settings at its end. */
 @Composable
 private fun NoLocationRow(modifier: Modifier = Modifier) {
-    val context = LocalContext.current
+    val device = cc.hyoban.moments.ui.LocalDevice.current
     ListItem(
         headlineContent = { Text(stringResource(Res.string.place_no_location)) },
         supportingContent = { Text(stringResource(Res.string.place_no_location_note)) },
         leadingContent = { Icon(AppIcons.Locate, contentDescription = null, tint = tokens.danger) },
         trailingContent = { Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp), tint = tokens.tx2) },
-        modifier = modifier.fillMaxWidth().clickable { with(context) { openAppSettings() } }.padding(horizontal = Space.s).testTag("place_no_location"),
+        modifier = modifier.fillMaxWidth().clickable { device.openAppSettings() }.padding(horizontal = Space.s).testTag("place_no_location"),
     )
 }
 
@@ -808,11 +791,6 @@ private fun ChosenRow(
     }
 }
 
-@Composable
-internal fun formatDistance(metres: Double): String =
-    if (metres < 1000) stringResource(Res.string.distance_metres, metres.toInt()) else stringResource(Res.string.distance_kilometres, decimals(metres / 1000, 1))
-
-internal val LOCATION_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 private const val LANDMARKS = 8
 /** How near the pin can come to rest to where it was looked around and keep what was found there. */
 /** How near a new place chosen is to a place found for it to be that one. */

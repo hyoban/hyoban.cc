@@ -70,9 +70,10 @@ class PhoneContainer private constructor(
         scope = scope,
     )
     /** Places by name and around a point, for a new Moment's place. */
-    val placeSearch = PlaceSearch(BuildConfig.PLACE_SEARCH_URL, tencentKey = { settings.tencentMapKey.value },
+    override val placeSearch = PlaceSearch(BuildConfig.PLACE_SEARCH_URL, tencentKey = { settings.tencentMapKey.value },
         amapKey = { settings.amapKey.value },
         tencentFirst = { settings.chinaPlaces.value == CHINA_PLACES_TENCENT },
+        townAt = { cc.hyoban.moments.data.local.placeName(context.applicationContext, it) },
     )
     /** Where each bill was paid, by the footprints. */
     val billPlaces = cc.hyoban.moments.footprints.BillPlaces(
@@ -106,6 +107,8 @@ class PhoneContainer private constructor(
         // first showing doesn't load it in the frame that opens it.
         scope.launch(Dispatchers.IO) { runCatching { System.loadLibrary("maplibre") } }
     }
+
+    override suspend fun billPointAt(time: Long) = billPlaces.pointAt(time)
 
     override suspend fun recordsChanged() = Widgets.update(appContext)
 
@@ -145,7 +148,7 @@ class PhoneContainer private constructor(
     private val _sharedPhotos = MutableStateFlow<List<Uri>>(emptyList())
 
     /** Photos and videos shared into the app from the gallery, as the app's own copies, until a new Moment takes them. */
-    val sharedPhotos: StateFlow<List<Uri>> = _sharedPhotos.asStateFlow()
+    override val sharedPhotos: StateFlow<List<Uri>> = _sharedPhotos.asStateFlow()
 
     /**
      * Copies photos and videos shared from another app into the app's cache, as they are, EXIF and
@@ -180,7 +183,7 @@ class PhoneContainer private constructor(
     fun takeSharedExport(): Uri? = _sharedExport.getAndUpdate { null }
 
     /** The photos shared into the app, taken so they are used once. */
-    fun takeSharedPhotos(): List<Uri> = _sharedPhotos.getAndUpdate { emptyList() }
+    override fun takeSharedPhotos(): List<Uri> = _sharedPhotos.getAndUpdate { emptyList() }
 }
 
 private const val DAY_MS = 24 * 60 * 60 * 1000L

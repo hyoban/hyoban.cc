@@ -42,10 +42,12 @@ kotlin {
         }
         jvmMain.dependencies {
             implementation(libs.icu4j)
+            implementation(libs.metadata.extractor)
         }
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.core.ktx)
+            implementation(libs.exifinterface)
             implementation(libs.capsule)
         }
     }

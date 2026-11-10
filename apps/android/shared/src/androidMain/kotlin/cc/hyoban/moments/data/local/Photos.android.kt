@@ -10,6 +10,7 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import androidx.exifinterface.media.ExifInterface
+import cc.hyoban.moments.AndroidApp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -18,51 +19,18 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
 
-/**
- * What a photo or a video says of itself: its size upright, when it was taken and where;
- * and, for one that doesn't say when, as a photo saved from WeChat or a chat, when its file
- * was made; whether it is a motion photo, with a clip after its still; and for a video, its
- * type and how big its file is, which the API has limits for.
- */
-data class PhotoInfo(
-    val width: Int?,
-    val height: Int?,
-    val takenAt: OffsetDateTime?,
-    val fix: Fix?,
-    val savedAt: OffsetDateTime? = null,
-    val motion: Boolean = false,
-    val video: Boolean = false,
-    val type: String? = null,
-    val bytes: Long? = null,
-)
+actual typealias PhotoRef = Uri
 
-/**
- * A photo copied into the app's own store, the SHA-256 of its bytes, and a motion photo's
- * clip; or a video, in [video], with a frame of it as its still in [file].
- */
-data class CopiedPhoto(val file: File, val sha256: String, val video: File? = null)
+actual fun String.toPhotoRef(): PhotoRef = Uri.parse(this)
 
-/** Why a picked file can't go in a Moment, or null when it can. */
-enum class Refusal { NOT_MEDIA, VIDEO_TYPE, VIDEO_TOO_BIG }
+actual fun File.toPhotoRef(): PhotoRef = Uri.fromFile(this)
 
 /** Photos and videos picked for a Moment written on the phone: read for their time and place, and copied in. */
-object Photos {
-    /** The video types the API keeps (`packages/data-spec`'s `getExtension`). */
-    val VIDEO_TYPES = setOf("video/mp4", "video/quicktime", "video/webm")
+actual object Photos {
+    actual suspend fun read(ref: PhotoRef): PhotoInfo = read(AndroidApp.context, ref)
 
-    /**
-     * The largest video taken, in bytes: a Worker takes no request bigger than 100 MB, and
-     * Media Transformations, which make the site's poster from it, no video bigger either.
-     */
-    const val MAX_VIDEO_BYTES = 100_000_000L
-
-    /** Whether a file read as [info] can go in a Moment. */
-    fun refusal(info: PhotoInfo): Refusal? = when {
-        !info.video -> if (info.type == null || info.type.startsWith("image/")) null else Refusal.NOT_MEDIA
-        info.type !in VIDEO_TYPES -> Refusal.VIDEO_TYPE
-        (info.bytes ?: 0) > MAX_VIDEO_BYTES -> Refusal.VIDEO_TOO_BIG
-        else -> null
-    }
+    actual suspend fun copy(ref: PhotoRef, directory: File, name: String, splitMotion: Boolean, poster: Boolean): CopiedPhoto =
+        copy(AndroidApp.context, ref, directory, name, splitMotion, poster)
 
     /** The type of what [uri] holds, as its provider says, else as its name's extension does. */
     fun typeOf(context: Context, uri: Uri): String? =
@@ -201,3 +169,5 @@ object Photos {
 
 /** How big a video's poster is on its longer side: the largest the app shows a still. */
 private const val POSTER_SIZE = 1920
+
+actual fun PhotoRef.asImageModel(): Any = this

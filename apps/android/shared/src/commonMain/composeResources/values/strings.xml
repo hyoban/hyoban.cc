@@ -259,6 +259,8 @@
     <plurals name="widget_heatmap_days">
         <item quantity="other">%1$d 天</item>
     </plurals>
+    <!-- The Mac sidebar's button that opens a new Moment. -->
+    <string name="action_record">记录</string>
     <string name="title_new_moment">新时刻</string>
     <string name="section_bill">账单</string>
     <string name="action_new_moment">记录时刻或账单</string>

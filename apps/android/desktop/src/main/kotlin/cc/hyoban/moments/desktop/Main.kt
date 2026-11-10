@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -30,7 +29,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,21 +50,24 @@ import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.res.Res
+import cc.hyoban.moments.res.action_record
+import cc.hyoban.moments.res.items_title
 import cc.hyoban.moments.res.me_settings
 import cc.hyoban.moments.res.me_things
 import cc.hyoban.moments.res.occasions_title
-import cc.hyoban.moments.res.onboarding_api_token
-import cc.hyoban.moments.res.onboarding_api_url
-import cc.hyoban.moments.res.onboarding_connect
-import cc.hyoban.moments.res.onboarding_connect_action
 import cc.hyoban.moments.res.tab_moments
+import cc.hyoban.moments.res.title_changes
 import cc.hyoban.moments.res.title_trips
+import cc.hyoban.moments.ui.Changes
 import cc.hyoban.moments.ui.Day
+import cc.hyoban.moments.ui.EditMoment
 import cc.hyoban.moments.ui.Feed
+import cc.hyoban.moments.ui.Items
 import cc.hyoban.moments.ui.LocalDevice
 import cc.hyoban.moments.ui.LocalMessages
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.Moment
+import cc.hyoban.moments.ui.NewMoment
 import cc.hyoban.moments.ui.Occasions
 import cc.hyoban.moments.ui.PlaceMoments
 import cc.hyoban.moments.ui.Search
@@ -74,12 +75,10 @@ import cc.hyoban.moments.ui.SyncSettings
 import cc.hyoban.moments.ui.Things
 import cc.hyoban.moments.ui.Trip
 import cc.hyoban.moments.ui.TripPlay
+import cc.hyoban.moments.ui.compose.NewMomentScreen
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
-import cc.hyoban.moments.ui.design.Button
 import cc.hyoban.moments.ui.design.Icon
-import cc.hyoban.moments.ui.design.OutlinedSecureTextField
-import cc.hyoban.moments.ui.design.OutlinedTextField
 import cc.hyoban.moments.ui.design.SnackbarHost
 import cc.hyoban.moments.ui.design.SnackbarResult
 import cc.hyoban.moments.ui.design.Text
@@ -88,9 +87,11 @@ import cc.hyoban.moments.ui.feed.DayScreen
 import cc.hyoban.moments.ui.feed.FeedScreen
 import cc.hyoban.moments.ui.feed.PlaceScreen
 import cc.hyoban.moments.ui.feed.SearchScreen
-import cc.hyoban.moments.ui.format.failureReason
 import cc.hyoban.moments.ui.moment.MomentScreen
 import cc.hyoban.moments.ui.occasions.OccasionsScreen
+import cc.hyoban.moments.ui.publish.ChangesScreen
+import cc.hyoban.moments.ui.settings.ItemsScreen
+import cc.hyoban.moments.ui.settings.SyncScreen
 import cc.hyoban.moments.ui.theme.MomentsTheme
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
@@ -99,7 +100,6 @@ import cc.hyoban.moments.ui.things.ThingsScreen
 import cc.hyoban.moments.ui.trips.TripCard
 import cc.hyoban.moments.ui.trips.TripPlayerScreen
 import cc.hyoban.moments.ui.trips.TripScreen
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -113,6 +113,7 @@ fun main() = application {
         onKeyEvent = { event ->
             if (event.type != KeyEventType.KeyDown || !event.isMetaPressed) return@Window false
             when (event.key) {
+                Key.N -> shell.open(NewMoment())
                 Key.One -> shell.show(Section.Timeline)
                 Key.Three -> shell.show(Section.Trips)
                 Key.Comma -> shell.show(Section.Settings)
@@ -136,6 +137,8 @@ private enum class Section(val label: StringResource, val icon: ImageVector, val
     Trips(Res.string.title_trips, AppIcons.Route, TripsList, "⌘3"),
     ThingsOwned(Res.string.me_things, AppIcons.Laptop, Things(), module = Module.THINGS),
     Days(Res.string.occasions_title, AppIcons.Gift, Occasions(), module = Module.OCCASIONS),
+    Publish(Res.string.title_changes, AppIcons.CloudUpload, Changes),
+    Visibility(Res.string.items_title, AppIcons.Eye, Items),
     Settings(Res.string.me_settings, AppIcons.Settings, SyncSettings, "⌘,"),
 }
 
@@ -164,7 +167,7 @@ private class Shell {
 
     /**
      * Opens the app on a page, for a trial run (`HERE_OPEN`): a section by its name (`trips`, `things`,
-     * `occasions`, `settings`), `search`, or a record as `moment:<uid>`, `trip:<id>`, `play:<id>`,
+     * `occasions`, `settings`, `items`, `changes`), `search`, `new`, `edit:<uid>`, or a record as `moment:<uid>`, `trip:<id>`, `play:<id>`,
      * `day:<date>` or `place:<id>`, over the timeline.
      */
     fun openLink(link: String) {
@@ -174,7 +177,11 @@ private class Shell {
             "things" -> show(Section.ThingsOwned)
             "occasions" -> show(Section.Days)
             "settings" -> show(Section.Settings)
+            "items" -> show(Section.Visibility)
+            "changes" -> show(Section.Publish)
             "search" -> open(Search)
+            "new" -> open(NewMoment())
+            "edit" -> open(EditMoment(id))
             "moment" -> open(Moment(id))
             "trip" -> { show(Section.Trips); open(Trip(id)) }
             "play" -> { show(Section.Trips); open(Trip(id)); open(TripPlay(id)) }
@@ -221,15 +228,32 @@ private fun Sidebar(container: DesktopContainer, shell: Shell) {
         Modifier.fillMaxHeight().width(SIDEBAR_WIDTH).background(tokens.surface).padding(horizontal = Space.s).padding(top = Space.l, bottom = Space.m),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Section.entries.filter { it != Section.Settings && (it.module == null || settings.isOn(it.module)) }.forEach { SidebarItem(it, shell) }
+        val foot = listOf(Section.Publish, Section.Visibility, Section.Settings)
+        // 记录, in the ink: a new Moment, over whatever page is shown.
+        Row(
+            Modifier.fillMaxWidth().height(36.dp).padding(horizontal = 0.dp)
+                .background(tokens.tx, RoundedCornerShape(50))
+                .clickable { shell.open(NewMoment()) }
+                .padding(horizontal = Space.m),
+            horizontalArrangement = Arrangement.spacedBy(Space.s),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(AppIcons.Plus, contentDescription = null, modifier = Modifier.size(SIDEBAR_ICON), tint = tokens.bg)
+            Text(stringResource(Res.string.action_record), style = AppTheme.typography.label, color = tokens.bg, modifier = Modifier.weight(1f))
+            Text("⌘N", style = AppTheme.typography.caption, color = tokens.bg.copy(alpha = 0.7f))
+        }
+        Spacer(Modifier.height(Space.s))
+        Section.entries.filter { it !in foot && (it.module == null || settings.isOn(it.module)) }.forEach { SidebarItem(it, shell) }
         Spacer(Modifier.weight(1f))
-        SidebarItem(Section.Settings, shell)
+        // How many changes wait to publish, said on its row while there are any.
+        val pending by container.repository.pending.collectAsState()
+        foot.forEach { SidebarItem(it, shell, count = if (it == Section.Publish) pending.size else 0) }
     }
 }
 
 /** One place the sidebar leads: its icon, its name, and its shortcut at the end; the one shown on the fill, in the ink. */
 @Composable
-private fun SidebarItem(section: Section, shell: Shell) {
+private fun SidebarItem(section: Section, shell: Shell, count: Int = 0) {
     val chosen = section == shell.section
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
@@ -250,6 +274,14 @@ private fun SidebarItem(section: Section, shell: Shell) {
             color = if (chosen) tokens.tx else tokens.tx2,
             modifier = Modifier.weight(1f),
         )
+        if (count > 0) {
+            Text(
+                count.toString(),
+                style = AppTheme.typography.caption,
+                color = tokens.onAccent,
+                modifier = Modifier.background(tokens.accent, RoundedCornerShape(50)).padding(horizontal = 6.dp, vertical = 1.dp),
+            )
+        }
         section.shortcut?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx3) }
     }
 }
@@ -267,13 +299,19 @@ private fun Page(container: DesktopContainer, shell: Shell, route: Any) {
             container,
             onMoment = openMoment,
             onDay = openDay,
-            onNew = {},
-            onChanges = {},
+            onNew = { shell.open(NewMoment()) },
+            onChanges = { shell.show(Section.Publish) },
             onSearch = { shell.open(Search) },
             onPlace = openPlace,
             onTrip = openTrip,
+            onEdit = { shell.open(EditMoment(it)) },
         )
-        is Moment -> MomentScreen(container, route.uid, onMedia = { _, _ -> }, onPlace = openPlace, onTrip = openTrip, onBack = back, onDay = openDay)
+        is Moment -> MomentScreen(
+            container, route.uid, onMedia = { _, _ -> }, onPlace = openPlace, onTrip = openTrip, onBack = back,
+            onEdit = { shell.open(EditMoment(it)) }, onDay = openDay, onChanges = { shell.show(Section.Publish) },
+        )
+        is NewMoment -> NewMomentScreen(container, onBack = back, onSaved = back)
+        is EditMoment -> NewMomentScreen(container, onBack = back, onSaved = back, edit = route.uid, onDeleted = { shell.back(); shell.back() })
         is Day -> DayScreen(container, route.date, onMoment = openMoment, onBack = back, onTrip = openTrip)
         is PlaceMoments -> PlaceScreen(container, route.id, onMoment = openMoment, onBack = back, onDay = openDay)
         is Trip -> TripScreen(container, route.id, onMoment = openMoment, onPlay = { shell.open(TripPlay(it)) }, onBack = back, onDay = openDay)
@@ -282,7 +320,9 @@ private fun Page(container: DesktopContainer, shell: Shell, route: Any) {
         TripsList -> Trips(container, openTrip)
         is Things -> ThingsScreen(container, onBack = back, onDay = openDay, kind = ThingKind.of(route.kind), open = route.open)
         is Occasions -> OccasionsScreen(container, onBack = back, open = route.open)
-        SyncSettings -> Connection(container)
+        SyncSettings -> SyncScreen(container, onBack = back)
+        Items -> ItemsScreen(container, onBack = back)
+        Changes -> ChangesScreen(container, onMoment = openMoment, onBack = back)
     }
 }
 
@@ -303,33 +343,5 @@ private fun Trips(container: DesktopContainer, onTrip: (String) -> Unit) {
             val count = remember(trip, moments, trips) { momentsOf(trip, moments, trips).size }
             TripCard(trip, covers, count, container.mediaUrls, onClick = { onTrip(trip.id) }, modifier = Modifier.fillMaxWidth())
         }
-    }
-}
-
-/** 连接网站: the API and its token, kept and read from once both are given. */
-@Composable
-private fun Connection(container: DesktopContainer) {
-    val settings = container.settings
-    var url by remember { mutableStateOf(settings.apiUrl.value) }
-    val token = rememberTextFieldState()
-    var busy by remember { mutableStateOf(false) }
-    var failure by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
-    Column(Modifier.fillMaxSize().padding(Space.xl).width(420.dp), verticalArrangement = Arrangement.spacedBy(Space.l)) {
-        Text(stringResource(Res.string.onboarding_connect), style = AppTheme.typography.titlePage)
-        OutlinedTextField(url, { url = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(Res.string.onboarding_api_url)) }, singleLine = true)
-        OutlinedSecureTextField(token, Modifier.fillMaxWidth(), label = { Text(stringResource(Res.string.onboarding_api_token)) })
-        failure?.let { Text(it, style = AppTheme.typography.caption, color = tokens.danger) }
-        Button(
-            enabled = !busy && url.isNotBlank() && token.text.isNotBlank(),
-            onClick = {
-                busy = true
-                failure = null
-                scope.launch {
-                    container.connect(url, token.text.toString()).await().onFailure { failure = failureReason(it) }
-                    busy = false
-                }
-            },
-        ) { Text(stringResource(Res.string.onboarding_connect_action)) }
     }
 }
