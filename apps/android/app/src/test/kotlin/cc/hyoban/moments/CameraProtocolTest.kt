@@ -88,21 +88,6 @@ class CameraProtocolTest {
         assertEquals(0x00010000, b.int)
     }
 
-    @Test fun `object info gives the name, size and capture time`() {
-        val info = Ptp.objectInfo(0x40001001, objectInfo("DSC00042.JPG", 0x3801, 8_123_456, "20261031T143005"))
-        assertEquals("DSC00042.JPG", info.name)
-        assertEquals(8_123_456L, info.size)
-        assertEquals(LocalDateTime.of(2026, 10, 31, 14, 30, 5), info.captured)
-        assertTrue(info.photo)
-        assertEquals("image/jpeg", info.mime)
-        val raw = Ptp.objectInfo(2, objectInfo("DSC00043.ARW", 0xB101, 3_000_000_000, "20261031T143006.0+0800"))
-        assertTrue(raw.raw && !raw.photo)
-        assertEquals(3_000_000_000L, raw.size)
-        assertEquals(LocalDateTime.of(2026, 10, 31, 14, 30, 6), raw.captured)
-        assertTrue(Ptp.objectInfo(3, objectInfo("HIF", 0x3001, 0, "")).folder)
-        assertEquals("image/heif", Ptp.objectInfo(4, objectInfo("DSC00044.HIF", 0xB110, 1, "")).mime)
-    }
-
     @Test fun `content list gives each content's id, slot and files`() {
         val b = ByteBuffer.allocate(4096).order(ByteOrder.LITTLE_ENDIAN)
         b.putShort(100).putShort(0).putLong(0)
@@ -110,7 +95,8 @@ class CameraProtocolTest {
         b.putInt(3)
         fun content(id: Int, protected: Boolean, files: List<Pair<String, Int>>, image: Boolean) {
             b.putInt(1).putInt(id).putInt(100).putInt(id).putInt(0).putInt(0).putInt(1)
-            repeat(4) { b.putLong(0) }
+            b.putLong(0).putLong(0)
+            b.putLong(java.time.LocalDateTime.of(2026, 11, 10, 13, 30, 5).toEpochSecond(java.time.ZoneOffset.UTC) * 1000).putLong(0)
             b.putInt(0).putInt(if (protected) 1 else 0).putInt(0)
             b.putInt(2).put(1).put(0)
             b.putInt(files.size)
@@ -127,65 +113,79 @@ class CameraProtocolTest {
         // Deleted while the list was made: zeros from here.
         val list = Ptp.contentInfoList(b.array())
         assertEquals(2, list.size)
-        assertEquals(Ptp.Content(131073, 1, false, listOf("A:/DCIM/100MSDCF/DSC00001.JPG", "A:/DCIM/100MSDCF/DSC00001.ARW")), list[0])
-        assertEquals(Ptp.Content(131074, 1, true, listOf("A:/DCIM/100MSDCF/DSC00002.HIF")), list[1])
+        assertEquals(131073, list[0].id)
+        assertEquals(1, list[0].slot)
+        assertEquals(listOf(Ptp.ContentFile(0, "A:/DCIM/100MSDCF/DSC00001.JPG", 0x3801, 1000), Ptp.ContentFile(1, "A:/DCIM/100MSDCF/DSC00001.ARW", 0xB101, 1001)), list[0].files)
+        assertEquals("DSC00001.JPG", list[0].files[0].name)
+        assertEquals(LocalDateTime.of(2026, 11, 10, 13, 30, 5), list[0].captured)
+        assertEquals(131074, list[1].id)
+        assertTrue(list[1].protected)
+        assertEquals(listOf(Ptp.ContentFile(0, "A:/DCIM/100MSDCF/DSC00002.HIF", 0xB110, 1000)), list[1].files)
     }
 
-    @Test fun `session opens, lists the card and downloads in chunks`() {
+    @Test fun `session lists the card, reads a thumbnail, downloads in chunks and deletes`() {
         val file = ByteArray(9 * 1024 * 1024 + 17) { (it * 31).toByte() }
-        val camera = FakeCamera(file, partial = true)
+        val camera = FakeCamera(file)
         val ptp = PtpIpConnection.open(SocketFactory.getDefault(), "127.0.0.1", UUID.randomUUID(), "test", port = camera.port)
         SonySession(ptp).use { session ->
+            var changed = 0
+            session.onContentsChanged = { changed++ }
             session.open()
-            val storages = session.storages()
-            assertArrayEquals(intArrayOf(0x00010001), storages)
-            val handles = session.handles(storages[0])
-            assertArrayEquals(intArrayOf(7, 8), handles)
-            val info = session.info(8)
-            assertEquals("DSC00008.JPG", info.name)
-            assertArrayEquals(byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 1, 2, 3), session.thumb(8))
+            val contents = session.contents()
+            assertEquals(1, contents.size)
+            val content = contents[0]
+            val jpeg = content.files.first { it.photo }
+            assertEquals("DSC00001.JPG", jpeg.name)
+            assertEquals(file.size.toLong(), jpeg.size)
+            assertArrayEquals(byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 1, 2, 3), session.thumb(content, jpeg))
             val out = ByteArrayOutputStream()
             val seen = mutableListOf<Long>()
-            session.download(info, out, { seen += it })
+            session.download(content, jpeg, out, { seen += it })
             assertArrayEquals(file, out.toByteArray())
             assertEquals(listOf(4L * 1024 * 1024, 8L * 1024 * 1024, file.size.toLong()), seen)
+            assertTrue(session.delete(content))
+            Thread.sleep(200)
+            assertEquals(1, changed)
         }
-        assertEquals(listOf(0x9210, 0x9201, 0x9201, 0x9202, 0x9201, 0x9212, 0x9212), camera.operations.take(7))
-        assertEquals(listOf(1, 1), camera.params[0x9210])
-        assertEquals(listOf(2, 1, 0), camera.params[0x9212])
+        assertEquals(listOf(0x9210, 0x9201, 0x9201, 0x9202, 0x9201), camera.operations.take(5))
+        assertEquals(listOf(1, 2), camera.params[0x9210])
+        assertEquals(listOf(131073, 1), camera.params[0x9250])
+        // The file is named by slot (top byte) and file ID.
+        assertEquals((1 shl 24) or 1, camera.params[0x923E]!![1])
     }
 
-    @Test fun `download falls back to the whole object without partial reads`() {
-        val file = ByteArray(100_000) { it.toByte() }
-        val camera = FakeCamera(file, partial = false)
-        val ptp = PtpIpConnection.open(SocketFactory.getDefault(), "127.0.0.1", UUID.randomUUID(), "test", port = camera.port)
-        SonySession(ptp).use { session ->
-            session.open()
-            val out = ByteArrayOutputStream()
-            session.download(session.info(8), out)
-            assertArrayEquals(file, out.toByteArray())
+    /** A ContentInfoList as the a7C II sends one: made-up contents, each with its files. */
+    private fun contentList(vararg contents: Triple<Int, Boolean, List<Pair<String, Long>>>, captured: java.time.LocalDateTime = java.time.LocalDateTime.of(2026, 11, 10, 13, 30, 5)): ByteArray {
+        val b = ByteBuffer.allocate(8192).order(ByteOrder.LITTLE_ENDIAN)
+        b.putShort(100).putShort(0).putLong(0)
+        b.put(ByteArray(64)).put(ByteArray(64)).putInt(1)
+        b.putInt(contents.size + 1)
+        for ((id, protected, files) in contents) {
+            b.putInt(1).putInt(id).putInt(100).putInt(id).putInt(0).putInt(0).putInt(1)
+            b.putLong(0).putLong(0)
+            b.putLong(captured.toEpochSecond(java.time.ZoneOffset.UTC) * 1000).putLong(0)
+            b.putInt(0).putInt(if (protected) 1 else 0).putInt(0)
+            b.putInt(2).put(1).put(0)
+            b.putInt(files.size)
+            files.forEachIndexed { i, (path, size) ->
+                val bytes = (path + "\u0000").toByteArray()
+                val format = if (path.endsWith(".ARW")) 0xB101 else if (path.endsWith(".HIF")) 0xB110 else 0x3801
+                b.putShort((i + 1).toShort()).putShort(0).putInt(bytes.size).put(bytes).putInt(format).putLong(size)
+                b.put(ByteArray(32))
+                b.putInt(1).putInt(6000).putInt(4000)
+                b.putInt(0).putInt(0)
+            }
         }
+        // One more counted, deleted while the list was made: zeros from here.
+        return b.array()
     }
 
-    private fun objectInfo(name: String, format: Int, size: Long, captured: String): ByteArray {
-        val b = ByteBuffer.allocate(512).order(ByteOrder.LITTLE_ENDIAN)
-        b.putInt(0x00010001).putShort(format.toShort()).putShort(0).putInt(size.toInt())
-        while (b.position() < 52) b.put(0)
-        fun str(s: String) {
-            if (s.isEmpty()) { b.put(0); return }
-            b.put((s.length + 1).toByte()); s.forEach { b.putChar(it) }; b.putChar('\u0000')
-        }
-        str(name); str(captured); str(""); str("")
-        return b.array().copyOf(b.position())
-    }
-
-    /** A camera that answers as the a7C II does to an app's contents-transfer session, on a loopback port. */
-    private inner class FakeCamera(private val file: ByteArray, private val partial: Boolean) {
+    /** A camera that answers as the a7C II does in remote control with transfer, on a loopback port. */
+    private inner class FakeCamera(private val file: ByteArray) {
         private val server = ServerSocket(0)
         val port = server.localPort
         val operations = mutableListOf<Int>()
         val params = mutableMapOf<Int, List<Int>>()
-        private var opened = false
 
         init {
             thread(isDaemon = true) {
@@ -213,6 +213,8 @@ class CameraProtocolTest {
                 synchronized(operations) { operations += code; params[code] = p }
                 fun respond(response: Int = Ptp.RESPONSE_OK) =
                     output.write(PtpIp.packet(PtpIp.OPERATION_RESPONSE, PtpIp.le(6).putShort(response.toShort()).putInt(id).array()))
+                fun event(code: Int, vararg params: Int) =
+                    events.write(PtpIp.packet(PtpIp.EVENT, PtpIp.le(6 + params.size * 4).putShort(code.toShort()).putInt(0).apply { params.forEach { putInt(it) } }.array()))
                 fun data(bytes: ByteArray) {
                     output.write(PtpIp.packet(PtpIp.START_DATA, PtpIp.le(12).putInt(id).putLong(bytes.size.toLong()).array()))
                     var at = 0
@@ -224,26 +226,19 @@ class CameraProtocolTest {
                     }
                     respond()
                 }
-                fun ints(vararg v: Int) = PtpIp.le(4 + v.size * 4).putInt(v.size).apply { v.forEach { putInt(it) } }.array()
                 when (code) {
-                    Ptp.SONY_OPEN_SESSION -> respond()
-                    Ptp.SONY_SET_CONTENTS_TRANSFER_MODE -> {
+                    Ptp.SONY_GET_CONTENT_INFO_LIST -> data(contentList(Triple(131073, false, listOf("A:/DCIM/100MSDCF/DSC00001.JPG" to file.size.toLong(), "A:/DCIM/100MSDCF/DSC00001.ARW" to 1000L))))
+                    Ptp.SONY_GET_CONTENT_COMPRESSED_DATA -> data(byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 1, 2, 3))
+                    Ptp.SONY_GET_CONTENT_DATA -> {
+                        val offset = (p[2].toLong() and 0xFFFFFFFFL) or (p[3].toLong() shl 32)
+                        data(file.copyOfRange(offset.toInt(), minOf(file.size.toLong(), offset + p[4]).toInt()))
+                    }
+                    Ptp.SONY_DELETE_CONTENT -> {
                         respond()
-                        if (p.getOrNull(1) == 1) {
-                            opened = true
-                            events.write(PtpIp.packet(PtpIp.EVENT, PtpIp.le(10).putShort(Ptp.EVENT_STORE_ADDED.toShort()).putInt(0).putInt(0x00010001).array()))
-                        }
+                        output.flush()
+                        event(Ptp.EVENT_DELETE_CONTENT_RESULT, 1, p[0], p[1])
+                        event(Ptp.EVENT_CONTENT_INFO_LIST_CHANGED, 1, 2, 0)
                     }
-                    Ptp.GET_STORAGE_IDS -> if (opened) data(ints(0x00010001)) else respond(Ptp.RESPONSE_STORE_NOT_AVAILABLE)
-                    Ptp.GET_OBJECT_HANDLES -> data(ints(7, 8))
-                    Ptp.GET_OBJECT_INFO -> data(objectInfo("DSC0000${p[0]}.JPG", 0x3801, file.size.toLong(), "20261101T090000"))
-                    Ptp.GET_THUMB -> data(byteArrayOf(0x09, 0, 0, 0, 0xFF.toByte(), 0xD8.toByte(), 1, 2, 3))
-                    Ptp.SONY_GET_PARTIAL_LARGE_OBJECT -> if (!partial) respond(0x2005) else {
-                        val offset = (p[1].toLong() and 0xFFFFFFFFL) or (p[2].toLong() shl 32)
-                        val length = (p[3].toLong() and 0xFFFFFFFFL) or (p[4].toLong() shl 32)
-                        data(file.copyOfRange(offset.toInt(), minOf(file.size.toLong(), offset + length).toInt()))
-                    }
-                    Ptp.GET_OBJECT -> data(file)
                     Ptp.CLOSE_SESSION -> { respond(); return }
                     else -> respond()
                 }
@@ -252,4 +247,3 @@ class CameraProtocolTest {
         }
     }
 }
-

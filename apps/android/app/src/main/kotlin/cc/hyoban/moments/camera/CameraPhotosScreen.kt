@@ -105,13 +105,13 @@ fun CameraPhotosScreen(onClose: () -> Unit, onAdded: (List<Uri>) -> Unit) {
     CameraPhotos(onClose, onAdded)
 }
 
-/** The photos chosen, in the order they were, and each one's place among them, by name (a delete moves handles). */
+/** The photos chosen, in the order they were, and each one's place among them. */
 private class Choice {
-    val photos = mutableStateListOf<Ptp.ObjectInfo>()
-    private val order by derivedStateOf { photos.withIndex().associate { (i, p) -> p.name to i } }
+    val photos = mutableStateListOf<CameraPhoto>()
+    private val order by derivedStateOf { photos.withIndex().associate { (i, p) -> p.key to i } }
     /** Where [info] is among those chosen, or -1. */
-    fun index(info: Ptp.ObjectInfo) = order[info.name] ?: -1
-    fun toggle(info: Ptp.ObjectInfo) {
+    fun index(info: CameraPhoto) = order[info.key] ?: -1
+    fun toggle(info: CameraPhoto) {
         val at = index(info)
         if (at >= 0) photos.removeAt(at) else photos.add(info)
     }
@@ -143,9 +143,9 @@ private fun CameraPhotos(onClose: () -> Unit, onAdded: (List<Uri>) -> Unit) {
     var failed by remember(transfer) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val ready = state as? CameraTransfer.State.Ready
-    val subtitle = listOfNotNull(camera?.name, ready?.let { stringResource(R.string.camera_photo_count, it.total) }).joinToString(" · ")
+    val subtitle = listOfNotNull(camera?.name, ready?.let { stringResource(R.string.camera_photo_count, it.photos.size) }).joinToString(" · ")
     val sideways = isPhoneLandscape()
-    // The photo looked at full size, by name: more may still be listed ahead of it, and a delete moves handles.
+    // The photo looked at full size, by its key: the list it is in may change under it.
     var viewing by remember(transfer) { mutableStateOf<String?>(null) }
 
     val add: () -> Unit = {
@@ -173,7 +173,7 @@ private fun CameraPhotos(onClose: () -> Unit, onAdded: (List<Uri>) -> Unit) {
             is CameraTransfer.State.Connecting -> Steps(s.step)
             is CameraTransfer.State.Failed -> Failed(s.reason) { attempt++ }
             is CameraTransfer.State.Ready -> Grid(transfer, s, chosen, enabled = downloading == null, columns = if (sideways) 8 else 4,
-                onOpen = { viewing = it.name })
+                onOpen = { viewing = it.key })
         }
         Column(Modifier.align(Alignment.BottomEnd).fillMaxWidth()) {
             if (downloading != null || failed) Surface(Modifier.fillMaxWidth(), color = tokens.surface) {
@@ -200,9 +200,9 @@ private fun CameraPhotos(onClose: () -> Unit, onAdded: (List<Uri>) -> Unit) {
     }
     val photos = ready?.photos.orEmpty()
     // The photo asked about deleting, and whether its delete is under way.
-    var deleting by remember(transfer) { mutableStateOf<Ptp.ObjectInfo?>(null) }
+    var deleting by remember(transfer) { mutableStateOf<CameraPhoto?>(null) }
     var busy by remember(transfer) { mutableStateOf(false) }
-    viewing?.let { name -> photos.indexOfFirst { it.name == name } }?.takeIf { it >= 0 }?.let { start ->
+    viewing?.let { key -> photos.indexOfFirst { it.key == key } }?.takeIf { it >= 0 }?.let { start ->
         Viewer(transfer, photos, start, chosen, enabled = downloading == null && !busy, busy = busy,
             // Added from there, it closes so the download shows.
             addButton = { if (canAdd) addButton("camera_viewer_add") { viewing = null } },
@@ -219,13 +219,13 @@ private fun CameraPhotos(onClose: () -> Unit, onAdded: (List<Uri>) -> Unit) {
                     deleting = null
                     busy = true
                     // What the viewer turns to once it's gone: the next, else the one before.
-                    val at = photos.indexOfFirst { it.name == info.name }
-                    val next = (photos.getOrNull(at + 1) ?: photos.getOrNull(at - 1))?.name
+                    val at = photos.indexOfFirst { it.key == info.key }
+                    val next = (photos.getOrNull(at + 1) ?: photos.getOrNull(at - 1))?.key
                     scope.launch {
                         val gone = transfer.delete(info)
                         busy = false
                         if (gone) {
-                            chosen.photos.removeAll { it.name == info.name }
+                            chosen.photos.removeAll { it.content == info.content }
                             viewing = next
                         } else Toast.makeText(context, R.string.camera_delete_failed, Toast.LENGTH_SHORT).show()
                     }
@@ -274,12 +274,12 @@ private fun Failed(reason: Int, onRetry: () -> Unit) {
 /** [info]'s thumbnail once the camera has sent it. */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-private fun rememberThumb(transfer: CameraTransfer, info: Ptp.ObjectInfo): State<Bitmap?> =
-    produceState(null, info.name) { value = transfer.thumbnail(info) }
+private fun rememberThumb(transfer: CameraTransfer, info: CameraPhoto): State<Bitmap?> =
+    produceState(null, info.key) { value = transfer.thumbnail(info) }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-private fun Grid(transfer: CameraTransfer, state: CameraTransfer.State.Ready, chosen: Choice, enabled: Boolean, columns: Int, onOpen: (Ptp.ObjectInfo) -> Unit) {
+private fun Grid(transfer: CameraTransfer, state: CameraTransfer.State.Ready, chosen: Choice, enabled: Boolean, columns: Int, onOpen: (CameraPhoto) -> Unit) {
     val haptics = rememberHaptics()
     val today = remember { LocalDate.now() }
     // By the day each was taken, newest first.
@@ -299,7 +299,7 @@ private fun Grid(transfer: CameraTransfer, state: CameraTransfer.State.Ready, ch
                     modifier = Modifier.padding(start = Space.gutter, top = Space.l, bottom = Space.xs),
                 )
             }
-            items(photos, key = { it.handle }) { info ->
+            items(photos, key = { it.key }) { info ->
                 val index = chosen.index(info)
                 val thumb by rememberThumb(transfer, info)
                 val label = stringResource(if (info.raw) R.string.camera_raw_description else R.string.camera_photo_description, info.name)
@@ -319,14 +319,11 @@ private fun Grid(transfer: CameraTransfer, state: CameraTransfer.State.Ready, ch
                                 haptics.toggle(index < 0)
                                 chosen.toggle(info)
                             }
-                            .testTag("camera_choose_${info.handle}"),
+                            .testTag("camera_choose_${info.key}"),
                         contentAlignment = Alignment.TopEnd,
                     ) { ChoiceMark(index, Modifier.padding(6.dp).size(22.dp)) }
                 }
             }
-        }
-        if (state.listing) item(key = "listing", span = { GridItemSpan(maxLineSpan) }) {
-            Box(Modifier.fillMaxWidth().padding(Space.l), contentAlignment = Alignment.Center) { Spinner() }
         }
     }
 }
@@ -372,13 +369,13 @@ private fun ChoiceMark(index: Int, modifier: Modifier) {
 @Composable
 private fun Viewer(
     transfer: CameraTransfer,
-    photos: List<Ptp.ObjectInfo>,
+    photos: List<CameraPhoto>,
     start: Int,
     chosen: Choice,
     enabled: Boolean,
     busy: Boolean,
     addButton: @Composable () -> Unit,
-    onDelete: (Ptp.ObjectInfo) -> Unit,
+    onDelete: (CameraPhoto) -> Unit,
     onClose: () -> Unit,
 ) {
     val haptics = rememberHaptics()
@@ -401,13 +398,13 @@ private fun Viewer(
         LaunchedEffect(shown?.name, pager.isScrollInProgress) {
             if (!pager.isScrollInProgress && shown != null && shown.photo) transfer.loadOriginal(shown)
         }
-        HorizontalPager(pager, Modifier.fillMaxSize(), beyondViewportPageCount = 0, userScrollEnabled = !zoomed, key = { photos[it].handle }) { page ->
+        HorizontalPager(pager, Modifier.fillMaxSize(), beyondViewportPageCount = 0, userScrollEnabled = !zoomed, key = { photos[it].key }) { page ->
             val info = photos[page]
             val thumb by rememberThumb(transfer, info)
             val settled = pager.currentPage == page
             val original = transfer.originalOf(info)
             val file = original?.file
-            var shape by remember(info.handle) { mutableFloatStateOf(0f) }
+            var shape by remember(info.key) { mutableFloatStateOf(0f) }
             ZoomablePhoto(
                 shape.takeIf { it > 0f } ?: thumb?.let { it.width.toFloat() / it.height } ?: 1.5f,
                 onZoom = { if (settled) zoomed = it },
