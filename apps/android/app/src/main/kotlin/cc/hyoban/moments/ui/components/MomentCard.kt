@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.design.AppIcons
@@ -39,14 +40,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
@@ -102,7 +102,7 @@ fun MomentCard(
     PressableCard(
         onClick = onOpen,
         onLongClick = { at -> menu = with(density) { DpOffset(at.x.toDp(), at.y.toDp()) } },
-        onLongClickLabel = stringResource(R.string.action_more),
+        onLongClickLabel = stringResource(Res.string.action_more),
         modifier = modifier.fillMaxWidth().sharedCard(moment.uid).then(outline)
             .semantics { this.selected = selected }.testTag("moment_${moment.uid}"),
         flat = true,
@@ -163,7 +163,7 @@ private fun MomentBubble(
         PressableCard(
             onClick = onOpen,
             onLongClick = { at -> menu = with(density) { DpOffset(at.x.toDp(), at.y.toDp()) } },
-            onLongClickLabel = stringResource(R.string.action_more),
+            onLongClickLabel = stringResource(Res.string.action_more),
             modifier = width.sharedCard(moment.uid).clip(shape).background(tokens.fill).border(2.dp, ring, shape).padding(end = tail)
                 .semantics { this.selected = selected }.testTag("moment_${moment.uid}"),
             flat = true,
@@ -174,7 +174,7 @@ private fun MomentBubble(
                 (if (moment.media.isNotEmpty()) Modifier.fillMaxWidth() else Modifier).padding(start = Space.m, end = Space.m, top = Space.s, bottom = Space.s),
                 verticalArrangement = Arrangement.spacedBy(Space.xs),
             ) {
-                val private = moment.hidden.takeIf { it }?.let { stringResource(R.string.visibility_private) }
+                val private = moment.hidden.takeIf { it }?.let { stringResource(Res.string.visibility_private) }
                 val parts = moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
                 // The time in the figures' monospace, as the records bubbles beside it have theirs.
                 val time = formatTime(moment.occurredAt)
@@ -191,7 +191,7 @@ private fun MomentBubble(
                 val foot: @Composable () -> Unit = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                         Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                        if (moment.published == null && LocalSettings.current.connected) Pill(stringResource(R.string.label_on_phone), icon = AppIcons.Phone)
+                        if (moment.published == null && LocalSettings.current.connected) Pill(stringResource(Res.string.label_on_phone), icon = AppIcons.Phone)
                     }
                 }
                 // What was eaten stays on the Moment's page: the conversation shows the words alone.
@@ -260,7 +260,7 @@ fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRe
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         val time = listOfNotNull(if (showDate) formatDate(moment.occurredAt) else null, formatTime(moment.occurredAt)).joinToString(" ")
         // Private is said in the faint line itself, as the design has it.
-        val private = moment.hidden.takeIf { it }?.let { stringResource(R.string.visibility_private) }
+        val private = moment.hidden.takeIf { it }?.let { stringResource(Res.string.visibility_private) }
         val parts = listOfNotNull(time.ifEmpty { null }) + moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
         Text(
             parts.joinToString(" "),
@@ -270,14 +270,14 @@ fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRe
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false),
         )
-        if (moment.published == null && LocalSettings.current.connected) Pill(stringResource(R.string.label_on_phone), icon = AppIcons.Phone)
+        if (moment.published == null && LocalSettings.current.connected) Pill(stringResource(Res.string.label_on_phone), icon = AppIcons.Phone)
     }
 }
 
 /** A back button that floats over a photo or a map, legible on either, round as every floating button is. */
 @Composable
 fun FloatingBack(onBack: () -> Unit, modifier: Modifier = Modifier) =
-    FloatingButton(AppIcons.ArrowLeft, stringResource(R.string.action_back), onBack, modifier, tag = "back")
+    FloatingButton(AppIcons.ArrowLeft, stringResource(Res.string.action_back), onBack, modifier, tag = "back")
 
 /**
  * A button that floats over a photo or a map, legible on either, as the back button does.

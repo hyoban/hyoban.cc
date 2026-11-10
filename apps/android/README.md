@@ -661,7 +661,7 @@ Android Studio opens `apps/android` as a project. From a shell, with the Android
 
 The same project holds the start of Here on the Mac, a Compose Desktop app in `:desktop` over
 the code it shares with the phone in `:shared`. For now it is a window with the design system's
-theme and the three sections down a sidebar, their pages still to come:
+theme and the three sections down a sidebar, in the phone's own words, their pages still to come:
 
 ```sh
 ./gradlew :desktop:run
@@ -724,7 +724,8 @@ scripts/ui.py tap tab_map
 
 The packages below are split between `:app` (the phone's own) and `:shared` (what the Mac app
 runs too: so far `data/spec`, `data/api`, `data/copy`, `data/trips`, `data/things`, and the
-design system in `ui/design` and `ui/theme`); `:desktop` is the Mac's window.
+design system in `ui/design` and `ui/theme`, and every page's words as Compose resources);
+`:desktop` is the Mac's window.
 
 - `data/spec`: the records as Kotlin, each keeping the fields it doesn't know.
 - `data/api`: the API's rows and writes.

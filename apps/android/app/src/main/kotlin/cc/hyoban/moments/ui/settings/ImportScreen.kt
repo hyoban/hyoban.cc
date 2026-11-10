@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.LocalSettings
@@ -22,10 +23,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.footprints.TrackImportResult
 import cc.hyoban.moments.footprints.readGpx
 import cc.hyoban.moments.ui.components.AppColors
@@ -57,16 +57,16 @@ import kotlinx.coroutines.withContext
 fun importSources(): List<String> {
     val settings = LocalSettings.current
     return listOfNotNull(
-        stringResource(R.string.import_source_swarm).takeIf { settings.isOn(Module.CHECKIN) },
-        stringResource(R.string.import_source_icost).takeIf { settings.isOn(Module.LEDGER) },
-        stringResource(R.string.import_source_gpx).takeIf { settings.isOn(Module.FOOTPRINTS) },
+        stringResource(Res.string.import_source_swarm).takeIf { settings.isOn(Module.CHECKIN) },
+        stringResource(Res.string.import_source_icost).takeIf { settings.isOn(Module.LEDGER) },
+        stringResource(Res.string.import_source_gpx).takeIf { settings.isOn(Module.FOOTPRINTS) },
     )
 }
 
 /** 导入: Swarm's export, iCost's backup or bill export, and GPX tracks, on one page under 我. */
 @Composable
 fun ImportScreen(container: AppContainer, onBack: () -> Unit) {
-    SubPage(stringResource(R.string.import_title), onBack, Modifier.background(AppColors.page)) {
+    SubPage(stringResource(Res.string.import_title), onBack, Modifier.background(AppColors.page)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
@@ -84,7 +84,7 @@ fun ImportScreen(container: AppContainer, onBack: () -> Unit) {
                 if (settings.isOn(Module.FOOTPRINTS)) GpxGroup(container)
                 // Opened by a link with every one of them off: why there is nothing here.
                 if (importSources().isEmpty()) Text(
-                    stringResource(R.string.import_none),
+                    stringResource(Res.string.import_none),
                     style = AppTheme.typography.body,
                     color = tokens.tx2,
                     modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).testTag("import_none"),
@@ -99,17 +99,17 @@ fun ImportScreen(container: AppContainer, onBack: () -> Unit) {
 private fun ICostGroup(container: AppContainer) {
     val importer = rememberICostImport(container)
     SegmentedGroup(
-        stringResource(R.string.import_ledger),
-        stringResource(R.string.import_ledger_note),
+        stringResource(Res.string.import_ledger),
+        stringResource(Res.string.import_ledger_note),
         listOf { shapes ->
             SegmentedListItem(
                 onClick = importer.pick,
                 shapes = shapes,
                 colors = segmentColors(),
                 leadingContent = { Icon(AppIcons.Receipt, contentDescription = null) },
-                supportingContent = { Text(stringResource(R.string.ledger_import_icost_note)) },
+                supportingContent = { Text(stringResource(Res.string.ledger_import_icost_note)) },
                 modifier = Modifier.testTag("import_icost"),
-            ) { Text(stringResource(R.string.ledger_import_icost)) }
+            ) { Text(stringResource(Res.string.ledger_import_icost)) }
         },
     )
     importer.Dialog()
@@ -151,8 +151,8 @@ private fun GpxGroup(container: AppContainer) {
         }
     }
     SegmentedGroup(
-        stringResource(R.string.footprints_title),
-        stringResource(R.string.import_footprints_note),
+        stringResource(Res.string.footprints_title),
+        stringResource(Res.string.import_footprints_note),
         listOf { shapes ->
             SegmentedListItem(
                 // Files apps call a .gpx by several types, or none.
@@ -160,14 +160,14 @@ private fun GpxGroup(container: AppContainer) {
                 shapes = shapes,
                 colors = segmentColors(),
                 leadingContent = { Icon(AppIcons.Footprints, contentDescription = null) },
-                supportingContent = { Text(stringResource(if (reading) R.string.ledger_importing else R.string.footprints_import_note)) },
+                supportingContent = { Text(stringResource(if (reading) Res.string.ledger_importing else Res.string.footprints_import_note)) },
                 trailingContent = if (reading) {
                     { Spinner(Modifier.size(24.dp)) }
                 } else {
                     null
                 },
                 modifier = Modifier.testTag("footprints_import"),
-            ) { Text(stringResource(R.string.footprints_import)) }
+            ) { Text(stringResource(Res.string.footprints_import)) }
         },
     )
 
@@ -175,19 +175,19 @@ private fun GpxGroup(container: AppContainer) {
     if (ended is GpxState.Done || ended == GpxState.Failed) {
         AlertDialog(
             onDismissRequest = { state = null },
-            title = { Text(stringResource(R.string.footprints_import)) },
+            title = { Text(stringResource(Res.string.footprints_import)) },
             text = {
                 Text(
                     when (ended) {
                         is GpxState.Done -> with(ended.result) {
-                            if (added + overlapping + invalid == 0) stringResource(R.string.footprints_import_empty)
-                            else stringResource(R.string.footprints_import_done, added, overlapping, invalid)
+                            if (added + overlapping + invalid == 0) stringResource(Res.string.footprints_import_empty)
+                            else stringResource(Res.string.footprints_import_done, added, overlapping, invalid)
                         }
-                        else -> stringResource(R.string.footprints_error)
+                        else -> stringResource(Res.string.footprints_error)
                     },
                 )
             },
-            confirmButton = { TextButton(onClick = { state = null }) { Text(stringResource(R.string.action_confirm)) } },
+            confirmButton = { TextButton(onClick = { state = null }) { Text(stringResource(Res.string.action_confirm)) } },
         )
     }
 }

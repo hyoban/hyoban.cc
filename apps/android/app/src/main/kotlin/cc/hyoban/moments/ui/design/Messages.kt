@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.design
 
+import cc.hyoban.moments.res.*
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
@@ -40,14 +41,13 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.theme.cardBorder
 import cc.hyoban.moments.ui.theme.tokens
 import kotlinx.coroutines.CancellableContinuation
@@ -147,7 +147,7 @@ fun AppSnackbar(data: SnackbarData, modifier: Modifier = Modifier) {
         }
         if (data.visuals.withDismissAction) {
             IconButton(onClick = data::dismiss) {
-                Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_close), tint = tokens.tx2)
+                Icon(AppIcons.Close, contentDescription = stringResource(Res.string.action_close), tint = tokens.tx2)
             }
         }
     }

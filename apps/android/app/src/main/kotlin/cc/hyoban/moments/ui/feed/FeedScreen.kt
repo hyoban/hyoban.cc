@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.MainActivity
@@ -103,15 +104,14 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.ui.compose.label
 import cc.hyoban.moments.data.trips.tripOf
@@ -242,7 +242,7 @@ fun FeedScreen(
             // circle at the end, the two going up with the Moments as they scroll on.
             Box(Modifier.fillMaxWidth()) {
                 Text(
-                    stringResource(R.string.title_moments),
+                    stringResource(Res.string.title_moments),
                     style = AppTheme.typography.body.strong,
                     maxLines = 1,
                     modifier = Modifier.align(Alignment.TopCenter).windowInsetsPadding(WindowInsets.statusBars)
@@ -250,7 +250,7 @@ fun FeedScreen(
                 )
                 // Beside the day's map, search is that map's, in its corner.
                 if (!dayMap) Box(Modifier.align(Alignment.TopEnd)) {
-                    FloatingButton(AppIcons.Search, stringResource(R.string.action_search), onSearch, tag = "search")
+                    FloatingButton(AppIcons.Search, stringResource(Res.string.action_search), onSearch, tag = "search")
                 }
             }
         }
@@ -289,7 +289,7 @@ fun FeedScreen(
                 Box(Modifier.fillMaxSize().background(AppColors.page)) {
                     Box(Modifier.fillMaxSize().hazeSource(haze).background(AppColors.page)) {
                     TabRefreshBox(pull) {
-                        LoadedContent(moments.isEmpty() || !tracks.ready, loading = !loaded || syncing || !tracks.ready, message = R.string.empty_moments) {
+                        LoadedContent(moments.isEmpty() || !tracks.ready, loading = !loaded || syncing || !tracks.ready, message = Res.string.empty_moments) {
                             // The rows over the Moments, the changes, list or calendar and the
                             // filter, stand once above both views rather than heading each, so
                             // switching cross-fades only what changes and leaves them still.
@@ -383,7 +383,7 @@ fun FeedScreen(
                             Modifier.fillMaxSize().background(LocalSurfaceLevel.current.raised.fill()).testTag("detail_placeholder"),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(stringResource(R.string.label_pick_moment), color = tokens.tx2, style = AppTheme.typography.bodyReading)
+                            Text(stringResource(Res.string.label_pick_moment), color = tokens.tx2, style = AppTheme.typography.bodyReading)
                         }
                     }
                 }
@@ -466,7 +466,7 @@ private const val VIEW_FADE_IN_MS = 210
  */
 @Composable
 private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false) {
-    val label = stringResource(R.string.action_new_moment)
+    val label = stringResource(Res.string.action_new_moment)
     Tooltip(label) {
         FloatingActionButton(
             onClick = onClick,
@@ -603,11 +603,11 @@ private fun DayHead(
             val metres = if (track == null) known?.metres else stats.metres
             val millis = if (track == null) known?.movingMillis else stats.recordedMillis
             val line = listOfNotNull(
-                if (moving && metres != null && millis != null) stringResource(R.string.day_track_stats, metres / 1000, millis / 60_000) else null,
-                daySpent(bills, date)?.let { stringResource(R.string.ledger_expense_short, it) },
+                if (moving && metres != null && millis != null) stringResource(Res.string.day_track_stats, decimals(metres / 1000, 1), millis / 60_000) else null,
+                daySpent(bills, date)?.let { stringResource(Res.string.ledger_expense_short, it) },
             ).joinToString(" ")
             // Still recording after the figures it keeps growing, in the line's own colour, as the word says it.
-            val still = if (recording) stringResource(R.string.day_still_recording) else null
+            val still = if (recording) stringResource(Res.string.day_still_recording) else null
             if (line.isNotEmpty() || still != null) {
                 Text(
                     listOfNotNull(line.ifEmpty { null }, still).joinToString(" "),
@@ -729,7 +729,7 @@ private fun TimelineDayMap(
         nowhere = !somewhere
         if (somewhere) mapped = MappedDay(shown, points, dayMoments)
     }
-    val openDay = stringResource(R.string.label_whole_day)
+    val openDay = stringResource(Res.string.label_whole_day)
     Box(modifier.background(AppColors.page)) {
         mapped?.let { shown ->
             Box(Modifier.fillMaxSize().graphicsLayer { alpha = if (nowhere) 0.4f else 1f }) {
@@ -746,11 +746,11 @@ private fun TimelineDayMap(
         day?.let { shown ->
             val stats = remember(mapped, nowhere) { mapped?.takeIf { !nowhere }?.let { cc.hyoban.moments.footprints.trackStats(it.points) } }
             val line = if (nowhere) {
-                stringResource(R.string.timeline_day_no_places)
+                stringResource(Res.string.timeline_day_no_places)
             } else {
                 listOfNotNull(
-                    stats?.takeIf { (mapped?.points?.size ?: 0) > 1 }?.let { stringResource(R.string.day_track_stats, it.metres / 1000, (it.recordedMillis / 60_000).toInt()) },
-                    daySpent(bills, shown)?.let { stringResource(R.string.ledger_expense_short, it) },
+                    stats?.takeIf { (mapped?.points?.size ?: 0) > 1 }?.let { stringResource(Res.string.day_track_stats, decimals(it.metres / 1000, 1), (it.recordedMillis / 60_000).toInt()) },
+                    daySpent(bills, shown)?.let { stringResource(Res.string.ledger_expense_short, it) },
                 ).joinToString(" ")
             }
             Box(controls) { Surface(
@@ -768,7 +768,7 @@ private fun TimelineDayMap(
             } }
         }
         Box(controls, contentAlignment = Alignment.TopEnd) {
-            FloatingButton(AppIcons.Search, stringResource(R.string.action_search), onSearch, tag = "search")
+            FloatingButton(AppIcons.Search, stringResource(Res.string.action_search), onSearch, tag = "search")
         }
     }
 }
@@ -840,7 +840,7 @@ fun PlaceScreen(
         PlaceKind.of(place?.kind)?.let { stringResource(it.label) },
         place?.division?.label(),
     ).plus(placeCounts(moments.size, checkins.size))
-        .plus(listOfNotNull(spent?.let { stringResource(R.string.ledger_spent, cc.hyoban.moments.ui.ledger.money(it, currency)) }))
+        .plus(listOfNotNull(spent?.let { stringResource(Res.string.ledger_spent, cc.hyoban.moments.ui.ledger.money(it, currency)) }))
         .joinToString(" ")
     val ledgerNav = LocalLedgerNav.current
     val context = LocalContext.current
@@ -848,11 +848,11 @@ fun PlaceScreen(
     val show = rememberShowMessage()
     // On the map tab, its panel up; the way there, as from that panel; and its name, point and kind.
     val actions = if (place == null) emptyList() else listOf(
-        PlaceAction(AppIcons.Map, stringResource(R.string.action_show_on_map), "show_on_map") { onMap(id) },
-        PlaceAction(AppIcons.Directions, stringResource(R.string.action_navigate), "navigate") {
-            if (!navigateTo(context, place)) show(resources.getString(R.string.no_map_app))
+        PlaceAction(AppIcons.Map, stringResource(Res.string.action_show_on_map), "show_on_map") { onMap(id) },
+        PlaceAction(AppIcons.Directions, stringResource(Res.string.action_navigate), "navigate") {
+            if (!navigateTo(context, place)) show(textOf(Res.string.no_map_app))
         },
-        PlaceAction(AppIcons.Pen, stringResource(R.string.action_edit_place), "edit_place") { editing = true },
+        PlaceAction(AppIcons.Pen, stringResource(Res.string.action_edit_place), "edit_place") { editing = true },
     )
     if (editing) cc.hyoban.moments.ui.compose.EditPlace(container, id, onDismiss = { editing = false })
     // The place is the page's title, so its cards name only the other places they were at.

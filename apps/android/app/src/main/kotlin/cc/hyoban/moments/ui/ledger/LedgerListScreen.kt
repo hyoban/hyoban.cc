@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.foundation.layout.Column
@@ -17,11 +18,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ledger.Ledger
@@ -76,16 +76,16 @@ fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerN
         ?: filter.trip?.let { id -> trips.firstOrNull { it.id == id }?.title }
         ?: filter.place?.let { places[it]?.name }
         ?: filter.day?.let { formatDay(it) }
-        ?: stringResource(R.string.action_search)
+        ?: stringResource(Res.string.action_search)
 
-    SubPage(title, nav.back, subtitle = pluralStringResource(R.plurals.ledger_count_bills, bills.size, bills.size)) {
+    SubPage(title, nav.back, subtitle = pluralStringResource(Res.plurals.ledger_count_bills, bills.size, bills.size)) {
         BillList(ledger, bills, currency, nav, header = {
             Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s)) {
                 if (filter.search) {
                     OutlinedTextField(
                         query,
                         { query = it },
-                        placeholder = { Text(stringResource(R.string.ledger_search_hint)) },
+                        placeholder = { Text(stringResource(Res.string.ledger_search_hint)) },
                         leadingIcon = { Icon(AppIcons.Search, contentDescription = null) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth().testTag("ledger_query"),
@@ -93,8 +93,8 @@ fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerN
                 }
                 Text(
                     listOf(
-                        stringResource(R.string.ledger_expense_short, money(sums.expense, currency)),
-                        stringResource(R.string.ledger_income_short, money(sums.income, currency)),
+                        stringResource(Res.string.ledger_expense_short, money(sums.expense, currency)),
+                        stringResource(Res.string.ledger_income_short, money(sums.income, currency)),
                     ).joinToString(" "),
                     style = AppTheme.typography.body.strong,
                     modifier = Modifier.padding(start = Space.l, top = Space.s),

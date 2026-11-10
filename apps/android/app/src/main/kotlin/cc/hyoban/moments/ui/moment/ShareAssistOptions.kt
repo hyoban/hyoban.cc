@@ -1,9 +1,10 @@
 package cc.hyoban.moments.ui.moment
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.design.AppSwitch
 import android.content.Intent
 import android.provider.Settings
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,9 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.R
 import cc.hyoban.moments.accessibility.AssistAdapter
 import cc.hyoban.moments.accessibility.AssistStatus
 import cc.hyoban.moments.accessibility.ShareAccessibilityService
@@ -29,8 +29,8 @@ import cc.hyoban.moments.ui.theme.Space
 internal fun ShareAssistOptions(
     adapter: AssistAdapter,
     tag: String,
-    @StringRes label: Int,
-    @StringRes running: Int,
+    label: StringResource,
+    running: StringResource,
     enabled: Boolean,
     onEnabled: (Boolean) -> Unit,
     busy: Boolean,
@@ -61,7 +61,7 @@ internal fun ShareAssistOptions(
                     onClick = { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
                     modifier = Modifier.testTag("${tag}_assist_settings"),
                 ) {
-                    Text(stringResource(R.string.share_assist_enable_service))
+                    Text(stringResource(Res.string.share_assist_enable_service))
                 }
             }
             when (status) {
@@ -72,7 +72,7 @@ internal fun ShareAssistOptions(
                         onClick = { ShareAccessibilityService.cancel(adapter.id) },
                         modifier = Modifier.testTag("${tag}_assist_cancel"),
                     ) {
-                        Text(stringResource(R.string.share_assist_cancel))
+                        Text(stringResource(Res.string.share_assist_cancel))
                     }
                 }
                 AssistStatus.Ready -> Text(stringResource(adapter.readyMessage))

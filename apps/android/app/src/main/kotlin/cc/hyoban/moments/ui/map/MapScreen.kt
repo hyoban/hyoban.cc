@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.map
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.TextButton
@@ -100,8 +101,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -115,7 +116,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.footprints.FootprintsOnMap
 import cc.hyoban.moments.footprints.FootprintsMapState
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
@@ -337,12 +337,12 @@ private fun MapContent(
     }
     val permission = cc.hyoban.moments.ui.components.rememberPermissionAsk(LOCATION_PERMISSIONS, cc.hyoban.moments.ui.components.PermissionWords(
         AppIcons.Locate,
-        stringResource(R.string.permission_locate_title),
-        stringResource(R.string.permission_locate_body),
-        stringResource(R.string.permission_not_now),
-        listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Pin, stringResource(R.string.permission_locate_fact))),
+        stringResource(Res.string.permission_locate_title),
+        stringResource(Res.string.permission_locate_body),
+        stringResource(Res.string.permission_not_now),
+        listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Pin, stringResource(Res.string.permission_locate_fact))),
     )) { granted ->
-        if (granted) startLocating() else show(resources.getString(R.string.error_location_permission))
+        if (granted) startLocating() else show(textOf(Res.string.error_location_permission))
     }
     val requestLocate: () -> Unit = { permission() }
 
@@ -395,7 +395,7 @@ private fun MapContent(
             fogRegions = fogRegions.orEmpty(),
             onLocated = { found ->
                 locating = false
-                if (!found) show(resources.getString(R.string.error_location))
+                if (!found) show(textOf(Res.string.error_location))
             },
             panel = if (wide) panelWidth + Space.m else 0.dp,
         )
@@ -533,7 +533,7 @@ private fun MapContent(
                         addedAt = now
                         scope.launch {
                             container.repository.createTrip(suggestion.name, suggestion.start, suggestion.end, Visibility.PRIVATE)
-                            show(resources.getString(R.string.message_trip_added, suggestion.name))
+                            show(textOf(Res.string.message_trip_added, suggestion.name))
                         }
                     }
                 },
@@ -545,7 +545,7 @@ private fun MapContent(
             PlaceSheet(
                 place, id, here, checkins, years, colors, places, container.mediaUrls,
                 bottom = if (wide) Space.l else clearance,
-                onNavigate = { if (!navigateTo(context, place)) show(resources.getString(R.string.no_map_app)) },
+                onNavigate = { if (!navigateTo(context, place)) show(textOf(Res.string.no_map_app)) },
                 onAll = { selected = null; onPlace(id) },
                 onMoment = onMoment,
             )
@@ -627,7 +627,7 @@ private fun PlaceSheet(
             Column(Modifier.weight(1f)) {
                 Text(place.name, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
                 Text(
-                    (placeCounts(here.size, checkins.size) + years.joinToString(resources.getString(R.string.separator_list)) { resources.getString(R.string.year_item, it) }).joinToString(" "),
+                    (placeCounts(here.size, checkins.size) + years.joinToString(textOf(Res.string.separator_list)) { textOf(Res.string.year_item, it) }).joinToString(" "),
                     style = AppTheme.typography.caption,
                     color = tokens.tx2,
                     maxLines = 1,
@@ -637,7 +637,7 @@ private fun PlaceSheet(
             // The way there beside the name, an action chip handing it to a map app.
             AssistChip(
                 onClick = onNavigate,
-                label = { Text(stringResource(R.string.action_navigate_short)) },
+                label = { Text(stringResource(Res.string.action_navigate_short)) },
                 leadingIcon = { Icon(AppIcons.Directions, contentDescription = null, modifier = Modifier.size(18.dp)) },
                 modifier = Modifier.testTag("navigate"),
             )
@@ -668,7 +668,7 @@ private fun PlaceSheet(
                             color = tokens.tx3,
                         )
                         Text(
-                            moment.text.ifBlank { moment.places.joinToString(stringResource(R.string.separator_list)) { places[it]?.name ?: it } },
+                            moment.text.ifBlank { moment.places.joinToString(stringResource(Res.string.separator_list)) { places[it]?.name ?: it } },
                             style = AppTheme.typography.body,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
@@ -687,7 +687,7 @@ private fun PlaceSheet(
                         .testTag("place_$id"),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(stringResource(R.string.action_see_moments), style = AppTheme.typography.body, modifier = Modifier.weight(1f))
+                    Text(stringResource(Res.string.action_see_moments), style = AppTheme.typography.body, modifier = Modifier.weight(1f))
                     Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(20.dp))
                 }
             }
@@ -751,14 +751,14 @@ private fun TripsSheet(
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {
-            Text(stringResource(R.string.title_trips), style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
+            Text(stringResource(Res.string.title_trips), style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
             Text(
                 if (trips.isEmpty()) {
-                    stringResource(R.string.trips_none)
+                    stringResource(Res.string.trips_none)
                 } else {
                     listOfNotNull(
-                        pluralStringResource(R.plurals.count_trips, trips.size, trips.size),
-                        total.takeIf { it >= 1 }?.let { stringResource(R.string.map_km, "%,d".format(it.roundToInt())) },
+                        pluralStringResource(Res.plurals.count_trips, trips.size, trips.size),
+                        total.takeIf { it >= 1 }?.let { stringResource(Res.string.map_km, "%,d".format(it.roundToInt())) },
                     ).joinToString(" ")
                 },
                 style = AppTheme.typography.caption,
@@ -767,7 +767,7 @@ private fun TripsSheet(
             )
             // Making a trip, there whether or not any are.
             IconButton(onClick = onNew, modifier = Modifier.align(Alignment.CenterVertically).testTag("trip_new")) {
-                Icon(AppIcons.Plus, contentDescription = stringResource(R.string.trip_new_title))
+                Icon(AppIcons.Plus, contentDescription = stringResource(Res.string.trip_new_title))
             }
         }
         LazyColumn(
@@ -794,7 +794,7 @@ private fun TripsSheet(
                         Modifier.fillMaxWidth().padding(horizontal = if (inCard) Space.l else Space.gutter).padding(top = Space.s, bottom = Space.xs),
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
-                        Text(stringResource(R.string.trips_suggested), style = AppTheme.typography.label, color = tokens.tx2, modifier = Modifier.semantics { heading() })
+                        Text(stringResource(Res.string.trips_suggested), style = AppTheme.typography.label, color = tokens.tx2, modifier = Modifier.semantics { heading() })
                     }
                 }
                 items(suggestions, key = { "suggested_${it.key}" }) { suggestion ->
@@ -829,11 +829,11 @@ private fun SuggestionRow(suggestion: TripSuggestion, coverSize: Int, onDismiss:
             Text(
                 listOf(
                     formatDate(suggestion.start),
-                    pluralStringResource(R.plurals.count_days, days, days),
+                    pluralStringResource(Res.plurals.count_days, days, days),
                     if (suggestion.photos > 0) {
-                        pluralStringResource(R.plurals.count_photos, suggestion.photos, suggestion.photos)
+                        pluralStringResource(Res.plurals.count_photos, suggestion.photos, suggestion.photos)
                     } else {
-                        pluralStringResource(R.plurals.count_records, suggestion.records, suggestion.records)
+                        pluralStringResource(Res.plurals.count_records, suggestion.records, suggestion.records)
                     },
                 ).joinToString(" "),
                 style = AppTheme.typography.caption,
@@ -841,10 +841,10 @@ private fun SuggestionRow(suggestion: TripSuggestion, coverSize: Int, onDismiss:
             )
         }
         IconButton(onClick = onAdd, modifier = Modifier.testTag("add_${suggestion.start}")) {
-            Icon(AppIcons.Plus, contentDescription = stringResource(R.string.trip_suggestion_add, suggestion.name), tint = tokens.tx, modifier = Modifier.size(20.dp))
+            Icon(AppIcons.Plus, contentDescription = stringResource(Res.string.trip_suggestion_add, suggestion.name), tint = tokens.tx, modifier = Modifier.size(20.dp))
         }
         IconButton(onClick = onDismiss, modifier = Modifier.testTag("dismiss_${suggestion.start}")) {
-            Icon(AppIcons.Close, contentDescription = stringResource(R.string.trip_suggestion_dismiss, suggestion.name), tint = tokens.tx2, modifier = Modifier.size(20.dp))
+            Icon(AppIcons.Close, contentDescription = stringResource(Res.string.trip_suggestion_dismiss, suggestion.name), tint = tokens.tx2, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -879,8 +879,8 @@ private fun TripRow(
             Text(
                 listOfNotNull(
                     formatDate(trip.start),
-                    pluralStringResource(R.plurals.count_days, days, days),
-                    km?.takeIf { it >= 1 }?.let { stringResource(R.string.map_km, "%,d".format(it.roundToInt())) },
+                    pluralStringResource(Res.plurals.count_days, days, days),
+                    km?.takeIf { it >= 1 }?.let { stringResource(Res.string.map_km, "%,d".format(it.roundToInt())) },
                 ).joinToString(" "),
                 style = AppTheme.typography.caption,
                 color = tokens.tx2,
@@ -910,7 +910,7 @@ private fun SearchPill(onClick: () -> Unit, modifier: Modifier = Modifier, float
             horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {
             Icon(AppIcons.Search, contentDescription = null)
-            Text(stringResource(R.string.map_search_hint), style = AppTheme.typography.body, color = tokens.tx3, maxLines = 1)
+            Text(stringResource(Res.string.map_search_hint), style = AppTheme.typography.body, color = tokens.tx3, maxLines = 1)
         }
     }
 }
@@ -962,7 +962,7 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
         enter = expandVertically(motion.fastSpatialSpec(), expandFrom = Alignment.Bottom) + fadeIn(motion.fastEffectsSpec()),
         exit = shrinkVertically(motion.fastSpatialSpec(), shrinkTowards = Alignment.Bottom) + fadeOut(motion.fastEffectsSpec()),
     ) {
-        MapButton(stringResource(R.string.action_north), onClick, tag = "north", tint = tokens.accent) {
+        MapButton(stringResource(Res.string.action_north), onClick, tag = "north", tint = tokens.accent) {
             Icon(AppIcons.Navigation, contentDescription = null, modifier = Modifier.rotate(-bearing.toFloat()))
         }
     }
@@ -972,7 +972,7 @@ private fun CompassButton(turned: Boolean, bearing: Double, onClick: () -> Unit)
 @Composable
 private fun LocateButton(locating: Boolean, onClick: () -> Unit) {
     // Named on the button, so it keeps its name while the indicator stands in for the icon.
-    MapButton(stringResource(R.string.action_locate), onClick = { if (!locating) onClick() }, tag = "locate") {
+    MapButton(stringResource(Res.string.action_locate), onClick = { if (!locating) onClick() }, tag = "locate") {
         Crossfade(locating, animationSpec = AppTheme.motionScheme.fastEffectsSpec(), label = "locating") { busy ->
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 if (busy) {
@@ -988,7 +988,7 @@ private fun LocateButton(locating: Boolean, onClick: () -> Unit) {
 /** Opens the phone's own footprints; a dot in the accent while it's recording. */
 @Composable
 private fun FootprintsButton(recording: Boolean, onClick: () -> Unit) {
-    val label = if (recording) stringResource(R.string.footprints_map_recording) else stringResource(R.string.footprints_title)
+    val label = if (recording) stringResource(Res.string.footprints_map_recording) else stringResource(Res.string.footprints_title)
     MapButton(label, onClick, tag = "footprints") {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Icon(AppIcons.Footprints, contentDescription = null)
@@ -1005,7 +1005,7 @@ private fun FootprintsButton(recording: Boolean, onClick: () -> Unit) {
 /** Turns the fog of war on and off: a round switch, filled with the accent while it's on. */
 @Composable
 private fun FogButton(on: Boolean, onClick: () -> Unit) {
-    MapButton(stringResource(R.string.action_fog), onClick, tag = "fog", on = on) {
+    MapButton(stringResource(Res.string.action_fog), onClick, tag = "fog", on = on) {
         Icon(AppIcons.Fog, contentDescription = null)
     }
 }
@@ -1015,7 +1015,7 @@ private fun FogButton(on: Boolean, onClick: () -> Unit) {
 private fun FogCount(fog: FogOfWar) {
     FloatingPill {
         Text(
-            stringResource(R.string.fog_lit, fog.cities, fog.provinces),
+            stringResource(Res.string.fog_lit, fog.cities, fog.provinces),
             style = AppTheme.typography.caption,
             color = tokens.tx2,
             modifier = Modifier.height(LEGEND_HEIGHT).padding(horizontal = Space.m).wrapContentHeight(),
@@ -1064,7 +1064,7 @@ private fun Legend(colors: Map<Int, Color>, trips: Boolean) {
                     VerticalDivider(Modifier.height(14.dp), color = dividerColor())
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                         Box(Modifier.width(14.dp).height(3.dp).background(tokens.tx.copy(alpha = ROUTE_OPACITY), CircleShape))
-                        Text(stringResource(R.string.legend_trips), style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, softWrap = false)
+                        Text(stringResource(Res.string.legend_trips), style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, softWrap = false)
                     }
                 }
             }
@@ -1090,7 +1090,7 @@ private fun RouteCard(trip: TripRecord, cover: MomentMedia?, year: Color?, km: D
         modifier = Modifier.fillMaxWidth().heightIn(min = ROUTE_CARD).testTag("trip_${trip.id}"),
     ) {
         TripRow(trip, cover, year, km, urls, Modifier.fillMaxWidth().padding(start = Space.m, end = Space.xs, top = Space.m, bottom = Space.m)) {
-            val label = stringResource(R.string.action_play_trip)
+            val label = stringResource(Res.string.action_play_trip)
             IconButton(onClick = onPlay, modifier = Modifier.semantics { contentDescription = label }.testTag("play_${trip.id}")) {
                 Icon(AppIcons.Play, contentDescription = null, tint = tokens.tx, modifier = Modifier.size(20.dp))
             }

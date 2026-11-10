@@ -1,5 +1,7 @@
 package cc.hyoban.moments.accessibility
 
+import org.jetbrains.compose.resources.StringResource
+
 /** Visible node data, scoped to the active task's app and discarded after each inspection. */
 internal data class AssistNode(
     val id: Int,
@@ -32,8 +34,8 @@ internal interface AssistAdapter {
     val id: String
     val packageName: String
     val timeoutMs: Long
-    val readyMessage: Int
-    val stoppedMessage: Int
+    val readyMessage: StringResource
+    val stoppedMessage: StringResource
 }
 
 /** Each explicit share creates a fresh flow; it is never persisted or automatically retried. */

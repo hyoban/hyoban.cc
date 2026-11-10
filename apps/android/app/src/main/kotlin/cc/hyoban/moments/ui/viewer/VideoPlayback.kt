@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.viewer
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.Scrubber
 import cc.hyoban.moments.ui.design.Spinner
@@ -35,7 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -50,7 +51,6 @@ import androidx.media3.ui.compose.state.rememberMuteButtonState
 import androidx.media3.ui.compose.state.rememberPlayPauseButtonState
 import androidx.media3.ui.compose.state.rememberProgressStateWithTickCount
 import androidx.media3.ui.compose.state.rememberProgressStateWithTickInterval
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
@@ -186,7 +186,7 @@ fun VideoControls(state: VideoState, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.xs),
         ) {
-            Tooltip(stringResource(if (playPause.showPlay) R.string.action_play else R.string.action_pause)) {
+            Tooltip(stringResource(if (playPause.showPlay) Res.string.action_play else Res.string.action_pause)) {
                 IconButton(onClick = playPause::onClick, enabled = playPause.isEnabled) {
                     Icon(
                         when {
@@ -194,7 +194,7 @@ fun VideoControls(state: VideoState, modifier: Modifier = Modifier) {
                             playPause.showPlay -> AppIcons.Play
                             else -> AppIcons.Pause
                         },
-                        contentDescription = stringResource(if (playPause.showPlay) R.string.action_play else R.string.action_pause),
+                        contentDescription = stringResource(if (playPause.showPlay) Res.string.action_play else Res.string.action_pause),
                         // Faded while the player can't take it yet, as a disabled button is.
                         tint = if (playPause.isEnabled) MediaOverlay.content else MediaOverlay.contentDisabled,
                     )
@@ -220,11 +220,11 @@ fun VideoControls(state: VideoState, modifier: Modifier = Modifier) {
                 modifier = Modifier.weight(1f).onSizeChanged { if (it.width > 0) bar.updateTotalTickCount(it.width) },
             )
             Text(formatClock(progress.durationMs.coerceAtLeast(0L)), style = AppTheme.typography.caption, color = MediaOverlay.contentVariant)
-            Tooltip(stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute)) {
+            Tooltip(stringResource(if (mute.showMuted) Res.string.action_unmute else Res.string.action_mute)) {
                 IconButton(onClick = mute::onClick, enabled = mute.isEnabled) {
                     Icon(
                         if (mute.showMuted) AppIcons.VolumeOff else AppIcons.Volume,
-                        contentDescription = stringResource(if (mute.showMuted) R.string.action_unmute else R.string.action_mute),
+                        contentDescription = stringResource(if (mute.showMuted) Res.string.action_unmute else Res.string.action_mute),
                         tint = if (mute.isEnabled) MediaOverlay.content else MediaOverlay.contentDisabled,
                     )
                 }

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.res.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -35,14 +36,13 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Text
@@ -119,16 +119,16 @@ internal fun Grid(
         ) {
             if (limited != null) item(key = "limited", span = { GridItemSpan(maxLineSpan) }) { limited() }
             if (shown.isEmpty() && empty) item(key = "empty", span = { GridItemSpan(maxLineSpan) }) {
-                Text(stringResource(R.string.picker_empty), style = AppTheme.typography.body, color = tokens.tx3, textAlign = TextAlign.Center,
+                Text(stringResource(Res.string.picker_empty), style = AppTheme.typography.body, color = tokens.tx3, textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(top = Space.xl * 3))
             }
             groups.forEach { (group, picks) ->
                 item(key = "group-$group", span = { GridItemSpan(maxLineSpan) }) {
                     Text(
                         when (group) {
-                            null -> stringResource(R.string.camera_no_date)
+                            null -> stringResource(Res.string.camera_no_date)
                             is YearMonth -> formatYearMonth(group)
-                            today -> stringResource(R.string.camera_today)
+                            today -> stringResource(Res.string.camera_today)
                             else -> formatDay(group.toString(), today)
                         },
                         style = AppTheme.typography.caption, color = tokens.tx2,
@@ -146,7 +146,7 @@ internal fun Grid(
                         Modifier.animateItem().aspectRatio(1f).background(tokens.fill)
                             .then(if (index >= 0) Modifier.border(3.dp, tokens.accent) else Modifier)
                             .semantics { contentDescription = label; selected = index >= 0 }
-                            .clickable(onClickLabel = stringResource(R.string.camera_view)) { onOpen(pick) },
+                            .clickable(onClickLabel = stringResource(Res.string.camera_view)) { onOpen(pick) },
                     ) {
                         thumb?.let { Image(it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().alpha(if (setBack) 0.38f else 1f)) }
                         if (!byMonth) corner?.let {
@@ -158,7 +158,7 @@ internal fun Grid(
                             if (index >= 0) ChoiceMark(index, Modifier.align(Alignment.TopEnd).padding(4.dp).size(18.dp))
                         } else if (pick.choosable) Box(
                             Modifier.align(Alignment.TopEnd).size(48.dp)
-                                .clickable(enabled = enabled && !setBack, role = Role.Checkbox, onClickLabel = stringResource(R.string.camera_choose)) { onToggle(pick) }
+                                .clickable(enabled = enabled && !setBack, role = Role.Checkbox, onClickLabel = stringResource(Res.string.camera_choose)) { onToggle(pick) }
                                 .testTag("picker_choose_${pick.key}"),
                             contentAlignment = Alignment.TopEnd,
                         ) { ChoiceMark(index, Modifier.padding(6.dp).size(22.dp).alpha(if (setBack) 0.38f else 1f)) }

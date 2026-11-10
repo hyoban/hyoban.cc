@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.ui.platform.LocalConfiguration
 import cc.hyoban.moments.ui.design.strong
@@ -46,14 +48,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.TextAutoSize
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ledger.DISCOUNT_CATEGORY
 import cc.hyoban.moments.ledger.FEE_CATEGORY
 import cc.hyoban.moments.ledger.Ledger
@@ -84,18 +85,18 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /** How long a stretch the sums are over. */
-private enum class Span(val label: Int) {
-    MONTH(R.string.ledger_span_month),
-    YEAR(R.string.ledger_span_year),
-    ALL(R.string.ledger_span_all),
+private enum class Span(val label: StringResource) {
+    MONTH(Res.string.ledger_span_month),
+    YEAR(Res.string.ledger_span_year),
+    ALL(Res.string.ledger_span_all),
 }
 
 /** The name of a summed category: the user's, or what a transfer's fee and discount are. */
 @Composable
 fun categoryName(ledger: Ledger, id: String?): String = when (id) {
-    FEE_CATEGORY -> stringResource(R.string.ledger_fee)
-    DISCOUNT_CATEGORY -> stringResource(R.string.ledger_discount)
-    null -> stringResource(R.string.ledger_uncategorized)
+    FEE_CATEGORY -> stringResource(Res.string.ledger_fee)
+    DISCOUNT_CATEGORY -> stringResource(Res.string.ledger_discount)
+    null -> stringResource(Res.string.ledger_uncategorized)
     else -> ledger.categoriesById[id]?.name ?: id
 }
 
@@ -148,7 +149,7 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
     val periodLabel = when (mode) {
         Span.MONTH -> formatMonth(anchor.toString()).let { (month, year) -> if (month.endsWith("月")) "${year}年$month" else "$month $year" }
         Span.YEAR -> anchor.year.toString()
-        Span.ALL -> stringResource(R.string.ledger_span_all)
+        Span.ALL -> stringResource(Res.string.ledger_span_all)
     }
     // The days of the stretch so far: none for one still to come, up to today for this one.
     val rangeStart = start ?: firstDay
@@ -182,14 +183,14 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
                 }
             }
             Row(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                FilterChip(selected = !income, onClick = { income = false }, label = { Text(stringResource(R.string.ledger_kind_expense)) })
-                FilterChip(selected = income, onClick = { income = true }, label = { Text(stringResource(R.string.ledger_kind_income)) })
+                FilterChip(selected = !income, onClick = { income = false }, label = { Text(stringResource(Res.string.ledger_kind_expense)) })
+                FilterChip(selected = income, onClick = { income = true }, label = { Text(stringResource(Res.string.ledger_kind_income)) })
             }
             val byDay = if (income) summary.incomeByDay else summary.expenseByDay
             val byCategory = if (income) summary.incomeByCategory else summary.expenseByCategory
             if (byDay.values.none { it > 0 }) {
                 Text(
-                    stringResource(if (income) R.string.ledger_no_income else R.string.ledger_no_expense),
+                    stringResource(if (income) Res.string.ledger_no_income else Res.string.ledger_no_expense),
                     style = AppTheme.typography.body,
                     color = tokens.tx2,
                     textAlign = TextAlign.Center,
@@ -205,8 +206,8 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
             }
             when (mode) {
                 Span.MONTH -> ChartCard(
-                    stringResource(R.string.ledger_chart_calendar),
-                    byDay.count { it.value > 0 }.let { days -> pluralStringResource(if (income) R.plurals.ledger_days_with_income else R.plurals.ledger_days_with_expense, days, days) },
+                    stringResource(Res.string.ledger_chart_calendar),
+                    byDay.count { it.value > 0 }.let { days -> pluralStringResource(if (income) Res.plurals.ledger_days_with_income else Res.plurals.ledger_days_with_expense, days, days) },
                 ) { MonthHeatmap(start!!, byDay, currency) { listBills(null, it, null) } }
                 Span.YEAR -> YearCalendar(anchor.year, byDay, income, currency, flowKey) { listBills(null, it, null) }
                 Span.ALL -> Unit
@@ -220,8 +221,8 @@ fun StatsView(ledger: Ledger, books: Set<String>, currency: String, nav: LedgerN
             val total = byCategory.sumOf { it.second.coerceAtLeast(0) }.coerceAtLeast(1)
             Categories(ledger, byCategory, ranked, colorOf, total, if (income) summary.income else summary.expense, income, currency, flowKey)
             SegmentedGroup(
-                stringResource(if (income) R.string.ledger_income_by_category else R.string.ledger_expense_by_category),
-                if (summary.unconverted > 0) stringResource(R.string.ledger_unconverted_note) else null,
+                stringResource(if (income) Res.string.ledger_income_by_category else Res.string.ledger_expense_by_category),
+                if (summary.unconverted > 0) stringResource(Res.string.ledger_unconverted_note) else null,
                 byCategory.map { (category, cents) ->
                     { shapes ->
                         val share = cents.toFloat() / total
@@ -270,7 +271,7 @@ private fun PeriodRow(label: String, mode: Span, onMode: (Span) -> Unit, onPrevi
         // Kept in place for all time, unseen, so the period stays in the middle.
         val stepping = mode != Span.ALL
         IconButton(onClick = onPrevious, enabled = stepping, modifier = Modifier.alpha(if (stepping) 1f else 0f)) {
-            Icon(AppIcons.ChevronLeft, contentDescription = stringResource(R.string.ledger_previous_period))
+            Icon(AppIcons.ChevronLeft, contentDescription = stringResource(Res.string.ledger_previous_period))
         }
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
             Row(
@@ -294,7 +295,7 @@ private fun PeriodRow(label: String, mode: Span, onMode: (Span) -> Unit, onPrevi
             }
         }
         IconButton(onClick = onNext, enabled = stepping, modifier = Modifier.alpha(if (stepping) 1f else 0f)) {
-            Icon(AppIcons.ChevronRight, contentDescription = stringResource(R.string.ledger_next_period))
+            Icon(AppIcons.ChevronRight, contentDescription = stringResource(Res.string.ledger_next_period))
         }
     }
 }
@@ -308,11 +309,11 @@ private fun Totals(summary: Summary, currency: String, average: Long?, compared:
     run {
         Column(Modifier.fillMaxWidth().padding(horizontal = Space.gutter + Space.xs, vertical = Space.m), verticalArrangement = Arrangement.spacedBy(Space.m)) {
             val figures = listOf(
-                R.string.ledger_kind_expense to summary.expense,
-                R.string.ledger_kind_income to summary.income,
-                R.string.ledger_balance to summary.balance,
+                Res.string.ledger_kind_expense to summary.expense,
+                Res.string.ledger_kind_income to summary.income,
+                Res.string.ledger_balance to summary.balance,
             )
-            val figure: @Composable (Pair<Int, Long>, Modifier) -> Unit = { (label, cents), modifier ->
+            val figure: @Composable (Pair<StringResource, Long>, Modifier) -> Unit = { (label, cents), modifier ->
                 Column(modifier.semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                     // A six-figure sum shrinks to fit its third rather than losing its cents.
                     Text(
@@ -336,15 +337,15 @@ private fun Totals(summary: Summary, currency: String, average: Long?, compared:
                 val share = percent(abs(summary.expense - before).toDouble() / before)
                 stringResource(
                     when {
-                        summary.expense > before && yearly -> R.string.ledger_vs_last_year_more
-                        summary.expense > before -> R.string.ledger_vs_last_month_more
-                        yearly -> R.string.ledger_vs_last_year_less
-                        else -> R.string.ledger_vs_last_month_less
+                        summary.expense > before && yearly -> Res.string.ledger_vs_last_year_more
+                        summary.expense > before -> Res.string.ledger_vs_last_month_more
+                        yearly -> Res.string.ledger_vs_last_year_less
+                        else -> Res.string.ledger_vs_last_month_less
                     },
                     share,
                 )
             }
-            val average = average?.takeIf { summary.expense > 0 }?.let { stringResource(R.string.ledger_daily_average, money(it, currency)) }
+            val average = average?.takeIf { summary.expense > 0 }?.let { stringResource(Res.string.ledger_daily_average, money(it, currency)) }
             if (average != null || change != null) {
                 Text(line(average, change), style = AppTheme.typography.body, color = tokens.tx2)
             }
@@ -362,14 +363,14 @@ private fun IncomeAgainstExpense(summary: Summary, yearly: Boolean, year: Int, f
     val expense = if (yearly) byMonth(summary.expenseByDay, year) else byYear(summary.expenseByDay, first, last)
     val income = if (yearly) byMonth(summary.incomeByDay, year) else byYear(summary.incomeByDay, first, last)
     val colors = listOf(tokens.accent, tokens.income)
-    val expenseLabel = stringResource(R.string.ledger_kind_expense)
-    val incomeLabel = stringResource(R.string.ledger_kind_income)
+    val expenseLabel = stringResource(Res.string.ledger_kind_expense)
+    val incomeLabel = stringResource(Res.string.ledger_kind_income)
     val readout = picked?.let { i ->
-        line(slotLabel(yearly, first, i), stringResource(R.string.ledger_expense_short, money(expense[i], currency)), stringResource(R.string.ledger_income_short, money(income[i], currency)))
-    } ?: if (summary.income > 0) stringResource(R.string.ledger_savings_rate, percent(summary.balance.toDouble() / summary.income)) else stringResource(R.string.ledger_expense_short, money(summary.expense, currency))
-    val description = stringResource(R.string.ledger_income_expense_description, money(summary.expense, currency), money(summary.income, currency))
+        line(slotLabel(yearly, first, i), stringResource(Res.string.ledger_expense_short, money(expense[i], currency)), stringResource(Res.string.ledger_income_short, money(income[i], currency)))
+    } ?: if (summary.income > 0) stringResource(Res.string.ledger_savings_rate, percent(summary.balance.toDouble() / summary.income)) else stringResource(Res.string.ledger_expense_short, money(summary.expense, currency))
+    val description = stringResource(Res.string.ledger_income_expense_description, money(summary.expense, currency), money(summary.income, currency))
     ChartCard(
-        stringResource(R.string.ledger_chart_income_expense),
+        stringResource(Res.string.ledger_chart_income_expense),
         readout,
         legend = listOf(expenseLabel to colors[0], incomeLabel to colors[1]),
         onOpen = picked?.let { i -> { onOpen(slotLabel(yearly, first, i), if (yearly) "%d-%02d".format(Locale.ROOT, year, i + 1) else "${first + i}") } },
@@ -413,7 +414,7 @@ private fun Trend(
     }
     val peak = values.indices.maxBy { values[it] }
     val readout = picked?.let { line(label(it), money(values[it], currency)) }
-        ?: stringResource(R.string.ledger_peak, label(peak), money(values[peak], currency))
+        ?: stringResource(Res.string.ledger_peak, label(peak), money(values[peak], currency))
     val axis = when (mode) {
         Span.MONTH -> listOf("1", "${values.size / 2 + 1}", "${values.size}")
         Span.YEAR -> listOf(formatMonthOnly(1), formatMonthOnly(6), formatMonthOnly(12))
@@ -422,9 +423,9 @@ private fun Trend(
     ChartCard(
         stringResource(
             when (mode) {
-                Span.MONTH -> R.string.ledger_chart_by_day
-                Span.YEAR -> R.string.ledger_chart_by_month
-                Span.ALL -> R.string.ledger_chart_by_year
+                Span.MONTH -> Res.string.ledger_chart_by_day
+                Span.YEAR -> Res.string.ledger_chart_by_month
+                Span.ALL -> Res.string.ledger_chart_by_year
             },
         ),
         readout,
@@ -445,7 +446,7 @@ private fun Trend(
             axis,
             picked,
             { picked = it },
-            stringResource(R.string.ledger_chart_description, money(values[peak], currency)),
+            stringResource(Res.string.ledger_chart_description, money(values[peak], currency)),
         )
     }
 }
@@ -473,7 +474,7 @@ private fun RunningTotal(
     val thisName = name(start)
     val lastName = name(previousStart)
     val at = picked ?: current.lastIndex
-    val dayName = if (monthly) stringResource(R.string.ledger_day_of_month, at + 1) else formatDate(start.plusDays(at.toLong()).toString(), today = start)
+    val dayName = if (monthly) stringResource(Res.string.ledger_day_of_month, at + 1) else formatDate(start.plusDays(at.toLong()).toString(), today = start)
     val readout = line(
         dayName,
         current.getOrNull(at)?.let { "$thisName ${money(it, currency)}" },
@@ -481,7 +482,7 @@ private fun RunningTotal(
     )
     val colors = listOf(tokens.accent, otherColor())
     ChartCard(
-        stringResource(R.string.ledger_chart_running_total),
+        stringResource(Res.string.ledger_chart_running_total),
         readout,
         legend = listOf(thisName to colors[0], lastName to colors[1]),
     ) {
@@ -492,7 +493,7 @@ private fun RunningTotal(
             if (monthly) listOf("1", "$length") else listOf(formatMonthOnly(1), formatMonthOnly(12)),
             picked,
             { picked = it },
-            stringResource(R.string.ledger_running_total_description, thisName, money(current.lastOrNull() ?: 0, currency), lastName, money(last.lastOrNull() ?: 0, currency)),
+            stringResource(Res.string.ledger_running_total_description, thisName, money(current.lastOrNull() ?: 0, currency), lastName, money(last.lastOrNull() ?: 0, currency)),
         )
     }
 }
@@ -503,9 +504,9 @@ private fun YearCalendar(year: Int, byDay: Map<LocalDate, Long>, income: Boolean
     var picked by remember(key) { mutableStateOf<LocalDate?>(null) }
     val count = byDay.count { it.key.year == year && it.value > 0 }
     val readout = picked?.let { line(formatDate(it.toString(), today = it), money(byDay[it] ?: 0, currency)) }
-        ?: pluralStringResource(if (income) R.plurals.ledger_days_with_income else R.plurals.ledger_days_with_expense, count, count)
+        ?: pluralStringResource(if (income) Res.plurals.ledger_days_with_income else Res.plurals.ledger_days_with_expense, count, count)
     ChartCard(
-        stringResource(R.string.ledger_chart_calendar),
+        stringResource(Res.string.ledger_chart_calendar),
         readout,
         onOpen = picked?.takeIf { (byDay[it] ?: 0) != 0L }?.let { day -> { onDay(day) } },
     ) {
@@ -521,8 +522,8 @@ private fun Weekdays(byDay: Map<LocalDate, Long>, start: LocalDate, end: LocalDa
     val locale = LocalConfiguration.current.locales[0]
     val weekday = { i: Int -> java.time.DayOfWeek.of(i + 1).getDisplayName(TextStyle.FULL, if (locale.language == "zh") Locale.CHINESE else Locale.ENGLISH) }
     val at = picked ?: values.indices.maxBy { values[it] }
-    val readout = stringResource(R.string.ledger_weekday_average, weekday(at), money(values[at], currency))
-    ChartCard(stringResource(R.string.ledger_chart_weekdays), readout) {
+    val readout = stringResource(Res.string.ledger_weekday_average, weekday(at), money(values[at], currency))
+    ChartCard(stringResource(Res.string.ledger_chart_weekdays), readout) {
         BarChart(listOf(values), listOf(tokens.accent), weekdayLetters(), picked, { picked = it }, readout, height = 88.dp)
     }
 }
@@ -543,21 +544,21 @@ private fun Categories(
     var picked by remember(key) { mutableStateOf<Int?>(null) }
     val own = byCategory.filter { it.first in ranked && it.second > 0 }
     val rest = byCategory.filter { it.first !in ranked }.sumOf { it.second.coerceAtLeast(0) }
-    val otherName = stringResource(R.string.ledger_category_other)
+    val otherName = stringResource(Res.string.ledger_category_other)
     val names = own.map { categoryName(ledger, it.first) } + listOfNotNull(otherName.takeIf { rest > 0 })
     val slices = own.map { it.second to colorOf(it.first) } + listOfNotNull((rest to otherColor()).takeIf { rest > 0 })
     if (slices.isEmpty()) return
     val readout = picked?.let { i -> line(names[i], percent(slices[i].first.toDouble() / total)) }
-        ?: stringResource(R.string.ledger_top_category, names[0], percent(slices[0].first.toDouble() / total))
+        ?: stringResource(Res.string.ledger_top_category, names[0], percent(slices[0].first.toDouble() / total))
     ChartCard(
-        stringResource(if (income) R.string.ledger_income_by_category else R.string.ledger_expense_by_category),
+        stringResource(if (income) Res.string.ledger_income_by_category else Res.string.ledger_expense_by_category),
         readout,
         legend = names.zip(slices.map { it.second }),
     ) {
         DonutChart(slices, picked, { picked = it }, readout) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    picked?.let { names[it] } ?: stringResource(if (income) R.string.ledger_kind_income else R.string.ledger_kind_expense),
+                    picked?.let { names[it] } ?: stringResource(if (income) Res.string.ledger_kind_income else Res.string.ledger_kind_expense),
                     style = AppTheme.typography.caption,
                     color = tokens.tx2,
                     maxLines = 1,
@@ -600,7 +601,7 @@ private fun CategoriesOverTime(
     }
     val shown = series.indices.filter { s -> series[s].any { it > 0 } }
     if (shown.isEmpty()) return
-    val otherName = stringResource(R.string.ledger_category_other)
+    val otherName = stringResource(Res.string.ledger_category_other)
     val names = keys.map { if (it == "@other") otherName else categoryName(ledger, it) }
     val colors = keys.map { if (it == "@other") otherColor() else colorOf(it) }
     val totals = byCategory.indices.map { i -> shown.sumOf { series[it][i] } }
@@ -608,9 +609,9 @@ private fun CategoriesOverTime(
     val readout = picked?.let { i ->
         val top = shown.maxBy { series[it][i] }
         line(slotLabel(yearly, first, i), money(totals[i], currency), names[top].takeIf { totals[i] > 0 }?.let { "$it ${money(series[top][i], currency)}" })
-    } ?: stringResource(R.string.ledger_peak, slotLabel(yearly, first, at), money(totals[at], currency))
+    } ?: stringResource(Res.string.ledger_peak, slotLabel(yearly, first, at), money(totals[at], currency))
     ChartCard(
-        stringResource(R.string.ledger_chart_categories_over_time),
+        stringResource(Res.string.ledger_chart_categories_over_time),
         readout,
         legend = shown.map { names[it] to colors[it] },
     ) {

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.camera
 
+import cc.hyoban.moments.res.*
 import android.Manifest
 import android.app.Activity
 import android.content.Context
@@ -31,12 +32,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.R
 import cc.hyoban.moments.footprints.ActionRow
 import cc.hyoban.moments.footprints.BackgroundAllowances
 import cc.hyoban.moments.ui.components.PermissionAsk
@@ -101,13 +101,13 @@ fun CameraSettingsScreen(onBack: () -> Unit) {
     val ask = rememberCameraPermissionAsk(
         arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
         listOf(
-            PermissionFact(AppIcons.Bluetooth, stringResource(R.string.permission_camera_bluetooth)),
-            PermissionFact(AppIcons.Pin, stringResource(R.string.permission_camera_location)),
-            PermissionFact(AppIcons.Wifi, stringResource(R.string.permission_camera_wifi)),
+            PermissionFact(AppIcons.Bluetooth, stringResource(Res.string.permission_camera_bluetooth)),
+            PermissionFact(AppIcons.Pin, stringResource(Res.string.permission_camera_location)),
+            PermissionFact(AppIcons.Wifi, stringResource(Res.string.permission_camera_wifi)),
         ),
     ) { granted -> if (granted) startPairing() }
 
-    SubPage(stringResource(R.string.camera_title), onBack, subtitle = stringResource(R.string.camera_note)) {
+    SubPage(stringResource(Res.string.camera_title), onBack, subtitle = stringResource(Res.string.camera_note)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current)
@@ -116,13 +116,13 @@ fun CameraSettingsScreen(onBack: () -> Unit) {
                 val paired = camera
                 when {
                     paired != null -> Paired(paired, status, needs, onUnpair = { unpairing = true })
-                    pairing -> SegmentedGroup(stringResource(R.string.camera_title), stringResource(R.string.camera_pairing_note), listOf { shapes ->
+                    pairing -> SegmentedGroup(stringResource(Res.string.camera_title), stringResource(Res.string.camera_pairing_note), listOf { shapes ->
                         SegmentedListItem(
                             onClick = {}, shapes = shapes, colors = segmentColors(),
                             leadingContent = { Icon(AppIcons.CameraBody, contentDescription = null) },
-                            supportingContent = { Text(stringResource(R.string.camera_pairing)) },
+                            supportingContent = { Text(stringResource(Res.string.camera_pairing)) },
                             trailingContent = { Spinner() },
-                        ) { Text(stringResource(R.string.camera_model)) }
+                        ) { Text(stringResource(Res.string.camera_model)) }
                     })
                     else -> Unpaired(supported = CameraLink.supported(context), failed = failed) { ask() }
                 }
@@ -131,12 +131,12 @@ fun CameraSettingsScreen(onBack: () -> Unit) {
     }
     if (unpairing) AlertDialog(
         onDismissRequest = { unpairing = false },
-        title = { Text(stringResource(R.string.camera_unpair_title)) },
-        text = { Text(stringResource(R.string.camera_unpair_body)) },
-        dismissButton = { TextButton(onClick = { unpairing = false }) { Text(stringResource(R.string.action_cancel)) } },
+        title = { Text(stringResource(Res.string.camera_unpair_title)) },
+        text = { Text(stringResource(Res.string.camera_unpair_body)) },
+        dismissButton = { TextButton(onClick = { unpairing = false }) { Text(stringResource(Res.string.action_cancel)) } },
         confirmButton = {
             TextButton(onClick = { unpairing = false; CameraLink.unpair(context) }) {
-                Text(stringResource(R.string.camera_unpair), color = tokens.danger)
+                Text(stringResource(Res.string.camera_unpair), color = tokens.danger)
             }
         },
     )
@@ -147,12 +147,12 @@ private fun Unpaired(supported: Boolean, failed: Boolean, onPair: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(top = Space.xl * 2, bottom = Space.xl), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Space.m)) {
         Icon(AppIcons.CameraBody, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(48.dp))
-        Text(stringResource(R.string.camera_none), style = AppTheme.typography.body, color = tokens.tx2)
-        Text(stringResource(if (supported) R.string.camera_only else R.string.camera_unsupported), style = AppTheme.typography.caption, color = tokens.tx3)
+        Text(stringResource(Res.string.camera_none), style = AppTheme.typography.body, color = tokens.tx2)
+        Text(stringResource(if (supported) Res.string.camera_only else Res.string.camera_unsupported), style = AppTheme.typography.caption, color = tokens.tx3)
     }
     if (!supported) return
     Column(Modifier.padding(horizontal = Space.gutter).padding(bottom = Space.xl), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-        listOf(R.string.camera_step_connect, R.string.camera_step_location, R.string.camera_step_pair).forEachIndexed { index, step ->
+        listOf(Res.string.camera_step_connect, Res.string.camera_step_location, Res.string.camera_step_pair).forEachIndexed { index, step ->
             Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
                 Box(Modifier.size(20.dp).background(tokens.fill, CircleShape), contentAlignment = Alignment.Center) {
                     Text("${index + 1}", style = AppTheme.typography.caption.strong)
@@ -160,10 +160,10 @@ private fun Unpaired(supported: Boolean, failed: Boolean, onPair: () -> Unit) {
                 Text(stringResource(step), style = AppTheme.typography.body)
             }
         }
-        if (failed) Text(stringResource(R.string.camera_pair_failed), style = AppTheme.typography.caption, color = tokens.danger)
+        if (failed) Text(stringResource(Res.string.camera_pair_failed), style = AppTheme.typography.caption, color = tokens.danger)
     }
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Button(onClick = onPair, modifier = Modifier.testTag("camera_pair")) { Text(stringResource(R.string.camera_pair)) }
+        Button(onClick = onPair, modifier = Modifier.testTag("camera_pair")) { Text(stringResource(Res.string.camera_pair)) }
     }
 }
 
@@ -171,44 +171,44 @@ private fun Unpaired(supported: Boolean, failed: Boolean, onPair: () -> Unit) {
 private fun Paired(camera: PairedCamera, status: CameraStatus, needs: Needs, onUnpair: () -> Unit) {
     val context = LocalContext.current
     val last = status.lastSent?.let {
-        stringResource(R.string.camera_last_sent, DateUtils.getRelativeTimeSpanString(it, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS))
+        stringResource(Res.string.camera_last_sent, DateUtils.getRelativeTimeSpanString(it, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS))
     }
     val state = when {
         status.problem != null -> stringResource(status.problem)
-        status.sending -> listOfNotNull(stringResource(R.string.camera_connected), last).joinToString(" · ")
-        status.near -> stringResource(R.string.camera_near)
-        else -> listOfNotNull(stringResource(R.string.camera_away), last).joinToString(" · ")
+        status.sending -> listOfNotNull(stringResource(Res.string.camera_connected), last).joinToString(" · ")
+        status.near -> stringResource(Res.string.camera_near)
+        else -> listOfNotNull(stringResource(Res.string.camera_away), last).joinToString(" · ")
     }
-    SegmentedGroup(stringResource(R.string.camera_title), null, listOf { shapes ->
+    SegmentedGroup(stringResource(Res.string.camera_title), null, listOf { shapes ->
         SegmentedListItem(
             onClick = {}, shapes = shapes, colors = segmentColors(),
             leadingContent = { Icon(AppIcons.CameraBody, contentDescription = null) },
             supportingContent = { Text(state) },
         ) { Text(camera.name) }
     })
-    SegmentedGroup(stringResource(R.string.camera_location), stringResource(R.string.camera_location_note), listOf { shapes ->
-        SwitchRow(camera.sendLocation, AppIcons.Pin, stringResource(R.string.camera_send_location), "camera_send_location", shapes,
-            supporting = stringResource(if (camera.sendLocation) R.string.camera_send_location_on else R.string.camera_send_location_off)) {
+    SegmentedGroup(stringResource(Res.string.camera_location), stringResource(Res.string.camera_location_note), listOf { shapes ->
+        SwitchRow(camera.sendLocation, AppIcons.Pin, stringResource(Res.string.camera_send_location), "camera_send_location", shapes,
+            supporting = stringResource(if (camera.sendLocation) Res.string.camera_send_location_on else Res.string.camera_send_location_off)) {
             CameraLink.setSendLocation(context, !camera.sendLocation)
         }
     })
     val (bluetooth, background, battery) = needs
-    SegmentedGroup(stringResource(R.string.camera_needs), null, listOf(
-        { shapes -> ActionRow(AppIcons.Bluetooth, stringResource(R.string.camera_need_bluetooth), shapes,
-            supporting = stringResource(if (bluetooth) R.string.camera_allowed else R.string.camera_need_bluetooth_off),
+    SegmentedGroup(stringResource(Res.string.camera_needs), null, listOf(
+        { shapes -> ActionRow(AppIcons.Bluetooth, stringResource(Res.string.camera_need_bluetooth), shapes,
+            supporting = stringResource(if (bluetooth) Res.string.camera_allowed else Res.string.camera_need_bluetooth_off),
             tag = "camera_need_bluetooth", external = !bluetooth) { if (!bluetooth) context.openAppSettings() } },
-        { shapes -> ActionRow(AppIcons.Pin, stringResource(R.string.camera_need_location), shapes,
-            supporting = stringResource(if (background) R.string.camera_allowed else R.string.camera_need_location_off),
+        { shapes -> ActionRow(AppIcons.Pin, stringResource(Res.string.camera_need_location), shapes,
+            supporting = stringResource(if (background) Res.string.camera_allowed else Res.string.camera_need_location_off),
             tag = "camera_need_location", external = !background) { if (!background) context.openAppSettings() } },
-        { shapes -> ActionRow(AppIcons.Refresh, stringResource(R.string.camera_need_battery), shapes,
-            supporting = stringResource(if (battery) R.string.camera_allowed else R.string.camera_need_battery_off),
+        { shapes -> ActionRow(AppIcons.Refresh, stringResource(Res.string.camera_need_battery), shapes,
+            supporting = stringResource(if (battery) Res.string.camera_allowed else Res.string.camera_need_battery_off),
             tag = "camera_need_battery", external = !battery) {
             if (!battery) BackgroundAllowances.requestUnrestrictedBattery(context)
         } },
     ))
     Box(Modifier.padding(start = Space.gutter, top = Space.xl)) {
         TextButton(onClick = onUnpair, modifier = Modifier.testTag("camera_unpair")) {
-            Text(stringResource(R.string.camera_unpair), color = tokens.danger)
+            Text(stringResource(Res.string.camera_unpair), color = tokens.danger)
         }
     }
 }
@@ -238,9 +238,9 @@ internal fun rememberCameraPermissionAsk(
     arrayOf(Manifest.permission.BLUETOOTH_CONNECT, *CameraLink.wifiPermissions, *more),
     PermissionWords(
         AppIcons.CameraBody,
-        stringResource(R.string.permission_camera_title),
-        stringResource(R.string.permission_camera_body),
-        stringResource(R.string.permission_not_now),
+        stringResource(Res.string.permission_camera_title),
+        stringResource(Res.string.permission_camera_body),
+        stringResource(Res.string.permission_not_now),
         facts,
     ),
     isGranted = CameraLink::transferAllowed,

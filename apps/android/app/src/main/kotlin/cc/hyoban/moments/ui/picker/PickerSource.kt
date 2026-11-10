@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.viewer.VideoState
 import android.content.Context
 import android.graphics.Bitmap
@@ -22,10 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Button
@@ -61,7 +62,7 @@ internal interface PhotoSource {
     val deleteTag: String
 
     /** What the viewer's delete says: to the bin, or deleted. */
-    val deleteWords: Int
+    val deleteWords: org.jetbrains.compose.resources.StringResource
 
     /** What it asks before deleting, where the system doesn't. */
     @Composable fun Dialogs()
@@ -148,7 +149,7 @@ internal interface Pick {
     @Composable fun rememberDetails(): PhotoDetails?
 
     /** A note for the info panel where [details] say too little. */
-    fun infoNote(details: PhotoDetails?): Int? = null
+    fun infoNote(details: PhotoDetails?): StringResource? = null
 
     /** Once the viewer rests on it. */
     fun settled() {}
@@ -197,12 +198,12 @@ internal fun rememberThumb(pick: Pick, size: Int = 320): State<Bitmap?> {
 
 /** A source that couldn't be reached: why, and trying again. */
 @Composable
-internal fun Failed(icon: ImageVector, reason: Int, note: Int, onRetry: () -> Unit) {
+internal fun Failed(icon: ImageVector, reason: StringResource, note: StringResource, onRetry: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(top = LocalTopClearance.current + Space.xl * 3).padding(horizontal = Space.xl),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Space.s)) {
         Icon(icon, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(48.dp))
         Text(stringResource(reason), style = AppTheme.typography.body, textAlign = TextAlign.Center)
         Text(stringResource(note), style = AppTheme.typography.caption, color = tokens.tx3, textAlign = TextAlign.Center)
-        Box(Modifier.padding(top = Space.l)) { Button(onClick = onRetry, modifier = Modifier.testTag("camera_retry")) { Text(stringResource(R.string.action_retry)) } }
+        Box(Modifier.padding(top = Space.l)) { Button(onClick = onRetry, modifier = Modifier.testTag("camera_retry")) { Text(stringResource(Res.string.action_retry)) } }
     }
 }

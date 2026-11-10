@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.moment
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.Spinner
@@ -8,7 +10,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.pm.PackageManager
-import androidx.annotation.StringRes
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,8 +52,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -61,7 +62,6 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.media.Share
 import cc.hyoban.moments.data.media.ShareAlbum
@@ -83,17 +83,17 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 /** Menu order: complete text/photo composers, assisted sharing, manual captions, then manual albums. */
-enum class ShareTarget(val tag: String, @param:StringRes val title: Int, val limit: Int = Int.MAX_VALUE, val app: String? = null) {
-    X("x", R.string.action_share_x, 4, app = "com.twitter.android"),
-    BLUESKY("bluesky", R.string.action_share_bluesky, 4, app = "xyz.blueskyweb.app"),
-    BILIBILI("bilibili", R.string.action_share_bilibili, app = "tv.danmaku.bili"),
-    TELEGRAM("telegram", R.string.action_share_telegram, app = "org.telegram.messenger"),
-    THREADS("threads", R.string.action_share_threads, app = "com.instagram.barcelona"),
-    XIAOHONGSHU("xiaohongshu", R.string.action_share_xiaohongshu, app = "com.xingin.xhs"),
-    INSTAGRAM("instagram", R.string.action_share_instagram, 20, app = "com.instagram.android"),
-    DOUYIN("douyin", R.string.action_share_douyin, app = "com.ss.android.ugc.aweme"),
-    WECHAT("wechat", R.string.action_share_wechat, app = "com.tencent.mm"),
-    PREPARE("prepare", R.string.action_prepare_share),
+enum class ShareTarget(val tag: String, val title: StringResource, val limit: Int = Int.MAX_VALUE, val app: String? = null) {
+    X("x", Res.string.action_share_x, 4, app = "com.twitter.android"),
+    BLUESKY("bluesky", Res.string.action_share_bluesky, 4, app = "xyz.blueskyweb.app"),
+    BILIBILI("bilibili", Res.string.action_share_bilibili, app = "tv.danmaku.bili"),
+    TELEGRAM("telegram", Res.string.action_share_telegram, app = "org.telegram.messenger"),
+    THREADS("threads", Res.string.action_share_threads, app = "com.instagram.barcelona"),
+    XIAOHONGSHU("xiaohongshu", Res.string.action_share_xiaohongshu, app = "com.xingin.xhs"),
+    INSTAGRAM("instagram", Res.string.action_share_instagram, 20, app = "com.instagram.android"),
+    DOUYIN("douyin", Res.string.action_share_douyin, app = "com.ss.android.ugc.aweme"),
+    WECHAT("wechat", Res.string.action_share_wechat, app = "com.tencent.mm"),
+    PREPARE("prepare", Res.string.action_prepare_share),
 }
 
 /** The app's outline in the design's own icons; an album for the one made ready by hand. */
@@ -145,7 +145,7 @@ fun ShareMenu(onSelect: (ShareTarget) -> Unit, onDismiss: () -> Unit) {
     ) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = Space.l)) {
             Text(
-                stringResource(R.string.action_share),
+                stringResource(Res.string.action_share),
                 style = AppTheme.typography.title,
                 modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s).semantics { heading() },
             )
@@ -210,7 +210,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
         onDispose { adapter?.let { ShareAccessibilityService.cancel(it.id) } }
     }
     var busy by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<Int?>(null) }
+    var error by remember { mutableStateOf<StringResource?>(null) }
     val chosen = photos.filter { it.uid in selected }
     val prepareByHand = target == ShareTarget.PREPARE || (target == ShareTarget.WECHAT && chosen.size > 1)
     val useAssist = chosen.isNotEmpty() && when (target) {
@@ -232,17 +232,17 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
         AlertDialog(
             modifier = Modifier.semantics { testTagsAsResourceId = true },
             onDismissRequest = onDismiss,
-            title = { Text(stringResource(R.string.share_prepared)) },
+            title = { Text(stringResource(Res.string.share_prepared)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.m)) {
-                    album?.let { Text(pluralStringResource(R.plurals.share_album_saved, it.count, it.count, it.name)) }
-                    if (text.isNotBlank()) Text(stringResource(R.string.share_text_copied))
-                    Text(stringResource(R.string.share_manual_steps), style = AppTheme.typography.caption)
+                    album?.let { Text(pluralStringResource(Res.plurals.share_album_saved, it.count, it.count, it.name)) }
+                    if (text.isNotBlank()) Text(stringResource(Res.string.share_text_copied))
+                    Text(stringResource(Res.string.share_manual_steps), style = AppTheme.typography.caption)
                 }
             },
             confirmButton = {
                 TextButton(onClick = onDismiss, modifier = Modifier.testTag("share_prepared_done")) {
-                    Text(stringResource(R.string.share_done))
+                    Text(stringResource(Res.string.share_done))
                 }
             },
         )
@@ -261,20 +261,20 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 onClick = {
                     if (useAssist && adapter != null) {
                         if (!ShareAccessibilityService.connected.value) {
-                            error = R.string.share_assist_service_required
+                            error = Res.string.share_assist_service_required
                             return@TextButton
                         }
                         if (target == ShareTarget.TELEGRAM && TelegramAssistFlow.username(destination) == null) {
-                            error = R.string.telegram_assist_invalid_target
+                            error = Res.string.telegram_assist_invalid_target
                             return@TextButton
                         }
                     }
                     if (needsPhoto) {
-                        error = if (target == ShareTarget.INSTAGRAM) R.string.share_instagram_no_photos else R.string.share_douyin_no_photos
+                        error = if (target == ShareTarget.INSTAGRAM) Res.string.share_instagram_no_photos else Res.string.share_douyin_no_photos
                         return@TextButton
                     }
                     if (text.isBlank() && chosen.isEmpty()) {
-                        error = R.string.error_empty_moment
+                        error = Res.string.error_empty_moment
                         return@TextButton
                     }
                     busy = true
@@ -321,20 +321,20 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                         } catch (_: ActivityNotFoundException) {
                             if (useAssist) adapter?.let { ShareAccessibilityService.cancel(it.id) }
                             error = when (target) {
-                                ShareTarget.X -> R.string.share_x_unavailable
-                                ShareTarget.BLUESKY -> R.string.share_bluesky_unavailable
-                                ShareTarget.INSTAGRAM -> R.string.share_instagram_unavailable
-                                ShareTarget.TELEGRAM -> R.string.share_telegram_unavailable
-                                ShareTarget.XIAOHONGSHU -> R.string.share_xiaohongshu_unavailable
-                                ShareTarget.THREADS -> R.string.share_threads_unavailable
-                                ShareTarget.DOUYIN -> R.string.share_douyin_unavailable
-                                ShareTarget.WECHAT -> R.string.share_wechat_unavailable
-                                ShareTarget.BILIBILI -> R.string.share_bilibili_unavailable
-                                ShareTarget.PREPARE -> R.string.error_share
+                                ShareTarget.X -> Res.string.share_x_unavailable
+                                ShareTarget.BLUESKY -> Res.string.share_bluesky_unavailable
+                                ShareTarget.INSTAGRAM -> Res.string.share_instagram_unavailable
+                                ShareTarget.TELEGRAM -> Res.string.share_telegram_unavailable
+                                ShareTarget.XIAOHONGSHU -> Res.string.share_xiaohongshu_unavailable
+                                ShareTarget.THREADS -> Res.string.share_threads_unavailable
+                                ShareTarget.DOUYIN -> Res.string.share_douyin_unavailable
+                                ShareTarget.WECHAT -> Res.string.share_wechat_unavailable
+                                ShareTarget.BILIBILI -> Res.string.share_bilibili_unavailable
+                                ShareTarget.PREPARE -> Res.string.error_share
                             }
                         } catch (_: Exception) {
                             if (useAssist) adapter?.let { ShareAccessibilityService.cancel(it.id) }
-                            error = R.string.error_share
+                            error = Res.string.error_share
                         } finally {
                             busy = false
                         }
@@ -344,26 +344,26 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 // Busy, a spinner in the label's place, saying
                 // what it waits for, as a button that has started something shows it.
                 if (busy) {
-                    val preparing = stringResource(R.string.share_preparing)
+                    val preparing = stringResource(Res.string.share_preparing)
                     Spinner(Modifier.size(24.dp).semantics { contentDescription = preparing }.testTag("share_busy"))
                 } else Text(stringResource(when {
-                    target == ShareTarget.X -> R.string.share_x_open
+                    target == ShareTarget.X -> Res.string.share_x_open
                     useAssist -> when (target) {
-                        ShareTarget.TELEGRAM -> R.string.telegram_assist_open
-                        ShareTarget.INSTAGRAM -> R.string.instagram_assist_open
-                        else -> R.string.threads_assist_open
+                        ShareTarget.TELEGRAM -> Res.string.telegram_assist_open
+                        ShareTarget.INSTAGRAM -> Res.string.instagram_assist_open
+                        else -> Res.string.threads_assist_open
                     }
-                    target == ShareTarget.TELEGRAM -> if (copyTextOnOpen) R.string.share_telegram_copy_open else R.string.share_telegram_open
-                    target == ShareTarget.XIAOHONGSHU -> if (copyTextOnOpen) R.string.share_xiaohongshu_copy_open else R.string.share_xiaohongshu_open
-                    target == ShareTarget.THREADS -> if (copyTextOnOpen) R.string.share_threads_copy_open else R.string.share_threads_open
-                    target == ShareTarget.BLUESKY -> R.string.share_bluesky_open
-                    target == ShareTarget.INSTAGRAM -> if (copyTextOnOpen) R.string.share_instagram_copy_open else R.string.share_instagram_open
-                    target == ShareTarget.DOUYIN -> if (copyTextOnOpen) R.string.share_douyin_copy_open else R.string.share_douyin_open
-                    target == ShareTarget.WECHAT && !prepareByHand -> R.string.share_wechat_open
-                    target == ShareTarget.BILIBILI -> R.string.share_bilibili_open
-                    chosen.isEmpty() -> R.string.share_copy_text
-                    text.isBlank() -> R.string.share_save_photos
-                    else -> R.string.share_save_and_copy
+                    target == ShareTarget.TELEGRAM -> if (copyTextOnOpen) Res.string.share_telegram_copy_open else Res.string.share_telegram_open
+                    target == ShareTarget.XIAOHONGSHU -> if (copyTextOnOpen) Res.string.share_xiaohongshu_copy_open else Res.string.share_xiaohongshu_open
+                    target == ShareTarget.THREADS -> if (copyTextOnOpen) Res.string.share_threads_copy_open else Res.string.share_threads_open
+                    target == ShareTarget.BLUESKY -> Res.string.share_bluesky_open
+                    target == ShareTarget.INSTAGRAM -> if (copyTextOnOpen) Res.string.share_instagram_copy_open else Res.string.share_instagram_open
+                    target == ShareTarget.DOUYIN -> if (copyTextOnOpen) Res.string.share_douyin_copy_open else Res.string.share_douyin_open
+                    target == ShareTarget.WECHAT && !prepareByHand -> Res.string.share_wechat_open
+                    target == ShareTarget.BILIBILI -> Res.string.share_bilibili_open
+                    chosen.isEmpty() -> Res.string.share_copy_text
+                    text.isBlank() -> Res.string.share_save_photos
+                    else -> Res.string.share_save_and_copy
                 }))
             }
         },
@@ -374,25 +374,25 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
         ) {
             Text(stringResource(target.title), style = AppTheme.typography.titlePage)
             Text(stringResource(when (target) {
-                ShareTarget.X -> R.string.share_x_hint
-                ShareTarget.BLUESKY -> R.string.share_bluesky_hint
+                ShareTarget.X -> Res.string.share_x_hint
+                ShareTarget.BLUESKY -> Res.string.share_bluesky_hint
                 ShareTarget.INSTAGRAM -> when {
-                    needsPhoto -> R.string.share_instagram_no_photos
-                    useAssist -> R.string.instagram_assist_note
-                    copyTextOnOpen -> R.string.share_instagram_photos_hint
-                    else -> R.string.share_instagram_hint
+                    needsPhoto -> Res.string.share_instagram_no_photos
+                    useAssist -> Res.string.instagram_assist_note
+                    copyTextOnOpen -> Res.string.share_instagram_photos_hint
+                    else -> Res.string.share_instagram_hint
                 }
-                ShareTarget.TELEGRAM -> if (useAssist) R.string.telegram_assist_note else if (copyTextOnOpen) R.string.share_telegram_multiple_hint else R.string.share_telegram_hint
-                ShareTarget.XIAOHONGSHU -> if (copyTextOnOpen) R.string.share_xiaohongshu_photos_hint else R.string.share_xiaohongshu_hint
-                ShareTarget.THREADS -> if (useAssist) R.string.threads_assist_note else if (copyTextOnOpen) R.string.share_threads_photos_hint else R.string.share_threads_hint
+                ShareTarget.TELEGRAM -> if (useAssist) Res.string.telegram_assist_note else if (copyTextOnOpen) Res.string.share_telegram_multiple_hint else Res.string.share_telegram_hint
+                ShareTarget.XIAOHONGSHU -> if (copyTextOnOpen) Res.string.share_xiaohongshu_photos_hint else Res.string.share_xiaohongshu_hint
+                ShareTarget.THREADS -> if (useAssist) Res.string.threads_assist_note else if (copyTextOnOpen) Res.string.share_threads_photos_hint else Res.string.share_threads_hint
                 ShareTarget.DOUYIN -> when {
-                    needsPhoto -> R.string.share_douyin_no_photos
-                    copyTextOnOpen -> R.string.share_douyin_photos_hint
-                    else -> R.string.share_douyin_hint
+                    needsPhoto -> Res.string.share_douyin_no_photos
+                    copyTextOnOpen -> Res.string.share_douyin_photos_hint
+                    else -> Res.string.share_douyin_hint
                 }
-                ShareTarget.WECHAT -> if (prepareByHand) R.string.share_wechat_multiple_hint else R.string.share_wechat_hint
-                ShareTarget.BILIBILI -> R.string.share_bilibili_hint
-                ShareTarget.PREPARE -> R.string.share_prepare_hint
+                ShareTarget.WECHAT -> if (prepareByHand) Res.string.share_wechat_multiple_hint else Res.string.share_wechat_hint
+                ShareTarget.BILIBILI -> Res.string.share_bilibili_hint
+                ShareTarget.PREPARE -> Res.string.share_prepare_hint
             }), style = AppTheme.typography.caption)
             if (target == ShareTarget.TELEGRAM) {
                 TelegramAssistOptions(
@@ -416,8 +416,8 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 ShareAssistOptions(
                     adapter = ThreadsShareAdapter,
                     tag = "threads",
-                    label = R.string.threads_assist_label,
-                    running = R.string.threads_assist_running,
+                    label = Res.string.threads_assist_label,
+                    running = Res.string.threads_assist_running,
                     enabled = threadsAssist,
                     onEnabled = { enabled ->
                         threadsAssist = enabled
@@ -426,15 +426,15 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     },
                     busy = busy || assistRunning,
                 ) {
-                    if (chosen.isEmpty()) Text(stringResource(R.string.share_assist_photos_only), style = AppTheme.typography.caption)
+                    if (chosen.isEmpty()) Text(stringResource(Res.string.share_assist_photos_only), style = AppTheme.typography.caption)
                 }
             }
             if (target == ShareTarget.INSTAGRAM) {
                 ShareAssistOptions(
                     adapter = InstagramShareAdapter,
                     tag = "instagram",
-                    label = R.string.instagram_assist_label,
-                    running = R.string.instagram_assist_running,
+                    label = Res.string.instagram_assist_label,
+                    running = Res.string.instagram_assist_running,
                     enabled = instagramAssist,
                     onEnabled = { enabled ->
                         instagramAssist = enabled
@@ -451,16 +451,16 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     adapter?.let { ShareAccessibilityService.resetStatus(it.id) }
                 },
                 enabled = !busy && !assistRunning,
-                label = { Text(stringResource(R.string.share_text)) },
+                label = { Text(stringResource(Res.string.share_text)) },
                 minLines = 3,
                 maxLines = 6,
                 modifier = Modifier.testTag("share_${target.tag}_text"),
             )
             if (photos.isNotEmpty()) {
                 Text(
-                    if (target == ShareTarget.X) stringResource(R.string.share_photos, chosen.size, target.limit)
-                    else if (!prepareByHand) pluralStringResource(R.plurals.share_selected_photos, chosen.size, chosen.size)
-                    else pluralStringResource(R.plurals.share_prepare_photos, chosen.size, chosen.size),
+                    if (target == ShareTarget.X) stringResource(Res.string.share_photos, chosen.size, target.limit)
+                    else if (!prepareByHand) pluralStringResource(Res.plurals.share_selected_photos, chosen.size, chosen.size)
+                    else pluralStringResource(Res.plurals.share_prepare_photos, chosen.size, chosen.size),
                     style = AppTheme.typography.label,
                 )
                 // Four to a row, filling the width, so the grid ends on the gutter as the words do.
@@ -471,7 +471,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                         val checked = photo.uid in selected
                         // Once as many are chosen as the app takes, the rest can't be, and look it.
                         val choosable = !busy && !assistRunning && (checked || chosen.size < target.limit)
-                        val label = stringResource(R.string.share_photo, index + 1)
+                        val label = stringResource(Res.string.share_photo, index + 1)
                         Box(
                             Modifier
                                 // The ripple kept to the ring's rounded shape.
@@ -507,7 +507,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                 }
             }
             if (moment.media.any { it.type == MediaType.VIDEO || it.type == MediaType.LIVE_PHOTO }) {
-                Text(stringResource(R.string.share_stills_only), style = AppTheme.typography.caption)
+                Text(stringResource(Res.string.share_stills_only), style = AppTheme.typography.caption)
             }
             error?.let {
                 Text(stringResource(it), color = tokens.danger)
@@ -517,7 +517,7 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
                     enabled = !busy && !assistRunning,
                     onClick = { target = ShareTarget.PREPARE; error = null },
                     modifier = Modifier.testTag("share_fallback"),
-                ) { Text(stringResource(R.string.action_prepare_share)) }
+                ) { Text(stringResource(Res.string.action_prepare_share)) }
             }
         }
     }

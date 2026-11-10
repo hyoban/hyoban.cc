@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.res.*
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,12 +10,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.spec.Visibility
 import cc.hyoban.moments.data.things.checkinOf
@@ -70,10 +70,10 @@ fun CheckinSheet(container: AppContainer, uid: String, onDismiss: () -> Unit) {
                     SwitchRow(
                         !checkin.private,
                         AppIcons.Eye,
-                        stringResource(R.string.visibility_public),
+                        stringResource(Res.string.visibility_public),
                         "checkin_public",
                         shapes,
-                        supporting = stringResource(R.string.checkin_public_note),
+                        supporting = stringResource(Res.string.checkin_public_note),
                     ) {
                         scope.launch { container.repository.saveEntry(withAudience(entry, private = !checkin.private)) }
                     }

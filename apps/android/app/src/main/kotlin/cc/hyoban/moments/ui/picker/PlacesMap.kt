@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.res.*
 import android.graphics.Bitmap
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
@@ -40,14 +41,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.AppTheme
@@ -102,7 +102,7 @@ internal fun PlacesMap(places: Places, sideways: Boolean, grid: @Composable (onN
         failed != null && spots == null -> { failed(); return }
         spots == null -> { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Spinner() }; return }
         spots.isEmpty() -> {
-            Text(stringResource(R.string.picker_map_empty), style = AppTheme.typography.body, color = tokens.tx3, textAlign = TextAlign.Center,
+            Text(stringResource(Res.string.picker_map_empty), style = AppTheme.typography.body, color = tokens.tx3, textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxSize().padding(top = LocalTopClearance.current + Space.xl * 3).padding(horizontal = Space.xl))
             return
         }
@@ -232,7 +232,7 @@ private fun HeapMark(places: Places, heap: Heap, chosen: Boolean, modifier: Modi
     val shape = AppTheme.shapes.medium
     val cover = heap.cover
     val thumb by produceState<Bitmap?>(null, cover.id) { value = places.thumbnail(cover) }
-    val label = stringResource(R.string.picker_heap_description, heap.count)
+    val label = stringResource(Res.string.picker_heap_description, heap.count)
     Box(modifier.size(HEAP)) {
         Box(
             Modifier.fillMaxSize().softShadow(ShadowElevation, shape).background(tokens.fill, shape).clip(shape)

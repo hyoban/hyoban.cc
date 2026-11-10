@@ -20,7 +20,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   Where the platforms differ, `commonMain` declares it `expect` and `androidMain` and
   `jvmMain` each give theirs, the phone's being what it already did.
 - A declaration `:app` uses from `:shared` is public, and its tests stay in `:app` until they
-  move too. The generators write into `:shared` (`Tokens.kt`, `AppIcons.kt`, `CopyTables.kt`,
+  move too. A string resource is held as a `StringResource`, never an `Int`. The generators write into `:shared` (`Tokens.kt`, `AppIcons.kt`, `CopyTables.kt`,
   `Modules.kt`); the paths below are packages, in whichever module holds them.
 - Check the Mac app where it runs: `./gradlew :desktop:run` opens its window; look at it,
   light and dark, before saying a change to it works.
@@ -170,7 +170,13 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   chip is laid out at its own size, so rows of chips stand 8dp apart, Compose widening its target.
 - Spacing is five steps (`Space.xs` … `Space.xl`): things within a section are `Space.l` apart,
   groups and days `Space.xl`. Large system fonts are `isLargeFont()` (130% and up), so read it in composition.
-- Words are in `values` (Chinese) and `values-en`, with TalkBack descriptions for what is shown.
+- Words are Compose resources in `:shared` (`composeResources/values`, Chinese, and `values-en`),
+  the same for the phone and the Mac, with TalkBack descriptions for what is shown: `Res.string.*`
+  from `cc.hyoban.moments.res`, read by `stringResource` in composition and by `textOf` and
+  `pluralTextOf` outside it (a notification, a widget, a store's message). A placeholder is
+  `%1$s` or `%1$d`, numbered, and nothing else: a decimal is formatted in code (`decimals`) and a
+  percent sign is written plainly. Only what Android's own XML names (the manifest, the widgets'
+  and the accessibility service's descriptions) stays in `:app`'s `res/values`, as `R.string`.
 - A page explains itself by its layout, headings, icons and states, not by notes or subtitles
   telling how to use it (what + does, that a tap opens it, what a check means); if it needs
   one, the design is wrong, so change the design. A note stays only for what the page can't

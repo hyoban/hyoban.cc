@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The provinces, by the first two digits of their cities' region ids, for the homes set by hand. -->
 <resources>
-    <string-array name="province_codes" translatable="false">
+    <string-array name="province_codes">
         <item>11</item>
         <item>12</item>
         <item>13</item>

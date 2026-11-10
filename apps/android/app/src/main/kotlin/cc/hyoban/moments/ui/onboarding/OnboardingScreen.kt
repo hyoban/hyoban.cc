@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.onboarding
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.settings.importSources
 import cc.hyoban.moments.data.spec.Module
 import android.Manifest
@@ -39,7 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -50,7 +52,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.footprints.BackgroundAllowances
 import cc.hyoban.moments.Setting
 import cc.hyoban.moments.footprints.RecordingService
@@ -113,7 +114,7 @@ fun OnboardingScreen(container: AppContainer, onDone: () -> Unit) {
                 Button(
                     onClick = toFootprints,
                     modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = Space.gutter).padding(top = Space.s, bottom = Space.xl).testTag("onboarding_import_next"),
-                ) { Text(stringResource(R.string.onboarding_continue)) }
+                ) { Text(stringResource(Res.string.onboarding_continue)) }
             }
             Step.Footprints -> Footprints(container, back, onBackground = { step = Step.Background }, onDone = onDone)
             Step.Background -> Background(back, onDone)
@@ -156,10 +157,10 @@ private fun Welcome(onStart: () -> Unit) {
         Column(Modifier.weight(1f).fillMaxWidth().padding(top = 40.dp), verticalArrangement = Arrangement.spacedBy(Space.s)) {
             Preview()
         }
-        Text(stringResource(R.string.onboarding_name), Modifier.semantics { heading() }, style = AppTheme.typography.titlePage)
-        Text(stringResource(R.string.onboarding_line), Modifier.padding(top = Space.xs), style = AppTheme.typography.body, color = tokens.tx2)
+        Text(stringResource(Res.string.onboarding_name), Modifier.semantics { heading() }, style = AppTheme.typography.titlePage)
+        Text(stringResource(Res.string.onboarding_line), Modifier.padding(top = Space.xs), style = AppTheme.typography.body, color = tokens.tx2)
         Button(onClick = onStart, modifier = Modifier.fillMaxWidth().padding(top = Space.xl, bottom = Space.xl).testTag("onboarding_start")) {
-            Text(stringResource(R.string.onboarding_start))
+            Text(stringResource(Res.string.onboarding_start))
         }
     }
 }
@@ -169,20 +170,20 @@ private fun Welcome(onStart: () -> Unit) {
 private fun ColumnScope.Preview() {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Text(
-            stringResource(R.string.onboarding_preview_day),
+            stringResource(Res.string.onboarding_preview_day),
             Modifier.background(tokens.fill, Corners.full).padding(horizontal = Space.s, vertical = 3.dp),
             style = AppTheme.typography.label,
             color = tokens.tx2,
         )
     }
-    Mine(stringResource(R.string.onboarding_preview_one), stringResource(R.string.onboarding_preview_one_place), "17:40")
+    Mine(stringResource(Res.string.onboarding_preview_one), stringResource(Res.string.onboarding_preview_one_place), "17:40")
     Column(
         Modifier.widthIn(max = 300.dp).background(tokens.surface, AppTheme.shapes.large).padding(horizontal = Space.m, vertical = Space.s),
     ) {
-        Record("18:30", AppIcons.Food, stringResource(R.string.onboarding_preview_bill), "−¥86.00")
-        Record("19:05", AppIcons.Pin, stringResource(R.string.onboarding_preview_checkin), "")
+        Record("18:30", AppIcons.Food, stringResource(Res.string.onboarding_preview_bill), "−¥86.00")
+        Record("19:05", AppIcons.Pin, stringResource(Res.string.onboarding_preview_checkin), "")
     }
-    Mine(stringResource(R.string.onboarding_preview_two), stringResource(R.string.onboarding_preview_two_place), "19:20")
+    Mine(stringResource(Res.string.onboarding_preview_two), stringResource(Res.string.onboarding_preview_two_place), "19:20")
 }
 
 @Composable
@@ -207,8 +208,8 @@ private fun Record(time: String, icon: ImageVector, words: String, amount: Strin
 
 @Composable
 private fun Start(onBack: () -> Unit, onSite: () -> Unit, onImport: () -> Unit, onBlank: () -> Unit) {
-    StepPage(stringResource(R.string.onboarding_where), onBack, actions = {}) {
-        val row = { icon: ImageVector, title: Int, note: Int, tag: String, onClick: () -> Unit ->
+    StepPage(stringResource(Res.string.onboarding_where), onBack, actions = {}) {
+        val row = { icon: ImageVector, title: StringResource, note: StringResource, tag: String, onClick: () -> Unit ->
             val segment: Segment = { shapes ->
                 SegmentedListItem(
                     onClick = onClick,
@@ -223,10 +224,10 @@ private fun Start(onBack: () -> Unit, onSite: () -> Unit, onImport: () -> Unit, 
             segment
         }
         // Importing only while a source's module is on (记录项与公开).
-        SegmentedGroup(null, stringResource(R.string.onboarding_where_note), listOfNotNull(
-            row(AppIcons.Link, R.string.onboarding_site, R.string.onboarding_site_note, "onboarding_site", onSite),
-            row(AppIcons.Download, R.string.onboarding_import, R.string.onboarding_import_note, "onboarding_import", onImport).takeIf { importSources().isNotEmpty() },
-            row(AppIcons.Phone, R.string.onboarding_blank, R.string.onboarding_blank_note, "onboarding_blank", onBlank),
+        SegmentedGroup(null, stringResource(Res.string.onboarding_where_note), listOfNotNull(
+            row(AppIcons.Link, Res.string.onboarding_site, Res.string.onboarding_site_note, "onboarding_site", onSite),
+            row(AppIcons.Download, Res.string.onboarding_import, Res.string.onboarding_import_note, "onboarding_import", onImport).takeIf { importSources().isNotEmpty() },
+            row(AppIcons.Phone, Res.string.onboarding_blank, Res.string.onboarding_blank_note, "onboarding_blank", onBlank),
         ))
     }
 }
@@ -248,13 +249,13 @@ private fun Connect(container: AppContainer, onBack: () -> Unit, onNext: () -> U
         }
     }
     val busy = reading != null
-    StepPage(stringResource(R.string.onboarding_connect), onBack, actions = {
+    StepPage(stringResource(Res.string.onboarding_connect), onBack, actions = {
         if (busy) Column(Modifier.padding(bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                 Spinner(Modifier.size(18.dp))
-                Text(stringResource(R.string.onboarding_reading), style = AppTheme.typography.label)
+                Text(stringResource(Res.string.onboarding_reading), style = AppTheme.typography.label)
             }
-            Text(stringResource(R.string.onboarding_reading_note), style = AppTheme.typography.caption, color = tokens.tx2)
+            Text(stringResource(Res.string.onboarding_reading_note), style = AppTheme.typography.caption, color = tokens.tx2)
         }
         Button(
             onClick = {
@@ -267,7 +268,7 @@ private fun Connect(container: AppContainer, onBack: () -> Unit, onNext: () -> U
             },
             enabled = busy || (url.isNotBlank() && token.isNotBlank()),
             modifier = Modifier.fillMaxWidth().testTag("onboarding_connect"),
-        ) { Text(stringResource(if (busy) R.string.onboarding_continue else R.string.onboarding_connect_action)) }
+        ) { Text(stringResource(if (busy) Res.string.onboarding_continue else Res.string.onboarding_connect_action)) }
     }) {
         Column(Modifier.padding(horizontal = Space.gutter), verticalArrangement = Arrangement.spacedBy(Space.l)) {
             OutlinedTextField(
@@ -275,10 +276,10 @@ private fun Connect(container: AppContainer, onBack: () -> Unit, onNext: () -> U
                 { url = it; badUrl = false; failed = false },
                 Modifier.fillMaxWidth().testTag("onboarding_api_url"),
                 enabled = !busy,
-                label = { Text(stringResource(R.string.onboarding_api_url)) },
+                label = { Text(stringResource(Res.string.onboarding_api_url)) },
                 placeholder = { Text("https://") },
                 isError = badUrl,
-                supportingText = if (badUrl) { { Text(stringResource(R.string.onboarding_bad_url)) } } else null,
+                supportingText = if (badUrl) { { Text(stringResource(Res.string.onboarding_bad_url)) } } else null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                 singleLine = true,
             )
@@ -287,19 +288,19 @@ private fun Connect(container: AppContainer, onBack: () -> Unit, onNext: () -> U
                 { token = it; failed = false },
                 Modifier.fillMaxWidth().testTag("onboarding_api_token"),
                 enabled = !busy,
-                label = { Text(stringResource(R.string.onboarding_api_token)) },
+                label = { Text(stringResource(Res.string.onboarding_api_token)) },
                 trailingIcon = {
                     IconButton(onClick = { shown = !shown }) {
                         Icon(if (shown) AppIcons.EyeOff else AppIcons.Eye, contentDescription = null)
                     }
                 },
                 isError = failed,
-                supportingText = if (failed) { { Text(stringResource(R.string.onboarding_failed)) } } else null,
+                supportingText = if (failed) { { Text(stringResource(Res.string.onboarding_failed)) } } else null,
                 visualTransformation = if (shown) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 singleLine = true,
             )
-            Text(stringResource(R.string.onboarding_connect_note), Modifier.padding(horizontal = Space.xs), style = AppTheme.typography.caption, color = tokens.tx2)
+            Text(stringResource(Res.string.onboarding_connect_note), Modifier.padding(horizontal = Space.xs), style = AppTheme.typography.caption, color = tokens.tx2)
         }
     }
 }
@@ -316,7 +317,7 @@ private fun Footprints(container: AppContainer, onBack: () -> Unit, onBackground
         }
         if (context.hasPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) onDone() else onBackground()
     }
-    StepPage(stringResource(R.string.onboarding_footprints), onBack, subtitle = stringResource(R.string.onboarding_footprints_line), actions = {
+    StepPage(stringResource(Res.string.onboarding_footprints), onBack, subtitle = stringResource(Res.string.onboarding_footprints_line), actions = {
         Button(
             onClick = {
                 val asked = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -324,12 +325,12 @@ private fun Footprints(container: AppContainer, onBack: () -> Unit, onBackground
                 permissions.launch(asked.toTypedArray())
             },
             modifier = Modifier.fillMaxWidth().testTag("onboarding_footprints_on"),
-        ) { Text(stringResource(R.string.onboarding_fp_on)) }
-        TextButton(onClick = onDone, modifier = Modifier.fillMaxWidth().testTag("onboarding_later")) { Text(stringResource(R.string.onboarding_later)) }
+        ) { Text(stringResource(Res.string.onboarding_fp_on)) }
+        TextButton(onClick = onDone, modifier = Modifier.fillMaxWidth().testTag("onboarding_later")) { Text(stringResource(Res.string.onboarding_later)) }
     }) {
-        Fact(AppIcons.Shield, stringResource(R.string.onboarding_fp_local))
-        Fact(AppIcons.Eye, stringResource(R.string.onboarding_fp_public))
-        Fact(AppIcons.Bell, stringResource(R.string.onboarding_fp_notification))
+        Fact(AppIcons.Shield, stringResource(Res.string.onboarding_fp_local))
+        Fact(AppIcons.Eye, stringResource(Res.string.onboarding_fp_public))
+        Fact(AppIcons.Bell, stringResource(Res.string.onboarding_fp_notification))
     }
 }
 
@@ -359,8 +360,8 @@ private fun Background(onBack: () -> Unit, onDone: () -> Unit) {
         live = BackgroundAllowances.liveUpdates(context)
         battery = BackgroundAllowances.unrestrictedBattery(context)
     }
-    StepPage(stringResource(R.string.onboarding_footprints), onBack, actions = {
-        Button(onClick = onDone, modifier = Modifier.fillMaxWidth().testTag("onboarding_done")) { Text(stringResource(R.string.onboarding_done)) }
+    StepPage(stringResource(Res.string.onboarding_footprints), onBack, actions = {
+        Button(onClick = onDone, modifier = Modifier.fillMaxWidth().testTag("onboarding_done")) { Text(stringResource(Res.string.onboarding_done)) }
     }) {
         val rows = buildList<Segment> {
             add { shapes ->
@@ -371,10 +372,10 @@ private fun Background(onBack: () -> Unit, onDone: () -> Unit) {
                     leadingContent = {
                         Icon(if (background) AppIcons.Check else AppIcons.Alert, contentDescription = null, tint = if (background) tokens.accent else tokens.danger)
                     },
-                    supportingContent = { Text(stringResource(if (background) R.string.onboarding_allowed else R.string.onboarding_background_note)) },
+                    supportingContent = { Text(stringResource(if (background) Res.string.onboarding_allowed else Res.string.onboarding_background_note)) },
                     trailingContent = { Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp)) },
                     modifier = Modifier.testTag("onboarding_background"),
-                ) { Text(stringResource(if (background) R.string.footprints_needs_location else R.string.onboarding_background)) }
+                ) { Text(stringResource(if (background) Res.string.footprints_needs_location else Res.string.onboarding_background)) }
             }
             add { shapes ->
                 SegmentedListItem(
@@ -384,20 +385,20 @@ private fun Background(onBack: () -> Unit, onDone: () -> Unit) {
                     shapes = shapes,
                     colors = segmentColors(),
                     leadingContent = { Icon(AppIcons.Bell, contentDescription = null) },
-                    supportingContent = { Text(stringResource(if (notifying) R.string.onboarding_allowed else R.string.onboarding_notifications_off)) },
+                    supportingContent = { Text(stringResource(if (notifying) Res.string.onboarding_allowed else Res.string.onboarding_notifications_off)) },
                     trailingContent = {
                         if (notifying) Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent)
                         else Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp))
                     },
-                ) { Text(stringResource(R.string.onboarding_notifications)) }
+                ) { Text(stringResource(Res.string.onboarding_notifications)) }
             }
             if (Build.VERSION.SDK_INT >= 36 && notifying) add { shapes ->
-                AllowanceRow(AppIcons.Stream, R.string.footprints_needs_live, R.string.footprints_needs_live_note, live, shapes, "onboarding_live") {
+                AllowanceRow(AppIcons.Stream, Res.string.footprints_needs_live, Res.string.footprints_needs_live_note, live, shapes, "onboarding_live") {
                     BackgroundAllowances.openLiveUpdates(context)
                 }
             }
             add { shapes ->
-                AllowanceRow(AppIcons.BatteryCharging, R.string.footprints_needs_battery, R.string.footprints_needs_battery_note, battery, shapes, "onboarding_battery") {
+                AllowanceRow(AppIcons.BatteryCharging, Res.string.footprints_needs_battery, Res.string.footprints_needs_battery_note, battery, shapes, "onboarding_battery") {
                     BackgroundAllowances.requestUnrestrictedBattery(context)
                 }
             }
@@ -407,10 +408,10 @@ private fun Background(onBack: () -> Unit, onDone: () -> Unit) {
                     shapes = shapes,
                     colors = segmentColors(),
                     leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
-                    supportingContent = { Text(stringResource(R.string.footprints_auto_start_path)) },
+                    supportingContent = { Text(stringResource(Res.string.footprints_auto_start_path)) },
                     trailingContent = { Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp)) },
                     modifier = Modifier.testTag("onboarding_auto_start"),
-                ) { Text(stringResource(R.string.footprints_auto_start)) }
+                ) { Text(stringResource(Res.string.footprints_auto_start)) }
             }
         }
         SegmentedGroup(null, null, rows)
@@ -419,13 +420,13 @@ private fun Background(onBack: () -> Unit, onDone: () -> Unit) {
 
 /** A system allowance on the footprints' last step: allowed, it is checked and does nothing; otherwise it opens the system's settings. */
 @Composable
-private fun AllowanceRow(icon: ImageVector, title: Int, off: Int, allowed: Boolean, shapes: cc.hyoban.moments.ui.design.ListItemShapes, tag: String, onOpen: () -> Unit) {
+private fun AllowanceRow(icon: ImageVector, title: StringResource, off: StringResource, allowed: Boolean, shapes: cc.hyoban.moments.ui.design.ListItemShapes, tag: String, onOpen: () -> Unit) {
     SegmentedListItem(
         onClick = { if (!allowed) onOpen() },
         shapes = shapes,
         colors = segmentColors(),
         leadingContent = { Icon(icon, contentDescription = null) },
-        supportingContent = { Text(stringResource(if (allowed) R.string.onboarding_allowed else off)) },
+        supportingContent = { Text(stringResource(if (allowed) Res.string.onboarding_allowed else off)) },
         trailingContent = {
             if (allowed) Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent)
             else Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp))

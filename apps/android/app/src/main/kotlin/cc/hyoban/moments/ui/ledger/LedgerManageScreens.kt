@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
@@ -29,8 +30,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -46,7 +47,6 @@ import cc.hyoban.moments.ui.design.AssistChip
 import cc.hyoban.moments.ui.design.FilterChipDefaults
 import cc.hyoban.moments.ui.design.ModalBottomSheet
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.ledger.Category
 import cc.hyoban.moments.ledger.CategoryType
@@ -77,7 +77,7 @@ internal fun BookCategories(container: AppContainer, book: String) {
     val uses = remember(ledger) { ledger.txns.groupingBy { it.category }.eachCount() }
 
     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-        listOf(false to R.string.ledger_kind_expense, true to R.string.ledger_kind_income).forEach { (value, label) ->
+        listOf(false to Res.string.ledger_kind_expense, true to Res.string.ledger_kind_income).forEach { (value, label) ->
             SegmentedButton(selected = income == value, onClick = { income = value }) { Text(stringResource(label)) }
         }
     }
@@ -104,7 +104,7 @@ internal fun BookCategories(container: AppContainer, book: String) {
         }
         AssistChip(
             onClick = { adding = "" },
-            label = { Text(stringResource(R.string.ledger_add_category)) },
+            label = { Text(stringResource(Res.string.ledger_add_category)) },
             leadingIcon = { Icon(AppIcons.Plus, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
             modifier = Modifier.testTag("add_category"),
         )
@@ -123,7 +123,7 @@ internal fun BookCategories(container: AppContainer, book: String) {
         )
     }
     adding?.let { parent ->
-        NameDialog(stringResource(if (parent.isEmpty()) R.string.ledger_add_category else R.string.ledger_add_subcategory), "", onDismiss = { adding = null }) { name ->
+        NameDialog(stringResource(if (parent.isEmpty()) Res.string.ledger_add_category else Res.string.ledger_add_subcategory), "", onDismiss = { adding = null }) { name ->
             adding = null
             scope.launch { container.ledger.saveCategory(Category(Ulid.next(), book, type, name, parent.ifEmpty { null }, position = ledger.categories.size)) }
         }
@@ -149,19 +149,19 @@ private fun CategoryDialog(
         title = { Text(category.name) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
-                OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_category_name)) }, singleLine = true)
-                if (category.parent == null) TextButton(onClick = onAddChild) { Text(stringResource(R.string.ledger_add_subcategory)) }
-                if (others.isNotEmpty()) TextButton(onClick = { merging = true }) { Text(stringResource(R.string.ledger_merge_category)) }
+                OutlinedTextField(name, { name = it }, label = { Text(stringResource(Res.string.ledger_category_name)) }, singleLine = true)
+                if (category.parent == null) TextButton(onClick = onAddChild) { Text(stringResource(Res.string.ledger_add_subcategory)) }
+                if (others.isNotEmpty()) TextButton(onClick = { merging = true }) { Text(stringResource(Res.string.ledger_merge_category)) }
                 TextButton(onClick = onDelete, enabled = used == 0) {
                     Text(
-                        if (used == 0) stringResource(R.string.action_delete) else pluralStringResource(R.plurals.ledger_category_in_use, used, used),
+                        if (used == 0) stringResource(Res.string.action_delete) else pluralStringResource(Res.plurals.ledger_category_in_use, used, used),
                         color = if (used == 0) tokens.danger else tokens.tx2,
                     )
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onRename(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_save)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        confirmButton = { TextButton(onClick = { onRename(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(Res.string.action_save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
     if (merging) {
         ChoiceSheet(
@@ -199,7 +199,7 @@ internal fun RatesSheet(container: AppContainer, onDismiss: () -> Unit) {
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet, modifier = Modifier.semantics { testTagsAsResourceId = true }) {
         Row(Modifier.fillMaxWidth().padding(start = Space.gutter, end = Space.m), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.ledger_rates), style = AppTheme.typography.title, modifier = Modifier.weight(1f).semantics { heading() })
+            Text(stringResource(Res.string.ledger_rates), style = AppTheme.typography.title, modifier = Modifier.weight(1f).semantics { heading() })
             TextButton(
                 enabled = !refreshing,
                 onClick = {
@@ -209,23 +209,23 @@ internal fun RatesSheet(container: AppContainer, onDismiss: () -> Unit) {
                             val from = currencies.mapNotNull { ledger.rates.latest(it)?.first }.minOrNull()?.minusDays(7) ?: LocalDate.now().minusYears(2)
                             val fetched = Rates.fetch(from, currencies.filter { it in ECB })
                             container.ledger.putRates(fetched)
-                            show(resources.getString(R.string.ledger_rates_refreshed))
+                            show(textOf(Res.string.ledger_rates_refreshed))
                         } catch (e: CancellationException) {
                             throw e
                         } catch (_: Exception) {
-                            show(resources.getString(R.string.ledger_rates_failed))
+                            show(textOf(Res.string.ledger_rates_failed))
                         } finally {
                             refreshing = false
                         }
                     }
                 },
                 modifier = Modifier.testTag("refresh_rates"),
-            ) { Text(stringResource(R.string.ledger_rates_refresh)) }
+            ) { Text(stringResource(Res.string.ledger_rates_refresh)) }
         }
         Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(bottom = Space.l)) {
             SegmentedGroup(
                 null,
-                stringResource(R.string.ledger_rates_note),
+                stringResource(Res.string.ledger_rates_note),
                 currencies.map { code ->
                     { shapes ->
                         val latest = ledger.rates.latest(code)
@@ -233,7 +233,7 @@ internal fun RatesSheet(container: AppContainer, onDismiss: () -> Unit) {
                             onClick = { editing = code },
                             shapes = shapes,
                             colors = segmentColors(),
-                            supportingContent = { Text(latest?.first?.toString() ?: stringResource(R.string.ledger_rate_missing)) },
+                            supportingContent = { Text(latest?.first?.toString() ?: stringResource(Res.string.ledger_rate_missing)) },
                             trailingContent = latest?.let { { Text("%.4f".format(1 / it.second) + " CNY", style = AppTheme.typography.body.strong) } },
                             modifier = Modifier.testTag("rate_$code"),
                         ) { Text("1 $code") }
@@ -247,7 +247,7 @@ internal fun RatesSheet(container: AppContainer, onDismiss: () -> Unit) {
         var value by remember { mutableStateOf(ledger.rates.latest(code)?.second?.let { "%.4f".format(1 / it) }.orEmpty()) }
         AlertDialog(
             onDismissRequest = { editing = null },
-            title = { Text(stringResource(R.string.ledger_rate_set, code)) },
+            title = { Text(stringResource(Res.string.ledger_rate_set, code)) },
             text = {
                 OutlinedTextField(
                     value, { value = it },
@@ -255,7 +255,7 @@ internal fun RatesSheet(container: AppContainer, onDismiss: () -> Unit) {
                     suffix = { Text("CNY") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    supportingText = { Text(stringResource(R.string.ledger_rate_set_note)) },
+                    supportingText = { Text(stringResource(Res.string.ledger_rate_set_note)) },
                 )
             },
             confirmButton = {
@@ -263,9 +263,9 @@ internal fun RatesSheet(container: AppContainer, onDismiss: () -> Unit) {
                     val yuan = value.toDoubleOrNull()?.takeIf { it > 0 } ?: return@TextButton
                     editing = null
                     scope.launch { container.ledger.putRates(mapOf(code to mapOf(LocalDate.now() to 1 / yuan))) }
-                }) { Text(stringResource(R.string.action_save)) }
+                }) { Text(stringResource(Res.string.action_save)) }
             },
-            dismissButton = { TextButton(onClick = { editing = null }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { editing = null }) { Text(stringResource(Res.string.action_cancel)) } },
         )
     }
 }

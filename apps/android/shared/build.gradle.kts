@@ -15,6 +15,8 @@ kotlin {
         namespace = "cc.hyoban.moments.shared"
         compileSdk = 37
         minSdk = 31
+        // The words both apps show are Compose resources, which an Android library packs as assets.
+        androidResources { enable = true }
     }
 
     jvm()
@@ -24,6 +26,7 @@ kotlin {
             api(libs.compose.multiplatform.runtime)
             api(libs.compose.multiplatform.foundation)
             api(libs.compose.multiplatform.ui)
+            api(libs.compose.multiplatform.resources)
             api(libs.kotlinx.coroutines.core)
             api(libs.kotlinx.serialization.json)
             api(libs.okhttp)
@@ -36,4 +39,11 @@ kotlin {
             implementation(libs.capsule)
         }
     }
+}
+
+// The words of both apps (composeResources/values, Chinese, and values-en), read as `Res.string.*`
+// from `cc.hyoban.moments.res` by :app and :desktop alike.
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "cc.hyoban.moments.res"
 }

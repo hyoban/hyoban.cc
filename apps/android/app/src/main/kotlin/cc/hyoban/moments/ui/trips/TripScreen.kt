@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.CompositionLocalProvider
@@ -44,8 +45,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
@@ -53,7 +54,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.data.trips.stopsOf
@@ -105,16 +105,16 @@ fun TripScreen(
     val stops = remember(trip, all, places) { stopsOf(trip, all, trips, places) }
     val resources = LocalResources.current
 
-    val dayLabel = { day: String -> resources.getString(R.string.trip_day, daysBetween(trip.start, day)) + " " + formatDay(day) }
+    val dayLabel = { day: String -> textOf(Res.string.trip_day, daysBetween(trip.start, day)) + " " + formatDay(day) }
     // 第 n 天 at the end of each day's header.
-    val dayNote = { day: String -> resources.getString(R.string.trip_day, daysBetween(trip.start, day)) }
+    val dayNote = { day: String -> textOf(Res.string.trip_day, daysBetween(trip.start, day)) }
     // What of it stays off the site, said as a property, not a switch: the trip, or else its track
     // while its footprints aren't public (with an API to publish to). The switches are in 编辑旅程.
     val tripPrivate = remember(trips, trip.id) { container.repository.isTripPrivate(trip.id) }
     val trackShared = rememberTrackShared(container, trip)
     val privateTag = when {
-        tripPrivate -> stringResource(R.string.visibility_private)
-        connected && footprintsOn && trackShared == false -> stringResource(R.string.trip_track_private)
+        tripPrivate -> stringResource(Res.string.visibility_private)
+        connected && footprintsOn && trackShared == false -> stringResource(Res.string.trip_track_private)
         else -> null
     }
     // The title is the bar's; under it, what the trip covered.
@@ -137,7 +137,7 @@ fun TripScreen(
                         cc.hyoban.moments.ui.design.Button(onClick = { onPlay(trip.id) }, modifier = Modifier.testTag("play_trip")) {
                             Icon(AppIcons.Play, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(Space.xs))
-                            Text(stringResource(R.string.action_play_trip))
+                            Text(stringResource(Res.string.action_play_trip))
                         }
                     }
                     tagHere?.let { PrivateTag(it) }
@@ -161,11 +161,11 @@ fun TripScreen(
         Column(Modifier.padding(bottom = Space.l), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
             Row(Modifier.padding(start = Space.gutter, end = Space.xs), verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    stringResource(R.string.section_photo) + " " + photos.size,
+                    stringResource(Res.string.section_photo) + " " + photos.size,
                     style = AppTheme.typography.body.strong,
                     modifier = Modifier.weight(1f).semantics { heading() },
                 )
-                val see = stringResource(R.string.action_see_moments)
+                val see = stringResource(Res.string.action_see_moments)
                 Tooltip(see) {
                     IconButton(onClick = { scope.launch { feedState.animateScrollToItem(momentsFrom) } }, modifier = Modifier.testTag("see_moments")) {
                         Icon(AppIcons.ArrowDown, contentDescription = see)
@@ -182,12 +182,12 @@ fun TripScreen(
             ) {
                 items(photos.size) { index ->
                     val (moment, media) = photos[index]
-                    val label = stringResource(R.string.media_position, stringResource(media.kindLabel()), index + 1, photos.size)
+                    val label = stringResource(Res.string.media_position, stringResource(media.kindLabel()), index + 1, photos.size)
                     MediaStill(
                         media,
                         container.mediaUrls,
                         Modifier.width(188.dp).fillMaxHeight().clip(AppTheme.shapes.large)
-                            .clickable(onClickLabel = stringResource(R.string.action_open_moment)) { onMoment(moment.uid) }
+                            .clickable(onClickLabel = stringResource(Res.string.action_open_moment)) { onMoment(moment.uid) }
                             .semantics { contentDescription = label },
                     )
                 }
@@ -196,7 +196,7 @@ fun TripScreen(
     }
     // The route as a card of its own, headed like the photo panel's sections; tapped, the
     // route on the map tab, lifted among the others.
-    val showOnMap = stringResource(R.string.action_show_on_map)
+    val showOnMap = stringResource(Res.string.action_show_on_map)
     val routeCard: @Composable (Modifier, Modifier) -> Unit = { modifier, mapModifier ->
         val level = LocalSurfaceLevel.current.raised
         Surface(
@@ -207,7 +207,7 @@ fun TripScreen(
                 .semantics { onClick(label = showOnMap) { onMap(trip.id); true } }.testTag("trip_route"),
         ) {
             Column(Modifier.padding(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                SectionHeader(AppIcons.Route, stringResource(R.string.section_route))
+                SectionHeader(AppIcons.Route, stringResource(Res.string.section_route))
                 // The map's corners the card's less its padding, so the two look as round.
                 TripMap(stops, routes[trip.id].orEmpty(), mapModifier.fillMaxWidth().clip(AppTheme.shapes.medium))
             }
@@ -223,7 +223,7 @@ fun TripScreen(
                 Icon(AppIcons.Map, contentDescription = showOnMap)
             }
         }
-        val edit = stringResource(R.string.action_edit_trip)
+        val edit = stringResource(Res.string.action_edit_trip)
         Tooltip(edit, below = true) {
             IconButton(onClick = { onEdit(trip.id) }, modifier = Modifier.testTag("edit_trip")) {
                 Icon(AppIcons.Pen, contentDescription = edit)
@@ -371,9 +371,9 @@ private fun TripFacets(
         if (bills.isEmpty()) null else cc.hyoban.moments.ledger.spendingOf(ledger, bills, currency).expense
     }
     val figures = listOfNotNull(
-        (km.takeIf { it >= 1 }?.let { "%,d".format(it.roundToInt()) to stringResource(R.string.facet_km) })?.let { it to null },
-        (charges.takeIf { it.isNotEmpty() }?.let { "%.0f".format(it.sum() / 1000) to pluralStringResource(R.plurals.facet_charging, it.size, it.size) })?.let { it to null },
-        (spent?.let { cc.hyoban.moments.ui.ledger.money(it, currency) to stringResource(R.string.facet_spent) })?.let { it to onBills },
+        (km.takeIf { it >= 1 }?.let { "%,d".format(it.roundToInt()) to stringResource(Res.string.facet_km) })?.let { it to null },
+        (charges.takeIf { it.isNotEmpty() }?.let { "%.0f".format(it.sum() / 1000) to pluralStringResource(Res.plurals.facet_charging, it.size, it.size) })?.let { it to null },
+        (spent?.let { cc.hyoban.moments.ui.ledger.money(it, currency) to stringResource(Res.string.facet_spent) })?.let { it to onBills },
     )
     if (figures.isEmpty()) return
     Row(

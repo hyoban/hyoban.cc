@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ledger
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -91,14 +92,14 @@ object AutoBill {
             Intent(context, MainActivity::class.java).setAction(Intent.ACTION_VIEW).setData(link),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         manager.deleteNotificationChannel(OLD_CHANNEL)
-        manager.createNotificationChannel(NotificationChannel(CHANNEL, context.getString(R.string.auto_bill_channel), NotificationManager.IMPORTANCE_HIGH))
+        manager.createNotificationChannel(NotificationChannel(CHANNEL, textOf(Res.string.auto_bill_channel), NotificationManager.IMPORTANCE_HIGH))
         val amount = "¥" + formatCents(payment.amount)
         val notification = NotificationCompat.Builder(context, CHANNEL)
             .setSmallIcon(R.drawable.ic_notification_bill)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentTitle(context.getString(R.string.auto_bill_title, amount))
-            .setContentText(listOfNotNull(payment.note, payment.method, context.getString(if (payment.app == PaymentApp.WECHAT) R.string.auto_bill_wechat else R.string.auto_bill_alipay)).joinToString(" "))
+            .setContentTitle(textOf(Res.string.auto_bill_title, amount))
+            .setContentText(listOfNotNull(payment.note, payment.method, textOf(if (payment.app == PaymentApp.WECHAT) Res.string.auto_bill_wechat else Res.string.auto_bill_alipay)).joinToString(" "))
             .setWhen(time)
             .setShowWhen(true)
             .setContentIntent(open)

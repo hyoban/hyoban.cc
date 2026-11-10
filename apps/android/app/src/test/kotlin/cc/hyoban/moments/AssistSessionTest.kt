@@ -1,5 +1,8 @@
 package cc.hyoban.moments
 
+import cc.hyoban.moments.res.Res
+import cc.hyoban.moments.res.telegram_assist_ready
+import cc.hyoban.moments.res.telegram_assist_stopped
 import cc.hyoban.moments.accessibility.AssistAction
 import cc.hyoban.moments.accessibility.AssistAdapter
 import cc.hyoban.moments.accessibility.AssistFlow
@@ -15,8 +18,8 @@ import kotlin.test.assertEquals
 class AssistSessionTest {
     private class Adapter(override val id: String, override val packageName: String) : AssistAdapter {
         override val timeoutMs = 40_000L
-        override val readyMessage = 0
-        override val stoppedMessage = 0
+        override val readyMessage = Res.string.telegram_assist_ready
+        override val stoppedMessage = Res.string.telegram_assist_stopped
     }
 
     private class Flow(var action: AssistAction = AssistAction.Wait) : AssistFlow {

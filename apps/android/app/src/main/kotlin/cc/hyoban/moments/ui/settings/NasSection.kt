@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.res.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,11 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
-import cc.hyoban.moments.R
 import cc.hyoban.moments.nas.Nas
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.design.AlertDialog
@@ -51,14 +51,14 @@ fun NasSection(nas: Nas, onEdit: () -> Unit) {
             leadingContent = { Icon(AppIcons.Nas, contentDescription = null) },
             supportingContent = {
                 Text(
-                    if (nas.configured) stringResource(R.string.nas_as, nas.link.value, nas.user.value) else stringResource(R.string.setting_unset),
+                    if (nas.configured) stringResource(Res.string.nas_as, nas.link.value, nas.user.value) else stringResource(Res.string.setting_unset),
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             },
             modifier = Modifier.testTag("nas_setting"),
-        ) { Text(stringResource(R.string.nas_photos)) }
+        ) { Text(stringResource(Res.string.nas_photos)) }
     }
-    SegmentedGroup(stringResource(R.string.section_nas), stringResource(R.string.settings_nas_note), listOf(row))
+    SegmentedGroup(stringResource(Res.string.section_nas), stringResource(Res.string.settings_nas_note), listOf(row))
 }
 
 /**
@@ -78,14 +78,14 @@ fun NasDialog(nas: Nas, onDismiss: () -> Unit, onForget: () -> Unit, onSave: (St
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.section_nas)) },
+        title = { Text(stringResource(Res.string.section_nas)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 OutlinedTextField(
                     value = link,
                     onValueChange = { link = it },
-                    label = { Text(stringResource(R.string.nas_link)) },
-                    supportingText = { Text(stringResource(R.string.nas_link_note)) },
+                    label = { Text(stringResource(Res.string.nas_link)) },
+                    supportingText = { Text(stringResource(Res.string.nas_link_note)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next),
                     modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("nas_link"),
@@ -93,22 +93,22 @@ fun NasDialog(nas: Nas, onDismiss: () -> Unit, onForget: () -> Unit, onSave: (St
                 OutlinedTextField(
                     value = user,
                     onValueChange = { user = it },
-                    label = { Text(stringResource(R.string.webdav_user)) },
+                    label = { Text(stringResource(Res.string.webdav_user)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                     modifier = Modifier.fillMaxWidth().testTag("nas_user"),
                 )
                 OutlinedSecureTextField(
                     state = password,
-                    label = { Text(stringResource(R.string.webdav_password)) },
+                    label = { Text(stringResource(Res.string.webdav_password)) },
                     placeholder = if (nas.password.isSet) {
-                        { Text(stringResource(R.string.webdav_password_set)) }
+                        { Text(stringResource(Res.string.webdav_password_set)) }
                     } else {
                         null
                     },
                     textObfuscationMode = if (hidden) TextObfuscationMode.RevealLastTyped else TextObfuscationMode.Visible,
                     trailingIcon = {
-                        val label = stringResource(if (hidden) R.string.action_show_password else R.string.action_hide_password)
+                        val label = stringResource(if (hidden) Res.string.action_show_password else Res.string.action_hide_password)
                         Tooltip(label) {
                             IconButton(onClick = { hidden = !hidden }) {
                                 Icon(if (hidden) AppIcons.Eye else AppIcons.EyeOff, contentDescription = label)
@@ -124,13 +124,13 @@ fun NasDialog(nas: Nas, onDismiss: () -> Unit, onForget: () -> Unit, onSave: (St
                         onClick = onForget,
                         colors = ButtonDefaults.textButtonColors(contentColor = tokens.danger),
                         modifier = Modifier.testTag("nas_forget"),
-                    ) { Text(stringResource(R.string.action_stop_nas)) }
+                    ) { Text(stringResource(Res.string.action_stop_nas)) }
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = save, enabled = ok, modifier = Modifier.testTag("nas_save")) { Text(stringResource(R.string.action_confirm)) }
+            TextButton(onClick = save, enabled = ok, modifier = Modifier.testTag("nas_save")) { Text(stringResource(Res.string.action_confirm)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }

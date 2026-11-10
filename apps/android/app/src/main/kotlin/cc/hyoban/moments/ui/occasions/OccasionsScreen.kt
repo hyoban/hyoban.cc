@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.occasions
 
+import cc.hyoban.moments.res.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,13 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringArrayResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.occasions.Count
 import cc.hyoban.moments.data.occasions.IcuLunar
@@ -73,9 +73,9 @@ import java.time.LocalDate
 fun occasionLabel(occasion: Occasion, on: LocalDate): String {
     val years = occasion.years(on)
     return when {
-        occasion.count == Count.AGE -> stringResource(R.string.occasion_age, occasion.name, years)
+        occasion.count == Count.AGE -> stringResource(Res.string.occasion_age, occasion.name, years)
         years == 0 -> occasion.firstLabel ?: occasion.name
-        occasion.count == Count.YEARS -> stringResource(R.string.occasion_years, occasion.name, years)
+        occasion.count == Count.YEARS -> stringResource(Res.string.occasion_years, occasion.name, years)
         else -> occasion.name
     }
 }
@@ -85,18 +85,18 @@ fun occasionLabel(occasion: Occasion, on: LocalDate): String {
 fun occasionDistance(today: LocalDate, day: LocalDate): String {
     val days = Occasions.daysUntil(today, day)
     return when {
-        days == 0L -> stringResource(R.string.occasion_today)
-        days > 0 -> stringResource(R.string.occasion_in_days, days)
-        else -> stringResource(R.string.occasion_days_ago, -days)
+        days == 0L -> stringResource(Res.string.occasion_today)
+        days > 0 -> stringResource(Res.string.occasion_in_days, days)
+        else -> stringResource(Res.string.occasion_days_ago, -days)
     }
 }
 
 /** A lunar day in words, 八月十六 or 闰四月初三. */
 @Composable
 fun lunarDayName(day: LunarDay): String {
-    val months = stringArrayResource(R.array.lunar_months)
-    val days = stringArrayResource(R.array.lunar_days)
-    val leap = if (day.leap) stringResource(R.string.lunar_leap) else ""
+    val months = stringArrayResource(Res.array.lunar_months)
+    val days = stringArrayResource(Res.array.lunar_days)
+    val leap = if (day.leap) stringResource(Res.string.lunar_leap) else ""
     return leap + months.getOrElse(day.month - 1) { day.month.toString() } + days.getOrElse(day.day - 1) { day.day.toString() }
 }
 
@@ -120,35 +120,35 @@ fun OccasionsScreen(container: AppContainer, onBack: () -> Unit, open: String? =
     var adding by rememberSaveable { mutableStateOf(false) }
     val (coming, passed) = all.partition { it.next(today, lunar) != null }
     SubPage(
-        stringResource(R.string.occasions_title),
+        stringResource(Res.string.occasions_title),
         onBack,
         Modifier.background(AppColors.page),
         actions = {
             IconButton(onClick = { adding = true }, modifier = Modifier.testTag("occasion_add")) {
-                Icon(AppIcons.Plus, contentDescription = stringResource(R.string.occasion_add))
+                Icon(AppIcons.Plus, contentDescription = stringResource(Res.string.occasion_add))
             }
         },
     ) {
         PageColumn {
             if (all.isEmpty()) {
-                Text(stringResource(R.string.occasions_empty), color = tokens.tx2, modifier = Modifier.padding(Space.gutter))
+                Text(stringResource(Res.string.occasions_empty), color = tokens.tx2, modifier = Modifier.padding(Space.gutter))
                 return@PageColumn
             }
             if (coming.isNotEmpty()) {
-                PageCaption(stringResource(R.string.occasions_coming))
+                PageCaption(stringResource(Res.string.occasions_coming))
                 coming.forEach { occasion ->
                     val day = occasion.next(today, lunar)!!
                     OccasionRow(occasionLabel(occasion, day), occasionWhen(occasion, day, today, lunar), occasionDistance(today, day), occasion.uid) { editing = occasion }
                 }
             }
             if (passed.isNotEmpty()) {
-                PageCaption(stringResource(R.string.occasions_passed))
+                PageCaption(stringResource(Res.string.occasions_passed))
                 passed.forEach { occasion ->
                     OccasionRow(occasionLabel(occasion, occasion.first), formatDate(occasion.first.toString(), today), occasionDistance(today, occasion.first), occasion.uid, dim = true) { editing = occasion }
                 }
             }
             Text(
-                stringResource(R.string.occasions_note),
+                stringResource(Res.string.occasions_note),
                 style = AppTheme.typography.caption,
                 color = tokens.tx3,
                 modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l),
@@ -169,8 +169,8 @@ private fun occasionWhen(occasion: Occasion, day: LocalDate, today: LocalDate, l
     val date = formatDate(day.toString(), today)
     return when {
         !occasion.repeat -> date
-        occasion.lunar -> date + APART + stringResource(R.string.occasion_each_lunar, lunarDayName(occasion.lunarDay(lunar)))
-        else -> date + APART + stringResource(R.string.occasion_each_year)
+        occasion.lunar -> date + APART + stringResource(Res.string.occasion_each_lunar, lunarDayName(occasion.lunarDay(lunar)))
+        else -> date + APART + stringResource(Res.string.occasion_each_year)
     }
 }
 
@@ -204,13 +204,13 @@ private fun OccasionSheet(container: AppContainer, occasion: Occasion?, lunar: L
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet) {
         Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(bottom = Space.l)) {
             Column(Modifier.padding(horizontal = Space.gutter), verticalArrangement = Arrangement.spacedBy(Space.l)) {
-                Text(occasion?.name ?: stringResource(R.string.occasion_add), style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
-                OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.occasion_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("occasion_name"))
+                Text(occasion?.name ?: stringResource(Res.string.occasion_add), style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
+                OutlinedTextField(name, { name = it }, label = { Text(stringResource(Res.string.occasion_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("occasion_name"))
                 Column(
                     Modifier.fillMaxWidth().clip(AppTheme.shapes.medium).clickable { picking = true }.padding(vertical = Space.xs).testTag("occasion_date"),
                     verticalArrangement = Arrangement.spacedBy(Space.xs),
                 ) {
-                    Text(stringResource(if (repeat) R.string.occasion_first_day else R.string.occasion_date), style = AppTheme.typography.caption, color = tokens.tx2)
+                    Text(stringResource(if (repeat) Res.string.occasion_first_day else Res.string.occasion_date), style = AppTheme.typography.caption, color = tokens.tx2)
                     Text(
                         formatDate(first, today) + if (repeat && byLunar) APART + lunarDayName(lunar.of(firstDay)) else "",
                         style = AppTheme.typography.body,
@@ -219,9 +219,9 @@ private fun OccasionSheet(container: AppContainer, occasion: Occasion?, lunar: L
                 if (repeat) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                         listOf(
-                            Count.YEARS to R.string.occasion_count_years,
-                            Count.AGE to R.string.occasion_count_age,
-                            Count.NONE to R.string.occasion_count_none,
+                            Count.YEARS to Res.string.occasion_count_years,
+                            Count.AGE to Res.string.occasion_count_age,
+                            Count.NONE to Res.string.occasion_count_none,
                         ).forEach { (option, label) ->
                             FilterChip(selected = count == option, onClick = { count = option }, label = { Text(stringResource(label)) })
                         }
@@ -232,26 +232,26 @@ private fun OccasionSheet(container: AppContainer, occasion: Occasion?, lunar: L
                 null,
                 null,
                 listOfNotNull(
-                    { shapes -> SwitchRow(repeat, AppIcons.Refresh, stringResource(R.string.occasion_repeat), "occasion_repeat", shapes) { repeat = !repeat } },
-                    if (repeat) { shapes -> SwitchRow(byLunar, AppIcons.Calendar, stringResource(R.string.occasion_lunar), "occasion_lunar", shapes) { byLunar = !byLunar } } else null,
-                    { shapes -> SwitchRow(public, AppIcons.Eye, stringResource(R.string.visibility_public), "occasion_public", shapes, supporting = stringResource(R.string.occasion_public_note)) { public = !public } },
+                    { shapes -> SwitchRow(repeat, AppIcons.Refresh, stringResource(Res.string.occasion_repeat), "occasion_repeat", shapes) { repeat = !repeat } },
+                    if (repeat) { shapes -> SwitchRow(byLunar, AppIcons.Calendar, stringResource(Res.string.occasion_lunar), "occasion_lunar", shapes) { byLunar = !byLunar } } else null,
+                    { shapes -> SwitchRow(public, AppIcons.Eye, stringResource(Res.string.visibility_public), "occasion_public", shapes, supporting = stringResource(Res.string.occasion_public_note)) { public = !public } },
                 ),
             )
             Column(Modifier.padding(horizontal = Space.gutter).padding(top = Space.l), verticalArrangement = Arrangement.spacedBy(Space.l)) {
                 if (repeat && count != Count.AGE) {
                     OutlinedTextField(
                         firstLabel, { firstLabel = it },
-                        label = { Text(stringResource(R.string.occasion_first_label)) },
-                        placeholder = { Text(name.ifBlank { stringResource(R.string.occasion_name) }) },
+                        label = { Text(stringResource(Res.string.occasion_first_label)) },
+                        placeholder = { Text(name.ifBlank { stringResource(Res.string.occasion_name) }) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
-                OutlinedTextField(note, { note = it }, label = { Text(stringResource(R.string.occasion_note)) }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(note, { note = it }, label = { Text(stringResource(Res.string.occasion_note)) }, modifier = Modifier.fillMaxWidth())
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     if (occasion != null) {
                         TextButton(onClick = { scope.launch { container.repository.deleteEntry(occasion.uid); onDismiss() } }, modifier = Modifier.testTag("occasion_delete")) {
-                            Text(stringResource(R.string.action_delete), color = tokens.danger)
+                            Text(stringResource(Res.string.action_delete), color = tokens.danger)
                         }
                     }
                     Box(Modifier.weight(1f))
@@ -274,7 +274,7 @@ private fun OccasionSheet(container: AppContainer, occasion: Occasion?, lunar: L
                             }
                         },
                         modifier = Modifier.testTag("occasion_save"),
-                    ) { Text(stringResource(R.string.action_save)) }
+                    ) { Text(stringResource(Res.string.action_save)) }
                 }
             }
         }

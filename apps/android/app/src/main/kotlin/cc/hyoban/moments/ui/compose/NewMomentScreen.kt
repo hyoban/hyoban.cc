@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.compose
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.design.rememberHaptics
@@ -103,8 +105,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
@@ -117,7 +119,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.Around
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.PhotoInfo
@@ -270,7 +271,7 @@ fun NewMomentScreen(
         val refused = photos.mapNotNull { uri -> infos[uri]?.let(Photos::refusal)?.let { uri to it } }
         if (refused.isNotEmpty()) {
             photos = photos - refused.map { it.first }.toSet()
-            saveError = refused.map { it.second }.distinct().joinToString("\n") { resources.getString(refusalText(it)) }
+            saveError = refused.map { it.second }.distinct().joinToString("\n") { textOf(refusalText(it)) }
         }
     }
     // Motion photos just added, to be asked whether they go in as photos.
@@ -282,10 +283,10 @@ fun NewMomentScreen(
         .minByOrNull { it.toInstant() }
     val time = chosenTime ?: photoTime ?: openedAt
     val timeSource = when {
-        original != null && chosenTime == originalTime -> R.string.source_saved
-        chosenTime != null -> R.string.source_chosen
-        photoTime != null -> R.string.source_photo
-        else -> R.string.source_now
+        original != null && chosenTime == originalTime -> Res.string.source_saved
+        chosenTime != null -> Res.string.source_chosen
+        photoTime != null -> Res.string.source_photo
+        else -> Res.string.source_now
     }
 
     // Where: just where the first photo that says was taken, as a new place named after what
@@ -337,7 +338,7 @@ fun NewMomentScreen(
     // the gallery, to be added from there.
     val openCamera: () -> Unit = {
         runCatching { context.startActivity(Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)) }
-            .onFailure { saveError = resources.getString(R.string.error_no_camera) }
+            .onFailure { saveError = textOf(Res.string.error_no_camera) }
     }
 
     val written = text.isNotBlank() || photos.isNotEmpty()
@@ -372,7 +373,7 @@ fun NewMomentScreen(
     val save: () -> Unit = save@{
         if (saving) return@save
         // The bill is checked first, so that nothing is kept while it can't be.
-        val txn = if (withBill) bill.toTxn(ledger, billAt, trips, null, null, null) { saveError = resources.getString(it) } ?: return@save else null
+        val txn = if (withBill) bill.toTxn(ledger, billAt, trips, null, null, null) { saveError = textOf(it) } ?: return@save else null
         saving = true
         scope.launch {
             try {
@@ -392,7 +393,7 @@ fun NewMomentScreen(
                 onSaved()
             } catch (error: Exception) {
                 saving = false
-                saveError = resources.getString(R.string.error_save, failureReason(context, error))
+                saveError = textOf(Res.string.error_save, failureReason(context, error))
             }
         }
     }
@@ -407,9 +408,9 @@ fun NewMomentScreen(
         SubPage(
             stringResource(
                 when {
-                    original != null -> R.string.title_edit_moment
-                    !withMoment -> R.string.ledger_new_bill
-                    else -> R.string.title_new_moment
+                    original != null -> Res.string.title_edit_moment
+                    !withMoment -> Res.string.ledger_new_bill
+                    else -> Res.string.title_new_moment
                 },
             ),
             onBack = leave,
@@ -434,7 +435,7 @@ fun NewMomentScreen(
                     enabled = !saving,
                     contentPadding = PaddingValues(horizontal = Space.l, vertical = Space.s),
                     modifier = Modifier.padding(end = Space.xs).testTag("save"),
-                ) { Text(stringResource(R.string.action_save)) }
+                ) { Text(stringResource(Res.string.action_save)) }
             },
         ) {
             val focus = remember { FocusRequester() }
@@ -444,7 +445,7 @@ fun NewMomentScreen(
                 TextField(
                     value = text,
                     onValueChange = { text = it },
-                    placeholder = { Text(stringResource(R.string.hint_moment_text)) },
+                    placeholder = { Text(stringResource(Res.string.hint_moment_text)) },
                     textStyle = AppTheme.typography.bodyReading,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Default),
                     isError = emptyError,
@@ -455,7 +456,7 @@ fun NewMomentScreen(
                         null
                     },
                     supportingText = if (emptyError) {
-                        { Text(stringResource(R.string.error_empty_moment)) }
+                        { Text(stringResource(Res.string.error_empty_moment)) }
                     } else {
                         null
                     },
@@ -503,10 +504,10 @@ fun NewMomentScreen(
                             Text(
                                 listOfNotNull(kind?.let { stringResource(it.label) }, stringResource(
                                     when {
-                                        original != null && chosenPlace == originalPlace -> R.string.source_saved
-                                        chosenPlace != null -> R.string.source_chosen
-                                        photoFix != null -> R.string.source_photo
-                                        else -> R.string.place_unchosen
+                                        original != null && chosenPlace == originalPlace -> Res.string.source_saved
+                                        chosenPlace != null -> Res.string.source_chosen
+                                        photoFix != null -> Res.string.source_photo
+                                        else -> Res.string.place_unchosen
                                     },
                                 )).joinToString(" "),
                             )
@@ -519,7 +520,7 @@ fun NewMomentScreen(
                             when (place) {
                                 is PlaceChoice.Known -> places[place.id]?.name ?: place.id
                                 is PlaceChoice.New -> place.name
-                                PlaceChoice.None -> stringResource(R.string.place_none)
+                                PlaceChoice.None -> stringResource(Res.string.place_none)
                             },
                         )
                     }
@@ -530,19 +531,19 @@ fun NewMomentScreen(
                 val foodOn = LocalSettings.current.isOn(Module.FOOD)
                 val billOn = LocalSettings.current.isOn(Module.LEDGER)
                 if (foodOn || billOn) {
-                    PageCaption(stringResource(R.string.section_add_item))
+                    PageCaption(stringResource(Res.string.section_add_item))
                     FlowRow(
                         Modifier.fillMaxWidth().padding(horizontal = Space.gutter),
                         horizontalArrangement = Arrangement.spacedBy(Space.s),
                         verticalArrangement = Arrangement.spacedBy(Space.s),
                     ) {
-                        if (foodOn) AddChip(withFood, AppIcons.Food, stringResource(R.string.section_food), "add_food") {
+                        if (foodOn) AddChip(withFood, AppIcons.Food, stringResource(Res.string.section_food), "add_food") {
                             withFood = !withFood
                             if (!withFood) {
                                 dishes = ""; verdict = null; amount = ""; people = ""
                             }
                         }
-                        if (billOn) AddChip(withBill, AppIcons.Receipt, stringResource(R.string.section_bill), "add_bill") { withBill = !withBill }
+                        if (billOn) AddChip(withBill, AppIcons.Receipt, stringResource(Res.string.section_bill), "add_bill") { withBill = !withBill }
                     }
                 }
                 if (withFood && foodOn) FoodGroup(
@@ -557,7 +558,7 @@ fun NewMomentScreen(
                 )
                 }
                 if (withBill) {
-                    if (withMoment) PageCaption(stringResource(R.string.section_bill))
+                    if (withMoment) PageCaption(stringResource(Res.string.section_bill))
                     BillFields(container, ledger, bill, billAt, null, null, withMoment = withMoment, keypad = keypad)
                 }
                 // Deleting is rare, so it waits down here rather than over the Moment; its snackbar can undo it.
@@ -576,7 +577,7 @@ fun NewMomentScreen(
                             ),
                             leadingContent = { Icon(AppIcons.Trash, contentDescription = null) },
                             modifier = Modifier.testTag("delete"),
-                        ) { Text(stringResource(R.string.action_delete_moment)) }
+                        ) { Text(stringResource(Res.string.action_delete_moment)) }
                     }
                 }
             }
@@ -633,7 +634,7 @@ fun NewMomentScreen(
         AlertDialog(
             onDismissRequest = { saveError = null },
             text = { Text(message) },
-            confirmButton = { TextButton(onClick = { saveError = null }) { Text(stringResource(R.string.action_confirm)) } },
+            confirmButton = { TextButton(onClick = { saveError = null }) { Text(stringResource(Res.string.action_confirm)) } },
         )
     }
     if (unaskedMotion.isNotEmpty()) {
@@ -643,16 +644,16 @@ fun NewMomentScreen(
         }
         AlertDialog(
             onDismissRequest = { answer(false) },
-            title = { Text(stringResource(R.string.confirm_motion)) },
-            text = { Text(pluralStringResource(R.plurals.confirm_motion_note, unaskedMotion.size, unaskedMotion.size)) },
+            title = { Text(stringResource(Res.string.confirm_motion)) },
+            text = { Text(pluralStringResource(Res.plurals.confirm_motion_note, unaskedMotion.size, unaskedMotion.size)) },
             confirmButton = {
                 TextButton(onClick = { answer(true) }, modifier = Modifier.testTag("motion_as_photos")) {
-                    Text(stringResource(R.string.action_add_as_photos))
+                    Text(stringResource(Res.string.action_add_as_photos))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { answer(false) }, modifier = Modifier.testTag("motion_keep_live")) {
-                    Text(stringResource(R.string.action_keep_live))
+                    Text(stringResource(Res.string.action_keep_live))
                 }
             },
         )
@@ -660,14 +661,14 @@ fun NewMomentScreen(
     if (confirmingDiscard) {
         AlertDialog(
             onDismissRequest = { confirmingDiscard = false },
-            title = { Text(stringResource(R.string.confirm_discard)) },
-            text = { Text(stringResource(R.string.confirm_discard_note)) },
+            title = { Text(stringResource(Res.string.confirm_discard)) },
+            text = { Text(stringResource(Res.string.confirm_discard_note)) },
             confirmButton = {
                 TextButton(onClick = { confirmingDiscard = false; onBack() }, modifier = Modifier.testTag("discard")) {
-                    Text(stringResource(R.string.action_discard), color = tokens.danger)
+                    Text(stringResource(Res.string.action_discard), color = tokens.danger)
                 }
             },
-            dismissButton = { TextButton(onClick = { confirmingDiscard = false }) { Text(stringResource(R.string.action_keep_writing)) } },
+            dismissButton = { TextButton(onClick = { confirmingDiscard = false }) { Text(stringResource(Res.string.action_keep_writing)) } },
         )
     }
 }
@@ -737,9 +738,9 @@ private fun PhotoStrip(
         list.requestScrollToItem(first.first, first.second)
     }
     val photoShape = AppTheme.shapes.medium
-    val earlier = stringResource(R.string.action_move_earlier)
-    val later = stringResource(R.string.action_move_later)
-    val options = stringResource(R.string.action_photo_options)
+    val earlier = stringResource(Res.string.action_move_earlier)
+    val later = stringResource(Res.string.action_move_later)
+    val options = stringResource(Res.string.action_photo_options)
     // The photo whose menu is open, from a tap on it.
     var menuFor by remember { mutableStateOf<Uri?>(null) }
     LazyRow(
@@ -802,7 +803,7 @@ private fun PhotoStrip(
                         Modifier.align(Alignment.TopStart).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(AppIcons.Play, contentDescription = stringResource(R.string.media_video), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
+                        Icon(AppIcons.Play, contentDescription = stringResource(Res.string.media_video), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
                     }
                 }
                 if (uri in utility) {
@@ -810,12 +811,12 @@ private fun PhotoStrip(
                         Modifier.align(Alignment.BottomStart).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(AppIcons.PhotoOff, contentDescription = stringResource(R.string.label_photo_utility), tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
+                        Icon(AppIcons.PhotoOff, contentDescription = stringResource(Res.string.label_photo_utility), tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
                     }
                 }
                 DropdownMenu(menuFor == uri, onDismissRequest = { menuFor = null }) {
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.action_photo_utility)) },
+                        text = { Text(stringResource(Res.string.action_photo_utility)) },
                         leadingIcon = { Icon(AppIcons.PhotoOff, contentDescription = null) },
                         trailingIcon = if (uri in utility) {
                             { Icon(AppIcons.Check, contentDescription = null) }
@@ -830,7 +831,7 @@ private fun PhotoStrip(
                     )
                     if (uri in motion) {
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.action_photo_still)) },
+                            text = { Text(stringResource(Res.string.action_photo_still)) },
                             leadingIcon = { Icon(AppIcons.LiveOff, contentDescription = null) },
                             trailingIcon = if (uri in stills) {
                                 { Icon(AppIcons.Check, contentDescription = null) }
@@ -852,7 +853,7 @@ private fun PhotoStrip(
                             interactionSource = null,
                             indication = PressIndication,
                             role = Role.Button,
-                            onClickLabel = stringResource(if (uri in videos) R.string.action_remove_video else R.string.action_remove_photo),
+                            onClickLabel = stringResource(if (uri in videos) Res.string.action_remove_video else Res.string.action_remove_photo),
                         ) { onRemove(uri) }
                         .testTag("remove_photo_$index"),
                     contentAlignment = Alignment.Center,
@@ -861,17 +862,17 @@ private fun PhotoStrip(
                         Modifier.size(REMOVE_DOT).clip(CircleShape).background(MediaOverlay.control),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(AppIcons.Close, contentDescription = stringResource(if (uri in videos) R.string.action_remove_video else R.string.action_remove_photo), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
+                        Icon(AppIcons.Close, contentDescription = stringResource(if (uri in videos) Res.string.action_remove_video else Res.string.action_remove_photo), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
                     }
                 }
             }
         }
         if (photos.size < MAX_PHOTOS) {
             item(key = ADD_KEY) {
-                AddTile(AppIcons.PhotoAdd, stringResource(R.string.action_add_photos), onAdd, Modifier.animateItem().testTag("add_photos"))
+                AddTile(AppIcons.PhotoAdd, stringResource(Res.string.action_add_photos), onAdd, Modifier.animateItem().testTag("add_photos"))
             }
             item(key = CAMERA_KEY) {
-                AddTile(AppIcons.Camera, stringResource(R.string.action_open_camera), onOpenCamera, Modifier.animateItem().testTag("open_camera"))
+                AddTile(AppIcons.Camera, stringResource(Res.string.action_open_camera), onOpenCamera, Modifier.animateItem().testTag("open_camera"))
             }
         }
     }
@@ -896,7 +897,7 @@ private fun Visibility(private: Boolean, onPrivate: (Boolean) -> Unit) {
     Box {
         AssistChip(
             onClick = { open = true },
-            label = { Text(stringResource(if (private) R.string.visibility_private else R.string.visibility_public)) },
+            label = { Text(stringResource(if (private) Res.string.visibility_private else Res.string.visibility_public)) },
             leadingIcon = { Icon(if (private) AppIcons.EyeOff else AppIcons.Eye, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
             trailingIcon = { Icon(AppIcons.CaretDown, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
             modifier = Modifier.semantics { role = Role.DropdownList }.testTag("moment_private"),
@@ -906,7 +907,7 @@ private fun Visibility(private: Boolean, onPrivate: (Boolean) -> Unit) {
                 // The chosen one on the accent's tint, its icon in the accent, besides its tick.
                 val chosen = choice == private
                 DropdownMenuItem(
-                    text = { Text(stringResource(if (choice) R.string.visibility_private else R.string.visibility_public)) },
+                    text = { Text(stringResource(if (choice) Res.string.visibility_private else Res.string.visibility_public)) },
                     leadingIcon = { Icon(icon, contentDescription = null, tint = if (chosen) tokens.accent else LocalContentColor.current) },
                     modifier = if (chosen) Modifier.background(tokens.accentSoft) else Modifier,
                     trailingIcon = if (chosen) {
@@ -939,12 +940,12 @@ private fun FoodGroup(
     people: String,
     onPeople: (String) -> Unit,
 ) {
-    PageCaption(stringResource(R.string.section_food))
+    PageCaption(stringResource(Res.string.section_food))
     PageRows { _ ->
         ListItem(
             leadingContent = { Icon(AppIcons.Food, contentDescription = null) },
             headlineContent = {
-                RowField(dishes, onDishes, stringResource(R.string.hint_food_dishes), AppTheme.typography.body, KeyboardOptions(imeAction = ImeAction.Next), Modifier.fillMaxWidth().testTag("food_dishes"))
+                RowField(dishes, onDishes, stringResource(Res.string.hint_food_dishes), AppTheme.typography.body, KeyboardOptions(imeAction = ImeAction.Next), Modifier.fillMaxWidth().testTag("food_dishes"))
             },
         )
         ListItem(
@@ -972,7 +973,7 @@ private fun FoodGroup(
                     RowField(
                         amount,
                         { typed -> onAmount(typed.filter { it.isDigit() || it == '.' }) },
-                        stringResource(R.string.label_food_amount),
+                        stringResource(Res.string.label_food_amount),
                         AppTheme.typography.body,
                         KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
                         Modifier.weight(1f).testTag("food_amount"),
@@ -984,14 +985,14 @@ private fun FoodGroup(
                     RowField(
                         people,
                         { typed -> onPeople(typed.filter { it.isDigit() }.take(3)) },
-                        stringResource(R.string.label_food_people),
+                        stringResource(Res.string.label_food_people),
                         LocalTextStyle.current.copy(fontFamily = AppTheme.typography.body.fontFamily),
                         KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
                         Modifier.testTag("food_people"),
                         fit = true,
                     )
-                    if (people.isNotEmpty()) Text(" " + stringResource(R.string.unit_food_people))
-                    if (share != null) Text(" " + stringResource(R.string.food_share, formatAmount(share)))
+                    if (people.isNotEmpty()) Text(" " + stringResource(Res.string.unit_food_people))
+                    if (share != null) Text(" " + stringResource(Res.string.food_share, formatAmount(share)))
                 }
             },
         )
@@ -1140,10 +1141,10 @@ private suspend fun buildMoment(
 }
 
 /** What says why a picked file was left out. */
-private fun refusalText(refusal: Refusal): Int = when (refusal) {
-    Refusal.NOT_MEDIA -> R.string.error_not_media
-    Refusal.VIDEO_TYPE -> R.string.error_video_type
-    Refusal.VIDEO_TOO_BIG -> R.string.error_video_too_big
+private fun refusalText(refusal: Refusal): StringResource = when (refusal) {
+    Refusal.NOT_MEDIA -> Res.string.error_not_media
+    Refusal.VIDEO_TYPE -> Res.string.error_video_type
+    Refusal.VIDEO_TOO_BIG -> Res.string.error_video_too_big
 }
 
 /** The side padding of a row, outside the page's gutter so its icon and words line up with the words above. */

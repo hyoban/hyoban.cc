@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.res.*
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.fillMaxHeight
 import cc.hyoban.moments.ui.components.railPadding
@@ -95,7 +96,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -104,7 +105,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.TripRecord
@@ -181,16 +181,16 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
 
     val title = stringResource(
         when {
-            fixedKind == TxnKind.REFUND -> R.string.ledger_kind_refund
-            fixedKind == TxnKind.REIMBURSEMENT -> R.string.ledger_record_reimbursement
-            original != null -> R.string.ledger_edit_bill
-            else -> R.string.ledger_new_bill
+            fixedKind == TxnKind.REFUND -> Res.string.ledger_kind_refund
+            fixedKind == TxnKind.REIMBURSEMENT -> Res.string.ledger_record_reimbursement
+            original != null -> Res.string.ledger_edit_bill
+            else -> Res.string.ledger_new_bill
         },
     )
 
     val haptics = rememberHaptics()
     fun save() {
-        val txn = draft.toTxn(ledger, at, trips, original, related, fixedKind) { show(resources.getString(it)) } ?: run { haptics.reject(); return }
+        val txn = draft.toTxn(ledger, at, trips, original, related, fixedKind) { show(textOf(it)) } ?: run { haptics.reject(); return }
         scope.launch {
             container.ledger.saveTxn(txn)
             haptics.confirm()
@@ -212,7 +212,7 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
         close = true,
         small = keypad,
         // On its side the keypad's own 保存 is always in sight, so the bar needn't hold another.
-        actions = { if (!sideways) TextButton(onClick = ::save, modifier = Modifier.testTag("save_bill")) { Text(stringResource(R.string.action_save)) } },
+        actions = { if (!sideways) TextButton(onClick = ::save, modifier = Modifier.testTag("save_bill")) { Text(stringResource(Res.string.action_save)) } },
     ) {
         if (sideways) {
             Row(Modifier.fillMaxSize().railPadding().imePadding().semantics { testTagsAsResourceId = true }) {
@@ -246,7 +246,7 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
 @Composable
 internal fun EnsureBook(container: AppContainer, enabled: Boolean = true) {
     val chinese = LocalConfiguration.current.locales[0].language == "zh"
-    val defaultBook = stringResource(R.string.ledger_default_book)
+    val defaultBook = stringResource(Res.string.ledger_default_book)
     LaunchedEffect(enabled) { if (enabled) container.ledger.ensureBook(defaultBook, chinese) }
 }
 
@@ -320,22 +320,22 @@ internal class BillDraft(
      * The bill as written, at [at], or null after telling [onError] what is missing. A changed
      * bill keeps what the form doesn't show.
      */
-    fun toTxn(ledger: Ledger, at: OffsetDateTime, trips: List<TripRecord>, original: Txn?, related: Txn?, fixedKind: TxnKind?, onError: (Int) -> Unit): Txn? {
+    fun toTxn(ledger: Ledger, at: OffsetDateTime, trips: List<TripRecord>, original: Txn?, related: Txn?, fixedKind: TxnKind?, onError: (org.jetbrains.compose.resources.StringResource) -> Unit): Txn? {
         val value = parseAmount(amount)
         val bookId = book ?: ledger.book?.id
         when {
-            value == null || value <= 0 && kind != TxnKind.EXPENSE -> return null.also { onError(R.string.ledger_error_amount) }
+            value == null || value <= 0 && kind != TxnKind.EXPENSE -> return null.also { onError(Res.string.ledger_error_amount) }
             bookId == null -> return null
-            kind == TxnKind.TRANSFER && (account == null && toAccount == null) -> return null.also { onError(R.string.ledger_error_transfer) }
-            kind == TxnKind.TRANSFER && account == toAccount -> return null.also { onError(R.string.ledger_error_same_account) }
+            kind == TxnKind.TRANSFER && (account == null && toAccount == null) -> return null.also { onError(Res.string.ledger_error_transfer) }
+            kind == TxnKind.TRANSFER && account == toAccount -> return null.also { onError(Res.string.ledger_error_same_account) }
         }
         val parsedSplits = if (splitting && kind != TxnKind.TRANSFER) {
             splitList.mapNotNull { (id, text) -> parseAmount(text)?.let { Split(id, it) } }.filter { it.amount > 0 }
         } else emptyList()
-        if (parsedSplits.isNotEmpty() && parsedSplits.sumOf { it.amount } != value) return null.also { onError(R.string.ledger_error_splits) }
+        if (parsedSplits.isNotEmpty() && parsedSplits.sumOf { it.amount } != value) return null.also { onError(Res.string.ledger_error_splits) }
         // Written here, a bill other than a transfer is paid from or into an account; an imported
         // one may have none.
-        if (kind != TxnKind.TRANSFER && parsedSplits.isEmpty() && account == null) return null.also { onError(R.string.ledger_error_account) }
+        if (kind != TxnKind.TRANSFER && parsedSplits.isEmpty() && account == null) return null.also { onError(Res.string.ledger_error_account) }
         val now = System.currentTimeMillis()
         val currency = shownCurrency(ledger)
         val payer = if (parsedSplits.isNotEmpty()) null else account
@@ -528,7 +528,7 @@ internal fun BillFields(
         OutlinedTextField(
             value = draft.amount,
             onValueChange = { draft.amount = it },
-            label = { Text(stringResource(R.string.ledger_amount)) },
+            label = { Text(stringResource(Res.string.ledger_amount)) },
             prefix = { Text(currencySymbol(shownCurrency)) },
             trailingIcon = {
                 TextButton(onClick = { currencies = true }, modifier = Modifier.testTag("currency")) { Text(shownCurrency) }
@@ -559,17 +559,17 @@ internal fun BillFields(
 
     if (kind == TxnKind.TRANSFER) {
         val rows = listOf<@Composable (ListItemShapes) -> Unit>(
-            { shapes -> PickRow(shapes, accountIconOf(ledger, account), stringResource(R.string.ledger_from_account), accountName(ledger, account), "from_account") { sheet = Sheet.From } },
-            { shapes -> PickRow(shapes, accountIconOf(ledger, draft.toAccount), stringResource(R.string.ledger_to_account), accountName(ledger, draft.toAccount), "to_account") { sheet = Sheet.To } },
+            { shapes -> PickRow(shapes, accountIconOf(ledger, account), stringResource(Res.string.ledger_from_account), accountName(ledger, account), "from_account") { sheet = Sheet.From } },
+            { shapes -> PickRow(shapes, accountIconOf(ledger, draft.toAccount), stringResource(Res.string.ledger_to_account), accountName(ledger, draft.toAccount), "to_account") { sheet = Sheet.To } },
         )
         SegmentedGroup(null, null, rows)
         Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
             if (toRecord != null && toRecord.currency != shownCurrency) {
                 val suggested = cents?.let { ledger.rates.convert(it, shownCurrency, toRecord.currency, at.toLocalDate()) }
-                AmountField(draft.toAmount, { draft.toAmount = it }, stringResource(R.string.ledger_to_amount), toRecord.currency, suggested?.let { stringResource(R.string.ledger_at_rate, formatMoney(it, toRecord.currency)) }, "to_amount")
+                AmountField(draft.toAmount, { draft.toAmount = it }, stringResource(Res.string.ledger_to_amount), toRecord.currency, suggested?.let { stringResource(Res.string.ledger_at_rate, formatMoney(it, toRecord.currency)) }, "to_amount")
             }
-            AmountField(draft.fee, { draft.fee = it }, stringResource(R.string.ledger_fee), shownCurrency, stringResource(R.string.ledger_fee_note), "fee")
-            AmountField(draft.discount, { draft.discount = it }, stringResource(R.string.ledger_discount), shownCurrency, stringResource(R.string.ledger_transfer_discount_note), "discount")
+            AmountField(draft.fee, { draft.fee = it }, stringResource(Res.string.ledger_fee), shownCurrency, stringResource(Res.string.ledger_fee_note), "fee")
+            AmountField(draft.discount, { draft.discount = it }, stringResource(Res.string.ledger_discount), shownCurrency, stringResource(Res.string.ledger_transfer_discount_note), "discount")
         }
     }
 
@@ -584,7 +584,7 @@ internal fun BillFields(
             OutlinedTextField(
                 value = draft.note,
                 onValueChange = { draft.note = it },
-                label = { Text(stringResource(R.string.ledger_note)) },
+                label = { Text(stringResource(Res.string.ledger_note)) },
                 leadingIcon = { Icon(AppIcons.Notes, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth().testTag("note"),
             )
@@ -595,14 +595,14 @@ internal fun BillFields(
         var value by remember { mutableStateOf(draft.discount) }
         AlertDialog(
             onDismissRequest = { discountOpen = false },
-            title = { Text(stringResource(R.string.ledger_discount)) },
-            text = { AmountField(value, { value = it }, stringResource(R.string.ledger_discount), shownCurrency, stringResource(R.string.ledger_expense_discount_note), "discount_field") },
+            title = { Text(stringResource(Res.string.ledger_discount)) },
+            text = { AmountField(value, { value = it }, stringResource(Res.string.ledger_discount), shownCurrency, stringResource(Res.string.ledger_expense_discount_note), "discount_field") },
             confirmButton = {
                 TextButton(onClick = { draft.discount = value.trim(); discountOpen = false }, enabled = value.isBlank() || parseAmount(value) != null) {
-                    Text(stringResource(R.string.action_confirm))
+                    Text(stringResource(Res.string.action_confirm))
                 }
             },
-            dismissButton = { TextButton(onClick = { discountOpen = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { discountOpen = false }) { Text(stringResource(Res.string.action_cancel)) } },
         )
     }
     if (timeOpen) {
@@ -613,7 +613,7 @@ internal fun BillFields(
     }
     addingCategory?.let { parent ->
         NameDialog(
-            title = stringResource(if (parent.isEmpty()) R.string.ledger_add_category else R.string.ledger_add_subcategory),
+            title = stringResource(if (parent.isEmpty()) Res.string.ledger_add_category else Res.string.ledger_add_subcategory),
             initial = "",
             onDismiss = { addingCategory = null },
         ) { name ->
@@ -654,7 +654,7 @@ internal fun BillFields(
             ChoiceSheet(
                 near.map { it.uid to (formatDay(it.dateKey) + " " + it.text.lines().firstOrNull().orEmpty().take(40)) },
                 onDismiss = { sheet = null },
-                empty = stringResource(R.string.ledger_no_moments_near),
+                empty = stringResource(Res.string.ledger_no_moments_near),
             ) { uid ->
                 draft.moment = uid
                 moments.firstOrNull { it.uid == uid }?.places?.firstOrNull()?.let { if (draft.place == null) draft.place = it }
@@ -709,11 +709,11 @@ private fun PickRow(
         overlineContent = { Text(label) },
         trailingContent = onClear?.let {
             {
-                IconButton(onClick = it) { Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_clear)) }
+                IconButton(onClick = it) { Icon(AppIcons.Close, contentDescription = stringResource(Res.string.action_clear)) }
             }
         },
         modifier = Modifier.testTag(tag),
-    ) { Text(value ?: stringResource(R.string.ledger_choose), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+    ) { Text(value ?: stringResource(Res.string.ledger_choose), maxLines = 1, overflow = TextOverflow.Ellipsis) }
 }
 
 /** An amount besides the bill's own, with what it means under it. */
@@ -753,7 +753,7 @@ private fun CategoryGrid(ledger: Ledger, book: String?, type: CategoryType, sele
                 Row(Modifier.fillMaxWidth()) {
                     row.forEach { category ->
                         if (category == null) {
-                            CategoryTile(stringResource(R.string.ledger_add_category), AppIcons.Plus, selected = false, hasSubs = false, tag = "add_category") { onAdd(null) }
+                            CategoryTile(stringResource(Res.string.ledger_add_category), AppIcons.Plus, selected = false, hasSubs = false, tag = "add_category") { onAdd(null) }
                         } else {
                             CategoryTile(
                                 category.name,
@@ -783,7 +783,7 @@ private fun CategoryGrid(ledger: Ledger, book: String?, type: CategoryType, sele
                             Row(Modifier.fillMaxWidth()) {
                                 subRow.forEach { category ->
                                     if (category == null) {
-                                        CategoryTile(stringResource(R.string.ledger_add_category), AppIcons.Plus, selected = false, hasSubs = false, tag = "add_subcategory", fill = tokens.fill) { onAdd(top) }
+                                        CategoryTile(stringResource(Res.string.ledger_add_category), AppIcons.Plus, selected = false, hasSubs = false, tag = "add_subcategory", fill = tokens.fill) { onAdd(top) }
                                     } else {
                                         CategoryTile(
                                             category.name,
@@ -860,7 +860,7 @@ private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraf
     val discount = parseAmount(draft.discount)?.takeIf { it > 0 }
     val chips: @Composable () -> Unit = {
         if (kind != TxnKind.TRANSFER && !draft.splitting) {
-            OptionChip(accountName(ledger, account) ?: stringResource(R.string.ledger_choose_account), accountIconOf(ledger, account), "account") { draft.sheet = Sheet.Account }
+            OptionChip(accountName(ledger, account) ?: stringResource(Res.string.ledger_choose_account), accountIconOf(ledger, account), "account") { draft.sheet = Sheet.Account }
         }
         if (!withMoment && !keypad) {
             OptionChip(formatDay(at.toLocalDate().toString()) + " " + at.format(DateTimeFormatter.ofPattern("HH:mm")), AppIcons.Calendar, "time") { draft.timeOpen = true }
@@ -870,13 +870,13 @@ private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraf
         }
         if (kind == TxnKind.EXPENSE) {
             LinkChip(
-                discount?.let { stringResource(R.string.ledger_discount) + " " + formatMoney(it, shownCurrency) },
-                stringResource(R.string.ledger_discount), AppIcons.Tag, "discount",
+                discount?.let { stringResource(Res.string.ledger_discount) + " " + formatMoney(it, shownCurrency) },
+                stringResource(Res.string.ledger_discount), AppIcons.Tag, "discount",
                 onClear = { draft.discount = "" },
             ) { draft.discountOpen = true }
         }
         if (kind != TxnKind.TRANSFER && fixedKind == null) {
-            ToggleChip(draft.splitting, stringResource(R.string.ledger_split), "split") {
+            ToggleChip(draft.splitting, stringResource(Res.string.ledger_split), "split") {
                 draft.splitting = !draft.splitting
                 if (draft.splitting && draft.splits.isBlank() && account != null) draft.splits = "$account\t${draft.amount}"
             }
@@ -884,34 +884,34 @@ private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraf
         if (kind == TxnKind.EXPENSE) {
             ToggleChip(
                 draft.reimburse != Reimburse.NONE,
-                stringResource(if (draft.reimburse == Reimburse.DONE) R.string.ledger_reimburse_done else R.string.ledger_reimbursable),
+                stringResource(if (draft.reimburse == Reimburse.DONE) Res.string.ledger_reimburse_done else Res.string.ledger_reimbursable),
                 "reimbursable",
             ) { draft.reimburse = if (draft.reimburse == Reimburse.NONE) Reimburse.PENDING else Reimburse.NONE }
         }
-        ToggleChip(draft.excluded, stringResource(R.string.ledger_excluded), "excluded") { draft.excluded = !draft.excluded }
+        ToggleChip(draft.excluded, stringResource(Res.string.ledger_excluded), "excluded") { draft.excluded = !draft.excluded }
         // Public follows the book's say for new bills until this one says otherwise; only its
         // amount, category and note would publish.
         if (kind == TxnKind.EXPENSE || kind == TxnKind.INCOME) {
             val bookPublic = ledger.books.firstOrNull { it.id == (draft.book ?: ledger.book?.id) }?.visibility == "public"
             val public = (draft.visibility ?: if (bookPublic) "public" else "private") == "public"
-            ToggleChip(public, stringResource(R.string.visibility_public), "public") { draft.visibility = if (public) "private" else "public" }
+            ToggleChip(public, stringResource(Res.string.visibility_public), "public") { draft.visibility = if (public) "private" else "public" }
         }
         // What it belongs to among the Moments, kept on the phone with the bill alone.
         if (!withMoment) {
             LinkChip(
                 momentRecord?.let { it.text.lines().firstOrNull()?.take(20)?.ifBlank { null } ?: formatDay(it.dateKey) },
-                stringResource(R.string.ledger_link_moment), AppIcons.Photos, "link_moment",
+                stringResource(Res.string.ledger_link_moment), AppIcons.Photos, "link_moment",
                 onClear = { draft.moment = null },
             ) { draft.sheet = Sheet.Moment }
             LinkChip(
                 draft.place?.let { places[it]?.name ?: it },
-                stringResource(R.string.ledger_link_place), AppIcons.Pin, "link_place",
+                stringResource(Res.string.ledger_link_place), AppIcons.Pin, "link_place",
                 onClear = { draft.place = null },
             ) { draft.sheet = Sheet.Place }
         }
         LinkChip(
             trip?.let { id -> trips.firstOrNull { it.id == id }?.title ?: id },
-            stringResource(R.string.ledger_link_trip), AppIcons.Luggage, "link_trip",
+            stringResource(Res.string.ledger_link_trip), AppIcons.Luggage, "link_trip",
             onClear = { draft.tripChosen = true; draft.trip = null },
         ) { draft.sheet = Sheet.Trip }
     }
@@ -970,7 +970,7 @@ private fun LinkChip(value: String?, label: String, icon: androidx.compose.ui.gr
         trailingIcon = {
             Icon(
                 AppIcons.Close,
-                contentDescription = stringResource(R.string.action_clear),
+                contentDescription = stringResource(Res.string.action_clear),
                 modifier = Modifier.size(InputChipDefaults.IconSize).clickable(role = Role.Button, onClick = onClear),
             )
         },
@@ -1042,7 +1042,7 @@ internal fun BillKeypad(
                 TextField(
                     value = draft.note,
                     onValueChange = { draft.note = it },
-                    placeholder = { Text(stringResource(R.string.ledger_note_hint)) },
+                    placeholder = { Text(stringResource(Res.string.ledger_note_hint)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     modifier = Modifier.weight(1f).testTag("note"),
@@ -1067,7 +1067,7 @@ internal fun BillKeypad(
                 Button(
                     onClick = onSave,
                     modifier = Modifier.weight(2f).height(keyHeight).testTag("keypad_save"),
-                ) { Text(stringResource(R.string.action_save), style = AppTheme.typography.body.strong) }
+                ) { Text(stringResource(Res.string.action_save), style = AppTheme.typography.body.strong) }
             }
         }
     }
@@ -1091,7 +1091,7 @@ private fun Key(key: Char, modifier: Modifier, height: Dp = KeyHeight, onClick: 
         modifier = modifier.height(height).testTag("key_${if (key == BACKSPACE) "back" else key.toString()}"),
     ) {
         when (key) {
-            BACKSPACE -> Icon(AppIcons.Backspace, contentDescription = stringResource(R.string.action_backspace))
+            BACKSPACE -> Icon(AppIcons.Backspace, contentDescription = stringResource(Res.string.action_backspace))
             '-' -> Text("−", style = AppTheme.typography.title)
             else -> Text(key.toString(), style = AppTheme.typography.title)
         }
@@ -1141,17 +1141,17 @@ private fun SplitEditor(ledger: Ledger, splits: List<Pair<String, String>>, curr
                     modifier = Modifier.weight(1f),
                 )
                 IconButton(onClick = { onChange(splits.filterIndexed { i, _ -> i != index }) }) {
-                    Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_remove))
+                    Icon(AppIcons.Close, contentDescription = stringResource(Res.string.action_remove))
                 }
             }
         }
         Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             TextButton(onClick = onAdd) {
                 Icon(AppIcons.Plus, contentDescription = null)
-                Text(stringResource(R.string.ledger_add_payer))
+                Text(stringResource(Res.string.ledger_add_payer))
             }
             Text(
-                stringResource(R.string.ledger_split_sum, formatMoney(sum, currency), formatMoney(total ?: 0, currency)),
+                stringResource(Res.string.ledger_split_sum, formatMoney(sum, currency), formatMoney(total ?: 0, currency)),
                 style = AppTheme.typography.caption,
                 color = if (total != null && sum != total) tokens.danger else tokens.tx2,
             )
@@ -1170,7 +1170,7 @@ fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> U
         LazyColumn(Modifier.padding(bottom = Space.l)) {
             item {
                 Text(
-                    stringResource(R.string.ledger_account),
+                    stringResource(Res.string.ledger_account),
                     style = AppTheme.typography.title,
                     modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.s).semantics { heading() },
                 )
@@ -1187,14 +1187,14 @@ fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> U
             item {
                 if (allowNone) {
                     ListItem(
-                        headlineContent = { Text(stringResource(R.string.ledger_no_account)) },
+                        headlineContent = { Text(stringResource(Res.string.ledger_no_account)) },
                         leadingContent = { Icon(AppIcons.Block, contentDescription = null) },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         modifier = Modifier.clickable { onPick(null) },
                     )
                 }
                 ListItem(
-                    headlineContent = { Text(stringResource(R.string.ledger_add_account)) },
+                    headlineContent = { Text(stringResource(Res.string.ledger_add_account)) },
                     leadingContent = { Icon(AppIcons.Plus, contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     modifier = Modifier.clickable { creating = true }.testTag("sheet_add_account"),
@@ -1220,10 +1220,10 @@ private fun QuickAccountDialog(onDismiss: () -> Unit, onDone: (Account) -> Unit)
     var currency by remember { mutableStateOf("CNY") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.ledger_add_account)) },
+        title = { Text(stringResource(Res.string.ledger_add_account)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_account_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(name, { name = it }, label = { Text(stringResource(Res.string.ledger_account_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     AccountKind.entries.forEach { entry -> FilterChip(selected = kind == entry, onClick = { kind = entry }, label = { Text(accountKindLabel(entry)) }) }
                 }
@@ -1234,10 +1234,10 @@ private fun QuickAccountDialog(onDismiss: () -> Unit, onDone: (Account) -> Unit)
         },
         confirmButton = {
             TextButton(onClick = { onDone(Account(Ulid.next(), name.trim(), kind, currency, position = Int.MAX_VALUE / 2)) }, enabled = name.isNotBlank()) {
-                Text(stringResource(R.string.action_add))
+                Text(stringResource(Res.string.action_add))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }
 
@@ -1268,7 +1268,7 @@ fun NameDialog(title: String, initial: String, onDismiss: () -> Unit, onDone: (S
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { OutlinedTextField(name, { name = it }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("name_field")) },
-        confirmButton = { TextButton(onClick = { onDone(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_confirm)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        confirmButton = { TextButton(onClick = { onDone(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(Res.string.action_confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }

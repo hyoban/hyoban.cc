@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.moment
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module
 import androidx.compose.ui.AbsoluteAlignment
 import cc.hyoban.moments.data.store.isPublic
@@ -83,8 +84,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
@@ -93,7 +94,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.FoodVerdict
 import cc.hyoban.moments.ui.ledger.LedgerEntryArgs
@@ -259,11 +259,11 @@ fun MomentScreen(
         // opens at its full size with a tap on it. Only back stays over the photo.
         val context = LocalContext.current
         val show = rememberShowMessage()
-        val copied = stringResource(R.string.message_text_copied)
+        val copied = stringResource(Res.string.message_text_copied)
         val tools: @Composable RowScope.() -> Unit = {
-            ToolbarButton(AppIcons.Share, stringResource(R.string.action_share), "share") { sharing = true }
+            ToolbarButton(AppIcons.Share, stringResource(Res.string.action_share), "share") { sharing = true }
             if (moment.text.isNotBlank()) {
-                ToolbarButton(AppIcons.Copy, stringResource(R.string.action_copy_text), "copy_text") {
+                ToolbarButton(AppIcons.Copy, stringResource(Res.string.action_copy_text), "copy_text") {
                     context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("", moment.text))
                     show(copied)
                 }
@@ -299,7 +299,7 @@ fun MomentScreen(
                     FloatingBar(toolbar, content = tools)
                     // Editing, the page's one main action, an ink button beside the bar.
                     if (canEdit) {
-                        val edit = stringResource(R.string.action_edit_moment)
+                        val edit = stringResource(Res.string.action_edit_moment)
                         Tooltip(edit) {
                             FloatingActionButton(
                                 onClick = { onEdit(uid) },
@@ -428,7 +428,7 @@ private fun MomentDetails(
                     ListItem(
                         headlineContent = {
                             Text(
-                                food.dishes.joinToString(stringResource(R.string.separator_list)).ifEmpty { stringResource(R.string.section_food) },
+                                food.dishes.joinToString(stringResource(Res.string.separator_list)).ifEmpty { stringResource(Res.string.section_food) },
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                             )
@@ -475,27 +475,27 @@ private fun MomentDetails(
                         colors = segmentColors(),
                         leadingContent = { Icon(AppIcons.Calendar, contentDescription = null) },
                         trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
-                        supportingContent = { Text(pluralStringResource(R.plurals.count_moments, sameDay, sameDay)) },
+                        supportingContent = { Text(pluralStringResource(Res.plurals.count_moments, sameDay, sameDay)) },
                         modifier = Modifier.testTag("day_${moment.dateKey}"),
-                    ) { Text(stringResource(R.string.label_whole_day)) }
+                    ) { Text(stringResource(Res.string.label_whole_day)) }
                 }
             }
             // Then who sees it: private, or public with the parts that would publish.
             add {
                 val private = moment.hidden
                 val published = listOfNotNull(
-                    stringResource(R.string.part_text).takeIf { moment.text.isNotBlank() },
-                    stringResource(R.string.part_photos).takeIf { moment.media.isNotEmpty() },
-                    stringResource(R.string.section_food).takeIf { moment.food != null && foodOn },
-                    stringResource(R.string.part_bill).takeIf { billPublic && ledgerOn },
-                    stringResource(R.string.part_charge).takeIf { parts?.containsKey("charge") == true && carOn },
+                    stringResource(Res.string.part_text).takeIf { moment.text.isNotBlank() },
+                    stringResource(Res.string.part_photos).takeIf { moment.media.isNotEmpty() },
+                    stringResource(Res.string.section_food).takeIf { moment.food != null && foodOn },
+                    stringResource(Res.string.part_bill).takeIf { billPublic && ledgerOn },
+                    stringResource(Res.string.part_charge).takeIf { parts?.containsKey("charge") == true && carOn },
                 )
                 ListItem(
-                    headlineContent = { Text(stringResource(if (private) R.string.visibility_private else R.string.visibility_public)) },
+                    headlineContent = { Text(stringResource(if (private) Res.string.visibility_private else Res.string.visibility_public)) },
                     supportingContent = {
                         Text(
-                            if (private) stringResource(R.string.moment_private_note)
-                            else stringResource(R.string.moment_publishes, published.joinToString(stringResource(R.string.separator_list))),
+                            if (private) stringResource(Res.string.moment_private_note)
+                            else stringResource(Res.string.moment_publishes, published.joinToString(stringResource(Res.string.separator_list))),
                         )
                     },
                     leadingContent = { Icon(if (private) AppIcons.EyeOff else AppIcons.Eye, contentDescription = null) },
@@ -506,15 +506,15 @@ private fun MomentDetails(
             val own = moment.extra[cc.hyoban.moments.data.spec.Entries.PART_VISIBILITY] as? kotlinx.serialization.json.JsonObject
             if (onPartPrivate != null && !moment.hidden) {
                 listOfNotNull(
-                    ("food" to R.string.section_food).takeIf { moment.food != null && foodOn },
-                    ("media" to R.string.part_photos).takeIf { moment.media.isNotEmpty() },
+                    ("food" to Res.string.section_food).takeIf { moment.food != null && foodOn },
+                    ("media" to Res.string.part_photos).takeIf { moment.media.isNotEmpty() },
                 ).forEach { (plugin, label) ->
                     val private = (own?.get(plugin) as? kotlinx.serialization.json.JsonPrimitive)?.content == "private"
                     add { shapes ->
                         cc.hyoban.moments.ui.settings.SwitchRow(
                             private,
                             AppIcons.EyeOff,
-                            stringResource(R.string.part_private, stringResource(label)),
+                            stringResource(Res.string.part_private, stringResource(label)),
                             "private_$plugin",
                             shapes,
                         ) { onPartPrivate(plugin, !private) }
@@ -525,8 +525,8 @@ private fun MomentDetails(
             // with no API there is nothing to publish to, so nothing is said.
             val state = when {
                 !LocalSettings.current.connected -> null
-                moment.published == null -> Triple(AppIcons.Phone, R.string.label_on_phone, R.string.explain_on_phone)
-                changed -> Triple(AppIcons.Pen, R.string.label_unpublished_change, R.string.explain_unpublished_change)
+                moment.published == null -> Triple(AppIcons.Phone, Res.string.label_on_phone, Res.string.explain_on_phone)
+                changed -> Triple(AppIcons.Pen, Res.string.label_unpublished_change, Res.string.explain_unpublished_change)
                 else -> null
             }
             state?.let { (icon, label, explanation) ->
@@ -570,7 +570,7 @@ private fun chargeTitle(charge: kotlinx.serialization.json.JsonObject): String {
     val type = (charge["type"] as? kotlinx.serialization.json.JsonPrimitive)?.content
     val kwh = (charge["energyWh"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()?.div(1000)
     return listOfNotNull(
-        stringResource(if (type == "DC") R.string.charge_dc else R.string.charge_ac),
+        stringResource(if (type == "DC") Res.string.charge_dc else Res.string.charge_ac),
         kwh?.let { "%.1f kWh".format(it) },
     ).joinToString(" ")
 }
@@ -620,7 +620,7 @@ private fun Filmstrip(moment: MomentRecord, urls: MediaUrls, pager: PagerState, 
     ) {
         itemsIndexed(moment.media, key = { _, media -> media.uid }) { index, media ->
             val selected = index == current
-            val label = stringResource(R.string.media_position, stringResource(media.kindLabel()), index + 1, moment.media.size)
+            val label = stringResource(Res.string.media_position, stringResource(media.kindLabel()), index + 1, moment.media.size)
             // The one shown rounder than the others, easing there on the motion scheme's spatial
             // spring; the others under a scrim rather than faded, so they don't turn the
             // page's grey.

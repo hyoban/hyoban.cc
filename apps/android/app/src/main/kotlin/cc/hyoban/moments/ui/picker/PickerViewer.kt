@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.res.*
 import androidx.compose.ui.layout.layout
 import kotlinx.coroutines.delay
 import androidx.compose.animation.core.animateDpAsState
@@ -61,7 +62,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -70,7 +71,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
@@ -172,12 +172,12 @@ internal fun Viewer(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onClose, modifier = Modifier.testTag("picker_viewer_close")) {
-                Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_close), tint = MediaOverlay.content)
+                Icon(AppIcons.Close, contentDescription = stringResource(Res.string.action_close), tint = MediaOverlay.content)
             }
             Text("${pager.currentPage + 1} / ${shown.size}", style = AppTheme.typography.body, color = MediaOverlay.content,
                 modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
             IconButton(onClick = { current?.let(onDelete) }, enabled = enabled && current != null, modifier = Modifier.testTag("picker_viewer_delete")) {
-                Icon(AppIcons.Trash, contentDescription = stringResource(current?.source?.deleteWords ?: R.string.camera_delete), tint = MediaOverlay.content)
+                Icon(AppIcons.Trash, contentDescription = stringResource(current?.source?.deleteWords ?: Res.string.camera_delete), tint = MediaOverlay.content)
             }
         }
         if (busy) Column(
@@ -186,7 +186,7 @@ internal fun Viewer(
             verticalArrangement = Arrangement.spacedBy(Space.s, Alignment.CenterVertically),
         ) {
             Spinner(color = MediaOverlay.content)
-            Text(stringResource(R.string.camera_deleting), style = AppTheme.typography.caption, color = MediaOverlay.content)
+            Text(stringResource(Res.string.camera_deleting), style = AppTheme.typography.caption, color = MediaOverlay.content)
         }
         if (current != null && !info) Column(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().padding(horizontal = Space.gutter, vertical = Space.m),
@@ -210,7 +210,7 @@ internal fun Viewer(
                     style = AppTheme.typography.caption, color = MediaOverlay.content, modifier = Modifier.weight(1f),
                 )
                 IconButton(onClick = { info = true }, modifier = Modifier.testTag("picker_viewer_info")) {
-                    Icon(AppIcons.Info, contentDescription = stringResource(R.string.photo_info), tint = MediaOverlay.content)
+                    Icon(AppIcons.Info, contentDescription = stringResource(Res.string.photo_info), tint = MediaOverlay.content)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -224,8 +224,8 @@ internal fun Viewer(
                     horizontalArrangement = Arrangement.spacedBy(Space.m),
                 ) {
                     ChoiceMark(index, Modifier.size(26.dp))
-                    Text(stringResource(if (index >= 0) R.string.camera_chosen else R.string.camera_choose), style = AppTheme.typography.body, color = MediaOverlay.content)
-                } else Text(stringResource(R.string.camera_raw_kept), style = AppTheme.typography.body, color = MediaOverlay.content, modifier = Modifier.weight(1f))
+                    Text(stringResource(if (index >= 0) Res.string.camera_chosen else Res.string.camera_choose), style = AppTheme.typography.body, color = MediaOverlay.content)
+                } else Text(stringResource(Res.string.camera_raw_kept), style = AppTheme.typography.body, color = MediaOverlay.content, modifier = Modifier.weight(1f))
                 addButton()
             }
         }

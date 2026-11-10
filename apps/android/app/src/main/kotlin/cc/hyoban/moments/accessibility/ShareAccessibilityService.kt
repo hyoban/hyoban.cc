@@ -1,5 +1,6 @@
 package cc.hyoban.moments.accessibility
 
+import cc.hyoban.moments.res.*
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.app.KeyguardManager
@@ -250,7 +251,7 @@ open class ShareAccessibilityService : AccessibilityService() {
         assistState.value = AssistState(adapter.id, current.status)
         listenIdle()
         val message = if (current.status == AssistStatus.Ready) adapter.readyMessage else adapter.stoppedMessage
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        Toast.makeText(this, textOf(message), Toast.LENGTH_LONG).show()
     }
 
     companion object {

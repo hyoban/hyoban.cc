@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.publish
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import androidx.compose.foundation.layout.WindowInsetsSides
 import cc.hyoban.moments.ui.components.sideInsetsPadding
 import androidx.compose.ui.semantics.semantics
@@ -82,8 +84,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -94,7 +96,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.entryUid
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
@@ -166,22 +167,22 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
     // Nothing waiting, there is nothing to stand beside the list.
     val sideways = isPhoneLandscape() && pending.size > 0
     SubPage(
-        stringResource(R.string.title_changes),
+        stringResource(Res.string.title_changes),
         onBack,
         Modifier.background(AppColors.page),
-        subtitle = if (pending.size == 0 || sideways) null else pluralStringResource(R.plurals.count_changes, pending.size, pending.size),
+        subtitle = if (pending.size == 0 || sideways) null else pluralStringResource(Res.plurals.count_changes, pending.size, pending.size),
         actions = {
             // While it publishes, a way to stop it; otherwise, with changes waiting, a way to drop them all.
             if (busy) {
-                Tooltip(stringResource(R.string.action_cancel_publish), below = true) {
+                Tooltip(stringResource(Res.string.action_cancel_publish), below = true) {
                     IconButton(onClick = container::cancelPublish, modifier = Modifier.testTag("cancel_publish")) {
-                        Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_cancel_publish))
+                        Icon(AppIcons.Close, contentDescription = stringResource(Res.string.action_cancel_publish))
                     }
                 }
             } else if (pending.size > 0) {
-                Tooltip(stringResource(R.string.action_clear_changes), below = true) {
+                Tooltip(stringResource(Res.string.action_clear_changes), below = true) {
                     IconButton(onClick = { clearing = true }, modifier = Modifier.testTag("clear_changes")) {
-                        Icon(AppIcons.Trash, contentDescription = stringResource(R.string.action_clear_changes))
+                        Icon(AppIcons.Trash, contentDescription = stringResource(Res.string.action_clear_changes))
                     }
                 }
             }
@@ -190,17 +191,17 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
         if (clearing) {
             AlertDialog(
                 onDismissRequest = { clearing = false },
-                title = { Text(stringResource(R.string.dialog_clear_changes)) },
+                title = { Text(stringResource(Res.string.dialog_clear_changes)) },
                 text = {
                     Text(
                         if (pending.added.isEmpty()) {
-                            stringResource(R.string.dialog_clear_changes_note)
+                            stringResource(Res.string.dialog_clear_changes_note)
                         } else {
-                            pluralStringResource(R.plurals.dialog_clear_changes_deletes, pending.added.size, pending.added.size)
+                            pluralStringResource(Res.plurals.dialog_clear_changes_deletes, pending.added.size, pending.added.size)
                         },
                     )
                 },
-                dismissButton = { TextButton(onClick = { clearing = false }) { Text(stringResource(R.string.action_cancel)) } },
+                dismissButton = { TextButton(onClick = { clearing = false }) { Text(stringResource(Res.string.action_cancel)) } },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -208,7 +209,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                             container.clearChanges()
                         },
                         modifier = Modifier.testTag("confirm_clear_changes"),
-                    ) { Text(stringResource(R.string.action_clear), color = tokens.danger) }
+                    ) { Text(stringResource(Res.string.action_clear), color = tokens.danger) }
                 },
             )
         }
@@ -222,23 +223,23 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                 contentPadding = PaddingValues(start = columns.margin, top = LocalTopClearance.current, end = columns.margin, bottom = Space.xl + FAB_CLEARANCE),
             ) {
                 if (pending.size == 0) {
-                    item(key = "empty") { Column(Modifier.animateItem()) { Group(null, stringResource(R.string.empty_changes)) {} } }
+                    item(key = "empty") { Column(Modifier.animateItem()) { Group(null, stringResource(Res.string.empty_changes)) {} } }
                 } else if (!sideways) {
                     item(key = "private-note") {
                         Text(
-                            stringResource(R.string.changes_private_note),
+                            stringResource(Res.string.changes_private_note),
                             style = AppTheme.typography.caption,
                             color = tokens.tx2,
                             modifier = Modifier.animateItem().padding(horizontal = Space.gutter, vertical = Space.xs),
                         )
                     }
                 }
-                section(R.string.section_added, pending.added, key = { it.uid }) { moment ->
+                section(Res.string.section_added, pending.added, key = { it.uid }) { moment ->
                     ChangeCard(moment, onOpen = { onMoment(moment.uid) }.takeUnless { busy }) {
                         MomentWhole(moment, places, urls)
                     }
                 }
-                section(R.string.section_changed, pending.changed, key = { it.after.uid }) { change ->
+                section(Res.string.section_changed, pending.changed, key = { it.after.uid }) { change ->
                     val revert = { container.revert(change.after.uid) }.takeUnless { busy }
                     SwipeToRevert(revert) {
                         ChangeCard(
@@ -251,13 +252,13 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         }
                     }
                 }
-                section(R.string.section_changed_places, pending.places, key = { "place-${it.id}" }) { change ->
+                section(Res.string.section_changed_places, pending.places, key = { "place-${it.id}" }) { change ->
                     val revert = { container.revertPlace(change.id) }.takeUnless { busy }
                     SwipeToRevert(revert) { PlaceChangeCard(change, revert) }
                 }
                 // The trips made on the phone, then the site's changed there, each taken back the same way.
                 val (madeTrips, changedTrips) = pending.trips.partition { it.before == null }
-                for ((heading, trips) in listOf(R.string.section_new_trips to madeTrips, R.string.section_changed_trips to changedTrips)) section(heading, trips, key = { "trip-${it.id}" }) { change ->
+                for ((heading, trips) in listOf(Res.string.section_new_trips to madeTrips, Res.string.section_changed_trips to changedTrips)) section(heading, trips, key = { "trip-${it.id}" }) { change ->
                     val revert = { container.scope.launch { container.repository.revertTrip(change.id) }; Unit }.takeUnless { busy }
                     val after = change.after
                     val title = (after["title"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: change.before?.title.orEmpty()
@@ -270,7 +271,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                             title,
                             formatDate(start) + " – " + formatDate(end),
                             null,
-                            stringResource(if (private) R.string.visibility_private else R.string.visibility_public),
+                            stringResource(if (private) Res.string.visibility_private else Res.string.visibility_public),
                             revert,
                         )
                     }
@@ -278,21 +279,21 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                 // Check-ins, Swarm's or the footprints' stays, and the occasions, apart from the devices and subscriptions.
                 val (checkins, rest) = pending.entries.partition { cc.hyoban.moments.data.things.checkinOf((it.after ?: it.before)!!) != null }
                 val (occasions, things) = rest.partition { cc.hyoban.moments.data.occasions.Occasions.occasion((it.after ?: it.before)!!) != null }
-                section(R.string.section_changed_checkins, checkins, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
+                section(Res.string.section_changed_checkins, checkins, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
                     val entry = (change.after ?: change.before)!!
                     val revert = { container.scope.launch { container.repository.revertEntry(entry.entryUid) }; Unit }.takeUnless { busy }
                     val checkin = cc.hyoban.moments.data.things.checkinOf(entry)!!
                     val end = (entry["end"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.let(::formatTime)
                     SwipeToRevert(revert) {
                         OutsideCard(
-                            stringResource(R.string.timeline_checkin, checkin.venue),
+                            stringResource(Res.string.timeline_checkin, checkin.venue),
                             listOfNotNull(formatDate(checkin.at), listOfNotNull(formatTime(checkin.at), end).joinToString("–").ifEmpty { null }).joinToString(" "),
                             null,
                             stringResource(
                                 when {
-                                    change.after == null -> R.string.thing_deleted
-                                    change.before == null -> R.string.thing_new
-                                    else -> R.string.thing_changed
+                                    change.after == null -> Res.string.thing_deleted
+                                    change.before == null -> Res.string.thing_new
+                                    else -> Res.string.thing_changed
                                 },
                             ),
                             revert,
@@ -300,7 +301,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         )
                     }
                 }
-                section(R.string.section_changed_occasions, occasions, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
+                section(Res.string.section_changed_occasions, occasions, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
                     val entry = (change.after ?: change.before)!!
                     val revert = { container.scope.launch { container.repository.revertEntry(entry.entryUid) }; Unit }.takeUnless { busy }
                     val occasion = cc.hyoban.moments.data.occasions.Occasions.occasion(entry)!!
@@ -308,12 +309,12 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         OutsideCard(
                             occasion.name,
                             formatDate(occasion.first.toString()),
-                            stringResource(if (occasion.repeat) R.string.occasion_each_year else R.string.occasion_once),
+                            stringResource(if (occasion.repeat) Res.string.occasion_each_year else Res.string.occasion_once),
                             stringResource(
                                 when {
-                                    change.after == null -> R.string.thing_deleted
-                                    change.before == null -> R.string.thing_new
-                                    else -> R.string.thing_changed
+                                    change.after == null -> Res.string.thing_deleted
+                                    change.before == null -> Res.string.thing_new
+                                    else -> Res.string.thing_changed
                                 },
                             ),
                             revert,
@@ -321,7 +322,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         )
                     }
                 }
-                section(R.string.section_changed_things, things, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
+                section(Res.string.section_changed_things, things, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
                     val entry = (change.after ?: change.before)!!
                     val revert = { container.scope.launch { container.repository.revertEntry(entry.entryUid) }; Unit }.takeUnless { busy }
                     val device = cc.hyoban.moments.data.things.Things.device(entry)
@@ -334,9 +335,9 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                                 ?: subscription?.let { cc.hyoban.moments.ui.things.priceOf(it.price, it.currency) },
                             stringResource(
                                 when {
-                                    change.after == null -> R.string.thing_deleted
-                                    change.before == null -> R.string.thing_new
-                                    else -> R.string.thing_changed
+                                    change.after == null -> Res.string.thing_deleted
+                                    change.before == null -> Res.string.thing_new
+                                    else -> Res.string.thing_changed
                                 },
                             ),
                             revert,
@@ -344,23 +345,23 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         )
                     }
                 }
-                section(R.string.section_visibility, pending.outside.bills, key = { "bill-${it.uid}" }) { change ->
+                section(Res.string.section_visibility, pending.outside.bills, key = { "bill-${it.uid}" }) { change ->
                     val revert = change.undo()?.let { visibility ->
                         { container.scope.launch { container.ledger.saveTxn(change.txn.copy(visibility = visibility)) }; Unit }
                     }?.takeUnless { busy }
-                    SwipeToRevert(revert) { OutsideCard(change.label, formatDate(change.txn.dateKey), billAmount(change), stringResource(if (change.part == null) R.string.changes_bill_private else R.string.changes_bill_public_note), revert) }
+                    SwipeToRevert(revert) { OutsideCard(change.label, formatDate(change.txn.dateKey), billAmount(change), stringResource(if (change.part == null) Res.string.changes_bill_private else Res.string.changes_bill_public_note), revert) }
                 }
-                section(R.string.changes_tracks, pending.outside.tracks, key = { "track-${it.share.uid}" }) { change ->
+                section(Res.string.changes_tracks, pending.outside.tracks, key = { "track-${it.share.uid}" }) { change ->
                     val span = listOf(change.share.start, change.share.end).map { formatDate(java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString()) }.distinct().joinToString(" – ")
                     OutsideCard(
-                        stringResource(R.string.changes_track_public, span),
+                        stringResource(Res.string.changes_track_public, span),
                         null,
                         null,
-                        if (change.line == null) stringResource(R.string.changes_track_removed) else stringResource(R.string.trip_track_public_note),
+                        if (change.line == null) stringResource(Res.string.changes_track_removed) else stringResource(Res.string.trip_track_public_note),
                         null,
                     )
                 }
-                section(R.string.section_removed, pending.removed, key = { it.uid }) { moment ->
+                section(Res.string.section_removed, pending.removed, key = { it.uid }) { moment ->
                     val revert = { container.revert(moment.uid) }.takeUnless { busy }
                     SwipeToRevert(revert) {
                         ChangeCard(moment, onRevert = revert) {
@@ -378,7 +379,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                             // indicator, as Material 3 has for a wait of more than a few seconds.
                             PublishingIndicator(publishing, Modifier.fillMaxWidth().padding(vertical = Space.xs).testTag("publish_progress"))
                             Text(
-                                stringResource(if (container.canPublish) R.string.note_publish_all else R.string.note_publish_needs_token),
+                                stringResource(if (container.canPublish) Res.string.note_publish_all else Res.string.note_publish_needs_token),
                                 style = AppTheme.typography.caption,
                                 color = tokens.tx2,
                                 modifier = Modifier.padding(horizontal = Space.l),
@@ -394,11 +395,11 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                 side = {
                     Column(Modifier.padding(top = LocalTopClearance.current + Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                         if (pending.size > 0) {
-                            Text(pluralStringResource(R.plurals.count_changes, pending.size, pending.size), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
-                            Text(stringResource(R.string.changes_private_note), style = AppTheme.typography.caption, color = tokens.tx2)
+                            Text(pluralStringResource(Res.plurals.count_changes, pending.size, pending.size), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
+                            Text(stringResource(Res.string.changes_private_note), style = AppTheme.typography.caption, color = tokens.tx2)
                             PublishingIndicator(publishing, Modifier.fillMaxWidth().padding(vertical = Space.xs).testTag("publish_progress"))
                             Text(
-                                stringResource(if (container.canPublish) R.string.note_publish_all else R.string.note_publish_needs_token),
+                                stringResource(if (container.canPublish) Res.string.note_publish_all else Res.string.note_publish_needs_token),
                                 style = AppTheme.typography.caption,
                                 color = tokens.tx3,
                             )
@@ -454,7 +455,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         if (progress != null) {
                             publishingText(LocalContext.current, progress)
                         } else {
-                            stringResource(R.string.label_publish_all)
+                            stringResource(Res.string.label_publish_all)
                         },
                         modifier = Modifier.animateContentSize(motion.fastSpatialSpec()),
                     )
@@ -469,7 +470,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
  * A group of the changes under [title], each of [items] a card of its own that folds away
  * when taken back and opens out when brought back; the caption goes with the last of them.
  */
-private fun <T> LazyListScope.section(title: Int, items: List<T>, key: (T) -> Any, card: @Composable (T) -> Unit) {
+private fun <T> LazyListScope.section(title: StringResource, items: List<T>, key: (T) -> Any, card: @Composable (T) -> Unit) {
     if (items.isEmpty()) return
     item(key = "caption-$title") { Box(Modifier.animateItem()) { Caption(stringResource(title)) } }
     itemsIndexed(items, key = { _, it -> key(it) }) { index, item ->
@@ -516,7 +517,7 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
         modifier = modifier.fillMaxWidth().testTag("changes"),
     ) {
         ListItem(
-            headlineContent = { Text(stringResource(R.string.title_changes)) },
+            headlineContent = { Text(stringResource(Res.string.title_changes)) },
             supportingContent = {
                 val progress = publishing
                 Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
@@ -524,7 +525,7 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
                         if (progress != null) {
                             publishingText(LocalContext.current, progress)
                         } else {
-                            pluralStringResource(R.plurals.count_changes, pending.size, pending.size)
+                            pluralStringResource(Res.plurals.count_changes, pending.size, pending.size)
                         },
                     )
                     // The same linear indicator as the changes' page, as Material 3 has one
@@ -567,7 +568,7 @@ private fun SwipeToRevert(onRevert: (() -> Unit)?, content: @Composable () -> Un
                 horizontalArrangement = Arrangement.spacedBy(Space.s, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(stringResource(R.string.action_revert), style = AppTheme.typography.label, color = tokens.tx)
+                Text(stringResource(Res.string.action_revert), style = AppTheme.typography.label, color = tokens.tx)
                 Icon(AppIcons.Undo, contentDescription = null, tint = tokens.tx)
             }
         },
@@ -619,7 +620,7 @@ private fun ChangeCard(
         }
         Column(verticalArrangement = Arrangement.spacedBy(Space.m)) { content() }
         CardActions(
-            onOpen?.let { open -> { TextButton(onClick = open, modifier = Modifier.testTag("open_${moment.uid}")) { Text(stringResource(R.string.action_view)) } } },
+            onOpen?.let { open -> { TextButton(onClick = open, modifier = Modifier.testTag("open_${moment.uid}")) { Text(stringResource(Res.string.action_view)) } } },
             onRevert?.let { revert -> { RevertButton(revert, Modifier.testTag("revert_${moment.uid}")) } },
         )
     }
@@ -639,7 +640,7 @@ private fun RevertButton(onRevert: () -> Unit, modifier: Modifier = Modifier) {
     TextButton(onClick = onRevert, modifier = modifier) {
         Icon(AppIcons.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
         Spacer(Modifier.size(Space.xs))
-        Text(stringResource(R.string.action_revert))
+        Text(stringResource(Res.string.action_revert))
     }
 }
 
@@ -673,7 +674,7 @@ private fun OutsideCard(title: String, date: String?, figure: String?, note: Str
         )
         if (diffs != null) {
             Column(Modifier.padding(top = Space.s), verticalArrangement = Arrangement.spacedBy(Space.m)) {
-                if (diffs.isEmpty()) Text(stringResource(R.string.note_change_nothing), style = AppTheme.typography.body, color = tokens.tx2)
+                if (diffs.isEmpty()) Text(stringResource(Res.string.note_change_nothing), style = AppTheme.typography.body, color = tokens.tx2)
                 diffs.forEach { diff -> Field(diff.label) { FromTo(diff.from, diff.to, diff.icon) } }
             }
         }
@@ -695,14 +696,14 @@ private fun PlaceChangeCard(change: PlaceChange, onRevert: (() -> Unit)?) {
         HorizontalDivider(color = dividerColor())
         val before = change.before
         val after = change.after
-        if (before.name != after.name) Field(R.string.change_place_name) { FromTo(before.name, after.name, AppIcons.Pen) }
+        if (before.name != after.name) Field(Res.string.change_place_name) { FromTo(before.name, after.name, AppIcons.Pen) }
         if (before.latitude != after.latitude || before.longitude != after.longitude) {
             val metres = distance(Fix(before.latitude, before.longitude), Fix(after.latitude, after.longitude))
-            Field(R.string.change_place_point) { FromTo(null, stringResource(R.string.change_place_moved, formatDistance(metres)), AppIcons.Pin) }
+            Field(Res.string.change_place_point) { FromTo(null, stringResource(Res.string.change_place_moved, formatDistance(metres)), AppIcons.Pin) }
         }
         if (before.kind != after.kind) {
             val kindOf = @Composable { place: Place -> PlaceKind.of(place.kind)?.let { stringResource(it.label) } ?: place.kind }
-            Field(R.string.change_place_kind) { FromTo(kindOf(before), kindOf(after).orEmpty(), AppIcons.Category) }
+            Field(Res.string.change_place_kind) { FromTo(kindOf(before), kindOf(after).orEmpty(), AppIcons.Category) }
         }
         CardActions(onRevert?.let { revert -> { RevertButton(revert, Modifier.testTag("revert_place_${change.id}")) } })
     }
@@ -712,12 +713,12 @@ private fun PlaceChangeCard(change: PlaceChange, onRevert: (() -> Unit)?) {
 @Composable
 private fun MomentIdentity(identity: Identity, modifier: Modifier = Modifier) {
     val moment = identity.moment
-    val where = moment.places.joinToString(stringResource(R.string.separator_list)) { identity.places[it]?.name ?: it }
+    val where = moment.places.joinToString(stringResource(Res.string.separator_list)) { identity.places[it]?.name ?: it }
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
         moment.media.firstOrNull()?.let { Thumbnail(it, identity.urls, size = 48) }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
             Text(
-                moment.text.lineSequence().firstOrNull { it.isNotBlank() } ?: where.ifEmpty { stringResource(R.string.label_no_words) },
+                moment.text.lineSequence().firstOrNull { it.isNotBlank() } ?: where.ifEmpty { stringResource(Res.string.label_no_words) },
                 style = AppTheme.typography.body.strong,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -768,14 +769,14 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
     val after = change.after
     val before = change.before
     if (before == null) {
-        Text(stringResource(R.string.note_change_recreates), style = AppTheme.typography.caption, color = tokens.tx2)
+        Text(stringResource(Res.string.note_change_recreates), style = AppTheme.typography.caption, color = tokens.tx2)
         MomentWhole(after, places, urls)
         return
     }
     var any = false
     if (before.text != after.text) {
         any = true
-        Field(R.string.change_text) { TextChange(before.text, after.text) }
+        Field(Res.string.change_text) { TextChange(before.text, after.text) }
     }
     if (before.media.map { it.uid } != after.media.map { it.uid }) {
         any = true
@@ -783,7 +784,7 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
         val now = after.media.map { it.uid }.toSet()
         val photos = after.media.map { it to (if (it.uid in kept) null else true) } +
             before.media.filter { it.uid !in now }.map { it to false }
-        Field(R.string.change_photos) { PhotoRow(photos, urls) }
+        Field(Res.string.change_photos) { PhotoRow(photos, urls) }
     }
     // The photos kept, marked out of covers or back into them, each set under what became of it.
     val was = before.media.associate { it.uid to it.showcase }
@@ -791,29 +792,29 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
     val unmarked = after.media.filter { it.showcase && was[it.uid] == false }
     if (marked.isNotEmpty() || unmarked.isNotEmpty()) {
         any = true
-        Field(R.string.change_cover) {
+        Field(Res.string.change_cover) {
             Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                if (marked.isNotEmpty()) CoverChange(AppIcons.PhotoOff, R.string.change_cover_off, marked, urls)
-                if (unmarked.isNotEmpty()) CoverChange(AppIcons.Image, R.string.change_cover_on, unmarked, urls)
+                if (marked.isNotEmpty()) CoverChange(AppIcons.PhotoOff, Res.string.change_cover_off, marked, urls)
+                if (unmarked.isNotEmpty()) CoverChange(AppIcons.Image, Res.string.change_cover_on, unmarked, urls)
             }
         }
     }
     if (before.occurredAt != after.occurredAt) {
         any = true
         val whenOf = { moment: MomentRecord -> listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" ") }
-        Field(R.string.change_time) { FromTo(whenOf(before), whenOf(after), AppIcons.Clock) }
+        Field(Res.string.change_time) { FromTo(whenOf(before), whenOf(after), AppIcons.Clock) }
     }
     if (before.places != after.places) {
         any = true
-        val separator = stringResource(R.string.separator_list)
-        val none = stringResource(R.string.place_none)
+        val separator = stringResource(Res.string.separator_list)
+        val none = stringResource(Res.string.place_none)
         val names = { ids: List<String> -> ids.joinToString(separator) { places[it]?.name ?: it }.ifEmpty { none } }
-        Field(R.string.change_place) { FromTo(names(before.places), names(after.places), AppIcons.Pin) }
+        Field(Res.string.change_place) { FromTo(names(before.places), names(after.places), AppIcons.Pin) }
     }
     if (before.food != after.food) {
         any = true
-        val none = stringResource(R.string.food_none)
-        Field(R.string.change_food) {
+        val none = stringResource(Res.string.food_none)
+        Field(Res.string.change_food) {
             val after = foodLine(after.food)
             if (after == null) FromTo(foodLine(before.food), none, AppIcons.Food) else FromTo(foodLine(before.food), after, AppIcons.Food)
         }
@@ -821,20 +822,20 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
     // Public or private, a change of its own: one made private leaves the site.
     if (before.hidden != after.hidden) {
         any = true
-        val public = stringResource(R.string.visibility_public)
-        val private = stringResource(R.string.visibility_private)
-        Field(R.string.section_visibility) {
+        val public = stringResource(Res.string.visibility_public)
+        val private = stringResource(Res.string.visibility_private)
+        Field(Res.string.section_visibility) {
             FromTo(if (before.hidden) private else public, if (after.hidden) private else public, if (after.hidden) AppIcons.EyeOff else AppIcons.Eye)
         }
     }
     if (!any) {
-        Text(stringResource(R.string.note_change_nothing), style = AppTheme.typography.body, color = tokens.tx2)
+        Text(stringResource(Res.string.note_change_nothing), style = AppTheme.typography.body, color = tokens.tx2)
     }
 }
 
 /** Photos whose use as covers changed, under what it changed to. */
 @Composable
-private fun CoverChange(icon: androidx.compose.ui.graphics.vector.ImageVector, label: Int, photos: List<MomentMedia>, urls: MediaUrls) {
+private fun CoverChange(icon: androidx.compose.ui.graphics.vector.ImageVector, label: StringResource, photos: List<MomentMedia>, urls: MediaUrls) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
             Icon(icon, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
@@ -846,7 +847,7 @@ private fun CoverChange(icon: androidx.compose.ui.graphics.vector.ImageVector, l
 
 /** A field that changed, under its name. */
 @Composable
-private fun Field(name: Int, content: @Composable () -> Unit) {
+private fun Field(name: StringResource, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
         Text(stringResource(name), style = AppTheme.typography.caption, color = tokens.tx2)
         content()
@@ -923,7 +924,7 @@ private fun PhotoRow(photos: List<Pair<MomentMedia, Boolean?>>, urls: MediaUrls,
                 if (badges && !media.showcase) {
                     Icon(
                         AppIcons.PhotoOff,
-                        contentDescription = stringResource(R.string.label_photo_utility),
+                        contentDescription = stringResource(Res.string.label_photo_utility),
                         tint = MediaOverlay.content,
                         modifier = Modifier.align(Alignment.BottomStart).padding(Space.xs).size(20.dp).clip(CircleShape)
                             .background(MediaOverlay.control).padding(Space.xs),
@@ -932,7 +933,7 @@ private fun PhotoRow(photos: List<Pair<MomentMedia, Boolean?>>, urls: MediaUrls,
                 if (added != null) {
                     Icon(
                         if (added) AppIcons.Plus else AppIcons.Minus,
-                        contentDescription = stringResource(if (added) R.string.label_photo_added else R.string.label_photo_removed),
+                        contentDescription = stringResource(if (added) Res.string.label_photo_added else Res.string.label_photo_removed),
                         tint = if (added) tokens.onAccent else tokens.bg,
                         modifier = Modifier.align(Alignment.TopEnd).padding(Space.xs).size(20.dp).clip(CircleShape).background(ring).padding(Space.xs),
                     )

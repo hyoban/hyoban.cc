@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.background
@@ -42,8 +44,8 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -51,7 +53,6 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
@@ -238,9 +239,9 @@ fun MediaTile(
     // Read as one thing to open: what it is, where it is among the rest, and what it shows,
     // rather than an unnamed button with "play" or "live" somewhere inside it.
     val kind = stringResource(media.kindLabel())
-    val named = position?.let { (index, count) -> stringResource(R.string.media_position, kind, index + 1, count) } ?: kind
-    val description = listOfNotNull(named, media.alt.ifEmpty { null }).joinToString(stringResource(R.string.separator_clause))
-    val view = stringResource(R.string.action_view)
+    val named = position?.let { (index, count) -> stringResource(Res.string.media_position, kind, index + 1, count) } ?: kind
+    val description = listOfNotNull(named, media.alt.ifEmpty { null }).joinToString(stringResource(Res.string.separator_clause))
+    val view = stringResource(Res.string.action_view)
     Box(
         modifier.then(
             if (onClick != null) {
@@ -267,7 +268,7 @@ fun MediaTile(
 fun PlayBadge(modifier: Modifier = Modifier) {
     Icon(
         AppIcons.Play,
-        contentDescription = stringResource(R.string.action_play),
+        contentDescription = stringResource(Res.string.action_play),
         tint = MediaOverlay.content,
         modifier = modifier.size(44.dp).clip(CircleShape).background(MediaOverlay.control).padding(Space.s),
     )
@@ -282,7 +283,7 @@ fun VideoBadge(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
         Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(12.dp))
-        Text(stringResource(R.string.media_video), color = MediaOverlay.content, style = AppTheme.typography.caption)
+        Text(stringResource(Res.string.media_video), color = MediaOverlay.content, style = AppTheme.typography.caption)
     }
 }
 
@@ -295,7 +296,7 @@ fun LiveBadge(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
         Icon(AppIcons.Live, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(12.dp))
-        Text(stringResource(R.string.label_live), color = MediaOverlay.content, style = AppTheme.typography.caption)
+        Text(stringResource(Res.string.label_live), color = MediaOverlay.content, style = AppTheme.typography.caption)
     }
 }
 
@@ -341,8 +342,8 @@ fun MediaMosaic(
                 Box(Modifier.weight(1f).fillMaxWidth().clip(TILE)) {
                     tile(2, Modifier.fillMaxSize())
                     if (media.size > 3) {
-                        val more = pluralStringResource(R.plurals.media_more, media.size - 3, media.size - 3)
-                        val view = stringResource(R.string.action_view)
+                        val more = pluralStringResource(Res.plurals.media_more, media.size - 3, media.size - 3)
+                        val view = stringResource(Res.string.action_view)
                         Box(
                             Modifier.fillMaxSize().background(MediaOverlay.control)
                                 .then(if (onOpen != null) Modifier.clickable(onClickLabel = view) { onOpen(2) } else Modifier)
@@ -359,10 +360,10 @@ fun MediaMosaic(
 }
 
 /** What the media is called: a photo, a live photo or a video. */
-fun MomentMedia.kindLabel(): Int = when (type) {
-    MediaType.IMAGE -> R.string.media_photo
-    MediaType.LIVE_PHOTO -> R.string.media_live
-    MediaType.VIDEO -> R.string.media_video
+fun MomentMedia.kindLabel(): StringResource = when (type) {
+    MediaType.IMAGE -> Res.string.media_photo
+    MediaType.LIVE_PHOTO -> Res.string.media_live
+    MediaType.VIDEO -> Res.string.media_video
 }
 
 /** Width over height, 4:3 when the record doesn't say. */

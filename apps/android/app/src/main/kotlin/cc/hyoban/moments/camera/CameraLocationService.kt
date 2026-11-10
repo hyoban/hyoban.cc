@@ -1,5 +1,6 @@
 package cc.hyoban.moments.camera
 
+import cc.hyoban.moments.res.*
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
@@ -71,7 +72,7 @@ class CameraLocationService : Service() {
         val locations = getSystemService(LocationManager::class.java)
         val provider = locations?.getProviders(true)?.let { p -> listOf("fused", LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER).firstOrNull { it in p } }
         if (provider == null || !CameraLink.locationAllowed(this)) {
-            CameraStore.update { it.copy(sending = false, problem = R.string.camera_problem_location) }
+            CameraStore.update { it.copy(sending = false, problem = Res.string.camera_problem_location) }
             stopSelf(); return
         }
         locations.requestLocationUpdates(provider, FIX_INTERVAL_MS, 0f, listener, Looper.getMainLooper())
@@ -110,8 +111,8 @@ class CameraLocationService : Service() {
             gatt.write(SonyBle.LOCATION_SERVICE, SonyBle.LOCATION_LOCK, byteArrayOf(1))
         } catch (e: GattException) {
             val problem = when (e.status) {
-                SonyBle.STATUS_LOCATION_OFF -> R.string.camera_problem_link_off
-                SonyBle.STATUS_LOCATION_TAKEN -> R.string.camera_problem_taken
+                SonyBle.STATUS_LOCATION_OFF -> Res.string.camera_problem_link_off
+                SonyBle.STATUS_LOCATION_TAKEN -> Res.string.camera_problem_taken
                 else -> null
             }
             if (problem != null) CameraStore.update { it.copy(sending = false, problem = problem) }
@@ -122,7 +123,7 @@ class CameraLocationService : Service() {
         val stopped = scope.launch {
             // The camera says on DD01 when it stops taking locations (位置信息链接 turned off on it).
             gatt.notifications.first { it.first == SonyBle.LOCATION_STATUS }
-            CameraStore.update { it.copy(problem = R.string.camera_problem_link_off) }
+            CameraStore.update { it.copy(problem = Res.string.camera_problem_link_off) }
             gatt.close()
         }
         try {
@@ -169,14 +170,14 @@ class CameraLocationService : Service() {
 
         private fun notification(context: Context, name: String?): Notification {
             val manager = context.getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(NotificationChannel(CHANNEL, context.getString(R.string.camera_channel), NotificationManager.IMPORTANCE_LOW))
+            manager.createNotificationChannel(NotificationChannel(CHANNEL, textOf(Res.string.camera_channel), NotificationManager.IMPORTANCE_LOW))
             val open = PendingIntent.getActivity(context, 0,
                 Intent(Intent.ACTION_VIEW, "moments://camera".toUri(), context, MainActivity::class.java),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
             return NotificationCompat.Builder(context, CHANNEL)
                 .setSmallIcon(R.drawable.ic_notification_camera)
-                .setContentTitle(context.getString(R.string.camera_sending))
-                .setContentText(name ?: context.getString(R.string.camera_title))
+                .setContentTitle(textOf(Res.string.camera_sending))
+                .setContentText(name ?: textOf(Res.string.camera_title))
                 .setContentIntent(open)
                 .setOngoing(true)
                 .setSilent(true)

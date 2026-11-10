@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.things
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -25,13 +26,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.things.Things
 import cc.hyoban.moments.data.things.Vehicle
 import cc.hyoban.moments.data.things.VehicleMonth
@@ -73,14 +73,14 @@ fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Un
     val shown = index.takeIf { it in months.indices } ?: months.indexOfFirst { it.distanceMeters != null }.coerceAtLeast(0)
     val month = months.getOrNull(shown)
     SubPage(
-        car?.name ?: stringResource(R.string.car_title),
+        car?.name ?: stringResource(Res.string.car_title),
         onBack,
         Modifier.background(AppColors.page),
         titleMenu = titleMenu,
         subtitle = assisted?.let { stats ->
             listOfNotNull(
-                stats.daysOwned?.let { stringResource(R.string.car_days_owned, it.toInt()) },
-                stats.beatsPercent?.let { stringResource(R.string.car_assisted_beats, it.toInt()) },
+                stats.daysOwned?.let { stringResource(Res.string.car_days_owned, it.toInt()) },
+                stats.beatsPercent?.let { stringResource(Res.string.car_assisted_beats, it.toInt()) },
             ).joinToString(APART).ifEmpty { null }
         },
     ) {
@@ -91,16 +91,16 @@ fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Un
             } },
         ) {
                 if (month == null) {
-                    Text(stringResource(R.string.car_empty), color = tokens.tx2, modifier = Modifier.padding(Space.gutter))
+                    Text(stringResource(Res.string.car_empty), color = tokens.tx2, modifier = Modifier.padding(Space.gutter))
                     return@PageColumn
                 }
-                PageCaption(stringResource(R.string.car_daily))
+                PageCaption(stringResource(Res.string.car_daily))
                 DailyBars(month)
                 val monthCharges = charges.filter { it.at.year == month.month.year && it.at.monthValue == month.month.monthValue }
                 if (monthCharges.isNotEmpty()) {
                     PageCaption(
                         listOf(
-                            stringResource(R.string.car_charges),
+                            stringResource(Res.string.car_charges),
                             monthCharges.size.toString(),
                             kwh(monthCharges.sumOf { it.energyWh ?: 0 }),
                         ).joinToString(APART),
@@ -111,7 +111,7 @@ fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Un
                             supportingContent = {
                                 Text(
                                     listOfNotNull(
-                                        stringResource(if (charge.type == "DC") R.string.car_dc else R.string.car_ac),
+                                        stringResource(if (charge.type == "DC") Res.string.car_dc else Res.string.car_ac),
                                         charge.durationMinutes?.let { duration(it) },
                                     ).joinToString(APART),
                                 )
@@ -122,16 +122,16 @@ fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Un
                     }
                 }
                 month.assisted?.let { stats ->
-                    PageCaption(listOfNotNull(stringResource(R.string.car_assisted), stats.distanceMeters?.let(::km)).joinToString(APART))
-                    Line(stringResource(R.string.car_nzp), listOfNotNull(stats.nzpMeters?.let(::km), stats.nzpPercent?.let { "$it%" }).joinToString(APART))
-                    Line(stringResource(R.string.car_acc_lcc), listOfNotNull(stats.accLccMeters?.let(::km), stats.accLccPercent?.let { "$it%" }).joinToString(APART))
+                    PageCaption(listOfNotNull(stringResource(Res.string.car_assisted), stats.distanceMeters?.let(::km)).joinToString(APART))
+                    Line(stringResource(Res.string.car_nzp), listOfNotNull(stats.nzpMeters?.let(::km), stats.nzpPercent?.let { "$it%" }).joinToString(APART))
+                    Line(stringResource(Res.string.car_acc_lcc), listOfNotNull(stats.accLccMeters?.let(::km), stats.accLccPercent?.let { "$it%" }).joinToString(APART))
                     stats.parkingCount?.let { count ->
-                        Line(stringResource(R.string.car_parking), stringResource(R.string.car_parking_value, count.toInt(), (stats.parkingAverageSeconds ?: 0).toInt()))
+                        Line(stringResource(Res.string.car_parking), stringResource(Res.string.car_parking_value, count.toInt(), (stats.parkingAverageSeconds ?: 0).toInt()))
                     }
                 }
                 month.capturedAt?.let { captured ->
                     Text(
-                        stringResource(R.string.car_imported, formatDate(captured.toLocalDate().toString())),
+                        stringResource(Res.string.car_imported, formatDate(captured.toLocalDate().toString())),
                         style = AppTheme.typography.caption,
                         color = tokens.tx3,
                         modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l),
@@ -144,13 +144,13 @@ fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Un
 @Composable
 private fun MonthSwitch(month: VehicleMonth, hasOlder: Boolean, hasNewer: Boolean, onOlder: () -> Unit, onNewer: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(horizontal = Space.gutter), verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(R.string.car_report, month.month.monthValue), style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.weight(1f))
+        Text(stringResource(Res.string.car_report, month.month.monthValue), style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.weight(1f))
         IconButton(onClick = onOlder, enabled = hasOlder, modifier = Modifier.testTag("car_older")) {
-            Icon(AppIcons.ChevronLeft, contentDescription = stringResource(R.string.car_previous_month))
+            Icon(AppIcons.ChevronLeft, contentDescription = stringResource(Res.string.car_previous_month))
         }
         Text("%d.%02d".format(month.month.year, month.month.monthValue), style = AppTheme.typography.caption, color = tokens.tx2)
         IconButton(onClick = onNewer, enabled = hasNewer, modifier = Modifier.testTag("car_newer")) {
-            Icon(AppIcons.ChevronRight, contentDescription = stringResource(R.string.car_next_month))
+            Icon(AppIcons.ChevronRight, contentDescription = stringResource(Res.string.car_next_month))
         }
     }
 }
@@ -159,14 +159,14 @@ private fun MonthSwitch(month: VehicleMonth, hasOlder: Boolean, hasNewer: Boolea
 private fun Report(month: VehicleMonth) {
     Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), verticalArrangement = Arrangement.spacedBy(Space.l)) {
         Figures(
-            Triple(stringResource(R.string.car_distance), month.distanceMeters?.let(::km) ?: "—", month.distanceBeatsPercent?.let { stringResource(R.string.car_beats, it.toInt()) }),
-            Triple(stringResource(R.string.car_energy), month.energyWh?.let(::kwh) ?: "—", null),
-            Triple(stringResource(R.string.car_consumption), month.whPer100Km?.let { "%.1f".format(it / 1000.0) } ?: "—", "kWh/100 km".takeIf { month.whPer100Km != null }),
+            Triple(stringResource(Res.string.car_distance), month.distanceMeters?.let(::km) ?: "—", month.distanceBeatsPercent?.let { stringResource(Res.string.car_beats, it.toInt()) }),
+            Triple(stringResource(Res.string.car_energy), month.energyWh?.let(::kwh) ?: "—", null),
+            Triple(stringResource(Res.string.car_consumption), month.whPer100Km?.let { "%.1f".format(it / 1000.0) } ?: "—", "kWh/100 km".takeIf { month.whPer100Km != null }),
         )
         Figures(
-            Triple(stringResource(R.string.car_trips), month.tripCount?.toString() ?: "—", null),
-            Triple(stringResource(R.string.car_driving), month.durationSeconds?.let { duration(it / 60) } ?: "—", null),
-            Triple(stringResource(R.string.car_longest), month.longestTripMeters?.let(::km) ?: "—", month.longestTripSeconds?.let { duration(it / 60) }),
+            Triple(stringResource(Res.string.car_trips), month.tripCount?.toString() ?: "—", null),
+            Triple(stringResource(Res.string.car_driving), month.durationSeconds?.let { duration(it / 60) } ?: "—", null),
+            Triple(stringResource(Res.string.car_longest), month.longestTripMeters?.let(::km) ?: "—", month.longestTripSeconds?.let { duration(it / 60) }),
         )
     }
 }
@@ -219,5 +219,5 @@ private fun kwh(wh: Long): String = "%.1f kWh".format(wh / 1000.0)
 /** `3 小时 25 分钟`, or `25 分钟`. */
 @Composable
 private fun duration(minutes: Long): String =
-    if (minutes >= 60) stringResource(R.string.footprints_hours_minutes, (minutes / 60).toInt(), (minutes % 60).toInt())
-    else stringResource(R.string.footprints_minutes, minutes.toInt())
+    if (minutes >= 60) stringResource(Res.string.footprints_hours_minutes, (minutes / 60).toInt(), (minutes % 60).toInt())
+    else stringResource(Res.string.footprints_minutes, minutes.toInt())

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.res.*
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,13 +17,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.design.PermissionFact
 import cc.hyoban.moments.ui.design.PermissionSheet
 
@@ -83,7 +83,7 @@ fun rememberPermissionAsk(
         title = words.title,
         body = words.body,
         facts = words.facts,
-        primary = stringResource(if (blocked) R.string.permission_open_settings else R.string.permission_continue),
+        primary = stringResource(if (blocked) Res.string.permission_open_settings else Res.string.permission_continue),
         external = blocked,
         secondary = words.secondary,
         onPrimary = {

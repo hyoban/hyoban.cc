@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.ListItemShapes
@@ -12,9 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ledger.Ledger
@@ -84,8 +84,8 @@ fun momentBillRows(
             colors = segmentColors(),
             leadingContent = { Icon(AppIcons.Plus, contentDescription = null) },
             trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
-            supportingContent = { Text(stringResource(R.string.ledger_from_moment_note)) },
+            supportingContent = { Text(stringResource(Res.string.ledger_from_moment_note)) },
             modifier = Modifier.testTag("moment_new_bill"),
-        ) { Text(stringResource(R.string.ledger_from_moment, money(Math.round(bill.amount * 100), "CNY"))) }
+        ) { Text(stringResource(Res.string.ledger_from_moment, money(Math.round(bill.amount * 100), "CNY"))) }
     }
 }

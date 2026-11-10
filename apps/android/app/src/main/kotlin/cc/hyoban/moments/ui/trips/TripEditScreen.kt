@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.res.*
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -31,10 +32,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.Visibility
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
@@ -56,7 +56,7 @@ import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.SwitchRow
 import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.tokens
-import androidx.compose.ui.res.pluralStringResource
+import org.jetbrains.compose.resources.pluralStringResource
 import java.time.temporal.ChronoUnit
 import cc.hyoban.moments.ui.theme.Space
 import java.time.LocalDate
@@ -121,7 +121,7 @@ fun TripEditScreen(
     val scope = rememberCoroutineScope()
     val valid = title.isNotBlank() && start <= end
     SubPage(
-        stringResource(if (listing) R.string.trip_edit_in_days_title else if (id == null) R.string.trip_new_title else R.string.trip_edit_title),
+        stringResource(if (listing) Res.string.trip_edit_in_days_title else if (id == null) Res.string.trip_new_title else Res.string.trip_edit_title),
         { if (listing) listing = false else onBack() },
         Modifier.background(AppColors.page),
     ) {
@@ -153,15 +153,15 @@ fun TripEditScreen(
                 title,
                 { title = it },
                 Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s).testTag("trip_title"),
-                label = { Text(stringResource(R.string.trip_edit_name)) },
+                label = { Text(stringResource(Res.string.trip_edit_name)) },
                 singleLine = true,
             )
             SegmentedGroup(
-                stringResource(R.string.trip_edit_days),
+                stringResource(Res.string.trip_edit_days),
                 null,
                 listOf(
-                    { shapes -> cc.hyoban.moments.footprints.ActionRow(AppIcons.Calendar, stringResource(R.string.trip_edit_start), shapes, supporting = formatDay(start), tag = "trip_start") { picking = "start" } },
-                    { shapes -> cc.hyoban.moments.footprints.ActionRow(AppIcons.Calendar, stringResource(R.string.trip_edit_end), shapes, supporting = formatDay(end), tag = "trip_end") { picking = "end" } },
+                    { shapes -> cc.hyoban.moments.footprints.ActionRow(AppIcons.Calendar, stringResource(Res.string.trip_edit_start), shapes, supporting = formatDay(start), tag = "trip_start") { picking = "start" } },
+                    { shapes -> cc.hyoban.moments.footprints.ActionRow(AppIcons.Calendar, stringResource(Res.string.trip_edit_end), shapes, supporting = formatDay(end), tag = "trip_end") { picking = "end" } },
                 ),
             )
         }
@@ -169,7 +169,7 @@ fun TripEditScreen(
             // Which records it holds: its days', in by themselves and counted in one row that
             // opens them, then each of the two days either side, out until added.
             if (inDays.isNotEmpty()) SegmentedGroup(
-                stringResource(R.string.trip_edit_members),
+                stringResource(Res.string.trip_edit_members),
                 null,
                 listOf { shapes ->
                     val left = inDays.count { it.uid in exclude }
@@ -179,15 +179,15 @@ fun TripEditScreen(
                         colors = segmentColors(),
                         leadingContent = { Icon(AppIcons.Timeline, contentDescription = null) },
                         supportingContent = {
-                            Text(if (left > 0) pluralStringResource(R.plurals.trip_edit_left_out, left, left) else stringResource(R.string.trip_edit_taken_in))
+                            Text(if (left > 0) pluralStringResource(Res.plurals.trip_edit_left_out, left, left) else stringResource(Res.string.trip_edit_taken_in))
                         },
                         trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp)) },
                         modifier = Modifier.testTag("trip_members"),
-                    ) { Text(pluralStringResource(R.plurals.trip_edit_in_days, inDays.size, inDays.size)) }
+                    ) { Text(pluralStringResource(Res.plurals.trip_edit_in_days, inDays.size, inDays.size)) }
                 },
             )
             if (around.isNotEmpty()) SegmentedGroup(
-                stringResource(R.string.trip_edit_around),
+                stringResource(Res.string.trip_edit_around),
                 null,
                 around.map<cc.hyoban.moments.data.spec.MomentRecord, cc.hyoban.moments.ui.settings.Segment> { moment ->
                     { shapes ->
@@ -196,7 +196,7 @@ fun TripEditScreen(
                         val words = memberTitle(moment)
                         val date = LocalDate.parse(moment.dateKey)
                         val offset = if (date.isBefore(LocalDate.parse(start))) -ChronoUnit.DAYS.between(date, LocalDate.parse(start)) else ChronoUnit.DAYS.between(LocalDate.parse(end), date)
-                        val side = stringResource(when (offset) { -2L -> R.string.trip_edit_two_before; -1L -> R.string.trip_edit_day_before; 1L -> R.string.trip_edit_day_after; else -> R.string.trip_edit_two_after })
+                        val side = stringResource(when (offset) { -2L -> Res.string.trip_edit_two_before; -1L -> Res.string.trip_edit_day_before; 1L -> Res.string.trip_edit_day_after; else -> Res.string.trip_edit_two_after })
                         SegmentedListItem(
                             onClick = toggle,
                             shapes = shapes,
@@ -205,9 +205,9 @@ fun TripEditScreen(
                             trailingContent = {
                                 IconButton(onClick = toggle, modifier = Modifier.testTag("member_${moment.uid}")) {
                                     if (on) {
-                                        Icon(AppIcons.Check, contentDescription = stringResource(R.string.trip_edit_leave_out, words), tint = tokens.accent)
+                                        Icon(AppIcons.Check, contentDescription = stringResource(Res.string.trip_edit_leave_out, words), tint = tokens.accent)
                                     } else {
-                                        Icon(AppIcons.Plus, contentDescription = stringResource(R.string.trip_edit_take_in, words))
+                                        Icon(AppIcons.Plus, contentDescription = stringResource(Res.string.trip_edit_take_in, words))
                                     }
                                 }
                             },
@@ -220,7 +220,7 @@ fun TripEditScreen(
             // Its covers, chosen from its records' photos in the order tapped.
             val photos = members.flatMap { moment -> moment.media.filter { it.type != cc.hyoban.moments.data.spec.MediaType.VIDEO }.map { moment.uid to it } }
             if (photos.isNotEmpty()) {
-                cc.hyoban.moments.ui.settings.Caption(stringResource(R.string.trip_edit_covers))
+                cc.hyoban.moments.ui.settings.Caption(stringResource(Res.string.trip_edit_covers))
                 androidx.compose.foundation.lazy.LazyRow(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Space.gutter),
                     horizontalArrangement = Arrangement.spacedBy(Space.s),
@@ -255,14 +255,14 @@ fun TripEditScreen(
             SegmentedGroup(
                 null,
                 // What reaches the site, said only with an API to publish to.
-                stringResource(if (private) R.string.moment_private_note else R.string.trip_edit_public_note).takeIf { LocalSettings.current.connected },
+                stringResource(if (private) Res.string.moment_private_note else Res.string.trip_edit_public_note).takeIf { LocalSettings.current.connected },
                 listOfNotNull<Segment>(
                     { shapes ->
-                        SwitchRow(private, AppIcons.EyeOff, stringResource(R.string.visibility_private), "trip_private", shapes) { private = !private }
+                        SwitchRow(private, AppIcons.EyeOff, stringResource(Res.string.visibility_private), "trip_private", shapes) { private = !private }
                     },
                     if (showTrack) { shapes ->
-                        SwitchRow(trackPrivate == true, AppIcons.Route, stringResource(R.string.trip_track_private), "trip_track_private", shapes,
-                            supporting = stringResource(R.string.trip_track_private_note)) { trackPrivate = trackPrivate != true }
+                        SwitchRow(trackPrivate == true, AppIcons.Route, stringResource(Res.string.trip_track_private), "trip_track_private", shapes,
+                            supporting = stringResource(Res.string.trip_track_private_note)) { trackPrivate = trackPrivate != true }
                     } else null,
                 ),
             )
@@ -272,7 +272,7 @@ fun TripEditScreen(
             ) {
                 // Only one not yet published goes from here; the site's trips have no deleting yet.
                 if (unpublished) {
-                    TextButton(onClick = { deleting = true }, modifier = Modifier.testTag("trip_delete")) { Text(stringResource(R.string.trip_delete)) }
+                    TextButton(onClick = { deleting = true }, modifier = Modifier.testTag("trip_delete")) { Text(stringResource(Res.string.trip_delete)) }
                 }
                 Button(
                     enabled = valid,
@@ -294,7 +294,7 @@ fun TripEditScreen(
                         }
                     },
                     modifier = Modifier.testTag("trip_save"),
-                ) { Text(stringResource(R.string.action_save)) }
+                ) { Text(stringResource(Res.string.action_save)) }
             }
         }
         // On a phone on its side, its name, days, covers and saving at the start, the records it
@@ -336,7 +336,7 @@ fun TripEditScreen(
     if (deleting && id != null) {
         cc.hyoban.moments.ui.design.AlertDialog(
             onDismissRequest = { deleting = false },
-            title = { Text(stringResource(R.string.trip_delete_confirm)) },
+            title = { Text(stringResource(Res.string.trip_delete_confirm)) },
             confirmButton = {
                 TextButton(onClick = {
                     deleting = false
@@ -344,9 +344,9 @@ fun TripEditScreen(
                         container.repository.revertTrip(id)
                         onDeleted()
                     }
-                }) { Text(stringResource(R.string.action_delete)) }
+                }) { Text(stringResource(Res.string.action_delete)) }
             },
-            dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(Res.string.action_cancel)) } },
         )
     }
     picking?.let { which ->
@@ -362,7 +362,7 @@ fun TripEditScreen(
 @Composable
 private fun memberTitle(moment: cc.hyoban.moments.data.spec.MomentRecord): String =
     moment.text.lines().firstOrNull()?.take(24)?.ifBlank { null }
-        ?: moment.media.size.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.count_photos, it, it) }
+        ?: moment.media.size.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.count_photos, it, it) }
         ?: formatTime(moment.occurredAt) ?: formatDay(moment.dateKey)
 
 /** How wide the trip's name, days and covers stand at the start on a phone on its side, its records beside them. */

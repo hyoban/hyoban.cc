@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.ui.platform.LocalConfiguration
 import cc.hyoban.moments.data.trips.countOf
@@ -58,14 +60,13 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
@@ -270,7 +271,7 @@ fun MomentFeed(
                                 onDay?.let { { it(day) } },
                                 Modifier.animateItem().then(if (day == timeline.first().first) Modifier.pullUp(CAPSULE_SLACK - Space.xs) else Modifier).padding(horizontal = Space.gutter).padding(top = if (headed) 0.dp else (Space.xl - CAPSULE_SLACK).coerceAtLeast(0.dp), bottom = (Space.m - CAPSULE_SLACK).coerceAtLeast(0.dp)),
                                 note = dayNote(day),
-                                description = pluralStringResource(R.plurals.count_moments, dayMoments.size, dayMoments.size),
+                                description = pluralStringResource(Res.plurals.count_moments, dayMoments.size, dayMoments.size),
                             )
                         }
                         val chats = chatItems(dayItems, bills.linked)
@@ -314,7 +315,7 @@ fun MomentFeed(
                     if (dayPills) item(key = "dayhead-$day", contentType = "dayhead") {
                         DayHeader(
                             day,
-                            pluralStringResource(R.plurals.count_moments, dayMoments.size, dayMoments.size),
+                            pluralStringResource(Res.plurals.count_moments, dayMoments.size, dayMoments.size),
                             onDay?.let { { it(day) } },
                             Modifier.animateItem().padding(horizontal = Space.gutter).dayHeaderSpacing(if (headed) Space.l else Space.xl, below = if (dayItems.firstOrNull() is DayItem.Moment) Space.m else 0.dp),
                             note = dayNote(day),
@@ -369,7 +370,7 @@ fun DayHeader(day: String, description: String, onClick: (() -> Unit)?, modifier
         modifier
             .fillMaxWidth()
             .heightIn(min = DAY_HEADER_TARGET)
-            .then(if (onClick != null) Modifier.clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick) else Modifier)
+            .then(if (onClick != null) Modifier.clickable(onClickLabel = stringResource(Res.string.label_whole_day), onClick = onClick) else Modifier)
             .semantics(mergeDescendants = true) { heading(); contentDescription = listOfNotNull(formatDay(day), note, description.takeIf { it.isNotBlank() }).joinToString(" ") }
             .testTag("day_header_$day"),
         contentAlignment = Alignment.BottomStart,
@@ -411,7 +412,7 @@ fun Modifier.dayHeaderSpacing(gap: Dp, below: Dp = Space.m): Modifier {
 /** A day's pill: its label, how many Moments it has when more than one, and what it spent. */
 @Composable
 private fun dayPillText(label: String, count: Int, spent: String? = null): String =
-    listOfNotNull(label, if (count > 1) pluralStringResource(R.plurals.count_moments, count, count) else null, spent).joinToString(" ")
+    listOfNotNull(label, if (count > 1) pluralStringResource(Res.plurals.count_moments, count, count) else null, spent).joinToString(" ")
 
 /**
  * Up by [by], taking that much off its height: the first day's capsule, its touch target's room
@@ -449,7 +450,7 @@ fun <T> CardRow(cards: List<T>, columns: Int, modifier: Modifier = Modifier, car
  * nothing to show, the first sync on a phone with nothing on it yet, a spinner in the middle.
  */
 @Composable
-fun LoadedContent(empty: Boolean, loading: Boolean, message: Int, content: @Composable () -> Unit) {
+fun LoadedContent(empty: Boolean, loading: Boolean, message: StringResource, content: @Composable () -> Unit) {
     val fade = AppTheme.motionScheme.fastEffectsSpec<Float>()
     // Three faces, the spinner, the message and the content, each kept as it was while it fades
     // out: the spinner leaving as the content comes doesn't turn into the message on its way.
@@ -480,7 +481,7 @@ private enum class LoadedFace { Loading, Empty, Content }
 
 /** A tab with nothing to show: [message] alone; scrollable, so it still pulls to refresh. */
 @Composable
-fun EmptyState(message: Int) {
+fun EmptyState(message: StringResource) {
     LazyColumn(Modifier.fillMaxSize()) {
         item {
             Column(
@@ -511,7 +512,7 @@ fun ShowRefreshErrors(container: AppContainer) {
     val resources = LocalResources.current
 
     LaunchedEffect(error) {
-        error?.let { show(resources.getString(R.string.message_refresh_failed, failureReason(context, it))) }
+        error?.let { show(textOf(Res.string.message_refresh_failed, failureReason(context, it))) }
     }
 }
 

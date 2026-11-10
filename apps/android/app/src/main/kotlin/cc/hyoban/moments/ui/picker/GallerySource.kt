@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.local.MotionPhotos
 import cc.hyoban.moments.ui.viewer.LiveMotion
 import cc.hyoban.moments.ui.viewer.LiveMotionState
@@ -40,12 +41,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.PermissionWords
 import cc.hyoban.moments.ui.components.rememberPermissionAsk
 import cc.hyoban.moments.ui.design.AppIcons
@@ -79,12 +79,12 @@ internal fun rememberGallery(deletion: Deletion, onFallback: () -> Unit): Galler
         LocalMedia.permissions + Manifest.permission.ACCESS_MEDIA_LOCATION,
         PermissionWords(
             AppIcons.Photos,
-            stringResource(R.string.permission_gallery_title),
-            stringResource(R.string.permission_gallery_body),
-            stringResource(R.string.permission_gallery_secondary),
+            stringResource(Res.string.permission_gallery_title),
+            stringResource(Res.string.permission_gallery_body),
+            stringResource(Res.string.permission_gallery_secondary),
             listOf(
-                PermissionFact(AppIcons.Image, stringResource(R.string.permission_gallery_local)),
-                PermissionFact(AppIcons.Shield, stringResource(R.string.permission_photo_candidate)),
+                PermissionFact(AppIcons.Image, stringResource(Res.string.permission_gallery_local)),
+                PermissionFact(AppIcons.Shield, stringResource(Res.string.permission_photo_candidate)),
             ),
         ),
         isGranted = { LocalMedia.access(it) != GalleryAccess.NONE },
@@ -113,7 +113,7 @@ internal fun rememberGallery(deletion: Deletion, onFallback: () -> Unit): Galler
             val request = MediaStore.createTrashRequest(context.contentResolver, these.map { it.uri }, true)
             trashed = these
             trash.launch(IntentSenderRequest.Builder(request.intentSender).build())
-        }.onFailure { Toast.makeText(context, R.string.picker_trash_failed, Toast.LENGTH_SHORT).show() }
+        }.onFailure { Toast.makeText(context, textOf(Res.string.picker_trash_failed), Toast.LENGTH_SHORT).show() }
     }
     // Kept for the page's life: the states it reads stay the same objects as their values change.
     return remember {
@@ -136,7 +136,7 @@ internal class GallerySource(
     override fun choices(): List<Choice> {
         val items = items
         val albums = remember(items) { LocalMedia.albums(items) }
-        return listOf(Choice(stringResource(R.string.picker_all), items.size, AppIcons.Photos, "picker_all", all)) +
+        return listOf(Choice(stringResource(Res.string.picker_all), items.size, AppIcons.Photos, "picker_all", all)) +
             albums.map { Choice(it.name, it.count, AppIcons.Folder, "picker_album_${it.id}", GalleryListing(this, it.id, it.name)) }
     }
 
@@ -148,7 +148,7 @@ internal class GallerySource(
     override fun delete(picks: List<Pick>, fromViewer: Boolean) = moveToBin(picks.map { (it as GalleryPick).item })
 
     override val deleteTag = "picker_trash_chosen"
-    override val deleteWords = R.string.picker_trash
+    override val deleteWords = Res.string.picker_trash
 
     @Composable
     override fun Dialogs() {}
@@ -159,7 +159,7 @@ internal data class GalleryListing(val gallery: GallerySource, val albumId: Long
     override val source get() = gallery
 
     @Composable
-    override fun title() = name ?: stringResource(R.string.picker_all)
+    override fun title() = name ?: stringResource(Res.string.picker_all)
 
     @Composable
     override fun picks(): List<Pick> {
@@ -195,12 +195,12 @@ internal data class GalleryPick(val item: LocalItem, override val source: Galler
         if (item.video) return item.duration?.let(::clock)
         val context = LocalContext.current
         val live by produceState(false, key) { value = withContext(Dispatchers.IO) { LocalMedia.isMotion(context, item) } }
-        return if (live) stringResource(R.string.label_live) else null
+        return if (live) stringResource(Res.string.label_live) else null
     }
 
     @Composable
     override fun description() =
-        stringResource(if (item.video) R.string.picker_video_description else R.string.camera_photo_description, item.name.orEmpty())
+        stringResource(if (item.video) Res.string.picker_video_description else Res.string.camera_photo_description, item.name.orEmpty())
 
     @Composable
     override fun place() = item.album
@@ -266,7 +266,7 @@ private fun Limited(count: Int, onChange: () -> Unit) {
             .background(tokens.fill, AppTheme.shapes.medium).padding(start = Space.m),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(stringResource(R.string.picker_limited, count), style = AppTheme.typography.body, color = tokens.tx2, modifier = Modifier.weight(1f))
-        TextButton(onClick = onChange, modifier = Modifier.testTag("picker_limited_change")) { Text(stringResource(R.string.picker_change)) }
+        Text(stringResource(Res.string.picker_limited, count), style = AppTheme.typography.body, color = tokens.tx2, modifier = Modifier.weight(1f))
+        TextButton(onClick = onChange, modifier = Modifier.testTag("picker_limited_change")) { Text(stringResource(Res.string.picker_change)) }
     }
 }

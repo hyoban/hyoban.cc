@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.viewer
 
+import cc.hyoban.moments.res.*
 import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -26,13 +27,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.exifinterface.media.ExifInterface
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.exifTime
@@ -205,7 +205,7 @@ fun PhotoInfoPanel(container: AppContainer, details: PhotoDetails?, modifier: Mo
                 }
             }
             details.fix?.let { fix ->
-                InfoRow(AppIcons.Pin, place ?: stringResource(R.string.photo_info_place), "%.4f, %.4f".format(Locale.ROOT, fix.latitude, fix.longitude)) {
+                InfoRow(AppIcons.Pin, place ?: stringResource(Res.string.photo_info_place), "%.4f, %.4f".format(Locale.ROOT, fix.latitude, fix.longitude)) {
                     PointMap(fix, Modifier.padding(top = Space.s).fillMaxWidth().height(112.dp).background(tokens.fill, AppTheme.shapes.medium))
                 }
             }

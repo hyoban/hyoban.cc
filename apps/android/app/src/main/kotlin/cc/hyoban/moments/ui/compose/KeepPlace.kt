@@ -1,14 +1,14 @@
 package cc.hyoban.moments.ui.compose
 
+import cc.hyoban.moments.res.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.newPlaceId
 import cc.hyoban.moments.data.local.recordTime
@@ -30,7 +30,7 @@ fun KeepPlace(
     onCheckin: (suspend (place: String, name: String) -> Unit)? = null,
     onKept: suspend (String) -> Unit = {},
 ) {
-    val checkinLabel = stringResource(R.string.action_save_checkin)
+    val checkinLabel = stringResource(Res.string.action_save_checkin)
     ChoosePlace(
         container,
         PlaceChoice.New(name, at),

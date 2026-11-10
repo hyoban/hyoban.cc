@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.res.*
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,9 +22,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.TitleMenu
 import cc.hyoban.moments.ui.components.isPhoneLandscape
@@ -122,10 +122,10 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
     val sideways = isPhoneLandscape()
     val count = if (onMap) places?.spots?.size else listing.count(shown)
     val subtitle = listOfNotNull(
-        count?.let { stringResource(R.string.camera_photo_count, it) },
-        chosen.size.takeIf { it > 0 }?.let { stringResource(R.string.picker_chosen_count, it) },
+        count?.let { stringResource(Res.string.camera_photo_count, it) },
+        chosen.size.takeIf { it > 0 }?.let { stringResource(Res.string.picker_chosen_count, it) },
     ).joinToString(" · ").ifEmpty { null }
-    val menu = TitleMenu(stringResource(R.string.picker_switch)) { close ->
+    val menu = TitleMenu(stringResource(Res.string.picker_switch)) { close ->
         sources.forEach { source ->
             source.choices().forEach { choice ->
                 DropdownMenuItem(
@@ -144,7 +144,7 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
         }
     }
     val addButton = @Composable { tag: String, first: () -> Unit ->
-        Button(onClick = { first(); add() }, modifier = Modifier.testTag(tag)) { Text(stringResource(R.string.camera_add, chosen.size)) }
+        Button(onClick = { first(); add() }, modifier = Modifier.testTag(tag)) { Text(stringResource(Res.string.camera_add, chosen.size)) }
     }
     val canAdd = chosen.isNotEmpty() && idle
     // The bar's delete takes what is chosen from the source listed.
@@ -155,10 +155,10 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
         listing.title(), onClose, subtitle = subtitle, close = true, small = onMap, titleMenu = menu,
         actions = {
             if (places != null) IconButton(onClick = { mapped = !mapped }, modifier = Modifier.testTag("picker_map_toggle")) {
-                Icon(if (onMap) AppIcons.Photos else AppIcons.Map, contentDescription = stringResource(if (onMap) R.string.picker_show_grid else R.string.picker_show_map))
+                Icon(if (onMap) AppIcons.Photos else AppIcons.Map, contentDescription = stringResource(if (onMap) Res.string.picker_show_grid else Res.string.picker_show_map))
             }
             if (listedChosen.isNotEmpty() && idle) IconButton(onClick = { listed.delete(listedChosen, fromViewer = false) }, modifier = Modifier.testTag(listed.deleteTag)) {
-                Icon(AppIcons.Trash, contentDescription = stringResource(R.string.camera_delete_chosen, listedChosen.size))
+                Icon(AppIcons.Trash, contentDescription = stringResource(Res.string.camera_delete_chosen, listedChosen.size))
             }
             if (sideways && canAdd) addButton("picker_add") {}
         },
@@ -178,13 +178,13 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
         }
         Column(Modifier.align(Alignment.BottomEnd).fillMaxWidth()) {
             if (deletion.job != null) ProgressBar(
-                stringResource(R.string.camera_deleting_count, (deletion.done + 1).coerceAtMost(deletion.total), deletion.total),
+                stringResource(Res.string.camera_deleting_count, (deletion.done + 1).coerceAtMost(deletion.total), deletion.total),
                 deletion.done.toFloat() / deletion.total.coerceAtLeast(1), null,
             ) { deletion.job?.cancel() }
             else if (adding != null && fetching > 0 || failed) {
                 val n = fetching.coerceAtLeast(1)
-                if (failed) ProgressBar(stringResource(R.string.camera_download_failed), null, null, retry = add) {}
-                else ProgressBar(stringResource(R.string.picker_adding, (done + 1).coerceAtMost(n), n), (done + within) / n, stringResource(R.string.picker_add_note)) { adding?.cancel() }
+                if (failed) ProgressBar(stringResource(Res.string.camera_download_failed), null, null, retry = add) {}
+                else ProgressBar(stringResource(Res.string.picker_adding, (done + 1).coerceAtMost(n), n), (done + within) / n, stringResource(Res.string.picker_add_note)) { adding?.cancel() }
             } else if (!sideways && canAdd) Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(Space.gutter), contentAlignment = Alignment.CenterEnd) {
                 addButton("picker_add") {}
             }
@@ -214,8 +214,8 @@ private fun ProgressBar(words: String, fraction: Float?, note: String?, retry: (
         Column(Modifier.navigationBarsPadding().padding(horizontal = Space.gutter, vertical = Space.m), verticalArrangement = Arrangement.spacedBy(Space.s)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(words, style = AppTheme.typography.body, modifier = Modifier.weight(1f))
-                if (retry != null) TextButton(onClick = retry) { Text(stringResource(R.string.action_retry)) }
-                else TextButton(onClick = onStop, modifier = Modifier.testTag("picker_stop")) { Text(stringResource(R.string.camera_stop)) }
+                if (retry != null) TextButton(onClick = retry) { Text(stringResource(Res.string.action_retry)) }
+                else TextButton(onClick = onStop, modifier = Modifier.testTag("picker_stop")) { Text(stringResource(Res.string.camera_stop)) }
             }
             if (fraction != null) LinearProgressIndicator({ fraction }, color = tokens.tx)
             note?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx2) }

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.widget
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.BuildConfig
 import androidx.core.net.toUri
 import cc.hyoban.moments.ui.theme.Tokens
@@ -100,7 +101,7 @@ class MemoryWidget : GlanceAppWidget() {
     private suspend fun memoryCard(context: Context): Card {
         val container = container(context)
         val memory = memoryFor(shown(container).moments, LocalDate.now()) { container.mediaUrls.still(it, PHOTO_WIDTH) != null }
-            ?: return Card.Empty(context.getString(R.string.widget_memory_empty))
+            ?: return Card.Empty(textOf(Res.string.widget_memory_empty))
         val moment = memory.moment
         val places = container.repository.places.value
         val words = moment.text.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
@@ -108,7 +109,7 @@ class MemoryWidget : GlanceAppWidget() {
 
         return Card.Photo(
             photo = photo(context, container, memory.media),
-            eyebrow = memory.yearsAgo?.let { context.resources.getQuantityString(R.plurals.widget_years_ago, it, it) }
+            eyebrow = memory.yearsAgo?.let { pluralTextOf(Res.plurals.widget_years_ago, it, it) }
                 // With its year always: a memory from this year still says which.
                 ?: formatDate(moment.dateKey, today = LocalDate.MIN),
             title = words ?: where ?: formatDate(moment.dateKey),
@@ -137,12 +138,12 @@ class TripWidget : GlanceAppWidget() {
         val container = container(context)
         val today = LocalDate.now()
         val (moments, trips) = shown(container)
-        val (trip, phase) = tripFor(trips, today) ?: return Card.Empty(context.getString(R.string.empty_trips))
+        val (trip, phase) = tripFor(trips, today) ?: return Card.Empty(textOf(Res.string.empty_trips))
         val total = daysBetween(trip.start, trip.end)
         val when_ = when (phase) {
-            TripPhase.ONGOING -> context.getString(R.string.trip_day, daysBetween(trip.start, today.toString())) + " " +
-                context.resources.getQuantityString(R.plurals.count_days_total, total, total)
-            TripPhase.UPCOMING -> (daysBetween(today.toString(), trip.start) - 1).let { context.resources.getQuantityString(R.plurals.widget_trip_in_days, it, it) }
+            TripPhase.ONGOING -> textOf(Res.string.trip_day, daysBetween(trip.start, today.toString())) + " " +
+                pluralTextOf(Res.plurals.count_days_total, total, total)
+            TripPhase.UPCOMING -> (daysBetween(today.toString(), trip.start) - 1).let { pluralTextOf(Res.plurals.widget_trip_in_days, it, it) }
             TripPhase.PAST -> formatRange(trip.start, trip.end, today)
         }
         val count = countOf(trip, moments, trips)
@@ -152,7 +153,7 @@ class TripWidget : GlanceAppWidget() {
             photo = cover?.let { photo(context, container, it) },
             eyebrow = when_,
             title = trip.title,
-            subtitle = if (count > 0) context.resources.getQuantityString(R.plurals.count_moments, count, count) else null,
+            subtitle = if (count > 0) pluralTextOf(Res.plurals.count_moments, count, count) else null,
             link = "trip/${trip.id}",
         )
     }
