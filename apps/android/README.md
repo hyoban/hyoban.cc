@@ -536,9 +536,12 @@ UbiquitousBear/shutter-bridge's measurements on an a7C II for the Wi‑Fi one.
   over its network's name and password (CC06, CC07); the phone joins that network for the app
   alone with `WifiNetworkSpecifier` (the system asks once), other traffic staying where it was,
   waits for its address (the a7C II hands the phone 192.168.0.1/16 and is itself 192.168.122.1,
-  the network's DHCP server and gateway), and opens PTP/IP (port 15740) to the camera in Sony's contents-transfer mode
-  (`SDIO_OpenSession` 0x9210 with mode 1, its connect handshake, `SetContentsTransferMode`
-  0x9212 off and on), the one session that lists the whole card. Photos come by day, newest
+  the network's DHCP server and gateway), and opens PTP/IP (port 15740) to the camera in Sony's
+  remote control with transfer (`SDIO_OpenSession` 0x9210 with mode 2 and its connect
+  handshake), one session kept until the page closes. The card is its contents
+  (`SDIO_GetContentInfoList` 0x923C): a shot with its files, a JPEG and its RAW, each a content
+  ID that stays its own whatever else is deleted, and a new list comes when the camera says the
+  card changed (event 0xC234), a photo taken or deleted. Photos come by day, newest
   first, with the camera's thumbnails (a JPEG behind four bytes of its length, 3:2 inside a 4:3
   frame, so cropped). A tap opens one full size, swiped through on black: its thumbnail
   enlarged, with how much of the original is down and how fast, until the original, fetched
@@ -547,17 +550,11 @@ UbiquitousBear/shutter-bridge's measurements on an a7C II for the Wi‑Fi one.
   photo viewer does (`ZoomablePhoto`: two fingers or a double tap). The ring in the corner, or
   选中 there, chooses it. JPEG and HEIF can be chosen, RAW only looked at. The camera's Wi‑Fi
   band is the camera's to choose: on 2.4 GHz the a7C II gave about 3 MB/s, on 5 GHz several
-  times that. The viewer's 删除 deletes a photo from the camera's card, after asking: the
-  contents-transfer session calls the card read-only (GetStorageInfo's AccessCapability 1, and
-  DeleteObject breaks it), so the session is closed, one opened in remote control with transfer
-  (`SDIO_OpenSession` mode 2), the photo found among its contents (`SDIO_GetContentInfoList`
-  0x923C) and deleted with them (`SDIO_DeleteContent` 0x9250, the camera confirming with event
-  0xC240), a JPEG's RAW too, and the card's session opened again. The a7C II numbers objects by
-  their place on the card, so the photos after the deleted one move up a handle: the app keeps
-  everything of a photo by its file name, matches the handles again in order after the reopen
-  (reading the card again if their count says a photo was taken meanwhile) and looks a photo's
-  handle up when it asks for it. Chosen
-  ones download in 4 MiB pieces (0x9211, else GetObject), or come from the cache when looked
+  times that. The viewer's 删除 deletes a photo from the camera's card, after asking, in the
+  same session: `SDIO_DeleteContent` (0x9250) takes the content, a JPEG's RAW too, and the
+  camera confirms with event 0xC240. Thumbnails are `SDIO_GetContentCompressedData` (0x923E),
+  and chosen ones download in 4 MiB pieces (`SDIO_GetContentData` 0x923D), or come from the
+  cache when looked
   at, to the gallery's `Pictures/Here/`,
   one already there kept, and join the Moment, its time and place from the photo as any
   other. Leaving the page leaves the camera's network.

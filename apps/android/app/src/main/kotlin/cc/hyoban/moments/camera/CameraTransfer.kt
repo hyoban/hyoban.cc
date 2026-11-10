@@ -28,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -48,11 +49,25 @@ import java.net.Inet4Address
 import java.net.InetAddress
 import java.time.ZoneId
 
+/** A photo on the camera's card: one file of a content, a JPEG, a HEIF or a RAW. */
+data class CameraPhoto(internal val content: Ptp.Content, internal val file: Ptp.ContentFile) {
+    /** Its own whatever else is deleted: the content's slot and ID and the file's. */
+    val key get() = "${content.slot}/${content.id}/${file.id}"
+    val name get() = file.name
+    val size get() = file.size
+    /** When it was taken, by the camera's clock. */
+    val captured get() = content.captured
+    val photo get() = file.photo
+    val raw get() = file.raw
+    val mime get() = file.mime
+}
+
 /**
  * Taking photos off the paired camera, for 从相机: the camera's Wi‑Fi switched on over
  * Bluetooth, the phone joined to it for this alone (its other traffic keeps to the network it
- * was on), a contents-transfer session listing the card, and the chosen photos saved to the
- * gallery's Here album. [close] leaves the camera's network.
+ * was on), one session in remote control with transfer listing the card as contents, the chosen
+ * photos saved to the gallery's Here album, and a photo deleted from the card in place.
+ * [close] leaves the camera's network.
  */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class CameraTransfer(private val context: Context) {
@@ -60,8 +75,8 @@ class CameraTransfer(private val context: Context) {
 
     sealed interface State {
         data class Connecting(val step: Step) : State
-        /** Connected; [photos] fills in newest first as the camera describes them, [total] of them. */
-        data class Ready(val photos: List<Ptp.ObjectInfo>, val total: Int, val listing: Boolean) : State
+        /** Connected; [photos] newest first. */
+        data class Ready(val photos: List<CameraPhoto>) : State
         data class Failed(val reason: Int) : State
     }
 
@@ -71,24 +86,17 @@ class CameraTransfer(private val context: Context) {
     private val connectivity = context.getSystemService(ConnectivityManager::class.java)
     private var callback: ConnectivityManager.NetworkCallback? = null
     private var session: SonySession? = null
-    /** Every object's handle on the card as last listed, folders and what isn't a photo too, in order. */
-    private var objects = listOf<Int>()
-    /** The camera's network and its address there, to open another session on. */
-    private var network: Network? = null
-    private var host: String? = null
-    /** One request to the camera at a time: listing, thumbnails and downloads take turns. */
+    /** One request to the camera at a time: the list, thumbnails, downloads and deletes take turns. */
     private val camera = Mutex()
-    /**
-     * By file name, as everything kept of a photo here is: the a7C II numbers its objects by
-     * their place on the card, so a delete moves the handles of the photos after it.
-     */
+    /** By [CameraPhoto.key], as everything kept of a photo here is. */
     private val thumbs = LruCache<String, Bitmap>(240)
     /** Thumbnails being fetched, so the grid and the viewer asking for one share the request. Touched on the main thread alone. */
     private val fetching = mutableMapOf<String, CompletableDeferred<Bitmap?>>()
     /** Originals downloaded to be looked at, in the app's cache, kept for adding and gone on [close]. */
     private val originals = File(context.cacheDir, "camera")
-    /** What goes on while the page is open whichever photo is shown: the originals being fetched. */
+    /** What goes on while the page is open whichever photo is shown: originals fetched, the list read again. */
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var relisting: Job? = null
 
     suspend fun connect() {
         val paired = CameraStore.load(context) ?: return fail(R.string.camera_failed)
@@ -102,13 +110,14 @@ class CameraTransfer(private val context: Context) {
             val opened = withContext(Dispatchers.IO) {
                 val hosts = hosts(network)
                 val ptp = hosts.firstNotNullOfOrNull { host ->
-                    runCatching { PtpIpConnection.open(network.socketFactory, host, CameraStore.guid(context), Build.MODEL ?: "Here", timeoutMs = HOST_TIMEOUT_MS) }
-                        .getOrNull()?.also { this@CameraTransfer.network = network; this@CameraTransfer.host = host }
+                    runCatching { PtpIpConnection.open(network.socketFactory, host, CameraStore.guid(context), Build.MODEL ?: "Here", timeoutMs = HOST_TIMEOUT_MS) }.getOrNull()
                 } ?: throw IOException("the camera answered at none of $hosts")
                 SonySession(ptp).also { runCatching { it.open() }.onFailure { e -> it.close(); throw e } }
             }
+            // A photo taken (or deleted on the camera) while the page is open shows at once.
+            opened.onContentsChanged = { scope.launch { relist() } }
             session = opened
-            list(opened)
+            relist()
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Log.w(TAG, "camera not connected", e)
@@ -193,44 +202,39 @@ class CameraTransfer(private val context: Context) {
         ).filter { it != own }.map { it.hostAddress!! }.plus(DEFAULT_HOST).distinct()
     }
 
-    private suspend fun list(session: SonySession) {
-        val handles = camera.withLock {
-            withContext(Dispatchers.IO) { session.storages().flatMap { session.handles(it).toList() } }
-        }.sorted().also { objects = it }.reversed()
-        // Kept newest first as they come, each put in its place.
-        val photos = mutableListOf<Ptp.ObjectInfo>()
-        val newestFirst = compareByDescending<Ptp.ObjectInfo> { it.captured }
-        _state.value = State.Ready(emptyList(), handles.size, listing = true)
-        for (handle in handles) {
-            if (!currentCoroutineContext().isActive) return
-            val info = camera.withLock { withContext(Dispatchers.IO) { runCatching { session.info(handle) }.getOrNull() } } ?: continue
-            if (info.folder || !(info.photo || info.raw)) continue
-            val at = photos.binarySearch(info, newestFirst)
-            photos.add(if (at < 0) -at - 1 else at, info)
-            // Shown as they come, a screenful at a time.
-            if (photos.size <= 24 || photos.size % 24 == 0) _state.value = State.Ready(photos.toList(), handles.size, listing = true)
+    /** Reads the card's contents again: every JPEG, HEIF and RAW, newest first. */
+    private suspend fun relist() {
+        relisting?.cancel()
+        relisting = scope.launch {
+            val contents = camera.withLock {
+                val session = session ?: return@withLock null
+                withContext(Dispatchers.IO) { runCatching { session.contents() }.onFailure { Log.w(TAG, "camera: contents not read", it) }.getOrNull() }
+            } ?: return@launch
+            _state.value = State.Ready(
+                contents.flatMap { c -> c.files.filter { it.photo || it.raw }.map { CameraPhoto(c, it) } }
+                    .sortedWith(compareByDescending<CameraPhoto> { it.captured }.thenByDescending { it.name }),
+            )
         }
-        _state.value = State.Ready(photos.toList(), photos.size, listing = false)
+        relisting?.join()
     }
 
-    suspend fun thumbnail(info: Ptp.ObjectInfo): Bitmap? {
-        thumbs.get(info.name)?.let { return it }
-        fetching[info.name]?.let { return it.await() }
+    suspend fun thumbnail(photo: CameraPhoto): Bitmap? {
+        thumbs.get(photo.key)?.let { return it }
+        fetching[photo.key]?.let { return it.await() }
         val result = CompletableDeferred<Bitmap?>()
-        fetching[info.name] = result
+        fetching[photo.key] = result
         try {
             val bytes = camera.withLock {
                 val session = session ?: return@withLock null
-                val now = onCard(info) ?: return@withLock null
-                withContext(Dispatchers.IO) { runCatching { session.thumb(now.handle) }.getOrNull() }
+                withContext(Dispatchers.IO) { runCatching { session.thumb(photo.content, photo.file) }.getOrNull() }
             }
             val bitmap = bytes?.let { withContext(Dispatchers.Default) { BitmapFactory.decodeByteArray(it, 0, it.size)?.let(::withoutBars) } }
-            bitmap?.let { thumbs.put(info.name, it) }
+            bitmap?.let { thumbs.put(photo.key, it) }
             result.complete(bitmap)
             return bitmap
         } finally {
             result.complete(null)
-            fetching.remove(info.name)
+            fetching.remove(photo.key)
         }
     }
 
@@ -245,10 +249,10 @@ class CameraTransfer(private val context: Context) {
         return if (bar > 0 && dark(0) && dark(h - 1)) Bitmap.createBitmap(bitmap, 0, bar, w, inner) else bitmap
     }
 
-    /** [info] as the card has it now, its handle current; null once deleted. Asked under [camera]. */
-    private fun onCard(info: Ptp.ObjectInfo) = (_state.value as? State.Ready)?.photos?.firstOrNull { it.name == info.name }
+    /** Whether [photo] is still on the card (not deleted meanwhile). */
+    private fun onCard(photo: CameraPhoto) = (_state.value as? State.Ready)?.photos?.any { it.key == photo.key } == true
 
-    private fun cached(info: Ptp.ObjectInfo) = File(originals, info.name).takeIf { it.length() == info.size }
+    private fun cached(photo: CameraPhoto) = File(originals, photo.name).takeIf { it.length() == photo.size }
 
     /** A photo's original on its way to the cache: how much of it is down, since when, and the file once it all is. */
     class Original(val size: Long) {
@@ -261,38 +265,38 @@ class CameraTransfer(private val context: Context) {
         val started = SystemClock.elapsedRealtime()
     }
 
-    /** The originals asked for, by name; the viewer reads them as they fill in. */
+    /** The originals asked for, by [CameraPhoto.key]; the viewer reads them as they fill in. */
     private val loading = mutableStateMapOf<String, Original>()
 
-    /** [info]'s original if it has been asked for: under way, down, or failed. */
-    fun originalOf(info: Ptp.ObjectInfo): Original? = loading[info.name]
+    /** [photo]'s original if it has been asked for: under way, down, or failed. */
+    fun originalOf(photo: CameraPhoto): Original? = loading[photo.key]
 
     /**
-     * Fetches the whole of [info] into the app's cache, to look at full size, unless it is there
+     * Fetches the whole of [photo] into the app's cache, to look at full size, unless it is there
      * or on its way: it goes on while the viewer moves past it, and stays until [close]. Asked
      * again after it failed, it tries again.
      */
-    fun loadOriginal(info: Ptp.ObjectInfo) {
-        val known = loading[info.name]
+    fun loadOriginal(photo: CameraPhoto) {
+        val known = loading[photo.key]
         if (known != null && !known.failed) return
         if (session == null) return
-        val original = Original(info.size)
-        loading[info.name] = original
+        val original = Original(photo.size)
+        loading[photo.key] = original
         scope.launch {
             val file = withContext(Dispatchers.IO) {
-                cached(info) ?: camera.withLock {
-                    // Deleted while it waited its turn, or moved by a delete.
-                    val now = onCard(info) ?: return@withLock null
+                cached(photo) ?: camera.withLock {
+                    // Deleted while it waited its turn.
+                    if (!onCard(photo)) return@withLock null
                     val session = session ?: return@withLock null
-                    cached(info) ?: run {
+                    cached(photo) ?: run {
                         originals.mkdirs()
-                        val part = File(originals, info.name + ".part")
+                        val part = File(originals, photo.name + ".part")
                         val job = currentCoroutineContext()
                         try {
                             part.outputStream().buffered(1 shl 20).use { out ->
-                                session.download(now, out, { original.done = it }) { !job.isActive }
+                                session.download(photo.content, photo.file, out, { original.done = it }) { !job.isActive }
                             }
-                            File(originals, info.name).also { part.renameTo(it) }
+                            File(originals, photo.name).also { part.renameTo(it) }
                         } catch (e: Exception) {
                             part.delete()
                             if (e is CancellationException) throw e
@@ -302,7 +306,7 @@ class CameraTransfer(private val context: Context) {
                     }
                 }
             }
-            if (file != null) { original.done = info.size; original.file = file } else original.failed = true
+            if (file != null) { original.done = photo.size; original.file = file } else original.failed = true
         }
     }
 
@@ -311,41 +315,39 @@ class CameraTransfer(private val context: Context) {
      * the camera kept rather than saved twice. [progress] is how many are done and how far into
      * the one under way, 0 to 1.
      */
-    suspend fun download(photos: List<Ptp.ObjectInfo>, progress: (Int, Float) -> Unit): List<Uri> {
-        return photos.mapIndexed { index, info ->
+    suspend fun download(photos: List<CameraPhoto>, progress: (Int, Float) -> Unit): List<Uri> =
+        photos.mapIndexed { index, photo ->
             progress(index, 0f)
             withContext(Dispatchers.IO) {
-                existing(info) ?: cached(info)?.let { local ->
+                existing(photo) ?: cached(photo)?.let { local ->
                     // One already looked at full size is copied from the cache rather than read again.
-                    save(info) { out, _ -> local.inputStream().use { it.copyTo(out) } }
+                    save(photo) { out, _ -> local.inputStream().use { it.copyTo(out) } }
                 } ?: camera.withLock {
                     val session = session ?: throw IOException("not connected")
-                    val now = onCard(info) ?: throw IOException("${info.name} is gone")
-                    save(info) { out, cancelled ->
-                        session.download(now, out, { done -> progress(index, if (info.size > 0) done.toFloat() / info.size else 1f) }, cancelled)
+                    save(photo) { out, cancelled ->
+                        session.download(photo.content, photo.file, out, { done -> progress(index, if (photo.size > 0) done.toFloat() / photo.size else 1f) }, cancelled)
                     }
                 }
             }
         }.also { progress(photos.size, 0f) }
-    }
 
-    private fun existing(info: Ptp.ObjectInfo): Uri? {
+    private fun existing(photo: CameraPhoto): Uri? {
         val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         context.contentResolver.query(
             collection, arrayOf(MediaStore.Images.Media._ID),
             "${MediaStore.Images.Media.DISPLAY_NAME} = ? AND ${MediaStore.Images.Media.SIZE} = ? AND ${MediaStore.Images.Media.RELATIVE_PATH} = ?",
-            arrayOf(info.name, info.size.toString(), ALBUM), null,
+            arrayOf(photo.name, photo.size.toString(), ALBUM), null,
         )?.use { if (it.moveToFirst()) return ContentUris.withAppendedId(collection, it.getLong(0)) }
         return null
     }
 
-    private suspend fun save(info: Ptp.ObjectInfo, write: (OutputStream, cancelled: () -> Boolean) -> Unit): Uri {
+    private suspend fun save(photo: CameraPhoto, write: (OutputStream, cancelled: () -> Boolean) -> Unit): Uri {
         val resolver = context.contentResolver
         val values = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, info.name)
-            put(MediaStore.Images.Media.MIME_TYPE, info.mime)
+            put(MediaStore.Images.Media.DISPLAY_NAME, photo.name)
+            put(MediaStore.Images.Media.MIME_TYPE, photo.mime)
             put(MediaStore.Images.Media.RELATIVE_PATH, ALBUM)
-            info.captured?.let { put(MediaStore.Images.Media.DATE_TAKEN, it.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()) }
+            photo.captured?.let { put(MediaStore.Images.Media.DATE_TAKEN, it.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()) }
             put(MediaStore.Images.Media.IS_PENDING, 1)
         }
         val uri = resolver.insert(MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values)
@@ -361,79 +363,26 @@ class CameraTransfer(private val context: Context) {
         }
     }
 
-    /** A new connection to the camera on its network, once it has let go of the last (it refuses until then). */
-    private fun reconnect(): PtpIpConnection {
-        val network = network ?: throw IOException("not connected")
-        val host = host ?: throw IOException("not connected")
-        var last: Exception? = null
-        repeat(RECONNECT_TRIES) {
-            Thread.sleep(RECONNECT_PAUSE_MS)
-            try { return PtpIpConnection.open(network.socketFactory, host, CameraStore.guid(context), Build.MODEL ?: "Here") }
-            catch (e: Exception) { last = e }
-        }
-        throw last ?: IOException("no connection")
-    }
-
     /**
-     * Deletes [info] from the camera's card, with the files shot with it (its RAW): the camera
-     * deletes only in remote control with transfer, so the card's session is closed, one in that
-     * mode opened for the delete, and the card's opened again. True once deleted, and gone from [state].
+     * Deletes [photo] from the camera's card, with the files shot with it (its RAW). True once
+     * the camera says so; it and they are gone from [state] then.
      */
-    suspend fun delete(info: Ptp.ObjectInfo): Boolean {
-        val (gone, readAgain) = camera.withLock {
+    suspend fun delete(photo: CameraPhoto): Boolean {
+        val gone = camera.withLock {
+            val session = session ?: return@withLock false
             withContext(Dispatchers.IO) {
-                val current = session ?: return@withContext emptySet<String>() to false
-                current.close()
-                session = null
-                val gone = deleteContent(info.name)
-                gone to reopen(gone)
+                runCatching { session.delete(photo.content) }.onFailure { Log.w(TAG, "camera: not deleted", it) }.getOrDefault(false)
             }
         }
-        if (readAgain) session?.let { list(it) }
-        return gone.isNotEmpty()
-    }
-
-    /** Deletes the content [name] is among in a session of its own: the names of its files, gone. */
-    private fun deleteContent(name: String): Set<String> = try {
-        SonySession(reconnect()).use { remote ->
-            remote.openForDelete()
-            val content = remote.contents().firstOrNull { c -> c.files.any { it.substringAfterLast('/') == name } }
-            if (content != null && remote.delete(content)) content.files.map { it.substringAfterLast('/') }.toSet() else emptySet()
+        if (!gone) return false
+        (_state.value as? State.Ready)?.let { ready ->
+            val (deleted, left) = ready.photos.partition { it.content.id == photo.content.id && it.content.slot == photo.content.slot }
+            // Its copies here go too: the original looked at, and what was fetched of it.
+            deleted.forEach { thumbs.remove(it.key); loading.remove(it.key) }
+            withContext(Dispatchers.IO) { deleted.forEach { File(originals, it.name).delete() } }
+            _state.value = State.Ready(left)
         }
-    } catch (e: Exception) {
-        if (e is CancellationException) throw e
-        Log.w(TAG, "camera: not deleted", e)
-        emptySet()
-    }
-
-    /**
-     * Opens the card's session again and moves the photos left to their new handles: the objects
-     * after a deleted one move up a place, so they are matched in order. True when the card holds
-     * more or fewer than that (a photo taken meanwhile) and has to be read again.
-     */
-    private fun reopen(gone: Set<String>): Boolean = try {
-        val reopened = SonySession(reconnect()).also { it.open() }
-        session = reopened
-        val now = reopened.storages().flatMap { reopened.handles(it).toList() }.sorted()
-        val ready = _state.value as? State.Ready
-        // Its copies here go too: the original looked at, and what was fetched of it.
-        gone.forEach { File(originals, it).delete(); loading.remove(it); thumbs.remove(it) }
-        if (ready == null) false else {
-            val deleted = ready.photos.filter { it.name in gone }.map { it.handle }.toSet()
-            val kept = objects.filter { it !in deleted }
-            if (kept.size != now.size) true else {
-                val moved = kept.zip(now).toMap()
-                val left = ready.photos.filter { it.name !in gone }.map { it.copy(handle = moved.getValue(it.handle)) }
-                objects = now
-                _state.value = ready.copy(photos = left, total = ready.total - (ready.photos.size - left.size))
-                false
-            }
-        }
-    } catch (e: Exception) {
-        if (e is CancellationException) throw e
-        Log.w(TAG, "camera: card not opened again", e)
-        fail(R.string.camera_lost)
-        false
+        return true
     }
 
     /** Ends the session and leaves the camera's network, which the camera then puts down. */
@@ -453,8 +402,6 @@ class CameraTransfer(private val context: Context) {
         /** The camera's own address on its network, when its routes don't say. */
         const val DEFAULT_HOST = "192.168.122.1"
         const val HOST_TIMEOUT_MS = 4_000
-        const val RECONNECT_TRIES = 6
-        const val RECONNECT_PAUSE_MS = 1_500L
         const val ADDRESS_WAIT_MS = 8_000L
         const val WIFI_ON_TIMEOUT_MS = 20_000L
         /** With the system's question the first time. */
