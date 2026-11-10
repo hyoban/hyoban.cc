@@ -499,6 +499,30 @@ private const val MAX_ZOOM = 6f
 private const val DOUBLE_TAP_ZOOM = 2.5f
 
 /**
+ * A photo of [shape] (width over height) that zooms as the viewer's do: two fingers or a
+ * double tap, up to the same limit, panning once zoomed and stopping at the photo's edges.
+ * [onZoom] says whether it is zoomed in, for a pager to stop turning meanwhile.
+ */
+@Composable
+fun ZoomablePhoto(shape: Float, onZoom: (Boolean) -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val zoom = rememberZoomableState(ZoomSpec(maxZoomFactor = MAX_ZOOM))
+    val zoomed = (zoom.zoomFraction ?: 0f) > 0.01f
+    LaunchedEffect(zoomed) { onZoom(zoomed) }
+    BoxWithConstraints(
+        modifier.fillMaxSize().zoomable(zoom, onDoubleClick = DoubleClickToZoomListener.cycle(DOUBLE_TAP_ZOOM)),
+        contentAlignment = Alignment.Center,
+    ) {
+        val fitted = remember(shape, constraints) {
+            val width = constraints.maxWidth.toFloat()
+            val height = constraints.maxHeight.toFloat()
+            if (width / height > shape) Size(height * shape, height) else Size(width, width / shape)
+        }
+        SideEffect { zoom.setContentLocation(ZoomableContentLocation.scaledInsideAndCenterAligned(fitted)) }
+        Box(Modifier.aspectRatio(shape)) { content() }
+    }
+}
+
+/**
  * White navigation icons over the black while the viewer is open, and the
  * bars themselves hidden when everything but the photo is; a swipe from the edge shows
  * them for a moment.

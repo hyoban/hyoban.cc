@@ -81,7 +81,7 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   `apps/web/src/data/boundaries/cities.json` shipped as an asset.
 - **我** is one screen: the changes waiting to be published, then three rows, 账本 (with this
   month's spending under its name), 足迹 and 东西, and one group of 设置: 记录项与公开, 家,
-  同步与来源, 导入 and 侧键, each a page with what it is set to under its name. There is no
+  同步与来源, 导入, 相机 and 侧键, each a page with what it is set to under its name. There is no
   settings page over them, and under 我 there is one level of pages: what goes deeper, such as
   a book, the exchange rates or a side key gesture's action, opens over its page as a sheet or
   a dialog. The ledger's own settings (记账) open from the ledger's top bar and the footprints'
@@ -506,6 +506,55 @@ Android 16 a chosen device can be associated through `CompanionDeviceService` to
 It needs precise and background location, and Nearby devices for Bluetooth. Its settings
 are `noBackupFilesDir/connection-reminders.json` and `companion-connections.json`.
 
+## Camera
+
+**相机**, in 我 (`moments://camera`), pairs one camera, a Sony a7C II (ILCE-7CM2), on Android 16
+and later (`CameraLink.supported`, the companion presence the footprints' automation uses too).
+It does two things, both written from Sony's protocol as open projects document it rather than
+from any one app's code: Saschl/alpha-gps (GPL, read for its notes only), rock3r/CameraSync,
+ekutner/camera-gps-link and Asdoos/SonyGpsApp for the Bluetooth side, and
+UbiquitousBear/shutter-bridge's measurements on an a7C II for the Wi‑Fi one.
+
+- **Pairing.** The camera's 智能手机连接 and 位置信息链接设置 on, and its Bluetooth 配对 screen
+  open; 配对相机 asks for Nearby devices, location, Nearby Wi‑Fi and, from Android 17, local
+  network access (without it the system silently drops every packet to the camera), then the system's device
+  list (Sony cameras by their advertisement), and bonds, the camera asking to confirm. The
+  association, the camera's address and 给相机发位置 are `noBackupFilesDir/camera.json`, kept
+  out of the footprints' Bluetooth rules. 取消配对 removes the association and the bond.
+- **Location.** While 给相机发位置 is on, the system tells the app when the camera's Bluetooth is
+  seen, and `CameraLocationService`, a location foreground service with its own notification,
+  connects over GATT, takes the camera's location lock (DD30, DD31), reads whether it wants the
+  time zone (DD21) and writes the phone's fix to DD11 every 10 seconds (91 bytes, or 95 with the
+  zone): WGS-84 degrees × 10⁷ and the fix's UTC time, a fix older than 15 seconds sent again with
+  the time now so the camera keeps its link, none older than 10 minutes. It stops when the
+  camera goes, says why when the camera refuses (位置信息链接 off, or another phone holding the
+  lock) and waits for the camera to come back. The camera's clock follows it only if the camera's
+  own 自动校正时间 and 自动调整区域 are on. Nothing of it leaves the phone but to the camera.
+- **从相机.** With a camera paired, 记录's photo row ends with a third tile that opens 从相机
+  over the Moment. Over Bluetooth the camera is told to put its Wi‑Fi up (CC08, after
+  subscribing to its status notifications, without which it puts it straight down) and hands
+  over its network's name and password (CC06, CC07); the phone joins that network for the app
+  alone with `WifiNetworkSpecifier` (the system asks once), other traffic staying where it was,
+  waits for its address (the a7C II hands the phone 192.168.0.1/16 and is itself 192.168.122.1,
+  the network's DHCP server and gateway), and opens PTP/IP (port 15740) to the camera in Sony's contents-transfer mode
+  (`SDIO_OpenSession` 0x9210 with mode 1, its connect handshake, `SetContentsTransferMode`
+  0x9212 off and on), the one session that lists the whole card. Photos come by day, newest
+  first, with the camera's thumbnails (a JPEG behind four bytes of its length, 3:2 inside a 4:3
+  frame, so cropped). A tap opens one full size, swiped through on black: its thumbnail
+  enlarged, with how much of the original is down and how fast, until the original, fetched
+  for the page it settles on and going on when swiped past, is in the app's cache (emptied
+  when 从相机 opens and closes); one down shows at once when come back to. It zooms as the
+  photo viewer does (`ZoomablePhoto`: two fingers or a double tap). The ring in the corner, or
+  选中 there, chooses it. JPEG and HEIF can be chosen, RAW only looked at. The camera's Wi‑Fi
+  band is the camera's to choose: on 2.4 GHz the a7C II gave about 3 MB/s, on 5 GHz several
+  times that. Nothing is deleted from the camera: in this session the a7C II calls its card
+  read-only without deletion (GetStorageInfo's AccessCapability 1), and a DeleteObject tried on
+  it left the photo and stopped the session answering. Chosen
+  ones download in 4 MiB pieces (0x9211, else GetObject), or come from the cache when looked
+  at, to the gallery's `Pictures/Here/`,
+  one already there kept, and join the Moment, its time and place from the photo as any
+  other. Leaving the page leaves the camera's network.
+
 ## Elsewhere
 
 - **Widgets.** 那年今天 (a Moment from this day in an earlier year) and 旅程 (the trip under
@@ -601,6 +650,7 @@ scripts/ui.py tap tab_map
 - `ledger`, `footprints`, `share`, `accessibility`: the ledger, the footprints, sharing
   and the assistant.
 - `widget`: the home screen widgets (Glance).
+- `camera`: the paired camera, its location over Bluetooth and its photos over PTP/IP.
 - `ui`: the Compose screens; `ui/design` and `ui/theme` the design system.
 
 ## Thanks

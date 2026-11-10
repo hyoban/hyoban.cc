@@ -182,6 +182,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import cc.hyoban.moments.camera.CameraStore
+import cc.hyoban.moments.camera.CameraPhotosScreen
+import cc.hyoban.moments.camera.CameraLink
 
 /**
  * A Moment written on the phone: its words, the photos picked for it, and when and where,
@@ -344,6 +347,21 @@ fun NewMomentScreen(
         runCatching { context.startActivity(Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)) }
             .onFailure { saveError = resources.getString(R.string.error_no_camera) }
     }
+    // 从相机 (39), over this page, while a camera is paired (38).
+    val pairedCamera by CameraStore.camera.collectAsStateWithLifecycle()
+    val cameraSupported = remember { CameraLink.supported(context) }
+    var fromCamera by remember { mutableStateOf(false) }
+    if (fromCamera) androidx.compose.ui.window.Dialog(
+        onDismissRequest = { fromCamera = false },
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
+        cc.hyoban.moments.ui.components.DialogPane {
+            CameraPhotosScreen(onClose = { fromCamera = false }) { added ->
+                photos = (photos + added).distinct().take(MAX_PHOTOS)
+                fromCamera = false
+            }
+        }
+    }
 
     val written = text.isNotBlank() || photos.isNotEmpty()
     val billWritten = withBill && (bill.amount.isNotBlank() || bill.note.isNotBlank())
@@ -473,6 +491,9 @@ fun NewMomentScreen(
                     photos,
                     onAdd = addPhotos,
                     onOpenCamera = openCamera,
+                    onFromCamera = if (pairedCamera != null && cameraSupported) {
+                        { fromCamera = true }
+                    } else null,
                     utility = utility,
                     onToggleUtility = { uri -> utility = if (uri in utility) utility - uri else utility + uri },
                     motion = photos.filter { infos[it]?.motion == true }.toSet(),
@@ -683,8 +704,8 @@ private val WORDS_COLUMN = 360.dp
 
 /**
  * The photos picked, in a row, each with a button to take it out, a motion photo marked
- * as live unless it goes in as a photo, and tiles to pick more or open the camera app to
- * take one.
+ * as live unless it goes in as a photo, and tiles to pick more, open the camera app to
+ * take one, or take them from the paired camera.
  * The first is the Moment's cover, so they are put in order as Material 3 has content
  * reordered: held and then dragged, the one held lifted under the finger and the others
  * stepping aside; a screen reader moves one earlier or later instead.
@@ -694,6 +715,8 @@ private fun PhotoStrip(
     photos: List<Uri>,
     onAdd: () -> Unit,
     onOpenCamera: () -> Unit,
+    /** Opens 从相机, when a camera is paired. */
+    onFromCamera: (() -> Unit)?,
     utility: Set<Uri>,
     onToggleUtility: (Uri) -> Unit,
     motion: Set<Uri>,
@@ -877,6 +900,9 @@ private fun PhotoStrip(
             }
             item(key = CAMERA_KEY) {
                 AddTile(AppIcons.Camera, stringResource(R.string.action_open_camera), onOpenCamera, Modifier.animateItem().testTag("open_camera"))
+            }
+            if (onFromCamera != null) item(key = FROM_CAMERA_KEY) {
+                AddTile(AppIcons.CameraBody, stringResource(R.string.action_from_camera), onFromCamera, Modifier.animateItem().testTag("from_camera"))
             }
         }
     }
@@ -1163,6 +1189,7 @@ private val REMOVE_DOT = 28.dp
 private val UTILITY_DOT = 28.dp
 private const val ADD_KEY = "add"
 private const val CAMERA_KEY = "camera"
+private const val FROM_CAMERA_KEY = "from_camera"
 /** How much a photo held to move grows, and Material 3's dragged state layer over it. */
 private const val LIFTED_SCALE = 1.06f
 private const val DRAGGED_LAYER = 0.16f

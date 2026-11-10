@@ -10,6 +10,8 @@ import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.video.VideoFrameDecoder
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import cc.hyoban.moments.camera.CameraStore
 
 class MomentsApplication : Application(), SingletonImageLoader.Factory {
     lateinit var container: AppContainer
@@ -22,6 +24,8 @@ class MomentsApplication : Application(), SingletonImageLoader.Factory {
             .onFailure { android.util.Log.e("Backup", "Restore failed", it) }
         container = AppContainer(this)
         cc.hyoban.moments.sidekey.SideKeys.initialize(this)
+        // The paired camera, read once for 我, 记录 and the camera's own pages and services.
+        container.scope.launch(Dispatchers.IO) { CameraStore.load(this@MomentsApplication) }
         lastLocales = resources.configuration.locales.toLanguageTags()
     }
 

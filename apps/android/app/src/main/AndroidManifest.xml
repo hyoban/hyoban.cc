@@ -14,6 +14,12 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- 从相机: joining the paired camera's own Wi‑Fi for its photos, never to find where the phone is. -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <!-- Android 17 keeps an app off devices on the local network until it is given this: the camera is one. -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" android:usesPermissionFlags="neverForLocation" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.REQUEST_OBSERVE_COMPANION_DEVICE_PRESENCE" />
     <uses-permission android:name="android.permission.REQUEST_COMPANION_START_FOREGROUND_SERVICES_FROM_BACKGROUND" />
@@ -70,6 +76,7 @@
         <receiver android:name=".footprints.ActivityTransitionReceiver" android:exported="false" />
         <receiver android:name=".update.InstallReceiver" android:exported="false" />
         <service android:name=".footprints.RecordingService" android:foregroundServiceType="location" android:exported="false" />
+        <service android:name=".camera.CameraLocationService" android:foregroundServiceType="location" android:exported="false" />
         <service android:name=".footprints.ConnectionReminderService" android:foregroundServiceType="specialUse" android:exported="false">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="User-enabled monitoring of selected Wi-Fi and paired Bluetooth connections to automatically start or pause local footprint recording. This watcher requests no location fixes; a separate location foreground service records only when enabled by the user or their selected connection rules." />

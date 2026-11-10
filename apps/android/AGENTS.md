@@ -70,6 +70,12 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   idle and within this task's scope), then verify that the processes exited.
   Do not close the user's IDE, stop unrelated processes or interrupt another build.
 
+- 相机 is for the owner's Sony a7C II alone; don't widen it to other bodies without asking.
+  Its protocol code is written from documented facts (README, Camera), never copied from a
+  GPL project such as alpha-gps; permissive ones may be read for reference. Test the camera
+  only when the owner asks, and only the steps named: pairing, the location lock and the
+  camera's Wi‑Fi act on a real camera.
+
 - Programmable actions stay configurable: adding an action must not assign or replace the
   user’s gesture bindings. 侧键 is for the owner's one phone model (`SideKeys.supported`,
   README); don't show it on others or widen the match without asking.
@@ -220,6 +226,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Trip discovery uses general time and location evidence, never exceptions for a particular
   export, city or date. Cover its rules with made-up records; private exports are local
   regression checks, not fixtures.
+- The paired camera is spoken to only over Bluetooth and its own Wi‑Fi (`camera/`): the
+  location goes to the camera alone and its photos come straight to the gallery.
 - Beyond the services named here, the app's one request of its own is for updates: the feed of this
   repository's GitHub releases (not GitHub's API, whose limit without a token a shared proxy uses up) and the APK it installs (`update/`), with nothing of the phone's.
 - No keys in the build: OpenFreeMap tiles drawn by MapLibre, Photon for place names, Valhalla

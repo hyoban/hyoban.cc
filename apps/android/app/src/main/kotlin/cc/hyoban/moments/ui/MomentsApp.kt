@@ -246,6 +246,10 @@ object FootprintSettings
 @Serializable
 object SideKeySettings
 
+/** 相机: the paired a7C II, its location and what it needs. */
+@Serializable
+object CameraSettings
+
 /** Who sees what by default: the Moments about tech, the books' new bills and the public spans of the footprints. */
 @Serializable
 object Items
@@ -765,6 +769,7 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                             sync = { navController.navigate(SyncSettings) },
                                             imports = { navController.navigate(Imports) },
                                             sideKey = { navController.navigate(SideKeySettings) },
+                                            camera = { navController.navigate(CameraSettings) },
                                             things = { navController.navigate(Things()) },
                                             occasions = { navController.navigate(Occasions()) },
                                         ),
@@ -778,6 +783,9 @@ fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
                                 }
                                 screen<SideKeySettings> {
                                     cc.hyoban.moments.sidekey.SideKeySettingsScreen(onBack = back)
+                                }
+                                screen<CameraSettings> {
+                                    cc.hyoban.moments.camera.CameraSettingsScreen(onBack = back)
                                 }
                                 screen<Items> {
                                     cc.hyoban.moments.ui.settings.ItemsScreen(container, onBack = back)
@@ -1220,7 +1228,7 @@ fun pagesOf(route: Any): List<Any> {
 private fun tabOf(route: Any): Any = when (route) {
     Feed, Atlas, Preferences -> route
     is Trip, is TripEdit, is TripPlay, is PlaceMoments -> Atlas
-    SyncSettings, Imports, FootprintSettings, SideKeySettings, Items, Homes, Changes, is Things, is Occasions,
+    SyncSettings, Imports, FootprintSettings, SideKeySettings, CameraSettings, Items, Homes, Changes, is Things, is Occasions,
     is LedgerHome, is LedgerEntry, is LedgerBill, is LedgerAccount, is LedgerAccountEdit, is LedgerSettings, is LedgerList,
     -> Preferences
     else -> Feed
@@ -1275,6 +1283,7 @@ fun routeOf(link: Uri): Any? {
         "items" -> Items
         "homes" -> Homes
         "side-key" -> SideKeySettings
+        "camera" -> CameraSettings
         "devices", "subscriptions", "car" -> Things(link.host)
         "occasions" -> Occasions(id)
         "new" -> NewMoment()
