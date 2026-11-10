@@ -4,7 +4,7 @@ import java.io.Writer
 import kotlinx.serialization.json.*
 
 /** Explicit export only. Streaming and coordinate-free; never appended to the rotating live log. */
-internal fun writeTrackReplayDiagnostics(
+fun writeTrackReplayDiagnostics(
     writer: Writer,
     samples: Sequence<TrackPoint>,
     recordedDay: String?,

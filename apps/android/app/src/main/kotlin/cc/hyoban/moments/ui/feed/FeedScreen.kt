@@ -111,7 +111,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.ui.compose.label
 import cc.hyoban.moments.data.trips.tripOf
@@ -146,7 +146,7 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FeedScreen(
-    container: AppContainer,
+    container: PhoneContainer,
     onMoment: (String) -> Unit,
     onDay: (String) -> Unit,
     onNew: () -> Unit,
@@ -490,7 +490,7 @@ private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false) {
  */
 @Composable
 fun DayScreen(
-    container: AppContainer,
+    container: PhoneContainer,
     date: String,
     onMoment: (String) -> Unit,
     onBack: () -> Unit,
@@ -684,7 +684,7 @@ private class MappedDay(val day: String, val points: List<cc.hyoban.moments.foot
  */
 @Composable
 private fun TimelineDayMap(
-    container: AppContainer,
+    container: PhoneContainer,
     state: androidx.compose.foundation.lazy.LazyListState,
     moments: List<cc.hyoban.moments.data.spec.MomentRecord>,
     places: Map<String, cc.hyoban.moments.data.spec.Place>,
@@ -788,7 +788,7 @@ private class PlaceAction(val icon: androidx.compose.ui.graphics.vector.ImageVec
 /** The Moments at one place, newest first. */
 @Composable
 fun PlaceScreen(
-    container: AppContainer,
+    container: PhoneContainer,
     id: String,
     onMoment: (String) -> Unit,
     onBack: () -> Unit,

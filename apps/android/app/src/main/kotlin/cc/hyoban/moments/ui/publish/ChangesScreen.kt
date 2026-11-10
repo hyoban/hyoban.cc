@@ -95,7 +95,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.spec.entryUid
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
@@ -142,7 +142,7 @@ import cc.hyoban.moments.ui.theme.fill
  * of it, the only way the app writes to the site.
  */
 @Composable
-fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit) {
+fun ChangesScreen(container: PhoneContainer, onMoment: (String) -> Unit, onBack: () -> Unit) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val publishing by container.publishing.collectAsStateWithLifecycle()
@@ -505,7 +505,7 @@ private fun PublishingIndicator(progress: PublishProgress?, modifier: Modifier =
  * saying how many, how far publishing has got while it runs, opening them to look over.
  */
 @Composable
-fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun PendingChangesRow(container: PhoneContainer, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     val publishing by container.publishing.collectAsStateWithLifecycle()
     Surface(

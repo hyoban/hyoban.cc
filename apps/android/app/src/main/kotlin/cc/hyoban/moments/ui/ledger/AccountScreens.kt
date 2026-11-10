@@ -42,7 +42,7 @@ import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.ledger.Account
 import cc.hyoban.moments.ledger.AccountKind
@@ -66,7 +66,7 @@ private fun parseSigned(text: String): Long? {
 
 /** An account: its balance in its currency, a way to set it to what it really is, and its bills. */
 @Composable
-fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
+fun AccountScreen(container: PhoneContainer, id: String, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val account = ledger.accountsById[id] ?: return
     val scope = rememberCoroutineScope()
@@ -141,7 +141,7 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
+fun AccountEditScreen(container: PhoneContainer, id: String?, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val original = id?.let(ledger.accountsById::get)
     val scope = rememberCoroutineScope()

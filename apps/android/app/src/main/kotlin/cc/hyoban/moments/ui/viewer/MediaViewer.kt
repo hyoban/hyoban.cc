@@ -89,7 +89,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.media.Share
 import cc.hyoban.moments.data.spec.MediaType
@@ -130,7 +130,7 @@ import me.saket.telephoto.zoomable.zoomable
  */
 @Composable
 fun MediaViewer(
-    container: AppContainer,
+    container: PhoneContainer,
     uid: String,
     index: Int,
     onBack: () -> Unit,
@@ -328,7 +328,7 @@ fun MediaViewer(
 
 /** The one shown, fetched first when it's the site's, the spinner in its place meanwhile. */
 @Composable
-private fun ShareShown(container: AppContainer, shown: MomentMedia) {
+private fun ShareShown(container: PhoneContainer, shown: MomentMedia) {
     val context = LocalContext.current
     val resources = LocalResources.current
     val show = rememberShowMessage()
@@ -614,7 +614,7 @@ private fun ViewerSystemBars(hidden: Boolean) {
 
 /** What [media] says of itself for the info panel: the record's own, then the EXIF of its file, or of the start of its original. */
 @Composable
-private fun rememberMediaDetails(container: AppContainer, media: MomentMedia): PhotoDetails? {
+private fun rememberMediaDetails(container: PhoneContainer, media: MomentMedia): PhotoDetails? {
     val context = LocalContext.current
     return produceState<PhotoDetails?>(null, media.uid) {
         val published = media.published

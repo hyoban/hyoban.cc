@@ -3,7 +3,7 @@ package cc.hyoban.moments.data.trips
 import java.time.LocalDate
 
 /** Formats qualified destinations; it does not decide which observations establish a visit. */
-internal object TripNames {
+object TripNames {
     /**
      * A trip's name, as one would write it: where it went, the [cities] with the most of its records
      * in the order they were reached. [cities] have already been qualified as destinations,

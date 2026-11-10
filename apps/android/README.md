@@ -661,11 +661,16 @@ Android Studio opens `apps/android` as a project. From a shell, with the Android
 
 The same project holds the start of Here on the Mac, a Compose Desktop app in `:desktop` over
 the code it shares with the phone in `:shared`. For now it is a window with the design system's
-theme and the three sections down a sidebar, in the phone's own words, their pages still to come:
+theme and the three sections down a sidebar, in the phone's own words; it reads the records from
+the API as the phone does, their pages still to come:
 
 ```sh
 ./gradlew :desktop:run
 ```
+
+It keeps its settings, its copy of the records and the token under
+`~/Library/Application Support/Here`, or under `HERE_HOME` when that is set, as a trial run's own
+folder; 我 takes the API and its token, and 时间线 lists what the copy then holds.
 
 The unit tests round-trip every record under the repository's `data/` through the app's
 models, so the app and the site can't drift apart unnoticed, and check the media URLs,
@@ -723,7 +728,8 @@ scripts/ui.py tap tab_map
 ## Layout
 
 The packages below are split between `:app` (the phone's own) and `:shared` (what the Mac app
-runs too: so far `data/spec`, `data/api`, `data/copy`, `data/trips`, `data/things`, and the
+runs too: so far the records and their stores under `data`, the ledger's and the footprints'
+models, the settings and the container every device shares, and the
 design system in `ui/design` and `ui/theme`, and every page's words as Compose resources);
 `:desktop` is the Mac's window.
 

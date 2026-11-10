@@ -31,7 +31,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.things.Things
 import cc.hyoban.moments.data.things.Vehicle
 import cc.hyoban.moments.data.things.VehicleMonth
@@ -61,7 +61,7 @@ const val CAR_ID = "zeekr-007gt"
  * day.
  */
 @Composable
-fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Unit, titleMenu: TitleMenu? = null) {
+fun CarScreen(container: PhoneContainer, onBack: () -> Unit, onDay: (String) -> Unit, titleMenu: TitleMenu? = null) {
     val records by container.repository.records.collectAsStateWithLifecycle()
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val car = remember(entries) { Things.devices(entries.values).firstOrNull { it.id == CAR_ID } }

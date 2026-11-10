@@ -63,8 +63,8 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
     private val prefs = context.getSharedPreferences("nas", Context.MODE_PRIVATE)
 
     /** The UGREENlink ID, or the NAS's own address. */
-    val link = Setting(prefs, "link", "")
-    val user = Setting(prefs, "user", "")
+    val link = Setting(cc.hyoban.moments.SharedPrefs(prefs), "link", "")
+    val user = Setting(cc.hyoban.moments.SharedPrefs(prefs), "user", "")
     val password = Token(File(context.noBackupFilesDir, "nas-password"))
 
     val configured get() = link.isSet && user.isSet && password.isSet

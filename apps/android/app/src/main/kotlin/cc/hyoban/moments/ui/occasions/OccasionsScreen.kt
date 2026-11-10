@@ -29,7 +29,7 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.occasions.Count
 import cc.hyoban.moments.data.occasions.IcuLunar
@@ -102,7 +102,7 @@ fun lunarDayName(day: LunarDay): String {
 
 /** The occasion coming soonest, as the row on 我 says it: what it will be and how far off. */
 @Composable
-fun nextOccasionSummary(container: AppContainer, lunar: Lunar = IcuLunar): String? {
+fun nextOccasionSummary(container: PhoneContainer, lunar: Lunar = IcuLunar): String? {
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val today = LocalDate.now()
     val next = remember(entries) { Occasions.of(entries.values, today, lunar).firstOrNull { it.next(today, lunar) != null } } ?: return null
@@ -112,7 +112,7 @@ fun nextOccasionSummary(container: AppContainer, lunar: Lunar = IcuLunar): Strin
 
 /** 纪念日: the days coming, soonest first, and the days that have passed. */
 @Composable
-fun OccasionsScreen(container: AppContainer, onBack: () -> Unit, open: String? = null, lunar: Lunar = IcuLunar) {
+fun OccasionsScreen(container: PhoneContainer, onBack: () -> Unit, open: String? = null, lunar: Lunar = IcuLunar) {
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val today = LocalDate.now()
     val all = remember(entries) { Occasions.of(entries.values, today, lunar) }
@@ -187,7 +187,7 @@ private fun OccasionRow(title: String, supporting: String, distance: String, uid
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun OccasionSheet(container: AppContainer, occasion: Occasion?, lunar: Lunar, onDismiss: () -> Unit) {
+private fun OccasionSheet(container: PhoneContainer, occasion: Occasion?, lunar: Lunar, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     val today = LocalDate.now()
     var name by rememberSaveable { mutableStateOf(occasion?.name.orEmpty()) }

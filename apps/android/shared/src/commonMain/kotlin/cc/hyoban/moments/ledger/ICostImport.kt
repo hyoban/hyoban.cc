@@ -108,14 +108,14 @@ object ICostImport {
     )
 
     /** `红包[-23.89]/中国银行 储蓄卡4049[-0.01]`: each account and its share. */
-    internal fun parseSplits(text: String): List<Pair<String, Long>> {
+    fun parseSplits(text: String): List<Pair<String, Long>> {
         if (!text.contains('[')) return emptyList()
         return Regex("""([^/\[\]]+)\[([-+]?[\d.,]+)]""").findAll(text).map { match ->
             match.groupValues[1].trim() to (parseCents(match.groupValues[2]) ?: 0)
         }.toList()
     }
 
-    internal fun parseTags(text: String): List<String> =
+    fun parseTags(text: String): List<String> =
         text.split('#', ' ', '　').map { it.trim() }.filter { it.isNotEmpty() }.distinct()
 
     private val TRANSFER_TYPES = mapOf(
@@ -127,7 +127,7 @@ object ICostImport {
     )
 
     /** An account's kind from how it was used and what it is called. */
-    internal fun kindOf(name: String, person: Boolean): AccountKind {
+    fun kindOf(name: String, person: Boolean): AccountKind {
         fun has(vararg words: String) = words.any { name.contains(it, ignoreCase = true) }
         return when {
             person -> AccountKind.PERSON
@@ -391,7 +391,7 @@ object ICostImport {
      * reimbursement for the expense [related] names by id, and says what came of it on top of
      * what [report] counted in the reading.
      */
-    internal fun settle(
+    fun settle(
         existing: Ledger,
         books: Collection<Book>,
         accounts: Collection<Account>,
@@ -456,5 +456,5 @@ object ICostImport {
     /** How far apart an exported bill and one written here can be and still be the same. */
     private const val SAME_BILL_MS = 10 * 60_000L
 
-    internal fun categoryKey(book: String, type: CategoryType, parent: String?, name: String) = "$book\u0000${type.value}\u0000${parent.orEmpty()}\u0000$name"
+    fun categoryKey(book: String, type: CategoryType, parent: String?, name: String) = "$book\u0000${type.value}\u0000${parent.orEmpty()}\u0000$name"
 }

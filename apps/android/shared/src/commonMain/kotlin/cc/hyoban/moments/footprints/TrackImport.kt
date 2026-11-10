@@ -73,7 +73,7 @@ fun readGpx(input: InputStream): List<TrackPoint> {
 data class TrackImportResult(val added: Int, val overlapping: Int, val invalid: Int, val firstDay: String?)
 
 /** Whether a fix read from a file can be kept: the live checks, except its age. */
-internal fun importable(point: TrackPoint, now: Long): Boolean {
+fun importable(point: TrackPoint, now: Long): Boolean {
     val decision = evaluateRawFix(point, now)
     return decision == FixDecision.ACCEPT || decision == FixDecision.STALE
 }

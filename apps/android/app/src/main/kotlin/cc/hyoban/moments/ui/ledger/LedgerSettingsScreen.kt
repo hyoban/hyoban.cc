@@ -58,7 +58,7 @@ import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.design.Button
 import cc.hyoban.moments.ui.design.ModalBottomSheet
 import cc.hyoban.moments.ui.settings.SwitchRow
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.ledger.Book
 import cc.hyoban.moments.ledger.COMMON_CURRENCIES
@@ -94,7 +94,7 @@ import kotlinx.coroutines.withContext
  * trips. Nothing here opens a page further down. [startImport] opens the import's file picker at once.
  */
 @Composable
-fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: Boolean = false) {
+fun LedgerSettingsScreen(container: PhoneContainer, nav: LedgerNav, startImport: Boolean = false) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -276,7 +276,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun BookSheet(container: AppContainer, book: Book, canDelete: Boolean, onDismiss: () -> Unit, onDelete: () -> Unit, onSave: (Book) -> Unit) {
+private fun BookSheet(container: PhoneContainer, book: Book, canDelete: Boolean, onDismiss: () -> Unit, onDelete: () -> Unit, onSave: (Book) -> Unit) {
     var name by remember { mutableStateOf(book.name) }
     var currency by remember { mutableStateOf(book.currency) }
     var archived by remember { mutableStateOf(book.archived) }
@@ -354,7 +354,7 @@ class ICostImporter internal constructor(val pick: () -> Unit, val read: (Uri) -
 private class Found(val merged: ICostImport.Result, val alone: ICostImport.Result)
 
 @Composable
-fun rememberICostImport(container: AppContainer): ICostImporter {
+fun rememberICostImport(container: PhoneContainer): ICostImporter {
     val context = LocalContext.current
     val resources = LocalResources.current
     val scope = rememberCoroutineScope()

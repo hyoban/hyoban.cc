@@ -53,7 +53,7 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.data.trips.stopsOf
@@ -84,7 +84,7 @@ import kotlin.math.roundToInt
  */
 @Composable
 fun TripScreen(
-    container: AppContainer,
+    container: PhoneContainer,
     id: String,
     onMoment: (String) -> Unit,
     onPlay: (String) -> Unit,
@@ -290,7 +290,7 @@ fun TripScreen(
 
 /** Whether the trip's footprints are public, null until it is known. */
 @Composable
-internal fun rememberTrackShared(container: AppContainer, trip: cc.hyoban.moments.data.spec.TripRecord): Boolean? {
+internal fun rememberTrackShared(container: PhoneContainer, trip: cc.hyoban.moments.data.spec.TripRecord): Boolean? {
     val revision by container.footprints.revision.collectAsStateWithLifecycle()
     val collection = remember(trip) { container.repository.tripUid(trip) }
     val shared by androidx.compose.runtime.produceState<Boolean?>(null, revision, collection) {
@@ -305,7 +305,7 @@ internal fun rememberTrackShared(container: AppContainer, trip: cc.hyoban.moment
  * Makes the trip's footprints public or takes them back: on, a span following the trip goes out
  * with the next publish, simplified, and the site draws the trip's route from it; off, it is taken back.
  */
-internal suspend fun setTrackShared(container: AppContainer, trip: cc.hyoban.moments.data.spec.TripRecord, on: Boolean) =
+internal suspend fun setTrackShared(container: PhoneContainer, trip: cc.hyoban.moments.data.spec.TripRecord, on: Boolean) =
     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val collection = container.repository.tripUid(trip)
         val current = container.footprints.shares().firstOrNull { it.collection == collection && !it.removed }
@@ -340,7 +340,7 @@ private fun PrivateTag(text: String, modifier: Modifier = Modifier) {
  */
 @Composable
 private fun TripFacets(
-    container: AppContainer,
+    container: PhoneContainer,
     trip: cc.hyoban.moments.data.spec.TripRecord,
     route: List<cc.hyoban.moments.data.trips.RouteSegment>,
     onBills: () -> Unit,

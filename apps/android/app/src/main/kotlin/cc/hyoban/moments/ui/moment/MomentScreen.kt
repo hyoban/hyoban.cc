@@ -93,7 +93,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.FoodVerdict
 import cc.hyoban.moments.ui.ledger.LedgerEntryArgs
@@ -144,7 +144,7 @@ private val RISE = 32.dp
  */
 @Composable
 fun MomentScreen(
-    container: AppContainer,
+    container: PhoneContainer,
     uid: String,
     onMedia: (String, Int) -> Unit,
     onPlace: (String) -> Unit,

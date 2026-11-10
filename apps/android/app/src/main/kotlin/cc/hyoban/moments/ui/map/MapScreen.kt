@@ -115,7 +115,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.footprints.FootprintsOnMap
 import cc.hyoban.moments.footprints.FootprintsMapState
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
@@ -186,7 +186,7 @@ sealed interface MapFocus {
  */
 @Composable
 fun MapScreen(
-    container: AppContainer,
+    container: PhoneContainer,
     onMoment: (String) -> Unit,
     onPlace: (String) -> Unit,
     onTrip: (String) -> Unit,
@@ -205,7 +205,7 @@ fun MapScreen(
 
 @Composable
 private fun MapContent(
-    container: AppContainer,
+    container: PhoneContainer,
     onMoment: (String) -> Unit,
     onPlace: (String) -> Unit,
     onTrip: (String) -> Unit,

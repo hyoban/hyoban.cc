@@ -109,7 +109,7 @@ object Xlsx {
     }
 
     /** `C12` as its column, from 0. */
-    internal fun columnOf(reference: String): Int {
+    fun columnOf(reference: String): Int {
         var column = 0
         for (char in reference) {
             if (!char.isLetter()) break

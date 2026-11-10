@@ -15,36 +15,6 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.util.UUID
 
-data class RecordingState(val daily: Boolean = false, val session: String? = null, val paused: Boolean = false) {
-    val requested get() = daily || session != null
-    val recording get() = requested && !paused
-}
-
-data class TrackSession(val id: String, val started: Long, val ended: Long?)
-data class TrackSelection(val day: String? = null, val session: String? = null, val from: Long? = null, val to: Long? = null)
-
-/**
- * A span of the footprints made public: its line, simplified to [simplify] metres, goes out with
- * 全部发布到网站; one following a trip ([collection], its uid) moves with the trip's days.
- * [removed] keeps one taken back until the site lets it go; [published] is what last went.
- */
-data class TrackShare(
-    val uid: String,
-    val start: Long,
-    val end: Long,
-    val collection: String? = null,
-    val simplify: Double = 30.0,
-    val removed: Boolean = false,
-    val published: String? = null,
-)
-/** A Play services activity (`DetectedActivity`) entered or left at [time]. */
-data class ActivityChange(val time: Long, val activity: Int, val entering: Boolean)
-
-/** A recording command (daily_on, pause, …, with who asked), a rest, a wake or a lost sky. */
-data class TrackEvent(val time: Long, val kind: String, val detail: String?)
-
-data class FootprintHistory(val days: List<String>, val sessions: List<TrackSession>)
-
 /**
  * All calls are made on IO. One lock serializes service writes, UI edits and streaming export.
  * The points table is the original sample ledger; the displayed route is a bounded streaming view.
@@ -274,11 +244,15 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         return FootprintHistory(days, sessions)
     }
 
-    private fun where(selection: TrackSelection): Pair<String, Array<String>> = when {
-        selection.session != null -> "session=?" to arrayOf(selection.session)
-        selection.day != null -> "day=?" to arrayOf(selection.day)
-        selection.from != null && selection.to != null -> "time BETWEEN ? AND ?" to arrayOf(selection.from.toString(), selection.to.toString())
-        else -> "1=1" to emptyArray()
+    private fun where(selection: TrackSelection): Pair<String, Array<String>> {
+        val session = selection.session
+        val day = selection.day
+        return when {
+            session != null -> "session=?" to arrayOf(session)
+            day != null -> "day=?" to arrayOf(day)
+            selection.from != null && selection.to != null -> "time BETWEEN ? AND ?" to arrayOf(selection.from.toString(), selection.to.toString())
+            else -> "1=1" to emptyArray()
+        }
     }
 
     /** Every public span, those taken back and not yet let go by the site among them. */

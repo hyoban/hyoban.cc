@@ -51,7 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.footprints.BackgroundAllowances
 import cc.hyoban.moments.Setting
 import cc.hyoban.moments.footprints.RecordingService
@@ -91,7 +91,7 @@ private enum class Step { Welcome, Start, Connect, Import, Footprints, Backgroun
  * there and only when turned on. Every step can be left undone; [onDone] when through.
  */
 @Composable
-fun OnboardingScreen(container: AppContainer, onDone: () -> Unit) {
+fun OnboardingScreen(container: PhoneContainer, onDone: () -> Unit) {
     var step by rememberSaveable { mutableStateOf(Step.Welcome) }
     val back = {
         step = when (step) {
@@ -233,7 +233,7 @@ private fun Start(onBack: () -> Unit, onSite: () -> Unit, onImport: () -> Unit, 
 }
 
 @Composable
-private fun Connect(container: AppContainer, onBack: () -> Unit, onNext: () -> Unit) {
+private fun Connect(container: PhoneContainer, onBack: () -> Unit, onNext: () -> Unit) {
     val settings = container.settings
     var url by rememberSaveable { mutableStateOf(settings.apiUrl.value) }
     var token by rememberSaveable { mutableStateOf("") }
@@ -306,7 +306,7 @@ private fun Connect(container: AppContainer, onBack: () -> Unit, onNext: () -> U
 }
 
 @Composable
-private fun Footprints(container: AppContainer, onBack: () -> Unit, onBackground: () -> Unit, onDone: () -> Unit) {
+private fun Footprints(container: PhoneContainer, onBack: () -> Unit, onBackground: () -> Unit, onDone: () -> Unit) {
     val context = LocalContext.current
     val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         if (!RecordingService.hasPreciseLocation(context)) return@rememberLauncherForActivityResult onDone()

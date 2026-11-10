@@ -70,7 +70,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.ledger.AccountKind
 import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.netAssetsByMonth
@@ -108,7 +108,7 @@ private enum class LedgerTab(val label: StringResource, val tag: String) {
  * Bills are written from the timeline's 记录, where they show too.
  */
 @Composable
-fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
+fun LedgerScreen(container: PhoneContainer, nav: LedgerNav, startTab: Int = 0) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val loaded by container.ledger.loaded.collectAsStateWithLifecycle()
     val book = ledger.book
@@ -216,7 +216,7 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
 
 /** The books to switch between, from the title; they are managed in 记账, from the bar's settings. */
 @Composable
-private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, close: () -> Unit) {
+private fun ColumnScope.BookMenuItems(container: PhoneContainer, ledger: Ledger, close: () -> Unit) {
     val scope = rememberCoroutineScope()
     DropdownMenuItem(
         text = { Text(stringResource(Res.string.ledger_all_books)) },

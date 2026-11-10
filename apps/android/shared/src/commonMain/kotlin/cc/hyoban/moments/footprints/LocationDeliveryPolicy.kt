@@ -1,7 +1,7 @@
 package cc.hyoban.moments.footprints
 
 /** Sampling and delivery clocks are separate: a valid batch contains intentionally older fixes. */
-internal object LocationDeliveryPolicy {
+object LocationDeliveryPolicy {
     // At 15 s the GNSS chip powered down between fixes: few satellites, no speed, positions stuck
     // or jumping while walking. 5 s keeps it tracking; rest still turns GPS off when stationary.
     const val DAILY_INTERVAL_MS = 5_000L
@@ -16,7 +16,7 @@ internal object LocationDeliveryPolicy {
 }
 
 /** Delivery health is independent of accuracy. A weak fix still proves the provider is responding. */
-internal class BatchDeliveryHealth {
+class BatchDeliveryHealth {
     private var started = 0L
     private var lastFreshDelivery = 0L
     private var failures = 0

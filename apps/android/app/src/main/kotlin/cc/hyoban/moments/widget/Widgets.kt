@@ -55,7 +55,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.LinkActivity
 import cc.hyoban.moments.MomentsApplication
 import cc.hyoban.moments.R
@@ -354,7 +354,7 @@ internal fun open(link: String) = actionStartActivity(
 )
 
 /** The app's container, its copy of the records read before anything is picked from it. */
-internal suspend fun container(context: Context): AppContainer =
+internal suspend fun container(context: Context): PhoneContainer =
     (context.applicationContext as MomentsApplication).container.also { it.repository.loaded.first { loaded -> loaded } }
 
 /**
@@ -375,13 +375,13 @@ private fun redrawn(context: Context, first: Card, card: suspend (Context) -> Ca
 }
 
 /** The Moments and trips the widgets may show: all of them, or in demo mode only the public's. */
-internal fun shown(container: AppContainer): Shown {
+internal fun shown(container: PhoneContainer): Shown {
     val repository = container.repository
     return shown(repository.moments.value, repository.trips.value, container.settings.demo, repository::isTripPrivate)
 }
 
 /** A media item's still, from Coil's cache when it has it, small enough for a widget to carry. */
-private suspend fun photo(context: Context, container: AppContainer, media: MomentMedia): Bitmap? {
+private suspend fun photo(context: Context, container: PhoneContainer, media: MomentMedia): Bitmap? {
     val url = container.mediaUrls.still(media, PHOTO_WIDTH) ?: return null
     val request = ImageRequest.Builder(context).data(url).size(PHOTO_WIDTH).allowHardware(false).build()
     return (SingletonImageLoader.get(context).execute(request) as? SuccessResult)?.image?.toBitmap()

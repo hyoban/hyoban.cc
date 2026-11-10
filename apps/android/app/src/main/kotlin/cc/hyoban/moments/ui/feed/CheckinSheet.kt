@@ -14,7 +14,7 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.spec.Visibility
 import cc.hyoban.moments.data.things.checkinOf
@@ -42,7 +42,7 @@ val LocalCheckinNav = staticCompositionLocalOf<((String) -> Unit)?> { null }
  * back takes the change away again.
  */
 @Composable
-fun CheckinSheet(container: AppContainer, uid: String, onDismiss: () -> Unit) {
+fun CheckinSheet(container: PhoneContainer, uid: String, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val entry = entries[uid]

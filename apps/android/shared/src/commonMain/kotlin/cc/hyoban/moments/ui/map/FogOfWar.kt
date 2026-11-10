@@ -37,7 +37,7 @@ class FogRegion(
     val name: String? = null,
 ) {
     /** West, south, east and north. */
-    internal val bounds: DoubleArray = DoubleArray(4).apply {
+    val bounds: DoubleArray = DoubleArray(4).apply {
         this[0] = Double.POSITIVE_INFINITY
         this[1] = Double.POSITIVE_INFINITY
         this[2] = Double.NEGATIVE_INFINITY

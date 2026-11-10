@@ -67,7 +67,7 @@ fun evaluateRawFix(point: TrackPoint, now: Long): FixDecision {
 fun connected(a: TrackPoint, b: TrackPoint): Boolean = trackBreakReason(a, b) == null
 
 /** Shared by rendering, totals, GPX and the on-demand diagnostic replay. */
-internal fun trackBreakReason(a: TrackPoint, b: TrackPoint): String? = when {
+fun trackBreakReason(a: TrackPoint, b: TrackPoint): String? = when {
     a.segment != b.segment -> "segment_change"
     b.time <= a.time -> "out_of_order"
     b.time - a.time > TRACK_GAP_MS -> "time_gap"
@@ -77,12 +77,12 @@ internal fun trackBreakReason(a: TrackPoint, b: TrackPoint): String? = when {
 }
 
 /** Speed uncertainty is evidence, not an exact speed limit. Missing speed permits ordinary transport. */
-internal fun plausibleMovement(a: TrackPoint, b: TrackPoint): Boolean {
+fun plausibleMovement(a: TrackPoint, b: TrackPoint): Boolean {
     if (b.time <= a.time) return false
     return distanceMetres(a, b) <= movementAllowanceMetres(a, b)
 }
 
-internal fun movementAllowanceMetres(a: TrackPoint, b: TrackPoint): Double {
+fun movementAllowanceMetres(a: TrackPoint, b: TrackPoint): Double {
     val seconds = (b.time - a.time) / 1000.0
     val speeds = listOf(a, b).mapNotNull { point ->
         val speed = point.speed

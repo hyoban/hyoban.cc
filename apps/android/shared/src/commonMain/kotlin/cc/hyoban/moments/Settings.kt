@@ -1,11 +1,8 @@
 package cc.hyoban.moments
 
-import android.content.Context
-import android.content.SharedPreferences
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.core.content.edit
 import cc.hyoban.moments.data.spec.Module
 import java.io.File
 
@@ -13,7 +10,7 @@ import java.io.File
  * An address the app reaches, set on the settings page, or the build's own until it is; one
  * the build has none of is empty until set. Its value is Compose state, so what reads it while drawing draws again when it changes.
  */
-class Setting internal constructor(private val prefs: SharedPreferences, private val key: String, val default: String) {
+class Setting(private val prefs: Prefs, private val key: String, val default: String) {
     var value: String by mutableStateOf(prefs.getString(key, null) ?: default)
         private set
 
@@ -36,7 +33,7 @@ class Setting internal constructor(private val prefs: SharedPreferences, private
  * The owner's token for the API's writes, in a file of the app's that backups leave out,
  * so it stays on this phone. Compose state, as [Setting]'s value is; empty when there is none.
  */
-class Token internal constructor(private val file: File) {
+class Token(private val file: File) {
     var value: String by mutableStateOf(runCatching { file.readText().trim() }.getOrDefault(""))
         private set
 
@@ -52,15 +49,17 @@ class Token internal constructor(private val file: File) {
 const val CHINA_PLACES_AMAP = "amap"
 const val CHINA_PLACES_TENCENT = "tencent"
 
-/** Where the app reads from, kept on the phone. */
-class Settings(context: Context) {
-    private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+/**
+ * Where the app reads from, kept on the device: the small settings in [prefs], and what must not
+ * leave it (the token, the keys) each in a file of its own under [secrets], which backups leave out.
+ */
+class Settings(private val prefs: Prefs, secrets: File) {
 
     /** The API the records and the routes come from; none until set, the app then the phone's alone. */
     val apiUrl = Setting(prefs, "api_url", "")
 
     /** The owner's token, with which the app publishes, changes and deletes the site's Moments. */
-    val apiToken = Token(File(context.noBackupFilesDir, "api-token"))
+    val apiToken = Token(File(secrets, "api-token"))
 
     /** The origin the published photos and videos are served from, as the API last said it; none until it has. */
     val assetOrigin = Setting(prefs, "asset_origin", "")
@@ -69,10 +68,10 @@ class Settings(context: Context) {
     val connected get() = apiUrl.isSet && apiToken.isSet
 
     /** The owner's own Tencent Location Service key, with which the place picker asks Tencent what is around in China; none, it asks Photon. */
-    val tencentMapKey = Token(File(context.noBackupFilesDir, "tencent-map-key"))
+    val tencentMapKey = Token(File(secrets, "tencent-map-key"))
 
     /** The owner's own AMap Web Service key, with which the place picker asks AMap what is around in China. */
-    val amapKey = Token(File(context.noBackupFilesDir, "amap-key"))
+    val amapKey = Token(File(secrets, "amap-key"))
 
     /** Which of the two the place picker asks first in China when both keys are set, `amap` or `tencent`; the other answers when it can't. */
     val chinaPlaces = Setting(prefs, "china_places", CHINA_PLACES_AMAP)

@@ -8,7 +8,7 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.newPlaceId
 import cc.hyoban.moments.data.local.recordTime
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun KeepPlace(
-    container: AppContainer,
+    container: PhoneContainer,
     at: Fix,
     name: String,
     onDismiss: () -> Unit,
@@ -48,7 +48,7 @@ fun KeepPlace(
  */
 @Composable
 internal fun ChoosePlace(
-    container: AppContainer,
+    container: PhoneContainer,
     current: PlaceChoice,
     fix: Fix?,
     onDismiss: () -> Unit,

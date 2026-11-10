@@ -19,6 +19,12 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   the Android-only libraries (MapLibre's Android SDK, Media3, Glance, WorkManager, Capsule).
   Where the platforms differ, `commonMain` declares it `expect` and `androidMain` and
   `jvmMain` each give theirs, the phone's being what it already did.
+- `AppContainer` in `:shared` is what every device shares (the settings, the records, their copy
+  and publishing); `PhoneContainer` in `:app` and `DesktopContainer` in `:desktop` are it with
+  what the device has. A screen takes `AppContainer` unless it needs the phone's own (the ledger's
+  and the footprints' stores, the widgets). Where the base needs something of the device, it is an
+  abstract or open member the device's container gives, not a `Context`. Settings are kept
+  through `Prefs`: the phone's shared preferences, a JSON file on the Mac.
 - A declaration `:app` uses from `:shared` is public, and its tests stay in `:app` until they
   move too. A string resource is held as a `StringResource`, never an `Int`. The generators write into `:shared` (`Tokens.kt`, `AppIcons.kt`, `CopyTables.kt`,
   `Modules.kt`); the paths below are packages, in whichever module holds them.

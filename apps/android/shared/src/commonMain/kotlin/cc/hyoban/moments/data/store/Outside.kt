@@ -1,14 +1,12 @@
 package cc.hyoban.moments.data.store
 
 import cc.hyoban.moments.data.spec.Entries
-import cc.hyoban.moments.footprints.FootprintStore
 import cc.hyoban.moments.footprints.TrackPoint
 import cc.hyoban.moments.footprints.TrackSelection
 import cc.hyoban.moments.footprints.TrackShare
 import cc.hyoban.moments.footprints.connected
 import cc.hyoban.moments.footprints.distanceMetres
 import cc.hyoban.moments.ledger.Ledger
-import cc.hyoban.moments.ledger.LedgerStore
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
 import kotlinx.serialization.json.JsonArray
@@ -49,16 +47,6 @@ interface OutsideChanges {
 
     /** After a publish went through: [sent] is the site's now. */
     suspend fun published(sent: Outside)
-}
-
-/** The ledger's and the footprints' changes to publish. */
-class PhoneOutside(private val ledger: LedgerStore, private val footprints: FootprintStore) : OutsideChanges {
-    override fun pending(): Outside = Outside(ledger.ledger.value.pendingBills(), footprints.pendingTracks())
-
-    override suspend fun published(sent: Outside) {
-        ledger.markPublished(sent.bills.associate { it.txn.id to it.part?.toString() })
-        footprints.markSharesPublished(sent.tracks.associate { it.share.uid to it.line?.toString() })
-    }
 }
 
 /** Whether a bill is public: its own say, else its book's, else private. */
@@ -103,12 +91,6 @@ fun BillChange.entry(): JsonObject = Entries.bill(
     updatedAt = Instant.ofEpochMilli(txn.updatedAt).atOffset(ZoneOffset.UTC).format(ISO),
 )
 
-/** Every public span whose line isn't what was last published, or taken back. */
-fun FootprintStore.pendingTracks(): List<TrackChange> = shares().mapNotNull { share ->
-    val line = if (share.removed) null else publicLine(share, points(TrackSelection(from = share.start, to = share.end)))
-    if (line?.toString() == share.published || (line == null && share.published == null)) null else TrackChange(share, line)
-}
-
 /**
  * A span's public line: a segment for each unbroken stretch, each simplified to the span's
  * metres, `[longitude, latitude, unix seconds]` a point, and how far it went.
@@ -141,7 +123,7 @@ fun publicLine(share: TrackShare, points: List<TrackPoint>): JsonObject? {
 }
 
 /** Douglas–Peucker to [tolerance] metres, on a plane local to the stretch. */
-internal fun simplify(points: List<TrackPoint>, tolerance: Double): List<TrackPoint> {
+fun simplify(points: List<TrackPoint>, tolerance: Double): List<TrackPoint> {
     if (points.size < 3) return points
     val metresPerLongitude = 111_320.0 * cos(Math.toRadians(points.first().latitude))
     fun x(point: TrackPoint) = point.longitude * metresPerLongitude
