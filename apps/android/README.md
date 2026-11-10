@@ -567,8 +567,8 @@ picker, and the other opens the phone's camera app. 选照片 reads the gallery 
 the first time it asks for the photos and videos with the photos' places (`READ_MEDIA_IMAGES`,
 `READ_MEDIA_VIDEO`, `ACCESS_MEDIA_LOCATION`); declined, the system's documents picker opens instead.
 Given only some photos (Android 14 and later), a row at the top says how many and 更改 asks the
-system again. Its title switches between 所有照片, the gallery's albums by size, and the paired camera
-(Camera, below); what is chosen stays chosen across them, numbered in the order it goes into the
+system again. Its title switches between 所有照片, the gallery's albums by size, the paired camera
+(Camera, below) and the UGREEN NAS's photos and albums (NAS, below); what is chosen stays chosen across them, numbered in the order it goes into the
 Moment, up to the nine a Moment holds. The grid is by day, newest first, four across (eight on its
 side), a video with its length and a motion photo marked 实况, its XMP read from the media store.
 A tap opens one full size on black, swiped through, zoomed as the photo viewer zooms, chosen and
@@ -579,12 +579,35 @@ gallery's in one request, the system asking once, the camera's one at a time. �
 originals where the app may see where they were taken (`setRequireOriginal`), and the camera's
 saved to the gallery's Here album first, with how far it is and 停止.
 
+**From the NAS.** 绿联 NAS, under 我 → 同步与来源, is the owner's UGREEN NAS (UGOS Pro) whose photo app
+选照片 reads (`nas/`): its UGREENlink ID, or an address of its own, the user and the password, kept as
+the WebDAV backup's is. Nothing is asked of it until the picker's title switches to it. An ID is
+looked up at UGREENlink (`api.ugnas.com`, `p2p/v2/ta/nodeInfo/byAlias`, which needs no sign-in): it
+answers the NAS's names on the home network under `lan.ug.link`, with a certificate of their own,
+its DDNS names and its relay, `<id>.<cluster>.ug.link`. Those at home are tried first, their
+heartbeat (`/ugreen/v1/verify/heartbeat`) together, then the rest; the one that answered is tried
+first next time. The app signs in as the NAS's web app does: `verify/check` gives an RSA key in
+`x-rsa-token`, the password goes to `verify/login` encrypted with it in 117-character chunks (PKCS#1
+v1.5), and the session is the token, a second key to encrypt it with for every request
+(`x-ugreen-token`, its MD5 as `x-ugreen-security-key`, both in the cookie with `token_uid`) and the
+`static_token` the stream wants as `ugk`. Over HTTPS the requests are plain JSON; over plain HTTP
+the web app wraps them in AES-GCM, which the app doesn't speak. The photos are the photo app's
+timeline (`v5/photo/picture/timeline/list`), newest first, two hundred at a time as the grid nears
+the end, and its albums (`album/list`, `album/picture/list`) follow in the title's menu once it has
+been read. Its `create_time_utc` is the clock's reading written as if UTC, so it is read as the
+phone's time. Thumbnails are the stream's (`picture/stream`, `size_type` 1 in the grid, 3 in the
+viewer, 0 the original); a photo's info reads its EXIF from the first 256 KB of the original.
+加入 saves the originals to the gallery's Here album first, as the camera's. 删除 asks the NAS first
+what it would do (`file/remove_operability`): to its recycle bin, or for good where there is none,
+and the dialog says which before `file/remove`. Through the relay an original comes at about
+2 MB/s, so a large video is better added at home.
+
 **Photo info.** In 选照片's viewer and the photo viewer, a swipe up, or 信息 in the bar, makes room
 under the photo for what it says of itself: when, with its offset; the body, lens, focal length (and
 its full-frame equivalent), aperture, shutter, ISO and exposure compensation; where, named as the
 place picker names a point, on a small map; and the file's name, format, size and album. What the
 photo doesn't say is left out. The gallery's are read from the file, a camera's from its original
-once it is down, and a published one's from the first 256 KB of its original (`Range`), which keeps
+once it is down, the NAS's from the start of its original, and a published one's from the first 256 KB of its original (`Range`), which keeps
 its EXIF; a swipe down puts it away.
 
 ## Elsewhere
@@ -683,6 +706,7 @@ scripts/ui.py tap tab_map
   and the assistant.
 - `widget`: the home screen widgets (Glance).
 - `camera`: the paired camera, its location over Bluetooth and its photos over PTP/IP.
+- `nas`: the UGREEN NAS whose photo app 选照片 reads, found through UGREENlink and signed in to as its web app does.
 - `ui`: the Compose screens; `ui/design` and `ui/theme` the design system.
 
 ## Thanks

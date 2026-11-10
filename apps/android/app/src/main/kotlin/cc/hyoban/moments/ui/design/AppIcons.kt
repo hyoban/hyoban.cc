@@ -228,6 +228,7 @@ object AppIcons {
     // Devices and data
     val Phone: ImageVector by lazy { icon("phone", false, listOf("M11 3H13A4.5 4.5 0 0 1 17.5 7.5V16.5A4.5 4.5 0 0 1 13 21H11A4.5 4.5 0 0 1 6.5 16.5V7.5A4.5 4.5 0 0 1 11 3z", "M10.5 18L13.5 18")) }
     val Laptop: ImageVector by lazy { icon("laptop", false, listOf("M8 5H16A3.5 3.5 0 0 1 19.5 8.5V12A3.5 3.5 0 0 1 16 15.5H8A3.5 3.5 0 0 1 4.5 12V8.5A3.5 3.5 0 0 1 8 5z", "M2.5 18.5h19")) }
+    val Nas: ImageVector by lazy { icon("nas", false, listOf("M8.5 3.5H15.5A3.5 3.5 0 0 1 19 7V17A3.5 3.5 0 0 1 15.5 20.5H8.5A3.5 3.5 0 0 1 5 17V7A3.5 3.5 0 0 1 8.5 3.5z", "M8.5 8L15.5 8", "M8.5 11.5L15.5 11.5"), listOf("M10.9 16.5a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0z")) }
     val Cloud: ImageVector by lazy { icon("cloud", false, listOf("M7 18.5a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a4.75 4.75 0 0 1-.5 9.5z")) }
     val CloudUpload: ImageVector by lazy { icon("cloud-upload", false, listOf("M8 18.5H7a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a4.75 4.75 0 0 1-.5 9.5H16", "M12 20.5L12 12.5", "M9.2 15.2 12 12.4l2.8 2.8")) }
     val CloudSync: ImageVector by lazy { icon("cloud-sync", false, listOf("M7 18.5a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a4.75 4.75 0 0 1-.5 9.5z", "M14.5 12a2.75 2.75 0 0 0-5 .5", "M9.5 15a2.75 2.75 0 0 0 5-.5", "M14.5 10.5V12H13", "M9.5 16.5V15H11")) }
