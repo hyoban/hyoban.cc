@@ -23,3 +23,6 @@ dependencyResolutionManagement {
 rootProject.name = "Moments"
 
 include(":app")
+// What the phone and the Mac share, and the Mac app itself.
+include(":shared")
+include(":desktop")

@@ -9,8 +9,8 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
-import com.kyant.capsule.ContinuousCapsule
-import com.kyant.capsule.ContinuousRoundedRectangle
+import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.shape.CornerBasedShape
 
 // The app's look, as its design system has it: the site's restraint on a phone. One column of
 // text, a page and one surface with a hairline between them, greys for text and one blue for
@@ -19,7 +19,7 @@ import com.kyant.capsule.ContinuousRoundedRectangle
 
 /** The fully rounded shape: buttons, chips, labels and what floats. A capsule with continuous ends. */
 object Corners {
-    val full: Shape = ContinuousCapsule
+    val full: Shape = continuousCapsule()
 }
 
 /**
@@ -31,9 +31,15 @@ fun isLargeFont(): Boolean = LocalDensity.current.fontScale >= 1.3f
 
 // The corner sizes as continuous curves rather than arcs, so a corner eases into its sides.
 private val AppShapes = Shapes(
-    medium = ContinuousRoundedRectangle(Radius.medium),
-    large = ContinuousRoundedRectangle(Radius.large),
+    medium = continuousRoundedRectangle(Radius.medium),
+    large = continuousRoundedRectangle(Radius.large),
 )
+
+/** A capsule with continuous ends, as each platform draws one. */
+expect fun continuousCapsule(): Shape
+
+/** A rectangle whose corners of [radius] ease into its sides, as each platform draws one. */
+expect fun continuousRoundedRectangle(radius: Dp): CornerBasedShape
 
 /** The springs everything moves on, which don't overshoot, for the components and for pages alike. */
 val TransitionMotion: MotionScheme = MotionScheme.standard()

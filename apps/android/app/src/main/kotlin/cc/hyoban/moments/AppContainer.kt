@@ -85,7 +85,7 @@ class AppContainer(context: Context) {
     // showed the site's records; both are left as they were.
     val localStore = DataStore(File(context.filesDir, "local"))
     private val api = MomentsApi(baseUrl = { settings.apiUrl.value }, token = { settings.apiToken.value })
-    val repository = MomentsRepository(cc.hyoban.moments.data.copy.CopyStore(File(context.noBackupFilesDir, "copy.db")), api, local = localStore, writer = api,
+    val repository = MomentsRepository(cc.hyoban.moments.data.copy.CopyStore(File(context.noBackupFilesDir, "copy.db"), androidx.sqlite.driver.AndroidSQLiteDriver()), api, local = localStore, writer = api,
         outside = cc.hyoban.moments.data.store.PhoneOutside(ledger, footprints),
     )
     /** Swarm's check-ins brought in from its export, their photos beside the phone's own Moments'. */

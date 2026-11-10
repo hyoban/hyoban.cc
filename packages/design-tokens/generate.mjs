@@ -10,7 +10,7 @@ import { renderSwift } from './src/swift.mjs'
 
 export const kotlinFile = fileURLToPath(
   new URL(
-    '../../apps/android/app/src/main/kotlin/cc/hyoban/moments/ui/theme/Tokens.kt',
+    '../../apps/android/shared/src/commonMain/kotlin/cc/hyoban/moments/ui/theme/Tokens.kt',
     import.meta.url,
   ),
 )
