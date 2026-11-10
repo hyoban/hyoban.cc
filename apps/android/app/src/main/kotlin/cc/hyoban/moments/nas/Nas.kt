@@ -266,6 +266,36 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
         return NasProtocol.photos(data, album) to (data?.get("total") as? JsonPrimitive)?.content?.toIntOrNull()
     }
 
+    /**
+     * Where every photo with a place was taken, as the web app's map reads them: the owner's
+     * files and those shared, [SPOTS] at a time until a page comes short.
+     */
+    suspend fun spots(): List<NasSpot> = buildList {
+        while (true) {
+            val page = NasProtocol.spots(call("v5/photo/ai/map/gps/list", buildJsonObject {
+                put("offset", size)
+                put("limit", SPOTS)
+                put("total", 0)
+                putJsonObject("range_option") { put("personal", 1); put("share", 1); put("share_manage", 0); put("share_download", 0); put("share_view_only", 0) }
+            }))
+            addAll(page)
+            if (page.size < SPOTS) break
+        }
+    }
+
+    /** A page of the photos with these [ids], a heap of the map's, as the NAS orders them. */
+    suspend fun spotPhotos(ids: List<Long>, offset: Int, limit: Int = PAGE): List<NasPhoto> =
+        NasProtocol.photos(call("v5/photo/ai/map/gps/photo", buildJsonObject {
+            putJsonArray("ids") { ids.forEach { add(JsonPrimitive(it)) } }
+            put("limit", limit)
+            put("offset", offset)
+            put("total", 1)
+        }))
+
+    /** The small thumbnail of the photo at [spot]. */
+    suspend fun thumbnail(spot: NasSpot): Bitmap? =
+        thumbnail(NasPhoto(spot.id, "", 0, null, null, video = false, live = false, duration = null, taken = null, uploaded = spot.uploaded))
+
     /** The stream of [photo] at [size]: a thumbnail, or the original. It wants the session's cookie and static token, no headers. */
     private suspend fun stream(photo: NasPhoto, size: Int): Request {
         val s = lock.withLock { withContext(Dispatchers.IO) { signedIn() } }
@@ -407,6 +437,7 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
 
     companion object {
         const val PAGE = 200
+        private const val SPOTS = 5000
         private const val HEAD = 256 * 1024
         private const val CLIENT_ID = "here-android"
         private val ALBUM = Environment.DIRECTORY_PICTURES + "/Here/"

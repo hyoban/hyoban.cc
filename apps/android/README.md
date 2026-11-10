@@ -607,6 +607,16 @@ the end, and its albums (`album/list`, `album/picture/list`) follow in the title
 been read. Its `create_time_utc` is the clock's reading written as if UTC, so it is read as the
 phone's time. Thumbnails are the stream's (`picture/stream`, `size_type` 1 in the grid, 3 in the
 viewer, 0 the original); a photo's info reads its EXIF from the first 256 KB of the original.
+With all the NAS's photos listed, a button in the bar switches between the grid and a map
+(`ui/picker/PlacesMap.kt`): the photo app's own list of where its photos were taken
+(`ai/map/gps/list`, five thousand at a time, read whole the first time the map shows; WGS‑84, as the
+EXIF has them), so no original is read for it. Photos within 64 points of each other on screen stand
+as one heap (`PhotoHeaps`: a grid fixed to the world, then neighbours joined), showing one of them
+and how many, grouped again each half zoom, so the map coming closer parts them. A heap tapped
+brings its photos up from the foot (`ai/map/gps/photo`, by their ids, two hundred at a time), the
+map staying above, chosen and looked at as in the grid; dragged down, a tap on the map or going
+back puts them away. On its side they are a panel beside the map. An album has no map: the NAS
+lists places only for them all.
 加入 saves the originals to the gallery's Here album first, as the camera's. 删除 asks the NAS first
 what it would do (`file/remove_operability`): to its recycle bin, or for good where there is none,
 and the dialog says which before `file/remove`. Through the relay an original comes at about

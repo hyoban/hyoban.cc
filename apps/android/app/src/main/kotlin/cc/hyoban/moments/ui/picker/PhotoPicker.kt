@@ -84,7 +84,12 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
     // In the title's menu in this order; fetched for the Moment in the order of [fetched].
     val sources = listOf(gallery, camera, nas)
     val fetched = listOf(camera, nas, gallery)
-    val shown = listing.picks()
+    // The map of what is listed, where its source knows where its photos were taken: then the
+    // photos shown, in the grid under it and in the viewer, are the opened heap's.
+    var mapped by remember { mutableStateOf(false) }
+    val places = listing.places
+    val onMap = mapped && places != null
+    val shown = if (onMap) places!!.picks() else listing.picks()
 
     // Adding: the gallery's as they are, the camera's and the NAS's downloaded first, in the order chosen.
     var adding by remember { mutableStateOf<Job?>(null) }
@@ -115,7 +120,7 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
 
     val idle = adding == null && deletion.job == null
     val sideways = isPhoneLandscape()
-    val count = listing.count(shown)
+    val count = if (onMap) places?.spots?.size else listing.count(shown)
     val subtitle = listOfNotNull(
         count?.let { stringResource(R.string.camera_photo_count, it) },
         chosen.size.takeIf { it > 0 }?.let { stringResource(R.string.picker_chosen_count, it) },
@@ -147,15 +152,24 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
     val listedChosen = chosen.filter { it.source === listed }
 
     SubPage(
-        listing.title(), onClose, subtitle = subtitle, close = true, titleMenu = menu,
+        listing.title(), onClose, subtitle = subtitle, close = true, small = onMap, titleMenu = menu,
         actions = {
+            if (places != null) IconButton(onClick = { mapped = !mapped }, modifier = Modifier.testTag("picker_map_toggle")) {
+                Icon(if (onMap) AppIcons.Photos else AppIcons.Map, contentDescription = stringResource(if (onMap) R.string.picker_show_grid else R.string.picker_show_map))
+            }
             if (listedChosen.isNotEmpty() && idle) IconButton(onClick = { listed.delete(listedChosen, fromViewer = false) }, modifier = Modifier.testTag(listed.deleteTag)) {
                 Icon(AppIcons.Trash, contentDescription = stringResource(R.string.camera_delete_chosen, listedChosen.size))
             }
             if (sideways && canAdd) addButton("picker_add") {}
         },
     ) {
-        listing.Body(shown) { limited, onNearEnd ->
+        if (onMap) PlacesMap(places!!, sideways) { onNearEnd ->
+            Grid(
+                shown, order, full, enabled = idle, sideways = false,
+                density = container.settings.pickerDensity, onDensity = container.settings::changePickerDensity,
+                limited = null, empty = false, onToggle = toggle, onNearEnd = onNearEnd,
+            ) { viewing = it.key }
+        } else listing.Body(shown) { limited, onNearEnd ->
             Grid(
                 shown, order, full, enabled = idle, sideways = sideways,
                 density = container.settings.pickerDensity, onDensity = container.settings::changePickerDensity,

@@ -1446,6 +1446,10 @@
     <string name="picker_info_camera_note">原图下好后才有拍摄参数和地点。</string>
     <string name="picker_camera_card">相机的存储卡</string>
     <string name="picker_empty">没有照片</string>
+    <string name="picker_show_map">地图</string>
+    <string name="picker_show_grid">照片格子</string>
+    <string name="picker_heap_description">%1$d 张照片</string>
+    <string name="picker_map_empty">NAS 里没有带位置的照片</string>
     <string name="picker_video_description">视频 %1$s</string>
     <string name="section_nas">绿联 NAS</string>
     <string name="nas_photos">相册</string>
