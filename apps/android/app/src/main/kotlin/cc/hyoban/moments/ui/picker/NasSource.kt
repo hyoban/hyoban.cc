@@ -38,6 +38,7 @@ import cc.hyoban.moments.nas.NasException
 import cc.hyoban.moments.nas.NasFailure
 import cc.hyoban.moments.nas.NasPhoto
 import cc.hyoban.moments.nas.NasProtocol
+import cc.hyoban.moments.nas.NasSpot
 import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.Icon
@@ -50,6 +51,7 @@ import cc.hyoban.moments.ui.viewer.PhotoDetails
 import cc.hyoban.moments.ui.viewer.ZoomablePhoto
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 
@@ -63,7 +65,7 @@ internal fun rememberNas(nas: Nas, deletion: Deletion): NasSource {
 
 internal class NasSource(
     val nas: Nas,
-    private val context: Context,
+    val context: Context,
     private val scope: CoroutineScope,
     private val deletion: Deletion,
 ) : PhotoSource {
@@ -72,6 +74,8 @@ internal class NasSource(
     var list by mutableStateOf<NasList?>(null)
         private set
     private val root = NasListing(this, null)
+    /** Where the photos were taken, for the map of them all. */
+    val places = NasPlaces(this, scope)
 
     /** Reads the first page of [album]'s photos, the timeline's without one, and the albums if they aren't yet. */
     suspend fun show(album: NasAlbum?) {
@@ -140,6 +144,7 @@ internal class NasSource(
                             done = these.size
                             if (missed == 0) {
                                 list?.let { list -> list.photos.removeAll { it.id in ids }; list.total = list.total?.minus(these.size) }
+                                places.removed(ids)
                                 deletion.gone(these.map { it.key }.toSet())
                             } else Toast.makeText(context, context.getString(R.string.camera_delete_missed, missed), Toast.LENGTH_SHORT).show()
                         } catch (e: Exception) {
@@ -158,6 +163,9 @@ internal data class NasListing(val nas: NasSource, val album: NasAlbum?) : Listi
     override val source get() = nas
 
     private val list get() = nas.list?.takeIf { it.album == album }
+
+    // The NAS's map is of all its photos, not an album's.
+    override val places get() = nas.places.takeIf { album == null }
 
     @Composable
     override fun title() = album?.name ?: stringResource(R.string.section_nas)
@@ -243,6 +251,82 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource)
             if (shown == null) Spinner(color = MediaOverlay.content)
             if (stream != null) VideoWaiting(video) else if (photo.video && !plays) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))
         }
+    }
+}
+
+/**
+ * Where the NAS's photos were taken, as its photo app keeps them, read whole the first time the
+ * map is shown; and the photos of the heap opened, read a page at a time.
+ */
+internal class NasPlaces(private val source: NasSource, private val scope: CoroutineScope) : Places {
+    private val nas get() = source.nas
+    private var known by mutableStateOf<Map<Long, NasSpot>?>(null)
+    private var failure by mutableStateOf<NasFailure?>(null)
+
+    override var spots by mutableStateOf<List<Spot>?>(null)
+        private set
+
+    override val failed: (@Composable () -> Unit)?
+        get() = failure?.let { why -> { Failed(AppIcons.Nas, nasReason(why), R.string.nas_failed_note) { failure = null; scope.launch { load() } } } }
+
+    override suspend fun load() {
+        if (spots != null || failure != null || !nas.configured) return
+        try {
+            val read = nas.spots()
+            known = read.associateBy { it.id }
+            spots = read.map { Spot(it.id, it.latitude, it.longitude) }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            android.util.Log.w(TAG, "nas: places not read", e)
+            failure = (e as? NasException)?.failure ?: if (e is java.io.IOException) NasFailure.UNREACHABLE else NasFailure.OTHER
+        }
+    }
+
+    override suspend fun thumbnail(spot: Spot): Bitmap? = known?.get(spot.id)?.let { nas.thumbnail(it) }
+
+    override var opened by mutableStateOf<List<Spot>?>(null)
+        private set
+    private val photos = mutableStateListOf<NasPhoto>()
+    private var ended = false
+    override var reading by mutableStateOf(false)
+        private set
+    private var job: Job? = null
+
+    override fun open(heap: List<Spot>?) {
+        job?.cancel()
+        photos.clear()
+        ended = false
+        reading = false
+        opened = heap
+        if (heap != null) more()
+    }
+
+    override fun more() {
+        val heap = opened ?: return
+        if (reading || ended) return
+        reading = true
+        job = scope.launch {
+            try {
+                val page = nas.spotPhotos(heap.map { it.id }, photos.size)
+                photos.addAll(page)
+                ended = page.size < Nas.PAGE || photos.size >= heap.size
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                android.util.Log.w(TAG, "nas: a heap's photos not read", e)
+                ended = true
+                Toast.makeText(source.context, nasReason((e as? NasException)?.failure ?: NasFailure.UNREACHABLE), Toast.LENGTH_SHORT).show()
+            } finally { reading = false }
+        }
+    }
+
+    @Composable
+    override fun picks(): List<Pick> = remember(opened, photos.size) { photos.map { NasPick(it, source) } }
+
+    /** What was deleted leaves the map and the heap opened. */
+    fun removed(ids: Set<Long>) {
+        spots = spots?.filter { it.id !in ids }
+        photos.removeAll { it.id in ids }
+        opened = opened?.filter { it.id !in ids }?.takeIf { it.isNotEmpty() }
     }
 }
 

@@ -78,6 +78,8 @@ internal fun Grid(
     limited: (@Composable () -> Unit)?,
     onToggle: (Pick) -> Unit,
     onNearEnd: (() -> Unit)? = null,
+    /** Whether it says so when there is nothing; not while what it shows is still being read. */
+    empty: Boolean = true,
     onOpen: (Pick) -> Unit,
 ) {
     val today = remember { LocalDate.now() }
@@ -86,7 +88,7 @@ internal fun Grid(
         if (byMonth) shown.groupBy { pick -> pick.day?.let(YearMonth::from) }.toList() else shown.groupBy { it.day }.toList()
     }
     // Where each group starts among the grid's items, and its month, for the handle's bubble.
-    val lead = (if (limited != null) 1 else 0) + (if (shown.isEmpty()) 1 else 0)
+    val lead = (if (limited != null) 1 else 0) + (if (shown.isEmpty() && empty) 1 else 0)
     val months = remember(groups, lead) {
         var at = lead
         groups.map { (_, picks) -> (at to picks.firstOrNull()?.day?.let(YearMonth::from)).also { at += 1 + picks.size } }
@@ -116,7 +118,7 @@ internal fun Grid(
             verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             if (limited != null) item(key = "limited", span = { GridItemSpan(maxLineSpan) }) { limited() }
-            if (shown.isEmpty()) item(key = "empty", span = { GridItemSpan(maxLineSpan) }) {
+            if (shown.isEmpty() && empty) item(key = "empty", span = { GridItemSpan(maxLineSpan) }) {
                 Text(stringResource(R.string.picker_empty), style = AppTheme.typography.body, color = tokens.tx3, textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(top = Space.xl * 3))
             }

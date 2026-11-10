@@ -52,6 +52,9 @@ data class NasPhoto(
     }
 }
 
+/** Where a photo was taken, as the NAS's map lists it: the photo by its id, and what its stream wants of it. */
+data class NasSpot(val id: Long, val latitude: Double, val longitude: Double, val uploaded: Long)
+
 /** An album of the NAS's photo app: its own, one kept by a rule, or one shared with the owner. */
 data class NasAlbum(val uuid: String, val name: String, val type: Int, val count: Int?)
 
@@ -143,6 +146,16 @@ object NasProtocol {
             duration = item.string("duration")?.takeIf { it.isNotEmpty() },
             taken = takenAt(item.long("create_time_utc")), uploaded = item.long("upload_time") ?: 0, album = album,
         )
+    }
+
+    /** The places the map's list holds, those without a point left out; the NAS writes its coordinates as text. */
+    fun spots(data: JsonObject?): List<NasSpot> = data?.array("list").orEmpty().mapNotNull { element ->
+        val item = element as? JsonObject ?: return@mapNotNull null
+        val id = item.long("picture_id") ?: return@mapNotNull null
+        val latitude = item.string("latitude")?.toDoubleOrNull()?.takeIf { it in -90.0..90.0 } ?: return@mapNotNull null
+        val longitude = item.string("longitude")?.toDoubleOrNull()?.takeIf { it in -180.0..180.0 } ?: return@mapNotNull null
+        if (latitude == 0.0 && longitude == 0.0) return@mapNotNull null
+        NasSpot(id, latitude, longitude, item.long("upload_time") ?: 0)
     }
 
     /** The albums an album list holds, those without a name or an id left out. */

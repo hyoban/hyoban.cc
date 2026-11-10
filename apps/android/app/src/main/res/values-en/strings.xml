@@ -1443,6 +1443,10 @@
     <string name="picker_info_camera_note">Settings and place show once the original is down.</string>
     <string name="picker_camera_card">Camera’s memory card</string>
     <string name="picker_empty">No photos</string>
+    <string name="picker_show_map">Map</string>
+    <string name="picker_show_grid">Photo grid</string>
+    <string name="picker_heap_description">%1$d photos</string>
+    <string name="picker_map_empty">No photos with a place on the NAS</string>
     <string name="picker_video_description">Video %1$s</string>
     <string name="section_nas">UGREEN NAS</string>
     <string name="nas_photos">Photos</string>

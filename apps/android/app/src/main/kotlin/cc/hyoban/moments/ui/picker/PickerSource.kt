@@ -79,11 +79,42 @@ internal interface Listing {
     /** How many it holds, where that is known. */
     @Composable fun count(shown: List<Pick>): Int?
 
+    /** Where its photos were taken, for its map, where its source knows that of them all without reading each. */
+    val places: Places? get() = null
+
     /** Once it is picked from the title's menu. */
     fun opened() {}
 
     /** The page under the bar: [grid] once there is something to show, else how far reaching it is or why it can't be. */
     @Composable fun Body(shown: List<Pick>, grid: @Composable (limited: (@Composable () -> Unit)?, onNearEnd: (() -> Unit)?) -> Unit)
+}
+
+/**
+ * Where a listing's photos were taken, and the photos of the heap opened on its map: the map
+ * shows [spots] in heaps, and one tapped is [open]ed, its photos read as the grid under it asks.
+ */
+internal interface Places {
+    /** Every photo with a place, once [load]ed; null until then. */
+    val spots: List<Spot>?
+
+    /** Why they couldn't be read, with trying again; null while they can. */
+    val failed: (@Composable () -> Unit)?
+
+    suspend fun load()
+
+    /** The small thumbnail of the photo at [spot], a heap's cover. */
+    suspend fun thumbnail(spot: Spot): Bitmap?
+
+    /** The heap opened, by its photos; null when none is. */
+    val opened: List<Spot>?
+
+    fun open(heap: List<Spot>?)
+
+    /** The opened heap's photos, as far as they are read, and whether more are coming. */
+    @Composable fun picks(): List<Pick>
+    val reading: Boolean
+
+    fun more()
 }
 
 /** One line of the title's menu. */
