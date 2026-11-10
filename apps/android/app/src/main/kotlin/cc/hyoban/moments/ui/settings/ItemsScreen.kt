@@ -28,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
@@ -50,7 +50,7 @@ import kotlinx.coroutines.withContext
  * page. Every bill and span can still say otherwise. Nothing here opens a page further down.
  */
 @Composable
-fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
+fun ItemsScreen(container: PhoneContainer, onBack: () -> Unit) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val revision by container.footprints.revision.collectAsStateWithLifecycle()
     val shares by produceState(0, revision) {

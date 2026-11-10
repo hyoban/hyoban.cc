@@ -39,7 +39,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.things.Device
@@ -171,7 +171,7 @@ private var lastKind: ThingKind? = null
  * looked at last, and [open] the device or subscription whose sheet opens over the page.
  */
 @Composable
-fun ThingsScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Unit, kind: ThingKind? = null, open: String? = null) {
+fun ThingsScreen(container: PhoneContainer, onBack: () -> Unit, onDay: (String) -> Unit, kind: ThingKind? = null, open: String? = null) {
     val settings = LocalSettings.current
     val kinds = ThingKind.entries.filter { if (it == ThingKind.CAR) settings.connected && settings.isOn(Module.CAR) else settings.isOn(Module.THINGS) }
     var shown by rememberSaveable { mutableStateOf((kind ?: lastKind)?.takeIf { it in kinds } ?: kinds.firstOrNull() ?: ThingKind.DEVICES) }
@@ -198,7 +198,7 @@ fun ThingsScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) ->
 
 /** 设备: what is owned, newest first, and what was sold, each with what it costs a day. */
 @Composable
-fun DevicesScreen(container: AppContainer, onBack: () -> Unit, open: String? = null, titleMenu: TitleMenu? = null) {
+fun DevicesScreen(container: PhoneContainer, onBack: () -> Unit, open: String? = null, titleMenu: TitleMenu? = null) {
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val devices = remember(entries) { Things.devices(entries.values) }
     val today = LocalDate.now()
@@ -284,7 +284,7 @@ fun DevicesScreen(container: AppContainer, onBack: () -> Unit, open: String? = n
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun DeviceSheet(container: AppContainer, device: Device?, categories: List<String>, onDismiss: () -> Unit) {
+private fun DeviceSheet(container: PhoneContainer, device: Device?, categories: List<String>, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     val today = LocalDate.now()
     var name by rememberSaveable { mutableStateOf(device?.name.orEmpty()) }
@@ -380,7 +380,7 @@ private fun DeviceSheet(container: AppContainer, device: Device?, categories: Li
 
 /** 订阅: by month, by year, then one row each for what was bought once and what was stopped. */
 @Composable
-fun SubscriptionsScreen(container: AppContainer, onBack: () -> Unit, open: String? = null, titleMenu: TitleMenu? = null) {
+fun SubscriptionsScreen(container: PhoneContainer, onBack: () -> Unit, open: String? = null, titleMenu: TitleMenu? = null) {
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val all = remember(entries) { Things.subscriptions(entries.values) }
     val today = LocalDate.now()
@@ -483,7 +483,7 @@ private fun SubscriptionRow(subscription: Subscription, today: LocalDate, onClic
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SubscriptionSheet(container: AppContainer, subscription: Subscription?, onDismiss: () -> Unit) {
+private fun SubscriptionSheet(container: PhoneContainer, subscription: Subscription?, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     val today = LocalDate.now()
     var name by rememberSaveable { mutableStateOf(subscription?.name.orEmpty()) }

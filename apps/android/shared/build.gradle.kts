@@ -33,6 +33,8 @@ kotlin {
             api(libs.sqlite)
             api(libs.haze)
             api(libs.haze.blur)
+            implementation(libs.zip4j)
+            implementation(libs.gson)
         }
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)

@@ -9,7 +9,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /** The observations supporting a visit, shared by candidate selection, naming and fallback. */
-internal object TripEvidence {
+object TripEvidence {
     private const val STAY_KM = 30.0
     private const val STAY_MS = 90 * 60 * 1000L
     private const val OBSERVATION_GAP_MS = 6 * 60 * 60 * 1000L
@@ -120,7 +120,7 @@ internal object TripEvidence {
 }
 
 /** The kilometres between two points on the earth. */
-internal fun distanceKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
+fun distanceKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
     val rad = Math.PI / 180
     val a = sin((lat2 - lat1) * rad / 2).let { it * it } +
         cos(lat1 * rad) * cos(lat2 * rad) * sin((lng2 - lng1) * rad / 2).let { it * it }

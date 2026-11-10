@@ -25,7 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.footprints.TrackImportResult
 import cc.hyoban.moments.footprints.readGpx
 import cc.hyoban.moments.ui.components.AppColors
@@ -65,7 +65,7 @@ fun importSources(): List<String> {
 
 /** 导入: Swarm's export, iCost's backup or bill export, and GPX tracks, on one page under 我. */
 @Composable
-fun ImportScreen(container: AppContainer, onBack: () -> Unit) {
+fun ImportScreen(container: PhoneContainer, onBack: () -> Unit) {
     SubPage(stringResource(Res.string.import_title), onBack, Modifier.background(AppColors.page)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
@@ -96,7 +96,7 @@ fun ImportScreen(container: AppContainer, onBack: () -> Unit) {
 
 /** iCost's backup or bill export into the ledger, what it found shown before it is written. */
 @Composable
-private fun ICostGroup(container: AppContainer) {
+private fun ICostGroup(container: PhoneContainer) {
     val importer = rememberICostImport(container)
     SegmentedGroup(
         stringResource(Res.string.import_ledger),
@@ -124,7 +124,7 @@ private sealed interface GpxState {
 
 /** A GPX file into the footprints, the phone's own samples kept where the two overlap. */
 @Composable
-private fun GpxGroup(container: AppContainer) {
+private fun GpxGroup(container: PhoneContainer) {
     val context = LocalContext.current
     var state by remember { mutableStateOf<GpxState?>(null) }
     val reading = state == GpxState.Reading

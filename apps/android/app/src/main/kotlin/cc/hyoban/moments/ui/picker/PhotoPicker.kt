@@ -23,7 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.TitleMenu
 import cc.hyoban.moments.ui.components.isPhoneLandscape
@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
  * saved to the gallery's Here album first. Leaving it leaves the camera's network.
  */
 @Composable
-fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, onFallback: () -> Unit, onAdded: (List<Uri>) -> Unit) {
+fun PhotoPickerScreen(container: PhoneContainer, limit: Int, onClose: () -> Unit, onFallback: () -> Unit, onAdded: (List<Uri>) -> Unit) {
     val haptics = rememberHaptics()
     val scope = rememberCoroutineScope()
 

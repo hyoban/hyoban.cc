@@ -38,7 +38,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.components.PageWidth
@@ -59,7 +59,7 @@ import kotlinx.coroutines.withContext
  * log, each a segmented group; what goes deeper opens as a dialog over the page.
  */
 @Composable
-fun FootprintSettingsScreen(container: AppContainer, onBack: () -> Unit) {
+fun FootprintSettingsScreen(container: PhoneContainer, onBack: () -> Unit) {
     SubPage(stringResource(Res.string.footprint_settings_title), onBack, Modifier.background(AppColors.page), subtitle = stringResource(Res.string.footprint_settings_subtitle)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
@@ -206,7 +206,7 @@ private fun BackgroundSettings() {
 
 /** The diagnostics log, saved as a file wherever the user picks. */
 @Composable
-private fun DiagnosticsSettings(container: AppContainer) {
+private fun DiagnosticsSettings(container: PhoneContainer) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var busy by rememberSaveable { mutableStateOf(false) }

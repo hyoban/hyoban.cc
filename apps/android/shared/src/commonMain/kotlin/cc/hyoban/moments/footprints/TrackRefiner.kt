@@ -12,16 +12,16 @@ import kotlin.math.sqrt
 fun refinedTrack(samples: Sequence<TrackPoint>): Sequence<TrackPoint> = replayTrack(samples)
 
 /** Only scalar evidence leaves the filter; never coordinates, altitude or a Location/TrackPoint. */
-internal data class TrackDecision(val reason: String, val fields: Map<String, Any?>)
+data class TrackDecision(val reason: String, val fields: Map<String, Any?>)
 
-internal fun replayTrack(samples: Sequence<TrackPoint>, trace: ((TrackDecision) -> Unit)? = null): Sequence<TrackPoint> = sequence {
+fun replayTrack(samples: Sequence<TrackPoint>, trace: ((TrackDecision) -> Unit)? = null): Sequence<TrackPoint> = sequence {
     val refiner = TrackRefiner(trace)
     for (sample in samples) yieldAll(refiner.add(sample))
     // The unconfirmed tail intentionally stays in raw storage, not in the displayed route.
     refiner.finish()
 }
 
-internal class TrackRefiner(private val trace: ((TrackDecision) -> Unit)? = null) {
+class TrackRefiner(private val trace: ((TrackDecision) -> Unit)? = null) {
     companion object {
         const val VERSION = "window-v1"
         const val WINDOW_MS = 30_000L

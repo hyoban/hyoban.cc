@@ -53,7 +53,7 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ledger.Reimburse
 import cc.hyoban.moments.ledger.TxnKind
@@ -74,7 +74,7 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
+fun BillScreen(container: PhoneContainer, id: String, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()

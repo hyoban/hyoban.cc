@@ -32,7 +32,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.BuildConfig
 import cc.hyoban.moments.R
 import cc.hyoban.moments.ledger.summarize
@@ -89,7 +89,7 @@ class MeRoutes(
  * not from here. Nothing is switched on this page itself.
  */
 @Composable
-fun MeScreen(container: AppContainer, routes: MeRoutes) {
+fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val revision by container.footprints.revision.collectAsStateWithLifecycle()
@@ -266,7 +266,7 @@ private fun MeRow(icon: ImageVector, title: String, tag: String, shapes: ListIte
 
 /** What 家 says on 我: the places set by hand, by name, else that where one lives is found by itself. */
 @Composable
-private fun homesSummary(container: AppContainer): String {
+private fun homesSummary(container: PhoneContainer): String {
     val homes = container.settings.homes
     val provinces = stringArrayResource(Res.array.province_codes).zip(stringArrayResource(Res.array.province_names)).toMap()
     val cities by produceState<List<cc.hyoban.moments.ui.map.FogRegion>?>(null, homes) { if (homes.any { it.length > 2 }) value = container.cityRegions() }

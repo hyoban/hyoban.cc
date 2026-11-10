@@ -133,7 +133,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.createGraph
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.toRoute
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.MainActivity
 import cc.hyoban.moments.Settings
 import cc.hyoban.moments.data.spec.Module
@@ -411,7 +411,7 @@ private enum class Tab(val route: Any, val type: KClass<*>, val label: StringRes
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun MomentsApp(container: AppContainer, pages: List<Any> = listOf(Feed)) {
+fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
     val navController = rememberNavController()
     val activity = LocalActivity.current as? MainActivity
     // 初次打开 (34), over everything until it is through: once, on a phone with nothing set up,

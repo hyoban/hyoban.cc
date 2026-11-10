@@ -1,39 +1,30 @@
 package cc.hyoban.moments
 
 import cc.hyoban.moments.res.*
-import cc.hyoban.moments.data.spec.Module
-import android.content.Context
-import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.snapshotFlow
+import androidx.sqlite.SQLiteDriver
 import cc.hyoban.moments.data.api.MomentsApi
-import cc.hyoban.moments.data.local.Photos
-import cc.hyoban.moments.data.local.PlaceSearch
-import cc.hyoban.moments.data.local.Ulid
-import cc.hyoban.moments.data.local.newPlaceId
-import cc.hyoban.moments.data.local.recordTime
+import cc.hyoban.moments.data.copy.CopyStore
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
-import cc.hyoban.moments.data.store.undo
+import cc.hyoban.moments.data.store.BillChange
 import cc.hyoban.moments.data.store.DataStore
 import cc.hyoban.moments.data.store.MomentsRepository
+import cc.hyoban.moments.data.store.OutsideChanges
 import cc.hyoban.moments.data.store.PublishProgress
 import cc.hyoban.moments.data.store.Shown
 import cc.hyoban.moments.data.store.shown
-import cc.hyoban.moments.publish.PublishWorker
 import cc.hyoban.moments.data.trips.TripRoutes
 import cc.hyoban.moments.ui.format.failureReason
-import cc.hyoban.moments.ui.viewer.MotionCache
-import cc.hyoban.moments.widget.Widgets
 import java.io.File
+import java.io.Reader
 import java.time.LocalDate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,76 +33,53 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.getAndUpdate
-import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-/** What the app shares: built once by the Application, handed to the screens. */
-class AppContainer(context: Context) {
-    private val appContext = context.applicationContext
+/**
+ * What the app shares on every device: built once when it starts, handed to the screens. The
+ * records, their copy and their publishing are here; what only a phone has (the ledger's and
+ * the footprints' stores, the widgets, the work it leaves running) is its own container's, over this.
+ *
+ * [files] holds what the device keeps, [private] what must not leave it nor be backed up, and
+ * [outside] what publishes beside the Moments.
+ */
+abstract class AppContainer(
+    val settings: Settings,
+    files: File,
+    private: File,
+    driver: SQLiteDriver,
+    outside: OutsideChanges,
+) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private var cities: List<cc.hyoban.moments.ui.map.FogRegion>? = null
 
-    /** The fog's cities, read from the app's assets the first time they're asked for and kept: the map's fog, and where the homes set by hand are. */
+    /** The fog's cities as the device keeps them, to read once. */
+    protected abstract fun openCities(): Reader
+
+    /** The fog's cities, read the first time they're asked for and kept: the map's fog, and where the homes set by hand are. */
     suspend fun cityRegions(): List<cc.hyoban.moments.ui.map.FogRegion> = cities ?: kotlinx.coroutines.withContext(Dispatchers.Default) {
-        appContext.assets.open(cc.hyoban.moments.ui.map.FOG_REGIONS_ASSET).bufferedReader().use { cc.hyoban.moments.ui.map.parseFogRegions(it) }
+        openCities().use { cc.hyoban.moments.ui.map.parseFogRegions(it) }
     }.also { cities = it }
-
-    val settings = Settings(context)
-    /** GPS tracks stay on this phone, private; only the spans made public publish, simplified. */
-    val footprints = cc.hyoban.moments.footprints.FootprintStore(context)
-    val footprintDiagnostics = cc.hyoban.moments.footprints.FootprintDiagnostics(
-        File(context.noBackupFilesDir, "footprint-diagnostics"), scope,
-    )
-    val connectionRules = cc.hyoban.moments.footprints.ConnectionRulesStore(context)
-    /** The ledger stays on this phone, outside API sync and Android's backup; only its public bills publish. */
-    val ledger = cc.hyoban.moments.ledger.LedgerStore(context)
-    /** The databases backed up to the owner's WebDAV directory, when one is set. */
-    val backup = cc.hyoban.moments.backup.Backup(context)
-
-    /** The owner's UGREEN NAS, whose photo app 选照片 reads; nothing is asked of it until it is set up. */
-    val nas = cc.hyoban.moments.nas.Nas(context)
-    /** The app's own updates, from its GitHub releases. */
-    val updates = cc.hyoban.moments.update.Updates(context)
 
     // Each its own: `copy.db` the copy of what the API serves, row for row as D1 keeps it,
     // out of the backup since a sync brings it again; `local/` the Moments written on this
     // phone, their photos and places, which no sync touches. `api/` may still hold the copy
     // as it was kept before, as JSON files, and `data/` what the app recorded before it only
     // showed the site's records; both are left as they were.
-    val localStore = DataStore(File(context.filesDir, "local"))
-    private val api = MomentsApi(baseUrl = { settings.apiUrl.value }, token = { settings.apiToken.value })
-    val repository = MomentsRepository(cc.hyoban.moments.data.copy.CopyStore(File(context.noBackupFilesDir, "copy.db"), androidx.sqlite.driver.AndroidSQLiteDriver()), api, local = localStore, writer = api,
-        outside = cc.hyoban.moments.data.store.PhoneOutside(ledger, footprints),
-    )
-    /** Swarm's check-ins brought in from its export, their photos beside the phone's own Moments'. */
-    val swarm = cc.hyoban.moments.data.swarm.SwarmImport(
-        open = { uri -> appContext.contentResolver.openInputStream(uri) ?: error("Can't read $uri") },
-        repository = repository,
-        mediaDirectory = File(localStore.root, "media"),
-        scope = scope,
-    )
+    val localStore = DataStore(File(files, "local"))
+    protected val api = MomentsApi(baseUrl = { settings.apiUrl.value }, token = { settings.apiToken.value })
+    val repository = MomentsRepository(CopyStore(File(private, "copy.db"), driver), api, local = localStore, writer = api, outside = outside)
     val mediaUrls = MediaUrls { settings.assetOrigin.value }
-    /** Places by name and around a point, for a new Moment's place. */
-    val placeSearch = PlaceSearch(BuildConfig.PLACE_SEARCH_URL, tencentKey = { settings.tencentMapKey.value },
-        amapKey = { settings.amapKey.value },
-        tencentFirst = { settings.chinaPlaces.value == CHINA_PLACES_TENCENT },
-    )
-    /** Where each bill was paid, by the footprints. */
-    val billPlaces = cc.hyoban.moments.footprints.BillPlaces(
-        footprints, placeSearch, repository.places, repository.checkins,
-        checkinsOn = { settings.isOn(Module.CHECKIN) },
-    ) { settings.isOn(Module.FOOTPRINTS) }
     /** The trips' routes along the roads, from the API. */
-    val routes = TripRoutes({ settings.apiUrl.value }, File(context.filesDir, "routes.json"), token = { settings.apiToken.value })
+    val routes = TripRoutes({ settings.apiUrl.value }, File(files, "routes.json"), token = { settings.apiToken.value })
 
     /** The routes of the trips the API hasn't routed, as one made on the phone, worked out here the same way. */
-    val phoneRoutes = cc.hyoban.moments.data.trips.PhoneRoutes(File(context.filesDir, "phone-routes.json"))
+    val phoneRoutes = cc.hyoban.moments.data.trips.PhoneRoutes(File(files, "phone-routes.json"))
 
     /** The Moments and trips the screens show: all of them, or in demo mode only the public's. */
     val shown: StateFlow<Shown> =
@@ -161,30 +129,28 @@ class AppContainer(context: Context) {
             }
         }.flowOn(Dispatchers.Default).stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
 
-    /** Where shared photos wait for a Moment; copied again into its own store when it is saved. */
-    private val sharedDirectory = File(context.cacheDir, "shared")
+    /** What the device draws from the records beside its pages (a phone's widgets), drawn again once they change. */
+    protected open suspend fun recordsChanged() {}
 
-    init {
-        // Shared photos no draft took within a day are left behind.
-        sharedDirectory.listFiles()?.filter { System.currentTimeMillis() - it.lastModified() > DAY_MS }?.forEach(File::delete)
-        // Routes were once kept per trip from the site's trip pages, under routes/.
-        File(context.filesDir, "routes").takeIf { it.isDirectory }?.deleteRecursively()
-        scope.launch { ledger.load() }
-        // The widgets show only what the public sees in demo mode, so they are drawn again as it turns.
-        scope.launch { snapshotFlow { settings.demo }.drop(1).collect { Widgets.update(appContext) } }
+    /** Starts publishing as the device runs work that outlasts its pages, which then calls [runPublish]. */
+    protected abstract fun enqueuePublish()
+
+    /** Stops the publishing [enqueuePublish] started. */
+    protected abstract fun cancelPublishWork()
+
+    /** Puts back each of [bills] going public or private, which the device's own ledger keeps. */
+    protected open suspend fun revertOutside(bills: List<BillChange>) {}
+
+    /**
+     * Reads what the device kept and then the API, and routes the trips the API hasn't: called by
+     * the device's container once it is built, so nothing here runs before it is.
+     */
+    protected fun start() {
         // The legs of the trips the API hasn't routed are routed here, once they settle.
         scope.launch {
             @OptIn(kotlinx.coroutines.FlowPreview::class)
             phoneLegs.debounce(ROUTE_SETTLE_MS).collectLatest { legs ->
                 phoneRoutes.fill(legs.values.flatten().mapNotNull { cc.hyoban.moments.data.trips.requestOf(it) })
-            }
-        }
-        cc.hyoban.moments.backup.BackupWorker.schedule(appContext, backup, replace = false)
-        cc.hyoban.moments.update.UpdateWorker.schedule(appContext, updates.auto)
-        // A bill or a span going public, or private again, is a change to publish too.
-        scope.launch {
-            kotlinx.coroutines.flow.combine(ledger.ledger, footprints.revision) { _, _ -> }.collect {
-                withContext(Dispatchers.IO) { repository.noteOutside() }
             }
         }
         scope.launch {
@@ -193,12 +159,6 @@ class AppContainer(context: Context) {
             phoneRoutes.load()
             refreshAll()
         }
-        // The videos' disk cache opens its index and database off the main thread, before a
-        // video is first opened, rather than in the frame that opens it.
-        scope.launch(Dispatchers.IO) { MotionCache.of(appContext) }
-        // The map's native library, 13 MB, loaded off the main thread too, so the map tab's
-        // first showing doesn't load it in the frame that opens it.
-        scope.launch(Dispatchers.IO) { runCatching { System.loadLibrary("maplibre") } }
     }
 
     fun refresh() {
@@ -249,7 +209,7 @@ class AppContainer(context: Context) {
     /** Something to say in a snackbar, and what its one action, if any, does; [onDismiss] when it goes without it. */
     class Message(val text: String, val action: String? = null, val onAction: () -> Unit = {}, val onDismiss: () -> Unit = {})
 
-    private val _messages = Channel<Message>(Channel.BUFFERED)
+    protected val _messages = Channel<Message>(Channel.BUFFERED)
 
     /**
      * What the app has to say while it is open, shown as snackbars in the order said; kept
@@ -257,76 +217,14 @@ class AppContainer(context: Context) {
      */
     val messages: Flow<Message> = _messages.receiveAsFlow()
 
-    private fun say(text: String) {
+    protected fun say(text: String) {
         _messages.trySend(Message(text))
     }
-
-    /**
-     * Offers [place], a check-in's just kept from a stay, to the bills paid in that stay from
-     * [start] to [end] that have no place of their own nor a Moment's; nothing is said when
-     * there are none or the ledger is off.
-     */
-    fun offerPlaceToBills(place: String, start: Long, end: Long) {
-        if (!settings.isOn(Module.LEDGER)) return
-        scope.launch {
-            val bills = ledger.ledger.value.txns.filter {
-                it.kind != cc.hyoban.moments.ledger.TxnKind.TRANSFER && it.place == null && it.moment == null && it.time in start..end
-            }
-            if (bills.isEmpty()) return@launch
-            _messages.send(
-                Message(
-                    pluralTextOf(Res.plurals.message_checkin_bills, bills.size, bills.size),
-                    action = textOf(Res.string.ledger_use_place),
-                    onAction = { scope.launch { ledger.saveTxns(bills.map { it.copy(place = place) }) } },
-                ),
-            )
-        }
-    }
-
-    private val _sharedPhotos = MutableStateFlow<List<Uri>>(emptyList())
-
-    /** Photos and videos shared into the app from the gallery, as the app's own copies, until a new Moment takes them. */
-    val sharedPhotos: StateFlow<List<Uri>> = _sharedPhotos.asStateFlow()
-
-    /**
-     * Copies photos and videos shared from another app into the app's cache, as they are, EXIF and
-     * all, while the sharing still lets them be read; those that can't be read are left out.
-     */
-    suspend fun receiveSharedPhotos(uris: List<Uri>) {
-        val copies = uris.mapNotNull { uri ->
-            runCatching { Photos.copy(appContext, uri, sharedDirectory, Ulid.next()).file }.getOrNull()?.let(Uri::fromFile)
-        }
-        if (copies.size < uris.size) say(textOf(Res.string.error_shared_photos))
-        _sharedPhotos.value = _sharedPhotos.value + copies
-    }
-
-    private val _sharedExport = MutableStateFlow<Uri?>(null)
-
-    /** An iCost export shared into the app, as the app's own copy, until the ledger's import takes it. */
-    val sharedExport: StateFlow<Uri?> = _sharedExport.asStateFlow()
-
-    /** Copies iCost's export or backup shared from another app while the sharing still lets it be read; says so when it can't. */
-    suspend fun receiveSharedExport(uri: Uri) {
-        val copy = withContext(Dispatchers.IO) {
-            runCatching {
-                val file = File(sharedDirectory, "${Ulid.next()}.icost").also { it.parentFile?.mkdirs() }
-                appContext.contentResolver.openInputStream(uri)!!.use { input -> file.outputStream().use { input.copyTo(it) } }
-                Uri.fromFile(file)
-            }.getOrNull()
-        }
-        if (copy == null) say(textOf(Res.string.ledger_error_import)) else _sharedExport.value = copy
-    }
-
-    /** The iCost export shared into the app, taken so it is imported once. */
-    fun takeSharedExport(): Uri? = _sharedExport.getAndUpdate { null }
-
-    /** The photos shared into the app, taken so they are used once. */
-    fun takeSharedPhotos(): List<Uri> = _sharedPhotos.getAndUpdate { emptyList() }
 
     /** Keeps a Moment written on the phone, and draws the widgets again with it. */
     suspend fun addLocal(moment: MomentRecord, place: Pair<String, Place>?) {
         repository.addLocal(moment, place)
-        Widgets.update(appContext)
+        recordsChanged()
     }
 
     /**
@@ -335,7 +233,7 @@ class AppContainer(context: Context) {
      */
     suspend fun updateLocal(moment: MomentRecord, place: Pair<String, Place>?) {
         repository.updateLocal(moment, place)
-        Widgets.update(appContext)
+        recordsChanged()
     }
 
     /** Whether the app may write to the API: it has one, and the owner's token. */
@@ -348,16 +246,16 @@ class AppContainer(context: Context) {
     val publishing: StateFlow<PublishProgress?> = _publishing.asStateFlow()
 
     /**
-     * Publishes every change kept on the phone, as [PublishWorker] does it, past the page
+     * Publishes every change kept on the phone, as the device's work does it, past the page
      * that asked and the app being left; the only way the app changes the site.
      */
     fun publishPending() {
         if (_publishing.value != null) return
         _publishing.value = PublishProgress(0, repository.pending.value.size)
-        PublishWorker.enqueue(appContext)
+        enqueuePublish()
     }
 
-    /** Publishing itself, for [PublishWorker]: the changes once the phone's copy is read, [onProgress] hearing how far it has got. */
+    /** Publishing itself, for the device's work: the changes once the phone's copy is read, [onProgress] hearing how far it has got. */
     suspend fun runPublish(onProgress: (PublishProgress) -> Unit) {
         repository.loaded.first { it }
         _publishing.value = PublishProgress(0, repository.pending.value.size)
@@ -370,14 +268,14 @@ class AppContainer(context: Context) {
             refreshAll()
         } finally {
             _publishing.value = null
-            Widgets.update(appContext)
+            recordsChanged()
         }
     }
 
     /** Stops publishing, running or waiting for the network; the changes not yet sent stay on the phone. */
     fun cancelPublish() {
         if (_publishing.value == null) return
-        PublishWorker.cancel(appContext)
+        cancelPublishWork()
         _publishing.value = null
         say(textOf(Res.string.message_publish_cancelled))
     }
@@ -390,11 +288,8 @@ class AppContainer(context: Context) {
         if (_publishing.value != null) return
         scope.launch {
             repository.clearChanges()
-            for (change in repository.pending.value.outside.bills) {
-                val visibility = change.undo() ?: continue
-                ledger.saveTxn(change.txn.copy(visibility = visibility))
-            }
-            Widgets.update(appContext)
+            revertOutside(repository.pending.value.outside.bills)
+            recordsChanged()
             say(textOf(Res.string.message_changes_cleared))
         }
     }
@@ -404,8 +299,8 @@ class AppContainer(context: Context) {
 
     /** Says publishing stopped, and why. */
     fun reportPublishFailed(error: Exception) {
-        Log.w("Moments", "Publishing failed", error)
-        say(textOf(Res.string.error_publish, failureReason(appContext, error)))
+        logWarning("Moments", "Publishing failed", error)
+        say(textOf(Res.string.error_publish, failureReason(error)))
     }
 
     /**
@@ -425,7 +320,7 @@ class AppContainer(context: Context) {
                     onDismiss = {
                         scope.launch {
                             repository.delete(uid)
-                            Widgets.update(appContext)
+                            recordsChanged()
                         }
                     },
                 ),
@@ -449,7 +344,7 @@ class AppContainer(context: Context) {
                     onDismiss = {
                         scope.launch {
                             repository.revert(uid)
-                            Widgets.update(appContext)
+                            recordsChanged()
                         }
                     },
                 ),
@@ -466,7 +361,7 @@ class AppContainer(context: Context) {
     private suspend fun readAssetOrigin() {
         runCatching { api.site() }
             .onSuccess { site -> site.assets?.let(settings.assetOrigin::set) }
-            .onFailure { Log.w("Moments", "Couldn't read where the photos are served from", it) }
+            .onFailure { logWarning("Moments", "Couldn't read where the photos are served from", it) }
     }
 
     /** What the widgets were last drawn from, and on which day, so a refresh that brought nothing new leaves them be. */
@@ -486,11 +381,9 @@ class AppContainer(context: Context) {
         val last = widgetsDrawn
         if (last != null && last.first === drawn.first && last.second === drawn.second && last.third == drawn.third) return
         widgetsDrawn = drawn
-        Widgets.update(appContext)
+        recordsChanged()
     }
 }
-
-private const val DAY_MS = 24 * 60 * 60 * 1000L
 
 /** How long a trip's legs stay put before the phone routes them, so an edit in progress asks nothing. */
 private const val ROUTE_SETTLE_MS = 2_000L

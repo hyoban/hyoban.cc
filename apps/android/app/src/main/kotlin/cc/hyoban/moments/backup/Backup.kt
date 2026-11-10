@@ -36,9 +36,9 @@ class Backup(private val context: Context) {
     private val prefs = context.getSharedPreferences("backup", Context.MODE_PRIVATE)
 
     /** The WebDAV directory the backups go in; none until set. */
-    val url = Setting(prefs, "webdav_url", "")
+    val url = Setting(cc.hyoban.moments.SharedPrefs(prefs), "webdav_url", "")
 
-    val user = Setting(prefs, "webdav_user", "")
+    val user = Setting(cc.hyoban.moments.SharedPrefs(prefs), "webdav_user", "")
 
     /** The WebDAV password, in a file backups leave out, as the API's token is. */
     val password = Token(File(context.noBackupFilesDir, "webdav-password"))

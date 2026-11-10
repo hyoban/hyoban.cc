@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit
 // its notification saying how far it has got, and a link that drops waits for the network
 // and goes on, the originals already sent not sent again.
 
-/** Publishes every change kept on the phone, as [cc.hyoban.moments.AppContainer.publishPending] asks. */
+/** Publishes every change kept on the phone, as [cc.hyoban.moments.PhoneContainer.publishPending] asks. */
 class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     private val container get() = (applicationContext as MomentsApplication).container
 
@@ -79,7 +79,7 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                 Result.retry()
             } else {
                 container.reportPublishFailed(error)
-                notifyResult(context, textOf(Res.string.notification_publish_failed), failureReason(context, error))
+                notifyResult(context, textOf(Res.string.notification_publish_failed), failureReason(error))
                 Result.failure()
             }
         } finally {

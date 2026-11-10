@@ -32,7 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.exifinterface.media.ExifInterface
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.exifTime
@@ -175,7 +175,7 @@ data class PhotoDetails(
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun PhotoInfoPanel(container: AppContainer, details: PhotoDetails?, modifier: Modifier = Modifier, note: String? = null) {
+fun PhotoInfoPanel(container: PhoneContainer, details: PhotoDetails?, modifier: Modifier = Modifier, note: String? = null) {
     val context = LocalContext.current
     val place by produceState<String?>(null, details?.fix) {
         value = details?.fix?.let { runCatching { container.placeSearch.around(context, it).name }.getOrNull() }

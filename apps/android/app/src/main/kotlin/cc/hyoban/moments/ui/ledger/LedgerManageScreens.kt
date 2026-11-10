@@ -46,7 +46,7 @@ import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.design.AssistChip
 import cc.hyoban.moments.ui.design.FilterChipDefaults
 import cc.hyoban.moments.ui.design.ModalBottomSheet
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.ledger.Category
 import cc.hyoban.moments.ledger.CategoryType
@@ -66,7 +66,7 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun BookCategories(container: AppContainer, book: String) {
+internal fun BookCategories(container: PhoneContainer, book: String) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var income by rememberSaveable { mutableStateOf(false) }
@@ -187,7 +187,7 @@ private val ECB = setOf(
  * only when asked.
  */
 @Composable
-internal fun RatesSheet(container: AppContainer, onDismiss: () -> Unit) {
+internal fun RatesSheet(container: PhoneContainer, onDismiss: () -> Unit) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val show = rememberShowMessage()

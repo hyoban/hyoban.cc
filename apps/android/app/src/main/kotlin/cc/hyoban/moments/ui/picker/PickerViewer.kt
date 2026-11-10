@@ -70,7 +70,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
@@ -92,7 +92,7 @@ import cc.hyoban.moments.ui.viewer.PhotoInfoPanel
  */
 @Composable
 internal fun Viewer(
-    container: AppContainer,
+    container: PhoneContainer,
     shown: List<Pick>,
     start: Int,
     order: Map<String, Int>,

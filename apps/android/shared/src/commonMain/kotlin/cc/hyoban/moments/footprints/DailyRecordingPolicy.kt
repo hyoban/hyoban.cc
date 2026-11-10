@@ -5,7 +5,7 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 /** Monotonic-time policy for daily recording. A manual trip never uses this policy. */
-internal class DailyRecordingPolicy(now: Long) {
+class DailyRecordingPolicy(now: Long) {
     enum class Phase { ACTIVE, REST, PROBE }
     enum class RestReason { STILL, NO_FIX }
     var phase = Phase.ACTIVE

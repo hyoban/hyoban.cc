@@ -104,7 +104,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.TripRecord
@@ -163,7 +163,7 @@ internal fun fieldOf(cents: Long?): String = cents?.let { formatCents(it).replac
  * or starts from a Moment, an account or a day.
  */
 @Composable
-fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) {
+fun EntryScreen(container: PhoneContainer, args: LedgerEntryArgs, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val trips by container.shownTrips.collectAsStateWithLifecycle()
@@ -244,7 +244,7 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
 
 /** A ledger with no book yet gets its first, with its categories, as soon as a bill is to be written. */
 @Composable
-internal fun EnsureBook(container: AppContainer, enabled: Boolean = true) {
+internal fun EnsureBook(container: PhoneContainer, enabled: Boolean = true) {
     val chinese = LocalConfiguration.current.locales[0].language == "zh"
     val defaultBook = stringResource(Res.string.ledger_default_book)
     LaunchedEffect(enabled) { if (enabled) container.ledger.ensureBook(defaultBook, chinese) }
@@ -463,7 +463,7 @@ internal fun mealCategory(ledger: Ledger): String? = ledger.txns.asSequence()
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun BillFields(
-    container: AppContainer,
+    container: PhoneContainer,
     ledger: Ledger,
     draft: BillDraft,
     at: OffsetDateTime,
@@ -847,7 +847,7 @@ private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphi
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraft, at: OffsetDateTime, fixedKind: TxnKind?, withMoment: Boolean, keypad: Boolean) {
+private fun BillOptions(container: PhoneContainer, ledger: Ledger, draft: BillDraft, at: OffsetDateTime, fixedKind: TxnKind?, withMoment: Boolean, keypad: Boolean) {
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.shownTrips.collectAsStateWithLifecycle()
@@ -990,7 +990,7 @@ internal fun keypadFits(): Boolean = windowHeight() >= 600.dp
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun BillKeypad(
-    container: AppContainer,
+    container: PhoneContainer,
     ledger: Ledger,
     draft: BillDraft,
     at: OffsetDateTime,

@@ -133,7 +133,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.TripRecord
@@ -171,7 +171,7 @@ class PlaybackHolder : ViewModel() {
  * Moment's card opens it when tapped. The screen stays on while it plays.
  */
 @Composable
-fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> Unit, onBack: () -> Unit) {
+fun TripPlayerScreen(container: PhoneContainer, id: String, onMoment: (String) -> Unit, onBack: () -> Unit) {
     val trips by container.shownTrips.collectAsStateWithLifecycle()
     val all by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()

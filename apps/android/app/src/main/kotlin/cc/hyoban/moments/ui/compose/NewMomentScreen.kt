@@ -118,7 +118,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.local.Around
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.PhotoInfo
@@ -197,7 +197,7 @@ import cc.hyoban.moments.ui.picker.PhotoPickerScreen
  */
 @Composable
 fun NewMomentScreen(
-    container: AppContainer,
+    container: PhoneContainer,
     onBack: () -> Unit,
     onSaved: () -> Unit,
     edit: String? = null,
@@ -393,7 +393,7 @@ fun NewMomentScreen(
                 onSaved()
             } catch (error: Exception) {
                 saving = false
-                saveError = textOf(Res.string.error_save, failureReason(context, error))
+                saveError = textOf(Res.string.error_save, failureReason(error))
             }
         }
     }
@@ -1070,7 +1070,7 @@ internal fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (Of
  */
 private suspend fun buildMoment(
     context: Context,
-    container: AppContainer,
+    container: PhoneContainer,
     text: String,
     photos: List<Uri>,
     utility: Set<Uri>,

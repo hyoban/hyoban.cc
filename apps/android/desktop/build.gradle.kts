@@ -9,10 +9,14 @@ kotlin {
     jvmToolchain(17)
 }
 
+// The cities the map's fog of war lights, the site's own file, as the phone takes it into its assets.
+sourceSets["main"].resources.srcDir(rootProject.file("../web/src/data/boundaries"))
+
 dependencies {
     implementation(project(":shared"))
     implementation(libs.compose.multiplatform.desktop)
     implementation(libs.kotlinx.coroutines.swing)
+    implementation(libs.sqlite.bundled)
 }
 
 compose.desktop {

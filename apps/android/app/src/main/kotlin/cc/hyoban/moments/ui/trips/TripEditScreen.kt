@@ -34,7 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.spec.Visibility
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
@@ -72,7 +72,7 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun TripEditScreen(
-    container: AppContainer,
+    container: PhoneContainer,
     id: String?,
     onBack: () -> Unit,
     onMade: (String) -> Unit = {},

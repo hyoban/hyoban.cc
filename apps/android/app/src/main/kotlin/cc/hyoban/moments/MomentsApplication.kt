@@ -14,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import cc.hyoban.moments.camera.CameraStore
 
 class MomentsApplication : Application(), SingletonImageLoader.Factory {
-    lateinit var container: AppContainer
+    lateinit var container: PhoneContainer
         private set
 
     override fun onCreate() {
@@ -22,7 +22,7 @@ class MomentsApplication : Application(), SingletonImageLoader.Factory {
         // A backup fetched to restore goes in place before anything opens the databases.
         runCatching { cc.hyoban.moments.backup.BackupArchive.restoreStaged(this) }
             .onFailure { android.util.Log.e("Backup", "Restore failed", it) }
-        container = AppContainer(this)
+        container = PhoneContainer(this)
         cc.hyoban.moments.sidekey.SideKeys.initialize(this)
         // The paired camera, read once for 我, 记录 and the camera's own pages and services.
         container.scope.launch(Dispatchers.IO) { CameraStore.load(this@MomentsApplication) }

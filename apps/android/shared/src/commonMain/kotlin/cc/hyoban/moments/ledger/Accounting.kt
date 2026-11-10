@@ -16,7 +16,7 @@ enum class Flow { EXPENSE, INCOME }
  */
 data class Entry(val txn: Txn, val flow: Flow, val category: String?, val amount: Long)
 
-internal fun entriesOf(ledger: Ledger): List<Entry> {
+fun entriesOf(ledger: Ledger): List<Entry> {
     val out = mutableListOf<Entry>()
     // How much of each expense is still there to be refunded, as its refunds come in order.
     val left = mutableMapOf<String, Long>()
@@ -87,7 +87,7 @@ fun effectsOf(txn: Txn, accounts: Map<String, Account>, rates: Rates): List<Pair
     }
 }
 
-internal fun balancesOf(ledger: Ledger): Map<String, Long> {
+fun balancesOf(ledger: Ledger): Map<String, Long> {
     val out = ledger.accounts.associate { it.id to it.opening }.toMutableMap()
     for (txn in ledger.txns) {
         effectsOf(txn, ledger.accountsById, ledger.rates).forEach { (account, cents) -> out[account] = (out[account] ?: 0) + cents }

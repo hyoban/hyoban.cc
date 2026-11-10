@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.SwitchRow
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +40,7 @@ import kotlinx.coroutines.withContext
 
 /** Starting and pausing by Wi-Fi and Bluetooth, on the footprint settings page; all identifiers stay on this phone. */
 @Composable
-fun ConnectionAutomationSettings(container: AppContainer) {
+fun ConnectionAutomationSettings(container: PhoneContainer) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val store = container.connectionRules

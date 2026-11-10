@@ -35,7 +35,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.SwitchRow
@@ -84,7 +84,7 @@ data class FootprintsMapState(
 )
 
 @Composable
-fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @Composable (FootprintsMapState) -> Unit) {
+fun FootprintsOnMap(container: PhoneContainer, onSettings: () -> Unit, content: @Composable (FootprintsMapState) -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     // The sheet is a window over every page, so it closes for the settings page and opens again on the way back.
     var reopen by rememberSaveable { mutableStateOf(false) }

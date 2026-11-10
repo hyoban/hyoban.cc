@@ -29,7 +29,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ledger.Ledger
@@ -113,7 +113,7 @@ enum class FeedKind { ALL, MOMENTS, BILLS, CHARGES, CHECKINS }
  * whichever the ledger's pages have chosen, on the days [filter] keeps.
  */
 @Composable
-fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, filter: TimeFilter, kind: FeedKind = FeedKind.ALL): TimelineBills {
+fun rememberTimelineBills(container: PhoneContainer, moments: List<MomentRecord>, filter: TimeFilter, kind: FeedKind = FeedKind.ALL): TimelineBills {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val records by container.repository.records.collectAsStateWithLifecycle()
     val entries by container.repository.entries.collectAsStateWithLifecycle()
@@ -505,7 +505,7 @@ fun knownFootprints(day: String): Boolean = day in TrackMemory.days
 fun knownDayTrack(day: String): DayTrack? = TrackMemory.cache[day]
 
 @Composable
-fun rememberTimelineTracks(container: AppContainer): TimelineTracks {
+fun rememberTimelineTracks(container: PhoneContainer): TimelineTracks {
     // With the footprints turned off (记录项与公开), no day has any.
     if (!LocalSettings.current.isOn(Module.FOOTPRINTS)) return TimelineTracks.EMPTY
     val store = container.footprints

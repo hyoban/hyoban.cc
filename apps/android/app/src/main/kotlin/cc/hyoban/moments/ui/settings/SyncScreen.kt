@@ -53,7 +53,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.CHINA_PLACES_AMAP
 import cc.hyoban.moments.CHINA_PLACES_TENCENT
 import cc.hyoban.moments.ui.design.DropdownMenu
@@ -74,7 +74,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 /** 同步与来源: the API, its token and reading from it again; the keys the map's place search uses. */
 @Composable
-fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
+fun SyncScreen(container: PhoneContainer, onBack: () -> Unit) {
     val settings = container.settings
     // The setting whose dialog is open, by its place in the list, so it stays open across a rotation.
     var editing by rememberSaveable { mutableStateOf<Int?>(null) }

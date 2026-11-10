@@ -21,7 +21,7 @@ import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ledger.Ledger
@@ -62,7 +62,7 @@ fun filterBills(ledger: Ledger, filter: LedgerFilter, query: String, moments: Ma
  * by a search; what they came to over them, and the bills by day.
  */
 @Composable
-fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerNav) {
+fun LedgerListScreen(container: PhoneContainer, filter: LedgerFilter, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val trips by container.shownTrips.collectAsStateWithLifecycle()

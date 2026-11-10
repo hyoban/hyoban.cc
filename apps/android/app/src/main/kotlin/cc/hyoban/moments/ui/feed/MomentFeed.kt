@@ -66,7 +66,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
@@ -505,14 +505,14 @@ private const val EMPTY_FADE_IN_MS = 210
 
 /** Says when a refresh failed, as a snackbar in the app's host. */
 @Composable
-fun ShowRefreshErrors(container: AppContainer) {
+fun ShowRefreshErrors(container: PhoneContainer) {
     val show = rememberShowMessage()
     val error by container.repository.error.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val resources = LocalResources.current
 
     LaunchedEffect(error) {
-        error?.let { show(textOf(Res.string.message_refresh_failed, failureReason(context, it))) }
+        error?.let { show(textOf(Res.string.message_refresh_failed, failureReason(it))) }
     }
 }
 
@@ -531,7 +531,7 @@ fun TabRefreshBox(pull: PulledRefresh, content: @Composable BoxScope.() -> Unit)
 }
 
 @Composable
-fun rememberPulledRefresh(container: AppContainer): PulledRefresh {
+fun rememberPulledRefresh(container: PhoneContainer): PulledRefresh {
     val syncing by container.repository.syncing.collectAsStateWithLifecycle()
     var pulled by remember { mutableStateOf(false) }
     // Over once the refresh it started is.
