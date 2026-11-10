@@ -1430,4 +1430,9 @@
     <string name="camera_chosen">已选</string>
     <string name="camera_raw_kept">RAW 留在相机上</string>
     <string name="camera_loading">%1$s / %2$s · %3$s/s</string>
+    <string name="camera_delete">删除</string>
+    <string name="camera_delete_title">删除这张照片？</string>
+    <string name="camera_delete_body">%1$s 会从相机的存储卡上删掉，不能恢复。同一张的 RAW 也一起删掉。</string>
+    <string name="camera_deleting">正在删除</string>
+    <string name="camera_delete_failed">没删掉</string>
 </resources>

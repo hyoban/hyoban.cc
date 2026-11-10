@@ -3,6 +3,7 @@ package cc.hyoban.moments.camera
 import android.graphics.Bitmap
 import android.os.SystemClock
 import android.text.format.Formatter
+import android.widget.Toast
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.BackHandler
@@ -67,6 +68,7 @@ import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.isPhoneLandscape
+import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Button
@@ -103,12 +105,12 @@ fun CameraPhotosScreen(onClose: () -> Unit, onAdded: (List<Uri>) -> Unit) {
     CameraPhotos(onClose, onAdded)
 }
 
-/** The photos chosen, in the order they were, and each one's place among them. */
+/** The photos chosen, in the order they were, and each one's place among them, by name (a delete moves handles). */
 private class Choice {
     val photos = mutableStateListOf<Ptp.ObjectInfo>()
-    private val order by derivedStateOf { photos.withIndex().associate { (i, p) -> p.handle to i } }
+    private val order by derivedStateOf { photos.withIndex().associate { (i, p) -> p.name to i } }
     /** Where [info] is among those chosen, or -1. */
-    fun index(info: Ptp.ObjectInfo) = order[info.handle] ?: -1
+    fun index(info: Ptp.ObjectInfo) = order[info.name] ?: -1
     fun toggle(info: Ptp.ObjectInfo) {
         val at = index(info)
         if (at >= 0) photos.removeAt(at) else photos.add(info)
@@ -143,8 +145,8 @@ private fun CameraPhotos(onClose: () -> Unit, onAdded: (List<Uri>) -> Unit) {
     val ready = state as? CameraTransfer.State.Ready
     val subtitle = listOfNotNull(camera?.name, ready?.let { stringResource(R.string.camera_photo_count, it.total) }).joinToString(" · ")
     val sideways = isPhoneLandscape()
-    // The photo looked at full size: itself, as more may still be listed ahead of it.
-    var viewing by remember(transfer) { mutableStateOf<Ptp.ObjectInfo?>(null) }
+    // The photo looked at full size, by name: more may still be listed ahead of it, and a delete moves handles.
+    var viewing by remember(transfer) { mutableStateOf<String?>(null) }
 
     val add: () -> Unit = {
         failed = false
@@ -171,7 +173,7 @@ private fun CameraPhotos(onClose: () -> Unit, onAdded: (List<Uri>) -> Unit) {
             is CameraTransfer.State.Connecting -> Steps(s.step)
             is CameraTransfer.State.Failed -> Failed(s.reason) { attempt++ }
             is CameraTransfer.State.Ready -> Grid(transfer, s, chosen, enabled = downloading == null, columns = if (sideways) 8 else 4,
-                onOpen = { viewing = it })
+                onOpen = { viewing = it.name })
         }
         Column(Modifier.align(Alignment.BottomEnd).fillMaxWidth()) {
             if (downloading != null || failed) Surface(Modifier.fillMaxWidth(), color = tokens.surface) {
@@ -197,10 +199,39 @@ private fun CameraPhotos(onClose: () -> Unit, onAdded: (List<Uri>) -> Unit) {
         }
     }
     val photos = ready?.photos.orEmpty()
-    viewing?.let { photos.indexOf(it) }?.takeIf { it >= 0 }?.let { start ->
-        Viewer(transfer, photos, start, chosen, enabled = downloading == null,
+    // The photo asked about deleting, and whether its delete is under way.
+    var deleting by remember(transfer) { mutableStateOf<Ptp.ObjectInfo?>(null) }
+    var busy by remember(transfer) { mutableStateOf(false) }
+    viewing?.let { name -> photos.indexOfFirst { it.name == name } }?.takeIf { it >= 0 }?.let { start ->
+        Viewer(transfer, photos, start, chosen, enabled = downloading == null && !busy, busy = busy,
             // Added from there, it closes so the download shows.
-            addButton = { if (canAdd) addButton("camera_viewer_add") { viewing = null } }, onClose = { viewing = null })
+            addButton = { if (canAdd) addButton("camera_viewer_add") { viewing = null } },
+            onDelete = { deleting = it }, onClose = { viewing = null })
+    }
+    deleting?.let { info ->
+        AlertDialog(
+            onDismissRequest = { deleting = null },
+            title = { Text(stringResource(R.string.camera_delete_title)) },
+            text = { Text(stringResource(R.string.camera_delete_body, info.name)) },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.action_cancel)) } },
+            confirmButton = {
+                TextButton(onClick = {
+                    deleting = null
+                    busy = true
+                    // What the viewer turns to once it's gone: the next, else the one before.
+                    val at = photos.indexOfFirst { it.name == info.name }
+                    val next = (photos.getOrNull(at + 1) ?: photos.getOrNull(at - 1))?.name
+                    scope.launch {
+                        val gone = transfer.delete(info)
+                        busy = false
+                        if (gone) {
+                            chosen.photos.removeAll { it.name == info.name }
+                            viewing = next
+                        } else Toast.makeText(context, R.string.camera_delete_failed, Toast.LENGTH_SHORT).show()
+                    }
+                }, modifier = Modifier.testTag("camera_delete_confirm")) { Text(stringResource(R.string.camera_delete), color = tokens.danger) }
+            },
+        )
     }
 }
 
@@ -244,7 +275,7 @@ private fun Failed(reason: Int, onRetry: () -> Unit) {
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 private fun rememberThumb(transfer: CameraTransfer, info: Ptp.ObjectInfo): State<Bitmap?> =
-    produceState(null, info.handle) { value = transfer.thumbnail(info.handle) }
+    produceState(null, info.name) { value = transfer.thumbnail(info) }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
@@ -345,7 +376,9 @@ private fun Viewer(
     start: Int,
     chosen: Choice,
     enabled: Boolean,
+    busy: Boolean,
     addButton: @Composable () -> Unit,
+    onDelete: (Ptp.ObjectInfo) -> Unit,
     onClose: () -> Unit,
 ) {
     val haptics = rememberHaptics()
@@ -362,12 +395,16 @@ private fun Viewer(
     Box(Modifier.fillMaxSize().background(Color.Black).testTag("camera_viewer")) {
         // Zoomed in, a swipe moves the photo rather than turning the page.
         var zoomed by remember { mutableStateOf(false) }
+        // The original of the photo shown, once the pager is still, so swiping past doesn't queue
+        // downloads; by name, so a delete that shortens the list asks for the one now shown.
+        val shown = photos.getOrNull(pager.currentPage)
+        LaunchedEffect(shown?.name, pager.isScrollInProgress) {
+            if (!pager.isScrollInProgress && shown != null && shown.photo) transfer.loadOriginal(shown)
+        }
         HorizontalPager(pager, Modifier.fillMaxSize(), beyondViewportPageCount = 0, userScrollEnabled = !zoomed, key = { photos[it].handle }) { page ->
             val info = photos[page]
             val thumb by rememberThumb(transfer, info)
-            // The original is asked for once its page is the one shown, so swiping past doesn't queue downloads.
-            val settled = pager.settledPage == page
-            LaunchedEffect(settled) { if (settled && info.photo) transfer.loadOriginal(info) }
+            val settled = pager.currentPage == page
             val original = transfer.originalOf(info)
             val file = original?.file
             var shape by remember(info.handle) { mutableFloatStateOf(0f) }
@@ -393,7 +430,17 @@ private fun Viewer(
             }
             Text("${pager.currentPage + 1} / ${photos.size}", style = AppTheme.typography.body, color = MediaOverlay.content,
                 modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-            Box(Modifier.size(48.dp))
+            IconButton(onClick = { current?.let(onDelete) }, enabled = enabled && current != null, modifier = Modifier.testTag("camera_viewer_delete")) {
+                Icon(AppIcons.Trash, contentDescription = stringResource(R.string.camera_delete), tint = MediaOverlay.content)
+            }
+        }
+        if (busy) Column(
+            Modifier.fillMaxSize().background(MediaOverlay.bar),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Space.s, Alignment.CenterVertically),
+        ) {
+            Spinner(color = MediaOverlay.content)
+            Text(stringResource(R.string.camera_deleting), style = AppTheme.typography.caption, color = MediaOverlay.content)
         }
         if (current != null) Column(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().padding(horizontal = Space.gutter, vertical = Space.m),
