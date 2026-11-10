@@ -148,6 +148,11 @@ private fun CameraPhotos(onClose: () -> Unit, onAdded: (List<Uri>) -> Unit) {
     // The photo looked at full size, by its key: the list it is in may change under it.
     var viewing by remember(transfer) { mutableStateOf<String?>(null) }
 
+    // The photos asked about deleting: the one in the viewer, or those chosen; and whether the
+    // viewer's delete is under way.
+    var deleting by remember(transfer) { mutableStateOf<List<CameraPhoto>?>(null) }
+    var busy by remember(transfer) { mutableStateOf(false) }
+
     val add: () -> Unit = {
         failed = false
         downloading = scope.launch {
@@ -159,7 +164,12 @@ private fun CameraPhotos(onClose: () -> Unit, onAdded: (List<Uri>) -> Unit) {
             } finally { downloading = null }
         }
     }
-    val canAdd = chosen.photos.isNotEmpty() && downloading == null
+    // The chosen being deleted from the grid: how many, and how many are gone.
+    var removing by remember(transfer) { mutableStateOf<Job?>(null) }
+    var removed by remember(transfer) { mutableIntStateOf(0) }
+    var toRemove by remember(transfer) { mutableIntStateOf(0) }
+    val idle = downloading == null && removing == null
+    val canAdd = chosen.photos.isNotEmpty() && idle
     val addButton = @Composable { tag: String, first: () -> Unit ->
         Button(onClick = { first(); add() }, modifier = Modifier.testTag(tag)) { Text(stringResource(R.string.camera_add, chosen.photos.size)) }
     }
@@ -167,16 +177,30 @@ private fun CameraPhotos(onClose: () -> Unit, onAdded: (List<Uri>) -> Unit) {
     SubPage(
         stringResource(R.string.camera_photos_title), onClose, subtitle = subtitle.ifEmpty { null }, close = true,
         // On its side the button goes up into the bar (H39).
-        actions = { if (sideways && canAdd) addButton("camera_add") {} },
+        actions = {
+            if (canAdd) IconButton(onClick = { deleting = chosen.photos.toList() }, modifier = Modifier.testTag("camera_delete_chosen")) {
+                Icon(AppIcons.Trash, contentDescription = stringResource(R.string.camera_delete_chosen, chosen.photos.size))
+            }
+            if (sideways && canAdd) addButton("camera_add") {}
+        },
     ) {
         when (val s = state) {
             is CameraTransfer.State.Connecting -> Steps(s.step)
             is CameraTransfer.State.Failed -> Failed(s.reason) { attempt++ }
-            is CameraTransfer.State.Ready -> Grid(transfer, s, chosen, enabled = downloading == null, columns = if (sideways) 8 else 4,
+            is CameraTransfer.State.Ready -> Grid(transfer, s, chosen, enabled = idle, columns = if (sideways) 8 else 4,
                 onOpen = { viewing = it.key })
         }
         Column(Modifier.align(Alignment.BottomEnd).fillMaxWidth()) {
-            if (downloading != null || failed) Surface(Modifier.fillMaxWidth(), color = tokens.surface) {
+            if (removing != null) Surface(Modifier.fillMaxWidth(), color = tokens.surface) {
+                Column(Modifier.navigationBarsPadding().padding(horizontal = Space.gutter, vertical = Space.m), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.camera_deleting_count, (removed + 1).coerceAtMost(toRemove), toRemove),
+                            style = AppTheme.typography.body, modifier = Modifier.weight(1f))
+                        TextButton(onClick = { removing?.cancel() }, modifier = Modifier.testTag("camera_delete_stop")) { Text(stringResource(R.string.camera_stop)) }
+                    }
+                    LinearProgressIndicator({ removed.toFloat() / toRemove.coerceAtLeast(1) }, color = tokens.tx)
+                }
+            } else if (downloading != null || failed) Surface(Modifier.fillMaxWidth(), color = tokens.surface) {
                 Column(Modifier.navigationBarsPadding().padding(horizontal = Space.gutter, vertical = Space.m), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     val count = chosen.photos.size
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -199,35 +223,52 @@ private fun CameraPhotos(onClose: () -> Unit, onAdded: (List<Uri>) -> Unit) {
         }
     }
     val photos = ready?.photos.orEmpty()
-    // The photo asked about deleting, and whether its delete is under way.
-    var deleting by remember(transfer) { mutableStateOf<CameraPhoto?>(null) }
-    var busy by remember(transfer) { mutableStateOf(false) }
     viewing?.let { key -> photos.indexOfFirst { it.key == key } }?.takeIf { it >= 0 }?.let { start ->
-        Viewer(transfer, photos, start, chosen, enabled = downloading == null && !busy, busy = busy,
+        Viewer(transfer, photos, start, chosen, enabled = idle && !busy, busy = busy,
             // Added from there, it closes so the download shows.
             addButton = { if (canAdd) addButton("camera_viewer_add") { viewing = null } },
-            onDelete = { deleting = it }, onClose = { viewing = null })
+            onDelete = { deleting = listOf(it) }, onClose = { viewing = null })
     }
-    deleting?.let { info ->
+    deleting?.let { these ->
+        val one = these.singleOrNull()
         AlertDialog(
             onDismissRequest = { deleting = null },
-            title = { Text(stringResource(R.string.camera_delete_title)) },
-            text = { Text(stringResource(R.string.camera_delete_body, info.name)) },
+            title = { Text(if (one != null) stringResource(R.string.camera_delete_title) else stringResource(R.string.camera_delete_many_title, these.size)) },
+            text = { Text(if (one != null) stringResource(R.string.camera_delete_body, one.name) else stringResource(R.string.camera_delete_many_body)) },
             dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.action_cancel)) } },
             confirmButton = {
                 TextButton(onClick = {
                     deleting = null
-                    busy = true
-                    // What the viewer turns to once it's gone: the next, else the one before.
-                    val at = photos.indexOfFirst { it.key == info.key }
-                    val next = (photos.getOrNull(at + 1) ?: photos.getOrNull(at - 1))?.key
-                    scope.launch {
-                        val gone = transfer.delete(info)
-                        busy = false
-                        if (gone) {
-                            chosen.photos.removeAll { it.content == info.content }
-                            viewing = next
-                        } else Toast.makeText(context, R.string.camera_delete_failed, Toast.LENGTH_SHORT).show()
+                    if (one != null && viewing != null) {
+                        busy = true
+                        // What the viewer turns to once it's gone: the next, else the one before.
+                        val at = photos.indexOfFirst { it.key == one.key }
+                        val next = (photos.getOrNull(at + 1) ?: photos.getOrNull(at - 1))?.key
+                        scope.launch {
+                            val gone = transfer.delete(one)
+                            busy = false
+                            if (gone) {
+                                chosen.photos.removeAll { it.content == one.content }
+                                viewing = next
+                            } else Toast.makeText(context, R.string.camera_delete_failed, Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        // One at a time, each leaving the choice once the camera says it's gone;
+                        // those it couldn't delete stay chosen.
+                        removed = 0
+                        toRemove = these.size
+                        removing = scope.launch {
+                            var missed = 0
+                            try {
+                                these.forEach { photo ->
+                                    if (transfer.delete(photo)) chosen.photos.removeAll { it.content == photo.content } else missed++
+                                    removed++
+                                }
+                            } finally {
+                                removing = null
+                                if (missed > 0) Toast.makeText(context, context.getString(R.string.camera_delete_missed, missed), Toast.LENGTH_SHORT).show()
+                            }
+                        }
                     }
                 }, modifier = Modifier.testTag("camera_delete_confirm")) { Text(stringResource(R.string.camera_delete), color = tokens.danger) }
             },

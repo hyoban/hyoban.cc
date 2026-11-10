@@ -552,7 +552,8 @@ UbiquitousBear/shutter-bridge's measurements on an a7C II for the Wi‑Fi one.
   band is the camera's to choose: on 2.4 GHz the a7C II gave about 3 MB/s, on 5 GHz several
   times that. The viewer's 删除 deletes a photo from the camera's card, after asking, in the
   same session: `SDIO_DeleteContent` (0x9250) takes the content, a JPEG's RAW too, and the
-  camera confirms with event 0xC240. Thumbnails are `SDIO_GetContentCompressedData` (0x923E),
+  camera confirms with event 0xC240. With photos chosen, the bar's 删除 deletes them all, after
+  asking, one at a time with how far it is and 停止; those it couldn't delete stay chosen. Thumbnails are `SDIO_GetContentCompressedData` (0x923E),
   and chosen ones download in 4 MiB pieces (`SDIO_GetContentData` 0x923D), or come from the
   cache when looked
   at, to the gallery's `Pictures/Here/`,
