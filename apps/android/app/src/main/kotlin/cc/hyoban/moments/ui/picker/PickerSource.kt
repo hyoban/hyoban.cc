@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.ui.viewer.VideoState
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
@@ -121,8 +122,11 @@ internal interface Pick {
     /** Once the viewer rests on it. */
     fun settled() {}
 
-    /** It full size in the viewer. */
-    @Composable fun Page(onZoom: (Boolean) -> Unit)
+    /**
+     * It full size in the viewer, [active] while it is the one shown: a video then plays over its
+     * still through [video], which the viewer's controls work.
+     */
+    @Composable fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit)
 }
 
 /**

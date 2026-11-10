@@ -280,6 +280,12 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
         return Request.Builder().url(url).header("Cookie", "token_uid=${s.uid}; token=${NasProtocol.encrypt(s.token, s.key)}").build()
     }
 
+    /** [photo]'s original as a player asks for it: its address, and the cookie it wants. */
+    suspend fun original(photo: NasPhoto): Pair<String, Map<String, String>> {
+        val request = stream(photo, NasProtocol.ORIGINAL)
+        return request.url.toString() to mapOf("Cookie" to request.header("Cookie").orEmpty())
+    }
+
     private val thumbs = LruCache<String, Bitmap>(400)
 
     /** [photo]'s thumbnail, [size] the stream's, small for the grid and big for the viewer; null when it couldn't be had. */

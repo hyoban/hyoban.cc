@@ -88,12 +88,20 @@ class VideoState {
 
 /**
  * The video at [url] over its poster while its page is [active]: it loads on arriving
- * at the page and plays when it can; leaving the page lets it go.
+ * at the page and plays when it can; leaving the page lets it go. With [headers] it is asked for
+ * as a sign-in wants; without [window] it never goes on in a window of its own.
  */
 @Composable
-fun VideoPlayback(url: String, active: Boolean, state: VideoState, modifier: Modifier = Modifier) {
+fun VideoPlayback(
+    url: String,
+    active: Boolean,
+    state: VideoState,
+    modifier: Modifier = Modifier,
+    headers: Map<String, String> = emptyMap(),
+    window: Boolean = true,
+) {
     val context = LocalContext.current
-    val player = rememberCachedPlayer(url, active) {
+    val player = rememberCachedPlayer(url, active, headers = headers) {
         volume = if (VideoSound.on) 1f else 0f
         setAudioAttributes(VIDEO_AUDIO, VideoSound.on)
         playWhenReady = true
@@ -134,7 +142,7 @@ fun VideoPlayback(url: String, active: Boolean, state: VideoState, modifier: Mod
 
     // Left for another app, it pauses; in a window of its own the app is only paused, not stopped.
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { player?.pause() }
-    PictureInPicture.Offer(state.playing, state.size.width, state.size.height)
+    if (window) PictureInPicture.Offer(state.playing, state.size.width, state.size.height)
 
     if (player != null) MediaSurface(player, if (state.playing) modifier.keepScreenOn() else modifier)
 }

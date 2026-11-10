@@ -571,8 +571,18 @@ system again. Its title switches between 所有照片, the gallery's albums by s
 (Camera, below) and the UGREEN NAS's photos and albums (NAS, below); what is chosen stays chosen across them, numbered in the order it goes into the
 Moment, up to the nine a Moment holds. The grid is by day, newest first, four across (eight on its
 side), a video with its length and a motion photo marked 实况, its XMP read from the media store.
+Two fingers pinched or spread change how many go across, three, four or six (six, eight or twelve
+on its side), kept for next time; at six they are by the month and only looked through, without
+their circles, what is chosen keeping its border and number. While the grid scrolls a handle shows
+at its right: dragged, it takes the grid through what it holds, a bubble beside it saying the
+month, and reaches only what has been read, so the NAS's reads on at the end.
 A tap opens one full size on black, swiped through, zoomed as the photo viewer zooms, chosen and
-added from there; its 删除 hands one of the gallery's to the system, which asks and moves it to its bin
+added from there. Under it, upright, the photos before and after are small in a row, the one shown
+in the middle and those chosen dotted: a tap turns to one, and dragging the row turns the viewer
+along. A video of the gallery's or the NAS's (MP4 or QuickTime) plays where it is, silent until
+asked, with the photo viewer's controls, the NAS's read from its stream as far as it is watched and
+not kept; a motion photo of the gallery's plays its clip once, read from inside its file, and with
+its sound while held. The camera's videos and the NAS's motion photos stay stills. Its 删除 hands one of the gallery's to the system, which asks and moves it to its bin
 (`createTrashRequest`), and deletes one of the camera's off its card, after asking. With
 photos chosen, the bar's 删除 does the same with those chosen from the source shown: the
 gallery's in one request, the system asking once, the camera's one at a time. 加入 adds the gallery's as they are, their

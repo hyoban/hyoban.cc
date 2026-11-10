@@ -1,5 +1,8 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.ui.viewer.VideoPlayback
+import cc.hyoban.moments.ui.viewer.VideoState
+import cc.hyoban.moments.ui.viewer.VideoWaiting
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
@@ -217,9 +220,16 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource)
         }.value
     }
 
-    /** Its big thumbnail over its small one; the original comes down only when it is added. */
+    /**
+     * Its big thumbnail over its small one; the original comes down only when it is added. A
+     * video plays from the NAS over it, as much of it as is watched.
+     */
     @Composable
-    override fun Page(onZoom: (Boolean) -> Unit) {
+    override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit) {
+        val plays = photo.video && photo.mime in PLAYED
+        val stream by produceState<Pair<String, Map<String, String>>?>(null, key, active) {
+            if (active && plays) value = runCatching { source.nas.original(photo) }.getOrNull()
+        }
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             val small by rememberThumb(this@NasPick)
             val large by rememberThumb(this@NasPick, size = 1440)
@@ -228,12 +238,16 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource)
                 ?: if (photo.width != null && photo.height != null && photo.height > 0) photo.width.toFloat() / photo.height else 1f
             ZoomablePhoto(shape, onZoom) {
                 shown?.let { Image(it.asImageBitmap(), contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
+                stream?.let { (url, headers) -> VideoPlayback(url, active, video, Modifier.fillMaxSize(), headers = headers, window = false) }
             }
             if (shown == null) Spinner(color = MediaOverlay.content)
-            if (photo.video) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))
+            if (stream != null) VideoWaiting(video) else if (photo.video && !plays) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))
         }
     }
 }
+
+/** The videos the viewer plays itself, as the players read MP4 alone. */
+private val PLAYED = setOf("video/mp4", "video/quicktime")
 
 /**
  * The NAS's photos for one listing, its timeline or one of its albums, read a page at a time as

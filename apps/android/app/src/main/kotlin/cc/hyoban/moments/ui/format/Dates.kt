@@ -68,6 +68,10 @@ fun formatMonth(dateKey: String, locale: Locale = Locale.getDefault()): Pair<Str
     return name to "${date.year}"
 }
 
+/** `2026年10月` or `October 2026`, for a month among the years. */
+fun formatYearMonth(month: java.time.YearMonth, locale: Locale = Locale.getDefault()): String =
+    if (locale.chinese()) "${month.year}年${month.monthValue}月" else "${month.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)} ${month.year}"
+
 /** A month of the year by its number, for a filter's choice: `10 月`, `Oct`. */
 fun formatMonthOnly(month: Int, locale: Locale = Locale.getDefault()): String =
     if (locale.chinese()) "$month 月" else java.time.Month.of(month).getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
