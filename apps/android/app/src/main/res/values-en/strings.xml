@@ -1290,11 +1290,7 @@
     <string name="permission_locate_title">Use location to find where you are</string>
     <string name="permission_locate_body">Used only when picking a place or tapping locate, to find where you are and what’s nearby.</string>
     <string name="permission_locate_fact">Your location goes into a record only when you pick it</string>
-    <string name="permission_photo_title">Read where photos were taken</string>
-    <string name="permission_photo_body">When a photo carries where it was taken, it fills in this record’s place and time.</string>
-    <string name="permission_photo_only">Only the photos you pick are read</string>
     <string name="permission_photo_candidate">A place read is only a suggestion until you pick it</string>
-    <string name="permission_photo_secondary">No, I’ll choose</string>
     <string name="permission_background_title">Keep recording in the background</string>
     <string name="permission_background_body">To keep recording in other apps, when locked or after a restart, set location to Allow all the time.</string>
     <string name="permission_background_path">Settings › Permissions › Location › Allow all the time</string>
@@ -1396,7 +1392,6 @@
     <string name="camera_problem_location">No location permission to send from</string>
     <string name="camera_problem_link_off">Location Info. Link is off on the camera</string>
     <string name="camera_problem_taken">Another phone or app is sending the camera its location</string>
-    <string name="camera_photos_title">From camera</string>
     <string name="camera_photo_count">%1$d photos</string>
     <string name="camera_step_wifi_on">Turning on the camera\'s Wi‑Fi</string>
     <string name="camera_step_joining">Joining the camera\'s Wi‑Fi</string>
@@ -1414,7 +1409,6 @@
     <string name="camera_stop">Stop</string>
     <string name="camera_photo_description">Photo %1$s</string>
     <string name="camera_raw_description">RAW %1$s, kept on the camera</string>
-    <string name="action_from_camera">From camera</string>
     <string name="me_camera_sending">Sending location</string>
     <string name="me_camera_unpaired">Not paired</string>
     <string name="permission_camera_title">Connect to the camera</string>
@@ -1437,4 +1431,23 @@
     <string name="camera_delete_many_body">They\'re deleted from the camera\'s card and can\'t be brought back. Their RAWs go too.</string>
     <string name="camera_deleting_count">Deleting %1$d of %2$d</string>
     <string name="camera_delete_missed">%1$d not deleted</string>
+    <string name="picker_all">All photos</string>
+    <string name="picker_switch">Switch photo source</string>
+    <string name="picker_chosen_count">%1$d chosen</string>
+    <string name="picker_limited">Only the %1$d photos you allowed are shown</string>
+    <string name="picker_change">Change</string>
+    <string name="picker_adding">Adding %1$d of %2$d</string>
+    <string name="picker_add_note">Photos from the camera are saved to the gallery’s Here album first.</string>
+    <string name="picker_trash">Move to bin</string>
+    <string name="picker_trash_failed">Not moved to the bin</string>
+    <string name="picker_info_camera_note">Settings and place show once the original is down.</string>
+    <string name="picker_camera_card">Camera’s memory card</string>
+    <string name="picker_empty">No photos</string>
+    <string name="picker_video_description">Video %1$s</string>
+    <string name="photo_info">Info</string>
+    <string name="photo_info_place">Where it was taken</string>
+    <string name="permission_gallery_title">Read your photos and videos</string>
+    <string name="permission_gallery_body">Choose photos and videos right in Here, with when and where they were taken.</string>
+    <string name="permission_gallery_local">Read on this phone only; added to a Moment only when chosen</string>
+    <string name="permission_gallery_secondary">No, use the system’s picker</string>
 </resources>

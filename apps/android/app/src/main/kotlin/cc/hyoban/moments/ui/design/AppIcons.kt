@@ -71,6 +71,8 @@ object AppIcons {
     val Block: ImageVector by lazy { icon("block", false, listOf("M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0z", "M6 6L18 18")) }
     val Archive: ImageVector by lazy { icon("archive", false, listOf("M5.75 4H18.25A2.25 2.25 0 0 1 20.5 6.25V6.25A2.25 2.25 0 0 1 18.25 8.5H5.75A2.25 2.25 0 0 1 3.5 6.25V6.25A2.25 2.25 0 0 1 5.75 4z", "M5 8.5V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8.5", "M10 12.5L14 12.5")) }
     val Backspace: ImageVector by lazy { icon("backspace", true, listOf("M8 5h11a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 19 19H8l-5.5-7z", "M11 9.5L16 14.5", "M16 9.5L11 14.5")) }
+    val File: ImageVector by lazy { icon("file", false, listOf("M6 3.5h8l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V5a1.5 1.5 0 0 1 1.5-1.5z", "M14 3.5V8h4")) }
+    val Folder: ImageVector by lazy { icon("folder", false, listOf("M3.5 8A2.5 2.5 0 0 1 6 5.5h3.2a1.5 1.5 0 0 1 1.1.5l1.4 1.5H18A2.5 2.5 0 0 1 20.5 10v6.5A2.5 2.5 0 0 1 18 19H6a2.5 2.5 0 0 1-2.5-2.5z")) }
     val FileOpen: ImageVector by lazy { icon("file-open", false, listOf("M6 3.5h8l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V5a1.5 1.5 0 0 1 1.5-1.5z", "M14 3.5V8h4", "M9 14.5l3-3 3 3", "M12 11.5L12 17.5")) }
 
     // Media
@@ -83,6 +85,7 @@ object AppIcons {
     val PhotoAdd: ImageVector by lazy { icon("photo-add", false, listOf("M12 4.5H7.5a4 4 0 0 0-4 4v7a4 4 0 0 0 4 4h9a4 4 0 0 0 4-4V12", "M3.6 16.5 8 12.6a1.5 1.5 0 0 1 2 0l3.5 3", "M18 3L18 9", "M15 6L21 6")) }
     val PhotoOff: ImageVector by lazy { icon("photo-off", false, listOf("M20.5 16V7.5a3 3 0 0 0-3-3H8", "M4.2 5.4A3 3 0 0 0 3.5 7.5v9a3 3 0 0 0 3 3h11a3 3 0 0 0 2.1-.8", "M3.5 16.5l5-5 4 4", "M3 3L21 21")) }
     val Camera: ImageVector by lazy { icon("camera", false, listOf("M8 6.5 9.2 4.6A1.5 1.5 0 0 1 10.5 4h3a1.5 1.5 0 0 1 1.3.6L16 6.5h2.5a2 2 0 0 1 2 2V17a2.5 2.5 0 0 1-2.5 2.5H6A2.5 2.5 0 0 1 3.5 17V8.5a2 2 0 0 1 2-2z", "M8.4 12.8a3.6 3.6 0 1 0 7.2 0a3.6 3.6 0 1 0 -7.2 0z"), listOf("M16.1 9.3a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0 -2.4 0z")) }
+    val Aperture: ImageVector by lazy { icon("aperture", false, listOf("M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0z", "M12 3.5l3.2 7.3", "M20.1 9.5l-7.9 1.1", "M17.4 18.6l-4.8-6.3", "M6.6 18.6l4.1-6.8", "M3.9 9.4l7.6 2.4")) }
     val CameraBody: ImageVector by lazy { icon("camera-body", false, listOf("M7 7.5H17A4 4 0 0 1 21 11.5V15.5A4 4 0 0 1 17 19.5H7A4 4 0 0 1 3 15.5V11.5A4 4 0 0 1 7 7.5z", "M5.5 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 11.5 6v1.5", "M10.9 13.5a3.6 3.6 0 1 0 7.2 0a3.6 3.6 0 1 0 -7.2 0z"), listOf("M5.5 11a1 1 0 1 0 2 0a1 1 0 1 0 -2 0z")) }
     val Live: ImageVector by lazy { icon("live", false, listOf("M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0z", "M6.75 12a5.25 5.25 0 1 0 10.5 0a5.25 5.25 0 1 0 -10.5 0z"), listOf("M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z")) }
     val LiveOff: ImageVector by lazy { icon("live-off", false, listOf("M18.5 17.3A8.5 8.5 0 0 0 6.7 5.5", "M4.5 8A8.5 8.5 0 0 0 16 19.5", "M3 3L21 21"), listOf("M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z")) }

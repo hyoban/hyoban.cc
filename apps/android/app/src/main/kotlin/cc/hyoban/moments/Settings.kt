@@ -77,11 +77,6 @@ class Settings(context: Context) {
     /** Which of the two the place picker asks first in China when both keys are set, `amap` or `tencent`; the other answers when it can't. */
     val chinaPlaces = Setting(prefs, "china_places", CHINA_PLACES_AMAP)
 
-    /** Whether the app has asked once to see where picked photos were taken; it doesn't ask again. */
-    var askedMediaLocation: Boolean
-        get() = prefs.getBoolean("asked_media_location", false)
-        set(value) = prefs.edit { putBoolean("asked_media_location", value) }
-
     /**
      * Whether 初次打开 has been through, or wasn't needed: a phone already reading an API never
      * sees it, and it shows once, the first time the app opens with nothing set up.

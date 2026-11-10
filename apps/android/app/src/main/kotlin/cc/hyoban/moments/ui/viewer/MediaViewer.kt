@@ -104,6 +104,11 @@ import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.graphics.graphicsLayer
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -140,6 +145,8 @@ fun MediaViewer(
     val pager = rememberPagerState(initialPage = index.coerceIn(0, media.lastIndex)) { media.size }
     var zoomed by remember { mutableStateOf(false) }
     var chrome by rememberSaveable { mutableStateOf(true) }
+    // The shown one's info under it (PhotoInfo), swiped up or opened from the bar.
+    var info by rememberSaveable { mutableStateOf(false) }
     // How far the photo has been dragged up or down, read only where it is drawn, so a drag
     // moves pixels rather than rebuilding the screen every frame.
     var drag by remember { mutableFloatStateOf(0f) }
@@ -202,11 +209,14 @@ fun MediaViewer(
             }
         }
 
+        BackHandler(enabled = info) { info = false }
+        val opened by animateFloatAsState(if (info) 1f else 0f, AppTheme.motionScheme.defaultSpatialSpec(), label = "info")
+        val panelHeight = maxHeight * 0.55f
         val backdrop = Color.Black
         Box(Modifier.fillMaxSize().drawBehind { drawRect(backdrop.copy(alpha = 1f - progress())) })
         HorizontalPager(
             pager,
-            Modifier.fillMaxSize()
+            Modifier.fillMaxSize().padding(bottom = panelHeight * opened)
                 // The drag moves and shrinks the photo in layout, not just in drawing, so
                 // where it is when let go is where its flight back into its tile starts.
                 .layout { measurable, constraints ->
@@ -226,8 +236,16 @@ fun MediaViewer(
                         drag += delta
                     },
                     onDragStopped = { velocity ->
-                        if (abs(drag) > closeAt || abs(velocity) > 2000f) onBack()
-                        else animate(drag, 0f, initialVelocity = velocity) { value, _ -> drag = value }
+                        // Up opens the info, down puts it away; down again, or with no info, closes.
+                        val up = drag < 0f && (-drag > closeAt / 2 || velocity < -1500f)
+                        when {
+                            up || (info && drag > 0f) -> {
+                                info = up
+                                animate(drag, 0f, initialVelocity = velocity) { value, _ -> drag = value }
+                            }
+                            drag > 0f && (drag > closeAt || velocity > 2000f) -> onBack()
+                            else -> animate(drag, 0f, initialVelocity = velocity) { value, _ -> drag = value }
+                        }
                     },
                 ),
             userScrollEnabled = !zoomed,
@@ -292,9 +310,18 @@ fun MediaViewer(
                             .heightIn(min = 48.dp).wrapContentHeight(Alignment.CenterVertically)
                             .padding(horizontal = Space.s).testTag("info_day"),
                     )
+                    Tooltip(stringResource(R.string.photo_info)) {
+                        IconButton(onClick = { info = true }, modifier = Modifier.testTag("photo_info_open")) {
+                            Icon(AppIcons.Info, contentDescription = stringResource(R.string.photo_info), tint = MediaOverlay.content)
+                        }
+                    }
                     ShareShown(container, shown)
                 }
             }
+        }
+        if (opened > 0f) {
+            val details = rememberMediaDetails(container, shown)
+            PhotoInfoPanel(container, details, Modifier.align(Alignment.BottomCenter).height(panelHeight).graphicsLayer { translationY = size.height * (1f - opened) })
         }
     }
 }
@@ -549,4 +576,28 @@ private fun ViewerSystemBars(hidden: Boolean) {
     LaunchedEffect(hidden) {
         if (hidden || landscape) controller.hide(WindowInsetsCompat.Type.systemBars()) else controller.show(WindowInsetsCompat.Type.systemBars())
     }
+}
+
+/** What [media] says of itself for the info panel: the record's own, then the EXIF of its file, or of the start of its original. */
+@Composable
+private fun rememberMediaDetails(container: AppContainer, media: MomentMedia): PhotoDetails? {
+    val context = LocalContext.current
+    return produceState<PhotoDetails?>(null, media.uid) {
+        val published = media.published
+        val base = PhotoDetails(
+            takenAt = media.takenAt?.let { runCatching { java.time.OffsetDateTime.parse(it) }.getOrNull() },
+            offset = media.takenAt?.takeIf { it.length > 19 }?.let { at -> Regex("([+-]\\d{2}:\\d{2}|Z)$").find(at)?.value?.let { if (it == "Z") "+00:00" else it } },
+            name = published?.key?.substringAfterLast('/') ?: media.local?.uri?.substringAfterLast('/'),
+            format = PhotoDetails.format(published?.contentType, published?.key),
+            width = media.width, height = media.height, bytes = published?.bytes,
+        )
+        value = base
+        if (media.type == MediaType.VIDEO) return@produceState
+        val local = media.local?.uri
+        value = when {
+            published == null && local != null -> PhotoDetails.readLocal(context, base, android.net.Uri.parse(local))
+            published?.original == true -> PhotoDetails.readRemote(base, container.mediaUrls.asset(published.key))
+            else -> base
+        }
+    }.value
 }

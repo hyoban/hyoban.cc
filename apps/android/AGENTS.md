@@ -144,6 +144,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Top bars switch between what the page is one of with `TitleMenu` and put a control over the
   subtitle's figures in `subtitleAction`. Settings are `SegmentedGroup` with `SwitchRow` and
   `ActionRow`, switches `AppSwitch`. What floats over a photo or the map is `FloatingButton`.
+- An action the system confirms itself (a gallery photo to its bin) goes straight to the
+  system's prompt; the app doesn't ask first too.
 - Haptics are the design's roles (lift, tick, armed/disarmed, toggle, key, confirm/reject) from
   `rememberHaptics()` in `ui/design/Haptics.kt`; call those, never `HapticFeedbackType` directly.
 - A 40dp button keeps its 48dp target in the layout (`minimumInteractiveComponentSize`); a 36dp
