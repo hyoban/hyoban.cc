@@ -25,6 +25,16 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   and the footprints' stores, the widgets). Where the base needs something of the device, it is an
   abstract or open member the device's container gives, not a `Context`. Settings are kept
   through `Prefs`: the phone's shared preferences, a JSON file on the Mac.
+- A page in `:shared` asks its device for what the phone and the Mac each do their own way
+  through `LocalDevice` (`ui/Device.kt`): the maps, a Moment's menu, sharing, editing a place.
+  `PhoneDevice` hands each to the phone's own code; `DesktopDevice` leaves a map's space blank
+  and closes what would open until the Mac has its own. A page that needs something only the
+  phone has takes it that way, or as a read-only interface on `AppContainer` (`LedgerSource`,
+  `Footprints`), rather than staying in `:app`. Small differences (the language shown, back,
+  the keyboard, a dialog's window) are `expect` functions in `ui/components/Platform.kt`.
+- The Mac's shell (`:desktop`'s `Main.kt`) follows the design system's Sidebar card: the
+  sections down a sidebar 232 wide, and beside it the page on top of that section's stack, each
+  a shared page. Its pages still draw the phone's top bars; the desktop's toolbars come later.
 - A declaration `:app` uses from `:shared` is public, and its tests stay in `:app` until they
   move too. A string resource is held as a `StringResource`, never an `Int`. The generators write into `:shared` (`Tokens.kt`, `AppIcons.kt`, `CopyTables.kt`,
   `Modules.kt`); the paths below are packages, in whichever module holds them.

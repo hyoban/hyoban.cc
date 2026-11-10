@@ -21,9 +21,9 @@ import java.util.UUID
  */
 class FootprintStore(context: Context) : SQLiteOpenHelper(
     context, File(context.noBackupFilesDir, "footprints.sqlite").absolutePath, null, 5,
-) {
+), Footprints {
     private val _revision = MutableStateFlow(0L)
-    val revision = _revision.asStateFlow()
+    override val revision = _revision.asStateFlow()
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE recording (id INTEGER PRIMARY KEY CHECK(id=1), daily INTEGER NOT NULL, session TEXT, paused INTEGER NOT NULL, segment TEXT NOT NULL)")
@@ -84,7 +84,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         arrayOf((time - within).toString(), (time + within).toString(), accuracy.toString(), time.toString()),
     ).use { if (it.moveToFirst()) it.point() else null }
 
-    @Synchronized fun state(): RecordingState = readableDatabase.rawQuery("SELECT daily, session, paused FROM recording WHERE id=1", null).use {
+    @Synchronized override fun state(): RecordingState = readableDatabase.rawQuery("SELECT daily, session, paused FROM recording WHERE id=1", null).use {
         it.moveToFirst()
         RecordingState(it.getInt(0) != 0, it.getString(1), it.getInt(2) != 0)
     }
@@ -232,7 +232,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
     ).use { c -> buildList { while (c.moveToNext()) add(ActivityChange(c.getLong(0), c.getInt(1), c.getInt(2) != 0)) } }
 
     /** The days with any footprints, newest first. */
-    @Synchronized fun days(): List<String> = readableDatabase.rawQuery("SELECT DISTINCT day FROM points ORDER BY day DESC", null).use { c ->
+    @Synchronized override fun days(): List<String> = readableDatabase.rawQuery("SELECT DISTINCT day FROM points ORDER BY day DESC", null).use { c ->
         buildList { while (c.moveToNext()) add(c.getString(0)) }
     }
 
@@ -256,7 +256,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
     }
 
     /** Every public span, those taken back and not yet let go by the site among them. */
-    @Synchronized fun shares(): List<TrackShare> = readableDatabase.rawQuery(
+    @Synchronized override fun shares(): List<TrackShare> = readableDatabase.rawQuery(
         "SELECT uid, start, end, collection, simplify, removed, published FROM track_shares ORDER BY start", null,
     ).use { c ->
         buildList {
@@ -264,7 +264,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         }
     }
 
-    @Synchronized fun saveShare(share: TrackShare) {
+    @Synchronized override fun saveShare(share: TrackShare) {
         writableDatabase.insertWithOnConflict("track_shares", null, ContentValues().apply {
             put("uid", share.uid); put("start", share.start); put("end", share.end); put("collection", share.collection)
             put("simplify", share.simplify); put("removed", if (share.removed) 1 else 0); put("published", share.published)
@@ -273,7 +273,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
     }
 
     /** Takes a span back: gone at once if the site never had it, else kept as removed until it is published. */
-    @Synchronized fun removeShare(uid: String) {
+    @Synchronized override fun removeShare(uid: String) {
         val share = shares().firstOrNull { it.uid == uid } ?: return
         if (share.published == null) writableDatabase.delete("track_shares", "uid=?", arrayOf(uid)) else saveShare(share.copy(removed = true))
         _revision.value++
@@ -293,7 +293,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         return readableDatabase.rawQuery("SELECT time,lat,lon,accuracy,altitude,segment,speed,speed_accuracy,bearing,bearing_accuracy,vertical_accuracy,msl_altitude,provider,sats_used,sats_visible,cn0 FROM points WHERE $where ORDER BY time,id", args)
     }
 
-    @Synchronized fun points(selection: TrackSelection): List<TrackPoint> = cursor(selection).use { c ->
+    @Synchronized override fun points(selection: TrackSelection): List<TrackPoint> = cursor(selection).use { c ->
         refinedTrack(sequence { while (c.moveToNext()) yield(c.point()) }).toList()
     }
 
