@@ -21,11 +21,16 @@ object Ptp {
     /** A 64-bit offset and length into an object: the one partial read a contents-transfer session takes. */
     const val SONY_GET_PARTIAL_LARGE_OBJECT = 0x9211
     const val SONY_SET_CONTENTS_TRANSFER_MODE = 0x9212
+    /** Remote control with transfer: the photos as Sony's contents, each a content ID within its slot. */
+    const val SONY_GET_CONTENT_INFO_LIST = 0x923C
+    /** Deletes a content (all its files) from the card; the result comes as [EVENT_DELETE_CONTENT_RESULT]. */
+    const val SONY_DELETE_CONTENT = 0x9250
 
     const val RESPONSE_OK = 0x2001
     const val RESPONSE_STORE_NOT_AVAILABLE = 0x2013
 
     const val EVENT_STORE_ADDED = 0x4004
+    const val EVENT_DELETE_CONTENT_RESULT = 0xC240
 
     const val FORMAT_ASSOCIATION = 0x3001
 
@@ -48,6 +53,43 @@ object Ptp {
             "HIF", "HEIF", "HEIC" -> "image/heif"
             else -> "application/octet-stream"
         }
+    }
+
+    /** A content on the card as Sony lists it: one shot, with its files (a JPEG and its RAW are one content). */
+    data class Content(val id: Int, val slot: Int, val protected: Boolean, val files: List<String>)
+
+    /**
+     * A ContentInfoList (Camera Control PTP 3 Reference): the slot, then each content with its
+     * files' paths; a content whose type is 0 was deleted while the list was made, and ends it.
+     */
+    internal fun contentInfoList(data: ByteArray): List<Content> {
+        val b = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
+        b.position(4 + 8 + 64 + 64)
+        val slot = b.int
+        val count = b.int
+        val out = mutableListOf<Content>()
+        repeat(count) {
+            val type = b.int
+            if (type == 0) return out
+            val id = b.int
+            b.position(b.position() + 5 * 4 + 4 * 8 + 4)
+            val protected = b.int != 0
+            b.int // dummy
+            val marks = b.int
+            b.position(b.position() + marks)
+            val files = List(b.int) {
+                b.short; b.short
+                val path = ByteArray(b.int).also { b.get(it) }
+                b.int; b.long
+                b.position(b.position() + 32)
+                if (b.int != 0) b.position(b.position() + 2 * 4)
+                if (b.int != 0) b.position(b.position() + 19 * 4)
+                if (b.int != 0) b.position(b.position() + 4 * 4)
+                String(path, Charsets.UTF_8).trimEnd('\u0000')
+            }
+            out += Content(id, slot, protected, files)
+        }
+        return out
     }
 
     private val PHOTO_EXTENSIONS = setOf("JPG", "JPEG", "HIF", "HEIF", "HEIC")

@@ -179,7 +179,7 @@ internal class PtpIpConnection private constructor(
             try {
                 command.getOutputStream().apply { write(PtpIp.initCommand(guid, name)); flush() }
                 val ack = PtpIp.read(command.getInputStream())
-                if (ack.type == PtpIp.INIT_FAIL) throw IOException("camera refused the connection")
+                if (ack.type == PtpIp.INIT_FAIL) throw IOException("camera refused the connection (reason ${ByteBuffer.wrap(ack.payload).order(ByteOrder.LITTLE_ENDIAN).int})")
                 if (ack.type != PtpIp.INIT_COMMAND_ACK) throw IOException("unexpected PTP/IP packet ${ack.type}")
                 val connection = ByteBuffer.wrap(ack.payload).order(ByteOrder.LITTLE_ENDIAN).int
                 val event = sockets.createSocket().apply { tcpNoDelay = true; connect(InetSocketAddress(host, port), timeoutMs) }

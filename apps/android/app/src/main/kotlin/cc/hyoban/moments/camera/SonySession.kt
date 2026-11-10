@@ -4,6 +4,7 @@ import java.io.Closeable
 import java.io.IOException
 import java.io.OutputStream
 import java.util.concurrent.CancellationException
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * A contents-transfer session with the camera over [ptp]: the whole card readable, as the
@@ -12,17 +13,51 @@ import java.util.concurrent.CancellationException
  */
 internal class SonySession(private val ptp: PtpIpConnection) : Closeable {
     @Volatile private var storeAdded = false
+    /** The camera's answers to deletes: content ID to result (1 deleted). */
+    private val deleted = ConcurrentHashMap<Int, Int>()
 
+    /** Opens it for the whole card, to list and download (contents transfer). */
     fun open() {
-        ptp.events { code, _ -> if (code == Ptp.EVENT_STORE_ADDED) storeAdded = true }
-        ptp.ok(Ptp.SONY_OPEN_SESSION, SESSION, MODE_CONTENTS_TRANSFER)
+        handshake(MODE_CONTENTS_TRANSFER)
+        ptp.call(Ptp.SONY_SET_CONTENTS_TRANSFER_MODE, 2, 0, 0)
+        Thread.sleep(TRANSFER_MODE_PAUSE_MS)
+        ptp.ok(Ptp.SONY_SET_CONTENTS_TRANSFER_MODE, 2, 1, 0)
+    }
+
+    /**
+     * Opens it for remote control with transfer, the one way the a7C II deletes: the photos are
+     * contents there ([contents]), each deleted with [delete].
+     */
+    fun openForDelete() = handshake(MODE_REMOTE_WITH_TRANSFER)
+
+    private fun handshake(mode: Int) {
+        ptp.events { code, params ->
+            when (code) {
+                Ptp.EVENT_STORE_ADDED -> storeAdded = true
+                Ptp.EVENT_DELETE_CONTENT_RESULT -> if (params.size >= 2) deleted[params[1]] = params[0]
+            }
+        }
+        ptp.ok(Ptp.SONY_OPEN_SESSION, SESSION, mode)
         ptp.call(Ptp.SONY_CONNECT, 1, 0, 0)
         ptp.call(Ptp.SONY_CONNECT, 2, 0, 0)
         ptp.call(Ptp.SONY_GET_EXT_DEVICE_INFO, EXT_DEVICE_INFO_VERSION)
         ptp.call(Ptp.SONY_CONNECT, 3, 0, 0)
-        ptp.call(Ptp.SONY_SET_CONTENTS_TRANSFER_MODE, 2, 0, 0)
-        Thread.sleep(TRANSFER_MODE_PAUSE_MS)
-        ptp.ok(Ptp.SONY_SET_CONTENTS_TRANSFER_MODE, 2, 1, 0)
+    }
+
+    /** Every content on the card's first slot (the a7C II has one), newest last. */
+    fun contents(slot: Int = 1): List<Ptp.Content> =
+        Ptp.contentInfoList(ptp.ok(Ptp.SONY_GET_CONTENT_INFO_LIST, 0, 0, CONTENT_LIMIT, slot, 0).data)
+
+    /** Deletes [content] and all its files from the card, true once the camera says it has. */
+    fun delete(content: Ptp.Content): Boolean {
+        deleted.remove(content.id)
+        ptp.ok(Ptp.SONY_DELETE_CONTENT, content.id, content.slot)
+        val until = System.currentTimeMillis() + DELETE_WAIT_MS
+        while (System.currentTimeMillis() < until) {
+            deleted[content.id]?.let { return it == DELETED }
+            Thread.sleep(100)
+        }
+        return false
     }
 
     /** The card's storages, once the camera has put them up (it says so with StoreAdded, a few seconds on). */
@@ -88,6 +123,10 @@ internal class SonySession(private val ptp: PtpIpConnection) : Closeable {
     private companion object {
         const val SESSION = 1
         const val MODE_CONTENTS_TRANSFER = 1
+        const val MODE_REMOTE_WITH_TRANSFER = 2
+        const val CONTENT_LIMIT = 100_000
+        const val DELETED = 1
+        const val DELETE_WAIT_MS = 10_000L
         /** What Sony's apps send GetExtDeviceInfo, the version of its codes they speak. */
         const val EXT_DEVICE_INFO_VERSION = 0xC8
         const val TRANSFER_MODE_PAUSE_MS = 1500L

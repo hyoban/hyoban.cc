@@ -103,6 +103,34 @@ class CameraProtocolTest {
         assertEquals("image/heif", Ptp.objectInfo(4, objectInfo("DSC00044.HIF", 0xB110, 1, "")).mime)
     }
 
+    @Test fun `content list gives each content's id, slot and files`() {
+        val b = ByteBuffer.allocate(4096).order(ByteOrder.LITTLE_ENDIAN)
+        b.putShort(100).putShort(0).putLong(0)
+        b.put(ByteArray(64)).put(ByteArray(64)).putInt(1)
+        b.putInt(3)
+        fun content(id: Int, protected: Boolean, files: List<Pair<String, Int>>, image: Boolean) {
+            b.putInt(1).putInt(id).putInt(100).putInt(id).putInt(0).putInt(0).putInt(1)
+            repeat(4) { b.putLong(0) }
+            b.putInt(0).putInt(if (protected) 1 else 0).putInt(0)
+            b.putInt(2).put(1).put(0)
+            b.putInt(files.size)
+            files.forEachIndexed { i, (path, format) ->
+                val bytes = (path + "\u0000").toByteArray()
+                b.putShort(i.toShort()).putShort(0).putInt(bytes.size).put(bytes).putInt(format).putLong(1000L + i)
+                b.put(ByteArray(32))
+                b.putInt(if (image) 1 else 0); if (image) b.putInt(6000).putInt(4000)
+                b.putInt(0).putInt(0)
+            }
+        }
+        content(131073, false, listOf("A:/DCIM/100MSDCF/DSC00001.JPG" to 0x3801, "A:/DCIM/100MSDCF/DSC00001.ARW" to 0xB101), image = true)
+        content(131074, true, listOf("A:/DCIM/100MSDCF/DSC00002.HIF" to 0xB110), image = false)
+        // Deleted while the list was made: zeros from here.
+        val list = Ptp.contentInfoList(b.array())
+        assertEquals(2, list.size)
+        assertEquals(Ptp.Content(131073, 1, false, listOf("A:/DCIM/100MSDCF/DSC00001.JPG", "A:/DCIM/100MSDCF/DSC00001.ARW")), list[0])
+        assertEquals(Ptp.Content(131074, 1, true, listOf("A:/DCIM/100MSDCF/DSC00002.HIF")), list[1])
+    }
+
     @Test fun `session opens, lists the card and downloads in chunks`() {
         val file = ByteArray(9 * 1024 * 1024 + 17) { (it * 31).toByte() }
         val camera = FakeCamera(file, partial = true)

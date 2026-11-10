@@ -547,9 +547,16 @@ UbiquitousBear/shutter-bridge's measurements on an a7C II for the Wi‑Fi one.
   photo viewer does (`ZoomablePhoto`: two fingers or a double tap). The ring in the corner, or
   选中 there, chooses it. JPEG and HEIF can be chosen, RAW only looked at. The camera's Wi‑Fi
   band is the camera's to choose: on 2.4 GHz the a7C II gave about 3 MB/s, on 5 GHz several
-  times that. Nothing is deleted from the camera: in this session the a7C II calls its card
-  read-only without deletion (GetStorageInfo's AccessCapability 1), and a DeleteObject tried on
-  it left the photo and stopped the session answering. Chosen
+  times that. The viewer's 删除 deletes a photo from the camera's card, after asking: the
+  contents-transfer session calls the card read-only (GetStorageInfo's AccessCapability 1, and
+  DeleteObject breaks it), so the session is closed, one opened in remote control with transfer
+  (`SDIO_OpenSession` mode 2), the photo found among its contents (`SDIO_GetContentInfoList`
+  0x923C) and deleted with them (`SDIO_DeleteContent` 0x9250, the camera confirming with event
+  0xC240), a JPEG's RAW too, and the card's session opened again. The a7C II numbers objects by
+  their place on the card, so the photos after the deleted one move up a handle: the app keeps
+  everything of a photo by its file name, matches the handles again in order after the reopen
+  (reading the card again if their count says a photo was taken meanwhile) and looks a photo's
+  handle up when it asks for it. Chosen
   ones download in 4 MiB pieces (0x9211, else GetObject), or come from the cache when looked
   at, to the gallery's `Pictures/Here/`,
   one already there kept, and join the Moment, its time and place from the photo as any
