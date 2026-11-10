@@ -18,6 +18,7 @@ import kotlinx.coroutines.sync.withLock
 import org.json.JSONObject
 import java.io.File
 import java.util.Locale
+import cc.hyoban.moments.camera.CameraLink
 
 /** The system owns associations. Existing paired-device rules work without an association. */
 internal object CompanionConnections {
@@ -28,7 +29,9 @@ internal object CompanionConnections {
 
     fun associations(context: Context): Map<String, Int> {
         if (!supported(context)) return emptyMap()
-        return runCatching { context.getSystemService(CompanionDeviceManager::class.java).myAssociations.mapNotNull {
+        // The paired camera's association is its own (相机), not one of the footprints' devices.
+        val camera = CameraLink.association(context)
+        return runCatching { context.getSystemService(CompanionDeviceManager::class.java).myAssociations.filter { it.id != camera }.mapNotNull {
             it.deviceMacAddress?.toString()?.uppercase(Locale.ROOT)?.let { address -> address to it.id }
         }.toMap() }.getOrDefault(emptyMap())
     }
@@ -83,10 +86,11 @@ internal object CompanionConnections {
     }
 }
 
-/** Bound only by Android; BLE proximity is intentionally not treated as a Bluetooth connection. */
+/** Bound only by Android; BLE proximity is intentionally not treated as a Bluetooth connection, except the paired camera's (相机). */
 @SuppressLint("NewApi") // Declared on all versions, but only registered/used on API 36+.
 class FootprintCompanionService : CompanionDeviceService() {
     override fun onDevicePresenceEvent(event: DevicePresenceEvent) {
+        if (CameraLink.onPresence(this, event)) return
         val connected = when (event.event) {
             DevicePresenceEvent.EVENT_BT_CONNECTED -> true
             DevicePresenceEvent.EVENT_BT_DISCONNECTED -> false

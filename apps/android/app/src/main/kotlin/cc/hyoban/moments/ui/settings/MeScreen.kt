@@ -59,6 +59,9 @@ import cc.hyoban.moments.ui.theme.tokens
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import cc.hyoban.moments.camera.CameraStore
+import cc.hyoban.moments.camera.CameraLink
+import androidx.compose.ui.platform.LocalContext
 
 /** Where a row of 我 leads: each a page of its own, the last one down. */
 class MeRoutes(
@@ -73,6 +76,7 @@ class MeRoutes(
     val sync: () -> Unit,
     val imports: () -> Unit,
     val sideKey: () -> Unit,
+    val camera: () -> Unit,
 )
 
 /**
@@ -95,6 +99,10 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
         }
     }
     val sideKey by SideKeys.state.collectAsStateWithLifecycle()
+    val camera by CameraStore.camera.collectAsStateWithLifecycle()
+    val cameraStatus by CameraStore.status.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val cameraSupported = remember { CameraLink.supported(context) }
     val settings = LocalSettings.current
     val connected = settings.connected
     val books = ledger.books.filter { !it.archived }
@@ -170,6 +178,13 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
                 AppIcons.FileOpen, stringResource(R.string.import_title), "settings_import", shapes,
                 supporting = sources.joinToString(stringResource(R.string.separator_list)),
                 onClick = routes.imports,
+            )
+            // On the phones that can keep a camera's location going in the background.
+            if (cameraSupported) MeRow(
+                AppIcons.CameraBody, stringResource(R.string.camera_title), "settings_camera", shapes,
+                supporting = camera?.let { listOfNotNull(it.name, stringResource(R.string.me_camera_sending).takeIf { cameraStatus.sending }).joinToString(" · ") }
+                    ?: stringResource(R.string.me_camera_unpaired),
+                onClick = routes.camera,
             )
             // Only on the phone whose key it is.
             if (SideKeys.supported) MeRow(
