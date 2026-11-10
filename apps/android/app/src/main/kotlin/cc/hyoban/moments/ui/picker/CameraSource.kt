@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.ui.viewer.VideoState
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
@@ -251,7 +252,7 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
 
     /** Its thumbnail enlarged until its original is down in the cache. */
     @Composable
-    override fun Page(onZoom: (Boolean) -> Unit) {
+    override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             val transfer = source.transfer
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || transfer == null) return@Box

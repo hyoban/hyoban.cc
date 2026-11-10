@@ -18,6 +18,9 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
+import androidx.media3.datasource.ContentDataSource
+import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.FileDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
@@ -72,24 +75,43 @@ private fun mp4Renderers(context: Context) = RenderersFactory { handler, video, 
     )
 }
 
+/** [upstream] read from [start] on: a motion photo's clip, which sits after its still in the one file. */
+@OptIn(UnstableApi::class)
+private class OffsetDataSource(private val upstream: DataSource, private val start: Long) : DataSource by upstream {
+    override fun open(dataSpec: DataSpec): Long = upstream.open(dataSpec.buildUpon().setPosition(dataSpec.position + start).build())
+}
+
 /**
  * A player of [url] through the disk cache, or of its file on the phone, while [active], set up by [configure] and
- * prepared, or null while not; it is released when the page goes or stops being shown.
+ * prepared, or null while not; it is released when the page goes or stops being shown. A file or a
+ * gallery's item is read from [start] on; a url asked with [headers], a sign-in's, is not kept on disk.
  */
 @OptIn(UnstableApi::class)
 @Composable
-fun rememberCachedPlayer(url: String, active: Boolean, configure: ExoPlayer.() -> Unit = {}): ExoPlayer? {
+fun rememberCachedPlayer(
+    url: String,
+    active: Boolean,
+    start: Long = 0,
+    headers: Map<String, String> = emptyMap(),
+    configure: ExoPlayer.() -> Unit = {},
+): ExoPlayer? {
     val context = LocalContext.current
     val setUp by rememberUpdatedState(configure)
     var player by remember { mutableStateOf<ExoPlayer?>(null) }
 
-    DisposableEffect(url, active) {
+    DisposableEffect(url, active, start, headers) {
         if (!active) return@DisposableEffect onDispose { }
-        // A clip still only on the phone, a live photo not yet published, is read from its file.
-        val source = if (url.startsWith("file:")) {
-            FileDataSource.Factory()
-        } else {
-            CacheDataSource.Factory()
+        // A clip still only on the phone, a live photo not yet published, is read from its file,
+        // and a gallery's video or motion photo from the media store.
+        val local: DataSource.Factory? = when {
+            url.startsWith("file:") -> FileDataSource.Factory()
+            url.startsWith("content:") -> DataSource.Factory { ContentDataSource(context.applicationContext) }
+            else -> null
+        }
+        val source: DataSource.Factory = when {
+            local != null -> if (start > 0) DataSource.Factory { OffsetDataSource(local.createDataSource(), start) } else local
+            headers.isNotEmpty() -> OkHttpDataSource.Factory(Http.client).setDefaultRequestProperties(headers)
+            else -> CacheDataSource.Factory()
                 .setCache(MotionCache.of(context))
                 .setUpstreamDataSourceFactory(OkHttpDataSource.Factory(Http.client))
         }

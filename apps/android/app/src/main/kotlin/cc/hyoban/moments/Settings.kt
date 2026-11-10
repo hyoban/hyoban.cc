@@ -94,6 +94,15 @@ class Settings(context: Context) {
         prefs.edit { putBoolean("map_fog", on) }
     }
 
+    /** How close 选照片's grid is: 0 the largest photos, 2 the smallest, by month. */
+    var pickerDensity: Int by mutableStateOf(prefs.getInt("picker_density", 1).coerceIn(0, 2))
+        private set
+
+    fun changePickerDensity(density: Int) {
+        pickerDensity = density.coerceIn(0, 2)
+        prefs.edit { putInt("picker_density", pickerDensity) }
+    }
+
     /** The map's 可能的旅程 dismissed, by their keys, so they don't come back. */
     var dismissedTrips: Set<String> by mutableStateOf(prefs.getStringSet("dismissed_trips", null).orEmpty().toSet())
         private set

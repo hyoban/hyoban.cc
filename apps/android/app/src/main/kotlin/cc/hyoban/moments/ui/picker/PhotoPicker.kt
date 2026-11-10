@@ -156,7 +156,11 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
         },
     ) {
         listing.Body(shown) { limited, onNearEnd ->
-            Grid(shown, order, full, enabled = idle, columns = if (sideways) 8 else 4, limited = limited, onToggle = toggle, onNearEnd = onNearEnd) { viewing = it.key }
+            Grid(
+                shown, order, full, enabled = idle, sideways = sideways,
+                density = container.settings.pickerDensity, onDensity = container.settings::changePickerDensity,
+                limited = limited, onToggle = toggle, onNearEnd = onNearEnd,
+            ) { viewing = it.key }
         }
         Column(Modifier.align(Alignment.BottomEnd).fillMaxWidth()) {
             if (deletion.job != null) ProgressBar(

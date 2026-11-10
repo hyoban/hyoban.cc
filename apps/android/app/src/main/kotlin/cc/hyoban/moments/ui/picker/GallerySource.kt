@@ -1,5 +1,11 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.data.local.MotionPhotos
+import cc.hyoban.moments.ui.viewer.LiveMotion
+import cc.hyoban.moments.ui.viewer.LiveMotionState
+import cc.hyoban.moments.ui.viewer.VideoPlayback
+import cc.hyoban.moments.ui.viewer.VideoState
+import cc.hyoban.moments.ui.viewer.VideoWaiting
 import android.Manifest
 import android.app.Activity
 import android.content.Context
@@ -213,21 +219,39 @@ internal data class GalleryPick(val item: LocalItem, override val source: Galler
         }.value
     }
 
-    /** From the file itself; a video shows a frame of it, and the gallery plays it. */
+    /**
+     * From the file itself. A video plays over a frame of it, silent until asked, and a motion
+     * photo plays its clip once and again with its sound while held, both read from the media store.
+     */
     @Composable
-    override fun Page(onZoom: (Boolean) -> Unit) {
+    override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit) {
+        val context = LocalContext.current
+        // Only what the players read: MP4 and its kin.
+        val plays = item.video && item.mime in PLAYED
+        val live = remember(key) { LiveMotionState() }
+        val clip by produceState<Long?>(null, key, active) {
+            if (active && !item.video) value = withContext(Dispatchers.IO) { MotionPhotos.videoStart(context, item.uri) }
+        }
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             val small by rememberThumb(this@GalleryPick)
             val large by rememberThumb(this@GalleryPick, size = if (item.video) 1440 else 320)
             val shape = if (item.width != null && item.height != null && item.height > 0) item.width.toFloat() / item.height else null
-            ZoomablePhoto(shape ?: small?.let { it.width.toFloat() / it.height } ?: 1f, onZoom) {
+            ZoomablePhoto(
+                shape ?: small?.let { it.width.toFloat() / it.height } ?: 1f, onZoom,
+                onHold = if (clip != null) { held -> if (held) live.play(sound = true) else live.stop() } else null,
+            ) {
                 (if (item.video) large else small)?.let { Image(it.asImageBitmap(), contentDescription = item.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
                 if (!item.video) AsyncImage(item.uri, contentDescription = item.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+                clip?.let { LiveMotion(item.uri.toString(), active, live, Modifier.fillMaxSize(), start = it) }
+                if (plays) VideoPlayback(item.uri.toString(), active, video, Modifier.fillMaxSize(), window = false)
             }
-            if (item.video) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))
+            if (plays) VideoWaiting(video) else if (item.video) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))
         }
     }
 }
+
+/** The videos the viewer plays itself; another kind shows a frame, as the players read MP4 alone. */
+private val PLAYED = setOf("video/mp4", "video/quicktime", "video/3gpp")
 
 private fun clock(millis: Long): String {
     val seconds = millis / 1000

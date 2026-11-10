@@ -47,11 +47,12 @@ class LiveMotionState {
 
 /**
  * The motion of a live photo at [url], over its still, while its page is [active]: it
- * loads on arriving at the page and plays once when loaded; leaving the page lets it go.
+ * loads on arriving at the page and plays once when loaded; leaving the page lets it go. A motion
+ * photo still in one file has its clip [start] bytes in.
  */
 @Composable
-fun LiveMotion(url: String, active: Boolean, state: LiveMotionState, modifier: Modifier = Modifier) {
-    val player = rememberCachedPlayer(url, active) { volume = 0f }
+fun LiveMotion(url: String, active: Boolean, state: LiveMotionState, modifier: Modifier = Modifier, start: Long = 0) {
+    val player = rememberCachedPlayer(url, active, start) { volume = 0f }
     val reduced = LocalReducedMotion.current
 
     DisposableEffect(player) {

@@ -1,5 +1,31 @@
 package cc.hyoban.moments.ui.picker
 
+import androidx.compose.ui.layout.layout
+import kotlinx.coroutines.delay
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.contentDescription
+import cc.hyoban.moments.ui.theme.Radius
+import cc.hyoban.moments.ui.theme.tokens
+import cc.hyoban.moments.ui.viewer.VideoControls
+import cc.hyoban.moments.ui.viewer.VideoState
+import com.kyant.capsule.ContinuousRoundedRectangle
+import kotlin.math.abs
+import kotlinx.coroutines.launch
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -59,8 +85,10 @@ import cc.hyoban.moments.ui.viewer.PhotoInfoPanel
 
 /**
  * The photos full size, black as the photo viewer (03): swiped through, chosen and added from
- * here too, each page as its source draws it. Swiped up, the photo makes room for its info
- * (PhotoInfo); swiped down, the info goes, else the viewer.
+ * here too, each page as its source draws it. Under the photo, upright, the photos before and
+ * after it small in a row (Filmstrip), the one shown in the middle, and a video's controls over
+ * them. Swiped up, the photo makes room for its info (PhotoInfo); swiped down, the info goes, else
+ * the viewer.
  */
 @Composable
 internal fun Viewer(
@@ -92,12 +120,18 @@ internal fun Viewer(
     var drag by remember { mutableFloatStateOf(0f) }
     val current = shown.getOrNull(pager.currentPage)
     val details = current?.rememberDetails()
+    // Each page's video, held here so the controls under the pages work the one shown.
+    val videos = remember { mutableMapOf<String, VideoState>() }
 
     Box(Modifier.fillMaxSize().background(Color.Black).testTag("picker_viewer")) {
         // Zoomed in, a swipe moves the photo rather than turning the page.
         var zoomed by remember { mutableStateOf(false) }
         LaunchedEffect(current?.key, pager.isScrollInProgress) {
-            if (!pager.isScrollInProgress) current?.settled()
+            // Once it rests there a moment, so the row of small ones dragged past it asks nothing of it.
+            if (!pager.isScrollInProgress) {
+                delay(300)
+                current?.settled()
+            }
         }
         val layout: @Composable (@Composable (Modifier) -> Unit, @Composable (Modifier) -> Unit) -> Unit = { photo, panel ->
             if (sideways) Row(Modifier.fillMaxSize()) {
@@ -129,7 +163,7 @@ internal fun Viewer(
                 beyondViewportPageCount = 0, userScrollEnabled = !zoomed, key = { shown[it].key },
             ) { page ->
                 val settled = pager.currentPage == page
-                shown[page].Page { if (settled) zoomed = it }
+                shown[page].Page(settled, videos.getOrPut(shown[page].key) { VideoState() }) { if (settled) zoomed = it }
             }
         }) { modifier -> PhotoInfoPanel(container, details, modifier, note = current?.infoNote(details)?.let { stringResource(it) }) }
 
@@ -158,6 +192,17 @@ internal fun Viewer(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().padding(horizontal = Space.gutter, vertical = Space.m),
             verticalArrangement = Arrangement.spacedBy(Space.xs),
         ) {
+            VideoControls(videos.getOrPut(current.key) { VideoState() })
+            val gutter = Space.gutter
+            if (!sideways && shown.size > 1) ViewerStrip(
+                shown, pager, order,
+                // From edge to edge, past the bar's own margins.
+                Modifier.layout { measurable, constraints ->
+                    val wider = gutter.roundToPx() * 2
+                    val placeable = measurable.measure(constraints.copy(minWidth = constraints.maxWidth + wider, maxWidth = constraints.maxWidth + wider))
+                    layout(constraints.maxWidth, placeable.height) { placeable.place(-wider / 2, 0) }
+                },
+            )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val at = details?.takenAt
                 Text(
@@ -182,6 +227,74 @@ internal fun Viewer(
                     Text(stringResource(if (index >= 0) R.string.camera_chosen else R.string.camera_choose), style = AppTheme.typography.body, color = MediaOverlay.content)
                 } else Text(stringResource(R.string.camera_raw_kept), style = AppTheme.typography.body, color = MediaOverlay.content, modifier = Modifier.weight(1f))
                 addButton()
+            }
+        }
+    }
+}
+
+/**
+ * The photos before and after the one shown, small in a row with it in the middle (Filmstrip):
+ * those chosen have a dot, a tap turns the viewer to one, and dragging the row turns it along.
+ */
+@Composable
+private fun ViewerStrip(shown: List<Pick>, pager: PagerState, order: Map<String, Int>, modifier: Modifier = Modifier) {
+    val scope = rememberCoroutineScope()
+    val strip = rememberLazyListState(pager.currentPage)
+    // Whether the row is moved by hand, the viewer following it, or follows the viewer.
+    var byHand by remember { mutableStateOf(false) }
+    val held by strip.interactionSource.collectIsDraggedAsState()
+    LaunchedEffect(held) { if (held) byHand = true }
+    LaunchedEffect(strip, pager) {
+        launch {
+            snapshotFlow { strip.isScrollInProgress }.collect { moving ->
+                if (!moving && byHand) {
+                    byHand = false
+                    strip.animateScrollToItem(pager.currentPage)
+                }
+            }
+        }
+        launch {
+            snapshotFlow {
+                val info = strip.layoutInfo
+                val middle = (info.viewportStartOffset + info.viewportEndOffset) / 2
+                info.visibleItemsInfo.minByOrNull { abs(it.offset + it.size / 2 - middle) }?.index
+            }.collect { if (byHand && it != null && it != pager.currentPage) pager.scrollToPage(it) }
+        }
+        snapshotFlow { pager.currentPage }.collect { if (!byHand) strip.animateScrollToItem(it) }
+    }
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        LazyRow(
+            Modifier.fillMaxWidth().testTag("picker_viewer_strip"),
+            state = strip,
+            // Room at each end for the first and the last to reach the middle.
+            contentPadding = PaddingValues(horizontal = ((maxWidth - 44.dp) / 2).coerceAtLeast(0.dp)),
+            horizontalArrangement = Arrangement.spacedBy(Space.xs),
+        ) {
+            items(shown.size, key = { shown[it].key }) { index ->
+                val pick = shown[index]
+                val selected = index == pager.currentPage
+                val thumb by rememberThumb(pick)
+                val label = pick.description()
+                val corner by animateDpAsState(if (selected) Radius.large else Radius.medium, AppTheme.motionScheme.fastSpatialSpec(), label = "thumb shape")
+                val dim by animateFloatAsState(if (selected) 0f else MediaOverlay.CONTROL_ALPHA, AppTheme.motionScheme.fastEffectsSpec(), label = "thumb dim")
+                Box(
+                    Modifier.size(44.dp).clip(ContinuousRoundedRectangle(corner))
+                        .clickable {
+                            // One nearby is turned to; one far off is gone to at once.
+                            scope.launch { if (abs(index - pager.currentPage) <= 3) pager.animateScrollToPage(index) else pager.scrollToPage(index) }
+                        }
+                        .semantics {
+                            contentDescription = label
+                            this.selected = selected
+                        },
+                ) {
+                    thumb?.let { Image(it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
+                    Box(Modifier.matchParentSize().graphicsLayer { alpha = dim }.background(Color.Black))
+                    if (pick.key in order) Box(
+                        Modifier.align(Alignment.TopEnd).padding(4.dp).size(8.dp)
+                            .background(tokens.accent, CircleShape).border(1.5.dp, MediaOverlay.content, CircleShape),
+                    )
+                }
             }
         }
     }

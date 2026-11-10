@@ -528,15 +528,49 @@ private const val DOUBLE_TAP_ZOOM = 2.5f
 /**
  * A photo of [shape] (width over height) that zooms as the viewer's do: two fingers or a
  * double tap, up to the same limit, panning once zoomed and stopping at the photo's edges.
- * [onZoom] says whether it is zoomed in, for a pager to stop turning meanwhile.
+ * [onZoom] says whether it is zoomed in, for a pager to stop turning meanwhile; [onHold] whether
+ * it is held down, at full size, until the finger lifts.
  */
 @Composable
-fun ZoomablePhoto(shape: Float, onZoom: (Boolean) -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+fun ZoomablePhoto(
+    shape: Float,
+    onZoom: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    onHold: ((Boolean) -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
     val zoom = rememberZoomableState(ZoomSpec(maxZoomFactor = MAX_ZOOM))
     val zoomed = (zoom.zoomFraction ?: 0f) > 0.01f
     LaunchedEffect(zoomed) { onZoom(zoomed) }
+    var held by remember { mutableStateOf(false) }
+    val hold by rememberUpdatedState(onHold)
     BoxWithConstraints(
-        modifier.fillMaxSize().zoomable(zoom, onDoubleClick = DoubleClickToZoomListener.cycle(DOUBLE_TAP_ZOOM)),
+        modifier.fillMaxSize()
+            // Held down, the finger's lifting ends what the hold started.
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false)
+                    waitForUpOrCancellation()
+                    if (held) {
+                        held = false
+                        hold?.invoke(false)
+                    }
+                }
+            }
+            .zoomable(
+                zoom,
+                onLongClick = if (onHold != null) {
+                    {
+                        if (!zoomed) {
+                            held = true
+                            onHold(true)
+                        }
+                    }
+                } else {
+                    null
+                },
+                onDoubleClick = DoubleClickToZoomListener.cycle(DOUBLE_TAP_ZOOM),
+            ),
         contentAlignment = Alignment.Center,
     ) {
         val fitted = remember(shape, constraints) {
