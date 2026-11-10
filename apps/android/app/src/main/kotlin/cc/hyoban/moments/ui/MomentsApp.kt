@@ -1139,15 +1139,6 @@ data class TabClearance(val bottom: Dp, val fab: Dp)
 private val LocalTabClearance = compositionLocalOf { TabClearance(0.dp, 0.dp) }
 
 /**
- * How much of the left and the right the tabs cover on a tab screen on a phone on its
- * side, one of them standing down one side or the other, to keep a page's content clear of.
- * A pane that has kept itself clear of the system's insets says so with [clearOfInsets].
- */
-data class RailSpace(val left: Dp, val right: Dp, val clearOfInsets: Boolean = false)
-
-val LocalRailSpace = staticCompositionLocalOf { RailSpace(0.dp, 0.dp) }
-
-/**
  * How far a page's own controls at its foot lift the snackbar, which a page sets while it is
  * shown, as Material 3 nudges a snackbar above a toolbar rather than over it.
  */

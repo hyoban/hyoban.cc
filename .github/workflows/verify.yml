@@ -64,7 +64,7 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v5
-      - run: ./gradlew :app:testDebugUnitTest :app:assembleDebug --no-daemon
+      - run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :desktop:classes --no-daemon
   apple:
     runs-on: macos-latest
     steps:

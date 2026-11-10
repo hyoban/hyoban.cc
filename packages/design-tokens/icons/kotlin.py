@@ -61,6 +61,6 @@ for group, icons in m.GROUPS.items():
         out.append(f'    val {camel(name)}: ImageVector by lazy {{ icon("{name}", {"true" if name in MIRROR else "false"}, listOf({s}){fill_arg}) }}')
     out.append('')
 out[-1] = '}'
-path = os.path.join(HERE, '../../../apps/android/app/src/main/kotlin/cc/hyoban/moments/ui/design/AppIcons.kt')
+path = os.path.join(HERE, '../../../apps/android/shared/src/commonMain/kotlin/cc/hyoban/moments/ui/design/AppIcons.kt')
 open(path, 'w').write('\n'.join(out) + '\n')
 print('wrote', sum(len(v) for v in m.GROUPS.values()))

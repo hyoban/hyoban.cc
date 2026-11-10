@@ -1,6 +1,7 @@
 # Here for Apple platforms
 
-The start of Here on iPhone, iPad and Mac, in SwiftUI. For now it is `HereKit`, a Swift package
+The start of Here on iPhone and iPad, in SwiftUI; the Mac's app is Compose Desktop, sharing the
+Android app's code (`apps/android`). For now it is `HereKit`, a Swift package
 of what those apps will share; the apps themselves come next, following the same design system
 as the Android app (the 「Here App 设计系统」 and 「Here App 页面设计稿」 artifacts) and the same
 data contract (`GET /v2/rows` into a copy of D1's tables, `POST /v2/changes` to publish).

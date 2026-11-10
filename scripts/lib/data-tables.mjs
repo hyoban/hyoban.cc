@@ -11,14 +11,14 @@ export const sqlFile = fileURLToPath(new URL('../../apps/api/schema.sql', import
 
 export const kotlinFile = fileURLToPath(
   new URL(
-    '../../apps/android/app/src/main/kotlin/cc/hyoban/moments/data/copy/CopyTables.kt',
+    '../../apps/android/shared/src/commonMain/kotlin/cc/hyoban/moments/data/copy/CopyTables.kt',
     import.meta.url,
   ),
 )
 
 export const modulesFile = fileURLToPath(
   new URL(
-    '../../apps/android/app/src/main/kotlin/cc/hyoban/moments/data/spec/Modules.kt',
+    '../../apps/android/shared/src/commonMain/kotlin/cc/hyoban/moments/data/spec/Modules.kt',
     import.meta.url,
   ),
 )

@@ -7,6 +7,24 @@ rules here and product behavior in [README.md](README.md).
 Run the commands below from `apps/android`, with JDK 17 or newer and the Android
 SDK configured in `local.properties` (`sdk.dir=…`).
 
+## One Gradle project, two apps
+
+- `:app` is the phone's app, `:desktop` the Mac's (Compose Desktop), and `:shared` (Kotlin
+  Multiplatform, for Android and the desktop's JVM) what both run. The Mac app is to do what
+  the phone's does, so code moves from `:app` into `:shared` a part at a time, keeping its
+  package and leaving the phone's behaviour as it was; each step builds and tests `:app`.
+  The Mac is not SwiftUI's: `apps/apple` is for iPhone and iPad.
+- Shared code may use the JDK and JVM libraries (OkHttp, `java.time`): both targets are JVMs.
+  What it may not touch is Android's own: `android.*`, `R`, `Context`, `BuildConfig`, and
+  the Android-only libraries (MapLibre's Android SDK, Media3, Glance, WorkManager, Capsule).
+  Where the platforms differ, `commonMain` declares it `expect` and `androidMain` and
+  `jvmMain` each give theirs, the phone's being what it already did.
+- A declaration `:app` uses from `:shared` is public, and its tests stay in `:app` until they
+  move too. The generators write into `:shared` (`Tokens.kt`, `AppIcons.kt`, `CopyTables.kt`,
+  `Modules.kt`); the paths below are packages, in whichever module holds them.
+- Check the Mac app where it runs: `./gradlew :desktop:run` opens its window; look at it,
+  light and dark, before saying a change to it works.
+
 ## Check every change on the phone
 
 - The phone is the user's, with their real data and a live link to the site. After a
@@ -61,7 +79,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   (read-only) from `apps/api`. The phone's traffic goes through FlClash, whose link
   drops and stalls now and then, so uploads have to ride that out.
 - Before committing run what CI runs (`.github/workflows/verify.yml`):
-  `./gradlew :app:testDebugUnitTest :app:assembleDebug --no-daemon`.
+  `./gradlew :app:testDebugUnitTest :app:assembleDebug :desktop:classes --no-daemon`.
   Documentation-only changes use the shared guide's documentation checks.
 - After builds and tests finish, close any emulator started for this task and clean up
   Gradle/Kotlin background processes used by this task once they are confirmed idle.

@@ -125,8 +125,8 @@ fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Un
                     PageCaption(listOfNotNull(stringResource(R.string.car_assisted), stats.distanceMeters?.let(::km)).joinToString(APART))
                     Line(stringResource(R.string.car_nzp), listOfNotNull(stats.nzpMeters?.let(::km), stats.nzpPercent?.let { "$it%" }).joinToString(APART))
                     Line(stringResource(R.string.car_acc_lcc), listOfNotNull(stats.accLccMeters?.let(::km), stats.accLccPercent?.let { "$it%" }).joinToString(APART))
-                    if (stats.parkingCount != null) {
-                        Line(stringResource(R.string.car_parking), stringResource(R.string.car_parking_value, stats.parkingCount.toInt(), (stats.parkingAverageSeconds ?: 0).toInt()))
+                    stats.parkingCount?.let { count ->
+                        Line(stringResource(R.string.car_parking), stringResource(R.string.car_parking_value, count.toInt(), (stats.parkingAverageSeconds ?: 0).toInt()))
                     }
                 }
                 month.capturedAt?.let { captured ->

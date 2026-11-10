@@ -2,7 +2,6 @@ package cc.hyoban.moments.data.copy
 
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.SQLiteDriver
-import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.sqlite.execSQL
 import java.io.File
 
@@ -15,7 +14,7 @@ data class CopyRow(val table: String, val key: String, val rev: Long, val delete
  * brought up to. Only the rows feed writes it; the phone's own edits are kept elsewhere until
  * they are published. A copy made for other tables than these is dropped and read again.
  */
-class CopyStore(private val file: File, private val driver: SQLiteDriver = AndroidSQLiteDriver()) {
+class CopyStore(private val file: File, private val driver: SQLiteDriver) {
     private var opened: SQLiteConnection? = null
 
     private val connection: SQLiteConnection

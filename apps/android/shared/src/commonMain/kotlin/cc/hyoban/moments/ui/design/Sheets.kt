@@ -132,7 +132,7 @@ fun ModalBottomSheet(
     val side = !wide && cc.hyoban.moments.ui.components.hidesSystemBars()
     val ltr = LocalLayoutDirection.current == LayoutDirection.Ltr
     val noSystemBars = cc.hyoban.moments.ui.components.hidesSystemBars()
-    Dialog(onDismissRequest = leave, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    Dialog(onDismissRequest = leave, properties = cc.hyoban.moments.ui.components.fullWindowDialogProperties()) {
         cc.hyoban.moments.ui.components.DialogSystemBars(noSystemBars)
         val alignment = when {
             wide -> Alignment.Center
