@@ -14,7 +14,7 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <!-- 从相机: joining the paired camera's own Wi‑Fi for its photos, never to find where the phone is. -->
+    <!-- 选照片's camera: joining the paired camera's own Wi‑Fi for its photos, never to find where the phone is. -->
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <!-- Android 17 keeps an app off devices on the local network until it is given this: the camera is one. -->
@@ -27,6 +27,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <!-- Where a photo picked for a new Moment was taken, which the gallery hides without it. -->
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+    <!-- 选照片 reads the gallery itself; Android 14 and later may give only the photos chosen. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <!-- Publishing runs as a foreground service with its progress in a notification, so it
          goes on once the app is left; Android 13 and later ask before it is shown. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />

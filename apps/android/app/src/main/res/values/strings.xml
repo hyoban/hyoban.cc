@@ -1293,11 +1293,7 @@
     <string name="permission_locate_title">用定位找你在哪</string>
     <string name="permission_locate_body">只在选地点、点定位按钮时用，找到你所在的位置和附近的店。</string>
     <string name="permission_locate_fact">定位不会自己写进记录，选了哪个才算哪个</string>
-    <string name="permission_photo_title">读出照片里的地点</string>
-    <string name="permission_photo_body">照片带着拍摄地点时，用它填这条记录的地点和时间。</string>
-    <string name="permission_photo_only">只读你选的照片</string>
     <string name="permission_photo_candidate">读到的地点只是候选，选了才写进记录</string>
-    <string name="permission_photo_secondary">不用，自己选</string>
     <string name="permission_background_title">在后台也接着记</string>
     <string name="permission_background_body">切到别的 App、锁屏或手机重启后还要记，位置要改成「始终允许」。</string>
     <string name="permission_background_path">系统设置 › 权限 › 位置 › 始终允许</string>
@@ -1360,7 +1356,7 @@
     <string name="permission_install_source">只从这个 App 的 GitHub 发布下载</string>
     <string name="permission_install_signature">签名与这台手机上的一致才安装</string>
     <string name="permission_install_path">系统设置 › 安装未知应用 › Here › 允许</string>
-    <!-- 相机 (38) and 从相机 (39): the paired Sony a7C II. -->
+    <!-- 相机 (38) and the camera in 选照片 (39): the paired Sony a7C II. -->
     <string name="camera_title">相机</string>
     <string name="camera_model">ILCE-7CM2</string>
     <string name="camera_note">位置只发给相机；照片从相机的 Wi‑Fi 直接下载到这台手机。</string>
@@ -1399,7 +1395,6 @@
     <string name="camera_problem_location">没有定位权限，发不了位置</string>
     <string name="camera_problem_link_off">相机的「位置信息链接」关着</string>
     <string name="camera_problem_taken">另一台手机或应用正在给相机发位置</string>
-    <string name="camera_photos_title">从相机</string>
     <string name="camera_photo_count">%1$d 张</string>
     <string name="camera_step_wifi_on">让相机打开 Wi‑Fi</string>
     <string name="camera_step_joining">连上相机的 Wi‑Fi</string>
@@ -1417,7 +1412,6 @@
     <string name="camera_stop">停止</string>
     <string name="camera_photo_description">照片 %1$s</string>
     <string name="camera_raw_description">RAW %1$s，留在相机上</string>
-    <string name="action_from_camera">从相机</string>
     <string name="me_camera_sending">正在发位置</string>
     <string name="me_camera_unpaired">未配对</string>
     <string name="permission_camera_title">连上相机</string>
@@ -1440,4 +1434,23 @@
     <string name="camera_delete_many_body">它们会从相机的存储卡上删掉，不能恢复。同一张的 RAW 也一起删掉。</string>
     <string name="camera_deleting_count">正在删除 %1$d / %2$d</string>
     <string name="camera_delete_missed">有 %1$d 张没删掉</string>
+    <string name="picker_all">所有照片</string>
+    <string name="picker_switch">切换照片来源</string>
+    <string name="picker_chosen_count">已选 %1$d 张</string>
+    <string name="picker_limited">只能看到你允许的 %1$d 张照片</string>
+    <string name="picker_change">更改</string>
+    <string name="picker_adding">正在加入 %1$d / %2$d</string>
+    <string name="picker_add_note">相机里的照片先存进相册的 Here 相簿。</string>
+    <string name="picker_trash">移到回收站</string>
+    <string name="picker_trash_failed">没移到回收站</string>
+    <string name="picker_info_camera_note">原图下好后才有拍摄参数和地点。</string>
+    <string name="picker_camera_card">相机的存储卡</string>
+    <string name="picker_empty">没有照片</string>
+    <string name="picker_video_description">视频 %1$s</string>
+    <string name="photo_info">信息</string>
+    <string name="photo_info_place">拍摄地点</string>
+    <string name="permission_gallery_title">读出相册里的照片和视频</string>
+    <string name="permission_gallery_body">在 Here 里直接挑照片和视频，带着拍摄的时间和地点。</string>
+    <string name="permission_gallery_local">只在这台手机上读，选了才加入时刻</string>
+    <string name="permission_gallery_secondary">不用，用系统的选择器</string>
 </resources>

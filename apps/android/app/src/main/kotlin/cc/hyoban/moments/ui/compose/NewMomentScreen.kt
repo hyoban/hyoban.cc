@@ -29,7 +29,6 @@ import cc.hyoban.moments.ui.design.DateTimeDialog
 import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.activity.compose.BackHandler
@@ -182,9 +181,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import cc.hyoban.moments.camera.CameraStore
-import cc.hyoban.moments.camera.CameraPhotosScreen
-import cc.hyoban.moments.camera.CameraLink
+import cc.hyoban.moments.ui.picker.PhotoPickerScreen
 
 /**
  * A Moment written on the phone: its words, the photos picked for it, and when and where,
@@ -309,36 +306,31 @@ fun NewMomentScreen(
         photos = (photos + container.takeSharedPhotos()).distinct().take(MAX_PHOTOS)
     }
 
-    // The documents picker rather than the photo picker: only what it hands over keeps where
-    // the photo or video was taken.
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { picked ->
+    // The system's documents picker, which keeps where a photo or video was taken: what 选照片
+    // falls back to when the gallery may not be read.
+    val documents = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { picked ->
         photos = (photos + picked).distinct().take(MAX_PHOTOS)
     }
-    val pickPhotos = { picker.launch(arrayOf("image/*", "video/*")) }
-    // Where a photo was taken is kept from the app until it may see it: asked for once, before
-    // the first pick ever; declined, the photos still give their time and the phone its place.
-    val mediaLocation = cc.hyoban.moments.ui.components.rememberPermissionAsk(
-        arrayOf(Manifest.permission.ACCESS_MEDIA_LOCATION),
-        cc.hyoban.moments.ui.components.PermissionWords(
-            AppIcons.Photos,
-            stringResource(R.string.permission_photo_title),
-            stringResource(R.string.permission_photo_body),
-            stringResource(R.string.permission_photo_secondary),
-            listOf(
-                cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Image, stringResource(R.string.permission_photo_only)),
-                cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Shield, stringResource(R.string.permission_photo_candidate)),
-            ),
-        ),
-        onDecline = { pickPhotos() },
-    ) { pickPhotos() }
-    val addPhotos = {
-        if (!container.settings.askedMediaLocation &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_MEDIA_LOCATION) != PackageManager.PERMISSION_GRANTED
-        ) {
-            container.settings.askedMediaLocation = true
-            mediaLocation()
-        } else {
-            pickPhotos()
+    // 选照片 (39), over this page: the gallery and the paired camera in one.
+    var picking by remember { mutableStateOf(false) }
+    val addPhotos = { picking = true }
+    if (picking) androidx.compose.ui.window.Dialog(
+        onDismissRequest = { picking = false },
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
+        cc.hyoban.moments.ui.components.DialogPane {
+            PhotoPickerScreen(
+                container,
+                limit = MAX_PHOTOS - photos.size,
+                onClose = { picking = false },
+                onFallback = {
+                    picking = false
+                    documents.launch(arrayOf("image/*", "video/*"))
+                },
+            ) { added ->
+                photos = (photos + added).distinct().take(MAX_PHOTOS)
+                picking = false
+            }
         }
     }
     // The tile opens the phone's camera app itself, with all it can do; what it takes goes to
@@ -346,21 +338,6 @@ fun NewMomentScreen(
     val openCamera: () -> Unit = {
         runCatching { context.startActivity(Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)) }
             .onFailure { saveError = resources.getString(R.string.error_no_camera) }
-    }
-    // 从相机 (39), over this page, while a camera is paired (38).
-    val pairedCamera by CameraStore.camera.collectAsStateWithLifecycle()
-    val cameraSupported = remember { CameraLink.supported(context) }
-    var fromCamera by remember { mutableStateOf(false) }
-    if (fromCamera) androidx.compose.ui.window.Dialog(
-        onDismissRequest = { fromCamera = false },
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
-    ) {
-        cc.hyoban.moments.ui.components.DialogPane {
-            CameraPhotosScreen(onClose = { fromCamera = false }) { added ->
-                photos = (photos + added).distinct().take(MAX_PHOTOS)
-                fromCamera = false
-            }
-        }
     }
 
     val written = text.isNotBlank() || photos.isNotEmpty()
@@ -491,9 +468,6 @@ fun NewMomentScreen(
                     photos,
                     onAdd = addPhotos,
                     onOpenCamera = openCamera,
-                    onFromCamera = if (pairedCamera != null && cameraSupported) {
-                        { fromCamera = true }
-                    } else null,
                     utility = utility,
                     onToggleUtility = { uri -> utility = if (uri in utility) utility - uri else utility + uri },
                     motion = photos.filter { infos[it]?.motion == true }.toSet(),
@@ -704,8 +678,8 @@ private val WORDS_COLUMN = 360.dp
 
 /**
  * The photos picked, in a row, each with a button to take it out, a motion photo marked
- * as live unless it goes in as a photo, and tiles to pick more, open the camera app to
- * take one, or take them from the paired camera.
+ * as live unless it goes in as a photo, and tiles to pick more (the gallery and the paired
+ * camera, in 选照片) or open the camera app to take one.
  * The first is the Moment's cover, so they are put in order as Material 3 has content
  * reordered: held and then dragged, the one held lifted under the finger and the others
  * stepping aside; a screen reader moves one earlier or later instead.
@@ -715,8 +689,6 @@ private fun PhotoStrip(
     photos: List<Uri>,
     onAdd: () -> Unit,
     onOpenCamera: () -> Unit,
-    /** Opens 从相机, when a camera is paired. */
-    onFromCamera: (() -> Unit)?,
     utility: Set<Uri>,
     onToggleUtility: (Uri) -> Unit,
     motion: Set<Uri>,
@@ -900,9 +872,6 @@ private fun PhotoStrip(
             }
             item(key = CAMERA_KEY) {
                 AddTile(AppIcons.Camera, stringResource(R.string.action_open_camera), onOpenCamera, Modifier.animateItem().testTag("open_camera"))
-            }
-            if (onFromCamera != null) item(key = FROM_CAMERA_KEY) {
-                AddTile(AppIcons.CameraBody, stringResource(R.string.action_from_camera), onFromCamera, Modifier.animateItem().testTag("from_camera"))
             }
         }
     }
@@ -1189,7 +1158,6 @@ private val REMOVE_DOT = 28.dp
 private val UTILITY_DOT = 28.dp
 private const val ADD_KEY = "add"
 private const val CAMERA_KEY = "camera"
-private const val FROM_CAMERA_KEY = "from_camera"
 /** How much a photo held to move grows, and Material 3's dragged state layer over it. */
 private const val LIFTED_SCALE = 1.06f
 private const val DRAGGED_LAYER = 0.16f

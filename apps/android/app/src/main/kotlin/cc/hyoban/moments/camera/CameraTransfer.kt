@@ -63,7 +63,7 @@ data class CameraPhoto(internal val content: Ptp.Content, internal val file: Ptp
 }
 
 /**
- * Taking photos off the paired camera, for 从相机: the camera's Wi‑Fi switched on over
+ * Taking photos off the paired camera, for 选照片: the camera's Wi‑Fi switched on over
  * Bluetooth, the phone joined to it for this alone (its other traffic keeps to the network it
  * was on), one session in remote control with transfer listing the card as contents, the chosen
  * photos saved to the gallery's Here album, and a photo deleted from the card in place.

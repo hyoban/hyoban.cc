@@ -162,8 +162,8 @@ is 公开 or 私有; a private one is published for its owner but never shown on
 The home screen widgets are the owner's own and show private Moments and trips too,
 except in 演示模式.
 
-- **Media.** Picked with the system's documents picker, which keeps a photo's location,
-  or shared in from the gallery (Here (写一个时刻)). They are copied in whole; a motion
+- **Media.** Picked in 选照片 (below), or shared in from the gallery (Here (写一个时刻)).
+  They are copied in whole; a motion
   photo is split into a live photo's still and video. A video over 100 MB, or other than
   MP4, MOV or WebM, is refused, since the Worker and the site's poster can't take it. A
   photo marked 不用作封面 never becomes a cover, widget or share card.
@@ -530,8 +530,8 @@ UbiquitousBear/shutter-bridge's measurements on an a7C II for the Wi‑Fi one.
   camera goes, says why when the camera refuses (位置信息链接 off, or another phone holding the
   lock) and waits for the camera to come back. The camera's clock follows it only if the camera's
   own 自动校正时间 and 自动调整区域 are on. Nothing of it leaves the phone but to the camera.
-- **从相机.** With a camera paired, 记录's photo row ends with a third tile that opens 从相机
-  over the Moment. Over Bluetooth the camera is told to put its Wi‑Fi up (CC08, after
+- **From the camera, in 选照片.** With a camera paired, 选照片's title lists it after the albums; chosen, it
+  connects then. Over Bluetooth the camera is told to put its Wi‑Fi up (CC08, after
   subscribing to its status notifications, without which it puts it straight down) and hands
   over its network's name and password (CC06, CC07); the phone joins that network for the app
   alone with `WifiNetworkSpecifier` (the system asks once), other traffic staying where it was,
@@ -546,7 +546,7 @@ UbiquitousBear/shutter-bridge's measurements on an a7C II for the Wi‑Fi one.
   frame, so cropped). A tap opens one full size, swiped through on black: its thumbnail
   enlarged, with how much of the original is down and how fast, until the original, fetched
   for the page it settles on and going on when swiped past, is in the app's cache (emptied
-  when 从相机 opens and closes); one down shows at once when come back to. It zooms as the
+  when 选照片 opens and closes); one down shows at once when come back to. It zooms as the
   photo viewer does (`ZoomablePhoto`: two fingers or a double tap). The ring in the corner, or
   选中 there, chooses it. JPEG and HEIF can be chosen, RAW only looked at. The camera's Wi‑Fi
   band is the camera's to choose: on 2.4 GHz the a7C II gave about 3 MB/s, on 5 GHz several
@@ -559,6 +559,33 @@ UbiquitousBear/shutter-bridge's measurements on an a7C II for the Wi‑Fi one.
   at, to the gallery's `Pictures/Here/`,
   one already there kept, and join the Moment, its time and place from the photo as any
   other. Leaving the page leaves the camera's network.
+
+## 选照片
+
+记录's photo row ends with two tiles: 加照片 opens 选照片 over the Moment, in place of the system's
+picker, and the other opens the phone's camera app. 选照片 reads the gallery itself (`ui/picker`):
+the first time it asks for the photos and videos with the photos' places (`READ_MEDIA_IMAGES`,
+`READ_MEDIA_VIDEO`, `ACCESS_MEDIA_LOCATION`); declined, the system's documents picker opens instead.
+Given only some photos (Android 14 and later), a row at the top says how many and 更改 asks the
+system again. Its title switches between 所有照片, the gallery's albums by size, and the paired camera
+(Camera, below); what is chosen stays chosen across them, numbered in the order it goes into the
+Moment, up to the nine a Moment holds. The grid is by day, newest first, four across (eight on its
+side), a video with its length and a motion photo marked 实况, its XMP read from the media store.
+A tap opens one full size on black, swiped through, zoomed as the photo viewer zooms, chosen and
+added from there; its 删除 hands one of the gallery's to the system, which asks and moves it to its bin
+(`createTrashRequest`), and deletes one of the camera's off its card, after asking. With
+photos chosen, the bar's 删除 does the same with those chosen from the source shown: the
+gallery's in one request, the system asking once, the camera's one at a time. 加入 adds the gallery's as they are, their
+originals where the app may see where they were taken (`setRequireOriginal`), and the camera's
+saved to the gallery's Here album first, with how far it is and 停止.
+
+**Photo info.** In 选照片's viewer and the photo viewer, a swipe up, or 信息 in the bar, makes room
+under the photo for what it says of itself: when, with its offset; the body, lens, focal length (and
+its full-frame equivalent), aperture, shutter, ISO and exposure compensation; where, named as the
+place picker names a point, on a small map; and the file's name, format, size and album. What the
+photo doesn't say is left out. The gallery's are read from the file, a camera's from its original
+once it is down, and a published one's from the first 256 KB of its original (`Range`), which keeps
+its EXIF; a swipe down puts it away.
 
 ## Elsewhere
 

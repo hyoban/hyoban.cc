@@ -1304,6 +1304,13 @@ fun PlaceMap(place: Place, modifier: Modifier = Modifier, topInset: Dp = 0.dp) {
     PointsMap(points, emptyList(), dot = 7f, padding = 48.dp, modifier = modifier, interactive = false, topInset = topInset, closest = PLACE_CLOSEST)
 }
 
+/** Where a photo was taken, a dot on its streets: the photo's info under the viewer. */
+@Composable
+fun PointMap(fix: cc.hyoban.moments.data.local.Fix, modifier: Modifier = Modifier) {
+    val points = remember(fix) { listOf(LatLng(fix.latitude, fix.longitude)) }
+    PointsMap(points, emptyList(), dot = 7f, padding = 24.dp, modifier = modifier, interactive = false, closest = PLACE_CLOSEST)
+}
+
 /** How close a place's own map frames it: its neighbourhood, a few streets round it. */
 private const val PLACE_CLOSEST = 13.0
 
