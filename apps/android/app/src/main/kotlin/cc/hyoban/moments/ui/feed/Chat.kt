@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.res.*
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,8 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -36,7 +37,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.geometry.Size
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.things.Checkin
 import cc.hyoban.moments.ledger.Ledger
@@ -207,14 +207,14 @@ class BubbleShape(private val sent: Boolean, private val joinedAbove: Boolean, p
 fun DateCapsule(day: String, onClick: (() -> Unit)?, modifier: Modifier = Modifier, note: String? = null, description: String = "") {
     val date = java.time.LocalDate.parse(day)
     val weekday = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, LocalConfiguration.current.locales[0])
-    val label = if (date == java.time.LocalDate.now()) stringResource(R.string.label_today) + " " + weekday else formatDay(day)
+    val label = if (date == java.time.LocalDate.now()) stringResource(Res.string.label_today) + " " + weekday else formatDay(day)
     val text = listOfNotNull(note, label).joinToString(" ")
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         // At least a touch target high for its tap, the capsule itself only as tall as its words.
         Box(
             Modifier
                 .heightIn(min = 48.dp)
-                .then(if (onClick != null) Modifier.clip(AppTheme.shapes.medium).clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick) else Modifier)
+                .then(if (onClick != null) Modifier.clip(AppTheme.shapes.medium).clickable(onClickLabel = stringResource(Res.string.label_whole_day), onClick = onClick) else Modifier)
                 .semantics(mergeDescendants = true) {
                     heading()
                     contentDescription = listOfNotNull(note, formatDay(day), description.takeIf { it.isNotBlank() }).joinToString(" ")
@@ -295,9 +295,9 @@ fun RecordsBubble(
                     )
                     is RecordLine.ChargeLine -> RecordRow(
                         icon = { Icon(AppIcons.Ev, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
-                        title = stringResource(R.string.timeline_charge),
+                        title = stringResource(Res.string.timeline_charge),
                         time = line.charge.at.drop(11).take(5).ifEmpty { null },
-                        end = line.charge.kwh?.let { "%.1f kWh".format(it) } ?: line.charge.minutes?.let { pluralStringResource(R.plurals.charge_minutes, it, it) }.orEmpty(),
+                        end = line.charge.kwh?.let { "%.1f kWh".format(it) } ?: line.charge.minutes?.let { pluralStringResource(Res.plurals.charge_minutes, it, it) }.orEmpty(),
                         endColor = tokens.tx,
                         large = large,
                         timed = timed,
@@ -327,9 +327,9 @@ fun RecordsBubble(
                     is RecordLine.Track -> track?.let { day ->
                         RecordRow(
                             icon = { Icon(AppIcons.Footprints, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
-                            title = stringResource(R.string.timeline_track),
+                            title = stringResource(Res.string.timeline_track),
                             time = null,
-                            end = stringResource(R.string.distance_kilometres, day.metres / 1000),
+                            end = stringResource(Res.string.distance_kilometres, decimals(day.metres / 1000, 1)),
                             endColor = tokens.tx,
                             large = large,
                             timed = timed,
@@ -340,7 +340,7 @@ fun RecordsBubble(
             }
             if (shown.size > MAX_LINES) {
                 Row(Modifier.heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.timeline_more_records, shown.size - visible.size), style = AppTheme.typography.caption, color = tokens.tx3)
+                    Text(stringResource(Res.string.timeline_more_records, shown.size - visible.size), style = AppTheme.typography.caption, color = tokens.tx3)
                 }
             }
         }

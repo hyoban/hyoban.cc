@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.viewer
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.rememberHaptics
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.Spinner
@@ -75,7 +76,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -89,7 +90,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.media.Share
 import cc.hyoban.moments.data.spec.MediaType
@@ -268,9 +268,9 @@ fun MediaViewer(
         AnimatedVisibility(bars, enter = fadeIn(motion.fastEffectsSpec()), exit = fadeOut(motion.fastEffectsSpec())) {
             // Close at the start, which of how many in the middle, and a live photo's motion at the end.
             Box(Modifier.fillMaxWidth().background(MediaOverlay.bar).statusBarsPadding().sideInsetsPadding().padding(Space.xs)) {
-                Tooltip(stringResource(R.string.action_close), below = true, modifier = Modifier.align(Alignment.CenterStart)) {
+                Tooltip(stringResource(Res.string.action_close), below = true, modifier = Modifier.align(Alignment.CenterStart)) {
                     IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
-                        Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_close), tint = MediaOverlay.content)
+                        Icon(AppIcons.Close, contentDescription = stringResource(Res.string.action_close), tint = MediaOverlay.content)
                     }
                 }
                 if (media.size > 1) {
@@ -306,13 +306,13 @@ fun MediaViewer(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f).clip(AppTheme.shapes.medium)
-                            .clickable(onClickLabel = stringResource(R.string.label_whole_day)) { onDay(moment.dateKey) }
+                            .clickable(onClickLabel = stringResource(Res.string.label_whole_day)) { onDay(moment.dateKey) }
                             .heightIn(min = 48.dp).wrapContentHeight(Alignment.CenterVertically)
                             .padding(horizontal = Space.s).testTag("info_day"),
                     )
-                    Tooltip(stringResource(R.string.photo_info)) {
+                    Tooltip(stringResource(Res.string.photo_info)) {
                         IconButton(onClick = { info = true }, modifier = Modifier.testTag("photo_info_open")) {
-                            Icon(AppIcons.Info, contentDescription = stringResource(R.string.photo_info), tint = MediaOverlay.content)
+                            Icon(AppIcons.Info, contentDescription = stringResource(Res.string.photo_info), tint = MediaOverlay.content)
                         }
                     }
                     ShareShown(container, shown)
@@ -334,7 +334,7 @@ private fun ShareShown(container: AppContainer, shown: MomentMedia) {
     val show = rememberShowMessage()
     val scope = rememberCoroutineScope()
     var sharing by remember { mutableStateOf(false) }
-    Tooltip(stringResource(R.string.action_share)) {
+    Tooltip(stringResource(Res.string.action_share)) {
         IconButton(
             onClick = {
                 sharing = true
@@ -344,7 +344,7 @@ private fun ShareShown(container: AppContainer, shown: MomentMedia) {
                     } catch (e: CancellationException) {
                         throw e
                     } catch (_: Exception) {
-                        show(resources.getString(R.string.error_share))
+                        show(textOf(Res.string.error_share))
                     } finally {
                         sharing = false
                     }
@@ -357,7 +357,7 @@ private fun ShareShown(container: AppContainer, shown: MomentMedia) {
                 if (busy) {
                     Spinner(Modifier.size(24.dp), color = MediaOverlay.content)
                 } else {
-                    Icon(AppIcons.Share, contentDescription = stringResource(R.string.action_share), tint = MediaOverlay.content)
+                    Icon(AppIcons.Share, contentDescription = stringResource(Res.string.action_share), tint = MediaOverlay.content)
                 }
             }
         }
@@ -413,8 +413,8 @@ private fun ViewerPage(
 /** A live photo's motion in the bar over it: a ring while it loads, then a tap plays it again or stops it. */
 @Composable
 private fun ViewerLiveButton(state: LiveMotionState, modifier: Modifier = Modifier) {
-    val label = stringResource(if (state.playing) R.string.action_pause else R.string.action_play)
-    Tooltip(stringResource(R.string.label_live), below = true, modifier = modifier) {
+    val label = stringResource(if (state.playing) Res.string.action_pause else Res.string.action_play)
+    Tooltip(stringResource(Res.string.label_live), below = true, modifier = modifier) {
         IconButton(onClick = { if (state.playing) state.stop() else state.play() }, enabled = state.ready, modifier = Modifier.testTag("live")) {
             if (state.ready) {
                 Icon(AppIcons.Live, contentDescription = label, tint = MediaOverlay.content)
@@ -509,9 +509,9 @@ private fun ZoomableStill(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(Space.s),
                     ) {
-                        Text(stringResource(R.string.media_not_loaded), style = AppTheme.typography.body, color = MediaOverlay.content)
+                        Text(stringResource(Res.string.media_not_loaded), style = AppTheme.typography.body, color = MediaOverlay.content)
                         TextButton(onClick = retry, modifier = Modifier.testTag("media_retry")) {
-                            Text(stringResource(R.string.action_retry), color = MediaOverlay.content)
+                            Text(stringResource(Res.string.action_retry), color = MediaOverlay.content)
                         }
                     }
                 },

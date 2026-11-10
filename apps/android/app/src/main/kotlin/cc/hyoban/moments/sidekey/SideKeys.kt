@@ -1,5 +1,7 @@
 package cc.hyoban.moments.sidekey
 
+import org.jetbrains.compose.resources.StringResource
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.BuildConfig
 import android.content.ComponentName
@@ -14,7 +16,6 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.SystemClock
 import android.widget.Toast
-import cc.hyoban.moments.R
 import cc.hyoban.moments.accessibility.ShareAccessibilityService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -59,11 +60,11 @@ internal data class SideKeyConfig(
     fun needsFront(gesture: String) = scenes.any { gesture in it.actions }
 }
 
-internal enum class SideKeyPhase(val label: Int) {
-    OFF(R.string.side_key_off), CONNECTING(R.string.side_key_connecting),
-    RUNNING(R.string.side_key_running), NEEDS_ACCESSIBILITY(R.string.side_key_needs_accessibility),
-    NEEDS_SHIZUKU(R.string.side_key_needs_shizuku), NEEDS_PERMISSION(R.string.side_key_needs_permission),
-    ERROR(R.string.side_key_error),
+internal enum class SideKeyPhase(val label: StringResource) {
+    OFF(Res.string.side_key_off), CONNECTING(Res.string.side_key_connecting),
+    RUNNING(Res.string.side_key_running), NEEDS_ACCESSIBILITY(Res.string.side_key_needs_accessibility),
+    NEEDS_SHIZUKU(Res.string.side_key_needs_shizuku), NEEDS_PERMISSION(Res.string.side_key_needs_permission),
+    ERROR(Res.string.side_key_error),
 }
 
 internal data class SideKeyState(
@@ -320,7 +321,7 @@ internal object SideKeys {
                 }
             }
         } catch (_: Exception) {
-            runtime.value = runtime.value.copy(message = context.getString(R.string.side_key_restore_pending))
+            runtime.value = runtime.value.copy(message = textOf(Res.string.side_key_restore_pending))
         } finally {
             if (oldConnection != null) runCatching { Shizuku.unbindUserService(args, oldConnection, true) }
         }
@@ -328,7 +329,7 @@ internal object SideKeys {
 
     private fun fail() {
         failed = true
-        runtime.value = runtime.value.copy(message = context.getString(R.string.side_key_error))
+        runtime.value = runtime.value.copy(message = textOf(Res.string.side_key_error))
         prefs.edit().putBoolean("enabled", false).apply()
         scope.launch { configState.value = readConfig(); reconcile() }
     }
@@ -353,27 +354,27 @@ internal object SideKeys {
                 action == "device:torch" -> scope.launch {
                     try {
                         val enabled = torch.toggle()
-                        report(context.getString(if (enabled) R.string.side_key_torch_on else R.string.side_key_torch_off))
+                        report(textOf(if (enabled) Res.string.side_key_torch_on else Res.string.side_key_torch_off))
                     } catch (error: kotlinx.coroutines.CancellationException) {
                         throw error
                     } catch (_: Exception) {
-                        report(context.getString(R.string.side_key_torch_unavailable), true)
+                        report(textOf(Res.string.side_key_torch_unavailable), true)
                     }
                 }
                 action == "ledger:capture" -> {
                     // Bound still, so it is there again when the ledger is turned back on.
                     if (!(context.applicationContext as cc.hyoban.moments.MomentsApplication).container.settings.isOn(Module.LEDGER)) {
-                        report(context.getString(R.string.side_key_ledger_off), true)
+                        report(textOf(Res.string.side_key_ledger_off), true)
                     } else {
                         val result = ShareAccessibilityService.capturePayment()
-                        report(context.getString(result.message), result != cc.hyoban.moments.accessibility.PaymentCapture.OPENED)
+                        report(textOf(result.message), result != cc.hyoban.moments.accessibility.PaymentCapture.OPENED)
                     }
                 }
                 action.startsWith("media:") -> {
                     val bridge = checkNotNull(remote)
                     scope.launch {
                         try { withContext(Dispatchers.IO) { bridge.media(action.substringAfter(':').toInt()) } }
-                        catch (_: Exception) { report(context.getString(R.string.side_key_action_failed), true) }
+                        catch (_: Exception) { report(textOf(Res.string.side_key_action_failed), true) }
                     }
                 }
                 action.startsWith("nav:") -> check(ShareAccessibilityService.sideKeyNavigation(action.substringAfter(':').toInt()))
@@ -383,8 +384,8 @@ internal object SideKeys {
                 }
                 action.startsWith("uri:") && SideKeyActions.validLink(action.substringAfter(':')) ->
                     check(ShareAccessibilityService.sideKeyOpen(Intent(Intent.ACTION_VIEW, Uri.parse(action.substringAfter(':')))))
-                else -> report(context.getString(R.string.side_key_action_failed), true)
+                else -> report(textOf(Res.string.side_key_action_failed), true)
             }
-        } catch (_: Exception) { report(context.getString(R.string.side_key_action_failed), true) }
+        } catch (_: Exception) { report(textOf(Res.string.side_key_action_failed), true) }
     }
 }

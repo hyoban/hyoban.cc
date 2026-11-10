@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.design.edgeBlur
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
@@ -104,8 +106,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -133,7 +135,6 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.toRoute
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.MainActivity
-import cc.hyoban.moments.R
 import cc.hyoban.moments.Settings
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.data.spec.MomentRecord
@@ -357,7 +358,7 @@ data class LedgerList(
 private fun TabIcon(tab: Tab, selected: Boolean, pending: Int) {
     val icon = if (selected) tab.selectedIcon else tab.icon
     if (tab == Tab.ME && !selected && pending > 0) {
-        val waiting = pluralStringResource(R.plurals.count_changes, pending, pending)
+        val waiting = pluralStringResource(Res.plurals.count_changes, pending, pending)
         BadgedBox(
             badge = { Badge(containerColor = tokens.accent) },
             modifier = Modifier.semantics { contentDescription = waiting },
@@ -402,10 +403,10 @@ private fun TabItem(tab: Tab, chosen: Boolean, pending: Int, modifier: Modifier,
 private val RAIL_WIDTH = 80.dp
 
 /** The tabs at the bottom; everything else opens over them. */
-private enum class Tab(val route: Any, val type: KClass<*>, val label: Int, val icon: ImageVector, val selectedIcon: ImageVector) {
-    MOMENTS(Feed, Feed::class, R.string.tab_moments, AppIcons.Timeline, AppIcons.TimelineFill),
-    MAP(Atlas, Atlas::class, R.string.tab_map, AppIcons.Map, AppIcons.MapFill),
-    ME(Preferences, Preferences::class, R.string.tab_me, AppIcons.Me, AppIcons.MeFill),
+private enum class Tab(val route: Any, val type: KClass<*>, val label: StringResource, val icon: ImageVector, val selectedIcon: ImageVector) {
+    MOMENTS(Feed, Feed::class, Res.string.tab_moments, AppIcons.Timeline, AppIcons.TimelineFill),
+    MAP(Atlas, Atlas::class, Res.string.tab_map, AppIcons.Map, AppIcons.MapFill),
+    ME(Preferences, Preferences::class, Res.string.tab_me, AppIcons.Me, AppIcons.MeFill),
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)

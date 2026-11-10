@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.compose
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.components.openAppSettings
 
 import androidx.compose.foundation.layout.safeDrawing
@@ -106,11 +107,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.Found
 import cc.hyoban.moments.data.local.NEARBY_METRES
@@ -232,12 +232,12 @@ internal fun PlacePicker(
     // Asked with the sheet first (PermissionSheet); refused, the map waits for a drag or a search.
     val permission = cc.hyoban.moments.ui.components.rememberPermissionAsk(LOCATION_PERMISSIONS, cc.hyoban.moments.ui.components.PermissionWords(
         AppIcons.Locate,
-        stringResource(R.string.permission_locate_title),
-        stringResource(R.string.permission_locate_body),
-        stringResource(R.string.permission_not_now),
-        listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Pin, stringResource(R.string.permission_locate_fact))),
+        stringResource(Res.string.permission_locate_title),
+        stringResource(Res.string.permission_locate_body),
+        stringResource(Res.string.permission_not_now),
+        listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Pin, stringResource(Res.string.permission_locate_fact))),
     )) { granted ->
-        if (granted) locate() else Toast.makeText(context, R.string.error_location_permission, Toast.LENGTH_SHORT).show()
+        if (granted) locate() else Toast.makeText(context, textOf(Res.string.error_location_permission), Toast.LENGTH_SHORT).show()
     }
     val askToLocate = { if (!locating) permission() }
     // The keyboard the Moment's words had goes, so the map shows. Opened with nothing chosen
@@ -370,7 +370,7 @@ internal fun PlacePicker(
         )
     }
     val locateButton: @Composable () -> Unit = {
-        val locateLabel = stringResource(R.string.action_locate)
+        val locateLabel = stringResource(Res.string.action_locate)
         Tooltip(locateLabel) {
             FloatingActionButton(
                 onClick = askToLocate,
@@ -593,14 +593,14 @@ private fun PlaceCard(
             SearchField(
                 state = query,
                 onSearch = { keyboard?.hide() },
-                placeholder = { Text(stringResource(R.string.place_search_hint), maxLines = 1) },
+                placeholder = { Text(stringResource(Res.string.place_search_hint), maxLines = 1) },
                 leadingIcon = {
                     Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) { Icon(AppIcons.Search, contentDescription = null) }
                 },
                 trailingIcon = if (query.text.isNotEmpty()) {
                     {
                         IconButton(onClick = { query.clearText() }) {
-                            Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_clear))
+                            Icon(AppIcons.Close, contentDescription = stringResource(Res.string.action_clear))
                         }
                     }
                 } else {
@@ -632,14 +632,14 @@ private fun PlaceCard(
                 typed.isNotEmpty() && results == null || typed.isEmpty() && locating && pick == PlaceChoice.None ->
                     Spinner(Modifier.align(Alignment.Center).size(24.dp), color = tokens.tx3)
                 typed.isNotEmpty() && rows.isEmpty() -> Text(
-                    stringResource(R.string.search_none_for, typed),
+                    stringResource(Res.string.search_none_for, typed),
                     style = AppTheme.typography.body,
                     color = tokens.tx2,
                     modifier = Modifier.align(Alignment.Center),
                 )
                 rows.isEmpty() && noLocation -> NoLocationRow(Modifier.align(Alignment.TopCenter))
                 rows.isEmpty() -> Text(
-                    stringResource(R.string.place_drag_hint),
+                    stringResource(Res.string.place_drag_hint),
                     style = AppTheme.typography.body,
                     color = tokens.tx2,
                     modifier = Modifier.align(Alignment.Center).padding(horizontal = Space.xl),
@@ -658,7 +658,7 @@ private fun PlaceCard(
                                 places.getValue(row.id).name,
                                 PlaceKind.of(places.getValue(row.id).kind),
                                 listOfNotNull(
-                                    stringResource(R.string.place_visited),
+                                    stringResource(Res.string.place_visited),
                                     PlaceKind.of(places.getValue(row.id).kind)?.let { stringResource(it.label) },
                                     formatDistance(row.metres),
                                 ),
@@ -685,14 +685,14 @@ private fun PlaceCard(
             if (alternative != null) {
                 TextButton(onClick = alternative.second, enabled = chosen, modifier = Modifier.testTag("place_alternative")) { Text(alternative.first) }
             } else if (onNone != null) {
-                TextButton(onClick = onNone, modifier = Modifier.testTag("place_none")) { Text(stringResource(R.string.place_none)) }
+                TextButton(onClick = onNone, modifier = Modifier.testTag("place_none")) { Text(stringResource(Res.string.place_none)) }
             }
             Spacer(Modifier.weight(1f))
             Button(
                 onClick = onConfirm,
                 enabled = chosen,
                 modifier = Modifier.testTag("place_confirm"),
-            ) { Text(stringResource(R.string.action_confirm)) }
+            ) { Text(stringResource(Res.string.action_confirm)) }
         }
     }
 }
@@ -702,8 +702,8 @@ private fun PlaceCard(
 private fun NoLocationRow(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     ListItem(
-        headlineContent = { Text(stringResource(R.string.place_no_location)) },
-        supportingContent = { Text(stringResource(R.string.place_no_location_note)) },
+        headlineContent = { Text(stringResource(Res.string.place_no_location)) },
+        supportingContent = { Text(stringResource(Res.string.place_no_location_note)) },
         leadingContent = { Icon(AppIcons.Locate, contentDescription = null, tint = tokens.danger) },
         trailingContent = { Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp), tint = tokens.tx2) },
         modifier = modifier.fillMaxWidth().clickable { with(context) { openAppSettings() } }.padding(horizontal = Space.s).testTag("place_no_location"),
@@ -768,7 +768,7 @@ private fun ChosenRow(
             OutlinedTextField(
                 value = name,
                 onValueChange = onName,
-                label = { Text(stringResource(R.string.place_name)) },
+                label = { Text(stringResource(Res.string.place_name)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { onDone() }),
@@ -788,7 +788,7 @@ private fun ChosenRow(
                     maxLines = 1,
                 )
                 Text(
-                    stringResource(if (pick is PlaceChoice.Known) R.string.place_visited else R.string.place_at_pin),
+                    stringResource(if (pick is PlaceChoice.Known) Res.string.place_visited else Res.string.place_at_pin),
                     style = AppTheme.typography.caption,
                     color = tokens.tx2,
                 )
@@ -796,7 +796,7 @@ private fun ChosenRow(
         }
         Box {
             TextButton(onClick = { kinds = true }, modifier = Modifier.testTag("place_kind")) {
-                Text(kind?.let { stringResource(it.label) } ?: stringResource(R.string.place_kind))
+                Text(kind?.let { stringResource(it.label) } ?: stringResource(Res.string.place_kind))
             }
         }
         if (kinds) {
@@ -810,7 +810,7 @@ private fun ChosenRow(
 
 @Composable
 internal fun formatDistance(metres: Double): String =
-    if (metres < 1000) stringResource(R.string.distance_metres, metres.toInt()) else stringResource(R.string.distance_kilometres, metres / 1000)
+    if (metres < 1000) stringResource(Res.string.distance_metres, metres.toInt()) else stringResource(Res.string.distance_kilometres, decimals(metres / 1000, 1))
 
 internal val LOCATION_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 private const val LANDMARKS = 8

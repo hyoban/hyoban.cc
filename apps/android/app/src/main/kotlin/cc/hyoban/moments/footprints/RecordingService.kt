@@ -1,5 +1,7 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.data.spec.Module
 import android.Manifest
 import android.app.*
@@ -20,7 +22,6 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import cc.hyoban.moments.BuildConfig
 import cc.hyoban.moments.MomentsApplication
-import cc.hyoban.moments.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -90,7 +91,7 @@ class RecordingService : Service() {
             for (event in events) {
                 try { event() } catch (e: CancellationException) { throw e } catch (e: Exception) {
                     diagnostic("event_error", "exception" to e.javaClass.simpleName)
-                    fail(R.string.footprints_error)
+                    fail(Res.string.footprints_error)
                 }
             }
         }
@@ -110,7 +111,7 @@ class RecordingService : Service() {
             return START_NOT_STICKY
         }
         try {
-            val message = if (intent?.action == ACTIVITY_WAKE && configured) _status.value ?: R.string.footprints_waiting else R.string.footprints_waiting
+            val message = if (intent?.action == ACTIVITY_WAKE && configured) _status.value ?: Res.string.footprints_waiting else Res.string.footprints_waiting
             ServiceCompat.startForeground(this, RecordingNotifications.ID, RecordingNotifications.build(this, message),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
         } catch (e: Exception) {
@@ -159,9 +160,9 @@ class RecordingService : Service() {
             ActivityTransitions.sync(this@RecordingService)
         }
         if (!state.recording) { stopSelfResult(latestStartId); return }
-        if (!hasPreciseLocation(this)) { fail(R.string.footprints_permission_needed); return }
+        if (!hasPreciseLocation(this)) { fail(Res.string.footprints_permission_needed); return }
         if (!manager.isLocationEnabled) {
-            updateStatus(R.string.footprints_location_off)
+            updateStatus(Res.string.footprints_location_off)
             return // Keep the service alive to recover when location is switched back on.
         }
         if (state.session == null) {
@@ -175,7 +176,7 @@ class RecordingService : Service() {
             tripWatchdog = scope.launch {
                 while (isActive) {
                     delay(15_000)
-                    if (subscribed && SystemClock.elapsedRealtime() - lastFix > 120_000) updateStatus(R.string.footprints_waiting)
+                    if (subscribed && SystemClock.elapsedRealtime() - lastFix > 120_000) updateStatus(Res.string.footprints_waiting)
                 }
             }
         }
@@ -184,7 +185,7 @@ class RecordingService : Service() {
     private suspend fun startUpdates(trip: Boolean, newSegment: Boolean = true, batch: Boolean = false) {
         val available = manager.getProviders(true)
         val provider = listOf(LocationManager.GPS_PROVIDER, "fused", LocationManager.NETWORK_PROVIDER).firstOrNull { it in available }
-        if (provider == null) { updateStatus(R.string.footprints_location_off); return }
+        if (provider == null) { updateStatus(Res.string.footprints_location_off); return }
         if (newSegment) {
             segmentId = withContext(Dispatchers.IO) { store.breakSegment() }
             segmentStartNanos = SystemClock.elapsedRealtimeNanos()
@@ -232,7 +233,7 @@ class RecordingService : Service() {
                 "system_timeout_ms" to if (acquiring) DailyRecordingPolicy.FIX_TIMEOUT else null)
             if (newSegment) {
                 lastFix = SystemClock.elapsedRealtime()
-                updateStatus(R.string.footprints_waiting)
+                updateStatus(Res.string.footprints_waiting)
             }
         } catch (e: SecurityException) { startFailed(e) }
     }
@@ -298,7 +299,7 @@ class RecordingService : Service() {
             if (decisions.all { it == FixDecision.NOT_RECORDING }) return@trySend
             diagnostic("location_delivery", "samples" to samples.size, "oldest_age_ms" to
                 (SystemClock.elapsedRealtimeNanos() - samples.first().first.elapsedRealtimeNanos) / 1_000_000)
-            updateStatus(R.string.footprints_recording)
+            updateStatus(Res.string.footprints_recording)
             if (acquiring && daily?.phase == DailyRecordingPolicy.Phase.ACTIVE) {
                 // Acquisition has no batching. Switch after a usable fix without creating a track gap.
                 stopUpdates()
@@ -383,7 +384,7 @@ class RecordingService : Service() {
             stopUpdates()
             armMotion()
             startPassive()
-            updateStatus(R.string.footprints_resting)
+            updateStatus(Res.string.footprints_resting)
             if (policy.restReason == DailyRecordingPolicy.RestReason.NO_FIX) startFallback(policy)
         } else {
             stopFallback()
@@ -593,13 +594,13 @@ class RecordingService : Service() {
         fail(RecordingFailure.message(error))
     }
 
-    private fun fail(message: Int) {
-        diagnostic("service_failure", "reason" to resources.getResourceEntryName(message), *environment())
+    private fun fail(message: StringResource) {
+        diagnostic("service_failure", "reason" to message.key, *environment())
         _status.value = message
         stopSelf()
     }
 
-    private fun updateStatus(message: Int) {
+    private fun updateStatus(message: StringResource) {
         if (_status.value == message) return
         _status.value = message
         getSystemService(NotificationManager::class.java).notify(RecordingNotifications.ID, RecordingNotifications.build(this, message))
@@ -616,7 +617,7 @@ class RecordingService : Service() {
         unregisterReceiver(providers)
         scope.cancel()
         events.close()
-        if (_status.value in listOf(R.string.footprints_recording, R.string.footprints_waiting, R.string.footprints_location_off, R.string.footprints_resting)) _status.value = null
+        if (_status.value in listOf(Res.string.footprints_recording, Res.string.footprints_waiting, Res.string.footprints_location_off, Res.string.footprints_resting)) _status.value = null
         super.onDestroy()
     }
 
@@ -673,7 +674,7 @@ class RecordingService : Service() {
             }.isSuccess) done.await()
         }
 
-        private val _status = MutableStateFlow<Int?>(null)
+        private val _status = MutableStateFlow<StringResource?>(null)
         val status = _status.asStateFlow()
 
         fun hasPreciseLocation(context: Context) = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED

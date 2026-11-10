@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
@@ -21,10 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.R
 import cc.hyoban.moments.footprints.footprintPlace
 import cc.hyoban.moments.ledger.Account
 import cc.hyoban.moments.ledger.AccountKind
@@ -117,37 +117,37 @@ fun amountColor(txn: Txn): Color = when {
 @Composable
 fun kindLabel(kind: TxnKind): String = stringResource(
     when (kind) {
-        TxnKind.EXPENSE -> R.string.ledger_kind_expense
-        TxnKind.INCOME -> R.string.ledger_kind_income
-        TxnKind.TRANSFER -> R.string.ledger_kind_transfer
-        TxnKind.REFUND -> R.string.ledger_kind_refund
-        TxnKind.REIMBURSEMENT -> R.string.ledger_kind_reimbursement
+        TxnKind.EXPENSE -> Res.string.ledger_kind_expense
+        TxnKind.INCOME -> Res.string.ledger_kind_income
+        TxnKind.TRANSFER -> Res.string.ledger_kind_transfer
+        TxnKind.REFUND -> Res.string.ledger_kind_refund
+        TxnKind.REIMBURSEMENT -> Res.string.ledger_kind_reimbursement
     },
 )
 
 @Composable
 fun transferLabel(type: TransferType): String = stringResource(
     when (type) {
-        TransferType.TRANSFER -> R.string.ledger_kind_transfer
-        TransferType.REPAY -> R.string.ledger_transfer_repay
-        TransferType.BORROW -> R.string.ledger_transfer_borrow
-        TransferType.LEND -> R.string.ledger_transfer_lend
-        TransferType.COLLECT -> R.string.ledger_transfer_collect
+        TransferType.TRANSFER -> Res.string.ledger_kind_transfer
+        TransferType.REPAY -> Res.string.ledger_transfer_repay
+        TransferType.BORROW -> Res.string.ledger_transfer_borrow
+        TransferType.LEND -> Res.string.ledger_transfer_lend
+        TransferType.COLLECT -> Res.string.ledger_transfer_collect
     },
 )
 
 @Composable
 fun accountKindLabel(kind: AccountKind): String = stringResource(
     when (kind) {
-        AccountKind.CASH -> R.string.ledger_account_cash
-        AccountKind.DEBIT -> R.string.ledger_account_debit
-        AccountKind.CREDIT -> R.string.ledger_account_credit
-        AccountKind.WALLET -> R.string.ledger_account_wallet
-        AccountKind.STORED -> R.string.ledger_account_stored
-        AccountKind.INVESTMENT -> R.string.ledger_account_investment
-        AccountKind.LOAN -> R.string.ledger_account_loan
-        AccountKind.PERSON -> R.string.ledger_account_person
-        AccountKind.OTHER -> R.string.ledger_account_other
+        AccountKind.CASH -> Res.string.ledger_account_cash
+        AccountKind.DEBIT -> Res.string.ledger_account_debit
+        AccountKind.CREDIT -> Res.string.ledger_account_credit
+        AccountKind.WALLET -> Res.string.ledger_account_wallet
+        AccountKind.STORED -> Res.string.ledger_account_stored
+        AccountKind.INVESTMENT -> Res.string.ledger_account_investment
+        AccountKind.LOAN -> Res.string.ledger_account_loan
+        AccountKind.PERSON -> Res.string.ledger_account_person
+        AccountKind.OTHER -> Res.string.ledger_account_other
     },
 )
 
@@ -342,8 +342,8 @@ fun LeadingIcon(icon: ImageVector, modifier: Modifier = Modifier, tonal: Boolean
 @Composable
 fun txnTitle(txn: Txn, ledger: Ledger): String = when (txn.kind) {
     TxnKind.TRANSFER -> {
-        val from = txn.account?.let(ledger.accountsById::get)?.let { accountName(it) } ?: stringResource(R.string.ledger_no_account)
-        val to = txn.toAccount?.let(ledger.accountsById::get)?.let { accountName(it) } ?: stringResource(R.string.ledger_no_account)
+        val from = txn.account?.let(ledger.accountsById::get)?.let { accountName(it) } ?: stringResource(Res.string.ledger_no_account)
+        val to = txn.toAccount?.let(ledger.accountsById::get)?.let { accountName(it) } ?: stringResource(Res.string.ledger_no_account)
         "$from → $to"
     }
     else -> ledger.categoryPath(txn.category) ?: kindLabel(txn.kind)
@@ -360,11 +360,11 @@ fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false, withTime:
     // The account stays on the bill's own page: a list says what the bill was, not what paid it.
     val transfer = transferLabel(txn.transfer).takeIf { txn.kind == TxnKind.TRANSFER && txn.transfer != TransferType.TRANSFER }
     val state = when {
-        txn.reimburse == Reimburse.PENDING -> stringResource(R.string.ledger_reimburse_pending)
-        txn.reimburse == Reimburse.DONE -> stringResource(R.string.ledger_reimburse_done)
-        txn.kind == TxnKind.REFUND -> stringResource(R.string.ledger_kind_refund)
-        txn.kind == TxnKind.REIMBURSEMENT -> stringResource(R.string.ledger_kind_reimbursement)
-        ledger.returns[txn.id].orEmpty().any { it.kind == TxnKind.REFUND } -> stringResource(R.string.ledger_refunded)
+        txn.reimburse == Reimburse.PENDING -> stringResource(Res.string.ledger_reimburse_pending)
+        txn.reimburse == Reimburse.DONE -> stringResource(Res.string.ledger_reimburse_done)
+        txn.kind == TxnKind.REFUND -> stringResource(Res.string.ledger_kind_refund)
+        txn.kind == TxnKind.REIMBURSEMENT -> stringResource(Res.string.ledger_kind_reimbursement)
+        ledger.returns[txn.id].orEmpty().any { it.kind == TxnKind.REFUND } -> stringResource(Res.string.ledger_refunded)
         else -> null
     }
     // The day first, so a long note doesn't cut it off; the time only where the row's end lacks it.

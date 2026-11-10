@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.data.spec.Module
 import androidx.compose.foundation.rememberScrollState
@@ -67,8 +68,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -78,7 +79,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
@@ -179,19 +179,19 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                 state = query,
                 // Searched, the keyboard goes, so what was found has the screen.
                 onSearch = { keyboard?.hide() },
-                placeholder = { Text(stringResource(R.string.hint_search_everything)) },
+                placeholder = { Text(stringResource(Res.string.hint_search_everything)) },
                 leadingIcon = {
-                    Tooltip(stringResource(R.string.action_back), below = true) {
+                    Tooltip(stringResource(Res.string.action_back), below = true) {
                         IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
-                            Icon(AppIcons.ArrowLeft, contentDescription = stringResource(R.string.action_back))
+                            Icon(AppIcons.ArrowLeft, contentDescription = stringResource(Res.string.action_back))
                         }
                     }
                 },
                 trailingIcon = if (text.isNotEmpty()) {
                     {
-                        Tooltip(stringResource(R.string.action_clear), below = true) {
+                        Tooltip(stringResource(Res.string.action_clear), below = true) {
                             IconButton(onClick = { query.clearText() }, modifier = Modifier.testTag("search_clear")) {
-                                Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_clear))
+                                Icon(AppIcons.Close, contentDescription = stringResource(Res.string.action_clear))
                             }
                         }
                     }
@@ -211,11 +211,11 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                 label = {
                     val name = stringResource(
                         when (option) {
-                            FeedKind.ALL -> R.string.filter_all
-                            FeedKind.MOMENTS -> R.string.filter_moments
-                            FeedKind.BILLS -> R.string.section_bill
-                            FeedKind.CHARGES -> R.string.part_charge
-                            FeedKind.CHECKINS -> R.string.filter_checkins
+                            FeedKind.ALL -> Res.string.filter_all
+                            FeedKind.MOMENTS -> Res.string.filter_moments
+                            FeedKind.BILLS -> Res.string.section_bill
+                            FeedKind.CHARGES -> Res.string.part_charge
+                            FeedKind.CHECKINS -> Res.string.filter_checkins
                         },
                     )
                     val figures = AppTheme.typography.caption.fontFamily
@@ -246,13 +246,13 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
             // when there is nothing to list, as the kinds' counts say how many there are.
             // Nothing to list says why, and under it, when a year narrows it, to loosen that.
             val status = when {
-                !searching -> stringResource(R.string.search_prompt)
-                found.isEmpty() && text.isNotEmpty() -> stringResource(R.string.search_none_for, text)
-                found.isEmpty() -> stringResource(R.string.search_none)
-                else -> pluralStringResource(R.plurals.count_results, found.size, found.size)
+                !searching -> stringResource(Res.string.search_prompt)
+                found.isEmpty() && text.isNotEmpty() -> stringResource(Res.string.search_none_for, text)
+                found.isEmpty() -> stringResource(Res.string.search_none)
+                else -> pluralStringResource(Res.plurals.count_results, found.size, found.size)
             }
             val note = when {
-                found.isEmpty() && filter != TimeFilter() -> stringResource(R.string.search_none_note_time)
+                found.isEmpty() && filter != TimeFilter() -> stringResource(Res.string.search_none_note_time)
                 else -> null
             }
             val announce = Modifier.semantics { liveRegion = LiveRegionMode.Polite }.testTag("search_status")
@@ -284,7 +284,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                                 Modifier.fillMaxWidth().background(AppColors.page).padding(start = Space.gutter, top = Space.l, bottom = Space.xs),
                             ) {
                                 Text(
-                                    stringResource(R.string.filter_year, year.toInt()),
+                                    stringResource(Res.string.filter_year, year.toInt()),
                                     style = AppTheme.typography.caption,
                                     color = tokens.tx2,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -398,7 +398,7 @@ private fun SearchResult(
         modifier = modifier.sharedCard(moment.uid).testTag("moment_${moment.uid}"),
     ) {
         Text(
-            marked(around(words, text), text, mark).ifEmpty { AnnotatedString(stringResource(R.string.label_no_words)) },
+            marked(around(words, text), text, mark).ifEmpty { AnnotatedString(stringResource(Res.string.label_no_words)) },
             style = AppTheme.typography.body,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -481,13 +481,13 @@ private fun SearchCharge(charge: Charge, modifier: Modifier) {
         modifier = modifier.testTag("charge_${charge.uid}"),
         trailing = { charge.at.drop(11).take(5).ifEmpty { null }?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx3) } },
     ) {
-        Text(stringResource(R.string.timeline_charge), style = AppTheme.typography.body)
+        Text(stringResource(Res.string.timeline_charge), style = AppTheme.typography.body)
         Text(
             listOfNotNull(
                 formatDate(charge.at, ownYear(charge.at)),
-                stringResource(if (charge.dc) R.string.charge_dc else R.string.charge_ac),
+                stringResource(if (charge.dc) Res.string.charge_dc else Res.string.charge_ac),
                 charge.kwh?.let { "%.1f kWh".format(it) },
-                charge.minutes?.let { pluralStringResource(R.plurals.charge_minutes, it, it) },
+                charge.minutes?.let { pluralStringResource(Res.plurals.charge_minutes, it, it) },
             ).joinToString(" "),
             style = AppTheme.typography.caption,
             color = tokens.tx2,
@@ -516,7 +516,7 @@ private fun SearchCheckin(checkin: cc.hyoban.moments.data.things.Checkin, text: 
             listOfNotNull(
                 formatDate(checkin.at, ownYear(checkin.at)),
                 checkin.place?.let { places[it]?.name }?.takeIf { it != checkin.venue },
-                if (checkin.private) stringResource(R.string.visibility_private) else null,
+                if (checkin.private) stringResource(Res.string.visibility_private) else null,
             ).joinToString(" "),
             style = AppTheme.typography.caption,
             color = tokens.tx2,

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.theme.cardBorder
 import cc.hyoban.moments.ui.theme.tokens
@@ -48,14 +49,13 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
@@ -187,7 +187,7 @@ fun DayPill(text: String, date: String? = null, onClick: (() -> Unit)? = null) {
     Box(Modifier.fillMaxWidth().padding(horizontal = Space.gutter, vertical = Space.s).semantics(mergeDescendants = true) { heading() }) {
         val open = if (onClick != null && date != null) {
             Modifier.clip(PillShape)
-                .clickable(onClickLabel = stringResource(R.string.label_whole_day), onClick = onClick).testTag("day_pill_$date")
+                .clickable(onClickLabel = stringResource(Res.string.label_whole_day), onClick = onClick).testTag("day_pill_$date")
         } else {
             Modifier
         }

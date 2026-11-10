@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
@@ -44,8 +45,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -58,7 +59,6 @@ import cc.hyoban.moments.ui.design.Button
 import cc.hyoban.moments.ui.design.ModalBottomSheet
 import cc.hyoban.moments.ui.settings.SwitchRow
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.ledger.Book
 import cc.hyoban.moments.ledger.COMMON_CURRENCIES
@@ -114,21 +114,21 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                 withContext(Dispatchers.IO) {
                     context.contentResolver.openOutputStream(uri, "wt")!!.bufferedWriter().use { it.write(LedgerBackup.encode(LedgerBackup.of(container.ledger.ledger.value))) }
                 }
-            }.onSuccess { show(resources.getString(R.string.ledger_backup_done)) }.onFailure { show(resources.getString(R.string.ledger_error_file)) }
+            }.onSuccess { show(textOf(Res.string.ledger_backup_done)) }.onFailure { show(textOf(Res.string.ledger_error_file)) }
         }
     }
     val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) scope.launch {
             runCatching { withContext(Dispatchers.IO) { LedgerBackup.decode(context.contentResolver.openInputStream(uri)!!.bufferedReader().use { it.readText() }) } }
                 .onSuccess { restoring = it }
-                .onFailure { show(resources.getString(R.string.ledger_error_backup)) }
+                .onFailure { show(textOf(Res.string.ledger_error_backup)) }
         }
     }
     val csv = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
         if (uri != null) scope.launch {
             runCatching {
                 withContext(Dispatchers.IO) { context.contentResolver.openOutputStream(uri, "wt")!!.bufferedWriter().use { writeCsv(container.ledger.ledger.value, it) } }
-            }.onSuccess { show(resources.getString(R.string.ledger_csv_done)) }.onFailure { show(resources.getString(R.string.ledger_error_file)) }
+            }.onSuccess { show(textOf(Res.string.ledger_csv_done)) }.onFailure { show(textOf(Res.string.ledger_error_file)) }
         }
     }
     LaunchedEffect(startImport) { if (startImport) importer.pick() }
@@ -136,7 +136,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
     val shared by container.sharedExport.collectAsStateWithLifecycle()
     LaunchedEffect(shared) { if (shared != null) container.takeSharedExport()?.let(importer.read) }
 
-    SubPage(stringResource(R.string.ledger_settings_title), nav.back) {
+    SubPage(stringResource(Res.string.ledger_settings_title), nav.back) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current).navigationBarsPadding()
@@ -144,7 +144,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                     .semantics { testTagsAsResourceId = true },
             ) {
                 SegmentedGroup(
-                    stringResource(R.string.ledger_books),
+                    stringResource(Res.string.ledger_books),
                     null,
                     ledger.books.map<Book, Segment> { book ->
                         { shapes ->
@@ -155,7 +155,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                                 colors = segmentColors(),
                                 leadingContent = { Icon(AppIcons.Book, contentDescription = null) },
                                 supportingContent = {
-                                    Text(listOfNotNull(book.currency, pluralStringResource(R.plurals.ledger_count_bills, count, count), stringResource(R.string.ledger_archived).takeIf { book.archived }).joinToString(" "))
+                                    Text(listOfNotNull(book.currency, pluralStringResource(Res.plurals.ledger_count_bills, count, count), stringResource(Res.string.ledger_archived).takeIf { book.archived }).joinToString(" "))
                                 },
                                 modifier = Modifier.testTag("book_${book.name}"),
                             ) { Text(book.name) }
@@ -167,11 +167,11 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                             colors = segmentColors(),
                             leadingContent = { Icon(AppIcons.Plus, contentDescription = null) },
                             modifier = Modifier.testTag("add_book"),
-                        ) { Text(stringResource(R.string.ledger_add_book)) }
+                        ) { Text(stringResource(Res.string.ledger_add_book)) }
                     },
                 )
                 SegmentedGroup(
-                    stringResource(R.string.ledger_rates),
+                    stringResource(Res.string.ledger_rates),
                     null,
                     listOf { shapes ->
                         val latest = ledger.rates.currencies.filter { it != "CNY" }.mapNotNull { ledger.rates.latest(it)?.first }.maxOrNull()
@@ -180,15 +180,15 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                             shapes = shapes,
                             colors = segmentColors(),
                             leadingContent = { Icon(AppIcons.Exchange, contentDescription = null) },
-                            supportingContent = latest?.let { { Text(stringResource(R.string.ledger_rates_until, it.toString())) } },
+                            supportingContent = latest?.let { { Text(stringResource(Res.string.ledger_rates_until, it.toString())) } },
                             modifier = Modifier.testTag("ledger_rates"),
-                        ) { Text(stringResource(R.string.ledger_rates)) }
+                        ) { Text(stringResource(Res.string.ledger_rates)) }
                     },
                 )
                 AutoBillGroup()
                 SegmentedGroup(
-                    stringResource(R.string.ledger_data),
-                    stringResource(R.string.ledger_data_note),
+                    stringResource(Res.string.ledger_data),
+                    stringResource(Res.string.ledger_data_note),
                     listOf(
                         { shapes ->
                             SegmentedListItem(
@@ -196,32 +196,32 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                                     scope.launch {
                                         val changed = autoLink(container.ledger.ledger.value, container.repository.moments.value, container.repository.trips.value)
                                         container.ledger.saveTxns(changed)
-                                        show(resources.getQuantityString(R.plurals.ledger_linked, changed.size, changed.size))
+                                        show(pluralTextOf(Res.plurals.ledger_linked, changed.size, changed.size))
                                     }
                                 },
                                 shapes = shapes, colors = segmentColors(),
                                 leadingContent = { Icon(AppIcons.Link, contentDescription = null) },
-                                supportingContent = { Text(stringResource(R.string.ledger_link_all_note)) },
+                                supportingContent = { Text(stringResource(Res.string.ledger_link_all_note)) },
                                 modifier = Modifier.testTag("link_all"),
-                            ) { Text(stringResource(R.string.ledger_link_all)) }
+                            ) { Text(stringResource(Res.string.ledger_link_all)) }
                         },
                         { shapes ->
                             SegmentedListItem(
                                 onClick = { backup.launch("ledger-${LocalDate.now()}.json") }, shapes = shapes, colors = segmentColors(),
                                 leadingContent = { Icon(AppIcons.CloudUpload, contentDescription = null) },
-                            ) { Text(stringResource(R.string.ledger_backup)) }
+                            ) { Text(stringResource(Res.string.ledger_backup)) }
                         },
                         { shapes ->
                             SegmentedListItem(
                                 onClick = { restore.launch(arrayOf("application/json", "application/octet-stream", "text/plain")) }, shapes = shapes, colors = segmentColors(),
                                 leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
-                            ) { Text(stringResource(R.string.ledger_restore)) }
+                            ) { Text(stringResource(Res.string.ledger_restore)) }
                         },
                         { shapes ->
                             SegmentedListItem(
                                 onClick = { csv.launch("ledger-${LocalDate.now()}.csv") }, shapes = shapes, colors = segmentColors(),
                                 leadingContent = { Icon(AppIcons.Table, contentDescription = null) },
-                            ) { Text(stringResource(R.string.ledger_export_csv)) }
+                            ) { Text(stringResource(Res.string.ledger_export_csv)) }
                         },
                     ),
                 )
@@ -244,7 +244,7 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
     }
     if (rates) RatesSheet(container) { rates = false }
     if (addingBook) {
-        NameDialog(stringResource(R.string.ledger_add_book), "", onDismiss = { addingBook = false }) { name ->
+        NameDialog(stringResource(Res.string.ledger_add_book), "", onDismiss = { addingBook = false }) { name ->
             addingBook = false
             scope.launch { container.ledger.addBook(name, ledger.book?.currency ?: "CNY", chinese) }
         }
@@ -252,8 +252,8 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
     restoring?.let { found ->
         AlertDialog(
             onDismissRequest = { restoring = null },
-            title = { Text(stringResource(R.string.ledger_restore)) },
-            text = { Text(stringResource(R.string.ledger_restore_note, found.txns.size, found.books.size)) },
+            title = { Text(stringResource(Res.string.ledger_restore)) },
+            text = { Text(stringResource(Res.string.ledger_restore_note, found.txns.size, found.books.size)) },
             confirmButton = {
                 TextButton(onClick = {
                     restoring = null
@@ -261,11 +261,11 @@ fun LedgerSettingsScreen(container: AppContainer, nav: LedgerNav, startImport: B
                     scope.launch {
                         container.ledger.putAll(found.books, found.accounts, found.categories, found.txns, replace = true)
                         busy = false
-                        show(resources.getString(R.string.ledger_restore_done))
+                        show(textOf(Res.string.ledger_restore_done))
                     }
-                }) { Text(stringResource(R.string.ledger_replace)) }
+                }) { Text(stringResource(Res.string.ledger_replace)) }
             },
-            dismissButton = { TextButton(onClick = { restoring = null }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { restoring = null }) { Text(stringResource(Res.string.action_cancel)) } },
         )
     }
 }
@@ -287,17 +287,17 @@ private fun BookSheet(container: AppContainer, book: Book, canDelete: Boolean, o
                 Text(book.name, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
                 OutlinedTextField(
                     name, { name = it },
-                    label = { Text(stringResource(R.string.ledger_book_name)) },
+                    label = { Text(stringResource(Res.string.ledger_book_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = Space.l).testTag("book_name"),
                 )
-                SheetCaption(stringResource(R.string.ledger_book_currency))
+                SheetCaption(stringResource(Res.string.ledger_book_currency))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                     (COMMON_CURRENCIES.take(8) + book.currency).distinct().forEach { code ->
                         FilterChip(selected = currency == code, onClick = { currency = code }, label = { Text(code) })
                     }
                 }
-                SheetCaption(stringResource(R.string.ledger_categories))
+                SheetCaption(stringResource(Res.string.ledger_categories))
                 BookCategories(container, book.id)
             }
             SegmentedGroup(
@@ -305,8 +305,8 @@ private fun BookSheet(container: AppContainer, book: Book, canDelete: Boolean, o
                 null,
                 listOfNotNull<Segment>(
                     { shapes ->
-                        SwitchRow(archived, AppIcons.Archive, stringResource(R.string.ledger_archive), "book_archive", shapes,
-                            supporting = stringResource(R.string.ledger_archive_note)) { archived = !archived }
+                        SwitchRow(archived, AppIcons.Archive, stringResource(Res.string.ledger_archive), "book_archive", shapes,
+                            supporting = stringResource(Res.string.ledger_archive_note)) { archived = !archived }
                     },
                     if (canDelete) { shapes ->
                         SegmentedListItem(
@@ -315,7 +315,7 @@ private fun BookSheet(container: AppContainer, book: Book, canDelete: Boolean, o
                             colors = segmentColors(),
                             leadingContent = { Icon(AppIcons.Trash, contentDescription = null, tint = tokens.danger) },
                             modifier = Modifier.testTag("book_delete"),
-                        ) { Text(stringResource(R.string.ledger_delete_book), color = tokens.danger) }
+                        ) { Text(stringResource(Res.string.ledger_delete_book), color = tokens.danger) }
                     } else null,
                 ),
             )
@@ -323,16 +323,16 @@ private fun BookSheet(container: AppContainer, book: Book, canDelete: Boolean, o
                 onClick = { onSave(book.copy(name = name.trim(), currency = currency, archived = archived)) },
                 enabled = name.isNotBlank(),
                 modifier = Modifier.align(Alignment.End).padding(start = Space.gutter, end = Space.gutter, top = Space.l).testTag("book_save"),
-            ) { Text(stringResource(R.string.action_save)) }
+            ) { Text(stringResource(Res.string.action_save)) }
         }
     }
     if (confirming) {
         AlertDialog(
             onDismissRequest = { confirming = false },
-            title = { Text(stringResource(R.string.ledger_delete_book)) },
-            text = { Text(stringResource(R.string.ledger_delete_book_note, book.name)) },
-            confirmButton = { TextButton(onClick = { confirming = false; onDelete() }) { Text(stringResource(R.string.action_delete), color = tokens.danger) } },
-            dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.action_cancel)) } },
+            title = { Text(stringResource(Res.string.ledger_delete_book)) },
+            text = { Text(stringResource(Res.string.ledger_delete_book_note, book.name)) },
+            confirmButton = { TextButton(onClick = { confirming = false; onDelete() }) { Text(stringResource(Res.string.action_delete), color = tokens.danger) } },
+            dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(Res.string.action_cancel)) } },
         )
     }
 }
@@ -373,7 +373,7 @@ fun rememberICostImport(container: AppContainer): ICostImporter {
                 throw e
             } catch (e: Exception) {
                 Log.w("Ledger", "iCost import failed", e)
-                show(resources.getString(R.string.ledger_error_import))
+                show(textOf(Res.string.ledger_error_import))
             } finally {
                 reading = false
             }
@@ -395,12 +395,12 @@ fun rememberICostImport(container: AppContainer): ICostImporter {
                     chosen.txns.groupingBy { it.book }.eachCount().maxByOrNull { it.value }?.key?.let { container.ledger.setCurrentBook(it) }
                     val linked = autoLink(container.ledger.ledger.value, container.repository.moments.value, container.repository.trips.value)
                     container.ledger.saveTxns(linked)
-                    show(resources.getQuantityString(R.plurals.ledger_import_done, chosen.txns.size, chosen.txns.size, linked.size))
+                    show(pluralTextOf(Res.plurals.ledger_import_done, chosen.txns.size, chosen.txns.size, linked.size))
                 }
             }
         }
         if (reading) {
-            AlertDialog(onDismissRequest = {}, confirmButton = {}, text = { Text(stringResource(R.string.ledger_importing)) })
+            AlertDialog(onDismissRequest = {}, confirmButton = {}, text = { Text(stringResource(Res.string.ledger_importing)) })
         }
     }
     return remember(picker) {
@@ -460,22 +460,22 @@ private fun ImportDialog(found: Found, hasData: Boolean, onDismiss: () -> Unit, 
     val report = result.report
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.ledger_import_icost)) },
+        title = { Text(stringResource(Res.string.ledger_import_icost)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                Text(stringResource(R.string.ledger_import_summary, report.rows, report.txns, report.books, report.accounts))
-                Text(stringResource(R.string.ledger_import_matched, report.refundsMatched + report.refundsLoose, report.refundsMatched, report.reimbursementsMatched + report.reimbursementsLoose, report.reimbursementsMatched))
-                if (report.folded > 0) Text(pluralStringResource(R.plurals.ledger_import_folded, report.folded, report.folded))
-                if (report.calibrated > 0) Text(pluralStringResource(R.plurals.ledger_import_calibrated, report.calibrated, report.calibrated))
-                if (report.adjusted > 0) Text(pluralStringResource(R.plurals.ledger_import_adjusted, report.adjusted, report.adjusted))
-                if (report.converted > 0) Text(pluralStringResource(R.plurals.ledger_import_converted, report.converted, report.converted))
-                if (report.duplicates > 0) Text(pluralStringResource(R.plurals.ledger_import_duplicates, report.duplicates, report.duplicates))
+                Text(stringResource(Res.string.ledger_import_summary, report.rows, report.txns, report.books, report.accounts))
+                Text(stringResource(Res.string.ledger_import_matched, report.refundsMatched + report.refundsLoose, report.refundsMatched, report.reimbursementsMatched + report.reimbursementsLoose, report.reimbursementsMatched))
+                if (report.folded > 0) Text(pluralStringResource(Res.plurals.ledger_import_folded, report.folded, report.folded))
+                if (report.calibrated > 0) Text(pluralStringResource(Res.plurals.ledger_import_calibrated, report.calibrated, report.calibrated))
+                if (report.adjusted > 0) Text(pluralStringResource(Res.plurals.ledger_import_adjusted, report.adjusted, report.adjusted))
+                if (report.converted > 0) Text(pluralStringResource(Res.plurals.ledger_import_converted, report.converted, report.converted))
+                if (report.duplicates > 0) Text(pluralStringResource(Res.plurals.ledger_import_duplicates, report.duplicates, report.duplicates))
                 if (report.skipped.isNotEmpty()) {
-                    Text(pluralStringResource(R.plurals.ledger_import_skipped, report.skipped.size, report.skipped.size, report.skipped.take(5).joinToString { "#${it.first} ${it.second}" }), color = tokens.danger)
+                    Text(pluralStringResource(Res.plurals.ledger_import_skipped, report.skipped.size, report.skipped.size, report.skipped.take(5).joinToString { "#${it.first} ${it.second}" }), color = tokens.danger)
                 }
-                Text(stringResource(if (report.balances) R.string.ledger_import_backup_note else R.string.ledger_import_accounts_note), style = AppTheme.typography.caption, color = tokens.tx2)
+                Text(stringResource(if (report.balances) Res.string.ledger_import_backup_note else Res.string.ledger_import_accounts_note), style = AppTheme.typography.caption, color = tokens.tx2)
                 if (hasData) {
-                    listOf(false to R.string.ledger_merge, true to R.string.ledger_replace).forEach { (value, label) ->
+                    listOf(false to Res.string.ledger_merge, true to Res.string.ledger_replace).forEach { (value, label) ->
                         Row(
                             Modifier.selectable(replace == value, role = Role.RadioButton) { replace = value }.padding(vertical = Space.xs),
                             verticalAlignment = Alignment.CenterVertically,
@@ -487,7 +487,7 @@ private fun ImportDialog(found: Found, hasData: Boolean, onDismiss: () -> Unit, 
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onImport(replace) }, modifier = Modifier.testTag("confirm_import")) { Text(stringResource(R.string.ledger_import)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        confirmButton = { TextButton(onClick = { onImport(replace) }, modifier = Modifier.testTag("confirm_import")) { Text(stringResource(Res.string.ledger_import)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }

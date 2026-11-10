@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.map
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.ContainedSpinner
@@ -44,7 +45,7 @@ import androidx.compose.ui.graphics.vector.VectorPainter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
@@ -53,7 +54,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.trips.PlaybackClock
 import cc.hyoban.moments.data.trips.Travel
 import cc.hyoban.moments.ui.format.formatDay
@@ -232,7 +232,7 @@ fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modif
         AnimatedVisibility(ready == null, enter = fadeIn(), exit = fadeOut(motion.fastEffectsSpec())) {
             Box(Modifier.fillMaxSize().padding(top = clear[1], bottom = clear[3]), contentAlignment = Alignment.Center) {
                 // Named by what it waits for, as a progress bar is.
-                val loading = stringResource(R.string.playback_loading_map)
+                val loading = stringResource(Res.string.playback_loading_map)
                 ContainedSpinner(Modifier.semantics { contentDescription = loading })
             }
         }
@@ -354,7 +354,7 @@ private fun HeadClock(clock: PlaybackClock, modifier: Modifier) {
         Column(Modifier.padding(horizontal = Space.s + Space.xs, vertical = Space.xs)) {
             Text(formatDay(clock.dateKey), style = AppTheme.typography.caption, color = tokens.tx2)
             Text(
-                listOfNotNull(stringResource(R.string.trip_day, clock.day), clock.time).joinToString(" "),
+                listOfNotNull(stringResource(Res.string.trip_day, clock.day), clock.time).joinToString(" "),
                 style = AppTheme.typography.label.copy(fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum", fontSize = 13.sp),
                 textAlign = TextAlign.Start,
             )

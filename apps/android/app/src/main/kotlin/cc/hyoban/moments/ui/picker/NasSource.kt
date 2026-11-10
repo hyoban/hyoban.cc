@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.viewer.VideoPlayback
 import cc.hyoban.moments.ui.viewer.VideoState
 import cc.hyoban.moments.ui.viewer.VideoWaiting
@@ -27,9 +28,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.R
 import cc.hyoban.moments.camera.TAG
 import cc.hyoban.moments.nas.Nas
 import cc.hyoban.moments.nas.NasAlbum
@@ -92,7 +92,7 @@ internal class NasSource(
     @Composable
     override fun choices(): List<Choice> {
         if (!nas.configured) return emptyList()
-        return listOf(Choice(stringResource(R.string.section_nas), null, AppIcons.Nas, "picker_nas", root)) +
+        return listOf(Choice(stringResource(Res.string.section_nas), null, AppIcons.Nas, "picker_nas", root)) +
             albums.map { Choice(it.name, it.count, AppIcons.Nas, "picker_nas_${it.uuid}", NasListing(this, it)) }
     }
 
@@ -109,13 +109,13 @@ internal class NasSource(
         scope.launch {
             try { deleting = these to nas.deleteKind(these) } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                Toast.makeText(context, R.string.camera_delete_failed, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, textOf(Res.string.camera_delete_failed), Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     override val deleteTag = "nas_delete_chosen"
-    override val deleteWords = R.string.camera_delete
+    override val deleteWords = Res.string.camera_delete
 
     @Composable
     override fun Dialogs() {
@@ -124,16 +124,16 @@ internal class NasSource(
         val bin = kind == NasDeleteKind.BIN
         AlertDialog(
             onDismissRequest = { deleting = null },
-            title = { Text(if (one != null) stringResource(R.string.camera_delete_title) else stringResource(R.string.camera_delete_many_title, these.size)) },
+            title = { Text(if (one != null) stringResource(Res.string.camera_delete_title) else stringResource(Res.string.camera_delete_many_title, these.size)) },
             text = {
                 Text(when {
-                    one != null && bin -> stringResource(R.string.nas_delete_bin, one.name)
-                    one != null -> stringResource(R.string.nas_delete_forever, one.name)
-                    bin -> stringResource(R.string.nas_delete_bin_many)
-                    else -> stringResource(R.string.nas_delete_forever_many)
+                    one != null && bin -> stringResource(Res.string.nas_delete_bin, one.name)
+                    one != null -> stringResource(Res.string.nas_delete_forever, one.name)
+                    bin -> stringResource(Res.string.nas_delete_bin_many)
+                    else -> stringResource(Res.string.nas_delete_forever_many)
                 })
             },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(Res.string.action_cancel)) } },
             confirmButton = {
                 TextButton(onClick = {
                     deleting = null
@@ -146,13 +146,13 @@ internal class NasSource(
                                 list?.let { list -> list.photos.removeAll { it.id in ids }; list.total = list.total?.minus(these.size) }
                                 places.removed(ids)
                                 deletion.gone(these.map { it.key }.toSet())
-                            } else Toast.makeText(context, context.getString(R.string.camera_delete_missed, missed), Toast.LENGTH_SHORT).show()
+                            } else Toast.makeText(context, textOf(Res.string.camera_delete_missed, missed), Toast.LENGTH_SHORT).show()
                         } catch (e: Exception) {
                             if (e is CancellationException) throw e
-                            Toast.makeText(context, R.string.camera_delete_failed, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, textOf(Res.string.camera_delete_failed), Toast.LENGTH_SHORT).show()
                         }
                     }
-                }, modifier = Modifier.testTag("nas_delete_confirm")) { Text(stringResource(R.string.camera_delete), color = tokens.danger) }
+                }, modifier = Modifier.testTag("nas_delete_confirm")) { Text(stringResource(Res.string.camera_delete), color = tokens.danger) }
             },
         )
     }
@@ -168,7 +168,7 @@ internal data class NasListing(val nas: NasSource, val album: NasAlbum?) : Listi
     override val places get() = nas.places.takeIf { album == null }
 
     @Composable
-    override fun title() = album?.name ?: stringResource(R.string.section_nas)
+    override fun title() = album?.name ?: stringResource(Res.string.section_nas)
 
     @Composable
     override fun picks(): List<Pick> =
@@ -183,7 +183,7 @@ internal data class NasListing(val nas: NasSource, val album: NasAlbum?) : Listi
         val list = list
         val failure = list?.failure
         when {
-            failure != null && shown.isEmpty() -> Failed(AppIcons.Nas, nasReason(failure), R.string.nas_failed_note) { list.retry(); nas.more(list) }
+            failure != null && shown.isEmpty() -> Failed(AppIcons.Nas, nasReason(failure), Res.string.nas_failed_note) { list.retry(); nas.more(list) }
             list == null || shown.isEmpty() && (list.loading || !list.started) -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Spinner() }
             else -> grid(null) { nas.more(list) }
         }
@@ -201,20 +201,20 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource)
     @Composable
     override fun badge(): String? = when {
         photo.video -> photo.duration?.trimStart('0')?.let { if (it.startsWith(':')) "0$it" else it }
-        photo.live -> stringResource(R.string.label_live)
+        photo.live -> stringResource(Res.string.label_live)
         else -> null
     }
 
     @Composable
     override fun description() =
-        stringResource(if (photo.video) R.string.picker_video_description else R.string.camera_photo_description, photo.name)
+        stringResource(if (photo.video) Res.string.picker_video_description else Res.string.camera_photo_description, photo.name)
 
     @Composable
-    override fun place() = photo.album?.name ?: stringResource(R.string.section_nas)
+    override fun place() = photo.album?.name ?: stringResource(Res.string.section_nas)
 
     @Composable
     override fun rememberDetails(): PhotoDetails? {
-        val nasName = stringResource(R.string.section_nas)
+        val nasName = stringResource(Res.string.section_nas)
         return produceState<PhotoDetails?>(null, key) {
             val base = PhotoDetails(
                 takenAt = photo.taken?.atZone(ZoneId.systemDefault())?.toOffsetDateTime(),
@@ -267,7 +267,7 @@ internal class NasPlaces(private val source: NasSource, private val scope: Corou
         private set
 
     override val failed: (@Composable () -> Unit)?
-        get() = failure?.let { why -> { Failed(AppIcons.Nas, nasReason(why), R.string.nas_failed_note) { failure = null; scope.launch { load() } } } }
+        get() = failure?.let { why -> { Failed(AppIcons.Nas, nasReason(why), Res.string.nas_failed_note) { failure = null; scope.launch { load() } } } }
 
     override suspend fun load() {
         if (spots != null || failure != null || !nas.configured) return
@@ -314,7 +314,7 @@ internal class NasPlaces(private val source: NasSource, private val scope: Corou
                 if (e is CancellationException) throw e
                 android.util.Log.w(TAG, "nas: a heap's photos not read", e)
                 ended = true
-                Toast.makeText(source.context, nasReason((e as? NasException)?.failure ?: NasFailure.UNREACHABLE), Toast.LENGTH_SHORT).show()
+                Toast.makeText(source.context, textOf(nasReason((e as? NasException)?.failure ?: NasFailure.UNREACHABLE)), Toast.LENGTH_SHORT).show()
             } finally { reading = false }
         }
     }
@@ -365,8 +365,8 @@ internal class NasList(private val nas: Nas, val album: NasAlbum?) {
 
 /** What the picker says when the NAS couldn't be read. */
 private fun nasReason(failure: NasFailure) = when (failure) {
-    NasFailure.NOT_FOUND -> R.string.nas_failed_not_found
-    NasFailure.UNREACHABLE -> R.string.nas_failed_unreachable
-    NasFailure.SIGN_IN -> R.string.nas_failed_sign_in
-    NasFailure.OTHER -> R.string.nas_failed_other
+    NasFailure.NOT_FOUND -> Res.string.nas_failed_not_found
+    NasFailure.UNREACHABLE -> Res.string.nas_failed_unreachable
+    NasFailure.SIGN_IN -> Res.string.nas_failed_sign_in
+    NasFailure.OTHER -> Res.string.nas_failed_other
 }

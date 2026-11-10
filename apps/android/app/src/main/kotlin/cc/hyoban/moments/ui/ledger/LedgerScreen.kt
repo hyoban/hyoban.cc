@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import androidx.compose.ui.text.style.TextOverflow
 import cc.hyoban.moments.ui.components.TitleMenuButton
 import cc.hyoban.moments.ui.components.SIDE_COLUMN
@@ -61,7 +63,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -69,7 +71,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ledger.AccountKind
 import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.netAssetsByMonth
@@ -95,10 +96,10 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
 import kotlinx.coroutines.launch
 
-private enum class LedgerTab(val label: Int, val tag: String) {
-    BILLS(R.string.ledger_tab_bills, "ledger_bills"),
-    STATS(R.string.ledger_tab_stats, "ledger_stats"),
-    ASSETS(R.string.ledger_tab_assets, "ledger_assets"),
+private enum class LedgerTab(val label: StringResource, val tag: String) {
+    BILLS(Res.string.ledger_tab_bills, "ledger_bills"),
+    STATS(Res.string.ledger_tab_stats, "ledger_stats"),
+    ASSETS(Res.string.ledger_tab_assets, "ledger_assets"),
 }
 
 /**
@@ -124,20 +125,20 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
         book?.let { summarize(ledger.entries.filter { it.txn.book in shown }, ledger.rates, currency, today, today.plusMonths(1)) }
     }
     val subtitle = if (month != null) {
-        stringResource(R.string.ledger_this_month, money(month.expense, currency), money(month.income, currency))
+        stringResource(Res.string.ledger_this_month, money(month.expense, currency), money(month.income, currency))
     } else {
         null
     }
 
     val title = when {
-        book == null -> stringResource(R.string.tab_ledger)
-        ledger.allBooks -> stringResource(R.string.ledger_all_books)
+        book == null -> stringResource(Res.string.tab_ledger)
+        ledger.allBooks -> stringResource(Res.string.ledger_all_books)
         else -> book.name
     }
     // Switched from its name, when there are books to switch between, so the bar keeps
     // to its one action.
     val titleMenu = if (ledger.books.count { !it.archived } >= 2) {
-        TitleMenu(stringResource(R.string.ledger_switch_book)) { close -> BookMenuItems(container, ledger, close) }
+        TitleMenu(stringResource(Res.string.ledger_switch_book)) { close -> BookMenuItems(container, ledger, close) }
     } else {
         null
     }
@@ -171,14 +172,14 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
         titleMenu = titleMenu.takeUnless { sideways },
         actions = {
             // Its settings live here, beside what they are about, not on 我.
-            Tooltip(stringResource(R.string.ledger_settings_title), below = true) {
+            Tooltip(stringResource(Res.string.ledger_settings_title), below = true) {
                 IconButton(onClick = nav.settings, modifier = Modifier.testTag("ledger_settings")) {
-                    Icon(AppIcons.Settings, contentDescription = stringResource(R.string.ledger_settings_title))
+                    Icon(AppIcons.Settings, contentDescription = stringResource(Res.string.ledger_settings_title))
                 }
             }
-            Tooltip(stringResource(R.string.action_search), below = true) {
+            Tooltip(stringResource(Res.string.action_search), below = true) {
                 IconButton(onClick = { nav.list(LedgerFilter(book = book?.id.takeIf { !ledger.allBooks }, search = true)) }, modifier = Modifier.testTag("ledger_search")) {
-                    Icon(AppIcons.Search, contentDescription = stringResource(R.string.action_search))
+                    Icon(AppIcons.Search, contentDescription = stringResource(Res.string.action_search))
                 }
             }
         },
@@ -197,11 +198,11 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
                         if (titleMenu != null) TitleMenuButton(titleMenu) { heading(it) } else heading(Modifier)
                         if (month != null) {
                             Row(Modifier.padding(top = Space.l), verticalAlignment = Alignment.CenterVertically) {
-                                Text(stringResource(R.string.me_month_expense), style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.weight(1f))
+                                Text(stringResource(Res.string.me_month_expense), style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.weight(1f))
                                 DemoButton()
                             }
                             Text(money(month.expense, currency), style = AppTheme.typography.titlePage, modifier = Modifier.testTag("ledger_side_expense"))
-                            Text(stringResource(R.string.ledger_income_short, money(month.income, currency)), style = AppTheme.typography.caption, color = tokens.tx3)
+                            Text(stringResource(Res.string.ledger_income_short, money(month.income, currency)), style = AppTheme.typography.caption, color = tokens.tx3)
                         }
                     }
                 },
@@ -218,7 +219,7 @@ fun LedgerScreen(container: AppContainer, nav: LedgerNav, startTab: Int = 0) {
 private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, close: () -> Unit) {
     val scope = rememberCoroutineScope()
     DropdownMenuItem(
-        text = { Text(stringResource(R.string.ledger_all_books)) },
+        text = { Text(stringResource(Res.string.ledger_all_books)) },
         trailingIcon = if (ledger.allBooks) { { Icon(AppIcons.Check, contentDescription = null) } } else null,
         onClick = {
             close()
@@ -246,7 +247,7 @@ private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, c
 @Composable
 fun DemoButton() {
     val settings = LocalSettings.current
-    val label = stringResource(if (settings.demo) R.string.demo_off else R.string.demo_on)
+    val label = stringResource(if (settings.demo) Res.string.demo_off else Res.string.demo_on)
     Tooltip(label, below = true) {
         IconButton(onClick = { settings.changeDemo(!settings.demo) }, modifier = Modifier.testTag("demo")) {
             Icon(
@@ -267,9 +268,9 @@ private fun EmptyLedger(onImport: () -> Unit, onNew: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Space.l),
     ) {
-        Text(stringResource(R.string.ledger_empty_title), style = AppTheme.typography.title, textAlign = TextAlign.Center)
+        Text(stringResource(Res.string.ledger_empty_title), style = AppTheme.typography.title, textAlign = TextAlign.Center)
         Text(
-            stringResource(R.string.ledger_empty_body),
+            stringResource(Res.string.ledger_empty_body),
             style = AppTheme.typography.body,
             color = tokens.tx2,
             textAlign = TextAlign.Center,
@@ -277,7 +278,7 @@ private fun EmptyLedger(onImport: () -> Unit, onNew: () -> Unit) {
         TextButton(onClick = onImport, modifier = Modifier.testTag("ledger_import_empty")) {
             Icon(AppIcons.FileOpen, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.size(Space.s))
-            Text(stringResource(R.string.ledger_import_icost))
+            Text(stringResource(Res.string.ledger_import_icost))
         }
     }
 }
@@ -388,9 +389,9 @@ private fun MonthTotals(month: String, expense: Long, income: Long, currency: St
         }
         Text(
             listOf(
-                stringResource(R.string.ledger_expense_short, money(expense, currency)),
-                stringResource(R.string.ledger_income_short, money(income, currency)),
-                stringResource(R.string.ledger_balance_short, money(income - expense, currency)),
+                stringResource(Res.string.ledger_expense_short, money(expense, currency)),
+                stringResource(Res.string.ledger_income_short, money(income, currency)),
+                stringResource(Res.string.ledger_balance_short, money(income - expense, currency)),
             ).joinToString(" "),
             style = AppTheme.typography.body,
             color = tokens.tx2,
@@ -411,10 +412,10 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                 .padding(start = columns.margin, top = LocalTopClearance.current, end = columns.margin, bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl),
         ) {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.xl).semantics(mergeDescendants = true) {}) {
-                Text(stringResource(R.string.ledger_net_assets), style = AppTheme.typography.label, color = tokens.tx2)
+                Text(stringResource(Res.string.ledger_net_assets), style = AppTheme.typography.label, color = tokens.tx2)
                 Text(money(assets.net, currency), style = AppTheme.typography.titlePage, modifier = Modifier.testTag("net_assets"))
                 Text(
-                    stringResource(R.string.ledger_assets_line, money(assets.held, currency), money(assets.owed, currency)),
+                    stringResource(Res.string.ledger_assets_line, money(assets.held, currency), money(assets.owed, currency)),
                     style = AppTheme.typography.body,
                     color = tokens.tx2,
                 )
@@ -436,7 +437,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                                 colors = segmentColors(),
                                 leadingContent = { Icon(accountIcon(account), contentDescription = null) },
                                 supportingContent = if (!account.counted || account.note.isNotBlank()) {
-                                    { Text(listOfNotNull(stringResource(R.string.ledger_not_counted).takeIf { !account.counted }, account.note.takeIf { it.isNotBlank() }).joinToString(" "), maxLines = 2) }
+                                    { Text(listOfNotNull(stringResource(Res.string.ledger_not_counted).takeIf { !account.counted }, account.note.takeIf { it.isNotBlank() }).joinToString(" "), maxLines = 2) }
                                 } else null,
                                 trailingContent = { Text(money(balance, account.currency), style = AppTheme.typography.body.strong) },
                                 modifier = Modifier.testTag("account_${account.id}"),
@@ -448,7 +449,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
             val archived = ledger.accounts.filter { it.archived }
             if (archived.isNotEmpty()) {
                 SegmentedGroup(
-                    stringResource(R.string.ledger_archived),
+                    stringResource(Res.string.ledger_archived),
                     null,
                     archived.map { account ->
                         { shapes ->
@@ -467,7 +468,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
             TextButton(onClick = { nav.editAccount(null) }, modifier = Modifier.padding(horizontal = Space.gutter).fillMaxWidth().testTag("add_account")) {
                 Icon(AppIcons.Plus, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.size(Space.s))
-                Text(stringResource(R.string.ledger_add_account))
+                Text(stringResource(Res.string.ledger_add_account))
             }
         }
     }
@@ -481,15 +482,15 @@ private fun NetAssetsTrend(ledger: Ledger, currency: String) {
     var picked by remember(months) { mutableStateOf<Int?>(null) }
     val name = { i: Int -> formatMonth(months[i].first.atDay(1).toString()).first }
     val change = months.last().second - months.first().second
-    val readout = picked?.let { stringResource(R.string.ledger_month_end, name(it), money(months[it].second, currency)) }
+    val readout = picked?.let { stringResource(Res.string.ledger_month_end, name(it), money(months[it].second, currency)) }
         ?: stringResource(
-            R.string.ledger_net_assets_change,
+            Res.string.ledger_net_assets_change,
             // A year ago, so with its year.
             formatMonth(months[0].first.atDay(1).toString()).let { (month, year) -> if (month.endsWith("月")) "${year}年$month" else "$month $year" },
             (if (change >= 0) "+" else "") + money(change, currency),
         )
     Spacer(Modifier.height(Space.l))
-    ChartCard(stringResource(R.string.ledger_chart_net_assets), readout, modifier = Modifier.testTag("chart_net_assets")) {
+    ChartCard(stringResource(Res.string.ledger_chart_net_assets), readout, modifier = Modifier.testTag("chart_net_assets")) {
         LineChart(
             listOf(months.map { it.second }),
             listOf(tokens.accent),

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.feed
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.design.strong
@@ -51,9 +52,8 @@ import cc.hyoban.moments.ui.ledger.money
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.trips.tripSummary
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
-import cc.hyoban.moments.R
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import cc.hyoban.moments.data.things.Checkin
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.format.daysBetween
@@ -217,11 +217,11 @@ sealed interface DayItem {
 fun ChargeRow(charge: Charge, modifier: Modifier = Modifier) {
     PageRow(
         leading = { Icon(AppIcons.Ev, contentDescription = null) },
-        title = androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.timeline_charge),
+        title = org.jetbrains.compose.resources.stringResource(Res.string.timeline_charge),
         supporting = listOfNotNull(
-            androidx.compose.ui.res.stringResource(if (charge.dc) cc.hyoban.moments.R.string.charge_dc else cc.hyoban.moments.R.string.charge_ac),
+            org.jetbrains.compose.resources.stringResource(if (charge.dc) Res.string.charge_dc else Res.string.charge_ac),
             charge.kwh?.let { "%.1f kWh".format(it) },
-            charge.minutes?.let { androidx.compose.ui.res.pluralStringResource(cc.hyoban.moments.R.plurals.charge_minutes, it, it) },
+            charge.minutes?.let { org.jetbrains.compose.resources.pluralStringResource(Res.plurals.charge_minutes, it, it) },
         ).joinToString(" "),
         onClick = null,
         modifier = modifier.testTag("charge_${charge.uid}"),
@@ -236,7 +236,7 @@ fun CheckinRow(checkin: Checkin, modifier: Modifier = Modifier, withDate: Boolea
     PageRow(
         leading = { Icon(AppIcons.Pin, contentDescription = null) },
         title = checkinTitle(checkin, withDate),
-        supporting = if (checkin.private) stringResource(R.string.visibility_private) else null,
+        supporting = if (checkin.private) stringResource(Res.string.visibility_private) else null,
         onClick = open?.let { { it(checkin.uid) } },
         modifier = modifier.testTag("checkin_${checkin.uid}"),
         time = formatTime(checkin.at).orEmpty(),
@@ -246,13 +246,13 @@ fun CheckinRow(checkin: Checkin, modifier: Modifier = Modifier, withDate: Boolea
 /** `签到 面馆`, or on its place's own list `10月12日 签到`. */
 @Composable
 fun checkinTitle(checkin: Checkin, withDate: Boolean = false): String =
-    if (withDate) stringResource(R.string.timeline_checkin_on, formatDate(checkin.at.take(10))) else stringResource(R.string.timeline_checkin, checkin.venue)
+    if (withDate) stringResource(Res.string.timeline_checkin_on, formatDate(checkin.at.take(10))) else stringResource(Res.string.timeline_checkin, checkin.venue)
 
 /** How many Moments and check-ins a place has, the Moments said even when none unless it has check-ins alone. */
 @Composable
 fun placeCounts(moments: Int, checkins: Int): List<String> = listOfNotNull(
-    pluralStringResource(R.plurals.count_moments, moments, moments).takeIf { moments > 0 || checkins == 0 },
-    pluralStringResource(R.plurals.count_checkins, checkins, checkins).takeIf { checkins > 0 },
+    pluralStringResource(Res.plurals.count_moments, moments, moments).takeIf { moments > 0 || checkins == 0 },
+    pluralStringResource(Res.plurals.count_checkins, checkins, checkins).takeIf { checkins > 0 },
 )
 
 /** A device bought or a subscription paid as a row on the page: no time, its name, its price at the end. */
@@ -272,7 +272,7 @@ fun ThingRow(thing: ThingRecord, modifier: Modifier = Modifier) {
 /** `买了 OPPO Find X10`, `续费 ChatGPT Plus`. */
 @Composable
 fun thingTitle(thing: ThingRecord): String =
-    androidx.compose.ui.res.stringResource(if (thing.bought) cc.hyoban.moments.R.string.timeline_bought else cc.hyoban.moments.R.string.timeline_renewed, thing.name)
+    org.jetbrains.compose.resources.stringResource(if (thing.bought) Res.string.timeline_bought else Res.string.timeline_renewed, thing.name)
 
 /**
  * A row on the timeline's page, for what has no words of its own: an icon at the Moments' edge,
@@ -434,10 +434,10 @@ private fun tripBannerSummary(trip: TripRecord, count: Int): AnnotatedString {
     val day = daysBetween(trip.start, today.toString())
     return AnnotatedString(
         listOf(
-            stringResource(R.string.trip_ongoing),
-            stringResource(R.string.trip_since, formatDate(trip.start)),
-            stringResource(R.string.trip_day, day),
-            pluralStringResource(R.plurals.count_moments, count, count),
+            stringResource(Res.string.trip_ongoing),
+            stringResource(Res.string.trip_since, formatDate(trip.start)),
+            stringResource(Res.string.trip_day, day),
+            pluralStringResource(Res.plurals.count_moments, count, count),
         ).joinToString(" "),
     )
 }
@@ -556,8 +556,8 @@ fun TrackRow(day: String, tracks: TimelineTracks, onClick: () -> Unit, modifier:
     val minutes = (shown.movingMillis / 60_000).toInt()
     PageRow(
         leading = { TrackGlyph(shown.stretches, Modifier.size(24.dp), tokens.tx2) },
-        title = androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.timeline_track),
-        supporting = androidx.compose.ui.res.pluralStringResource(cc.hyoban.moments.R.plurals.timeline_track_moving, minutes, minutes),
+        title = org.jetbrains.compose.resources.stringResource(Res.string.timeline_track),
+        supporting = org.jetbrains.compose.resources.pluralStringResource(Res.plurals.timeline_track_moving, minutes, minutes),
         onClick = onClick,
         // The day's page grows out of the row and shrinks back into it.
         modifier = modifier.testTag("track_$day"),
@@ -565,7 +565,7 @@ fun TrackRow(day: String, tracks: TimelineTracks, onClick: () -> Unit, modifier:
         time = "",
     ) {
         Text(
-            androidx.compose.ui.res.stringResource(cc.hyoban.moments.R.string.distance_kilometres, shown.metres / 1000),
+            org.jetbrains.compose.resources.stringResource(Res.string.distance_kilometres, decimals(shown.metres / 1000, 1)),
             style = AppTheme.typography.body,
             color = tokens.tx2,
         )

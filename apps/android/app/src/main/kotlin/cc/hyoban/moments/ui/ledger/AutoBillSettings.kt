@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
 import android.Manifest
 import android.content.Intent
@@ -19,7 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -52,27 +53,27 @@ internal fun AutoBillGroup() {
     val on = enabled == true
     // Turned on without the accessibility service, the sheet says what it reads first (35).
     var explaining by remember { mutableStateOf(false) }
-    val service = stringResource(R.string.share_assist_service_label)
+    val service = androidx.compose.ui.res.stringResource(R.string.share_assist_service_label)
     if (explaining) cc.hyoban.moments.ui.design.PermissionSheet(
         icon = AppIcons.Accessibility,
-        title = stringResource(R.string.permission_auto_bill_title),
-        body = stringResource(R.string.permission_auto_bill_body, service),
+        title = stringResource(Res.string.permission_auto_bill_title),
+        body = stringResource(Res.string.permission_auto_bill_body, service),
         facts = listOf(
-            cc.hyoban.moments.ui.design.PermissionFact(AppIcons.EyeOff, stringResource(R.string.permission_auto_bill_page)),
-            cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Phone, stringResource(R.string.permission_auto_bill_local)),
-            cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Bell, stringResource(R.string.permission_auto_bill_notify)),
+            cc.hyoban.moments.ui.design.PermissionFact(AppIcons.EyeOff, stringResource(Res.string.permission_auto_bill_page)),
+            cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Phone, stringResource(Res.string.permission_auto_bill_local)),
+            cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Bell, stringResource(Res.string.permission_auto_bill_notify)),
         ),
-        path = stringResource(R.string.permission_auto_bill_path, service),
-        primary = stringResource(R.string.permission_open_settings),
+        path = stringResource(Res.string.permission_auto_bill_path, service),
+        primary = stringResource(Res.string.permission_open_settings),
         external = true,
-        secondary = stringResource(R.string.permission_not_now),
+        secondary = stringResource(Res.string.permission_not_now),
         onPrimary = { explaining = false; context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
         onDismiss = { explaining = false },
         tag = "permission_auto_bill",
     )
     val rows = buildList<Segment> {
         add { shapes ->
-            SwitchRow(on, AppIcons.Receipt, stringResource(R.string.auto_bill_label), "auto_bill", shapes, stringResource(R.string.auto_bill_note)) {
+            SwitchRow(on, AppIcons.Receipt, stringResource(Res.string.auto_bill_label), "auto_bill", shapes, stringResource(Res.string.auto_bill_note)) {
                 AutoBill.setEnabled(context, !on)
                 if (!on && !connected) explaining = true
                 if (!on && Build.VERSION.SDK_INT >= 33 &&
@@ -87,9 +88,9 @@ internal fun AutoBillGroup() {
                 shapes = shapes,
                 colors = segmentColors(),
                 leadingContent = { Icon(AppIcons.Accessibility, contentDescription = null) },
-                supportingContent = { Text(stringResource(R.string.auto_bill_service_note)) },
+                supportingContent = { Text(stringResource(Res.string.auto_bill_service_note)) },
                 modifier = Modifier.testTag("auto_bill_service"),
-            ) { Text(stringResource(R.string.share_assist_enable_service)) }
+            ) { Text(stringResource(Res.string.share_assist_enable_service)) }
         }
         if (on && !notifying) add { shapes ->
             SegmentedListItem(
@@ -99,10 +100,10 @@ internal fun AutoBillGroup() {
                 shapes = shapes,
                 colors = segmentColors(),
                 leadingContent = { Icon(AppIcons.BellOff, contentDescription = null) },
-                supportingContent = { Text(stringResource(R.string.auto_bill_notifications_note)) },
+                supportingContent = { Text(stringResource(Res.string.auto_bill_notifications_note)) },
                 modifier = Modifier.testTag("auto_bill_notifications"),
-            ) { Text(stringResource(R.string.auto_bill_notifications)) }
+            ) { Text(stringResource(Res.string.auto_bill_notifications)) }
         }
     }
-    SegmentedGroup(stringResource(R.string.auto_bill_title_group), null, rows)
+    SegmentedGroup(stringResource(Res.string.auto_bill_title_group), null, rows)
 }

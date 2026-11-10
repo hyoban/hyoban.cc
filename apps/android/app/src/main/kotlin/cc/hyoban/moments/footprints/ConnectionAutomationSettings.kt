@@ -1,5 +1,7 @@
 package cc.hyoban.moments.footprints
 
+import org.jetbrains.compose.resources.StringResource
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.Checkbox
 import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.TextButton
@@ -21,7 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -30,7 +32,6 @@ import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.SwitchRow
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +49,7 @@ fun ConnectionAutomationSettings(container: AppContainer) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     var loaded by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<Int?>(null) }
+    var error by remember { mutableStateOf<StringResource?>(null) }
     var permissionHelp by rememberSaveable { mutableStateOf(false) }
     var explaining by rememberSaveable { mutableStateOf(false) }
     var picker by rememberSaveable { mutableStateOf<String?>(null) }
@@ -62,7 +63,7 @@ fun ConnectionAutomationSettings(container: AppContainer) {
             error = null
             try { block() }
             catch (e: kotlinx.coroutines.CancellationException) { throw e }
-            catch (_: Exception) { error = R.string.connection_automation_error }
+            catch (_: Exception) { error = Res.string.connection_automation_error }
             finally { busy = false }
         }
     }
@@ -103,10 +104,10 @@ fun ConnectionAutomationSettings(container: AppContainer) {
         if (Build.VERSION.SDK_INT >= 31) arrayOf(Manifest.permission.BLUETOOTH_CONNECT) else emptyArray(),
         cc.hyoban.moments.ui.components.PermissionWords(
             AppIcons.Bluetooth,
-            stringResource(R.string.permission_bluetooth_title),
-            stringResource(R.string.permission_bluetooth_body),
-            stringResource(R.string.permission_not_now),
-            listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Block, stringResource(R.string.permission_bluetooth_fact))),
+            stringResource(Res.string.permission_bluetooth_title),
+            stringResource(Res.string.permission_bluetooth_body),
+            stringResource(Res.string.permission_not_now),
+            listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Block, stringResource(Res.string.permission_bluetooth_fact))),
         ),
         isGranted = { it.bluetoothAllowed() },
     ) { afterPermission("bluetooth") }
@@ -136,58 +137,58 @@ fun ConnectionAutomationSettings(container: AppContainer) {
         scope.launch {
             try { ConnectionReminderService.sync(context) }
             catch (e: kotlinx.coroutines.CancellationException) { throw e }
-            catch (_: Exception) { error = R.string.connection_automation_error }
+            catch (_: Exception) { error = Res.string.connection_automation_error }
         }
     }
     val names = { set: Collection<String> -> set.sorted().joinToString("、") }
-    val none = stringResource(R.string.connection_automation_none)
+    val none = stringResource(Res.string.connection_automation_none)
     SegmentedGroup(
-        stringResource(R.string.connection_automation_title),
+        stringResource(Res.string.connection_automation_title),
         error?.let { stringResource(it) },
         listOf(
             { shapes ->
                 SwitchRow(
                     rules.enabled,
                     AppIcons.Link,
-                    stringResource(R.string.connection_automation_switch),
+                    stringResource(Res.string.connection_automation_switch),
                     "connection_automation_enabled",
                     shapes,
                     supporting = stringResource(when {
-                        !rules.hasTargets -> R.string.connection_automation_choose_first
-                        rules.enabled -> status ?: R.string.connection_automation_watching
-                        else -> R.string.connection_automation_off
+                        !rules.hasTargets -> Res.string.connection_automation_choose_first
+                        rules.enabled -> status ?: Res.string.connection_automation_watching
+                        else -> Res.string.connection_automation_off
                     }),
                     enabled = loaded && !busy && rules.hasTargets,
                 ) { if (!rules.enabled) request("enable") else save(rules.copy(enabled = false)) }
             },
             { shapes ->
-                ActionRow(AppIcons.Wifi, stringResource(R.string.connection_automation_wifi_row), shapes,
+                ActionRow(AppIcons.Wifi, stringResource(Res.string.connection_automation_wifi_row), shapes,
                     supporting = rules.wifi.takeIf { it.isNotEmpty() }?.let(names) ?: none, tag = "connection_automation_wifi", enabled = !busy) { request("wifi") }
             },
             { shapes ->
-                ActionRow(AppIcons.Bluetooth, stringResource(R.string.connection_automation_bluetooth_row), shapes,
+                ActionRow(AppIcons.Bluetooth, stringResource(Res.string.connection_automation_bluetooth_row), shapes,
                     supporting = rules.bluetooth.values.takeIf { it.isNotEmpty() }?.let(names) ?: none, tag = "connection_automation_bluetooth", enabled = !busy) { request("bluetooth") }
             },
             { shapes ->
-                ActionRow(AppIcons.Info, stringResource(R.string.connection_automation_how), shapes, tag = "connection_automation_settings") {
+                ActionRow(AppIcons.Info, stringResource(Res.string.connection_automation_how), shapes, tag = "connection_automation_settings") {
                     explaining = true
                 }
             },
         ),
     )
     CompanionConnectionSettings(rules)
-    if (permissionHelp || (rules.enabled && status == R.string.connection_automation_permissions)) {
+    if (permissionHelp || (rules.enabled && status == Res.string.connection_automation_permissions)) {
         SegmentedGroup(
-            stringResource(R.string.connection_automation_permission_title),
-            stringResource(R.string.connection_automation_permission_help),
+            stringResource(Res.string.connection_automation_permission_title),
+            stringResource(Res.string.connection_automation_permission_help),
             listOf(
                 { shapes ->
-                    ActionRow(AppIcons.Settings, stringResource(R.string.footprints_settings), shapes, external = true) {
+                    ActionRow(AppIcons.Settings, stringResource(Res.string.footprints_settings), shapes, external = true) {
                         context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
                     }
                 },
                 { shapes ->
-                    ActionRow(AppIcons.Pin, stringResource(R.string.connection_automation_location_settings), shapes, external = true) {
+                    ActionRow(AppIcons.Pin, stringResource(Res.string.connection_automation_location_settings), shapes, external = true) {
                         context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                     }
                 },
@@ -195,18 +196,18 @@ fun ConnectionAutomationSettings(container: AppContainer) {
         )
     }
     if (explaining) InfoDialog(
-        stringResource(R.string.connection_automation_how),
-        listOf(stringResource(R.string.connection_automation_rules), stringResource(R.string.connection_automation_monitor_note)),
+        stringResource(Res.string.connection_automation_how),
+        listOf(stringResource(Res.string.connection_automation_rules), stringResource(Res.string.connection_automation_monitor_note)),
     ) { explaining = false }
     picker?.let { kind ->
         AlertDialog(
             modifier = Modifier.semantics { testTagsAsResourceId = true },
             onDismissRequest = { picker = null },
-            title = { Text(stringResource(if (kind == "wifi") R.string.connection_automation_wifi_title else R.string.connection_automation_bluetooth_title)) },
+            title = { Text(stringResource(if (kind == "wifi") Res.string.connection_automation_wifi_title else Res.string.connection_automation_bluetooth_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(if (kind == "wifi") R.string.connection_automation_wifi_note else R.string.connection_automation_bluetooth_note))
-                    if (choices.isEmpty()) Text(stringResource(R.string.connection_automation_no_devices))
+                    Text(stringResource(if (kind == "wifi") Res.string.connection_automation_wifi_note else Res.string.connection_automation_bluetooth_note))
+                    if (choices.isEmpty()) Text(stringResource(Res.string.connection_automation_no_devices))
                     LazyColumn(Modifier.heightIn(max = 300.dp)) {
                         items(choices.entries.toList(), key = { it.key }) { (id, name) ->
                             Row(Modifier.fillMaxWidth().toggleable(id in selected, role = Role.Checkbox) {
@@ -228,8 +229,8 @@ fun ConnectionAutomationSettings(container: AppContainer) {
                 save(next.copy(enabled = next.enabled && context.connectionAutomationAllowed(next)))
                 permissionHelp = next.enabled && !context.connectionAutomationAllowed(next)
                 picker = null
-            }, modifier = Modifier.testTag("connection_automation_save")) { Text(stringResource(R.string.connection_automation_save)) } },
-            dismissButton = { TextButton(onClick = { picker = null }) { Text(stringResource(android.R.string.cancel)) } },
+            }, modifier = Modifier.testTag("connection_automation_save")) { Text(stringResource(Res.string.connection_automation_save)) } },
+            dismissButton = { TextButton(onClick = { picker = null }) { Text(androidx.compose.ui.res.stringResource(android.R.string.cancel)) } },
         )
     }
 }

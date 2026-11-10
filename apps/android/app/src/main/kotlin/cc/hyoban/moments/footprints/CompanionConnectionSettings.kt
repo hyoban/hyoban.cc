@@ -1,5 +1,6 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
 import android.companion.AssociationInfo
 import android.companion.AssociationRequest
@@ -11,10 +12,9 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.settings.Segment
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.SwitchRow
@@ -41,8 +41,8 @@ internal fun CompanionConnectionSettings(rules: ConnectionRules) {
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { refresh() }
     // One switch per chosen device, on while the system has it linked to the app.
     SegmentedGroup(
-        stringResource(R.string.footprints_companion_title),
-        stringResource(if (error) R.string.footprints_companion_failed else R.string.footprints_companion_note),
+        stringResource(Res.string.footprints_companion_title),
+        stringResource(if (error) Res.string.footprints_companion_failed else Res.string.footprints_companion_note),
         rules.bluetooth.map<String, String, Segment> { (address, name) ->
             { shapes ->
                 SwitchRow(address in associations, AppIcons.BluetoothOn, name, "footprints_companion_associate", shapes,

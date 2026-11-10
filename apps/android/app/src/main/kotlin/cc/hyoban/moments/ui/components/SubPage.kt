@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.TopBarWindowInsets
 import cc.hyoban.moments.ui.design.rememberTopBarScroll
@@ -49,13 +50,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.LocalRailSpace
 import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.theme.Space
@@ -154,7 +154,7 @@ private fun BarPage(
     OnTabReselect(tab) {
         animate(scroll.state.heightOffset, 0f) { value, _ -> scroll.state.heightOffset = value }
     }
-    val refreshLabel = stringResource(R.string.action_refresh)
+    val refreshLabel = stringResource(Res.string.action_refresh)
     val smallTitle = AppTheme.typography.title.fontSize
     val titleText: @Composable () -> Unit = {
         // Opened out, a long title wraps to a second line rather than being cut, the bar growing
@@ -198,12 +198,12 @@ private fun BarPage(
     }
     val back: @Composable () -> Unit = {
         if (onBack != null) {
-            Tooltip(stringResource(if (close) R.string.action_close else R.string.action_back), below = true) {
+            Tooltip(stringResource(if (close) Res.string.action_close else Res.string.action_back), below = true) {
                 IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
                     if (close) {
-                        Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_close))
+                        Icon(AppIcons.Close, contentDescription = stringResource(Res.string.action_close))
                     } else {
-                        Icon(AppIcons.ArrowLeft, contentDescription = stringResource(R.string.action_back))
+                        Icon(AppIcons.ArrowLeft, contentDescription = stringResource(Res.string.action_back))
                     }
                 }
             }

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.res.*
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
@@ -12,14 +13,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.BuildConfig
-import cc.hyoban.moments.R
 import cc.hyoban.moments.update.Release
 import cc.hyoban.moments.update.UpdateFailure
 import cc.hyoban.moments.update.UpdateState
@@ -56,7 +56,7 @@ fun UpdateSection(updates: Updates, scope: CoroutineScope) {
         }
     }
     val daily: Segment = { shapes ->
-        SwitchRow(auto, AppIcons.Clock, stringResource(R.string.update_auto), "update_auto", shapes, stringResource(R.string.update_auto_note)) {
+        SwitchRow(auto, AppIcons.Clock, stringResource(Res.string.update_auto), "update_auto", shapes, stringResource(Res.string.update_auto_note)) {
             auto = !auto
             updates.changeAuto(auto)
         }
@@ -74,7 +74,7 @@ fun UpdateSection(updates: Updates, scope: CoroutineScope) {
                 null
             },
             modifier = Modifier.testTag("update_check"),
-        ) { Text(stringResource(R.string.action_check_update)) }
+        ) { Text(stringResource(Res.string.action_check_update)) }
     }
     val installRow: Segment? = latest?.let { release ->
         { shapes ->
@@ -97,22 +97,22 @@ fun UpdateSection(updates: Updates, scope: CoroutineScope) {
                     null
                 },
                 modifier = Modifier.testTag("update_install"),
-            ) { Text(stringResource(R.string.action_install_update, release.version)) }
+            ) { Text(stringResource(Res.string.action_install_update, release.version)) }
         }
     }
-    SegmentedGroup(stringResource(R.string.section_update), stringResource(R.string.settings_update_note), listOfNotNull(daily, check, installRow))
+    SegmentedGroup(stringResource(Res.string.section_update), stringResource(Res.string.settings_update_note), listOfNotNull(daily, check, installRow))
     if (explaining) PermissionSheet(
         icon = AppIcons.Download,
-        title = stringResource(R.string.permission_install_title),
-        body = stringResource(R.string.permission_install_body),
+        title = stringResource(Res.string.permission_install_title),
+        body = stringResource(Res.string.permission_install_body),
         facts = listOf(
-            PermissionFact(AppIcons.Github, stringResource(R.string.permission_install_source)),
-            PermissionFact(AppIcons.Shield, stringResource(R.string.permission_install_signature)),
+            PermissionFact(AppIcons.Github, stringResource(Res.string.permission_install_source)),
+            PermissionFact(AppIcons.Shield, stringResource(Res.string.permission_install_signature)),
         ),
-        path = stringResource(R.string.permission_install_path),
-        primary = stringResource(R.string.permission_open_settings),
+        path = stringResource(Res.string.permission_install_path),
+        primary = stringResource(Res.string.permission_open_settings),
         external = true,
-        secondary = stringResource(R.string.permission_not_now),
+        secondary = stringResource(Res.string.permission_not_now),
         onPrimary = {
             explaining = false
             inSettings = true
@@ -130,11 +130,11 @@ private fun checkedText(context: Context, at: Long) =
 private fun checkText(context: Context, state: UpdateState): String {
     val at = state.checkedAt
     return when {
-        state.checking -> context.getString(R.string.update_checking)
-        state.failure != null && state.latest == null -> context.getString(R.string.update_check_failed, context.getString(reasonOf(state.failure)))
-        at == null -> context.getString(R.string.update_never, BuildConfig.VERSION_NAME)
-        state.latest != null -> context.getString(R.string.update_checked, checkedText(context, at))
-        else -> context.getString(R.string.update_current, BuildConfig.VERSION_NAME, checkedText(context, at))
+        state.checking -> textOf(Res.string.update_checking)
+        state.failure != null && state.latest == null -> textOf(Res.string.update_check_failed, textOf(reasonOf(state.failure)))
+        at == null -> textOf(Res.string.update_never, BuildConfig.VERSION_NAME)
+        state.latest != null -> textOf(Res.string.update_checked, checkedText(context, at))
+        else -> textOf(Res.string.update_current, BuildConfig.VERSION_NAME, checkedText(context, at))
     }
 }
 
@@ -142,15 +142,15 @@ private fun checkText(context: Context, state: UpdateState): String {
 private fun installText(context: Context, state: UpdateState): String {
     val downloading = state.downloading
     return when {
-        downloading != null -> context.getString(R.string.update_downloading, (downloading * 100).toInt())
-        state.failure != null -> context.getString(reasonOf(state.failure))
-        else -> context.getString(R.string.update_source)
+        downloading != null -> textOf(Res.string.update_downloading, (downloading * 100).toInt())
+        state.failure != null -> textOf(reasonOf(state.failure))
+        else -> textOf(Res.string.update_source)
     }
 }
 
 private fun reasonOf(failure: UpdateFailure) = when (failure) {
-    UpdateFailure.Unreachable -> R.string.update_failure_unreachable
-    UpdateFailure.Server -> R.string.update_failure_server
-    UpdateFailure.Signature -> R.string.update_failure_signature
-    UpdateFailure.Install -> R.string.update_failure_install
+    UpdateFailure.Unreachable -> Res.string.update_failure_unreachable
+    UpdateFailure.Server -> Res.string.update_failure_server
+    UpdateFailure.Signature -> Res.string.update_failure_signature
+    UpdateFailure.Install -> Res.string.update_failure_install
 }

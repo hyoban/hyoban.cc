@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.components
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
@@ -41,14 +42,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import cc.hyoban.moments.ui.theme.ShadowElevation
 import androidx.compose.ui.window.DialogProperties
-import cc.hyoban.moments.R
 
 /**
  * Material 3's full-screen dialog, for a task with fields to fill on a phone: the whole
@@ -82,7 +82,7 @@ fun FullScreenDialog(onDismiss: () -> Unit, actions: @Composable RowScope.() -> 
                 Surface(Modifier.fillMaxSize(), color = AppColors.page) {
                     Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
                         Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            val label = stringResource(R.string.action_close)
+                            val label = stringResource(Res.string.action_close)
                             Tooltip(label, below = true) {
                                 IconButton(onClick = close, modifier = Modifier.testTag("dialog_close")) {
                                     Icon(AppIcons.Close, contentDescription = label)

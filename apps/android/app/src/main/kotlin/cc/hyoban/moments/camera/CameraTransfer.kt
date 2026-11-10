@@ -1,5 +1,7 @@
 package cc.hyoban.moments.camera
 
+import org.jetbrains.compose.resources.StringResource
+import cc.hyoban.moments.res.*
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
@@ -19,7 +21,6 @@ import android.provider.MediaStore
 import android.util.Log
 import android.util.LruCache
 import androidx.annotation.RequiresApi
-import cc.hyoban.moments.R
 import kotlinx.coroutines.CancellationException
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -77,7 +78,7 @@ class CameraTransfer(private val context: Context) {
         data class Connecting(val step: Step) : State
         /** Connected; [photos] newest first. */
         data class Ready(val photos: List<CameraPhoto>) : State
-        data class Failed(val reason: Int) : State
+        data class Failed(val reason: StringResource) : State
     }
 
     private val _state = MutableStateFlow<State>(State.Connecting(Step.WIFI_ON))
@@ -99,7 +100,7 @@ class CameraTransfer(private val context: Context) {
     private var relisting: Job? = null
 
     suspend fun connect() {
-        val paired = CameraStore.load(context) ?: return fail(R.string.camera_failed)
+        val paired = CameraStore.load(context) ?: return fail(Res.string.camera_failed)
         // What an earlier visit left behind, if the app went before it could clear it.
         withContext(Dispatchers.IO) { originals.listFiles()?.forEach { it.delete() } }
         try {
@@ -121,11 +122,11 @@ class CameraTransfer(private val context: Context) {
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Log.w(TAG, "camera not connected", e)
-            fail(R.string.camera_failed)
+            fail(Res.string.camera_failed)
         }
     }
 
-    private fun fail(reason: Int) { _state.value = State.Failed(reason) }
+    private fun fail(reason: StringResource) { _state.value = State.Failed(reason) }
 
     /** Has the camera put its Wi‑Fi up and hand over its name and password. */
     private suspend fun wifiDetails(paired: PairedCamera): Pair<String, String> {
@@ -170,7 +171,7 @@ class CameraTransfer(private val context: Context) {
             }
             override fun onUnavailable() { joined.completeExceptionally(IOException("camera network unavailable")) }
             override fun onLost(network: Network) {
-                if (joined.isCompleted) _state.value = State.Failed(R.string.camera_lost)
+                if (joined.isCompleted) _state.value = State.Failed(Res.string.camera_lost)
             }
         }
         callback = cb

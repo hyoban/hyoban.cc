@@ -1,5 +1,6 @@
 package cc.hyoban.moments.camera
 
+import org.jetbrains.compose.resources.StringResource
 import android.content.Context
 import android.util.AtomicFile
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +28,7 @@ data class CameraStatus(
     /** When a location last reached the camera, epoch millis. */
     val lastSent: Long? = null,
     /** Why it isn't taking locations, a string resource, or null. */
-    val problem: Int? = null,
+    val problem: StringResource? = null,
 )
 
 /**

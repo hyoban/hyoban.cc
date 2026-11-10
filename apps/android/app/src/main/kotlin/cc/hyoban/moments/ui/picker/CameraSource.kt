@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.viewer.VideoState
 import android.content.Context
 import android.graphics.Bitmap
@@ -34,10 +35,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.R
 import cc.hyoban.moments.camera.CameraLink
 import cc.hyoban.moments.camera.CameraPhoto
 import cc.hyoban.moments.camera.CameraStore
@@ -78,7 +78,7 @@ internal fun rememberCamera(deletion: Deletion, onRefused: () -> Unit): CameraSo
     }
     val ask = rememberCameraPermissionAsk(
         emptyArray(),
-        listOf(PermissionFact(AppIcons.Wifi, stringResource(R.string.permission_camera_wifi))),
+        listOf(PermissionFact(AppIcons.Wifi, stringResource(Res.string.permission_camera_wifi))),
         onDecline = onRefused,
     ) { granted -> if (granted) camera.connect() else onRefused() }
     SideEffect { camera.ask = { ask() } }
@@ -134,7 +134,7 @@ internal class CameraSource(
     }
 
     override val deleteTag = "camera_delete_chosen"
-    override val deleteWords = R.string.camera_delete
+    override val deleteWords = Res.string.camera_delete
 
     /** The keys of what goes with [photo]: the camera deletes its JPEG and its RAW together. */
     private fun withIt(photo: CameraPhoto): Set<String> {
@@ -148,9 +148,9 @@ internal class CameraSource(
         val one = these.singleOrNull()
         AlertDialog(
             onDismissRequest = { deleting = null },
-            title = { Text(if (one != null) stringResource(R.string.camera_delete_title) else stringResource(R.string.camera_delete_many_title, these.size)) },
-            text = { Text(if (one != null) stringResource(R.string.camera_delete_body, one.name) else stringResource(R.string.camera_delete_many_body)) },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.action_cancel)) } },
+            title = { Text(if (one != null) stringResource(Res.string.camera_delete_title) else stringResource(Res.string.camera_delete_many_title, these.size)) },
+            text = { Text(if (one != null) stringResource(Res.string.camera_delete_body, one.name) else stringResource(Res.string.camera_delete_many_body)) },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(Res.string.action_cancel)) } },
             confirmButton = {
                 TextButton(onClick = {
                     deleting = null
@@ -159,7 +159,7 @@ internal class CameraSource(
                     if (one != null && fromViewer) deletion.one {
                         val gone = withIt(one)
                         if (camera.delete(one)) deletion.gone(gone)
-                        else Toast.makeText(context, R.string.camera_delete_failed, Toast.LENGTH_SHORT).show()
+                        else Toast.makeText(context, textOf(Res.string.camera_delete_failed), Toast.LENGTH_SHORT).show()
                     } else deletion.several(these.size) {
                         // One at a time, each leaving the choice once the camera says it's gone;
                         // those it couldn't delete stay chosen.
@@ -171,10 +171,10 @@ internal class CameraSource(
                                 done++
                             }
                         } finally {
-                            if (missed > 0) Toast.makeText(context, context.getString(R.string.camera_delete_missed, missed), Toast.LENGTH_SHORT).show()
+                            if (missed > 0) Toast.makeText(context, textOf(Res.string.camera_delete_missed, missed), Toast.LENGTH_SHORT).show()
                         }
                     }
-                }, modifier = Modifier.testTag("camera_delete_confirm")) { Text(stringResource(R.string.camera_delete), color = tokens.danger) }
+                }, modifier = Modifier.testTag("camera_delete_confirm")) { Text(stringResource(Res.string.camera_delete), color = tokens.danger) }
             },
         )
     }
@@ -187,7 +187,7 @@ internal data class CameraListing(val camera: CameraSource) : Listing {
     override val source get() = camera
 
     @Composable
-    override fun title() = camera.paired?.name ?: stringResource(R.string.camera_model)
+    override fun title() = camera.paired?.name ?: stringResource(Res.string.camera_model)
 
     @Composable
     override fun picks(): List<Pick> =
@@ -204,7 +204,7 @@ internal data class CameraListing(val camera: CameraSource) : Listing {
     override fun Body(shown: List<Pick>, grid: @Composable ((@Composable () -> Unit)?, (() -> Unit)?) -> Unit) {
         when (val s = camera.state()) {
             null, is CameraTransfer.State.Connecting -> Steps((s as? CameraTransfer.State.Connecting)?.step ?: CameraTransfer.Step.WIFI_ON)
-            is CameraTransfer.State.Failed -> Failed(AppIcons.CameraBody, s.reason, R.string.camera_failed_note) { camera.connect() }
+            is CameraTransfer.State.Failed -> Failed(AppIcons.CameraBody, s.reason, Res.string.camera_failed_note) { camera.connect() }
             is CameraTransfer.State.Ready -> grid(null, null)
         }
     }
@@ -224,14 +224,14 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
 
     @Composable
     override fun description() =
-        stringResource(if (photo.raw) R.string.camera_raw_description else R.string.camera_photo_description, photo.name)
+        stringResource(if (photo.raw) Res.string.camera_raw_description else Res.string.camera_photo_description, photo.name)
 
     @Composable
     override fun place() = photo.name
 
     @Composable
     override fun rememberDetails(): PhotoDetails? {
-        val cardName = stringResource(R.string.picker_camera_card)
+        val cardName = stringResource(Res.string.picker_camera_card)
         val original = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.transfer?.originalOf(photo)?.file else null
         return produceState<PhotoDetails?>(null, key, original) {
             val base = PhotoDetails(
@@ -243,7 +243,7 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
     }
 
     override fun infoNote(details: PhotoDetails?) =
-        R.string.picker_info_camera_note.takeIf { details?.make == null && details?.focal == null }
+        Res.string.picker_info_camera_note.takeIf { details?.make == null && details?.focal == null }
 
     /** Its original, once the viewer is still on it, so swiping past doesn't queue downloads. */
     override fun settled() {
@@ -276,9 +276,9 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
 private fun Steps(step: CameraTransfer.Step) {
     Column(Modifier.fillMaxSize().padding(top = LocalTopClearance.current).padding(horizontal = Space.gutter, vertical = Space.s)) {
         listOf(
-            CameraTransfer.Step.WIFI_ON to R.string.camera_step_wifi_on,
-            CameraTransfer.Step.JOINING to R.string.camera_step_joining,
-            CameraTransfer.Step.READING to R.string.camera_step_reading,
+            CameraTransfer.Step.WIFI_ON to Res.string.camera_step_wifi_on,
+            CameraTransfer.Step.JOINING to Res.string.camera_step_joining,
+            CameraTransfer.Step.READING to Res.string.camera_step_reading,
         ).forEach { (s, label) ->
             val past = s.ordinal < step.ordinal
             val now = s == step
@@ -293,7 +293,7 @@ private fun Steps(step: CameraTransfer.Step) {
                 Text(stringResource(label), style = AppTheme.typography.body, color = if (now) tokens.tx else if (past) tokens.tx2 else tokens.tx3)
             }
         }
-        Text(stringResource(R.string.camera_join_note), style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.padding(top = Space.s))
+        Text(stringResource(Res.string.camera_join_note), style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.padding(top = Space.s))
     }
 }
 
@@ -303,15 +303,15 @@ private fun Loading(original: CameraTransfer.Original, onRetry: () -> Unit) {
     val context = LocalContext.current
     Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Space.s, Alignment.CenterVertically)) {
         if (original.failed) {
-            Text(stringResource(R.string.camera_download_failed), style = AppTheme.typography.body, color = MediaOverlay.content)
-            TextButton(onClick = onRetry) { Text(stringResource(R.string.action_retry), color = MediaOverlay.content) }
+            Text(stringResource(Res.string.camera_download_failed), style = AppTheme.typography.body, color = MediaOverlay.content)
+            TextButton(onClick = onRetry) { Text(stringResource(Res.string.action_retry), color = MediaOverlay.content) }
             return@Column
         }
         Spinner(color = MediaOverlay.content)
         val seconds = (SystemClock.elapsedRealtime() - original.started) / 1000f
         val perSecond = if (seconds > 0.3f) (original.done / seconds).toLong() else 0L
         Text(
-            stringResource(R.string.camera_loading, Formatter.formatShortFileSize(context, original.done), Formatter.formatShortFileSize(context, original.size),
+            stringResource(Res.string.camera_loading, Formatter.formatShortFileSize(context, original.done), Formatter.formatShortFileSize(context, original.size),
                 Formatter.formatShortFileSize(context, perSecond)),
             style = AppTheme.typography.caption, color = MediaOverlay.content,
         )

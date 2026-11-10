@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.moment
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.anchoredMenu
 import cc.hyoban.moments.ui.design.MenuPopup
@@ -25,9 +26,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.DpOffset
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.ui.Day
@@ -51,17 +51,17 @@ fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: 
     val actions = LocalMomentActions.current
     val context = LocalContext.current
     val show = rememberShowMessage()
-    val copied = stringResource(R.string.message_text_copied)
+    val copied = stringResource(Res.string.message_text_copied)
     var sharing by remember { mutableStateOf(false) }
     var target by remember { mutableStateOf<ShareTarget?>(null) }
     // Kept while it closes, so it doesn't jump to the corner as it goes.
     var shownAt by remember { mutableStateOf(DpOffset.Zero) }
     if (at != null) shownAt = at
 
-    val share = stringResource(R.string.action_share)
-    val copy = stringResource(R.string.action_copy_text)
-    val edit = stringResource(R.string.action_edit_moment)
-    val wholeDay = stringResource(R.string.label_whole_day)
+    val share = stringResource(Res.string.action_share)
+    val copy = stringResource(Res.string.action_copy_text)
+    val edit = stringResource(Res.string.action_edit_moment)
+    val wholeDay = stringResource(Res.string.label_whole_day)
     val doing = buildList {
         add(MenuChoice(share, AppIcons.Share, "menu_share") { sharing = true })
         if (moment.text.isNotBlank()) {

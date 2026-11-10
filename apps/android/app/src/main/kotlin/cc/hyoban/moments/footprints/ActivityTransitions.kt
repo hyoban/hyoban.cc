@@ -1,5 +1,6 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.res.*
 import android.Manifest
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
@@ -8,7 +9,6 @@ import android.content.Intent
 import android.os.SystemClock
 import androidx.core.content.edit
 import cc.hyoban.moments.MomentsApplication
-import cc.hyoban.moments.R
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.ActivityRecognition
@@ -32,7 +32,7 @@ import kotlin.coroutines.resumeWithException
 /** Optional Google service enhancement; GNSS and the wake-up sensor never depend on it. */
 internal object ActivityTransitions {
     private val lock = Mutex()
-    private val _status = MutableStateFlow(R.string.footprints_activity_off)
+    private val _status = MutableStateFlow(Res.string.footprints_activity_off)
     val status = _status.asStateFlow()
     private fun preferences(context: Context) = context.getSharedPreferences("footprint-activity", Context.MODE_PRIVATE)
     fun enabled(context: Context) = preferences(context).getBoolean("enabled", false)
@@ -51,7 +51,7 @@ internal object ActivityTransitions {
         val container = (context.applicationContext as MomentsApplication).container
         val diagnostics = container.footprintDiagnostics
         if (!available(context)) {
-            _status.value = R.string.footprints_activity_unavailable
+            _status.value = Res.string.footprints_activity_unavailable
             diagnostics.record("activity_recognition", mapOf("state" to "unavailable"))
             return@withLock
         }
@@ -62,9 +62,9 @@ internal object ActivityTransitions {
             if (!enabled(context) || !ActivityWakePolicy.dailyRequested(state) || !permitted(context)) {
                 client.removeActivityTransitionUpdates(pending(context)).awaitResult()
                 _status.value = when {
-                    !enabled(context) -> R.string.footprints_activity_off
-                    !permitted(context) -> R.string.footprints_activity_permission
-                    else -> R.string.footprints_activity_ready
+                    !enabled(context) -> Res.string.footprints_activity_off
+                    !permitted(context) -> Res.string.footprints_activity_permission
+                    else -> Res.string.footprints_activity_ready
                 }
             } else {
                 val transitions = listOf(DetectedActivity.WALKING, DetectedActivity.RUNNING,
@@ -74,15 +74,15 @@ internal object ActivityTransitions {
                     }
                 }
                 client.requestActivityTransitionUpdates(ActivityTransitionRequest(transitions), pending(context)).awaitResult()
-                _status.value = R.string.footprints_activity_active
+                _status.value = Res.string.footprints_activity_active
             }
-            diagnostics.record("activity_recognition", mapOf("state" to context.resources.getResourceEntryName(_status.value)))
+            diagnostics.record("activity_recognition", mapOf("state" to _status.value.key))
         } catch (e: SecurityException) {
-            _status.value = R.string.footprints_activity_permission
+            _status.value = Res.string.footprints_activity_permission
             diagnostics.record("activity_recognition", mapOf("state" to "permission_denied", "exception" to e.javaClass.simpleName))
         } catch (e: kotlinx.coroutines.CancellationException) { throw e }
         catch (e: Exception) {
-            _status.value = R.string.footprints_activity_failed
+            _status.value = Res.string.footprints_activity_failed
             diagnostics.record("activity_recognition", mapOf("state" to "failed", "exception" to e.javaClass.simpleName))
         }
     }

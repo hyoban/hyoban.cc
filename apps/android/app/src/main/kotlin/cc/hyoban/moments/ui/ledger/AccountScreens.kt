@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
@@ -38,11 +39,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.ledger.Account
 import cc.hyoban.moments.ledger.AccountKind
@@ -79,25 +79,25 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
         nav.back,
         subtitle = accountKindLabel(account.kind) + " " + account.currency,
         actions = {
-            Tooltip(stringResource(R.string.action_edit), below = true) {
+            Tooltip(stringResource(Res.string.action_edit), below = true) {
                 IconButton(onClick = { nav.editAccount(id) }, modifier = Modifier.testTag("edit_account")) {
-                    Icon(AppIcons.Pen, contentDescription = stringResource(R.string.action_edit))
+                    Icon(AppIcons.Pen, contentDescription = stringResource(Res.string.action_edit))
                 }
             }
         },
     ) {
         BillList(ledger, bills, account.currency, nav, header = {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.s, bottom = Space.s)) {
-                Text(stringResource(R.string.ledger_balance_label), style = AppTheme.typography.label, color = tokens.tx2)
+                Text(stringResource(Res.string.ledger_balance_label), style = AppTheme.typography.label, color = tokens.tx2)
                 Text(money(balance, account.currency), style = AppTheme.typography.titlePage, modifier = Modifier.testTag("account_balance"))
                 Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                     TextButton(onClick = { nav.entry(LedgerEntryArgs(account = id)) }) {
                         Icon(AppIcons.Plus, contentDescription = null)
-                        Text(stringResource(R.string.ledger_new_bill), modifier = Modifier.padding(start = Space.s))
+                        Text(stringResource(Res.string.ledger_new_bill), modifier = Modifier.padding(start = Space.s))
                     }
                     TextButton(onClick = { calibrating = true }, modifier = Modifier.testTag("calibrate")) {
                         Icon(AppIcons.Sliders, contentDescription = null)
-                        Text(stringResource(R.string.ledger_calibrate), modifier = Modifier.padding(start = Space.s))
+                        Text(stringResource(Res.string.ledger_calibrate), modifier = Modifier.padding(start = Space.s))
                     }
                 }
             }
@@ -108,10 +108,10 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
         var value by remember { mutableStateOf(fieldOf(kotlin.math.abs(balance)).let { if (balance < 0) "-$it" else it }) }
         AlertDialog(
             onDismissRequest = { calibrating = false },
-            title = { Text(stringResource(R.string.ledger_calibrate)) },
+            title = { Text(stringResource(Res.string.ledger_calibrate)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                    Text(stringResource(R.string.ledger_calibrate_note), style = AppTheme.typography.body)
+                    Text(stringResource(Res.string.ledger_calibrate_note), style = AppTheme.typography.body)
                     OutlinedTextField(
                         value, { value = it },
                         prefix = { Text(currencySymbol(account.currency)) },
@@ -127,9 +127,9 @@ fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
                     val target = parseSigned(value) ?: return@TextButton
                     calibrating = false
                     scope.launch { container.ledger.saveAccount(account.copy(opening = account.opening + target - balance)) }
-                }) { Text(stringResource(R.string.action_save)) }
+                }) { Text(stringResource(Res.string.action_save)) }
             },
-            dismissButton = { TextButton(onClick = { calibrating = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { calibrating = false }) { Text(stringResource(Res.string.action_cancel)) } },
         )
     }
 }
@@ -175,10 +175,10 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
     }
 
     SubPage(
-        stringResource(if (original == null) R.string.ledger_add_account else R.string.ledger_edit_account),
+        stringResource(if (original == null) Res.string.ledger_add_account else Res.string.ledger_edit_account),
         nav.back,
         close = true,
-        actions = { TextButton(onClick = ::save, enabled = name.isNotBlank(), modifier = Modifier.testTag("save_account")) { Text(stringResource(R.string.action_save)) } },
+        actions = { TextButton(onClick = ::save, enabled = name.isNotBlank(), modifier = Modifier.testTag("save_account")) { Text(stringResource(Res.string.action_save)) } },
     ) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
@@ -186,8 +186,8 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                     .padding(start = columns.margin, end = columns.margin, bottom = Space.xl),
             ) {
                 Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s), verticalArrangement = Arrangement.spacedBy(Space.m)) {
-                    OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.ledger_account_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("account_name"))
-                    Text(stringResource(R.string.ledger_account_kind), style = AppTheme.typography.label, color = tokens.tx2)
+                    OutlinedTextField(name, { name = it }, label = { Text(stringResource(Res.string.ledger_account_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("account_name"))
+                    Text(stringResource(Res.string.ledger_account_kind), style = AppTheme.typography.label, color = tokens.tx2)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                         AccountKind.entries.forEach { entry ->
                             FilterChip(
@@ -201,7 +201,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                     Box {
                         var open by remember { mutableStateOf(false) }
                         TextButton(onClick = { open = true }, modifier = Modifier.testTag("account_currency")) {
-                            Text(stringResource(R.string.ledger_currency) + " " + currency)
+                            Text(stringResource(Res.string.ledger_currency) + " " + currency)
                         }
                         DropdownMenu(open, onDismissRequest = { open = false }) {
                             (COMMON_CURRENCIES + ledger.rates.currencies.sorted()).distinct().forEach { code ->
@@ -211,22 +211,22 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                     }
                     OutlinedTextField(
                         opening, { opening = it },
-                        label = { Text(stringResource(R.string.ledger_opening)) },
-                        supportingText = { Text(stringResource(if (kind.liability) R.string.ledger_opening_owed_note else R.string.ledger_opening_note)) },
+                        label = { Text(stringResource(Res.string.ledger_opening)) },
+                        supportingText = { Text(stringResource(if (kind.liability) Res.string.ledger_opening_owed_note else Res.string.ledger_opening_note)) },
                         prefix = { Text(currencySymbol(currency)) },
                         isError = opening.isNotBlank() && parseSigned(opening) == null,
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    OutlinedTextField(note, { note = it }, label = { Text(stringResource(R.string.ledger_note)) }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(note, { note = it }, label = { Text(stringResource(Res.string.ledger_note)) }, modifier = Modifier.fillMaxWidth())
                 }
                 SegmentedGroup(
                     null,
                     null,
                     listOf(
-                        { shapes -> SwitchRow(counted, AppIcons.Eye, stringResource(R.string.ledger_counted), "counted", shapes, supporting = stringResource(R.string.ledger_counted_note)) { counted = !counted } },
-                        { shapes -> SwitchRow(archived, AppIcons.Archive, stringResource(R.string.ledger_archive), "archived", shapes, supporting = stringResource(R.string.ledger_archive_note)) { archived = !archived } },
+                        { shapes -> SwitchRow(counted, AppIcons.Eye, stringResource(Res.string.ledger_counted), "counted", shapes, supporting = stringResource(Res.string.ledger_counted_note)) { counted = !counted } },
+                        { shapes -> SwitchRow(archived, AppIcons.Archive, stringResource(Res.string.ledger_archive), "archived", shapes, supporting = stringResource(Res.string.ledger_archive_note)) { archived = !archived } },
                     ),
                 )
                 if (original != null) {
@@ -234,7 +234,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                         onClick = { deleting = true },
                         enabled = !used,
                         modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l),
-                    ) { Text(stringResource(if (used) R.string.ledger_account_in_use else R.string.ledger_delete_account), color = if (used) tokens.tx2 else tokens.danger) }
+                    ) { Text(stringResource(if (used) Res.string.ledger_account_in_use else Res.string.ledger_delete_account), color = if (used) tokens.tx2 else tokens.danger) }
                 }
             }
         }
@@ -242,7 +242,7 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
     if (deleting && original != null) {
         AlertDialog(
             onDismissRequest = { deleting = false },
-            title = { Text(stringResource(R.string.ledger_delete_account)) },
+            title = { Text(stringResource(Res.string.ledger_delete_account)) },
             text = { Text(original.name) },
             confirmButton = {
                 TextButton(onClick = {
@@ -252,9 +252,9 @@ fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
                         nav.back()
                         nav.back()
                     }
-                }) { Text(stringResource(R.string.action_delete)) }
+                }) { Text(stringResource(Res.string.action_delete)) }
             },
-            dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(Res.string.action_cancel)) } },
         )
     }
 }

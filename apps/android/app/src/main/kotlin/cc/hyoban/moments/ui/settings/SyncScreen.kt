@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
@@ -42,8 +44,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -58,7 +60,6 @@ import cc.hyoban.moments.ui.design.DropdownMenu
 import cc.hyoban.moments.ui.design.DropdownMenuItem
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.unit.DpOffset
-import cc.hyoban.moments.R
 import cc.hyoban.moments.Setting
 import cc.hyoban.moments.Token
 import cc.hyoban.moments.ui.components.AppColors
@@ -84,10 +85,10 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
     var restoring by rememberSaveable { mutableStateOf(false) }
     var editingNas by rememberSaveable { mutableStateOf(false) }
     val rows = listOf(
-        Row(settings.apiUrl, R.string.setting_api_url, AppIcons.Cloud) { container.changeApi(it) },
+        Row(settings.apiUrl, Res.string.setting_api_url, AppIcons.Cloud) { container.changeApi(it) },
     )
 
-    SubPage(stringResource(R.string.sync_title), onBack, Modifier.background(AppColors.page)) {
+    SubPage(stringResource(Res.string.sync_title), onBack, Modifier.background(AppColors.page)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
@@ -105,9 +106,9 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                         shapes = shapes,
                         colors = segmentColors(),
                         leadingContent = { Icon(AppIcons.Key, contentDescription = null) },
-                        supportingContent = { Text(stringResource(if (settings.apiToken.isSet) R.string.token_set else R.string.token_unset)) },
+                        supportingContent = { Text(stringResource(if (settings.apiToken.isSet) Res.string.token_set else Res.string.token_unset)) },
                         modifier = Modifier.testTag("api_token"),
-                    ) { Text(stringResource(R.string.setting_api_token)) }
+                    ) { Text(stringResource(Res.string.setting_api_token)) }
                 }
                 // Reading from the API again with a tap, as a refresh pulled for on the tabs is had without the gesture too.
                 val syncing by container.repository.syncing.collectAsStateWithLifecycle()
@@ -120,7 +121,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                         colors = segmentColors(),
                         leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
                         supportingContent = {
-                            Text(stringResource(if (syncing) R.string.refreshing else if (connected) R.string.refresh_note else R.string.refresh_needs_api))
+                            Text(stringResource(if (syncing) Res.string.refreshing else if (connected) Res.string.refresh_note else Res.string.refresh_needs_api))
                         },
                         trailingContent = if (syncing) {
                             { Spinner(Modifier.size(24.dp)) }
@@ -128,9 +129,9 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                             null
                         },
                         modifier = Modifier.testTag("refresh"),
-                    ) { Text(stringResource(R.string.action_refresh)) }
+                    ) { Text(stringResource(Res.string.action_refresh)) }
                 }
-                Section(stringResource(R.string.section_site), rows.subList(0, 1), 0, stringResource(R.string.settings_api_note), extra = listOf(token, refresh)) { editing = it }
+                Section(stringResource(Res.string.section_site), rows.subList(0, 1), 0, stringResource(Res.string.settings_api_note), extra = listOf(token, refresh)) { editing = it }
                 BackupSection(container.backup, onEdit = { editingBackup = true }, onRestore = { restoring = true })
                 NasSection(container.nas) { editingNas = true }
                 // The keys the place picker asks AMap and Tencent with in China, kept beside the map's styles, and,
@@ -144,12 +145,12 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                             shapes = shapes,
                             colors = segmentColors(),
                             leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
-                            supportingContent = { Text(stringResource(if (tencentFirst) R.string.setting_tencent_maps else R.string.setting_amap)) },
+                            supportingContent = { Text(stringResource(if (tencentFirst) Res.string.setting_tencent_maps else Res.string.setting_amap)) },
                             trailingContent = { Icon(AppIcons.CaretDown, contentDescription = null) },
                             modifier = Modifier.testTag("china_places"),
-                        ) { Text(stringResource(R.string.setting_china_places)) }
+                        ) { Text(stringResource(Res.string.setting_china_places)) }
                         DropdownMenu(open, onDismissRequest = { open = false }, offset = DpOffset(Space.l, 0.dp)) {
-                            listOf(CHINA_PLACES_AMAP to R.string.setting_amap, CHINA_PLACES_TENCENT to R.string.setting_tencent_maps).forEach { (value, words) ->
+                            listOf(CHINA_PLACES_AMAP to Res.string.setting_amap, CHINA_PLACES_TENCENT to Res.string.setting_tencent_maps).forEach { (value, words) ->
                                 DropdownMenuItem(
                                     text = { Text(stringResource(words)) },
                                     onClick = { settings.chinaPlaces.set(value); open = false },
@@ -169,9 +170,9 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                         shapes = shapes,
                         colors = segmentColors(),
                         leadingContent = { Icon(AppIcons.Key, contentDescription = null) },
-                        supportingContent = { Text(stringResource(if (settings.amapKey.isSet) R.string.token_set else R.string.token_unset)) },
+                        supportingContent = { Text(stringResource(if (settings.amapKey.isSet) Res.string.token_set else Res.string.token_unset)) },
                         modifier = Modifier.testTag("amap_key"),
-                    ) { Text(stringResource(R.string.setting_amap_key)) }
+                    ) { Text(stringResource(Res.string.setting_amap_key)) }
                 }
                 val tencentKey: Segment = { shapes ->
                     SegmentedListItem(
@@ -179,11 +180,11 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                         shapes = shapes,
                         colors = segmentColors(),
                         leadingContent = { Icon(AppIcons.Key, contentDescription = null) },
-                        supportingContent = { Text(stringResource(if (settings.tencentMapKey.isSet) R.string.token_set else R.string.token_unset)) },
+                        supportingContent = { Text(stringResource(if (settings.tencentMapKey.isSet) Res.string.token_set else Res.string.token_unset)) },
                         modifier = Modifier.testTag("tencent_key"),
-                    ) { Text(stringResource(R.string.setting_tencent_key)) }
+                    ) { Text(stringResource(Res.string.setting_tencent_key)) }
                 }
-                Section(stringResource(R.string.section_map), emptyList(), 0, stringResource(R.string.settings_map_note), extra = listOfNotNull(amapKey, tencentKey, chinaPlaces.takeIf { settings.amapKey.isSet && settings.tencentMapKey.isSet })) { editing = it }
+                Section(stringResource(Res.string.section_map), emptyList(), 0, stringResource(Res.string.settings_map_note), extra = listOfNotNull(amapKey, tencentKey, chinaPlaces.takeIf { settings.amapKey.isSet && settings.tencentMapKey.isSet })) { editing = it }
                 UpdateSection(container.updates, container.scope)
             }
         }
@@ -254,7 +255,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
 }
 
 /** A setting as a row: its name, its icon, and what saving it does. */
-private class Row(val setting: Setting, val title: Int, val icon: ImageVector, val save: (String) -> Unit)
+private class Row(val setting: Setting, val title: StringResource, val icon: ImageVector, val save: (String) -> Unit)
 
 /** Rows as one segmented group under a caption, and a note under them; [extra] segments after them. */
 @Composable
@@ -271,11 +272,11 @@ private fun SettingRow(row: Row, shapes: ListItemShapes, onClick: () -> Unit) {
         colors = segmentColors(),
         supportingContent = {
             // The scheme said by the dialog; the row has room only for where it points.
-            Text(if (setting.isSet) setting.value.substringAfter("://") else stringResource(R.string.setting_unset), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(if (setting.isSet) setting.value.substringAfter("://") else stringResource(Res.string.setting_unset), maxLines = 1, overflow = TextOverflow.Ellipsis)
         },
         leadingContent = { Icon(row.icon, contentDescription = null) },
         trailingContent = if (setting.isDefault && setting.isSet) {
-            { Text(stringResource(R.string.setting_is_default), style = AppTheme.typography.caption) }
+            { Text(stringResource(Res.string.setting_is_default), style = AppTheme.typography.caption) }
         } else {
             null
         },
@@ -314,9 +315,9 @@ private fun AddressDialog(setting: Setting, title: String, onDismiss: () -> Unit
                     supportingText = {
                         Text(
                             when {
-                                !ok -> stringResource(R.string.error_address)
-                                setting.default.isEmpty() -> stringResource(R.string.setting_blank_none)
-                                else -> stringResource(R.string.setting_default, setting.default)
+                                !ok -> stringResource(Res.string.error_address)
+                                setting.default.isEmpty() -> stringResource(Res.string.setting_blank_none)
+                                else -> stringResource(Res.string.setting_default, setting.default)
                             },
                         )
                     },
@@ -327,23 +328,23 @@ private fun AddressDialog(setting: Setting, title: String, onDismiss: () -> Unit
                 )
                 if (setting.default.isNotEmpty() && Setting.normalize(field.text) != setting.default) {
                     TextButton(onClick = { onSave(setting.default) }, modifier = Modifier.testTag("restore_default")) {
-                        Text(stringResource(R.string.action_restore_default))
+                        Text(stringResource(Res.string.action_restore_default))
                     }
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(field.text) }, enabled = ok) { Text(stringResource(R.string.action_confirm)) }
+            TextButton(onClick = { onSave(field.text) }, enabled = ok) { Text(stringResource(Res.string.action_confirm)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }
 
 /** What a secret's dialog calls it, asks for and says it is for. */
-private enum class TokenWords(val title: Int, val hint: Int, val replace: Int, val note: Int, val forget: Int, val show: Int, val hide: Int) {
-    Api(R.string.setting_api_token, R.string.token_hint, R.string.token_replace, R.string.settings_token_note, R.string.action_forget_token, R.string.action_show_token, R.string.action_hide_token),
-    Tencent(R.string.setting_tencent_key, R.string.tencent_key_hint, R.string.tencent_key_replace, R.string.settings_tencent_key_note, R.string.action_forget_tencent_key, R.string.action_show_key, R.string.action_hide_key),
-    Amap(R.string.setting_amap_key, R.string.amap_key_hint, R.string.tencent_key_replace, R.string.settings_amap_key_note, R.string.action_forget_tencent_key, R.string.action_show_key, R.string.action_hide_key),
+private enum class TokenWords(val title: StringResource, val hint: StringResource, val replace: StringResource, val note: StringResource, val forget: StringResource, val show: StringResource, val hide: StringResource) {
+    Api(Res.string.setting_api_token, Res.string.token_hint, Res.string.token_replace, Res.string.settings_token_note, Res.string.action_forget_token, Res.string.action_show_token, Res.string.action_hide_token),
+    Tencent(Res.string.setting_tencent_key, Res.string.tencent_key_hint, Res.string.tencent_key_replace, Res.string.settings_tencent_key_note, Res.string.action_forget_tencent_key, Res.string.action_show_key, Res.string.action_hide_key),
+    Amap(Res.string.setting_amap_key, Res.string.amap_key_hint, Res.string.tencent_key_replace, Res.string.settings_amap_key_note, Res.string.action_forget_tencent_key, Res.string.action_show_key, Res.string.action_hide_key),
 }
 
 /**
@@ -393,9 +394,9 @@ private fun TokenDialog(token: Token, words: TokenWords, tag: String, onDismiss:
         confirmButton = {
             val text = field.text.toString()
             TextButton(onClick = { onSave(text) }, enabled = text.isNotBlank(), modifier = Modifier.testTag("${tag}_save")) {
-                Text(stringResource(R.string.action_confirm))
+                Text(stringResource(Res.string.action_confirm))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }

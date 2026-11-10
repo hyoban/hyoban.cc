@@ -1,5 +1,6 @@
 package cc.hyoban.moments
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module
 import android.content.Context
 import android.net.Uri
@@ -274,8 +275,8 @@ class AppContainer(context: Context) {
             if (bills.isEmpty()) return@launch
             _messages.send(
                 Message(
-                    appContext.resources.getQuantityString(R.plurals.message_checkin_bills, bills.size, bills.size),
-                    action = appContext.getString(R.string.ledger_use_place),
+                    pluralTextOf(Res.plurals.message_checkin_bills, bills.size, bills.size),
+                    action = textOf(Res.string.ledger_use_place),
                     onAction = { scope.launch { ledger.saveTxns(bills.map { it.copy(place = place) }) } },
                 ),
             )
@@ -295,7 +296,7 @@ class AppContainer(context: Context) {
         val copies = uris.mapNotNull { uri ->
             runCatching { Photos.copy(appContext, uri, sharedDirectory, Ulid.next()).file }.getOrNull()?.let(Uri::fromFile)
         }
-        if (copies.size < uris.size) say(appContext.getString(R.string.error_shared_photos))
+        if (copies.size < uris.size) say(textOf(Res.string.error_shared_photos))
         _sharedPhotos.value = _sharedPhotos.value + copies
     }
 
@@ -313,7 +314,7 @@ class AppContainer(context: Context) {
                 Uri.fromFile(file)
             }.getOrNull()
         }
-        if (copy == null) say(appContext.getString(R.string.ledger_error_import)) else _sharedExport.value = copy
+        if (copy == null) say(textOf(Res.string.ledger_error_import)) else _sharedExport.value = copy
     }
 
     /** The iCost export shared into the app, taken so it is imported once. */
@@ -378,7 +379,7 @@ class AppContainer(context: Context) {
         if (_publishing.value == null) return
         PublishWorker.cancel(appContext)
         _publishing.value = null
-        say(appContext.getString(R.string.message_publish_cancelled))
+        say(textOf(Res.string.message_publish_cancelled))
     }
 
     /**
@@ -394,17 +395,17 @@ class AppContainer(context: Context) {
                 ledger.saveTxn(change.txn.copy(visibility = visibility))
             }
             Widgets.update(appContext)
-            say(appContext.getString(R.string.message_changes_cleared))
+            say(textOf(Res.string.message_changes_cleared))
         }
     }
 
     /** Says publishing went through, on the page open when the app is next on screen. */
-    fun reportPublished() = say(appContext.getString(R.string.message_published))
+    fun reportPublished() = say(textOf(Res.string.message_published))
 
     /** Says publishing stopped, and why. */
     fun reportPublishFailed(error: Exception) {
         Log.w("Moments", "Publishing failed", error)
-        say(appContext.getString(R.string.error_publish, failureReason(appContext, error)))
+        say(textOf(Res.string.error_publish, failureReason(appContext, error)))
     }
 
     /**
@@ -418,8 +419,8 @@ class AppContainer(context: Context) {
             repository.setAside(uid)
             _messages.send(
                 Message(
-                    appContext.getString(R.string.message_moment_deleted),
-                    action = appContext.getString(R.string.action_undo),
+                    textOf(Res.string.message_moment_deleted),
+                    action = textOf(Res.string.action_undo),
                     onAction = { scope.launch { repository.bringBack(uid) } },
                     onDismiss = {
                         scope.launch {
@@ -442,8 +443,8 @@ class AppContainer(context: Context) {
             repository.holdRevert(uid)
             _messages.send(
                 Message(
-                    appContext.getString(R.string.message_change_reverted),
-                    action = appContext.getString(R.string.action_undo),
+                    textOf(Res.string.message_change_reverted),
+                    action = textOf(Res.string.action_undo),
                     onAction = { scope.launch { repository.keepChange(uid) } },
                     onDismiss = {
                         scope.launch {

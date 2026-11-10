@@ -1,5 +1,6 @@
 package cc.hyoban.moments.update
 
+import cc.hyoban.moments.res.*
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -58,7 +59,7 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 return
             }
             context.getSystemService(NotificationManager::class.java).createNotificationChannel(
-                NotificationChannel(CHANNEL, context.getString(R.string.update_channel), NotificationManager.IMPORTANCE_DEFAULT),
+                NotificationChannel(CHANNEL, textOf(Res.string.update_channel), NotificationManager.IMPORTANCE_DEFAULT),
             )
             val open = PendingIntent.getActivity(
                 context,
@@ -69,8 +70,8 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
             )
             val notification = NotificationCompat.Builder(context, CHANNEL)
                 .setSmallIcon(R.drawable.ic_notification_update)
-                .setContentTitle(context.getString(R.string.update_notification_title, release.version))
-                .setContentText(context.getString(R.string.update_notification_text))
+                .setContentTitle(textOf(Res.string.update_notification_title, release.version))
+                .setContentText(textOf(Res.string.update_notification_text))
                 .setContentIntent(open)
                 .setAutoCancel(true)
                 .build()

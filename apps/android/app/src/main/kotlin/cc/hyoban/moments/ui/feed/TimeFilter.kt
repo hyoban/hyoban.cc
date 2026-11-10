@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.feed
 
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.animation.AnimatedVisibility
@@ -26,8 +27,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
-import cc.hyoban.moments.R
+import org.jetbrains.compose.resources.stringResource
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.ui.format.formatMonthOnly
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
@@ -71,7 +71,7 @@ fun TimeFilterRows(filter: TimeFilter, years: List<Int>, months: List<Int>, onCh
             "year_",
             listOf(null) + years,
             selected = filter.year,
-            label = { it?.let { year -> stringResource(R.string.filter_year, year) } ?: stringResource(R.string.filter_all) },
+            label = { it?.let { year -> stringResource(Res.string.filter_year, year) } ?: stringResource(Res.string.filter_all) },
             onSelect = { onChange(TimeFilter(year = it)) },
         )
         AnimatedVisibility(
@@ -83,7 +83,7 @@ fun TimeFilterRows(filter: TimeFilter, years: List<Int>, months: List<Int>, onCh
                 "month_",
                 listOf(null) + months,
                 selected = filter.month,
-                label = { it?.let { month -> formatMonthOnly(month) } ?: stringResource(R.string.filter_whole_year) },
+                label = { it?.let { month -> formatMonthOnly(month) } ?: stringResource(Res.string.filter_whole_year) },
                 onSelect = { onChange(filter.copy(month = it)) },
             )
         }

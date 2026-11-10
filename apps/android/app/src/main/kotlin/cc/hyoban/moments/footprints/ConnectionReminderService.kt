@@ -1,5 +1,7 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.data.spec.Module
 import android.annotation.SuppressLint
 import android.app.*
@@ -57,19 +59,19 @@ class ConnectionReminderService : Service() {
     override fun onCreate() {
         super.onCreate()
         live = this
-        notifications.createNotificationChannel(NotificationChannel(WATCH_CHANNEL, getString(R.string.connection_automation_title), NotificationManager.IMPORTANCE_LOW))
+        notifications.createNotificationChannel(NotificationChannel(WATCH_CHANNEL, textOf(Res.string.connection_automation_title), NotificationManager.IMPORTANCE_LOW))
         notifications.cancel(2302) // Remove any pre-upgrade confirmation notification.
         scope.launch {
             for (event in events) try { event() }
             catch (e: CancellationException) { throw e }
-            catch (_: Exception) { updateStatus(R.string.connection_automation_error) }
+            catch (_: Exception) { updateStatus(Res.string.connection_automation_error) }
         }
         scope.launch {
             try {
                 withContext(Dispatchers.IO) { container.connectionRules.load() }
                 container.connectionRules.rules.collect { value -> post { if (!configured || value != rules) configure(value) } }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { updateStatus(R.string.connection_automation_error) }
+            catch (_: Exception) { updateStatus(Res.string.connection_automation_error) }
         }
         scope.launch {
             container.footprints.revision.collect {
@@ -90,7 +92,7 @@ class ConnectionReminderService : Service() {
         scope.launch {
             RecordingService.status.collect { status ->
                 if (RecordingFailure.isFailure(status)) post {
-                    if (rules.enabled) updateStatus(status ?: R.string.connection_automation_auto_failed)
+                    if (rules.enabled) updateStatus(status ?: Res.string.connection_automation_auto_failed)
                 }
             }
         }
@@ -100,10 +102,10 @@ class ConnectionReminderService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         try {
-            ServiceCompat.startForeground(this, WATCH_ID, watchNotification(R.string.connection_automation_watching),
+            ServiceCompat.startForeground(this, WATCH_ID, watchNotification(Res.string.connection_automation_watching),
                 if (Build.VERSION.SDK_INT >= 34) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else 0)
         } catch (_: Exception) {
-            _status.value = R.string.connection_automation_error
+            _status.value = Res.string.connection_automation_error
             stopSelf()
             return START_NOT_STICKY
         }
@@ -159,8 +161,8 @@ class ConnectionReminderService : Service() {
         }
         // Bluetooth broadcasts originate from a privileged system app, not always the system UID.
         ContextCompat.registerReceiver(this, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
-        if (!permissionState) { updateStatus(R.string.connection_automation_permissions); return }
-        updateStatus(R.string.connection_automation_watching)
+        if (!permissionState) { updateStatus(Res.string.connection_automation_permissions); return }
+        updateStatus(Res.string.connection_automation_watching)
         if (value.wifi.isNotEmpty()) {
             initialNetworks += connectivity.allNetworks.filter { connectivity.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true }
             transitions.wifi(emptySet(), seed = true)
@@ -220,7 +222,7 @@ class ConnectionReminderService : Service() {
         if (unresolvedNetworks.isNotEmpty()) return
         val known = networks.values.none { it == null }
         transitions.wifi(if (known) networks.values.filterNotNull().toSet() else null, seed)
-        updateStatus(if (known) R.string.connection_automation_watching else R.string.connection_automation_wifi_unknown)
+        updateStatus(if (known) Res.string.connection_automation_watching else Res.string.connection_automation_wifi_unknown)
         changed()
     }
 
@@ -353,7 +355,7 @@ class ConnectionReminderService : Service() {
                     "action" to action, "accepted" to applied)
                 recording = withContext(Dispatchers.IO) { container.footprints.state() }
                 val failed = RecordingFailure.isFailure(RecordingService.status.value)
-                updateStatus(if (failed) RecordingService.status.value ?: R.string.connection_automation_auto_failed else R.string.connection_automation_watching)
+                updateStatus(if (failed) RecordingService.status.value ?: Res.string.connection_automation_auto_failed else Res.string.connection_automation_watching)
             }
         }
     }
@@ -366,11 +368,11 @@ class ConnectionReminderService : Service() {
         Intent(this, MainActivity::class.java).setAction(Intent.ACTION_VIEW).setData("moments://map".toUri()),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-    private fun watchNotification(message: Int) = NotificationCompat.Builder(this, WATCH_CHANNEL)
-        .setSmallIcon(R.drawable.ic_notification_connections).setContentTitle(getString(R.string.connection_automation_title))
-        .setContentText(getString(message)).setContentIntent(openMap()).setOngoing(true).setOnlyAlertOnce(true).build()
+    private fun watchNotification(message: StringResource) = NotificationCompat.Builder(this, WATCH_CHANNEL)
+        .setSmallIcon(R.drawable.ic_notification_connections).setContentTitle(textOf(Res.string.connection_automation_title))
+        .setContentText(textOf(message)).setContentIntent(openMap()).setOngoing(true).setOnlyAlertOnce(true).build()
 
-    private fun updateStatus(message: Int) {
+    private fun updateStatus(message: StringResource) {
         _status.value = message
         notifications.notify(WATCH_ID, watchNotification(message))
     }
@@ -405,7 +407,7 @@ class ConnectionReminderService : Service() {
         private const val WATCH_CHANNEL = "connection-watch"
         private const val WATCH_ID = 2301
         private var live: ConnectionReminderService? = null
-        private val _status = MutableStateFlow<Int?>(null)
+        private val _status = MutableStateFlow<StringResource?>(null)
         val status = _status.asStateFlow()
 
         internal fun companionEvent(context: Context, signal: ConnectionSignal, previous: Boolean?) {
@@ -438,7 +440,7 @@ class ConnectionReminderService : Service() {
                 val service = live
                 if (service == null) {
                     try { ContextCompat.startForegroundService(app, Intent(app, ConnectionReminderService::class.java).putExtra(EXTRA_APPLY, apply)) }
-                    catch (_: Exception) { _status.value = R.string.connection_automation_error }
+                    catch (_: Exception) { _status.value = Res.string.connection_automation_error }
                 } else service.post {
                     if (service.permissionState != app.connectionAutomationAllowed(rules)) service.configure(rules)
                     if (apply) service.applyNow()

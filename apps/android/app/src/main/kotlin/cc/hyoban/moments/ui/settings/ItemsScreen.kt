@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.res.*
+import org.jetbrains.compose.resources.StringResource
 import kotlinx.coroutines.CancellationException
 import android.util.Log
 import android.content.Context
@@ -24,10 +26,9 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
@@ -58,7 +59,7 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val settings = LocalSettings.current
     val context = LocalContext.current
-    SubPage(stringResource(R.string.items_title), onBack, Modifier.background(AppColors.page)) {
+    SubPage(stringResource(Res.string.items_title), onBack, Modifier.background(AppColors.page)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(
                 Modifier
@@ -70,8 +71,8 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
                     .padding(bottom = Space.xl),
             ) {
                 SegmentedGroup(
-                    stringResource(R.string.items_modules),
-                    stringResource(R.string.items_modules_note),
+                    stringResource(Res.string.items_modules),
+                    stringResource(Res.string.items_modules_note),
                     Module.entries.map { module ->
                         { shapes ->
                             val on = settings.isOn(module)
@@ -85,8 +86,8 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
                 val books = ledger.books.filter { !it.archived }
                 if (books.isNotEmpty() && settings.isOn(Module.LEDGER)) {
                     SegmentedGroup(
-                        stringResource(R.string.items_books),
-                        stringResource(R.string.items_book_note),
+                        stringResource(Res.string.items_books),
+                        stringResource(Res.string.items_book_note),
                         books.map { book ->
                             { shapes ->
                                 SwitchRow(
@@ -95,7 +96,7 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
                                     book.name,
                                     "book_public_${book.id}",
                                     shapes,
-                                    supporting = stringResource(R.string.items_book_public),
+                                    supporting = stringResource(Res.string.items_book_public),
                                 ) {
                                     scope.launch {
                                         container.ledger.saveBook(book.copy(visibility = if (book.visibility == "public") "private" else "public"))
@@ -106,13 +107,13 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
                     )
                 }
                 if (settings.isOn(Module.FOOTPRINTS)) SegmentedGroup(
-                    stringResource(R.string.items_tracks),
-                    stringResource(R.string.items_tracks_note),
+                    stringResource(Res.string.items_tracks),
+                    stringResource(Res.string.items_tracks_note),
                     listOf { _ ->
                         ListItem(
-                            headlineContent = { Text(stringResource(R.string.footprints_title)) },
+                            headlineContent = { Text(stringResource(Res.string.footprints_title)) },
                             leadingContent = { Icon(AppIcons.Footprints, contentDescription = null) },
-                            trailingContent = { Text(stringResource(R.string.items_track_shares, shares)) },
+                            trailingContent = { Text(stringResource(Res.string.items_track_shares, shares)) },
                             modifier = Modifier.testTag("items_tracks"),
                         )
                     },
@@ -123,14 +124,14 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
 }
 
 /** A module's name on the page: the app's own word for each. */
-fun moduleTitle(module: Module): Int = when (module) {
-    Module.FOOTPRINTS -> R.string.footprints_title
-    Module.LEDGER -> R.string.me_ledger
-    Module.THINGS -> R.string.me_things
-    Module.CAR -> R.string.car_title
-    Module.FOOD -> R.string.section_food
-    Module.CHECKIN -> R.string.module_checkin
-    Module.OCCASIONS -> R.string.occasions_title
+fun moduleTitle(module: Module): StringResource = when (module) {
+    Module.FOOTPRINTS -> Res.string.footprints_title
+    Module.LEDGER -> Res.string.me_ledger
+    Module.THINGS -> Res.string.me_things
+    Module.CAR -> Res.string.car_title
+    Module.FOOD -> Res.string.section_food
+    Module.CHECKIN -> Res.string.module_checkin
+    Module.OCCASIONS -> Res.string.occasions_title
 }
 
 /** A module's icon, the one its row on 我 or its part has. */

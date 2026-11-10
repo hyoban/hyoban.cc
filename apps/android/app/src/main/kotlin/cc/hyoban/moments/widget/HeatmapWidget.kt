@@ -1,5 +1,6 @@
 package cc.hyoban.moments.widget
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module
 import android.appwidget.AppWidgetManager
 import android.content.Context
@@ -29,7 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -224,26 +225,24 @@ private fun HeatCard(source: HeatSource, days: Map<LocalDate, Double>, today: Lo
     val shown = grid.cells.associate { it.date to (days[it.date] ?: 0.0) }
     val level = heatLevels(shown.values)
     val pictures = drawHeat(context, layout, level, shown)
-    val name = context.getString(
-        when (source) {
-            HeatSource.MOMENTS -> R.string.widget_heatmap_moments
-            HeatSource.SPENDING -> R.string.widget_heatmap_spending
-            HeatSource.FOOTPRINTS -> R.string.widget_heatmap_footprints
-        },
-    )
+    val name = when (source) {
+        HeatSource.MOMENTS -> context.getString(R.string.widget_heatmap_moments)
+        HeatSource.SPENDING -> textOf(Res.string.widget_heatmap_spending)
+        HeatSource.FOOTPRINTS -> textOf(Res.string.widget_heatmap_footprints)
+    }
     val range = when (layout.shape) {
-        HeatLayout.Shape.YEAR -> context.getString(R.string.widget_heatmap_year)
-        else -> ((grid.end.toEpochDay() - grid.start.toEpochDay()) / 7 + 1).toInt().let { context.resources.getQuantityString(R.plurals.widget_heatmap_weeks, it, it) }
+        HeatLayout.Shape.YEAR -> textOf(Res.string.widget_heatmap_year)
+        else -> ((grid.end.toEpochDay() - grid.start.toEpochDay()) / 7 + 1).toInt().let { pluralTextOf(Res.plurals.widget_heatmap_weeks, it, it) }
     }
     val amount = when (source) {
         HeatSource.FOOTPRINTS -> {
             val km = shown.values.sum() / 1000
             val format = NumberFormat.getNumberInstance().apply { maximumFractionDigits = if (km < 10) 1 else 0 }
-            context.getString(R.string.widget_heatmap_km, format.format(km))
+            textOf(Res.string.widget_heatmap_km, format.format(km))
         }
-        else -> shown.values.count { it > 0 }.let { context.resources.getQuantityString(R.plurals.widget_heatmap_days, it, it) }
+        else -> shown.values.count { it > 0 }.let { pluralTextOf(Res.plurals.widget_heatmap_days, it, it) }
     }
-    val summary = context.getString(R.string.widget_heatmap_summary, range, amount)
+    val summary = textOf(Res.string.widget_heatmap_summary, range, amount)
 
     val base = GlanceModifier.fillMaxSize().appWidgetBackground().cornerRadius(android.R.dimen.system_app_widget_background_radius)
         .background(GlanceTheme.colors.surface).clickable(open(source.link))
@@ -404,7 +403,7 @@ class HeatmapSettingsActivity : ComponentActivity() {
 @Composable
 private fun HeatmapSettings(chosen: HeatSource?, onBack: () -> Unit, onChoose: (HeatSource) -> Unit) {
     SubPage(
-        stringResource(R.string.widget_heatmap_name),
+        androidx.compose.ui.res.stringResource(R.string.widget_heatmap_name),
         onBack,
         Modifier.background(AppColors.page),
         close = true,
@@ -418,14 +417,14 @@ private fun HeatmapSettings(chosen: HeatSource?, onBack: () -> Unit, onChoose: (
                 .padding(bottom = Space.xl),
         ) {
             SegmentedGroup(
-                stringResource(R.string.widget_heatmap_show),
+                stringResource(Res.string.widget_heatmap_show),
                 null,
                 HeatSource.entries.map { source ->
                     { shapes ->
                         val (icon, title, supporting) = when (source) {
-                            HeatSource.MOMENTS -> Triple(AppIcons.Pen, R.string.widget_heatmap_moments, R.string.widget_heatmap_moments_note)
-                            HeatSource.SPENDING -> Triple(AppIcons.Receipt, R.string.widget_heatmap_spending, R.string.widget_heatmap_spending_note)
-                            HeatSource.FOOTPRINTS -> Triple(AppIcons.Footprints, R.string.widget_heatmap_footprints, R.string.widget_heatmap_footprints_note)
+                            HeatSource.MOMENTS -> Triple(AppIcons.Pen, androidx.compose.ui.res.stringResource(R.string.widget_heatmap_moments), stringResource(Res.string.widget_heatmap_moments_note))
+                            HeatSource.SPENDING -> Triple(AppIcons.Receipt, stringResource(Res.string.widget_heatmap_spending), stringResource(Res.string.widget_heatmap_spending_note))
+                            HeatSource.FOOTPRINTS -> Triple(AppIcons.Footprints, stringResource(Res.string.widget_heatmap_footprints), stringResource(Res.string.widget_heatmap_footprints_note))
                         }
                         val selected = source == chosen
                         SegmentedListItem(
@@ -433,13 +432,13 @@ private fun HeatmapSettings(chosen: HeatSource?, onBack: () -> Unit, onChoose: (
                             shapes = shapes,
                             colors = segmentColors(),
                             leadingContent = { Icon(icon, contentDescription = null) },
-                            supportingContent = { AppText(stringResource(supporting)) },
+                            supportingContent = { AppText(supporting) },
                             trailingContent = if (selected) ({ Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent) }) else null,
                             modifier = Modifier.semantics {
                                 role = Role.RadioButton
                                 this.selected = selected
                             }.testTag("heatmap_${source.key}"),
-                        ) { AppText(stringResource(title)) }
+                        ) { AppText(title) }
                     }
                 },
             )

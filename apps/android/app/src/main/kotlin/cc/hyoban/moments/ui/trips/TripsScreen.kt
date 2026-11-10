@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.res.*
 import androidx.compose.foundation.layout.Arrangement
 import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.foundation.layout.Column
@@ -22,12 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.TripRecord
@@ -65,7 +65,7 @@ fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, urls: Medi
 @Composable
 fun TripSubhead(trip: TripRecord, count: Int, places: Int? = null) {
     Text(
-        (listOf(tripSummary(trip, count)) + listOfNotNull(places?.let { pluralStringResource(R.plurals.count_places, it, it) })).joinToString(" "),
+        (listOf(tripSummary(trip, count)) + listOfNotNull(places?.let { pluralStringResource(Res.plurals.count_places, it, it) })).joinToString(" "),
         style = AppTheme.typography.body,
         color = tokens.tx2,
     )
@@ -77,8 +77,8 @@ fun tripSummary(trip: TripRecord, moments: Int? = null): String {
     val days = daysBetween(trip.start, trip.end)
     return listOfNotNull(
         formatRange(trip.start, trip.end),
-        pluralStringResource(R.plurals.count_days, days, days),
-        moments?.let { pluralStringResource(R.plurals.count_moments, it, it) },
+        pluralStringResource(Res.plurals.count_days, days, days),
+        moments?.let { pluralStringResource(Res.plurals.count_moments, it, it) },
     ).joinToString(" ")
 }
 

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.res.*
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -19,12 +20,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringArrayResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.trips.TripDiscovery
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.LocalTopClearance
@@ -66,7 +66,7 @@ fun HomesScreen(container: AppContainer, onBack: () -> Unit) {
                 .orEmpty()
         }
     }
-    val provinces = stringArrayResource(R.array.province_codes).zip(stringArrayResource(R.array.province_names)).toMap()
+    val provinces = stringArrayResource(Res.array.province_codes).zip(stringArrayResource(Res.array.province_names)).toMap()
     val cities = remember(regions) { regions.orEmpty().filter { !it.fogged && it.name != null }.groupBy { it.id.take(2) } }
     // Null on the homes, empty choosing a province, else choosing among that province's cities.
     var picking by rememberSaveable { mutableStateOf<String?>(null) }
@@ -81,7 +81,7 @@ fun HomesScreen(container: AppContainer, onBack: () -> Unit) {
     }
 
     SubPage(
-        stringResource(if (picking == null) R.string.homes_title else R.string.homes_pick),
+        stringResource(if (picking == null) Res.string.homes_title else Res.string.homes_pick),
         onBack = { if (picking != null) back() else onBack() },
         modifier = Modifier.background(AppColors.page),
     ) {
@@ -98,20 +98,20 @@ fun HomesScreen(container: AppContainer, onBack: () -> Unit) {
                 when (val province = picking) {
                     null -> {
                         SegmentedGroup(
-                            stringResource(R.string.homes_found),
-                            stringResource(R.string.homes_found_group_note),
+                            stringResource(Res.string.homes_found),
+                            stringResource(Res.string.homes_found_group_note),
                             listOf { shapes ->
                                 HomeRow(
                                     AppIcons.Home,
-                                    found?.ifEmpty { stringResource(R.string.homes_found_none) } ?: "",
+                                    found?.ifEmpty { stringResource(Res.string.homes_found_none) } ?: "",
                                     shapes,
                                     tag = "home_found",
                                 )
                             },
                         )
                         SegmentedGroup(
-                            stringResource(R.string.homes_set),
-                            stringResource(R.string.homes_set_note),
+                            stringResource(Res.string.homes_set),
+                            stringResource(Res.string.homes_set_note),
                             settings.homes.sorted().map<String, Segment> { id ->
                                 { shapes ->
                                     val name = nameOf(id)
@@ -119,16 +119,16 @@ fun HomesScreen(container: AppContainer, onBack: () -> Unit) {
                                         if (id.length == 2) AppIcons.Map else AppIcons.Pin,
                                         name,
                                         shapes,
-                                        supporting = if (id.length == 2) stringResource(R.string.homes_whole) else provinces[id.take(2)],
+                                        supporting = if (id.length == 2) stringResource(Res.string.homes_whole) else provinces[id.take(2)],
                                         tag = "home_$id",
                                     ) {
                                         IconButton(onClick = { toggle(id) }, modifier = Modifier.testTag("home_remove_$id")) {
-                                            Icon(AppIcons.Close, contentDescription = stringResource(R.string.homes_remove, name), tint = tokens.tx2, modifier = Modifier.size(20.dp))
+                                            Icon(AppIcons.Close, contentDescription = stringResource(Res.string.homes_remove, name), tint = tokens.tx2, modifier = Modifier.size(20.dp))
                                         }
                                     }
                                 }
                             } + { shapes ->
-                                HomeRow(AppIcons.Plus, stringResource(R.string.homes_add), shapes, tag = "home_add", onClick = { picking = "" }) {
+                                HomeRow(AppIcons.Plus, stringResource(Res.string.homes_add), shapes, tag = "home_add", onClick = { picking = "" }) {
                                     Icon(AppIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp))
                                 }
                             },
@@ -156,7 +156,7 @@ fun HomesScreen(container: AppContainer, onBack: () -> Unit) {
                         provinces[province],
                         null,
                         listOf<Segment> { shapes ->
-                            HomeRow(AppIcons.Map, stringResource(R.string.homes_whole_of, provinces[province] ?: province), shapes, tag = "province_whole_$province", onClick = { toggle(province) }) {
+                            HomeRow(AppIcons.Map, stringResource(Res.string.homes_whole_of, provinces[province] ?: province), shapes, tag = "province_whole_$province", onClick = { toggle(province) }) {
                                 if (province in settings.homes) Check()
                             }
                         } + cities[province].orEmpty().sortedBy { it.id }.map<FogRegion, Segment> { city ->

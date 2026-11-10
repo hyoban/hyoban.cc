@@ -1,13 +1,13 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import cc.hyoban.moments.R
+import org.jetbrains.compose.resources.stringResource
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.SwitchRow
 import androidx.lifecycle.Lifecycle
@@ -25,10 +25,10 @@ internal fun ActivityRecognitionSettings() {
         arrayOf(Manifest.permission.ACTIVITY_RECOGNITION),
         cc.hyoban.moments.ui.components.PermissionWords(
             AppIcons.Walk,
-            stringResource(R.string.permission_activity_title),
-            stringResource(R.string.permission_activity_body),
-            stringResource(R.string.permission_not_now),
-            listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Phone, stringResource(R.string.permission_activity_fact))),
+            stringResource(Res.string.permission_activity_title),
+            stringResource(Res.string.permission_activity_body),
+            stringResource(Res.string.permission_not_now),
+            listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Phone, stringResource(Res.string.permission_activity_fact))),
         ),
     ) { granted ->
         permitted = granted
@@ -41,19 +41,19 @@ internal fun ActivityRecognitionSettings() {
         RecordingService.refreshActivityRecognition(context)
     }
     SegmentedGroup(
-        stringResource(R.string.footprints_activity_section),
-        stringResource(R.string.footprints_activity_note),
+        stringResource(Res.string.footprints_activity_section),
+        stringResource(Res.string.footprints_activity_note),
         listOf { shapes ->
             SwitchRow(
                 enabled,
                 AppIcons.Walk,
-                stringResource(R.string.footprints_activity_title),
+                stringResource(Res.string.footprints_activity_title),
                 "footprints_activity_enabled",
                 shapes,
                 supporting = stringResource(when {
-                    !available -> R.string.footprints_activity_unavailable
-                    !enabled -> R.string.footprints_activity_off
-                    !permitted -> R.string.footprints_activity_permission
+                    !available -> Res.string.footprints_activity_unavailable
+                    !enabled -> Res.string.footprints_activity_off
+                    !permitted -> Res.string.footprints_activity_permission
                     else -> status
                 }),
                 enabled = available || enabled,

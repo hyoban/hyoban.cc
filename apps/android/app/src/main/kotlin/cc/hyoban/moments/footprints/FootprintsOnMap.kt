@@ -1,5 +1,7 @@
 package cc.hyoban.moments.footprints
 
+import org.jetbrains.compose.resources.StringResource
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.components.openAppSettings
@@ -26,15 +28,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.SwitchRow
@@ -102,7 +103,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
     var view by remember { mutableStateOf(TrackView()) }
     var loaded by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
-    var error by rememberSaveable { mutableStateOf<Int?>(null) }
+    var error by remember { mutableStateOf<StringResource?>(null) }
     var deleting by remember { mutableStateOf<TrackSelection?>(null) }
     var exportDay by rememberSaveable { mutableStateOf<String?>(null) }
     var exportSession by rememberSaveable { mutableStateOf<String?>(null) }
@@ -114,7 +115,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             busy = true
             error = null
             try { block() } catch (e: CancellationException) { throw e } catch (_: Exception) {
-                error = R.string.footprints_error
+                error = Res.string.footprints_error
             } finally { busy = false }
         }
     }
@@ -132,7 +133,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             }
             loaded = true
         } catch (e: CancellationException) { throw e } catch (_: Exception) {
-            error = R.string.footprints_error
+            error = Res.string.footprints_error
         }
     }
     // A stay's name, by its start, from the phone's own places nearby; no request leaves for it.
@@ -162,7 +163,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             // A check-in already there over the stay, Swarm's or one kept before, is that visit,
             // whichever day it started on.
             val other = container.repository.checkins.value.overlapping(stay.start, stay.end).any { it.uid != entry.entryUid }
-            if (other) Toast.makeText(context, R.string.message_checkin_known, Toast.LENGTH_SHORT).show()
+            if (other) Toast.makeText(context, textOf(Res.string.message_checkin_known), Toast.LENGTH_SHORT).show()
             else {
                 container.repository.saveEntry(entry)
                 // The bills paid while there, with no place, may take this one.
@@ -187,12 +188,12 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
         requested,
         cc.hyoban.moments.ui.components.PermissionWords(
             AppIcons.Footprints,
-            stringResource(R.string.onboarding_footprints),
-            stringResource(R.string.onboarding_footprints_line),
-            stringResource(R.string.permission_not_now),
+            stringResource(Res.string.onboarding_footprints),
+            stringResource(Res.string.onboarding_footprints_line),
+            stringResource(Res.string.permission_not_now),
             listOf(
-                cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Shield, stringResource(R.string.onboarding_fp_local)),
-                cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Bell, stringResource(R.string.onboarding_fp_notification)),
+                cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Shield, stringResource(Res.string.onboarding_fp_local)),
+                cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Bell, stringResource(Res.string.onboarding_fp_notification)),
             ),
         ),
         isGranted = { RecordingService.hasPreciseLocation(it) },
@@ -206,7 +207,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                 prefs.edit().putBoolean("told_background", true).apply()
                 askBackground = true
             }
-        } else if (!granted) error = R.string.footprints_permission_needed
+        } else if (!granted) error = Res.string.footprints_permission_needed
     }
     fun enable(action: String) {
         pendingAction = action
@@ -214,13 +215,13 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
     }
     if (askBackground) cc.hyoban.moments.ui.design.PermissionSheet(
         icon = AppIcons.Footprints,
-        title = stringResource(R.string.permission_background_title),
-        body = stringResource(R.string.permission_background_body),
-        facts = listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Bell, stringResource(R.string.onboarding_fp_notification))),
-        path = stringResource(R.string.permission_background_path),
-        primary = stringResource(R.string.permission_open_settings),
+        title = stringResource(Res.string.permission_background_title),
+        body = stringResource(Res.string.permission_background_body),
+        facts = listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Bell, stringResource(Res.string.onboarding_fp_notification))),
+        path = stringResource(Res.string.permission_background_path),
+        primary = stringResource(Res.string.permission_open_settings),
         external = true,
-        secondary = stringResource(R.string.permission_background_secondary),
+        secondary = stringResource(Res.string.permission_background_secondary),
         onPrimary = { askBackground = false; context.openAppSettings() },
         onDismiss = { askBackground = false },
         tag = "permission_background",
@@ -245,7 +246,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
         recording = state.recording,
     ))
     // Paused, never started or stopped by an error, the row offers to resume; otherwise to pause.
-    val resumable = state.paused || status == null || status == R.string.footprints_permission_needed || status == R.string.footprints_error
+    val resumable = state.paused || status == null || status == Res.string.footprints_permission_needed || status == Res.string.footprints_error
     if (expanded) ModalBottomSheet(
         onDismissRequest = { expanded = false },
         containerColor = AppColors.sheet,
@@ -255,26 +256,26 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             // Its name, and the way to how it records, as the place sheet has its name and the way there.
             item {
                 Row(Modifier.fillMaxWidth().padding(start = Space.gutter + Space.l, end = Space.gutter), verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.footprints_title), Modifier.weight(1f).semantics { heading() }, style = AppTheme.typography.title)
+                    Text(stringResource(Res.string.footprints_title), Modifier.weight(1f).semantics { heading() }, style = AppTheme.typography.title)
                     IconButton(onClick = { expanded = false; reopen = true; onSettings() }, modifier = Modifier.testTag("footprint_settings")) {
-                        Icon(AppIcons.Settings, contentDescription = stringResource(R.string.footprint_settings_title))
+                        Icon(AppIcons.Settings, contentDescription = stringResource(Res.string.footprint_settings_title))
                     }
                 }
             }
             item {
                 SegmentedGroup(
-                    stringResource(R.string.footprints_section_recording),
-                    error?.let { stringResource(it) } ?: stringResource(R.string.footprints_local_note),
+                    stringResource(Res.string.footprints_section_recording),
+                    error?.let { stringResource(it) } ?: stringResource(Res.string.footprints_local_note),
                     listOfNotNull(
                         { shapes ->
-                            SwitchRow(state.daily, AppIcons.Refresh, stringResource(R.string.footprints_daily), "footprints_daily", shapes,
-                                supporting = stringResource(R.string.footprints_daily_note), enabled = loaded && !busy) {
+                            SwitchRow(state.daily, AppIcons.Refresh, stringResource(Res.string.footprints_daily), "footprints_daily", shapes,
+                                supporting = stringResource(Res.string.footprints_daily_note), enabled = loaded && !busy) {
                                 if (!state.daily) enable("daily_on") else control("daily_off")
                             }
                         },
                         { shapes ->
-                            SwitchRow(state.session != null, AppIcons.Flag, stringResource(R.string.footprints_trip), "footprints_trip", shapes,
-                                supporting = stringResource(if (state.session != null) R.string.footprints_trip_note else R.string.footprints_trip_off_note),
+                            SwitchRow(state.session != null, AppIcons.Flag, stringResource(Res.string.footprints_trip), "footprints_trip", shapes,
+                                supporting = stringResource(if (state.session != null) Res.string.footprints_trip_note else Res.string.footprints_trip_off_note),
                                 enabled = loaded && !busy) {
                                 if (state.session == null) enable("start_trip") else control("end_trip")
                             }
@@ -282,15 +283,15 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                         if (state.requested) { shapes ->
                             ActionRow(
                                 if (resumable) AppIcons.Play else AppIcons.Pause,
-                                stringResource(if (resumable) R.string.footprints_resume else R.string.footprints_pause),
+                                stringResource(if (resumable) Res.string.footprints_resume else Res.string.footprints_pause),
                                 shapes,
-                                supporting = stringResource(if (state.paused) R.string.footprints_paused else status ?: R.string.footprints_interrupted),
+                                supporting = stringResource(if (state.paused) Res.string.footprints_paused else status ?: Res.string.footprints_interrupted),
                                 tag = "footprints_pause",
                                 enabled = !busy,
                             ) { if (resumable) enable("resume") else control("pause") }
                         } else null,
                         { shapes ->
-                            SwitchRow(showTracks, AppIcons.Layers, stringResource(R.string.footprints_show), "footprints_layer", shapes) {
+                            SwitchRow(showTracks, AppIcons.Layers, stringResource(Res.string.footprints_show), "footprints_layer", shapes) {
                                 showTracks = !showTracks
                             }
                         },
@@ -300,8 +301,8 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
             item {
                 val selectedTrip = view.history.sessions.firstOrNull { it.id == session }
                 SegmentedGroup(
-                    stringResource(R.string.footprints_section_tracks),
-                    stringResource(R.string.footprints_quality_note),
+                    stringResource(Res.string.footprints_section_tracks),
+                    stringResource(Res.string.footprints_quality_note),
                     listOf(
                         { shapes ->
                             // What is chosen, and a tap shows the whole of it on the map.
@@ -312,21 +313,21 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                                 colors = segmentColors(),
                                 leadingContent = { Icon(if (selectedTrip == null) AppIcons.Calendar else AppIcons.Flag, contentDescription = null) },
                                 supportingContent = {
-                                    Text(if (view.points.isEmpty()) stringResource(R.string.footprints_empty) else listOfNotNull(
-                                        stringResource(R.string.footprints_stats, view.stats.metres / 1000, pluralStringResource(R.plurals.footprints_points, view.points.size, view.points.size), view.stats.recordedMillis / 60_000),
-                                        view.points.lastOrNull()?.let { stringResource(R.string.footprints_last_fix, stamp(it.time)) },
+                                    Text(if (view.points.isEmpty()) stringResource(Res.string.footprints_empty) else listOfNotNull(
+                                        stringResource(Res.string.footprints_stats, decimals(view.stats.metres / 1000, 2), pluralStringResource(Res.plurals.footprints_points, view.points.size, view.points.size), view.stats.recordedMillis / 60_000),
+                                        view.points.lastOrNull()?.let { stringResource(Res.string.footprints_last_fix, stamp(it.time)) },
                                     ).joinToString("\n"))
                                 },
                                 trailingContent = if (view.points.isNotEmpty()) {
-                                    { Icon(AppIcons.Fit, contentDescription = stringResource(R.string.footprints_frame)) }
+                                    { Icon(AppIcons.Fit, contentDescription = stringResource(Res.string.footprints_frame)) }
                                 } else null,
                                 modifier = Modifier.testTag("footprints_frame"),
                             ) {
-                                Text(if (selectedTrip == null) day else stamp(selectedTrip.started) + " – " + (selectedTrip.ended?.let(::stamp) ?: stringResource(R.string.footprints_active_trip)))
+                                Text(if (selectedTrip == null) day else stamp(selectedTrip.started) + " – " + (selectedTrip.ended?.let(::stamp) ?: stringResource(Res.string.footprints_active_trip)))
                             }
                         },
                         { shapes ->
-                            ActionRow(AppIcons.Download, stringResource(R.string.footprints_export), shapes,
+                            ActionRow(AppIcons.Download, stringResource(Res.string.footprints_export), shapes,
                                 enabled = loaded && !busy && view.points.isNotEmpty()) {
                                 exportDay = selection.day
                                 exportSession = selection.session
@@ -335,7 +336,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                             }
                         },
                         { shapes ->
-                            ActionRow(AppIcons.Download, stringResource(R.string.footprints_export_all), shapes,
+                            ActionRow(AppIcons.Download, stringResource(Res.string.footprints_export_all), shapes,
                                 enabled = loaded && !busy && view.history.days.isNotEmpty()) {
                                 exportDay = null
                                 exportSession = null
@@ -344,8 +345,8 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                             }
                         },
                         { shapes ->
-                            ActionRow(AppIcons.Download, stringResource(R.string.footprints_export_raw), shapes,
-                                supporting = stringResource(R.string.footprints_export_raw_note),
+                            ActionRow(AppIcons.Download, stringResource(Res.string.footprints_export_raw), shapes,
+                                supporting = stringResource(Res.string.footprints_export_raw_note),
                                 enabled = loaded && !busy && (selection.day in view.history.days || session != null)) {
                                 exportDay = selection.day
                                 exportSession = selection.session
@@ -355,8 +356,8 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                         },
                         { shapes ->
                             // Every sample in one file: what 导入's GPX row needs to bring all of it back.
-                            ActionRow(AppIcons.Download, stringResource(R.string.footprints_export_all_raw), shapes,
-                                supporting = stringResource(R.string.footprints_export_all_raw_note),
+                            ActionRow(AppIcons.Download, stringResource(Res.string.footprints_export_all_raw), shapes,
+                                supporting = stringResource(Res.string.footprints_export_all_raw_note),
                                 tag = "footprints_export_all_raw", enabled = loaded && !busy && view.history.days.isNotEmpty()) {
                                 exportDay = null
                                 exportSession = null
@@ -365,8 +366,8 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                             }
                         },
                         { shapes ->
-                            ActionRow(AppIcons.Trash, stringResource(R.string.footprints_delete), shapes,
-                                supporting = stringResource(R.string.footprints_delete_note),
+                            ActionRow(AppIcons.Trash, stringResource(Res.string.footprints_delete), shapes,
+                                supporting = stringResource(Res.string.footprints_delete_note),
                                 enabled = loaded && !busy && view.deletable && (selection.day in view.history.days || session != null)) {
                                 deleting = selection
                             }
@@ -387,7 +388,7 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                                 items(view.history.sessions, key = { it.id }) { trip ->
                                     FilterChip(selected = session == trip.id, onClick = { session = trip.id },
                                         leadingIcon = { Icon(if (session == trip.id) AppIcons.Check else AppIcons.Flag, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
-                                        label = { Text(stamp(trip.started) + if (trip.ended == null) " " + stringResource(R.string.footprints_active_trip) else "") })
+                                        label = { Text(stamp(trip.started) + if (trip.ended == null) " " + stringResource(Res.string.footprints_active_trip) else "") })
                                 }
                             }
                         }
@@ -398,26 +399,26 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                 // The day or trip told as moves and stays; a tap frames that part on the map.
                 val days = view.points.map { day(it.time) }.distinct().size > 1
                 SegmentedGroup(
-                    stringResource(R.string.footprints_section_parts),
+                    stringResource(Res.string.footprints_section_parts),
                     null,
                     view.parts.map<TrackPart, cc.hyoban.moments.ui.settings.Segment> { part ->
                         { shapes ->
                             val span = clock(part.start, days) + "–" + clock(part.end, days)
                             val (icon, title, supporting) = when (part) {
                                 is TrackStay -> Triple(AppIcons.Pin,
-                                    stringResource(R.string.footprints_stay) + " " + duration(part.end - part.start),
+                                    stringResource(Res.string.footprints_stay) + " " + duration(part.end - part.start),
                                     listOfNotNull(span, keptStays[part.start]?.venue ?: stayNames[part.start]).joinToString(" "))
                                 is TrackMove -> Triple(
                                     when (part.mode) { TravelMode.WALK -> AppIcons.Walk; TravelMode.CYCLE -> AppIcons.Bike; TravelMode.DRIVE -> AppIcons.Car },
                                     stringResource(when (part.mode) {
-                                        TravelMode.WALK -> R.string.footprints_mode_walk
-                                        TravelMode.CYCLE -> R.string.footprints_mode_cycle
-                                        TravelMode.DRIVE -> R.string.footprints_mode_drive
-                                    }) + " " + stringResource(R.string.footprints_part_km, part.metres / 1000),
+                                        TravelMode.WALK -> Res.string.footprints_mode_walk
+                                        TravelMode.CYCLE -> Res.string.footprints_mode_cycle
+                                        TravelMode.DRIVE -> Res.string.footprints_mode_drive
+                                    }) + " " + stringResource(Res.string.footprints_part_km, decimals(part.metres / 1000, 1)),
                                     listOfNotNull(span, part.averageSpeed?.let { average ->
                                         val top = part.topSpeed
-                                        if (top != null) stringResource(R.string.footprints_speeds, kmh(average), kmh(top))
-                                        else stringResource(R.string.footprints_speed_average, kmh(average))
+                                        if (top != null) stringResource(Res.string.footprints_speeds, kmh(average), kmh(top))
+                                        else stringResource(Res.string.footprints_speed_average, kmh(average))
                                     }).joinToString("\n"))
                             }
                             SegmentedListItem(
@@ -428,14 +429,14 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                                 supportingContent = { Text(supporting) },
                                 trailingContent = {
                                     if (part is TrackStay && part.start in keptStays) {
-                                        Icon(AppIcons.Flag, contentDescription = stringResource(R.string.footprints_stay_kept), tint = tokens.tx3,
+                                        Icon(AppIcons.Flag, contentDescription = stringResource(Res.string.footprints_stay_kept), tint = tokens.tx3,
                                             modifier = Modifier.minimumInteractiveComponentSize().testTag("footprints_stay_kept_${part.start}"))
                                     } else if (part is TrackStay) {
                                         IconButton(onClick = { keep(part) }, modifier = Modifier.testTag("footprints_save_place_${part.start}")) {
-                                            Icon(AppIcons.Plus, contentDescription = stringResource(R.string.share_save_place))
+                                            Icon(AppIcons.Plus, contentDescription = stringResource(Res.string.share_save_place))
                                         }
                                     } else {
-                                        Icon(AppIcons.Fit, contentDescription = stringResource(R.string.footprints_frame_part))
+                                        Icon(AppIcons.Fit, contentDescription = stringResource(Res.string.footprints_frame_part))
                                     }
                                 },
                                 modifier = Modifier.testTag("footprints_part_${part.start}"),
@@ -459,17 +460,17 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
                         LocalDate.parse(day).plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1
                 }
                 SegmentedGroup(
-                    stringResource(R.string.footprints_public_spans),
-                    stringResource(R.string.items_tracks_note),
+                    stringResource(Res.string.footprints_public_spans),
+                    stringResource(Res.string.items_tracks_note),
                     shares.map<TrackShare, cc.hyoban.moments.ui.settings.Segment> { share ->
                         { shapes ->
                             SwitchRow(true, AppIcons.Eye, stamp(share.start) + " – " + stamp(share.end), "share_${share.uid}", shapes,
-                                supporting = stringResource(if (share.collection != null) R.string.footprints_span_trip else R.string.footprints_span_manual)) {
+                                supporting = stringResource(if (share.collection != null) Res.string.footprints_span_trip else Res.string.footprints_span_manual)) {
                                 work { withContext(Dispatchers.IO) { store.removeShare(share.uid) } }
                             }
                         }
                     } + listOf<cc.hyoban.moments.ui.settings.Segment> { shapes ->
-                        ActionRow(AppIcons.Plus, stringResource(R.string.footprints_make_public), shapes,
+                        ActionRow(AppIcons.Plus, stringResource(Res.string.footprints_make_public), shapes,
                             supporting = stamp(span.first) + " – " + stamp(span.second),
                             tag = "footprints_make_public",
                             enabled = loaded && !busy && view.points.isNotEmpty() && shares.none { it.start == span.first && it.end == span.second }) {
@@ -487,16 +488,16 @@ fun FootprintsOnMap(container: AppContainer, onSettings: () -> Unit, content: @C
     deleting?.let { target ->
         AlertDialog(
             onDismissRequest = { deleting = null },
-            title = { Text(stringResource(R.string.footprints_delete)) },
-            text = { Text(stringResource(R.string.footprints_delete_confirm)) },
+            title = { Text(stringResource(Res.string.footprints_delete)) },
+            text = { Text(stringResource(Res.string.footprints_delete_confirm)) },
             confirmButton = { TextButton(onClick = {
                 deleting = null
                 work {
                     withContext(Dispatchers.IO) { store.delete(target) }
                     if (target.session != null) session = null
                 }
-            }) { Text(stringResource(R.string.footprints_delete)) } },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.footprints_cancel)) } },
+            }) { Text(stringResource(Res.string.footprints_delete)) } },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(Res.string.footprints_cancel)) } },
         )
     }
 }
@@ -515,8 +516,8 @@ private fun kmh(metresPerSecond: Double) = (metresPerSecond * 3.6).roundToInt()
 @Composable
 private fun duration(millis: Long): String {
     val minutes = (millis / 60_000).toInt()
-    return if (minutes < 60) stringResource(R.string.footprints_minutes, minutes)
-    else stringResource(R.string.footprints_hours_minutes, minutes / 60, minutes % 60)
+    return if (minutes < 60) stringResource(Res.string.footprints_minutes, minutes)
+    else stringResource(Res.string.footprints_hours_minutes, minutes / 60, minutes % 60)
 }
 
 private fun stamp(time: Long): String = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,9 +25,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringArrayResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -121,53 +122,53 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
         if (pending.size > 0 && container.canPublish) PublishCard(pending.size, routes.changes)
         // A row for each module that is on (记录项与公开); the things' row names what of it is.
         val things = listOfNotNull(
-            stringResource(R.string.devices_title).takeIf { settings.isOn(Module.THINGS) },
-            stringResource(R.string.subscriptions_title).takeIf { settings.isOn(Module.THINGS) },
+            stringResource(Res.string.devices_title).takeIf { settings.isOn(Module.THINGS) },
+            stringResource(Res.string.subscriptions_title).takeIf { settings.isOn(Module.THINGS) },
             // The car's data comes only from an import into the API, so without one there is none.
-            stringResource(R.string.car_title).takeIf { connected && settings.isOn(Module.CAR) },
+            stringResource(Res.string.car_title).takeIf { connected && settings.isOn(Module.CAR) },
         )
         PageRows(Modifier.padding(top = Space.s)) { shapes ->
             if (settings.isOn(Module.LEDGER)) MeRow(
-                AppIcons.Wallet, stringResource(R.string.me_ledger), "me_ledger", shapes,
-                supporting = month?.let { (expense, currency) -> stringResource(R.string.me_month_expense) + APART + money(expense, currency) },
+                AppIcons.Wallet, stringResource(Res.string.me_ledger), "me_ledger", shapes,
+                supporting = month?.let { (expense, currency) -> stringResource(Res.string.me_month_expense) + APART + money(expense, currency) },
             ) { routes.ledger(0) }
             if (settings.isOn(Module.FOOTPRINTS)) MeRow(
-                AppIcons.Footprints, stringResource(R.string.footprints_title), "me_footprints", shapes,
-                supporting = stringResource(R.string.me_footprints_recording).takeIf { footprints.second },
+                AppIcons.Footprints, stringResource(Res.string.footprints_title), "me_footprints", shapes,
+                supporting = stringResource(Res.string.me_footprints_recording).takeIf { footprints.second },
                 onClick = routes.footprints,
             )
             if (things.isNotEmpty()) MeRow(
-                AppIcons.Package, stringResource(R.string.me_things), "me_things", shapes,
-                supporting = things.joinToString(stringResource(R.string.separator_list)),
+                AppIcons.Package, stringResource(Res.string.me_things), "me_things", shapes,
+                supporting = things.joinToString(stringResource(Res.string.separator_list)),
                 onClick = routes.things,
             )
             if (settings.isOn(Module.OCCASIONS)) MeRow(
-                AppIcons.Calendar, stringResource(R.string.occasions_title), "me_occasions", shapes,
+                AppIcons.Calendar, stringResource(Res.string.occasions_title), "me_occasions", shapes,
                 supporting = cc.hyoban.moments.ui.occasions.nextOccasionSummary(container),
                 onClick = routes.occasions,
             )
         }
     }
     val second: @Composable () -> Unit = {
-        PageCaption(stringResource(R.string.me_settings))
+        PageCaption(stringResource(Res.string.me_settings))
         PageRows { shapes ->
             MeRow(
-                AppIcons.Eye, stringResource(R.string.me_items), "settings_items", shapes,
-                supporting = stringResource(R.string.me_items_public, books.count { it.visibility == "public" }, footprints.first),
+                AppIcons.Eye, stringResource(Res.string.me_items), "settings_items", shapes,
+                supporting = stringResource(Res.string.me_items_public, books.count { it.visibility == "public" }, footprints.first),
                 onClick = routes.items,
             )
             MeRow(
-                AppIcons.Home, stringResource(R.string.homes_title), "settings_homes", shapes,
+                AppIcons.Home, stringResource(Res.string.homes_title), "settings_homes", shapes,
                 supporting = homesSummary(container),
                 onClick = routes.homes,
             )
             MeRow(
-                AppIcons.CloudSync, stringResource(R.string.sync_title), "settings_sync", shapes,
+                AppIcons.CloudSync, stringResource(Res.string.sync_title), "settings_sync", shapes,
                 supporting = stringResource(
                     when {
-                        !container.settings.apiUrl.isSet -> R.string.me_sync_no_api
-                        container.settings.apiToken.isSet -> R.string.me_sync_token_set
-                        else -> R.string.me_sync_token_unset
+                        !container.settings.apiUrl.isSet -> Res.string.me_sync_no_api
+                        container.settings.apiToken.isSet -> Res.string.me_sync_token_set
+                        else -> Res.string.me_sync_token_unset
                     },
                 ),
                 onClick = routes.sync,
@@ -175,20 +176,20 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
             // The sources of the modules that are on; with none, nothing to import into.
             val sources = importSources()
             if (sources.isNotEmpty()) MeRow(
-                AppIcons.FileOpen, stringResource(R.string.import_title), "settings_import", shapes,
-                supporting = sources.joinToString(stringResource(R.string.separator_list)),
+                AppIcons.FileOpen, stringResource(Res.string.import_title), "settings_import", shapes,
+                supporting = sources.joinToString(stringResource(Res.string.separator_list)),
                 onClick = routes.imports,
             )
             // On the phones that can keep a camera's location going in the background.
             if (cameraSupported) MeRow(
-                AppIcons.CameraBody, stringResource(R.string.camera_title), "settings_camera", shapes,
-                supporting = camera?.let { listOfNotNull(it.name, stringResource(R.string.me_camera_sending).takeIf { cameraStatus.sending }).joinToString(" · ") }
-                    ?: stringResource(R.string.me_camera_unpaired),
+                AppIcons.CameraBody, stringResource(Res.string.camera_title), "settings_camera", shapes,
+                supporting = camera?.let { listOfNotNull(it.name, stringResource(Res.string.me_camera_sending).takeIf { cameraStatus.sending }).joinToString(" · ") }
+                    ?: stringResource(Res.string.me_camera_unpaired),
                 onClick = routes.camera,
             )
             // Only on the phone whose key it is.
             if (SideKeys.supported) MeRow(
-                AppIcons.Phone, stringResource(R.string.side_key_title), "settings_sidekey", shapes,
+                AppIcons.Phone, stringResource(Res.string.side_key_title), "settings_sidekey", shapes,
                 supporting = stringResource(sideKey.phase.label),
                 onClick = routes.sideKey,
             )
@@ -196,7 +197,7 @@ fun MeScreen(container: AppContainer, routes: MeRoutes) {
         Credits()
     }
     // Demo mode at the top, where it is there with or without a ledger.
-    TabPage(stringResource(R.string.tab_me), tab = Preferences, actions = { DemoButton() }) {
+    TabPage(stringResource(Res.string.tab_me), tab = Preferences, actions = { DemoButton() }) {
         PageWidth(maxColumns = if (sideways) 2 else 1) { columns ->
             Column(
                 Modifier
@@ -239,12 +240,12 @@ private fun PublishCard(count: Int, onChanges: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
         Text(
-            pluralStringResource(R.plurals.count_changes, count, count),
+            pluralStringResource(Res.plurals.count_changes, count, count),
             style = AppTheme.typography.body.strong,
             modifier = Modifier.semantics { heading() },
         )
         Button(onClick = onChanges, modifier = Modifier.padding(top = Space.m).testTag("review_publish")) {
-            Text(stringResource(R.string.action_review_publish))
+            Text(stringResource(Res.string.action_review_publish))
         }
     }
 }
@@ -267,13 +268,13 @@ private fun MeRow(icon: ImageVector, title: String, tag: String, shapes: ListIte
 @Composable
 private fun homesSummary(container: AppContainer): String {
     val homes = container.settings.homes
-    val provinces = stringArrayResource(R.array.province_codes).zip(stringArrayResource(R.array.province_names)).toMap()
+    val provinces = stringArrayResource(Res.array.province_codes).zip(stringArrayResource(Res.array.province_names)).toMap()
     val cities by produceState<List<cc.hyoban.moments.ui.map.FogRegion>?>(null, homes) { if (homes.any { it.length > 2 }) value = container.cityRegions() }
-    if (homes.isEmpty()) return stringResource(R.string.homes_found_note)
+    if (homes.isEmpty()) return stringResource(Res.string.homes_found_note)
     val names = homes.sorted().map { id ->
         if (id.length == 2) provinces[id] ?: id else cities?.firstOrNull { it.id == id }?.name?.let(cc.hyoban.moments.data.trips.TripDiscovery::shortCity) ?: ""
     }.filter { it.isNotEmpty() }
-    return stringResource(R.string.me_homes_some, names.joinToString(stringResource(R.string.separator_list)))
+    return stringResource(Res.string.me_homes_some, names.joinToString(stringResource(Res.string.separator_list)))
 }
 
 /** The app and its version at the foot of the page, and 馒头, the cat the icon is drawn from. */
@@ -286,7 +287,7 @@ private fun Credits() {
     ) {
         Image(painterResource(R.drawable.mantou), contentDescription = null, Modifier.size(20.dp).clip(CircleShape))
         Text(
-            stringResource(R.string.me_footer, stringResource(R.string.app_name), BuildConfig.VERSION_NAME),
+            stringResource(Res.string.me_footer, androidx.compose.ui.res.stringResource(R.string.app_name), BuildConfig.VERSION_NAME),
             style = AppTheme.typography.caption,
             color = tokens.tx3,
         )

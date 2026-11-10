@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.theme.cardBorder
 import cc.hyoban.moments.ui.theme.tokens
@@ -50,7 +51,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -64,7 +65,6 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.weekdayLetters
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
@@ -134,7 +134,7 @@ fun ChartCard(
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                     )
                 }
-                if (onOpen != null) TextButton(onClick = onOpen) { Text(stringResource(R.string.ledger_open_bills)) }
+                if (onOpen != null) TextButton(onClick = onOpen) { Text(stringResource(Res.string.ledger_open_bills)) }
             }
             Column(Modifier.padding(end = Space.s)) {
                 if (legend.isNotEmpty()) {

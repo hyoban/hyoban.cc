@@ -1,5 +1,6 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.res.*
 import android.Manifest
 import android.app.ActivityManager
 import android.content.Intent
@@ -11,7 +12,6 @@ import android.os.ParcelFileDescriptor
 import android.os.SystemClock
 import androidx.test.platform.app.InstrumentationRegistry
 import cc.hyoban.moments.MomentsApplication
-import cc.hyoban.moments.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.*
@@ -64,14 +64,14 @@ class RecordingRecoveryTest {
             RecordingService.activityTransition(app, ActivityMotion(SystemClock.elapsedRealtimeNanos(), true, 7))
         }
         waitUntil { running() && RecordingService.status.value in listOf(
-            R.string.footprints_waiting, R.string.footprints_recording, R.string.footprints_resting) }
+            Res.string.footprints_waiting, Res.string.footprints_recording, Res.string.footprints_resting) }
         assertEquals(state, store.state())
         stopService()
         runBlocking(Dispatchers.Main) { ActivityTransitions.sync(app) }
-        assertEquals(R.string.footprints_activity_active, ActivityTransitions.status.value)
+        assertEquals(Res.string.footprints_activity_active, ActivityTransitions.status.value)
         runBlocking(Dispatchers.Main) { RecordingService.control(app, "pause") }
         runBlocking(Dispatchers.Main) { ActivityTransitions.sync(app) }
-        assertEquals(R.string.footprints_activity_ready, ActivityTransitions.status.value)
+        assertEquals(Res.string.footprints_activity_ready, ActivityTransitions.status.value)
     }
 
     @Test fun movementDoesNotRestartAManuallyPausedRecorder() {
@@ -105,7 +105,7 @@ class RecordingRecoveryTest {
             manager.setTestProviderEnabled(LocationManager.GPS_PROVIDER, true)
             app.getSharedPreferences("footprint-activity", 0).edit().putBoolean("enabled", false).commit()
             runBlocking(Dispatchers.Main) { RecordingService.control(app) }
-            waitUntil { RecordingService.status.value == R.string.footprints_waiting }
+            waitUntil { RecordingService.status.value == Res.string.footprints_waiting }
             fun fix(accuracy: Float) = manager.setTestProviderLocation(LocationManager.GPS_PROVIDER,
                 Location(LocationManager.GPS_PROVIDER).apply {
                     latitude = 37.422; longitude = -122.084; this.accuracy = accuracy

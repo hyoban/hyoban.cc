@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.res.*
 import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.safeDrawing
@@ -118,8 +119,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
@@ -133,7 +134,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.R
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.TripRecord
@@ -248,7 +248,7 @@ fun TripPlayerScreen(container: AppContainer, id: String, onMoment: (String) -> 
             is PlaybackSlide.Day -> slide.places.firstOrNull()
             else -> null
         }
-        val routeMap = if (here != null) stringResource(R.string.playback_map_at, trip.title, here) else stringResource(R.string.playback_map, trip.title)
+        val routeMap = if (here != null) stringResource(Res.string.playback_map_at, trip.title, here) else stringResource(Res.string.playback_map, trip.title)
         // On its side, the map's credit stands in the open map beside the card, never under it.
         val credit = if (landscape) {
             with(density) {
@@ -404,8 +404,8 @@ private fun PlayerCard(
         val progressRow: @Composable () -> Unit = {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) { Row(Modifier.padding(horizontal = Space.xs), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
                 // Named, with which card it is on, as the count beside it says to the eye.
-                val label = stringResource(R.string.playback_progress, trip.title)
-                val position = stringResource(R.string.playback_card_of, index + 1, count)
+                val label = stringResource(Res.string.playback_progress, trip.title)
+                val position = stringResource(Res.string.playback_card_of, index + 1, count)
                 LinearProgressIndicator(
                     progress = progress,
                     color = tokens.tx,
@@ -496,7 +496,7 @@ private fun PlayerCard(
             if (back != null) {
                 Row(Modifier.padding(start = Space.xs, end = Space.m, top = Space.xs), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
                     IconButton(onClick = back, modifier = Modifier.testTag("back")) {
-                        Icon(AppIcons.ArrowLeft, contentDescription = stringResource(R.string.action_back))
+                        Icon(AppIcons.ArrowLeft, contentDescription = stringResource(Res.string.action_back))
                     }
                     Box(Modifier.weight(1f)) { progressRow() }
                 }
@@ -560,7 +560,7 @@ private fun IntroCard(trip: TripRecord, playback: TripPlayback, covers: List<Mom
 @Composable
 private fun DayCard(slide: PlaybackSlide.Day) {
     Column(Modifier.padding(horizontal = Space.xs, vertical = Space.xs)) {
-        Text(stringResource(R.string.trip_day, slide.day), style = AppTheme.typography.label, color = tokens.tx2)
+        Text(stringResource(Res.string.trip_day, slide.day), style = AppTheme.typography.label, color = tokens.tx2)
         Text(formatDay(slide.dateKey), style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
         if (slide.places.isNotEmpty()) {
             Text(slide.places.joinToString(" → "), style = AppTheme.typography.body, color = tokens.tx2)
@@ -583,11 +583,11 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
     val photos = stop.photos
     val photo by remember(controller, slide) { derivedStateOf { controller.photo() } }
     val heading = listOfNotNull(
-        stringResource(R.string.trip_day, stop.day),
+        stringResource(Res.string.trip_day, stop.day),
         formatDay(moment.dateKey),
         formatTime(moment.occurredAt),
     ).joinToString(" ") + " " + stop.places.joinToString("、") { it.name }
-    val open = stringResource(R.string.action_open_moment)
+    val open = stringResource(Res.string.action_open_moment)
     Column(
         // Filling the card's height, its photos take what its words leave.
         Modifier.fillMaxWidth().then(if (fill) Modifier.fillMaxHeight() else Modifier).semantics {
@@ -609,8 +609,8 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
                     if (!scrolling && state.firstVisibleItemIndex != controller.photo()) controller.selectPhoto(state.firstVisibleItemIndex)
                 }
             }
-            val view = stringResource(R.string.action_view_photo)
-            val clause = stringResource(R.string.separator_clause)
+            val view = stringResource(Res.string.action_view_photo)
+            val clause = stringResource(Res.string.separator_clause)
             BoxWithConstraints(Modifier.fillMaxWidth().then(if (fill) Modifier.weight(1f) else Modifier.height(photoHeight))) {
                 val width = if (photos.size == 1) maxWidth else maxWidth - PEEK - Space.s
                 LazyRow(
@@ -620,7 +620,7 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
                     flingBehavior = rememberSnapFlingBehavior(state),
                 ) {
                     items(photos.size) { n ->
-                        val label = stringResource(R.string.media_position, stringResource(photos[n].kindLabel()), n + 1, photos.size)
+                        val label = stringResource(Res.string.media_position, stringResource(photos[n].kindLabel()), n + 1, photos.size)
                         MediaStill(
                             photos[n],
                             urls,
@@ -657,7 +657,7 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
                         }
                         .combinedClickable(
                             onClickLabel = open,
-                            onLongClickLabel = stringResource(R.string.action_more),
+                            onLongClickLabel = stringResource(Res.string.action_more),
                             onLongClick = { menu = with(density) { DpOffset(down[0].toDp(), down[1].toDp()) } },
                         ) { onMoment(moment.uid) }
                         .padding(horizontal = Space.xs),
@@ -681,18 +681,18 @@ private val PEEK = 56.dp
 private fun SummaryCard(trip: TripRecord, playback: TripPlayback, covers: List<MomentMedia>, urls: MediaUrls, expanded: Boolean, fill: Boolean) {
     Column(Modifier.padding(horizontal = Space.xs).then(if (fill) Modifier.fillMaxHeight() else Modifier), verticalArrangement = Arrangement.spacedBy(Space.m)) {
         Column {
-            Text(stringResource(R.string.playback_look_back), style = AppTheme.typography.label, color = tokens.accent)
+            Text(stringResource(Res.string.playback_look_back), style = AppTheme.typography.label, color = tokens.accent)
             Text(trip.title, style = AppTheme.typography.titlePage, modifier = Modifier.semantics { heading() })
         }
         val days = cc.hyoban.moments.ui.format.daysBetween(trip.start, trip.end)
         val km = remember(playback) { playback.route.drivenKm() }.roundToInt()
         // The driving ones only when there was driving, as the site's.
         val stats = listOfNotNull(
-            days to R.plurals.unit_days,
-            playback.stops.size to R.plurals.unit_moments,
-            playback.points.distinctBy { it.id }.size to R.plurals.unit_places,
-            playback.stops.sumOf { it.photos.size } to R.plurals.unit_photos,
-            (km to R.plurals.unit_km_driven).takeIf { km > 0 },
+            days to Res.plurals.unit_days,
+            playback.stops.size to Res.plurals.unit_moments,
+            playback.points.distinctBy { it.id }.size to Res.plurals.unit_places,
+            playback.stops.sumOf { it.photos.size } to Res.plurals.unit_photos,
+            (km to Res.plurals.unit_km_driven).takeIf { km > 0 },
         )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.xl), verticalArrangement = Arrangement.spacedBy(Space.m)) {
             stats.forEach { (value, unit) -> Tile(value, pluralStringResource(unit, value)) }
@@ -744,14 +744,14 @@ private fun PlayerToolbar(
     FloatingBar(modifier) {
         // Back, play and on, side by side; play the ink, the one main action.
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
-            val previous = stringResource(R.string.action_previous_stop)
+            val previous = stringResource(Res.string.action_previous_stop)
             Tooltip(previous) {
                 IconButton(onClick = onPrevious, enabled = !first, modifier = Modifier.testTag("player_previous")) {
                     Icon(AppIcons.SkipBack, contentDescription = previous)
                 }
             }
             // At the look back, where playback ends, it plays the trip again.
-            val play = stringResource(if (atEnd && !playing) R.string.action_replay else if (playing) R.string.action_pause else R.string.action_play)
+            val play = stringResource(if (atEnd && !playing) Res.string.action_replay else if (playing) Res.string.action_pause else Res.string.action_play)
             Tooltip(play) {
                 FilledIconButton(
                     onClick = onPlay,
@@ -768,7 +768,7 @@ private fun PlayerToolbar(
                     }
                 }
             }
-            val next = stringResource(R.string.action_next_stop)
+            val next = stringResource(Res.string.action_next_stop)
             Tooltip(next) {
                 IconButton(onClick = onNext, enabled = !last, modifier = Modifier.testTag("player_next")) {
                     Icon(AppIcons.SkipNext, contentDescription = next)
@@ -785,7 +785,7 @@ private fun PlayerToolbar(
  */
 @Composable
 private fun DragHandle(expanded: Boolean, onExpanded: (Boolean) -> Unit) {
-    val action = stringResource(if (expanded) R.string.action_collapse_card else R.string.action_expand_card)
+    val action = stringResource(if (expanded) Res.string.action_collapse_card else Res.string.action_expand_card)
     Box(
         Modifier.fillMaxWidth().height(HANDLE_TARGET)
             .clickable(onClickLabel = action, role = Role.Button) { onExpanded(!expanded) }

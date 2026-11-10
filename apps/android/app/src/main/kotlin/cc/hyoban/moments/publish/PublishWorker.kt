@@ -1,5 +1,6 @@
 package cc.hyoban.moments.publish
 
+import cc.hyoban.moments.res.*
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -68,17 +69,17 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         try {
             container.runPublish { progress.value = it }
             container.reportPublished()
-            notifyResult(context, context.getString(R.string.notification_published), null)
+            notifyResult(context, textOf(Res.string.notification_published), null)
             Result.success()
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
             if (isNetwork(error) && runAttemptCount + 1 < TRIES) {
-                notifyResult(context, context.getString(R.string.notification_publish_waiting), null)
+                notifyResult(context, textOf(Res.string.notification_publish_waiting), null)
                 Result.retry()
             } else {
                 container.reportPublishFailed(error)
-                notifyResult(context, context.getString(R.string.notification_publish_failed), failureReason(context, error))
+                notifyResult(context, textOf(Res.string.notification_publish_failed), failureReason(context, error))
                 Result.failure()
             }
         } finally {
@@ -123,7 +124,7 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         private fun channel(context: Context): String {
             val manager = context.getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(
-                NotificationChannel(CHANNEL, context.getString(R.string.notification_channel_publishing), NotificationManager.IMPORTANCE_LOW),
+                NotificationChannel(CHANNEL, textOf(Res.string.notification_channel_publishing), NotificationManager.IMPORTANCE_LOW),
             )
             return CHANNEL
         }
@@ -139,11 +140,11 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         private fun foregroundInfo(context: Context, progress: PublishProgress?, cancel: PendingIntent): ForegroundInfo {
             val notification = NotificationCompat.Builder(context, channel(context))
                 .setSmallIcon(R.drawable.ic_notification_upload)
-                .setContentTitle(context.getString(R.string.notification_publishing))
+                .setContentTitle(textOf(Res.string.notification_publishing))
                 .setContentText(progress?.let { publishingText(context, it) })
                 .setProgress(PROGRESS_MAX, ((progress?.fraction ?: 0f) * PROGRESS_MAX).toInt(), progress == null)
                 .setContentIntent(openApp(context))
-                .addAction(0, context.getString(R.string.action_cancel_publish), cancel)
+                .addAction(0, textOf(Res.string.action_cancel_publish), cancel)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setSilent(true)
@@ -175,7 +176,7 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
 fun publishingText(context: Context, progress: PublishProgress): String =
     if (progress.size > 0 && progress.sent < progress.size) {
         // In MB, the unit once, so it fits the button on one line.
-        context.getString(R.string.message_uploading_progress, "%.1f".format(progress.sent / 1e6), "%.0f".format(progress.size / 1e6))
+        textOf(Res.string.message_uploading_progress, "%.1f".format(progress.sent / 1e6), "%.0f".format(progress.size / 1e6))
     } else {
-        context.getString(R.string.message_publishing)
+        textOf(Res.string.message_publishing)
     }

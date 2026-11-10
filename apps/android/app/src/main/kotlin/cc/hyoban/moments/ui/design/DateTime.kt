@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.design
 
+import cc.hyoban.moments.res.*
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -34,7 +35,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.R
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.tokens
 import java.time.DayOfWeek
@@ -61,15 +61,15 @@ fun DateTimeDialog(day: LocalDate, hour: Int, minute: Int, onDismiss: () -> Unit
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = { if (h != null && m != null) onPick(LocalDate.ofEpochDay(chosen), h, m) }, enabled = h != null && m != null, modifier = Modifier.testTag("time_confirm")) {
-                Text(stringResource(R.string.action_confirm))
+                Text(stringResource(Res.string.action_confirm))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 MonthGrid(YearMonth.parse(month), LocalDate.ofEpochDay(chosen), onMonth = { month = it.toString() }, onDay = { chosen = it.toEpochDay() })
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.label_time), style = AppTheme.typography.body, color = tokens.tx2, modifier = Modifier.weight(1f))
+                    Text(stringResource(Res.string.label_time), style = AppTheme.typography.body, color = tokens.tx2, modifier = Modifier.weight(1f))
                     TimePart(hours, { hours = it }, "time_hour")
                     Text(":", style = AppTheme.typography.title)
                     TimePart(minutes, { minutes = it }, "time_minute")
@@ -103,10 +103,10 @@ private fun MonthGrid(month: YearMonth, chosen: LocalDate, onMonth: (YearMonth) 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(title, style = AppTheme.typography.body.strong, modifier = Modifier.weight(1f).padding(start = 4.dp))
             IconButton(onClick = { onMonth(month.minusMonths(1)) }) {
-                Icon(AppIcons.ChevronLeft, contentDescription = stringResource(R.string.action_previous_month), tint = tokens.tx2)
+                Icon(AppIcons.ChevronLeft, contentDescription = stringResource(Res.string.action_previous_month), tint = tokens.tx2)
             }
             IconButton(onClick = { onMonth(month.plusMonths(1)) }) {
-                Icon(AppIcons.ChevronRight, contentDescription = stringResource(R.string.action_next_month), tint = tokens.tx2)
+                Icon(AppIcons.ChevronRight, contentDescription = stringResource(Res.string.action_next_month), tint = tokens.tx2)
             }
         }
         Row(Modifier.fillMaxWidth()) {
