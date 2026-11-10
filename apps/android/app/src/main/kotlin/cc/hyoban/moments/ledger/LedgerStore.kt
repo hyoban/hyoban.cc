@@ -27,9 +27,9 @@ import kotlinx.coroutines.withContext
  */
 class LedgerStore(private val context: Context) : SQLiteOpenHelper(
     context, File(context.noBackupFilesDir, "ledger.sqlite").absolutePath, null, 3,
-) {
+), LedgerSource {
     private val _ledger = MutableStateFlow(Ledger())
-    val ledger: StateFlow<Ledger> = _ledger.asStateFlow()
+    override val ledger: StateFlow<Ledger> = _ledger.asStateFlow()
 
     private val _loaded = MutableStateFlow(false)
     val loaded: StateFlow<Boolean> = _loaded.asStateFlow()

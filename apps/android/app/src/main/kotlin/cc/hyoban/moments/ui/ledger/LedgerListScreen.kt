@@ -46,7 +46,7 @@ fun filterBills(ledger: Ledger, filter: LedgerFilter, query: String, moments: Ma
             (filter.trip == null || (txn.kind != TxnKind.TRANSFER && tripOfTxn(txn, moments, trips) == filter.trip)) &&
             (filter.place == null || (txn.kind != TxnKind.TRANSFER && placeOfTxn(txn, moments) == filter.place)) &&
             (filter.day == null || txn.dateKey == filter.day) &&
-            (filter.period == null || txn.dateKey.startsWith(filter.period)) &&
+            filter.period.let { it == null || txn.dateKey.startsWith(it) } &&
             (words.isEmpty() || words.all { word ->
                 txn.note.lowercase().contains(word) ||
                     ledger.categoryPath(txn.category)?.lowercase()?.contains(word) == true ||

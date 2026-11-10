@@ -72,6 +72,7 @@ import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdate
 import org.maplibre.android.camera.CameraUpdateFactory
+import cc.hyoban.moments.ui.DayMark
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.location.LocationComponentActivationOptions
@@ -1371,11 +1372,11 @@ private fun PointsMap(
         style.getSourceAs<GeoJsonSource>(MARKS)?.setGeoJson(
             FeatureCollection.fromFeatures(
                 data.marks.map { mark ->
-                    Feature.fromGeometry(mark.at.point).apply { addStringProperty("icon", mark.image) }
+                    Feature.fromGeometry(mark.latLng.point).apply { addStringProperty("icon", mark.image) }
                 },
             ),
         )
-        val framed = data.points + data.rings + data.marks.map { it.at } + data.lines.flatMap { segment -> segment.line.map { (longitude, latitude) -> LatLng(latitude, longitude) } }
+        val framed = data.points + data.rings + data.marks.map { it.latLng } + data.lines.flatMap { segment -> segment.line.map { (longitude, latitude) -> LatLng(latitude, longitude) } }
         if (framed.isNotEmpty()) ready.frame(framed, inset, closest)
         drawn[0] = data
     }
@@ -1440,16 +1441,10 @@ private data class PointsShown(
     val markImages: Map<String, android.graphics.Bitmap> = emptyMap(),
 )
 
-/**
- * Something of a day marked on its map: a Moment, a bill or a check-in, where it was, and the
- * icon on its badge (a place's kind, a bill's category).
- */
-data class DayMark(val at: LatLng, val kind: Kind, val icon: ImageVector) {
-    enum class Kind { MOMENT, BILL, CHECKIN }
+/** A mark's badge's name in the map's style: one per kind and icon. */
+private val DayMark.image: String get() = "mark-${kind.name}-${icon.name}"
 
-    /** Its badge's name in the map's style: one per kind and icon. */
-    val image: String get() = "mark-${kind.name}-${icon.name}"
-}
+private val DayMark.latLng: LatLng get() = LatLng(at.latitude, at.longitude)
 
 private val MARK_SIZE = 22.dp
 private val MARK_ICON = 14.dp

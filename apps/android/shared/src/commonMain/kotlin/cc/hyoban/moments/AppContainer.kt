@@ -56,6 +56,12 @@ abstract class AppContainer(
 ) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
+    /** The ledger the pages read; the phone's own, or none. */
+    abstract val ledger: cc.hyoban.moments.ledger.LedgerSource
+
+    /** The footprints the pages read; the phone's own, or none. */
+    abstract val footprints: cc.hyoban.moments.footprints.Footprints
+
     private var cities: List<cc.hyoban.moments.ui.map.FogRegion>? = null
 
     /** The fog's cities as the device keeps them, to read once. */

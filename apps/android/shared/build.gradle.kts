@@ -33,10 +33,18 @@ kotlin {
             api(libs.sqlite)
             api(libs.haze)
             api(libs.haze.blur)
+            api(libs.coil.compose)
+            api(libs.coil.network.okhttp)
+            api(libs.lifecycle.runtime.compose.multiplatform)
+            api(libs.lifecycle.viewmodel.compose.multiplatform)
             implementation(libs.zip4j)
             implementation(libs.gson)
         }
+        jvmMain.dependencies {
+            implementation(libs.icu4j)
+        }
         androidMain.dependencies {
+            implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.core.ktx)
             implementation(libs.capsule)
         }

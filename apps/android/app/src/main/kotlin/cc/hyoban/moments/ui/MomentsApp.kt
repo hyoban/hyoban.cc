@@ -191,163 +191,10 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
-@Serializable
-object Feed
-
-@Serializable
-object Atlas
-
-
-@Serializable
-data class Moment(val uid: String)
-
-@Serializable
-data class Viewer(val uid: String, val index: Int)
-
 /** Keeps the open viewer across a rotation, as its Moment and index. */
 private val ViewerSaver = listSaver<Viewer?, Any>(
     save = { it?.let { viewer -> listOf(viewer.uid, viewer.index) }.orEmpty() },
     restore = { if (it.isEmpty()) null else Viewer(it[0] as String, it[1] as Int) },
-)
-
-@Serializable
-data class Trip(val id: String)
-
-/** A trip's name, days and who sees it, to change, or with no [id] to make one, from [start] to [end] and named [title] when they're given. */
-@Serializable
-data class TripEdit(val id: String? = null, val start: String? = null, val end: String? = null, val title: String? = null)
-
-/** A trip played back along its route. */
-@Serializable
-data class TripPlay(val id: String)
-
-/**
- * One day's Moments, by its `YYYY-MM-DD`, and the key of the card it grows out of: a calendar
- * day, a day's pill or a Moment's row for it. Opened from elsewhere, a menu, it slides in.
- */
-@Serializable
-data class Day(val date: String)
-
-@Serializable
-data class PlaceMoments(val id: String)
-
-/** The 我 tab: the changes waiting to be published, the ledger's month and the settings, each a page under it. */
-@Serializable
-object Preferences
-
-/** 同步与来源: the API, its token, the photos' origin and the map's styles. */
-@Serializable
-object SyncSettings
-
-/** How footprints are recorded, a page under 我. */
-@Serializable
-object FootprintSettings
-
-/** The physical side key and the action assigned to each gesture. */
-@Serializable
-object SideKeySettings
-
-/** 相机: the paired a7C II, its location and what it needs. */
-@Serializable
-object CameraSettings
-
-/** Who sees what by default: the Moments about tech, the books' new bills and the public spans of the footprints. */
-@Serializable
-object Items
-
-/** 家: where the map's 可能的旅程 count as home. */
-@Serializable
-object Homes
-
-/** 导入: Swarm, iCost and GPX files brought in, each where it belongs. */
-@Serializable
-object Imports
-
-/**
- * 东西: the devices, the subscriptions and the car on one page, [kind] the one shown (devices,
- * subscriptions or car; none: the one looked at last), with the sheet of the thing [open] over it.
- */
-@Serializable
-data class Things(val kind: String? = null, val open: String? = null)
-
-/** 纪念日: the days that matter, with the sheet of the one [open] over the page. */
-@Serializable
-data class Occasions(val open: String? = null)
-
-/** A Moment to write, kept on the phone, with a bill or the [bill] alone. */
-@Serializable
-data class NewMoment(val bill: Boolean = false)
-
-/** One of the phone's Moments, to change. */
-@Serializable
-data class EditMoment(val uid: String)
-
-/**
- * A Moment to write, or one of [uid] to change, opened from the medium breakpoint on: a basic
- * dialog over the page it was opened from, as Material 3 keeps full-screen dialogs for compact
- * windows, where [NewMoment] and [EditMoment] are pages of their own.
- */
-@Serializable
-data class EditorDialog(val uid: String? = null, val bill: Boolean = false)
-
-/** The changes kept on the phone, to look over and publish. */
-@Serializable
-object Changes
-
-/** Searching the Moments. */
-@Serializable
-object Search
-
-/** The ledger, opened from 我 on its [tab]: 0 the bills, 1 the sums, 2 the accounts. */
-@Serializable
-data class LedgerHome(val tab: Int = 0)
-
-/** A bill to write, or one of [edit] to change; what a new one starts with, as [LedgerEntryArgs] has it. */
-@Serializable
-data class LedgerEntry(
-    val edit: String? = null,
-    val kind: String? = null,
-    val related: String? = null,
-    val moment: String? = null,
-    val date: String? = null,
-    val account: String? = null,
-    val trip: String? = null,
-    /** A payment's, read by 自动记账: its cents, epoch milliseconds, note and category. */
-    val amount: String? = null,
-    val time: String? = null,
-    val note: String? = null,
-    val category: String? = null,
-)
-
-/** One bill of the ledger. */
-@Serializable
-data class LedgerBill(val id: String)
-
-/** One account of the ledger and its bills. */
-@Serializable
-data class LedgerAccount(val id: String)
-
-/** An account to add, or one of [id] to change. */
-@Serializable
-data class LedgerAccountEdit(val id: String? = null)
-
-/** The ledger's settings; with [import], its iCost import's file picker opened at once. */
-@Serializable
-data class LedgerSettings(val import: Boolean = false)
-
-/** Bills picked as [LedgerFilter] has it. */
-@Serializable
-data class LedgerList(
-    val title: String? = null,
-    val book: String? = null,
-    val account: String? = null,
-    val category: String? = null,
-    val categoryName: String? = null,
-    val trip: String? = null,
-    val place: String? = null,
-    val day: String? = null,
-    val period: String? = null,
-    val search: Boolean = false,
 )
 
 /**
@@ -652,12 +499,18 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                 LocalReducedMotion provides rememberReducedMotion(),
                 LocalMediaMaxHeight provides if (landscape) windowHeight * 0.6f else Dp.Infinity,
             ) {
+                // The activity, which the way to a place and the sharing start from.
+                val deviceContext = androidx.compose.ui.platform.LocalContext.current
+                val device = remember(deviceContext) { PhoneDevice(deviceContext) }
+                val footprintPlaceName: @Composable (cc.hyoban.moments.ledger.Txn) -> String? = { cc.hyoban.moments.footprints.billSpot(it)?.name }
                 SharedTransitionLayout(Modifier.fillMaxSize().hazeSource(pageHaze).background(AppColors.page)) {
                     CompositionLocalProvider(
                         LocalSharedTransitionScope provides this,
                         LocalCardOpening provides cardOpening,
                         LocalSettings provides container.settings,
                         cc.hyoban.moments.footprints.LocalBillPlaces provides container.billPlaces,
+                        cc.hyoban.moments.footprints.LocalFootprintPlace provides footprintPlaceName,
+                        LocalDevice provides device,
                         LocalTabReselects provides tabReselects,
                         LocalInPictureInPicture provides inPictureInPicture,
                         LocalMomentActions provides momentActions,
@@ -1090,85 +943,12 @@ private val FADE_THROUGH_OUT = fadeOut(tween(FADE_THROUGH_OUT_MS, easing = FastO
 private val FADE_THROUGH_IN = fadeIn(tween(FADE_THROUGH_IN_MS, delayMillis = FADE_THROUGH_OUT_MS, easing = LinearOutSlowInEasing)) +
     scaleIn(tween(FADE_THROUGH_IN_MS, delayMillis = FADE_THROUGH_OUT_MS, easing = LinearOutSlowInEasing), initialScale = 0.92f)
 
-/** Where the app reads from, for what draws without the container at hand, as the map. */
-val LocalSettings = staticCompositionLocalOf<Settings> { error("No settings provided") }
-
-/**
- * What a Moment's card offers from its menu beyond what it holds itself: editing, when the
- * Moment can be, and going to its places, its trip and its day, read from the app's [places]
- * and [tripOf].
- */
-class MomentActions(
-    val canEdit: (String) -> Boolean,
-    val onEdit: (String) -> Unit,
-    val places: () -> Map<String, Place>,
-    val tripOf: (MomentRecord) -> TripRecord?,
-    val onPlace: (String) -> Unit,
-    val onTrip: (String) -> Unit,
-    val onDay: (String) -> Unit,
-    /** Whether a route is the page shown, which the menu needn't lead to. */
-    val isHere: (Any) -> Boolean,
-)
-
-/** The app's [MomentActions], for the cards of any list; none where the app doesn't give them. */
-val LocalMomentActions = staticCompositionLocalOf<MomentActions?> { null }
-
-/** The tabs tapped again while chosen, each as its route: [Feed], [Atlas] or [Preferences]. */
-val LocalTabReselects = staticCompositionLocalOf<SharedFlow<Any>> { MutableSharedFlow() }
-
-/** Runs [action] each time the tab of [route] is tapped again while its page is shown; nothing without a [route]. */
-@Composable
-fun OnTabReselect(route: Any?, action: suspend () -> Unit) {
-    val taps = LocalTabReselects.current
-    val current by rememberUpdatedState(action)
-    LaunchedEffect(taps, route) {
-        if (route != null) taps.collect { if (it == route) current() }
-    }
-}
-
-/** How much of the bottom the navigation bar covers on a tab screen, to leave clear under a list's last item. */
-val LocalBottomClearance = compositionLocalOf { 0.dp }
-
-/** How much more the tab's floating action button covers above the bar, for a list or a card to keep clear of. */
-val LocalFabClearance = compositionLocalOf { 0.dp }
-
 /** What a tab's page keeps clear of, the bar and the button over it, whichever page is shown. */
 data class TabClearance(val bottom: Dp, val fab: Dp)
 
 // Not static: they change as the bar and the button come and go, often as a page changes,
 // and only what reads them need be drawn again then, not every page under them.
 private val LocalTabClearance = compositionLocalOf { TabClearance(0.dp, 0.dp) }
-
-/**
- * How far a page's own controls at its foot lift the snackbar, which a page sets while it is
- * shown, as Material 3 nudges a snackbar above a toolbar rather than over it.
- */
-val LocalSnackbarLift = staticCompositionLocalOf<MutableState<Dp>> { mutableStateOf(0.dp) }
-
-/** Material 3's snackbars for the whole app, rather than toasts: one host, above the tabs. */
-val LocalMessages = staticCompositionLocalOf { SnackbarHostState() }
-
-/** Shows a message as a snackbar from a tap or a callback, the one before it making way. */
-@Composable
-fun rememberShowMessage(): (String) -> Unit {
-    val host = LocalMessages.current
-    val scope = rememberCoroutineScope()
-    return remember(host, scope) {
-        { text ->
-            scope.launch {
-                host.currentSnackbarData?.dismiss()
-                host.showSnackbar(text)
-            }
-        }
-    }
-}
-
-/** Whether a tab's page has folded the floating tabs away as it scrolls on; the app brings them back as the page is left. */
-val LocalTabsHidden = staticCompositionLocalOf { mutableStateOf(false) }
-
-/** A tab screen's floating action button, which that screen fills in and clears, and the app places. */
-val LocalNavAccessory = staticCompositionLocalOf<MutableState<(@Composable () -> Unit)?>> { mutableStateOf(null) }
-
 
 /**
  * Goes to [route] as a page over the one shown, or, when it is the page just under it, back

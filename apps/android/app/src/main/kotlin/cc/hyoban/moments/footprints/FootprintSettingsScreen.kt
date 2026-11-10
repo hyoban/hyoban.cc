@@ -238,34 +238,6 @@ private fun DiagnosticsSettings(container: PhoneContainer) {
     )
 }
 
-/** A row that does something on a tap, with what it is set to under its name; [external] ones open the system's settings. */
-@Composable
-internal fun ActionRow(
-    icon: ImageVector,
-    title: String,
-    shapes: ListItemShapes,
-    supporting: String? = null,
-    tag: String? = null,
-    enabled: Boolean = true,
-    external: Boolean = false,
-    onClick: () -> Unit,
-) {
-    SegmentedListItem(
-        onClick = onClick,
-        shapes = shapes,
-        enabled = enabled,
-        colors = segmentColors(),
-        leadingContent = { Icon(icon, contentDescription = null) },
-        supportingContent = supporting?.let { { Text(it) } },
-        trailingContent = if (external) {
-            { Icon(AppIcons.External, contentDescription = null) }
-        } else {
-            null
-        },
-        modifier = if (tag != null) Modifier.testTag(tag) else Modifier,
-    ) { Text(title) }
-}
-
 /** The longer explanation behind a row, kept out of the page until asked for. */
 @Composable
 internal fun InfoDialog(title: String, paragraphs: List<String>, onDismiss: () -> Unit) {

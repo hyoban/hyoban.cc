@@ -34,9 +34,9 @@ import kotlinx.coroutines.withContext
 class PhoneContainer private constructor(
     context: Context,
     /** The ledger stays on this phone, outside API sync and Android's backup; only its public bills publish. */
-    val ledger: LedgerStore,
+    override val ledger: LedgerStore,
     /** GPS tracks stay on this phone, private; only the spans made public publish, simplified. */
-    val footprints: FootprintStore,
+    override val footprints: FootprintStore,
 ) : AppContainer(
     settings = Settings(SharedPrefs(context.getSharedPreferences("settings", Context.MODE_PRIVATE)), context.noBackupFilesDir),
     files = context.filesDir,

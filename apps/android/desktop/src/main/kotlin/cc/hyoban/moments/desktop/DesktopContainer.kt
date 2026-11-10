@@ -24,6 +24,9 @@ class DesktopContainer(root: File) : AppContainer(
     driver = BundledSQLiteDriver(),
     outside = NothingOutside,
 ) {
+    override val ledger = cc.hyoban.moments.ledger.NoLedger
+    override val footprints = cc.hyoban.moments.footprints.NoFootprints
+
     private var publish: Job? = null
 
     init {

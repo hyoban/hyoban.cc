@@ -125,7 +125,3 @@ fun billSpot(txn: Txn): BillSpot? {
         value = if (wanted) spots.spotAt(txn.time) else null
     }.value
 }
-
-/** The name of where [txn] was, as [billSpot] has it, for a row of bills. */
-@Composable
-fun footprintPlace(txn: Txn): String? = billSpot(txn)?.name

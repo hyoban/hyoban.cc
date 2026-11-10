@@ -661,8 +661,8 @@ Android Studio opens `apps/android` as a project. From a shell, with the Android
 
 The same project holds the start of Here on the Mac, a Compose Desktop app in `:desktop` over
 the code it shares with the phone in `:shared`. For now it is a window with the design system's
-theme and the three sections down a sidebar, in the phone's own words; it reads the records from
-the API as the phone does, their pages still to come:
+theme and its sections down a sidebar, in the phone's own words; it reads the records from the
+API as the phone does and shows them in the phone's pages:
 
 ```sh
 ./gradlew :desktop:run
@@ -670,7 +670,11 @@ the API as the phone does, their pages still to come:
 
 It keeps its settings, its copy of the records and the token under
 `~/Library/Application Support/Here`, or under `HERE_HOME` when that is set, as a trial run's own
-folder; 我 takes the API and its token, and 时间线 lists what the copy then holds.
+folder. 设置 takes the API and its token; the sidebar then leads to 时间线, 旅程, 东西 and 纪念日, the
+phone's own pages, with a Moment, a day, a place and a trip opening over them and ⌘[ going back.
+The maps, the photo viewer, writing and publishing are still to come: a map's space is blank.
+`HERE_OPEN` opens it on a page for a trial run: `trips`, `things`, `occasions`, `settings`,
+`search`, or `moment:<uid>`, `trip:<id>`, `play:<id>`, `day:<date>`, `place:<id>`.
 
 The unit tests round-trip every record under the repository's `data/` through the app's
 models, so the app and the site can't drift apart unnoticed, and check the media URLs,
@@ -729,7 +733,8 @@ scripts/ui.py tap tab_map
 
 The packages below are split between `:app` (the phone's own) and `:shared` (what the Mac app
 runs too: so far the records and their stores under `data`, the ledger's and the footprints'
-models, the settings and the container every device shares, and the
+models, the settings and the container every device shares, the timeline's, a Moment's, the
+trips', the things' and the occasions' pages with the components they are made of, and the
 design system in `ui/design` and `ui/theme`, and every page's words as Compose resources);
 `:desktop` is the Mac's window.
 
