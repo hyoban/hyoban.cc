@@ -1432,4 +1432,9 @@
     <string name="camera_delete_body">%1$s is deleted from the camera\'s card and can\'t be brought back. Its RAW goes too.</string>
     <string name="camera_deleting">Deleting</string>
     <string name="camera_delete_failed">Not deleted</string>
+    <string name="camera_delete_chosen">Delete the %1$d chosen</string>
+    <string name="camera_delete_many_title">Delete %1$d photos?</string>
+    <string name="camera_delete_many_body">They\'re deleted from the camera\'s card and can\'t be brought back. Their RAWs go too.</string>
+    <string name="camera_deleting_count">Deleting %1$d of %2$d</string>
+    <string name="camera_delete_missed">%1$d not deleted</string>
 </resources>
