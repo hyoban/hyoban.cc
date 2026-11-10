@@ -6,7 +6,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.local.fix
 import cc.hyoban.moments.data.spec.PlaceKind
 import kotlinx.coroutines.launch
@@ -17,11 +17,11 @@ import kotlinx.coroutines.launch
  * entry at it stays there; the other places aren't offered, as choosing one isn't editing this.
  */
 @Composable
-fun EditPlace(container: PhoneContainer, id: String, onDismiss: () -> Unit) {
+fun EditPlace(container: AppContainer, id: String, onDismiss: () -> Unit) {
     val places by container.repository.places.collectAsStateWithLifecycle()
     val place = places[id] ?: return
     val scope = rememberCoroutineScope()
-    Dialog(onDismiss, DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    Dialog(onDismiss, cc.hyoban.moments.ui.components.fullWindowDialogProperties()) {
         PlacePicker(
             current = PlaceChoice.New(place.name, place.fix(), PlaceKind.of(place.kind)),
             fix = place.fix(),

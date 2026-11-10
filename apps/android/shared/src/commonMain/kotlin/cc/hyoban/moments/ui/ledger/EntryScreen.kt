@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.ui.components.testTagsAsResources
 import cc.hyoban.moments.res.*
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -23,7 +24,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
@@ -93,18 +93,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.TripRecord
@@ -121,7 +118,6 @@ import cc.hyoban.moments.ledger.TransferType
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ledger.currencySymbol
-import cc.hyoban.moments.ledger.ensureBook
 import cc.hyoban.moments.ledger.formatCents
 import cc.hyoban.moments.ledger.formatMoney
 import cc.hyoban.moments.ledger.tripOnDay
@@ -143,7 +139,7 @@ import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
 
 /** An amount as typed, `12.5` or `12 + 3.4 - 1`, in cents; null when it isn't one. */
-internal fun parseAmount(text: String): Long? {
+fun parseAmount(text: String): Long? {
     val cleaned = text.replace(",", "").replace("，", "").replace(" ", "")
     if (cleaned.isEmpty()) return null
     if (!Regex("""^[+-]?\d*\.?\d+([+-]\d*\.?\d+)*$""").matches(cleaned)) return null
@@ -152,7 +148,7 @@ internal fun parseAmount(text: String): Long? {
 }
 
 /** Cents written for a field, without grouping: `12.50` as `12.5`, `12.00` as `12`. */
-internal fun fieldOf(cents: Long?): String = cents?.let { formatCents(it).replace(",", "") }.orEmpty()
+fun fieldOf(cents: Long?): String = cents?.let { formatCents(it).replace(",", "") }.orEmpty()
 
 /**
  * Writing a bill or changing one, a full-screen dialog as Material 3 has a form that is saved
@@ -163,13 +159,12 @@ internal fun fieldOf(cents: Long?): String = cents?.let { formatCents(it).replac
  * or starts from a Moment, an account or a day.
  */
 @Composable
-fun EntryScreen(container: PhoneContainer, args: LedgerEntryArgs, nav: LedgerNav) {
+fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val trips by container.shownTrips.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val show = rememberShowMessage()
-    val resources = LocalResources.current
     EnsureBook(container)
 
     val original = remember(args.edit) { args.edit?.let { ledger.txnsById[it] } }
@@ -215,7 +210,7 @@ fun EntryScreen(container: PhoneContainer, args: LedgerEntryArgs, nav: LedgerNav
         actions = { if (!sideways) TextButton(onClick = ::save, modifier = Modifier.testTag("save_bill")) { Text(stringResource(Res.string.action_save)) } },
     ) {
         if (sideways) {
-            Row(Modifier.fillMaxSize().railPadding().imePadding().semantics { testTagsAsResourceId = true }) {
+            Row(Modifier.fillMaxSize().railPadding().imePadding().testTagsAsResources()) {
                 Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current, bottom = Space.s)) {
                     BillFields(container, ledger, draft, at, fixedKind, related, keypad = true)
                     // Its options' chips under the fields here, leaving the end half to the amount and the keys.
@@ -230,7 +225,7 @@ fun EntryScreen(container: PhoneContainer, args: LedgerEntryArgs, nav: LedgerNav
                 Column(
                     Modifier.fillMaxSize().imePadding().navigationBarsPadding()
                         .padding(start = columns.margin, end = columns.margin)
-                        .semantics { testTagsAsResourceId = true },
+                        .testTagsAsResources(),
                 ) {
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current, bottom = if (keypad) Space.s else Space.xl)) {
                         BillFields(container, ledger, draft, at, fixedKind, related, keypad = keypad)
@@ -244,15 +239,15 @@ fun EntryScreen(container: PhoneContainer, args: LedgerEntryArgs, nav: LedgerNav
 
 /** A ledger with no book yet gets its first, with its categories, as soon as a bill is to be written. */
 @Composable
-internal fun EnsureBook(container: PhoneContainer, enabled: Boolean = true) {
-    val chinese = LocalConfiguration.current.locales[0].language == "zh"
+fun EnsureBook(container: AppContainer, enabled: Boolean = true) {
+    val chinese = cc.hyoban.moments.ui.components.currentLocale().language == "zh"
     val defaultBook = stringResource(Res.string.ledger_default_book)
     LaunchedEffect(enabled) { if (enabled) container.ledger.ensureBook(defaultBook, chinese) }
 }
 
 /** What a bill's form holds while it is written, kept as the phone turns. */
 @Stable
-internal class BillDraft(
+class BillDraft(
     kind: TxnKind,
     transfer: TransferType,
     book: String?,
@@ -407,7 +402,7 @@ internal class BillDraft(
 
 /** The form's start: the bill being changed, else what it was opened for. */
 @Composable
-internal fun rememberBillDraft(ledger: Ledger, original: Txn?, related: Txn?, moment: MomentRecord?, args: LedgerEntryArgs): BillDraft =
+fun rememberBillDraft(ledger: Ledger, original: Txn?, related: Txn?, moment: MomentRecord?, args: LedgerEntryArgs): BillDraft =
     rememberSaveable(saver = BillDraft.Saver) {
         val kind = original?.kind ?: args.kind ?: TxnKind.EXPENSE
         val fixedKind = kind.takeIf { it == TxnKind.REFUND || it == TxnKind.REIMBURSEMENT }
@@ -448,7 +443,7 @@ internal fun rememberBillDraft(ledger: Ledger, original: Txn?, related: Txn?, mo
     }
 
 /** The book's most used food category, else its first named for food, for a meal's bill. */
-internal fun mealCategory(ledger: Ledger): String? = ledger.txns.asSequence()
+fun mealCategory(ledger: Ledger): String? = ledger.txns.asSequence()
     .filter { it.book == ledger.book?.id && it.kind == TxnKind.EXPENSE && it.category != null }
     .mapNotNull { it.category }
     .filter { id -> ledger.categoriesById[id]?.name?.let { name -> listOf("餐", "饭", "食", "Food", "Meal").any { name.contains(it, ignoreCase = true) } } == true }
@@ -462,8 +457,8 @@ internal fun mealCategory(ledger: Ledger): String? = ledger.txns.asSequence()
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun BillFields(
-    container: PhoneContainer,
+fun BillFields(
+    container: AppContainer,
     ledger: Ledger,
     draft: BillDraft,
     at: OffsetDateTime,
@@ -666,7 +661,7 @@ internal fun BillFields(
         Sheet.Place -> {
             val time = at.toInstant().toEpochMilli()
             // Opened once the footprints have answered, as the picker opens where it is first told.
-            val spot by produceState<Result<Fix?>?>(null, time) { value = Result.success(container.billPlaces.pointAt(time)) }
+            val spot by produceState<Result<Fix?>?>(null, time) { value = Result.success(container.billPointAt(time)) }
             spot?.let { found ->
                 val current = draft.place?.takeIf { it in places }?.let { PlaceChoice.Known(it) } ?: PlaceChoice.None
                 ChoosePlace(container, current, found.getOrNull(), onDismiss = { sheet = null }) { id, _ ->
@@ -682,7 +677,7 @@ internal fun BillFields(
     }
 }
 
-internal enum class Sheet { Account, From, To, Split, Book, Moment, Place, Trip }
+enum class Sheet { Account, From, To, Split, Book, Moment, Place, Trip }
 
 @Composable
 private fun accountName(ledger: Ledger, id: String?): String? = id?.let(ledger.accountsById::get)?.let { accountName(it) }
@@ -847,7 +842,7 @@ private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphi
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun BillOptions(container: PhoneContainer, ledger: Ledger, draft: BillDraft, at: OffsetDateTime, fixedKind: TxnKind?, withMoment: Boolean, keypad: Boolean) {
+private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraft, at: OffsetDateTime, fixedKind: TxnKind?, withMoment: Boolean, keypad: Boolean) {
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.shownTrips.collectAsStateWithLifecycle()
@@ -980,7 +975,7 @@ private fun LinkChip(value: String?, label: String, icon: androidx.compose.ui.gr
 
 /** Whether the keypad fits: a bill page of its own on a window tall enough for the keys and what is above them. */
 @Composable
-internal fun keypadFits(): Boolean = windowHeight() >= 600.dp
+fun keypadFits(): Boolean = windowHeight() >= 600.dp
 
 /**
  * The amount, its time and note, over keys that type it, pinned under the bill's other fields as
@@ -989,8 +984,8 @@ internal fun keypadFits(): Boolean = windowHeight() >= 600.dp
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun BillKeypad(
-    container: PhoneContainer,
+fun BillKeypad(
+    container: AppContainer,
     ledger: Ledger,
     draft: BillDraft,
     at: OffsetDateTime,
@@ -1049,7 +1044,7 @@ internal fun BillKeypad(
                 )
             }
         }
-        if (!WindowInsets.isImeVisible) {
+        if (!cc.hyoban.moments.ui.components.imeVisible()) {
             val type = { key: Char -> draft.amount = typeKey(draft.amount, key) }
             val keys = listOf(
                 listOf('1', '2', '3', BACKSPACE),
@@ -1102,7 +1097,7 @@ private fun Key(key: Char, modifier: Modifier, height: Dp = KeyHeight, onClick: 
  * [text] with [key] typed after it on the keypad: an operator only after a number, taking the
  * place of one just typed; one point to a number, and two places after it.
  */
-internal fun typeKey(text: String, key: Char): String {
+fun typeKey(text: String, key: Char): String {
     val number = text.takeLastWhile { it != '+' && it != '-' }
     return when (key) {
         '+', '-' -> when {
@@ -1166,7 +1161,7 @@ private fun SplitEditor(ledger: Ledger, splits: List<Pair<String, String>>, curr
 @Composable
 fun AccountSheet(ledger: Ledger, onDismiss: () -> Unit, onCreate: (Account) -> Unit, allowNone: Boolean = true, onPick: (String?) -> Unit) {
     var creating by remember { mutableStateOf(false) }
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet, modifier = Modifier.semantics { testTagsAsResourceId = true }) {
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.sheet, modifier = Modifier.testTagsAsResources()) {
         LazyColumn(Modifier.padding(bottom = Space.l)) {
             item {
                 Text(

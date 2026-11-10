@@ -1,6 +1,5 @@
 package cc.hyoban.moments.data.local
 
-import android.content.Context
 import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.spec.PlaceKind
 import kotlinx.coroutines.Dispatchers
@@ -29,15 +28,25 @@ import java.io.IOException
  * something comes from their input tips. Elsewhere, without a key, or when neither
  * can answer, from Photon at [baseUrl]: OpenStreetMap's, the same the map draws. Where neither can be reached, the system's geocoder stands in.
  */
+/** Photon, over the same OpenStreetMap data the map draws: where places are searched by name and found around a pin. */
+const val PHOTON_URL = "https://photon.komoot.io"
+
 class PlaceSearch(
     private val baseUrl: () -> String,
     private val tencentKey: () -> String? = { null },
     private val amapKey: () -> String? = { null },
     private val tencentFirst: () -> Boolean = { false },
     private val client: OkHttpClient = Http.client,
+    /** What the device itself calls the place at a point, a town or a part of one, when no service can be reached; nothing where it has no geocoder. */
+    private val townAt: suspend (Fix) -> String? = { null },
 ) {
-    constructor(baseUrl: String, tencentKey: () -> String? = { null }, amapKey: () -> String? = { null }, tencentFirst: () -> Boolean = { false }) :
-        this({ baseUrl }, tencentKey, amapKey, tencentFirst)
+    constructor(
+        baseUrl: String,
+        tencentKey: () -> String? = { null },
+        amapKey: () -> String? = { null },
+        tencentFirst: () -> Boolean = { false },
+        townAt: suspend (Fix) -> String? = { null },
+    ) : this({ baseUrl }, tencentKey, amapKey, tencentFirst, townAt = townAt)
 
     /** AMap's and Tencent's answers this run, by what was asked, so a pin moved back costs none of a key's day's calls. */
     private val kept = object : LinkedHashMap<String, List<Found>>(16, 0.75f, true) {
@@ -73,7 +82,7 @@ class PlaceSearch(
      * first: the chosen one's place search, the other's, then the chosen one's reverse
      * geocoding and the other's, so the shops nearest come while their calls last.
      */
-    internal suspend fun china(fix: Fix, text: String? = null): List<Found>? {
+    suspend fun china(fix: Fix, text: String? = null): List<Found>? {
         if (!inChina(fix)) return null
         val asks: List<suspend () -> List<Found>?> = if (text != null) {
             listOf({ amapTips(fix, text) }, { tencentTips(fix, text) })
@@ -175,7 +184,7 @@ class PlaceSearch(
                 if (it is kotlinx.coroutines.CancellationException) return@onFailure
                 if (it is CallsUsedUp) synchronized(kept) { spent[endpoint] = today() }
                 // Not said off the phone, in a unit test, where Log is a stub.
-                runCatching { android.util.Log.w("Moments", "Asking $service for places failed: ${it.message?.replace(key, "…")}") }
+                runCatching { cc.hyoban.moments.logWarning("Moments", "Asking $service for places failed: ${it.message?.replace(key, "…")}") }
             }
             .getOrNull() ?: return null
         synchronized(kept) { kept[id] = found }
@@ -188,15 +197,15 @@ class PlaceSearch(
     /**
      * What to call the place at [fix], and what else is around it: the nearest shop, sight
      * or building AMap or Tencent knows in China, else the nearest park, sight, shop or quarter
-     * Photon knows, else the street; where neither can be reached, the system's geocoder's town.
+     * Photon knows, else the street; where neither can be reached, the town the device's own geocoder gives.
      */
-    suspend fun around(context: Context, fix: Fix): Around {
+    suspend fun around(fix: Fix): Around {
         val found = china(fix)?.takeIf { it.isNotEmpty() } ?: runCatching { nearby(fix) }.getOrNull()
         if (found != null) {
             val name = nameAt(found)
             if (name != null) return Around(name, landmarks(found), landmarks(found).firstOrNull()?.let(::kindOf))
         }
-        return Around(placeName(context, fix), emptyList())
+        return Around(townAt(fix), emptyList())
     }
 
     private suspend fun get(url: String): String = withContext(Dispatchers.IO) {
@@ -248,7 +257,7 @@ private const val TENCENT_DAY_USED_UP = 121
 private val AMAP_USED_UP = setOf("10003", "10044", "10045")
 
 /** Today in China, where both services count their calls, as days since 1970. */
-internal fun today(): Long = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Shanghai")).toEpochDay()
+fun today(): Long = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Shanghai")).toEpochDay()
 
 /** A place as a map service knows it: `amap` or `tencent`, and that service's id; a record's `source`. */
 data class PlaceSource(val app: String, val venue: String)

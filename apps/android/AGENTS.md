@@ -26,12 +26,18 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   abstract or open member the device's container gives, not a `Context`. Settings are kept
   through `Prefs`: the phone's shared preferences, a JSON file on the Mac.
 - A page in `:shared` asks its device for what the phone and the Mac each do their own way
-  through `LocalDevice` (`ui/Device.kt`): the maps, a Moment's menu, sharing, editing a place.
+  through `LocalDevice` (`ui/Device.kt`): the maps, a Moment's menu, sharing, choosing photos,
+  where the device is, and what it asks before publishing.
   `PhoneDevice` hands each to the phone's own code; `DesktopDevice` leaves a map's space blank
   and closes what would open until the Mac has its own. A page that needs something only the
   phone has takes it that way, or as a read-only interface on `AppContainer` (`LedgerSource`,
   `Footprints`), rather than staying in `:app`. Small differences (the language shown, back,
   the keyboard, a dialog's window) are `expect` functions in `ui/components/Platform.kt`.
+- Android's own code that shared code calls sits in `:shared`'s `androidMain` as the `actual`
+  of an `expect` (`Photos`, which reads and copies a picked photo, `PhotoRef`, the phone's
+  content address or a file on the Mac), taking the application's context from `AndroidApp`
+  where no caller has one; the Mac's is in `jvmMain`. The Mac takes pictures from the system's
+  file dialog and not yet videos, and has no ledger (`NoLedger`), so nothing there offers a bill.
 - The Mac's shell (`:desktop`'s `Main.kt`) follows the design system's Sidebar card: the
   sections down a sidebar 232 wide, and beside it the page on top of that section's stack, each
   a shared page. Its pages still draw the phone's top bars; the desktop's toolbars come later.

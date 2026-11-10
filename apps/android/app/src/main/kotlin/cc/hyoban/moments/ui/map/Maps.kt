@@ -1502,14 +1502,6 @@ fun DayTrackMap(stretches: List<List<Pair<Double, Double>>>, marks: List<DayMark
 private const val PICK_PLACES = "pick-places"
 private const val PICK_NAMES = "pick-names"
 
-/** Where a [PickerMap] is to go, a new one each time, even to the same place. */
-data class MapTarget(val latitude: Double, val longitude: Double, val zoom: Double, val serial: Int = targets++)
-
-private var targets = 0
-
-/** A town's streets: close enough to put a pin on the right one. */
-const val PICK_ZOOM = 14.0
-
 /**
  * A map to choose a place on, a pin standing at its middle: the known places as dots
  * with their names, [chosen] in the theme's colour, one tapped told to [onPlace]; where

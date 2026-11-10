@@ -670,11 +670,15 @@ API as the phone does and shows them in the phone's pages:
 
 It keeps its settings, its copy of the records and the token under
 `~/Library/Application Support/Here`, or under `HERE_HOME` when that is set, as a trial run's own
-folder. 设置 takes the API and its token; the sidebar then leads to 时间线, 旅程, 东西 and 纪念日, the
-phone's own pages, with a Moment, a day, a place and a trip opening over them and ⌘[ going back.
-The maps, the photo viewer, writing and publishing are still to come: a map's space is blank.
+folder. 设置 is the phone's 同步与来源, where the API and its token go; the sidebar then leads to
+时间线, 旅程, 东西 and 纪念日, the phone's own pages, with a Moment, a day, a place and a trip opening
+over them and ⌘[ going back. 记录 (⌘N) writes a Moment as the phone does, its pictures chosen from
+the Mac's files and its place searched for by name; what is written waits under 发布更改, which
+publishes it. The maps and the photo viewer are still to come: a map's space is blank, so a place
+is searched for rather than pinned. Videos aren't taken yet, and there is no ledger, so no bill.
 `HERE_OPEN` opens it on a page for a trial run: `trips`, `things`, `occasions`, `settings`,
-`search`, or `moment:<uid>`, `trip:<id>`, `play:<id>`, `day:<date>`, `place:<id>`.
+`items`, `changes`, `search`, `new`, or `moment:<uid>`, `edit:<uid>`, `trip:<id>`, `play:<id>`,
+`day:<date>`, `place:<id>`.
 
 The unit tests round-trip every record under the repository's `data/` through the app's
 models, so the app and the site can't drift apart unnoticed, and check the media URLs,
@@ -734,7 +738,8 @@ scripts/ui.py tap tab_map
 The packages below are split between `:app` (the phone's own) and `:shared` (what the Mac app
 runs too: so far the records and their stores under `data`, the ledger's and the footprints'
 models, the settings and the container every device shares, the timeline's, a Moment's, the
-trips', the things' and the occasions' pages with the components they are made of, and the
+trips', the things' and the occasions' pages, writing a Moment with its place picker and bill form,
+the changes to publish, 同步与来源 and 记录项与公开, with the components they are made of, and the
 design system in `ui/design` and `ui/theme`, and every page's words as Compose resources);
 `:desktop` is the Mac's window.
 

@@ -8,7 +8,7 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.newPlaceId
 import cc.hyoban.moments.data.local.recordTime
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun KeepPlace(
-    container: PhoneContainer,
+    container: AppContainer,
     at: Fix,
     name: String,
     onDismiss: () -> Unit,
@@ -47,8 +47,8 @@ fun KeepPlace(
  * another way to keep the choice, its words and what it does with the place, in place of none.
  */
 @Composable
-internal fun ChoosePlace(
-    container: PhoneContainer,
+fun ChoosePlace(
+    container: AppContainer,
     current: PlaceChoice,
     fix: Fix?,
     onDismiss: () -> Unit,
@@ -77,7 +77,7 @@ internal fun ChoosePlace(
             } finally { onDismiss() }
         }
     }
-    Dialog(onDismiss, DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    Dialog(onDismiss, cc.hyoban.moments.ui.components.fullWindowDialogProperties()) {
         PlacePicker(
             current = current,
             fix = fix,

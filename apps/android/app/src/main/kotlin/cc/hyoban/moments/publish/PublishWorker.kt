@@ -141,7 +141,7 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             val notification = NotificationCompat.Builder(context, channel(context))
                 .setSmallIcon(R.drawable.ic_notification_upload)
                 .setContentTitle(textOf(Res.string.notification_publishing))
-                .setContentText(progress?.let { publishingText(context, it) })
+                .setContentText(progress?.let { publishingText(it) })
                 .setProgress(PROGRESS_MAX, ((progress?.fraction ?: 0f) * PROGRESS_MAX).toInt(), progress == null)
                 .setContentIntent(openApp(context))
                 .addAction(0, textOf(Res.string.action_cancel_publish), cancel)
@@ -171,12 +171,3 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         }
     }
 }
-
-/** What publishing is doing: how much of the originals has gone while they upload, then the write. */
-fun publishingText(context: Context, progress: PublishProgress): String =
-    if (progress.size > 0 && progress.sent < progress.size) {
-        // In MB, the unit once, so it fits the button on one line.
-        textOf(Res.string.message_uploading_progress, "%.1f".format(progress.sent / 1e6), "%.0f".format(progress.size / 1e6))
-    } else {
-        textOf(Res.string.message_publishing)
-    }

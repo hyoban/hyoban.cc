@@ -45,6 +45,8 @@ sqliteJdbc = "3.46.1.3"
 sqlite = "2.5.0"
 
 [libraries]
+# Reads a photo's time and place from its file on the Mac, as ExifInterface does on the phone.
+metadata-extractor = { group = "com.drewnoakes", name = "metadata-extractor", version = "2.19.0" }
 # The lunar calendar on the Mac, as Android's own ICU gives it on the phone.
 icu4j = { group = "com.ibm.icu", name = "icu4j", version = "76.1" }
 shizuku-api = { group = "dev.rikka.shizuku", name = "api", version.ref = "shizuku" }

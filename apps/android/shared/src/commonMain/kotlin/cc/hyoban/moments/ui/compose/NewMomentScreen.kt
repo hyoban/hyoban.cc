@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.compose
 
+import cc.hyoban.moments.ui.components.BackHandler
 import cc.hyoban.moments.res.*
 import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.LocalSettings
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import cc.hyoban.moments.ui.components.railPadding
 import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.components.LocalTopClearance
-import androidx.core.net.toUri
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AssistChip
 import cc.hyoban.moments.ui.design.Button
@@ -28,14 +28,9 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import cc.hyoban.moments.ui.design.PressIndication
 import cc.hyoban.moments.ui.design.DateTimeDialog
-import android.Manifest
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.provider.MediaStore
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import cc.hyoban.moments.data.local.PhotoRef
+import cc.hyoban.moments.data.local.PhotoRules
+import cc.hyoban.moments.data.local.toPhotoRef
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateFloatAsState
@@ -102,8 +97,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -116,9 +109,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.local.Around
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.PhotoInfo
@@ -182,7 +174,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import cc.hyoban.moments.ui.picker.PhotoPickerScreen
 
 /**
  * A Moment written on the phone: its words, the photos picked for it, and when and where,
@@ -197,15 +188,14 @@ import cc.hyoban.moments.ui.picker.PhotoPickerScreen
  */
 @Composable
 fun NewMomentScreen(
-    container: PhoneContainer,
+    container: AppContainer,
     onBack: () -> Unit,
     onSaved: () -> Unit,
     edit: String? = null,
     onDeleted: () -> Unit = onBack,
     startWithBill: Boolean = false,
 ) {
-    val context = LocalContext.current
-    val resources = LocalResources.current
+    val device = cc.hyoban.moments.ui.LocalDevice.current
     val scope = rememberCoroutineScope()
     val places by container.repository.places.collectAsStateWithLifecycle()
 
@@ -216,7 +206,7 @@ fun NewMomentScreen(
     // Each photo it had by where it is shown from: the phone's copy, or the site's still.
     val originalMedia = remember(original) {
         original?.media.orEmpty().associateBy { media ->
-            (media.local?.uri ?: container.mediaUrls.still(media, PHOTO_WIDTH) ?: "media:${media.uid}").toUri()
+            (media.local?.uri ?: container.mediaUrls.still(media, PHOTO_WIDTH) ?: "media:${media.uid}").toPhotoRef()
         }
     }
     val originalTime = remember(original) { original?.let { parseStamp(it.occurredAt) } }
@@ -227,10 +217,10 @@ fun NewMomentScreen(
     // The photos kept for the record, never picked for a cover: see MomentMedia.utility.
     val originalUtility = remember(originalMedia) { originalMedia.filterValues { !it.showcase }.keys }
     var utility by remember { mutableStateOf(originalUtility) }
-    val infos = remember { mutableStateMapOf<Uri, PhotoInfo>() }
+    val infos = remember { mutableStateMapOf<PhotoRef, PhotoInfo>() }
     // The motion photos added as photos alone, their clips left out, and those already asked about.
-    var stills by remember { mutableStateOf(emptySet<Uri>()) }
-    var askedMotion by remember { mutableStateOf(emptySet<Uri>()) }
+    var stills by remember { mutableStateOf(emptySet<PhotoRef>()) }
+    var askedMotion by remember { mutableStateOf(emptySet<PhotoRef>()) }
     // What was eaten, as typed: the dishes in one field, the bill's yuan and people in two.
     val originalFood = original?.food
     var dishes by rememberSaveable { mutableStateOf(originalFood?.dishes.orEmpty().joinToString("、")) }
@@ -265,10 +255,10 @@ fun NewMomentScreen(
     EnsureBook(container, enabled = withBill)
 
     LaunchedEffect(photos) {
-        photos.filter { it !in infos && it !in originalMedia }.forEach { infos[it] = Photos.read(context, it) }
+        photos.filter { it !in infos && it !in originalMedia }.forEach { infos[it] = Photos.read(it) }
         // What the site can't take, a video too big or of a type it doesn't keep, is left out
         // as soon as it is read, saying why.
-        val refused = photos.mapNotNull { uri -> infos[uri]?.let(Photos::refusal)?.let { uri to it } }
+        val refused = photos.mapNotNull { uri -> infos[uri]?.let(PhotoRules::refusal)?.let { uri to it } }
         if (refused.isNotEmpty()) {
             photos = photos - refused.map { it.first }.toSet()
             saveError = refused.map { it.second }.distinct().joinToString("\n") { textOf(refusalText(it)) }
@@ -294,7 +284,7 @@ fun NewMomentScreen(
     val photoFix = photos.firstNotNullOfOrNull { infos[it]?.fix }
     val fix = photoFix
     LaunchedEffect(fix) {
-        if (fix != null && geocoded?.first != fix) geocoded = fix to container.placeSearch.around(context, fix)
+        if (fix != null && geocoded?.first != fix) geocoded = fix to container.placeSearch.around(fix)
     }
     val around = geocoded?.takeIf { it.first == fix }?.second
     val suggestedName = fix?.let { at -> around?.name ?: coordinatesName(at) }
@@ -307,38 +297,17 @@ fun NewMomentScreen(
         photos = (photos + container.takeSharedPhotos()).distinct().take(MAX_PHOTOS)
     }
 
-    // The system's documents picker, which keeps where a photo or video was taken: what 选照片
-    // falls back to when the gallery may not be read.
-    val documents = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { picked ->
-        photos = (photos + picked).distinct().take(MAX_PHOTOS)
-    }
-    // 选照片 (39), over this page: the gallery and the paired camera in one.
+    // 选照片 (39), over this page, as the device has it: the phone's gallery and paired camera in one, a computer's files.
     var picking by remember { mutableStateOf(false) }
     val addPhotos = { picking = true }
-    if (picking) androidx.compose.ui.window.Dialog(
-        onDismissRequest = { picking = false },
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
-    ) {
-        cc.hyoban.moments.ui.components.DialogPane {
-            PhotoPickerScreen(
-                container,
-                limit = MAX_PHOTOS - photos.size,
-                onClose = { picking = false },
-                onFallback = {
-                    picking = false
-                    documents.launch(arrayOf("image/*", "video/*"))
-                },
-            ) { added ->
-                photos = (photos + added).distinct().take(MAX_PHOTOS)
-                picking = false
-            }
-        }
+    if (picking) device.PhotoPicker(container, limit = MAX_PHOTOS - photos.size, onDismiss = { picking = false }) { added ->
+        photos = (photos + added).distinct().take(MAX_PHOTOS)
+        picking = false
     }
     // The tile opens the phone's camera app itself, with all it can do; what it takes goes to
     // the gallery, to be added from there.
     val openCamera: () -> Unit = {
-        runCatching { context.startActivity(Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)) }
-            .onFailure { saveError = textOf(Res.string.error_no_camera) }
+        if (!device.openCamera()) saveError = textOf(Res.string.error_no_camera)
     }
 
     val written = text.isNotBlank() || photos.isNotEmpty()
@@ -379,7 +348,7 @@ fun NewMomentScreen(
             try {
                 withContext(NonCancellable) {
                     val moment = if (withMoment) {
-                        val (moment, newPlace) = buildMoment(context, container, text, photos, utility, stills, infos, time, place, food, private, original, originalMedia)
+                        val (moment, newPlace) = buildMoment(container, text, photos, utility, stills, infos, time, place, food, private, original, originalMedia)
                         when {
                             original == null -> container.addLocal(moment, newPlace)
                             momentChanged -> container.updateLocal(moment, newPlace)
@@ -468,7 +437,7 @@ fun NewMomentScreen(
                 PhotoStrip(
                     photos,
                     onAdd = addPhotos,
-                    onOpenCamera = openCamera,
+                    onOpenCamera = openCamera.takeIf { device.hasCamera },
                     utility = utility,
                     onToggleUtility = { uri -> utility = if (uri in utility) utility - uri else utility + uri },
                     motion = photos.filter { infos[it]?.motion == true }.toSet(),
@@ -529,7 +498,7 @@ fun NewMomentScreen(
                 // its icon; only those of modules that are on (记录项与公开), a meal already written
                 // staying as it is while meals are off.
                 val foodOn = LocalSettings.current.isOn(Module.FOOD)
-                val billOn = LocalSettings.current.isOn(Module.LEDGER)
+                val billOn = LocalSettings.current.isOn(Module.LEDGER) && container.ledger.kept
                 if (foodOn || billOn) {
                     PageCaption(stringResource(Res.string.section_add_item))
                     FlowRow(
@@ -687,16 +656,16 @@ private val WORDS_COLUMN = 360.dp
  */
 @Composable
 private fun PhotoStrip(
-    photos: List<Uri>,
+    photos: List<PhotoRef>,
     onAdd: () -> Unit,
-    onOpenCamera: () -> Unit,
-    utility: Set<Uri>,
-    onToggleUtility: (Uri) -> Unit,
-    motion: Set<Uri>,
-    videos: Set<Uri>,
-    stills: Set<Uri>,
-    onToggleStill: (Uri) -> Unit,
-    onRemove: (Uri) -> Unit,
+    onOpenCamera: (() -> Unit)?,
+    utility: Set<PhotoRef>,
+    onToggleUtility: (PhotoRef) -> Unit,
+    motion: Set<PhotoRef>,
+    videos: Set<PhotoRef>,
+    stills: Set<PhotoRef>,
+    onToggleStill: (PhotoRef) -> Unit,
+    onRemove: (PhotoRef) -> Unit,
     onMove: (Int, Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -704,10 +673,10 @@ private fun PhotoStrip(
     val haptics = rememberHaptics()
     val currentMove by rememberUpdatedState(onMove)
     // The photo held, and how far it has been dragged from where it is laid out.
-    var held by remember { mutableStateOf<Uri?>(null) }
+    var held by remember { mutableStateOf<PhotoRef?>(null) }
     var offset by remember { mutableFloatStateOf(0f) }
     // The photo let go, gliding from under the finger into its place, still over the rest until it is there.
-    var settling by remember { mutableStateOf<Uri?>(null) }
+    var settling by remember { mutableStateOf<PhotoRef?>(null) }
     val scope = rememberCoroutineScope()
     var settle by remember { mutableStateOf<Job?>(null) }
     val settleSpec = AppTheme.motionScheme.defaultSpatialSpec<Float>()
@@ -742,7 +711,7 @@ private fun PhotoStrip(
     val later = stringResource(Res.string.action_move_later)
     val options = stringResource(Res.string.action_photo_options)
     // The photo whose menu is open, from a tap on it.
-    var menuFor by remember { mutableStateOf<Uri?>(null) }
+    var menuFor by remember { mutableStateOf<PhotoRef?>(null) }
     LazyRow(
         modifier.fillMaxWidth(),
         state = list,
@@ -795,7 +764,7 @@ private fun PhotoStrip(
                     .testTag("photo_$index"),
             ) {
                 // The site's photos by their URL, the phone's by their Uri.
-                AsyncImage(model = if (uri.scheme == "https" || uri.scheme == "http") uri.toString() else uri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                AsyncImage(model = cc.hyoban.moments.data.local.imageModel(uri), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 if (lift > 0f) Box(Modifier.fillMaxSize().background(tokens.tx.copy(alpha = DRAGGED_LAYER * lift)))
                 if (uri in motion && uri !in stills) LiveBadge(Modifier.align(Alignment.TopStart).padding(Space.s))
                 if (uri in videos) {
@@ -871,7 +840,8 @@ private fun PhotoStrip(
             item(key = ADD_KEY) {
                 AddTile(AppIcons.PhotoAdd, stringResource(Res.string.action_add_photos), onAdd, Modifier.animateItem().testTag("add_photos"))
             }
-            item(key = CAMERA_KEY) {
+            // Only where the device has a camera app of its own to open.
+            if (onOpenCamera != null) item(key = CAMERA_KEY) {
                 AddTile(AppIcons.Camera, stringResource(Res.string.action_open_camera), onOpenCamera, Modifier.animateItem().testTag("open_camera"))
             }
         }
@@ -1029,7 +999,7 @@ private fun RowField(value: String, onValueChange: (String) -> Unit, hint: Strin
  * The food as typed, kept with whatever else [original] said: the dishes split at commas,
  * enumeration commas and new lines, a bill only with its yuan, and nothing when nothing is said.
  */
-internal fun foodOf(dishes: String, verdict: String?, amount: String, people: String, original: MomentFood?): MomentFood? {
+fun foodOf(dishes: String, verdict: String?, amount: String, people: String, original: MomentFood?): MomentFood? {
     val names = dishes.split(DISH_SEPARATORS).map { it.trim() }.filter { it.isNotEmpty() }
     val bill = amount.toDoubleOrNull()?.takeIf { it >= 0 }?.let { yuan ->
         val fed = people.toIntOrNull()?.takeIf { it > 0 }
@@ -1056,7 +1026,7 @@ private fun AddTile(icon: ImageVector, label: String, onClick: () -> Unit, modif
 
 /** The day and the time of day on it, in one dialog, keeping the offset [time] has. */
 @Composable
-internal fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (OffsetDateTime) -> Unit) =
+fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (OffsetDateTime) -> Unit) =
     DateTimeDialog(time.toLocalDate(), time.hour, time.minute, onDismiss) { day, hour, minute ->
         onPick(OffsetDateTime.of(day, java.time.LocalTime.of(hour, minute), time.offset))
     }
@@ -1069,19 +1039,18 @@ internal fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (Of
  * were. Its place is the one chosen, as a Moment is at one place at most.
  */
 private suspend fun buildMoment(
-    context: Context,
-    container: PhoneContainer,
+    container: AppContainer,
     text: String,
-    photos: List<Uri>,
-    utility: Set<Uri>,
-    stills: Set<Uri>,
-    infos: Map<Uri, PhotoInfo>,
+    photos: List<PhotoRef>,
+    utility: Set<PhotoRef>,
+    stills: Set<PhotoRef>,
+    infos: Map<PhotoRef, PhotoInfo>,
     time: OffsetDateTime,
     place: PlaceChoice,
     food: MomentFood?,
     private: Boolean,
     original: MomentRecord? = null,
-    originalMedia: Map<Uri, MomentMedia> = emptyMap(),
+    originalMedia: Map<PhotoRef, MomentMedia> = emptyMap(),
 ): Pair<MomentRecord, Pair<String, Place>?> {
     val now = recordTime()
     val directory = File(container.localStore.root, "media")
@@ -1089,10 +1058,10 @@ private suspend fun buildMoment(
         val kept = (uri in utility).takeIf { it }
         originalMedia[uri]?.let { return@map it.copy(utility = kept) }
         val uid = Ulid.next()
-        val info = infos[uri] ?: Photos.read(context, uri)
+        val info = infos[uri] ?: Photos.read(uri)
         // A motion photo is split either way, so a photo alone is its still without the clip
         // trailing after it; a video gets a frame of itself as its still.
-        val copied = Photos.copy(context, uri, directory, uid, splitMotion = !info.video, poster = info.video)
+        val copied = Photos.copy(uri, directory, uid, splitMotion = !info.video, poster = info.video)
             .let { photo ->
                 if (info.video || uri !in stills) return@let photo
                 photo.video?.delete()
@@ -1110,8 +1079,8 @@ private suspend fun buildMoment(
             takenAt = info.takenAt?.let(::stamp),
             utility = kept,
             local = LocalMedia(
-                uri = Uri.fromFile(copied.file).toString(),
-                videoUri = copied.video?.let { Uri.fromFile(it).toString() },
+                uri = copied.file.toPhotoRef().toString(),
+                videoUri = copied.video?.let { it.toPhotoRef().toString() },
                 sha256 = copied.sha256,
                 copied = true,
             ),

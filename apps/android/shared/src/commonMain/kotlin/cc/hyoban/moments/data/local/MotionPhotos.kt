@@ -1,9 +1,6 @@
 package cc.hyoban.moments.data.local
 
-import android.content.Context
-import android.net.Uri
 import java.io.File
-import java.io.FileInputStream
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
@@ -18,17 +15,8 @@ object MotionPhotos {
     /** Where the clip starts in [file], or null when it is a plain photo. */
     fun videoStart(file: File): Long? = RandomAccessFile(file, "r").use { videoStart(it.channel) }
 
-    /** Whether the photo at [uri] is a motion photo; one that can't be read through is taken for a plain one. */
-    fun isMotion(context: Context, uri: Uri): Boolean = videoStart(context, uri) != null
-
-    /** Where the clip starts in the photo at [uri], or null when it is a plain photo or can't be read through. */
-    fun videoStart(context: Context, uri: Uri): Long? = runCatching {
-        context.contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
-            FileInputStream(descriptor.fileDescriptor).channel.use { videoStart(it) }
-        }
-    }.getOrNull()
-
-    private fun videoStart(channel: FileChannel): Long? {
+    /** Where the clip starts in what [channel] reads, or null when it is a plain photo. */
+    fun videoStart(channel: FileChannel): Long? {
         val size = channel.size()
         val head = read(channel, 0, minOf(size, XMP_READ).toInt())
         val length = videoLength(String(head, Charsets.ISO_8859_1)) ?: return null
@@ -45,7 +33,7 @@ object MotionPhotos {
     }
 
     /** The clip's length in bytes as the XMP in [head] gives it. */
-    internal fun videoLength(head: String): Long? {
+    fun videoLength(head: String): Long? {
         val xmp = head.substringAfter("<x:xmpmeta", "").substringBefore("</x:xmpmeta>").ifEmpty { return null }
         ITEM.findAll(xmp).map { it.value }.firstOrNull { "Semantic=\"MotionPhoto\"" in it }?.let { item ->
             return LENGTH.find(item)?.groupValues?.get(1)?.toLongOrNull()?.takeIf { it > 0 }
