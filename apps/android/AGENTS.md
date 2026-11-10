@@ -230,6 +230,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   regression checks, not fixtures.
 - The paired camera is spoken to only over Bluetooth and its own Wi‑Fi (`camera/`): the
   location goes to the camera alone and its photos come straight to the gallery.
+- The owner's UGREEN NAS (`nas/`), once set up in 同步与来源, is asked only from 选照片: UGREENlink
+  for where it is, by its ID alone, and the NAS itself for its photo app's photos. Its API is the
+  one its web app uses, undocumented (README, 选照片); read changes to it off the NAS's own web
+  bundle (`/photo/assets/`) or its traffic, and test deletes only when the owner asks.
 - Beyond the services named here, the app's one request of its own is for updates: the feed of this
   repository's GitHub releases (not GitHub's API, whose limit without a token a shared proxy uses up) and the APK it installs (`update/`), with nothing of the phone's.
 - No keys in the build: OpenFreeMap tiles drawn by MapLibre, Photon for place names, Valhalla

@@ -42,6 +42,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -54,12 +55,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -88,6 +91,13 @@ import cc.hyoban.moments.camera.CameraPhoto
 import cc.hyoban.moments.camera.CameraStore
 import cc.hyoban.moments.camera.CameraTransfer
 import cc.hyoban.moments.camera.rememberCameraPermissionAsk
+import cc.hyoban.moments.nas.Nas
+import cc.hyoban.moments.nas.NasAlbum
+import cc.hyoban.moments.nas.NasDeleteKind
+import cc.hyoban.moments.nas.NasException
+import cc.hyoban.moments.nas.NasFailure
+import cc.hyoban.moments.nas.NasPhoto
+import cc.hyoban.moments.nas.NasProtocol
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.components.PermissionWords
 import cc.hyoban.moments.ui.components.SubPage
@@ -145,22 +155,59 @@ private sealed interface Pick {
         override val day get() = photo.captured?.toLocalDate()
         override val choosable get() = photo.photo
     }
+
+    data class Nas(val photo: NasPhoto) : Pick {
+        override val key get() = photo.key
+        override val day get() = photo.taken?.toLocalDate()
+        override val choosable get() = true
+    }
 }
 
-/** Where the picker's photos come from: the whole gallery, one of its albums, or the paired camera. */
+/** Where the picker's photos come from: the whole gallery, one of its albums, the paired camera, or the NAS's photos or one of its albums. */
 private sealed interface Source {
     data object All : Source
     data class Album(val id: Long, val name: String) : Source
     data object Camera : Source
+    data class Nas(val album: NasAlbum?) : Source
+}
+
+/**
+ * The NAS's photos for one source, its timeline or one of its albums, read a page at a time as
+ * the grid nears the end of what is read; [failure] says why it couldn't be read.
+ */
+private class NasList(private val nas: Nas, val album: NasAlbum?) {
+    val photos: SnapshotStateList<NasPhoto> = mutableStateListOf()
+    var total by mutableStateOf<Int?>(null)
+    var loading by mutableStateOf(false)
+    var failure by mutableStateOf<NasFailure?>(null)
+    var started by mutableStateOf(false)
+    private val ended get() = total?.let { photos.size >= it } ?: false
+
+    suspend fun more() {
+        if (loading || ended || failure != null) return
+        loading = true
+        started = true
+        try {
+            val (page, count) = if (album == null) nas.timeline(photos.size) else nas.albumPhotos(album, photos.size)
+            photos.addAll(page)
+            total = if (page.isEmpty()) photos.size else count ?: if (page.size < Nas.PAGE) photos.size else null
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            android.util.Log.w(cc.hyoban.moments.camera.TAG, "nas: photos not read", e)
+            failure = (e as? NasException)?.failure ?: if (e is java.io.IOException) NasFailure.UNREACHABLE else NasFailure.OTHER
+        } finally { loading = false }
+    }
+
+    fun retry() { failure = null }
 }
 
 /**
  * 选照片 (39), over the Moment being written, in place of the system's picker: the phone's
- * gallery and the paired camera in one page, one grid and one viewer, switched from the title.
+ * gallery, the paired camera and the NAS in one page, one grid and one viewer, switched from the title.
  * What is chosen stays chosen across them, numbered in the order it goes into the Moment, at
  * most [limit]. The gallery asks for its permission first; refused, [onFallback] opens the
- * system's documents picker instead. [onAdded] has the photos, the camera's saved to the
- * gallery's Here album first. Leaving it leaves the camera's network.
+ * system's documents picker instead. [onAdded] has the photos, the camera's and the NAS's
+ * saved to the gallery's Here album first. Leaving it leaves the camera's network.
  */
 @Composable
 fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, onFallback: () -> Unit, onAdded: (List<Uri>) -> Unit) {
@@ -216,6 +263,19 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
     DisposableEffect(Unit) { onDispose { currentTransfer?.close() } }
     val cameraState = transfer?.state?.collectAsStateWithLifecycle()?.value
 
+    // The NAS, asked only once it is the source, and its albums then, for the title's menu.
+    val nas = container.nas.takeIf { it.configured }
+    var nasAlbums by remember { mutableStateOf<List<NasAlbum>>(emptyList()) }
+    var nasList by remember { mutableStateOf<NasList?>(null) }
+    val nasSource = source as? Source.Nas
+    LaunchedEffect(nasSource) {
+        val reach = nas ?: return@LaunchedEffect
+        val wanted = nasSource ?: return@LaunchedEffect
+        val list = nasList?.takeIf { it.album == wanted.album } ?: NasList(reach, wanted.album).also { nasList = it }
+        if (!list.started) list.more()
+        if (nasAlbums.isEmpty()) nasAlbums = try { reach.albums() } catch (e: Exception) { if (e is CancellationException) throw e; emptyList() }
+    }
+
     val chosen = remember { mutableStateListOf<Pick>() }
     val order by remember { derivedStateOf { chosen.withIndex().associate { (i, p) -> p.key to i } } }
     val full = chosen.size >= limit
@@ -229,6 +289,7 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
         Source.All -> remember(items) { items.map { Pick.Local(it) } }
         is Source.Album -> remember(items, s.id) { items.filter { it.albumId == s.id }.map { Pick.Local(it) } }
         Source.Camera -> (cameraState as? CameraTransfer.State.Ready)?.photos?.let { photos -> remember(photos) { photos.map { Pick.Camera(it) } } }.orEmpty()
+        is Source.Nas -> nasList?.takeIf { it.album == s.album }?.let { list -> remember(list, list.photos.size) { list.photos.map { Pick.Nas(it) } } }.orEmpty()
     }
 
     // Adding: the gallery's as they are, the camera's downloaded first, in the order chosen.
@@ -237,6 +298,9 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
     var within by remember { mutableFloatStateOf(0f) }
     var failed by remember { mutableStateOf(false) }
     val cameraChosen = chosen.filterIsInstance<Pick.Camera>()
+    val nasChosen = chosen.filterIsInstance<Pick.Nas>()
+    // How many are fetched before they go in: the camera's and the NAS's.
+    val fetching = cameraChosen.size + nasChosen.size
     val add: () -> Unit = {
         failed = false
         adding = scope.launch {
@@ -244,11 +308,14 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
                 val fromCamera = chosen.filterIsInstance<Pick.Camera>()
                 val saved = if (fromCamera.isEmpty() || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) emptyList()
                     else transfer!!.download(fromCamera.map { it.photo }) { index, fraction -> done = index; within = fraction }
-                val byKey = fromCamera.map { it.key }.zip(saved).toMap()
+                val fromNas = chosen.filterIsInstance<Pick.Nas>()
+                val fromNasSaved = if (fromNas.isEmpty()) emptyList()
+                    else container.nas.download(fromNas.map { it.photo }) { index, fraction -> done = fromCamera.size + index; within = fraction }
+                val byKey = fromCamera.map { it.key }.zip(saved).toMap() + fromNas.map { it.key }.zip(fromNasSaved).toMap()
                 onAdded(chosen.mapNotNull { pick ->
                     when (pick) {
                         is Pick.Local -> LocalMedia.forMoment(context, pick.item.uri)
-                        is Pick.Camera -> byKey[pick.key]
+                        is Pick.Camera, is Pick.Nas -> byKey[pick.key]
                     }
                 })
             } catch (e: Exception) {
@@ -285,15 +352,28 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
         }.onFailure { Toast.makeText(context, R.string.picker_trash_failed, Toast.LENGTH_SHORT).show() }
     }
 
+    // Deleting on the NAS: it says first whether they go to its recycle bin, and the dialog says so.
+    var nasDeleting by remember { mutableStateOf<Pair<List<NasPhoto>, NasDeleteKind>?>(null) }
+    val askNasDelete: (List<NasPhoto>) -> Unit = { these ->
+        scope.launch {
+            try { nasDeleting = these to container.nas.deleteKind(these) } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Toast.makeText(context, R.string.camera_delete_failed, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     val idle = adding == null && removing == null
     val sideways = isPhoneLandscape()
     val title = when (val s = source) {
         Source.All -> stringResource(R.string.picker_all)
         is Source.Album -> s.name
         Source.Camera -> camera?.name ?: stringResource(R.string.camera_model)
+        is Source.Nas -> s.album?.name ?: stringResource(R.string.section_nas)
     }
     val count = when (source) {
         Source.Camera -> (cameraState as? CameraTransfer.State.Ready)?.photos?.size
+        is Source.Nas -> nasList?.total ?: shown.size.takeIf { it > 0 }
         else -> shown.size
     }
     val subtitle = listOfNotNull(
@@ -326,6 +406,12 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
                 if (transfer == null) cameraAsk()
             }
         }
+        if (nas != null) {
+            item(stringResource(R.string.section_nas), null, AppIcons.Nas, source == Source.Nas(null), "picker_nas") { source = Source.Nas(null) }
+            nasAlbums.forEach { album ->
+                item(album.name, album.count, AppIcons.Nas, (source as? Source.Nas)?.album?.uuid == album.uuid, "picker_nas_${album.uuid}") { source = Source.Nas(album) }
+            }
+        }
     }
     val addButton = @Composable { tag: String, first: () -> Unit ->
         Button(onClick = { first(); add() }, modifier = Modifier.testTag(tag)) { Text(stringResource(R.string.camera_add, chosen.size)) }
@@ -334,13 +420,17 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
     val canDeleteCamera = source == Source.Camera && cameraChosen.isNotEmpty() && idle
     // The bar's delete takes what is chosen from the source shown: the gallery's, or the camera's.
     val localChosen = chosen.filterIsInstance<Pick.Local>()
-    val canTrashLocal = source != Source.Camera && localChosen.isNotEmpty() && idle
+    val canTrashLocal = (source == Source.All || source is Source.Album) && localChosen.isNotEmpty() && idle
+    val canDeleteNas = source is Source.Nas && nasChosen.isNotEmpty() && idle
 
     SubPage(
         title, onClose, subtitle = subtitle, close = true, titleMenu = menu,
         actions = {
             if (canDeleteCamera) IconButton(onClick = { deleting = cameraChosen.map { it.photo } }, modifier = Modifier.testTag("camera_delete_chosen")) {
                 Icon(AppIcons.Trash, contentDescription = stringResource(R.string.camera_delete_chosen, cameraChosen.size))
+            }
+            if (canDeleteNas) IconButton(onClick = { askNasDelete(nasChosen.map { it.photo }) }, modifier = Modifier.testTag("nas_delete_chosen")) {
+                Icon(AppIcons.Trash, contentDescription = stringResource(R.string.camera_delete_chosen, nasChosen.size))
             }
             if (canTrashLocal) IconButton(onClick = { moveToBin(localChosen.map { it.item }) }, modifier = Modifier.testTag("picker_trash_chosen")) {
                 Icon(AppIcons.Trash, contentDescription = stringResource(R.string.camera_delete_chosen, localChosen.size))
@@ -350,17 +440,28 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
     ) {
         if (source == Source.Camera) when (val s = cameraState) {
             null, is CameraTransfer.State.Connecting -> Steps((s as? CameraTransfer.State.Connecting)?.step ?: CameraTransfer.Step.WIFI_ON)
-            is CameraTransfer.State.Failed -> Failed(s.reason) { connect() }
-            is CameraTransfer.State.Ready -> Grid(shown, order, full, transfer, enabled = idle, columns = if (sideways) 8 else 4, limited = null, onToggle = toggle) { viewing = it.key }
+            is CameraTransfer.State.Failed -> Failed(AppIcons.CameraBody, s.reason, R.string.camera_failed_note) { connect() }
+            is CameraTransfer.State.Ready -> Grid(shown, order, full, transfer, null, enabled = idle, columns = if (sideways) 8 else 4, limited = null, onToggle = toggle) { viewing = it.key }
+        } else if (source is Source.Nas) {
+            val list = nasList?.takeIf { it.album == (source as Source.Nas).album }
+            val failure = list?.failure
+            when {
+                failure != null && shown.isEmpty() -> Failed(AppIcons.Nas, nasReason(failure), R.string.nas_failed_note) { list.retry(); scope.launch { list.more() } }
+                list == null || shown.isEmpty() && (list.loading || !list.started) -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Spinner() }
+                else -> Grid(
+                    shown, order, full, transfer, container.nas, enabled = idle, columns = if (sideways) 8 else 4, limited = null, onToggle = toggle,
+                    onNearEnd = { scope.launch { list.more() } },
+                ) { viewing = it.key }
+            }
         } else Grid(
-            shown, order, full, transfer, enabled = idle, columns = if (sideways) 8 else 4,
+            shown, order, full, transfer, null, enabled = idle, columns = if (sideways) 8 else 4,
             limited = if (access == GalleryAccess.CHOSEN) ({ Limited(items.size) { reselect.launch(LocalMedia.permissions) } }) else null,
             onToggle = toggle,
         ) { viewing = it.key }
         Column(Modifier.align(Alignment.BottomEnd).fillMaxWidth()) {
             if (removing != null) ProgressBar(stringResource(R.string.camera_deleting_count, (removed + 1).coerceAtMost(toRemove), toRemove), removed.toFloat() / toRemove.coerceAtLeast(1), null) { removing?.cancel() }
-            else if (adding != null && cameraChosen.isNotEmpty() || failed) {
-                val n = cameraChosen.size.coerceAtLeast(1)
+            else if (adding != null && fetching > 0 || failed) {
+                val n = fetching.coerceAtLeast(1)
                 if (failed) ProgressBar(stringResource(R.string.camera_download_failed), null, null, retry = add) {}
                 else ProgressBar(stringResource(R.string.picker_adding, (done + 1).coerceAtMost(n), n), (done + within) / n, stringResource(R.string.picker_add_note)) { adding?.cancel() }
             } else if (!sideways && canAdd) Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(Space.gutter), contentAlignment = Alignment.CenterEnd) {
@@ -379,6 +480,7 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
                 when (pick) {
                     is Pick.Camera -> deleting = listOf(pick.photo)
                     is Pick.Local -> moveToBin(listOf(pick.item))
+                    is Pick.Nas -> askNasDelete(listOf(pick.photo))
                 }
             },
             onClose = { viewing = null },
@@ -429,6 +531,54 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
             },
         )
     }
+
+    nasDeleting?.let { (these, kind) ->
+        val one = these.singleOrNull()
+        val bin = kind == NasDeleteKind.BIN
+        AlertDialog(
+            onDismissRequest = { nasDeleting = null },
+            title = { Text(if (one != null) stringResource(R.string.camera_delete_title) else stringResource(R.string.camera_delete_many_title, these.size)) },
+            text = {
+                Text(when {
+                    one != null && bin -> stringResource(R.string.nas_delete_bin, one.name)
+                    one != null -> stringResource(R.string.nas_delete_forever, one.name)
+                    bin -> stringResource(R.string.nas_delete_bin_many)
+                    else -> stringResource(R.string.nas_delete_forever_many)
+                })
+            },
+            dismissButton = { TextButton(onClick = { nasDeleting = null }) { Text(stringResource(R.string.action_cancel)) } },
+            confirmButton = {
+                TextButton(onClick = {
+                    nasDeleting = null
+                    val ids = these.map { it.id }.toSet()
+                    removed = 0
+                    toRemove = these.size
+                    removing = scope.launch {
+                        try {
+                            val missed = container.nas.delete(these)
+                            removed = these.size
+                            if (missed == 0) {
+                                chosen.removeAll { it is Pick.Nas && it.photo.id in ids }
+                                nasList?.let { list -> list.photos.removeAll { it.id in ids }; list.total = list.total?.minus(these.size) }
+                                if (viewing?.let { key -> these.any { it.key == key } } == true) viewing = afterDelete
+                            } else Toast.makeText(context, context.getString(R.string.camera_delete_missed, missed), Toast.LENGTH_SHORT).show()
+                        } catch (e: Exception) {
+                            if (e is CancellationException) throw e
+                            Toast.makeText(context, R.string.camera_delete_failed, Toast.LENGTH_SHORT).show()
+                        } finally { removing = null }
+                    }
+                }, modifier = Modifier.testTag("nas_delete_confirm")) { Text(stringResource(R.string.camera_delete), color = tokens.danger) }
+            },
+        )
+    }
+}
+
+/** What the picker says when the NAS couldn't be read. */
+private fun nasReason(failure: NasFailure) = when (failure) {
+    NasFailure.NOT_FOUND -> R.string.nas_failed_not_found
+    NasFailure.UNREACHABLE -> R.string.nas_failed_unreachable
+    NasFailure.SIGN_IN -> R.string.nas_failed_sign_in
+    NasFailure.OTHER -> R.string.nas_failed_other
 }
 
 /** The bar at the foot of the page while something goes on: what, how far, and stopping it; or failed, to try again. */
@@ -486,12 +636,12 @@ private fun Steps(step: CameraTransfer.Step) {
 }
 
 @Composable
-private fun Failed(reason: Int, onRetry: () -> Unit) {
+private fun Failed(icon: androidx.compose.ui.graphics.vector.ImageVector, reason: Int, note: Int, onRetry: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(top = LocalTopClearance.current + Space.xl * 3).padding(horizontal = Space.xl),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Space.s)) {
-        Icon(AppIcons.CameraBody, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(48.dp))
-        Text(stringResource(reason), style = AppTheme.typography.body)
-        Text(stringResource(R.string.camera_failed_note), style = AppTheme.typography.caption, color = tokens.tx3)
+        Icon(icon, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(48.dp))
+        Text(stringResource(reason), style = AppTheme.typography.body, textAlign = TextAlign.Center)
+        Text(stringResource(note), style = AppTheme.typography.caption, color = tokens.tx3, textAlign = TextAlign.Center)
         Box(Modifier.padding(top = Space.l)) { Button(onClick = onRetry, modifier = Modifier.testTag("camera_retry")) { Text(stringResource(R.string.action_retry)) } }
     }
 }
@@ -501,7 +651,7 @@ private val localThumbs = LruCache<String, Bitmap>(300)
 
 /** [pick]'s thumbnail, at [size] pixels for the gallery's, as the camera sent it for the camera's. */
 @Composable
-private fun rememberThumb(pick: Pick, transfer: CameraTransfer?, size: Int = 320): State<Bitmap?> {
+private fun rememberThumb(pick: Pick, transfer: CameraTransfer?, nas: Nas?, size: Int = 320): State<Bitmap?> {
     val context = LocalContext.current
     val cacheKey = "${pick.key}@$size"
     return produceState(localThumbs.get(cacheKey), cacheKey) {
@@ -511,6 +661,8 @@ private fun rememberThumb(pick: Pick, transfer: CameraTransfer?, size: Int = 320
                 runCatching { context.contentResolver.loadThumbnail(pick.item.uri, Size(size, size), null) }.getOrNull()
             }?.also { localThumbs.put(cacheKey, it) }
             is Pick.Camera -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) transfer?.thumbnail(pick.photo) else null
+            // The NAS keeps its own thumbnails, small for the grid and big for the viewer, and its client caches them.
+            is Pick.Nas -> nas?.thumbnail(pick.photo, if (size > 320) NasProtocol.BIG else NasProtocol.SMALL)
         }
     }
 }
@@ -525,6 +677,7 @@ private fun badge(pick: Pick): String? {
             val live by produceState(false, pick.key) { value = withContext(Dispatchers.IO) { LocalMedia.isMotion(context, pick.item) } }
             if (live) stringResource(R.string.label_live) else null
         }
+        is Pick.Nas -> if (pick.photo.video) pick.photo.duration?.trimStart('0')?.let { if (it.startsWith(':')) "0$it" else it } else if (pick.photo.live) stringResource(R.string.label_live) else null
     }
 }
 
@@ -539,18 +692,28 @@ private fun Grid(
     order: Map<String, Int>,
     full: Boolean,
     transfer: CameraTransfer?,
+    nas: Nas?,
     enabled: Boolean,
     columns: Int,
     limited: (@Composable () -> Unit)?,
     onToggle: (Pick) -> Unit,
+    onNearEnd: (() -> Unit)? = null,
     onOpen: (Pick) -> Unit,
 ) {
     val today = remember { LocalDate.now() }
     // By the day each was taken, newest first.
     val days = remember(shown) { shown.groupBy { it.day }.toList() }
+    val state = rememberLazyGridState()
+    // More of a source read a page at a time, as the grid nears the end of what is read.
+    val nearEnd by rememberUpdatedState(onNearEnd)
+    LaunchedEffect(state) {
+        snapshotFlow { state.layoutInfo.let { (it.visibleItemsInfo.lastOrNull()?.index ?: 0) to it.totalItemsCount } }
+            .collect { (last, total) -> if (total > 0 && last >= total - 40) nearEnd?.invoke() }
+    }
     LazyVerticalGrid(
         GridCells.Fixed(columns),
         Modifier.fillMaxSize().testTag("picker_grid"),
+        state = state,
         contentPadding = PaddingValues(top = LocalTopClearance.current, bottom = 120.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
         verticalArrangement = Arrangement.spacedBy(3.dp),
@@ -570,12 +733,12 @@ private fun Grid(
             }
             items(picks, key = { it.key }) { pick ->
                 val index = order[pick.key] ?: -1
-                val thumb by rememberThumb(pick, transfer)
+                val thumb by rememberThumb(pick, transfer, nas)
                 val corner = badge(pick)
-                val name = when (pick) { is Pick.Local -> pick.item.name.orEmpty(); is Pick.Camera -> pick.photo.name }
+                val name = when (pick) { is Pick.Local -> pick.item.name.orEmpty(); is Pick.Camera -> pick.photo.name; is Pick.Nas -> pick.photo.name }
                 val label = when {
                     pick is Pick.Camera && pick.photo.raw -> stringResource(R.string.camera_raw_description, name)
-                    pick is Pick.Local && pick.item.video -> stringResource(R.string.picker_video_description, name)
+                    pick is Pick.Local && pick.item.video || pick is Pick.Nas && pick.photo.video -> stringResource(R.string.picker_video_description, name)
                     else -> stringResource(R.string.camera_photo_description, name)
                 }
                 // At the limit, what can't be chosen any more is set back.
@@ -637,9 +800,10 @@ private fun ChoiceMark(index: Int, modifier: Modifier) {
 
 /** What [pick] says of itself for the info panel: what the list knows, and the EXIF once it can be read. */
 @Composable
-private fun rememberDetails(pick: Pick, transfer: CameraTransfer?): PhotoDetails? {
+private fun rememberDetails(pick: Pick, transfer: CameraTransfer?, nas: Nas): PhotoDetails? {
     val context = LocalContext.current
     val cardName = stringResource(R.string.picker_camera_card)
+    val nasName = stringResource(R.string.section_nas)
     val original = (pick as? Pick.Camera)?.let { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) transfer?.originalOf(it.photo)?.file else null }
     return produceState<PhotoDetails?>(null, pick.key, original) {
         value = when (pick) {
@@ -660,6 +824,18 @@ private fun rememberDetails(pick: Pick, transfer: CameraTransfer?): PhotoDetails
                     name = photo.name, format = PhotoDetails.format(photo.mime, photo.name), bytes = photo.size, album = cardName,
                 )
                 if (original != null) PhotoDetails.read(base) { original.inputStream() } else base
+            }
+            is Pick.Nas -> {
+                val photo = pick.photo
+                val base = PhotoDetails(
+                    takenAt = photo.taken?.atZone(ZoneId.systemDefault())?.toOffsetDateTime(),
+                    name = photo.name, format = PhotoDetails.format(photo.mime, photo.name),
+                    width = photo.width, height = photo.height, bytes = photo.size, album = photo.album?.name ?: nasName,
+                )
+                value = base
+                // Its EXIF from the start of the original, as a published one's.
+                val head = if (photo.video) null else nas.head(photo)
+                if (head != null) PhotoDetails.read(base) { head.inputStream() } else base
             }
         }
     }.value
@@ -700,7 +876,7 @@ private fun Viewer(
     val opened by animateFloatAsState(if (info) 1f else 0f, AppTheme.motionScheme.defaultSpatialSpec(), label = "info")
     var drag by remember { mutableFloatStateOf(0f) }
     val current = shown.getOrNull(pager.currentPage)
-    val details = current?.let { rememberDetails(it, transfer) }
+    val details = current?.let { rememberDetails(it, transfer, container.nas) }
 
     Box(Modifier.fillMaxSize().background(Color.Black).testTag("picker_viewer")) {
         // Zoomed in, a swipe moves the photo rather than turning the page.
@@ -741,7 +917,7 @@ private fun Viewer(
             ) { page ->
                 val pick = shown[page]
                 val settled = pager.currentPage == page
-                ViewerPage(pick, transfer) { if (settled) zoomed = it }
+                ViewerPage(pick, transfer, container.nas) { if (settled) zoomed = it }
             }
         }) { modifier -> PhotoInfoPanel(container, details, modifier, note = stringResource(R.string.picker_info_camera_note).takeIf { current is Pick.Camera && details?.make == null && details?.focal == null }) }
 
@@ -775,7 +951,7 @@ private fun Viewer(
                 val at = details?.takenAt
                 Text(
                     listOfNotNull(at?.let { "${formatDay(it.toLocalDate().toString())} ${"%02d:%02d".format(it.hour, it.minute)}" },
-                        when (current) { is Pick.Local -> current.item.album; is Pick.Camera -> current.photo.name }).joinToString(" · "),
+                        when (current) { is Pick.Local -> current.item.album; is Pick.Camera -> current.photo.name; is Pick.Nas -> current.photo.album?.name ?: stringResource(R.string.section_nas) }).joinToString(" · "),
                     style = AppTheme.typography.caption, color = MediaOverlay.content, modifier = Modifier.weight(1f),
                 )
                 IconButton(onClick = { info = true }, modifier = Modifier.testTag("picker_viewer_info")) {
@@ -803,14 +979,14 @@ private fun Viewer(
 
 /** One photo in the viewer: the gallery's from the file itself, the camera's as above. */
 @Composable
-private fun ViewerPage(pick: Pick, transfer: CameraTransfer?, onZoom: (Boolean) -> Unit) {
+private fun ViewerPage(pick: Pick, transfer: CameraTransfer?, nas: Nas, onZoom: (Boolean) -> Unit) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         when (pick) {
             is Pick.Local -> {
                 val item = pick.item
-                val small by rememberThumb(pick, transfer)
+                val small by rememberThumb(pick, transfer, null)
                 // A video shows a frame of it; the gallery plays it.
-                val large by rememberThumb(pick, transfer, size = if (item.video) 1440 else 320)
+                val large by rememberThumb(pick, transfer, null, size = if (item.video) 1440 else 320)
                 val shape = if (item.width != null && item.height != null && item.height > 0) item.width.toFloat() / item.height else null
                 ZoomablePhoto(shape ?: small?.let { it.width.toFloat() / it.height } ?: 1f, onZoom) {
                     (if (item.video) large else small)?.let { Image(it.asImageBitmap(), contentDescription = item.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
@@ -821,7 +997,7 @@ private fun ViewerPage(pick: Pick, transfer: CameraTransfer?, onZoom: (Boolean) 
             is Pick.Camera -> {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || transfer == null) return@Box
                 val info = pick.photo
-                val thumb by rememberThumb(pick, transfer)
+                val thumb by rememberThumb(pick, transfer, null)
                 val original = transfer.originalOf(info)
                 val file = original?.file
                 var shape by remember(pick.key) { mutableFloatStateOf(0f) }
@@ -833,6 +1009,20 @@ private fun ViewerPage(pick: Pick, transfer: CameraTransfer?, onZoom: (Boolean) 
                     }
                 }
                 if (info.photo && file == null && original != null) Loading(original) { transfer.loadOriginal(info) }
+            }
+            is Pick.Nas -> {
+                // The NAS's big thumbnail over its small one; the original comes down only when it is added.
+                val photo = pick.photo
+                val small by rememberThumb(pick, transfer, nas)
+                val large by rememberThumb(pick, transfer, nas, size = 1440)
+                val shown = large ?: small
+                val shape = shown?.let { it.width.toFloat() / it.height }
+                    ?: if (photo.width != null && photo.height != null && photo.height > 0) photo.width.toFloat() / photo.height else 1f
+                ZoomablePhoto(shape, onZoom) {
+                    shown?.let { Image(it.asImageBitmap(), contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
+                }
+                if (shown == null) Spinner(color = MediaOverlay.content)
+                if (photo.video) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))
             }
         }
     }

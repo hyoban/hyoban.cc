@@ -72,6 +72,9 @@ class AppContainer(context: Context) {
     val ledger = cc.hyoban.moments.ledger.LedgerStore(context)
     /** The databases backed up to the owner's WebDAV directory, when one is set. */
     val backup = cc.hyoban.moments.backup.Backup(context)
+
+    /** The owner's UGREEN NAS, whose photo app 选照片 reads; nothing is asked of it until it is set up. */
+    val nas = cc.hyoban.moments.nas.Nas(context)
     /** The app's own updates, from its GitHub releases. */
     val updates = cc.hyoban.moments.update.Updates(context)
 

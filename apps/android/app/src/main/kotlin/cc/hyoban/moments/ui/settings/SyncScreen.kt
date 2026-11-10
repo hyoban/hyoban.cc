@@ -82,6 +82,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
     var editingAmapKey by rememberSaveable { mutableStateOf(false) }
     var editingBackup by rememberSaveable { mutableStateOf(false) }
     var restoring by rememberSaveable { mutableStateOf(false) }
+    var editingNas by rememberSaveable { mutableStateOf(false) }
     val rows = listOf(
         Row(settings.apiUrl, R.string.setting_api_url, AppIcons.Cloud) { container.changeApi(it) },
     )
@@ -131,6 +132,7 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                 }
                 Section(stringResource(R.string.section_site), rows.subList(0, 1), 0, stringResource(R.string.settings_api_note), extra = listOf(token, refresh)) { editing = it }
                 BackupSection(container.backup, onEdit = { editingBackup = true }, onRestore = { restoring = true })
+                NasSection(container.nas) { editingNas = true }
                 // The keys the place picker asks AMap and Tencent with in China, kept beside the map's styles, and,
                 // with both, which it asks first: a menu under the row.
                 val chinaPlaces: Segment = { shapes ->
@@ -220,6 +222,21 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
         ) { url, user, password ->
             backup.change(url, user, password)
             editingBackup = false
+        }
+    }
+
+    if (editingNas) {
+        val nas = container.nas
+        NasDialog(
+            nas,
+            onDismiss = { editingNas = false },
+            onForget = {
+                nas.forget()
+                editingNas = false
+            },
+        ) { link, user, password ->
+            nas.change(link, user, password)
+            editingNas = false
         }
     }
 
