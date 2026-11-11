@@ -127,7 +127,8 @@ dragging. `trip-map-toolbar__actions` on the toolbar's buttons moves them aside 
    `photo` (a square thumbnail about 96 pixels wide) and the map draws it as that photo,
    framed in white with its year's dot; without one it's a balloon in its year's colour
    with its `kind`'s icon (`cafe`, `station`…, as `@hyoban/data-spec` names them) and its
-   name under it where there's room. Crowded places stack, with their Moments counted.
+   name under it where there's room. An open place's pin lifts off it, larger, over a dot
+   left on the spot with its name in bold. Crowded places stack, with their Moments counted.
    Give a trip summary a `color` and its route is drawn in it, else in the text colour.
 
    ```ts

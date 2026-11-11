@@ -291,13 +291,112 @@
   transform: scale(1.15);
 }
 
-/* The open place's pin, larger, as MapKit lifts a selected one. */
+/* The dot that keeps a place's very spot while its open pin floats above it. */
+.trip-map-pin-anchor {
+  position: absolute;
+  left: 50%;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  pointer-events: none;
+  visibility: hidden;
+  background: var(--marker-color);
+  border: 1.5px solid #fff;
+  border-radius: 9999px;
+  box-shadow: 0 0 0.1875rem rgb(0 0 0 / 0.35);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.4);
+}
+
+/* Gone at once as the pin comes down, as MapKit drops its dot first. */
+.trip-map-marker > span.trip-map-pin-anchor {
+  transition-duration: 80ms;
+}
+
+/* A photo's place is its middle; a balloon's, its tail's tip. */
+.trip-map-pin-photo + .trip-map-pin-anchor {
+  top: 50%;
+}
+
+.trip-map-pin-balloon + .trip-map-pin-anchor {
+  top: 100%;
+}
+
+/* A photo's tail, shown once it lifts off its place: a corner of its frame, shadowed like
+   it so it holds up on a pale map, pointing down at the dot on the spot. */
+.trip-map-marker .trip-map-pin-photo::after {
+  position: absolute;
+  top: calc(100% + 0.125rem);
+  left: 50%;
+  /* Under the photo, so only its point shows below the frame. */
+  z-index: -1;
+  width: 0.5rem;
+  height: 0.5rem;
+  content: '';
+  background: #fff;
+  border-bottom-right-radius: 0.125rem;
+  box-shadow: 0.0625rem 0.0625rem 0.125rem rgb(0 0 0 / 0.25);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+  transition: opacity 160ms;
+}
+
+.trip-map-pin-photo__year {
+  transition: opacity 160ms;
+}
+
+/* Lifted, the photo leaves its year's colour to the dot on the spot. */
+.trip-map-marker[aria-pressed='true'] .trip-map-pin-photo__year {
+  opacity: 0;
+}
+
+/* The open place's pin lifts off it, larger, as MapKit lifts a selected one: its tail
+   stops short of a dot left on the spot, and its name hangs in bold under the dot. */
 .trip-map-marker[aria-pressed='true'] .trip-map-pin-photo {
-  transform: scale(1.45);
+  transform: translateY(calc(-50% - 1.125rem)) scale(1.8);
+  transform-origin: 50% 100%;
+}
+
+.trip-map-marker[aria-pressed='true'] .trip-map-pin-photo::after {
+  opacity: 1;
 }
 
 .trip-map-marker[aria-pressed='true'] .trip-map-pin-balloon {
-  transform: scale(1.3);
+  transform: translateY(-0.5625rem) scale(1.7);
+}
+
+.trip-map-marker[aria-pressed='true'] .trip-map-pin-anchor {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, -50%);
+  transition-duration: 220ms;
+  transition-delay: 60ms;
+}
+
+.trip-map-pin-label--open {
+  display: none;
+}
+
+/* Two lines at most, as MapKit wraps a selected name rather than cutting it. */
+.trip-map-marker[aria-pressed='true'] :is(.trip-map-pin-label, .trip-map-pin-label[hidden]) {
+  display: -webkit-box;
+  width: max-content;
+  max-width: 8rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1rem;
+  text-align: center;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Under the dot. */
+.trip-map-marker[aria-pressed='true'] .trip-map-pin-label {
+  top: calc(100% + 0.375rem);
+}
+
+.trip-map-marker[aria-pressed='true'] .trip-map-pin-label--open {
+  top: calc(50% + 0.5rem);
 }
 
 .trip-map-marker:focus-visible :is(.trip-map-pin-photo, .trip-map-pin-balloon),

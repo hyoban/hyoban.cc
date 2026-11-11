@@ -441,6 +441,27 @@ export function createPlaceMarkers({
     return balloon
   }
 
+  /**
+   * The dot on a place under its open pin, as MapKit leaves one where a selected marker
+   * lifts off: the pin floats above, and the dot keeps the very spot.
+   */
+  function createAnchor() {
+    const anchor = document.createElement('span')
+
+    anchor.className = 'trip-map-pin-anchor'
+    anchor.setAttribute('aria-hidden', 'true')
+    return anchor
+  }
+
+  function createLabel(name: string, className: string) {
+    const label = document.createElement('span')
+
+    label.className = className
+    label.setAttribute('aria-hidden', 'true')
+    label.textContent = name
+    return label
+  }
+
   /** Where a pin's name pops up: above it, or beside or under it near the map's edges. */
   function getPopupOffset({
     lift,
@@ -478,14 +499,16 @@ export function createPlaceMarkers({
       button.setAttribute('aria-pressed', 'false')
 
       if (place.photo) {
-        button.append(createPhoto(place.photo))
+        // A photo shows its name only while it's open, lifted over its place.
+        button.append(
+          createPhoto(place.photo),
+          createAnchor(),
+          createLabel(place.name, 'trip-map-pin-label trip-map-pin-label--open'),
+        )
       } else {
-        label = document.createElement('span')
-        label.className = 'trip-map-pin-label'
-        label.setAttribute('aria-hidden', 'true')
-        label.textContent = place.name
+        label = createLabel(place.name, 'trip-map-pin-label')
         label.hidden = true
-        button.append(createBalloon(place.kind), label)
+        button.append(createBalloon(place.kind), createAnchor(), label)
       }
 
       const entry: MarkerEntry = {
@@ -504,7 +527,8 @@ export function createPlaceMarkers({
       const showPopup = () => {
         const map = getMap()
 
-        if (map && !quietFocus) {
+        // The open place's pin, lifted, already has its name under it.
+        if (map && !quietFocus && button.getAttribute('aria-pressed') !== 'true') {
           popup.setLngLat(getNudgedLngLat(map, entry.coordinates, entry.nudge)).addTo(map)
         }
       }
