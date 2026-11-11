@@ -47,7 +47,7 @@ func currentLocation() async -> CLLocationCoordinate2D? {
     Locator.manager.requestWhenInUseAuthorization()
     do {
         for try await update in CLLocationUpdate.liveUpdates() {
-            if let location = update.location { return location.coordinate }
+            if let location = update.location { return ChinaShift.onMap(location.coordinate) }
             if update.authorizationDenied || update.authorizationDeniedGlobally || update.authorizationRestricted { return nil }
         }
     } catch {

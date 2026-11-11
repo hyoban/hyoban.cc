@@ -71,6 +71,11 @@ What it does and keeps:
   by name or area, grouped, ↑↓ and ↩ to pick; empty, it lists the last eight opened (user defaults,
   `map.recents`). A place's Directions opens Apple Maps; Share sends an Apple Maps link. SwiftUI's
   MapKit has no clustering, so close places are not merged.
+- **China's basemap** is drawn in GCJ-02, and MapKit takes the coordinates it is given as they are.
+  The records stay in WGS 84; what the map draws in the mainland, Hong Kong and Macau (places,
+  routes, the cities the fog lifts, the camera's targets, what Directions and Share hand to Maps)
+  is shifted onto it first (`ChinaShift`), over the area Android shifts by (`gcj-area.json`,
+  which the script puts in the app).
 - **Settings** (⌘,) hold only the API's address and token; until they are set, a note over the map
   opens them.
 

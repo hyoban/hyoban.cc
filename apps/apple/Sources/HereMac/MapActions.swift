@@ -7,10 +7,11 @@ import SwiftUI
 // What a place or a trip can do from its card, a search row's context menu or its pin, as Maps
 // offers them: Directions in Maps, Share, Copy, and a trip's page on the site.
 
+@MainActor
 enum PlaceActions {
     /// Apple Maps, with directions to [place] from where this Mac is.
     static func directions(to place: Place) {
-        let item = MKMapItem(location: CLLocation(latitude: place.latitude, longitude: place.longitude), address: nil)
+        let item = MKMapItem(location: CLLocation(latitude: place.coordinate.latitude, longitude: place.coordinate.longitude), address: nil)
         item.name = place.name
         item.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDefault])
     }
@@ -19,7 +20,7 @@ enum PlaceActions {
     static func link(_ place: Place) -> URL? {
         var parts = URLComponents(string: "https://maps.apple.com/")
         parts?.queryItems = [
-            URLQueryItem(name: "ll", value: "\(place.latitude),\(place.longitude)"),
+            URLQueryItem(name: "ll", value: "\(place.coordinate.latitude),\(place.coordinate.longitude)"),
             URLQueryItem(name: "q", value: place.name),
         ]
         return parts?.url
