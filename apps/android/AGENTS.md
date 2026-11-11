@@ -40,8 +40,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   content address or a file on the Mac), taking the application's context from `AndroidApp`
   where no caller has one; the Mac's is in `jvmMain`. The Mac takes pictures from the system's
   file dialog and not yet videos, and has no ledger (`NoLedger`), so nothing there offers a bill.
-- The Mac's shell (`:desktop`'s `Main.kt`) follows the design system's Sidebar card: the
-  sections down a sidebar 232 wide, and beside it the page on top of that section's stack, each
+- The Mac's shell (`:desktop`'s `Main.kt`) follows the design system's Sidebar card: no title
+  bar of its own (the content runs up under a transparent one, the window's buttons over the
+  sidebar's top, which still drags the window), the sections down a sidebar 232 wide, and beside it the page on top of that section's stack, each
   a shared page. Its pages still draw the phone's top bars; the desktop's toolbars come later.
 - A declaration `:app` uses from `:shared` is public, and its tests stay in `:app` until they
   move too. A string resource is held as a `StringResource`, never an `Int`. The generators write into `:shared` (`Tokens.kt`, `AppIcons.kt`, `CopyTables.kt`,

@@ -107,6 +107,7 @@ import cc.hyoban.moments.ui.trips.TripCard
 import cc.hyoban.moments.ui.trips.TripPlayerScreen
 import cc.hyoban.moments.ui.trips.TripScreen
 import org.jetbrains.compose.resources.StringResource
+import androidx.compose.foundation.window.WindowDraggableArea
 import org.maplibre.compose.desktop.ProvideMapPresentationHost
 import org.maplibre.compose.desktop.rememberAwtComposeMapPresentationHost
 import org.jetbrains.compose.resources.stringResource
@@ -138,9 +139,22 @@ private fun app() = application {
             true
         },
     ) {
+        // No title bar of its own: the page runs up under a transparent one, its title hidden,
+        // the window's buttons standing over the top of the sidebar, as a Mac app's sidebar has them.
+        remember(window) {
+            window.rootPane.putClientProperty("apple.awt.fullWindowContent", true)
+            window.rootPane.putClientProperty("apple.awt.transparentTitleBar", true)
+            window.rootPane.putClientProperty("apple.awt.windowTitleVisible", false)
+        }
         // The maps draw into this window's own Metal context.
         ProvideMapPresentationHost(rememberAwtComposeMapPresentationHost(window)) {
-            MomentsTheme { Shell(container, shell) }
+            MomentsTheme {
+                Box(Modifier.fillMaxSize()) {
+                    Shell(container, shell)
+                    // Where the title bar was, over the sidebar, still moves the window.
+                    WindowDraggableArea(Modifier.width(SIDEBAR_WIDTH).height(TITLE_BAR)) { Box(Modifier.fillMaxSize()) }
+                }
+            }
         }
     }
 }
@@ -221,6 +235,9 @@ private class Shell {
 }
 
 private val SIDEBAR_WIDTH = 232.dp
+
+/** The height of the title bar the window no longer draws, kept clear at the sidebar's top for its buttons. */
+private val TITLE_BAR = 28.dp
 private val SIDEBAR_ITEM = 32.dp
 private val SIDEBAR_ICON = 18.dp
 
@@ -254,7 +271,7 @@ private fun Shell(container: DesktopContainer, shell: Shell) {
 private fun Sidebar(container: DesktopContainer, shell: Shell) {
     val settings = container.settings
     Column(
-        Modifier.fillMaxHeight().width(SIDEBAR_WIDTH).background(tokens.surface).padding(horizontal = Space.s).padding(top = Space.l, bottom = Space.m),
+        Modifier.fillMaxHeight().width(SIDEBAR_WIDTH).background(tokens.surface).padding(horizontal = Space.s).padding(top = TITLE_BAR + Space.s, bottom = Space.m),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         val foot = listOf(Section.Publish, Section.Visibility, Section.Settings)
