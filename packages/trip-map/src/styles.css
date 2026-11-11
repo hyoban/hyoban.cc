@@ -1156,6 +1156,11 @@
   z-index: 100001;
 }
 
+/* A pin's or route's name over the whole pile. */
+.trip-map-page .mapboxgl-popup.trip-map-popup {
+  z-index: 100002;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .trip-map-page .trip-map-marker > span,
   .trip-map-legend {
