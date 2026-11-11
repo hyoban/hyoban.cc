@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Here's icon on the Mac: the phone's launcher icon (app/src/main/res/drawable/ic_launcher_*),
+       its middle 72 of 108 (what a launcher's mask shows) on the macOS icon grid's 824 body. -->
+  <defs>
+    <clipPath id="body"><rect x="100" y="100" width="824" height="824" rx="185"/></clipPath>
+    <clipPath id="head"><path d="M4,80C4,64 17,56 34,56C51,56 64,64 64,80C64,94 51,102 34,102C17,102 4,94 4,80zM7.5,69C7,61 8.5,55 11.5,53C13.5,51.8 17,52.5 25,58.5zM43,58.5C51,52.5 54.5,51.8 56.5,53C59.5,55 61,61 60.5,69z"/></clipPath>
+  </defs>
+  <g clip-path="url(#body)">
+    <rect x="100" y="100" width="824" height="824" fill="#2B3A5C"/>
+    <g transform="translate(100 100) scale(11.4444) translate(-18 -18)">
+      <g transform="translate(47 68) rotate(-8) scale(1.18) translate(-34 -78)">
+        <g clip-path="url(#head)">
+          <path fill="#FFFFFF" d="M0,40H70V110H0z"/>
+          <path fill="#5A5F66" d="M0,40H29.5C29.5,52 28.5,60 26,66.5C21,68.8 13,69.2 6,68.3L0,67z"/>
+          <path fill="#5A5F66" d="M35,40H70V84C63,86.5 56,88 50,87.5C43,87 37.5,83 37,76C36.6,66 36.5,52 35,40z"/>
+          <path fill="#FFFFFF" d="M43,58.5C51,52.5 54.5,51.8 56.5,53C59.5,55 61,61 60.5,69z"/>
+        </g>
+        <path fill="#231F1C" d="M14.1,77.7a7.6,7.6 0,1 1,15.2,0a7.6,7.6 0,1 1,-15.2,0z"/>
+        <path fill="#FFFFFF" d="M21.8,74.6a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0z"/>
+        <path fill="#231F1C" d="M39.1,76.7a7.6,7.6 0,1 1,15.2,0a7.6,7.6 0,1 1,-15.2,0z"/>
+        <path fill="#FFFFFF" d="M46.8,73.6a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0z"/>
+        <path fill="#F2A0AA" d="M31.8,85.4Q34,84.6 36.2,85.4Q36.7,85.7 36.3,86.2L34.6,87.9Q34,88.4 33.4,87.9L31.7,86.2Q31.3,85.7 31.8,85.4z"/>
+      </g>
+    </g>
+  </g>
+</svg>

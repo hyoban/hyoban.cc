@@ -14,6 +14,12 @@ pluginManagement {
     }
 }
 
+// Lets a build fetch a JDK it lacks: the Mac app is packaged with Temurin, whose jpackage
+// Compose accepts (Android Studio's JDK has none, and Homebrew's is refused).
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
 val localProperties = Properties().apply {
     rootDir.resolve("local.properties").takeIf { it.isFile }?.inputStream()?.use(::load)
 }

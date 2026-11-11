@@ -1,0 +1,46 @@
+name: Mac release
+
+# Pushing a tag `mac-v1.2.3` builds the Mac app at that version, its jars shrunk by ProGuard,
+# and puts `Here-1.2.3.dmg` in a GitHub release of the same name. It isn't signed yet: the first open is right-click › Open.
+# The phone's updates read only `android-v` tags, so these releases don't reach it.
+on:
+  push:
+    tags:
+      - 'mac-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: apps/android
+    steps:
+      - uses: actions/checkout@v7
+      # Temurin, whose jpackage Compose packages with (the build asks Gradle for it by vendor).
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Prepare MapLibre Maven repositories
+        env:
+          MAPLIBRE_MAVEN_ROOT: ${{ runner.temp }}/maplibre-maven
+        run: |
+          ./scripts/prepare-maplibre-maven.sh
+          echo "MAPLIBRE_COMPOSE_REPOSITORY=$MAPLIBRE_MAVEN_ROOT/compose" >> "$GITHUB_ENV"
+          echo "MAPLIBRE_NATIVE_FFI_REPOSITORY=$MAPLIBRE_MAVEN_ROOT/native-ffi" >> "$GITHUB_ENV"
+      - name: Build the release
+        run: |
+          version="${GITHUB_REF_NAME#mac-v}"
+          ./gradlew :desktop:packageReleaseDmg -PappVersion="$version" --no-daemon
+          cp "desktop/build/compose/binaries/main-release/dmg/Here-$version.dmg" "$RUNNER_TEMP/Here-$version.dmg"
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#mac-v}"
+          gh release create "$GITHUB_REF_NAME" "$RUNNER_TEMP/Here-$version.dmg" \
+            --title "Here for Mac $version" --generate-notes --latest=false

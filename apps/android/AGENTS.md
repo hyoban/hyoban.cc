@@ -39,11 +39,25 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   of an `expect` (`Photos`, which reads and copies a picked photo, `PhotoRef`, the phone's
   content address or a file on the Mac), taking the application's context from `AndroidApp`
   where no caller has one; the Mac's is in `jvmMain`. The Mac takes pictures from the system's
-  file dialog and not yet videos, and has no ledger (`NoLedger`), so nothing there offers a bill.
+  file dialog and not yet videos.
+- The ledger and the footprints on a desktop or a tablet are the phone's latest WebDAV backup,
+  read by `backup/PhoneBackup` in `:shared` and only shown (`LedgerSource.writable` false): no bill
+  is written, edited or deleted there and the ledger's settings stay on the phone, as the canvas's
+  D17–D20 and T17–T20 draw; a page gates each write on `writable`.
+- Share code first: the Mac's version of anything goes into `:shared`, a page's desktop layout
+  as a branch on `LocalDesktop` in the shared page or a shared component (`ui/design/Desktop.kt`:
+  `Toolbar`, `DesktopDialog`, `DesktopButton`), and what only differs by device as a `Device`
+  member. `:desktop` keeps only the windows (`Main.kt`), the container and `DesktopDevice`.
 - The Mac's shell (`:desktop`'s `Main.kt`) follows the design system's Sidebar card: no title
   bar of its own (the content runs up under a transparent one, the window's buttons over the
-  sidebar's top, which still drags the window), the sections down a sidebar 232 wide, and beside it the page on top of that section's stack, each
-  a shared page. Its pages still draw the phone's top bars; the desktop's toolbars come later.
+  sidebar's top, which still drags the window), the sections down a sidebar 232 wide (64, icons
+  alone, under 1024), and beside it the page on top of that section's stack, each a shared page.
+  `SubPage` and `TabPage` draw the design's 52 toolbar there in place of the floating circles; the
+  editors open as `DesktopDialog`s over the page they came from, a bill or a place in the inspector
+  beside its page, and a bottom sheet as the inspector down the window's end; 设置 is a window of
+  its own (`SettingsPanes`, which the Pad's settings can take too); 初次打开 a small window. Esc
+  and ⌘[ go to the pages' own `BackHandler`s first (`DesktopBack`), so a draft is asked about
+  before it goes; a page takes the window's keys with `OnDesktopKey`.
 - A declaration `:app` uses from `:shared` is public, and its tests stay in `:app` until they
   move too. A string resource is held as a `StringResource`, never an `Int`. The generators write into `:shared` (`Tokens.kt`, `AppIcons.kt`, `CopyTables.kt`,
   `Modules.kt`); the paths below are packages, in whichever module holds them.
@@ -71,8 +85,12 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   with the same key, the release key in `local.properties` or else the debug key, so either
   installs over the other and the app's data stays. The emulator only ever gets the debug
   build, so `run-as` can read its files.
-- Releases go to GitHub by pushing an `android-v<x.y.z>` tag (README, Releasing), and only
-  when the user asks for one. The release key and its passwords are the user's: never create,
+- Releases go to GitHub by pushing an `android-v<x.y.z>` tag, or `mac-v<x.y.z>` for the Mac
+  (README, Releasing), and only when the user asks for one. The Mac's DMG is unsigned for now;
+  check a packaging change by opening the packaged release (`./gradlew :desktop:packageReleaseDmg`,
+  ProGuard's), not only `:desktop:run`, each page by `HERE_OPEN` with its standard error read, maps
+  included, as what is left out of it shows only there. A library reached by reflection, JNI or
+  ServiceLoader that is added to the Mac is kept whole in `desktop/rules.pro`. The release key and its passwords are the user's: never create,
   read, print or commit them, nor set the repository's secrets.
 - Testing never costs the app's data: the ledger and footprints live in `noBackupFilesDir`
   and have no other copy. Ask before anything that would lose or reset it, and say what
