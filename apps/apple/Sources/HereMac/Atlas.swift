@@ -47,7 +47,9 @@ extension CLLocationCoordinate2D {
 }
 
 extension Place {
-    var coordinate: CLLocationCoordinate2D { CLLocationCoordinate2D(latitude: latitude, longitude: longitude) }
+    /// Where the map draws it, shifted onto the mainland's basemap (`ChinaShift`).
+    @MainActor
+    var coordinate: CLLocationCoordinate2D { ChinaShift.onMap(CLLocationCoordinate2D(latitude: latitude, longitude: longitude)) }
 }
 
 /// A stretch of a trip's route: a drive along roads, or a train, ferry or flight drawn dashed.
@@ -84,7 +86,7 @@ enum TripRoutes {
         let segments = stretches.compactMap { stretch -> RouteSegment? in
             let line = (stretch["line"].array ?? stretch["coordinates"].array ?? []).compactMap { pair -> CLLocationCoordinate2D? in
                 guard let lng = pair[0].double, let lat = pair[1].double else { return nil }
-                return CLLocationCoordinate2D(latitude: lat, longitude: lng)
+                return ChinaShift.onMap(CLLocationCoordinate2D(latitude: lat, longitude: lng))
             }
             return line.count >= 2 ? RouteSegment(line: line, straight: stretch["straight"].bool ?? false) : nil
         }
@@ -92,11 +94,11 @@ enum TripRoutes {
     }
 }
 
-/// Where an entry was: its place's point, else its own.
+/// Where an entry was, as the map draws it: its place's point, else its own.
 @MainActor
 func coordinate(of entry: Entry, in store: HereStore) -> CLLocationCoordinate2D? {
     if let id = entry.place, let place = store.places[id] { return place.coordinate }
-    return entry.point.map(CLLocationCoordinate2D.init)
+    return entry.point.map { ChinaShift.onMap(CLLocationCoordinate2D($0)) }
 }
 
 /// A place as the map shows it.

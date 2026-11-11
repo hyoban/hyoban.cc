@@ -60,12 +60,14 @@ final class FogShape {
         var enclaves: [MKPolygon] = []
         for region in regions where lit[region.id] != nil {
             let opacity = Thickness.of(lit[region.id] ?? 1)
+            // A city of the mainland, Hong Kong or Macau is drawn on the shifted basemap; Taiwan's are not.
+            let shifted = region.id.first?.isNumber == true && !region.id.hasPrefix("71")
             for polygon in region.polygons {
                 guard let outer = polygon.first else { continue }
-                let shape = Self.polygon(outer)
+                let shape = Self.polygon(outer, shifted: shifted)
                 holes.append(shape)
                 if opacity > 0.001 { thinned.append((shape, opacity)) }
-                enclaves += polygon.dropFirst().map(Self.polygon)
+                enclaves += polygon.dropFirst().map { Self.polygon($0, shifted: shifted) }
             }
         }
         // The world as map points, a little inside its edges so MapKit doesn't wrap it.
@@ -84,12 +86,13 @@ final class FogShape {
         provinces = Set(lit.keys.map { $0.prefix(2) }).count
     }
 
-    private static func polygon(_ ring: [Double]) -> MKPolygon {
+    private static func polygon(_ ring: [Double], shifted: Bool) -> MKPolygon {
         var coordinates: [CLLocationCoordinate2D] = []
         coordinates.reserveCapacity(ring.count / 2)
         var index = 0
         while index + 1 < ring.count {
-            coordinates.append(CLLocationCoordinate2D(latitude: ring[index + 1], longitude: ring[index]))
+            let point = CLLocationCoordinate2D(latitude: ring[index + 1], longitude: ring[index])
+            coordinates.append(shifted ? ChinaShift.gcj(point) : point)
             index += 2
         }
         return MKPolygon(coordinates: coordinates, count: coordinates.count)

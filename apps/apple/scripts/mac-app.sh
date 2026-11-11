@@ -23,6 +23,9 @@ cp -R "$products/HereKit_HereMac.bundle" "$app/Contents/Resources/"
 # The cities the map's fog lifts, as the site and Android ship them.
 cp "$root/apps/web/src/data/boundaries/cities.json" "$app/Contents/Resources/cities.json"
 
+# Where the basemap is drawn in GCJ-02, so what the map draws there is shifted onto it.
+cp "$root/apps/android/app/src/main/resources/gcj-area.json" "$app/Contents/Resources/gcj-area.json"
+
 icon=build/Here.icns
 if [ ! -f "$icon" ] || [ "$root/apps/android/desktop/icon/here.svg" -nt "$icon" ]; then
   (cd "$root/apps/android/desktop/icon" && swift icns.swift here.svg "$root/apps/apple/$icon")
