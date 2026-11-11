@@ -40,7 +40,6 @@ struct MapPage: View {
     @State private var query = ""
     @State private var fog: FogShape?
     @State private var fogOn = false
-    @State private var visible: MKMapRect?
     @State private var titlebarHovered = false
     @Namespace private var scope
     @FocusState private var searching: Bool
@@ -153,27 +152,20 @@ struct MapPage: View {
         return atlas.trips.filter { $0.trip.year == year }
     }
 
-    /// The places in sight, the most been to first, as many as the map draws quickly.
+    /// The places of the year picked, all when none is, and the one chosen.
     private var places: [PlaceSummary] {
-        var shown = atlas.places
-        if let year { shown = shown.filter { $0.years.contains(year) } }
-        if let visible {
-            let around = visible.insetBy(dx: -visible.width * 0.25, dy: -visible.height * 0.25)
-            shown = shown.filter { around.contains(MKMapPoint($0.place.coordinate)) }
+        guard let year else { return atlas.places }
+        var shown = atlas.places.filter { $0.years.contains(year) }
+        if let id = selection, !shown.contains(where: { $0.id == id }), let place = atlas.places.first(where: { $0.id == id }) {
+            shown.append(place)
         }
-        shown.sort { $0.count > $1.count }
-        var kept = Array(shown.prefix(400))
-        if let id = selection, !kept.contains(where: { $0.id == id }), let place = atlas.places.first(where: { $0.id == id }) {
-            kept.append(place)
-        }
-        return kept
+        return shown
     }
 
     // MARK: The map
 
     private var map: some View {
         let places = places
-        let photos = Set(places.filter { $0.photo != nil }.prefix(80).map(\.id))
         let highlighted = chosenTrip
         return Map(position: $position, selection: $selection, scope: scope) {
             if fogOn, let fog { FogContent(shape: fog, ink: scheme.ink) }
@@ -191,7 +183,7 @@ struct MapPage: View {
             }
             ForEach(places) { summary in
                 let color = atlas.color(summary.firstYear)
-                if photos.contains(summary.id), let photo = summary.photo {
+                if let photo = summary.photo {
                     Annotation(summary.place.name, coordinate: summary.place.coordinate, anchor: .center) {
                         PhotoPin(item: photo, color: color, selected: selection == summary.id)
                             .contextMenu { PlaceMenu(place: summary.place) }
@@ -208,9 +200,6 @@ struct MapPage: View {
         }
         .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
         .mapControls {}
-        .onMapCameraChange(frequency: .onEnd) { context in
-            visible = context.rect
-        }
         .overlay(alignment: .bottomLeading) {
             if atlas.years.count > 1 {
                 YearLegend(years: atlas.years, color: atlas.color, selected: $year)
