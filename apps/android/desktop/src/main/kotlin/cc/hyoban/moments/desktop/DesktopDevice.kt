@@ -1,7 +1,5 @@
 package cc.hyoban.moments.desktop
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -24,7 +22,6 @@ import cc.hyoban.moments.data.trips.RouteSegment
 import cc.hyoban.moments.data.trips.Stop
 import cc.hyoban.moments.ui.DayMark
 import cc.hyoban.moments.ui.Device
-import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.trips.PlaybackController
 import java.awt.Desktop
 import java.awt.Toolkit
@@ -32,25 +29,25 @@ import java.awt.datatransfer.StringSelection
 import java.net.URI
 
 /**
- * The Mac's way with what the pages ask of their device. The maps, a Moment's menu, sharing and
- * editing a place are still to come here: where a map would be there is its space, left blank, and
- * what would open closes again at once.
+ * The Mac's way with what the pages ask of their device: the shared MapLibre maps, drawn with Metal
+ * into the window's host (`Main.kt`). A Moment's menu and sharing are still to come here: what
+ * would open closes again at once.
  */
 object DesktopDevice : Device {
     @Composable
-    private fun MapSpace(modifier: Modifier) = Box(modifier.background(tokens.fill))
+    override fun TripMap(stops: List<Stop>, segments: List<RouteSegment>, modifier: Modifier) =
+        cc.hyoban.moments.ui.map.SharedTripMap(stops, segments, modifier)
 
     @Composable
-    override fun TripMap(stops: List<Stop>, segments: List<RouteSegment>, modifier: Modifier) = MapSpace(modifier)
+    override fun PlaceMap(place: Place, modifier: Modifier, topInset: Dp) = cc.hyoban.moments.ui.map.SharedPlaceMap(place, modifier, topInset)
 
     @Composable
-    override fun PlaceMap(place: Place, modifier: Modifier, topInset: Dp) = MapSpace(modifier)
+    override fun DayTrackMap(stretches: List<List<Pair<Double, Double>>>, marks: List<DayMark>, modifier: Modifier, topInset: Dp) =
+        cc.hyoban.moments.ui.map.SharedDayTrackMap(stretches, marks, modifier, topInset)
 
     @Composable
-    override fun DayTrackMap(stretches: List<List<Pair<Double, Double>>>, marks: List<DayMark>, modifier: Modifier, topInset: Dp) = MapSpace(modifier)
-
-    @Composable
-    override fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modifier, credit: IntArray?) = MapSpace(modifier)
+    override fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modifier, credit: IntArray?) =
+        cc.hyoban.moments.ui.map.SharedPlaybackMap(controller, clear, modifier, credit)
 
     @Composable
     override fun PickerMap(
@@ -61,11 +58,7 @@ object DesktopDevice : Device {
         onPlace: (String) -> Unit,
         modifier: Modifier,
         onDrag: (Boolean) -> Unit,
-    ) {
-        // No map to drag yet: the pin stands wherever a search or a place chosen puts it.
-        LaunchedEffect(target) { target?.let { onCenter(it.latitude, it.longitude, false) } }
-        MapSpace(modifier)
-    }
+    ) = cc.hyoban.moments.ui.map.SharedPickerMap(places, chosen, target, onCenter, onPlace, modifier, onDrag)
 
     // The system's own file dialog, for pictures; what was chosen comes back at once.
     @Composable
@@ -87,6 +80,8 @@ object DesktopDevice : Device {
     override fun rememberLocationAsk(onResult: (Boolean) -> Unit): LocationAsk = remember { LocationAsk({ true }, { onResult(false) }) }
 
     // A computer isn't asked where it is: a place is searched for, or taken from a photo.
+    override val hasLocation: Boolean = false
+
     override fun canLocate(): Boolean = false
 
     override suspend fun currentFix(): Fix? = null

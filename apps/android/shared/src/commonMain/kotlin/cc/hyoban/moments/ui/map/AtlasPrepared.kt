@@ -1,7 +1,7 @@
 package cc.hyoban.moments.ui.map
 
 import androidx.compose.ui.graphics.Color
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-internal data class AtlasInputs(
+data class AtlasInputs(
     val moments: List<MomentRecord>,
     val places: Map<String, Place>,
     val checkins: Checkins,
@@ -28,7 +28,7 @@ internal data class AtlasInputs(
 )
 
 /** Everything the atlas can derive before its first composition. */
-internal data class AtlasPrepared(
+data class AtlasPrepared(
     private val inputs: AtlasInputs,
     val byPlace: Map<String, List<MomentRecord>>,
     val checkinsByPlace: Map<String, List<Checkin>>,
@@ -54,7 +54,7 @@ internal data class AtlasPrepared(
  * complete snapshot. The composable checks source identities before using it, so a late result can
  * never show stale records while a newer snapshot is being prepared.
  */
-internal class AtlasPreparedStore(container: PhoneContainer, scope: CoroutineScope) {
+class AtlasPreparedStore(container: AppContainer, scope: CoroutineScope) {
     private val _value = MutableStateFlow<AtlasPrepared?>(null)
     val value: StateFlow<AtlasPrepared?> = _value.asStateFlow()
 
@@ -74,7 +74,7 @@ internal class AtlasPreparedStore(container: PhoneContainer, scope: CoroutineSco
     }
 }
 
-internal fun prepareAtlas(inputs: AtlasInputs): AtlasPrepared {
+fun prepareAtlas(inputs: AtlasInputs): AtlasPrepared {
     val byPlace = inputs.moments
         .flatMap { moment -> moment.places.distinct().map { it to moment } }
         .groupBy({ it.first }, { it.second })

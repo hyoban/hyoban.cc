@@ -71,6 +71,19 @@ interface Device {
     /** Asking for where the device is, as it asks: [onResult] hears whether it may be read. */
     @Composable fun rememberLocationAsk(onResult: (Boolean) -> Unit): LocationAsk
 
+    /**
+     * The atlas's footprints and their panel, given to [content]; null on a device that records
+     * none, [onSettings] opening their settings.
+     */
+    @Composable fun FootprintsOnMap(
+        container: AppContainer,
+        onSettings: () -> Unit,
+        content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
+    ) = content(null)
+
+    /** Whether the device can tell where it is at all; a computer isn't asked. */
+    val hasLocation: Boolean
+
     /** Whether where the device is may be read now. */
     fun canLocate(): Boolean
 

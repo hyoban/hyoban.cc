@@ -19,6 +19,8 @@ dependencies {
     implementation(libs.compose.multiplatform.desktop)
     implementation(libs.kotlinx.coroutines.swing)
     implementation(libs.sqlite.bundled)
+    // MapLibre Native drawn with Metal, as the Mac's Compose window draws.
+    runtimeOnly(libs.maplibre.compose.runtime.metal.macos.arm64)
 }
 
 compose.desktop {

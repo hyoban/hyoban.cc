@@ -57,7 +57,9 @@ import cc.hyoban.moments.res.me_things
 import cc.hyoban.moments.res.occasions_title
 import cc.hyoban.moments.res.tab_moments
 import cc.hyoban.moments.res.title_changes
+import cc.hyoban.moments.res.tab_map
 import cc.hyoban.moments.res.title_trips
+import cc.hyoban.moments.ui.Atlas
 import cc.hyoban.moments.ui.Changes
 import cc.hyoban.moments.ui.Day
 import cc.hyoban.moments.ui.EditMoment
@@ -74,7 +76,11 @@ import cc.hyoban.moments.ui.Search
 import cc.hyoban.moments.ui.SyncSettings
 import cc.hyoban.moments.ui.Things
 import cc.hyoban.moments.ui.Trip
+import cc.hyoban.moments.ui.TripEdit
 import cc.hyoban.moments.ui.TripPlay
+import cc.hyoban.moments.ui.map.MapFocus
+import cc.hyoban.moments.ui.map.MapScreen
+import cc.hyoban.moments.ui.trips.TripEditScreen
 import cc.hyoban.moments.ui.compose.NewMomentScreen
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
@@ -101,6 +107,8 @@ import cc.hyoban.moments.ui.trips.TripCard
 import cc.hyoban.moments.ui.trips.TripPlayerScreen
 import cc.hyoban.moments.ui.trips.TripScreen
 import org.jetbrains.compose.resources.StringResource
+import org.maplibre.compose.desktop.ProvideMapPresentationHost
+import org.maplibre.compose.desktop.rememberAwtComposeMapPresentationHost
 import org.jetbrains.compose.resources.stringResource
 
 fun main() = application {
@@ -115,6 +123,7 @@ fun main() = application {
             when (event.key) {
                 Key.N -> shell.open(NewMoment())
                 Key.One -> shell.show(Section.Timeline)
+                Key.Two -> shell.show(Section.Map)
                 Key.Three -> shell.show(Section.Trips)
                 Key.Comma -> shell.show(Section.Settings)
                 Key.LeftBracket -> shell.back()
@@ -123,17 +132,21 @@ fun main() = application {
             true
         },
     ) {
-        MomentsTheme { Shell(container, shell) }
+        // The maps draw into this window's own Metal context.
+        ProvideMapPresentationHost(rememberAwtComposeMapPresentationHost(window)) {
+            MomentsTheme { Shell(container, shell) }
+        }
     }
 }
 
 /**
  * Where the sidebar leads, as the design's Sidebar has them: the destinations, 我的 under its
- * own heading, and the settings at its foot. A module turned off isn't listed. The map, the
- * footprints and the ledger join them as their pages reach the Mac.
+ * own heading, and the settings at its foot. A module turned off isn't listed. The footprints and
+ * the ledger join them as their pages reach the Mac.
  */
 private enum class Section(val label: StringResource, val icon: ImageVector, val route: Any, val shortcut: String? = null, val module: Module? = null) {
     Timeline(Res.string.tab_moments, AppIcons.Timeline, Feed, "⌘1"),
+    Map(Res.string.tab_map, AppIcons.Map, Atlas, "⌘2"),
     Trips(Res.string.title_trips, AppIcons.Route, TripsList, "⌘3"),
     ThingsOwned(Res.string.me_things, AppIcons.Laptop, Things(), module = Module.THINGS),
     Days(Res.string.occasions_title, AppIcons.Gift, Occasions(), module = Module.OCCASIONS),
@@ -157,6 +170,15 @@ private class Shell {
         stack.add(section.route)
     }
 
+    /** What a page asked the map to show, until the map has flown to it. */
+    var mapFocus by mutableStateOf<MapFocus?>(null)
+
+    /** The map, showing [focus]: a place with its panel up, or a trip lifted with its card. */
+    fun showOnMap(focus: MapFocus) {
+        mapFocus = focus
+        show(Section.Map)
+    }
+
     fun open(route: Any) {
         if (stack.lastOrNull() != route) stack.add(route)
     }
@@ -166,13 +188,14 @@ private class Shell {
     }
 
     /**
-     * Opens the app on a page, for a trial run (`HERE_OPEN`): a section by its name (`trips`, `things`,
+     * Opens the app on a page, for a trial run (`HERE_OPEN`): a section by its name (`map`, `trips`, `things`,
      * `occasions`, `settings`, `items`, `changes`), `search`, `new`, `edit:<uid>`, or a record as `moment:<uid>`, `trip:<id>`, `play:<id>`,
      * `day:<date>` or `place:<id>`, over the timeline.
      */
     fun openLink(link: String) {
         val id = link.substringAfter(':', "")
         when (link.substringBefore(':')) {
+            "map" -> show(Section.Map)
             "trips" -> show(Section.Trips)
             "things" -> show(Section.ThingsOwned)
             "occasions" -> show(Section.Days)
@@ -313,8 +336,32 @@ private fun Page(container: DesktopContainer, shell: Shell, route: Any) {
         is NewMoment -> NewMomentScreen(container, onBack = back, onSaved = back)
         is EditMoment -> NewMomentScreen(container, onBack = back, onSaved = back, edit = route.uid, onDeleted = { shell.back(); shell.back() })
         is Day -> DayScreen(container, route.date, onMoment = openMoment, onBack = back, onTrip = openTrip)
-        is PlaceMoments -> PlaceScreen(container, route.id, onMoment = openMoment, onBack = back, onDay = openDay)
-        is Trip -> TripScreen(container, route.id, onMoment = openMoment, onPlay = { shell.open(TripPlay(it)) }, onBack = back, onDay = openDay)
+        is PlaceMoments -> PlaceScreen(
+            container, route.id, onMoment = openMoment, onBack = back, onDay = openDay,
+            onMap = { shell.showOnMap(MapFocus.Place(it)) },
+        )
+        is Trip -> TripScreen(
+            container, route.id, onMoment = openMoment, onPlay = { shell.open(TripPlay(it)) }, onBack = back, onDay = openDay,
+            onMap = { shell.showOnMap(MapFocus.Trip(it)) }, onEdit = { shell.open(TripEdit(it)) },
+        )
+        is TripEdit -> TripEditScreen(
+            container, route.id, startDay = route.start, endDay = route.end, name = route.title, onBack = back,
+            // A trip made opens in place of the page that made it; deleted, its own page goes with it.
+            onMade = { id -> shell.back(); openTrip(id) },
+            onDeleted = { shell.back(); if (shell.stack.lastOrNull() is Trip) shell.back() },
+        )
+        Atlas -> MapScreen(
+            container,
+            onMoment = openMoment,
+            onPlace = openPlace,
+            onTrip = openTrip,
+            onPlay = { shell.open(TripPlay(it)) },
+            onSearch = { shell.open(Search) },
+            focus = shell.mapFocus,
+            onFocused = { shell.mapFocus = null },
+            onNewTrip = { shell.open(TripEdit()) },
+            onSuggestedTrip = { shell.open(TripEdit(start = it.start, end = it.end, title = it.name)) },
+        )
         is TripPlay -> TripPlayerScreen(container, route.id, onMoment = openMoment, onBack = back)
         Search -> SearchScreen(container, onMoment = openMoment, onBack = back)
         TripsList -> Trips(container, openTrip)

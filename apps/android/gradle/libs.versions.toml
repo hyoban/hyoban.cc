@@ -79,6 +79,7 @@ gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 maplibre-compose = { group = "org.maplibre.compose", name = "maplibre-compose", version.ref = "maplibreCompose" }
 # The OpenGL ES runtime: Vulkan's arm64 library is about 2 MB larger, 0.7 MB in the APK.
 maplibre-compose-runtime-opengl-android = { group = "org.maplibre.compose", name = "maplibre-compose-runtime-opengl-android", version.ref = "maplibreCompose" }
+maplibre-compose-runtime-metal-macos-arm64 = { group = "org.maplibre.compose", name = "maplibre-compose-runtime-metal-macos-arm64", version.ref = "maplibreCompose" }
 media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
 media3-datasource-okhttp = { group = "androidx.media3", name = "media3-datasource-okhttp", version.ref = "media3" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }

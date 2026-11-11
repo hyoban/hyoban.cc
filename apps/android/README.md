@@ -682,12 +682,14 @@ API as the phone does and shows them in the phone's pages:
 It keeps its settings, its copy of the records and the token under
 `~/Library/Application Support/Here`, or under `HERE_HOME` when that is set, as a trial run's own
 folder. 设置 is the phone's 同步与来源, where the API and its token go; the sidebar then leads to
-时间线, 旅程, 东西 and 纪念日, the phone's own pages, with a Moment, a day, a place and a trip opening
+时间线, 地图 (⌘2), 旅程, 东西 and 纪念日, the phone's own pages, with a Moment, a day, a place and a trip opening
 over them and ⌘[ going back. 记录 (⌘N) writes a Moment as the phone does, its pictures chosen from
-the Mac's files and its place searched for by name; what is written waits under 发布更改, which
-publishes it. The maps and the photo viewer are still to come: a map's space is blank, so a place
-is searched for rather than pinned. Videos aren't taken yet, and there is no ledger, so no bill.
-`HERE_OPEN` opens it on a page for a trial run: `trips`, `things`, `occasions`, `settings`,
+the Mac's files and its place searched for by name or pinned on the map; what is written waits
+under 发布更改, which publishes it. The maps are the phone's, drawn by MapLibre with Metal: the
+atlas with its trips and 可能的旅程, a trip's route and its playback, a place's map. A computer
+isn't asked where it is, so the atlas has no locate button, and it records no footprints, so none
+are drawn. The photo viewer is still to come, videos aren't taken yet, and there is no ledger, so
+no bill. `HERE_OPEN` opens it on a page for a trial run: `map`, `trips`, `things`, `occasions`, `settings`,
 `items`, `changes`, `search`, `new`, or `moment:<uid>`, `edit:<uid>`, `trip:<id>`, `play:<id>`,
 `day:<date>`, `place:<id>`.
 

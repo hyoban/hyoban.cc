@@ -147,6 +147,9 @@ abstract class AppContainer(
             }
         }.flowOn(Dispatchers.Default).stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
 
+    /** The atlas's record grouping and GeoJSON, prepared before its page is first visited. */
+    val atlasPrepared = cc.hyoban.moments.ui.map.AtlasPreparedStore(this, scope)
+
     /** What the device draws from the records beside its pages (a phone's widgets), drawn again once they change. */
     protected open suspend fun recordsChanged() {}
 

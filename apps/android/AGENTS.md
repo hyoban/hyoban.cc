@@ -29,9 +29,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   through `Prefs`: the phone's shared preferences, a JSON file on the Mac.
 - A page in `:shared` asks its device for what the phone and the Mac each do their own way
   through `LocalDevice` (`ui/Device.kt`): a Moment's menu, sharing, choosing photos, where the
-  device is, what it asks before publishing, and its map host. `PhoneDevice` uses the shared
-  MapLibre Compose maps; `DesktopDevice` leaves a map's space blank until its runtime and window
-  host are connected. A page that needs something only the
+  device is, what it asks before publishing, and the atlas's footprints. Both devices draw the
+  shared MapLibre Compose maps: the phone with the OpenGL runtime, the Mac with the Metal one
+  in a presentation host its window (`Main.kt`) provides. A page that needs something only the
   phone has takes it that way, or as a read-only interface on `AppContainer` (`LedgerSource`,
   `Footprints`), rather than staying in `:app`. Small differences (the language shown, back,
   the keyboard, a dialog's window) are `expect` functions in `ui/components/Platform.kt`.

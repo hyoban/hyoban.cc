@@ -15,7 +15,6 @@ import cc.hyoban.moments.footprints.FootprintStore
 import cc.hyoban.moments.ledger.LedgerStore
 import cc.hyoban.moments.publish.PublishWorker
 import cc.hyoban.moments.ui.viewer.MotionCache
-import cc.hyoban.moments.ui.map.AtlasPreparedStore
 import cc.hyoban.moments.widget.Widgets
 import java.io.File
 import java.io.Reader
@@ -84,9 +83,6 @@ class PhoneContainer private constructor(
     ) { settings.isOn(Module.FOOTPRINTS) }
     /** Where shared photos wait for a Moment; copied again into its own store when it is saved. */
     private val sharedDirectory = File(context.cacheDir, "shared")
-
-    /** The atlas's record grouping and GeoJSON, prepared before its tab is first visited. */
-    internal val atlasPrepared = AtlasPreparedStore(this, scope)
 
     init {
         // Shared photos no draft took within a day are left behind.

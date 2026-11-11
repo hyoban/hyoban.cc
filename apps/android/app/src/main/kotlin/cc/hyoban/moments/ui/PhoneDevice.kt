@@ -85,6 +85,34 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
         return remember(ask) { LocationAsk({ ask.asked }, { ask() }) }
     }
 
+    override val hasLocation: Boolean = true
+
+    // The footprints' own store and panel, drawn on the atlas as the shared map takes them.
+    @Composable
+    override fun FootprintsOnMap(
+        container: AppContainer,
+        onSettings: () -> Unit,
+        content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
+    ) = cc.hyoban.moments.footprints.FootprintsOnMap(container as PhoneContainer, onSettings) { state ->
+        val drawing = remember(state.drawing) {
+            cc.hyoban.moments.ui.map.AtlasFootprints(
+                lines = state.drawing.lines.map { (mode, points) ->
+                    cc.hyoban.moments.ui.map.AtlasFootprintLine(
+                        mode = when (mode) {
+                            cc.hyoban.moments.footprints.TravelMode.WALK -> cc.hyoban.moments.ui.map.AtlasFootprintMode.WALK
+                            cc.hyoban.moments.footprints.TravelMode.CYCLE -> cc.hyoban.moments.ui.map.AtlasFootprintMode.CYCLE
+                            cc.hyoban.moments.footprints.TravelMode.DRIVE -> cc.hyoban.moments.ui.map.AtlasFootprintMode.DRIVE
+                        },
+                        points = points,
+                    )
+                },
+                ends = state.drawing.ends,
+                stays = state.drawing.stays,
+            )
+        }
+        content(cc.hyoban.moments.ui.map.AtlasFootprintsOnMap(drawing, state.frame, state.frameRequested, state.onFramed, state.open, state.recording))
+    }
+
     override fun canLocate(): Boolean = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
 
     override suspend fun currentFix(): cc.hyoban.moments.data.local.Fix? =
