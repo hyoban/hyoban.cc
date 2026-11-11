@@ -4,8 +4,6 @@ import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.rememberHaptics
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.Spinner
-import android.app.Activity
-import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animate
@@ -70,11 +68,8 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.Constraints
@@ -84,14 +79,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import kotlin.math.abs
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.Player
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.ui.LocalDevice
+import cc.hyoban.moments.ui.components.BackHandler
+import cc.hyoban.moments.ui.components.rememberPredictiveBack
+import cc.hyoban.moments.ui.components.LocalInPictureInPicture
+import cc.hyoban.moments.ui.components.ViewerSystemBars
 import cc.hyoban.moments.data.media.MediaUrls
-import cc.hyoban.moments.data.media.Share
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.ui.components.DrawnStills
@@ -104,7 +99,6 @@ import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.produceState
@@ -130,7 +124,7 @@ import me.saket.telephoto.zoomable.zoomable
  */
 @Composable
 fun MediaViewer(
-    container: PhoneContainer,
+    container: AppContainer,
     uid: String,
     index: Int,
     onBack: () -> Unit,
@@ -158,8 +152,8 @@ fun MediaViewer(
     val inPip = LocalInPictureInPicture.current
     ViewerSystemBars(hidden = !chrome || inPip)
     // Each one's motion and video, held here so the bars over the pages work the one shown.
-    val lives = remember(media) { media.associate { it.uid to LiveMotionState() } }
-    val videos = remember(media) { media.associate { it.uid to VideoState() } }
+    val device = LocalDevice.current
+    val motions = remember(media) { media.associate { it.uid to device.viewerMotion(it) } }
     val shown = media[pager.currentPage.coerceIn(0, media.lastIndex)]
 
     // Space pressed, for the page shown to play or pause what it holds.
@@ -197,16 +191,10 @@ fun MediaViewer(
         // thins out to the page under the viewer.
         fun progress() = (abs(drag) / fadeOver).coerceIn(0f, 1f)
         // The system's back gesture previews closing as a drag down does, the photo following
-        // the finger; let go, the photo flies back to its tile from there, and called off it settles.
-        val settleSpec = AppTheme.motionScheme.fastSpatialSpec<Float>()
-        PredictiveBackHandler { events ->
-            try {
-                events.collect { drag = it.progress * fadeOver }
-                onBack()
-            } catch (e: CancellationException) {
-                keyScope.launch { animate(drag, 0f, animationSpec = settleSpec) { value, _ -> drag = value } }
-                throw e
-            }
+        // the finger; let go, the photo closes from there, and called off it settles.
+        val back = rememberPredictiveBack(enabled = !info) { onBack() }
+        LaunchedEffect(back) {
+            androidx.compose.runtime.snapshotFlow { back.progress }.collect { drag = it * fadeOver }
         }
 
         BackHandler(enabled = info) { info = false }
@@ -255,8 +243,7 @@ fun MediaViewer(
                 media = media[page],
                 urls = container.mediaUrls,
                 active = pager.currentPage == page,
-                live = lives.getValue(media[page].uid),
-                video = videos.getValue(media[page].uid),
+                motion = motions.getValue(media[page].uid),
                 onZoom = { zoomed = it },
                 onTap = { chrome = !chrome },
                 playKeys = playKeys,
@@ -268,7 +255,9 @@ fun MediaViewer(
         AnimatedVisibility(bars, enter = fadeIn(motion.fastEffectsSpec()), exit = fadeOut(motion.fastEffectsSpec())) {
             // Close at the start, which of how many in the middle, and a live photo's motion at the end.
             Box(Modifier.fillMaxWidth().background(MediaOverlay.bar).statusBarsPadding().sideInsetsPadding().padding(Space.xs)) {
-                Tooltip(stringResource(Res.string.action_close), below = true, modifier = Modifier.align(Alignment.CenterStart)) {
+                // On a desktop, clear of the window's own buttons at its top left (D03): close at the end.
+                val desktop = cc.hyoban.moments.ui.design.LocalDesktop.current
+                Tooltip(stringResource(Res.string.action_close), below = true, modifier = Modifier.align(if (desktop) Alignment.CenterEnd else Alignment.CenterStart)) {
                     IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
                         Icon(AppIcons.Close, contentDescription = stringResource(Res.string.action_close), tint = MediaOverlay.content)
                     }
@@ -282,7 +271,7 @@ fun MediaViewer(
                     )
                 }
                 if (shown.type == MediaType.LIVE_PHOTO && container.mediaUrls.motion(shown) != null) {
-                    ViewerLiveButton(lives.getValue(shown.uid), Modifier.align(Alignment.CenterEnd))
+                    motions.getValue(shown.uid)?.LiveButton(Modifier.align(if (desktop) Alignment.Center else Alignment.CenterEnd))
                 }
             }
         }
@@ -294,7 +283,7 @@ fun MediaViewer(
         ) {
             Column(Modifier.fillMaxWidth().background(MediaOverlay.bar).navigationBarsPadding().sideInsetsPadding()) {
                 if (shown.type == MediaType.VIDEO && container.mediaUrls.motion(shown) != null) {
-                    VideoControls(videos.getValue(shown.uid), Modifier.padding(horizontal = Space.xs))
+                    motions.getValue(shown.uid)?.Controls(Modifier.padding(horizontal = Space.xs))
                 }
                 Row(Modifier.padding(start = Space.gutter - Space.s, end = Space.xs, bottom = Space.xs), verticalAlignment = Alignment.CenterVertically) {
                     // When and where, tapped for the rest of its day.
@@ -310,7 +299,7 @@ fun MediaViewer(
                             .heightIn(min = 48.dp).wrapContentHeight(Alignment.CenterVertically)
                             .padding(horizontal = Space.s).testTag("info_day"),
                     )
-                    Tooltip(stringResource(Res.string.photo_info)) {
+                    if (device.hasPhotoInfo) Tooltip(stringResource(Res.string.photo_info)) {
                         IconButton(onClick = { info = true }, modifier = Modifier.testTag("photo_info_open")) {
                             Icon(AppIcons.Info, contentDescription = stringResource(Res.string.photo_info), tint = MediaOverlay.content)
                         }
@@ -320,17 +309,15 @@ fun MediaViewer(
             }
         }
         if (opened > 0f) {
-            val details = rememberMediaDetails(container, shown)
-            PhotoInfoPanel(container, details, Modifier.align(Alignment.BottomCenter).height(panelHeight).graphicsLayer { translationY = size.height * (1f - opened) })
+            device.PhotoInfo(container, shown, Modifier.align(Alignment.BottomCenter).height(panelHeight).graphicsLayer { translationY = size.height * (1f - opened) })
         }
     }
 }
 
 /** The one shown, fetched first when it's the site's, the spinner in its place meanwhile. */
 @Composable
-private fun ShareShown(container: PhoneContainer, shown: MomentMedia) {
-    val context = LocalContext.current
-    val resources = LocalResources.current
+private fun ShareShown(container: AppContainer, shown: MomentMedia) {
+    val device = LocalDevice.current
     val show = rememberShowMessage()
     val scope = rememberCoroutineScope()
     var sharing by remember { mutableStateOf(false) }
@@ -340,7 +327,7 @@ private fun ShareShown(container: PhoneContainer, shown: MomentMedia) {
                 sharing = true
                 scope.launch {
                     try {
-                        Share.media(context, shown, container.mediaUrls)
+                        device.shareMedia(shown, container.mediaUrls)
                     } catch (e: CancellationException) {
                         throw e
                     } catch (_: Exception) {
@@ -369,29 +356,15 @@ private fun ViewerPage(
     media: MomentMedia,
     urls: MediaUrls,
     active: Boolean,
-    live: LiveMotionState,
-    video: VideoState,
+    motion: ViewerMotion?,
     onZoom: (Boolean) -> Unit,
     onTap: () -> Unit,
     playKeys: SharedFlow<Unit>,
 ) {
-    val motion = urls.motion(media)
-    val liveMotion = motion?.takeIf { media.type == MediaType.LIVE_PHOTO }
-    val videoUrl = motion?.takeIf { media.type == MediaType.VIDEO }
+    val url = urls.motion(media)?.takeIf { motion != null }
     // Space, while this page is the one shown: a video plays or pauses, a live photo plays or stops.
     LaunchedEffect(active, playKeys) {
-        if (active) playKeys.collect {
-            val player = video.player
-            when {
-                videoUrl != null && player != null -> if (player.playWhenReady && player.playbackState != Player.STATE_ENDED) {
-                    player.pause()
-                } else {
-                    if (player.playbackState == Player.STATE_ENDED) player.seekToDefaultPosition()
-                    player.play()
-                }
-                liveMotion != null && live.ready -> if (live.playing) live.stop() else live.play()
-            }
-        }
+        if (active && url != null) playKeys.collect { motion?.toggle() }
     }
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -401,27 +374,11 @@ private fun ViewerPage(
             onZoom,
             onTap,
             // Held down, a live photo plays with its sound until let go.
-            onHold = if (liveMotion != null) { held -> if (held) live.play(sound = true) else live.stop() } else null,
+            onHold = motion?.hold?.takeIf { url != null && media.type == MediaType.LIVE_PHOTO },
         ) {
-            if (liveMotion != null) LiveMotion(liveMotion, active, live, Modifier.fillMaxSize())
-            if (videoUrl != null) VideoPlayback(videoUrl, active, video, Modifier.fillMaxSize())
+            if (url != null) motion?.Over(url, active, Modifier.fillMaxSize())
         }
-        if (videoUrl != null) VideoWaiting(video)
-    }
-}
-
-/** A live photo's motion in the bar over it: a ring while it loads, then a tap plays it again or stops it. */
-@Composable
-private fun ViewerLiveButton(state: LiveMotionState, modifier: Modifier = Modifier) {
-    val label = stringResource(if (state.playing) Res.string.action_pause else Res.string.action_play)
-    Tooltip(stringResource(Res.string.label_live), below = true, modifier = modifier) {
-        IconButton(onClick = { if (state.playing) state.stop() else state.play() }, enabled = state.ready, modifier = Modifier.testTag("live")) {
-            if (state.ready) {
-                Icon(AppIcons.Live, contentDescription = label, tint = MediaOverlay.content)
-            } else {
-                Spinner(Modifier.size(20.dp), color = MediaOverlay.content)
-            }
-        }
+        if (url != null) motion?.Waiting()
     }
 }
 
@@ -581,57 +538,4 @@ fun ZoomablePhoto(
         SideEffect { zoom.setContentLocation(ZoomableContentLocation.scaledInsideAndCenterAligned(fitted)) }
         Box(Modifier.aspectRatio(shape)) { content() }
     }
-}
-
-/**
- * White navigation icons over the black while the viewer is open, and the
- * bars themselves hidden when everything but the photo is; a swipe from the edge shows
- * them for a moment.
- */
-@Composable
-private fun ViewerSystemBars(hidden: Boolean) {
-    val view = LocalView.current
-    val window = (view.context as? Activity)?.window ?: return
-    val controller = remember(window, view) { WindowCompat.getInsetsController(window, view) }
-    // On its side the system's bars stay put away after the viewer closes, as the app has them there.
-    val landscape by rememberUpdatedState(cc.hyoban.moments.ui.components.hidesSystemBars())
-
-    DisposableEffect(controller) {
-        // The status bar's icons follow what is under them, white over the black.
-        val navigation = controller.isAppearanceLightNavigationBars
-        controller.isAppearanceLightNavigationBars = false
-        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        onDispose {
-            controller.isAppearanceLightNavigationBars = navigation
-            if (!landscape) controller.show(WindowInsetsCompat.Type.systemBars())
-        }
-    }
-
-    LaunchedEffect(hidden) {
-        if (hidden || landscape) controller.hide(WindowInsetsCompat.Type.systemBars()) else controller.show(WindowInsetsCompat.Type.systemBars())
-    }
-}
-
-/** What [media] says of itself for the info panel: the record's own, then the EXIF of its file, or of the start of its original. */
-@Composable
-private fun rememberMediaDetails(container: PhoneContainer, media: MomentMedia): PhotoDetails? {
-    val context = LocalContext.current
-    return produceState<PhotoDetails?>(null, media.uid) {
-        val published = media.published
-        val base = PhotoDetails(
-            takenAt = media.takenAt?.let { runCatching { java.time.OffsetDateTime.parse(it) }.getOrNull() },
-            offset = media.takenAt?.takeIf { it.length > 19 }?.let { at -> Regex("([+-]\\d{2}:\\d{2}|Z)$").find(at)?.value?.let { if (it == "Z") "+00:00" else it } },
-            name = published?.key?.substringAfterLast('/') ?: media.local?.uri?.substringAfterLast('/'),
-            format = PhotoDetails.format(published?.contentType, published?.key),
-            width = media.width, height = media.height, bytes = published?.bytes,
-        )
-        value = base
-        if (media.type == MediaType.VIDEO) return@produceState
-        val local = media.local?.uri
-        value = when {
-            published == null && local != null -> PhotoDetails.readLocal(context, base, android.net.Uri.parse(local))
-            published?.original == true -> PhotoDetails.readRemote(base, container.mediaUrls.asset(published.key))
-            else -> base
-        }
-    }.value
 }

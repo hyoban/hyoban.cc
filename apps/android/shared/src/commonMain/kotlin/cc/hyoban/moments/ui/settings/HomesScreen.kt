@@ -1,7 +1,7 @@
 package cc.hyoban.moments.ui.settings
 
 import cc.hyoban.moments.res.*
-import androidx.activity.compose.BackHandler
+import cc.hyoban.moments.ui.components.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,7 +24,7 @@ import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.trips.TripDiscovery
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.LocalTopClearance
@@ -51,7 +51,7 @@ import java.time.LocalDate
  * (a municipality, Hong Kong) is chosen as it is. Kept in the settings, on the phone alone.
  */
 @Composable
-fun HomesScreen(container: PhoneContainer, onBack: () -> Unit) {
+fun HomesScreen(container: AppContainer, onBack: () -> Unit) {
     val settings = container.settings
     val regions by produceState<List<FogRegion>?>(null) { value = container.cityRegions() }
     val moments by container.shownMoments.collectAsStateWithLifecycle()

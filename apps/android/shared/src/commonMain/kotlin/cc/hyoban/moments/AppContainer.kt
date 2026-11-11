@@ -92,6 +92,20 @@ abstract class AppContainer(
     val localStore = DataStore(File(files, "local"))
     protected val api = MomentsApi(baseUrl = { settings.apiUrl.value }, token = { settings.apiToken.value })
     val repository = MomentsRepository(CopyStore(File(private, "copy.db"), driver), api, local = localStore, writer = api, outside = outside)
+
+    /** Swarm's check-ins brought in from its export, their photos beside the device's own Moments'. */
+    val swarm by lazy {
+        cc.hyoban.moments.data.swarm.SwarmImport(
+            open = ::openSource,
+            repository = repository,
+            mediaDirectory = File(localStore.root, "media"),
+            scope = scope,
+        )
+    }
+
+    /** Opens what the device's file picker chose: a file's path or `file:` URI here, the phone's content address there. */
+    open fun openSource(source: String): java.io.InputStream =
+        (if (source.startsWith("file:")) File(java.net.URI(source)) else File(source)).inputStream()
     val mediaUrls = MediaUrls { settings.assetOrigin.value }
     /** The trips' routes along the roads, from the API. */
     val routes = TripRoutes({ settings.apiUrl.value }, File(files, "routes.json"), token = { settings.apiToken.value })

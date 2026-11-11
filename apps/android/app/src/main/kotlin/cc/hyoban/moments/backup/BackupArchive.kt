@@ -4,8 +4,6 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import java.io.File
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -26,21 +24,13 @@ object BackupArchive {
     /** The directory of `local/` that holds the photos and videos, which a backup leaves out. */
     private const val MEDIA = "media"
 
-    private const val PREFIX = "here-backup-"
-    private const val SUFFIX = ".zip"
-    private val STAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")
-
     /** The name of a backup made at [at]; sorted by name, the backups are sorted by time. */
-    fun name(at: LocalDateTime = LocalDateTime.now()) = "$PREFIX${at.format(STAMP)}$SUFFIX"
+    fun name(at: LocalDateTime = LocalDateTime.now()) = BackupNames.name(at)
 
-    fun isBackup(name: String) = name.startsWith(PREFIX) && name.endsWith(SUFFIX)
+    fun isBackup(name: String) = BackupNames.isBackup(name)
 
     /** When the backup called [name] was made, or null for a name that isn't a backup's. */
-    fun madeAt(name: String): LocalDateTime? = if (!isBackup(name)) null else try {
-        LocalDateTime.parse(name.removePrefix(PREFIX).removeSuffix(SUFFIX), STAMP)
-    } catch (_: DateTimeParseException) {
-        null
-    }
+    fun madeAt(name: String): LocalDateTime? = BackupNames.madeAt(name)
 
     /** Of the backups among [names], those past the newest [keep]. */
     fun beyond(names: List<String>, keep: Int): List<String> = names.filter(::isBackup).sortedDescending().drop(keep)

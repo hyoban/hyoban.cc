@@ -1,7 +1,5 @@
 package cc.hyoban.moments.data.swarm
 
-import android.net.Uri
-import android.util.Log
 import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.local.stamp
 import cc.hyoban.moments.data.spec.Entries
@@ -283,7 +281,8 @@ data class SwarmReport(val checkins: Int, val moments: Int, val entries: Int, va
  * phone, private and unpublished, with [repository]'s other changes.
  */
 class SwarmImport(
-    private val open: (Uri) -> InputStream,
+    /** Opens the export at a source the device's file picker gave. */
+    private val open: (String) -> InputStream,
     private val repository: MomentsRepository,
     private val mediaDirectory: File,
     private val scope: CoroutineScope,
@@ -304,7 +303,7 @@ class SwarmImport(
 
     val running: Boolean get() = _state.value.running
 
-    fun start(uri: Uri) {
+    fun start(uri: String) {
         if (running) return
         _state.value = State.Reading
         scope.launch {
@@ -313,7 +312,7 @@ class SwarmImport(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                Log.w("Moments", "Swarm import failed", error)
+                cc.hyoban.moments.logWarning("Moments", "Swarm import failed", error)
                 State.Failed
             }
         }
@@ -324,7 +323,7 @@ class SwarmImport(
         if (!running) _state.value = State.Idle
     }
 
-    private suspend fun run(uri: Uri): SwarmReport = withContext(Dispatchers.IO) {
+    private suspend fun run(uri: String): SwarmReport = withContext(Dispatchers.IO) {
         val read = Swarm.checkins(open(uri).use(Swarm::readFiles))
         require(read.isNotEmpty()) { "No check-ins in the export" }
         val known = repository.known(read.map { it.uid })

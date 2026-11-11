@@ -32,7 +32,7 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
     override val ledger: StateFlow<Ledger> = _ledger.asStateFlow()
 
     private val _loaded = MutableStateFlow(false)
-    val loaded: StateFlow<Boolean> = _loaded.asStateFlow()
+    override val loaded: StateFlow<Boolean> = _loaded.asStateFlow()
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
@@ -129,7 +129,7 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
     override suspend fun saveTxn(txn: Txn) { write { it.replace("txns", txn.values()) } }
 
     /** Deletes bills, and the refunds and reimbursements of any of them with them. */
-    suspend fun deleteTxns(ids: Collection<String>) = write { db ->
+    override suspend fun deleteTxns(ids: Collection<String>) = write { db ->
         val all = ids.toSet() + _ledger.value.txns.filter { it.related in ids }.map { it.id }
         all.forEach { db.delete("txns", "id=?", arrayOf(it)) }
     }
@@ -137,7 +137,7 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
     override suspend fun saveAccount(account: Account) { write { it.replace("accounts", account.values()) } }
 
     /** Deletes an account no bill uses. */
-    suspend fun deleteAccount(id: String) = write { db ->
+    override suspend fun deleteAccount(id: String) = write { db ->
         check(_ledger.value.txns.none { it.uses(id) }) { "Account in use" }
         db.delete("accounts", "id=?", arrayOf(id))
     }
@@ -171,13 +171,13 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
         db.delete("books", "id=?", arrayOf(id))
     }
 
-    suspend fun setCurrentBook(id: String) = write {
+    override suspend fun setCurrentBook(id: String) = write {
         allBooks = false
         it.replace("meta", ContentValues().apply { put("key", "book"); put("value", id) })
     }
 
     /** Shows every book at once, a new bill still going to the one chosen last. */
-    suspend fun showAllBooks() = write { allBooks = true }
+    override suspend fun showAllBooks() = write { allBooks = true }
 
     override suspend fun saveCategory(category: Category) { write { it.replace("categories", category.values()) } }
 
@@ -239,56 +239,14 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
     }
 }
 
-/** Whether a bill moves money in or out of [account] in any way. */
-fun Txn.uses(account: String): Boolean =
-    this.account == account || toAccount == account || feeAccount == account || discountAccount == account || splits.any { it.account == account }
 
 private fun Cursor.stringOrNull(index: Int): String? = if (isNull(index)) null else getString(index)
 private fun Cursor.longOrNull(index: Int): Long? = if (isNull(index)) null else getLong(index)
 
-private fun Cursor.txn(): Txn {
-    fun s(name: String) = stringOrNull(getColumnIndexOrThrow(name))
-    fun l(name: String) = longOrNull(getColumnIndexOrThrow(name))
-    return Txn(
-        id = s("id")!!,
-        book = s("book")!!,
-        kind = TxnKind.of(s("kind")),
-        transfer = TransferType.of(s("transfer")),
-        time = l("time")!!,
-        offsetMinutes = l("offset")!!.toInt(),
-        amount = l("amount")!!,
-        currency = s("currency")!!,
-        category = s("category"),
-        account = s("account"),
-        accountAmount = l("account_amount"),
-        splits = decodeSplits(s("splits")),
-        toAccount = s("to_account"),
-        toAmount = l("to_amount"),
-        fee = l("fee") ?: 0,
-        feeAccount = s("fee_account"),
-        discount = l("discount") ?: 0,
-        discountAccount = s("discount_account"),
-        note = s("note").orEmpty(),
-        related = s("related"),
-        reimburse = Reimburse.of(s("reimburse")),
-        excluded = l("excluded") == 1L,
-        moment = s("moment"),
-        place = s("place"),
-        trip = s("trip"),
-        createdAt = l("created")!!,
-        updatedAt = l("updated")!!,
-        visibility = s("visibility"),
-        published = s("published"),
-    )
-}
-
-/** Splits as `account\tcents` lines. */
-internal fun encodeSplits(splits: List<Split>): String? = splits.takeIf { it.isNotEmpty() }?.joinToString("\n") { "${it.account}\t${it.amount}" }
-
-internal fun decodeSplits(text: String?): List<Split> = text.orEmpty().lines().mapNotNull { line ->
-    val parts = line.split('\t')
-    if (parts.size == 2) parts[1].toLongOrNull()?.let { Split(parts[0], it) } else null
-}
+private fun Cursor.txn(): Txn = txnOf(
+    { name -> stringOrNull(getColumnIndexOrThrow(name)) },
+    { name -> longOrNull(getColumnIndexOrThrow(name)) },
+)
 
 private fun Txn.values() = ContentValues().apply {
     put("id", id); put("book", book); put("kind", kind.value); put("transfer", transfer.value)

@@ -39,6 +39,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.semantics.paneTitle
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
@@ -148,6 +149,10 @@ private fun BarPage(
     centre: (@Composable () -> Unit)? = null,
     accessory: (@Composable () -> Unit)? = null,
 ) {
+    if (cc.hyoban.moments.ui.design.LocalDesktop.current) {
+        DesktopBarPage(title, subtitle, onBack, modifier, actions, content, close, titleMenu, subtitleAction, centre, accessory)
+        return
+    }
     // A dialog's bar, on a window too short to open it out, stays put rather than scrolling away,
     // so its X and its confirming action are always there.
     val scroll = rememberTopBarScroll(pinned = close && (isCompactHeight() || small || centre != null))
@@ -292,10 +297,68 @@ private fun BarPage(
 }
 
 /**
+ * The same page on a desktop: the design's toolbar over it rather than circles floating over a
+ * large title; what would stay under the circles ([accessory], the ledger's segments) and the
+ * subtitle's own action go to the toolbar's end with the page's actions.
+ */
+@Composable
+private fun DesktopBarPage(
+    title: String,
+    subtitle: String?,
+    onBack: (() -> Unit)?,
+    modifier: Modifier,
+    actions: @Composable RowScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit,
+    close: Boolean,
+    titleMenu: TitleMenu?,
+    subtitleAction: (@Composable () -> Unit)?,
+    centre: (@Composable () -> Unit)?,
+    accessory: (@Composable () -> Unit)?,
+) {
+    Column(modifier.fillMaxSize().background(AppColors.page).semantics { paneTitle = title }) {
+        cc.hyoban.moments.ui.design.Toolbar(
+            // What the phone's small bar holds in its middle (the ledger's segments) stands at the
+            // toolbar's end on a desktop, the page's title kept at its start.
+            title = {
+                if (titleMenu != null) TitleMenuButton(titleMenu) { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = it) }
+                else Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            },
+            subtitle = subtitle?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
+            back = onBack?.takeIf { cc.hyoban.moments.ui.design.LocalCanGoBack.current }?.let {
+                {
+                    val shut = close || cc.hyoban.moments.ui.design.LocalInspector.current
+                    val label = stringResource(if (shut) Res.string.action_close else Res.string.action_back)
+                    Tooltip(label, below = true) {
+                        IconButton(onClick = it, modifier = Modifier.testTag("back")) {
+                            Icon(if (shut) AppIcons.Close else AppIcons.ArrowLeft, contentDescription = label)
+                        }
+                    }
+                }
+            },
+            actions = {
+                // As wide as the design's small segments, however wide the phone lays them.
+                if (centre != null) Box(Modifier.widthIn(max = DESKTOP_ACCESSORY)) { centre() }
+                if (accessory != null) Box(Modifier.widthIn(max = DESKTOP_ACCESSORY)) {
+                    CompositionLocalProvider(LocalRailSpace provides cc.hyoban.moments.ui.RailSpace(0.dp, 0.dp)) { accessory() }
+                }
+                subtitleAction?.invoke()
+                actions()
+            },
+        )
+        Box(Modifier.fillMaxWidth().weight(1f)) {
+            CompositionLocalProvider(LocalTopClearance provides Space.s) { content() }
+        }
+    }
+}
+
+/**
  * How far down a page that runs up under its top bar starts its list, clear of the status bar
  * and the row of circles: its scrolling content's top padding, so what scrolls passes under them.
  */
 val LocalTopClearance = staticCompositionLocalOf { 0.dp }
+
+/** How wide what stands in a desktop toolbar beside the page's actions grows, its segments. */
+private val DESKTOP_ACCESSORY = 280.dp
 
 /** How far in from its edge the top bar sets its title, the compact window's margin. */
 private val BAR_TITLE_INSET = 16.dp

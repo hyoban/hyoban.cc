@@ -3,7 +3,7 @@ package cc.hyoban.moments.ui.ledger
 import cc.hyoban.moments.res.*
 import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.components.LocalTopClearance
-import androidx.compose.ui.platform.LocalConfiguration
+import cc.hyoban.moments.ui.components.currentLocale
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
@@ -519,7 +519,7 @@ private fun YearCalendar(year: Int, byDay: Map<LocalDate, Long>, income: Boolean
 private fun Weekdays(byDay: Map<LocalDate, Long>, start: LocalDate, end: LocalDate, today: LocalDate, currency: String, key: Any) {
     var picked by remember(key) { mutableStateOf<Int?>(null) }
     val values = remember(byDay, start, end, today) { weekdayAverages(byDay, start, end, today) }
-    val locale = LocalConfiguration.current.locales[0]
+    val locale = currentLocale()
     val weekday = { i: Int -> java.time.DayOfWeek.of(i + 1).getDisplayName(TextStyle.FULL, if (locale.language == "zh") Locale.CHINESE else Locale.ENGLISH) }
     val at = picked ?: values.indices.maxBy { values[it] }
     val readout = stringResource(Res.string.ledger_weekday_average, weekday(at), money(values[at], currency))

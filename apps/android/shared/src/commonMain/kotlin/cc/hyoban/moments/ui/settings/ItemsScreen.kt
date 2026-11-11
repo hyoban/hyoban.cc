@@ -78,7 +78,7 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
                     },
                 )
                 val books = ledger.books.filter { !it.archived }
-                if (books.isNotEmpty() && settings.isOn(Module.LEDGER)) {
+                if (books.isNotEmpty() && settings.isOn(Module.LEDGER) && container.ledger.writable) {
                     SegmentedGroup(
                         stringResource(Res.string.items_books),
                         stringResource(Res.string.items_book_note),

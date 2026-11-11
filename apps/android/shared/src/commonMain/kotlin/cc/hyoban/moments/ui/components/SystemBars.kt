@@ -19,3 +19,13 @@ expect fun DialogSystemBars(hidden: Boolean)
 
 /** A dialog that lays itself out over the whole window, under the system's bars where there are any. */
 expect fun fullWindowDialogProperties(): DialogProperties
+
+/**
+ * While the photo viewer is open: the system's bars light on the black, and put away when
+ * everything but the photo is ([hidden]), a swipe from the edge showing them for a moment.
+ */
+@Composable
+expect fun ViewerSystemBars(hidden: Boolean)
+
+/** Whether the app is in a small window of its own over others, where a video plays alone. */
+val LocalInPictureInPicture = androidx.compose.runtime.staticCompositionLocalOf { false }

@@ -3,6 +3,15 @@ package cc.hyoban.moments.desktop
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.testTag
+import java.io.File
+import cc.hyoban.moments.res.Res
+import cc.hyoban.moments.res.desktop_photos_saved
+import kotlinx.coroutines.launch
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.PhotoRef
 import cc.hyoban.moments.data.local.toPhotoRef
@@ -97,21 +106,114 @@ object DesktopDevice : Device {
     }
 
     @Composable
-    override fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: () -> Unit) {
-        if (at != null) LaunchedEffect(at) { onDismiss() }
+    override fun ShareMoment(moment: MomentRecord, urls: MediaUrls, place: String?, onDismiss: () -> Unit) {
+        val scope = rememberCoroutineScope()
+        val show = cc.hyoban.moments.ui.rememberShowMessage()
+        cc.hyoban.moments.ui.moment.DesktopShareDialog(
+            moment, urls, place, onDismiss,
+            savePhotos = { photos ->
+                scope.launch {
+                    val folder = chooseFolder() ?: return@launch
+                    val count = withContext(Dispatchers.IO) { savePhotos(photos, folder, moment.dateKey) }
+                    if (count > 0) show(org.jetbrains.compose.resources.getString(Res.string.desktop_photos_saved, count))
+                    onDismiss()
+                }
+            },
+        )
     }
 
+    // A live photo shows its still; a video is handed to the Mac to play.
+    override fun viewerMotion(media: cc.hyoban.moments.data.spec.MomentMedia): cc.hyoban.moments.ui.viewer.ViewerMotion? =
+        if (media.type == cc.hyoban.moments.data.spec.MediaType.VIDEO) SystemVideo() else null
+
+    /** A video played by whatever the Mac opens it with: its play badge over the poster opens it. */
+    private class SystemVideo : cc.hyoban.moments.ui.viewer.ViewerMotion {
+        private var url: String? = null
+
+        @Composable
+        override fun Over(url: String, active: Boolean, modifier: Modifier) {
+            if (active) this.url = url
+            androidx.compose.foundation.layout.Box(modifier, contentAlignment = androidx.compose.ui.Alignment.Center) {
+                cc.hyoban.moments.ui.components.PlayBadge(
+                    androidx.compose.ui.Modifier.clickable(onClickLabel = null, role = androidx.compose.ui.semantics.Role.Button) { open(url) },
+                )
+            }
+        }
+
+        override fun toggle() {
+            url?.let(::open)
+        }
+
+        private fun open(url: String) {
+            runCatching { if (url.startsWith("http")) Desktop.getDesktop().browse(URI(url)) else Desktop.getDesktop().open(File(URI(url).path)) }
+        }
+    }
+
+    // The one shown kept in a folder, as sharing a Moment keeps its photos.
+    override suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls) {
+        val source = media.published?.let { urls.image(it, 4096) } ?: media.local?.uri ?: return
+        val folder = chooseFolder() ?: return
+        withContext(Dispatchers.IO) { savePhotos(listOf(source), folder, media.takenAt?.take(10) ?: media.uid) }
+    }
+
+    // The system's file dialog, offering files by their names' endings.
     @Composable
-    override fun ShareMoment(moment: MomentRecord, urls: MediaUrls, place: String?, onDismiss: () -> Unit) {
-        LaunchedEffect(moment.uid) { onDismiss() }
+    override fun rememberFilePicker(types: List<String>, onPicked: (String) -> Unit): () -> Unit {
+        val scope = rememberCoroutineScope()
+        val endings = types.filter { '/' !in it }.toSet()
+        return {
+            scope.launch {
+                val file = withContext(Dispatchers.IO) {
+                    val dialog = FileDialog(null as Frame?, "", FileDialog.LOAD).apply {
+                        if (endings.isNotEmpty()) setFilenameFilter { _, name -> name.substringAfterLast('.', "").lowercase() in endings }
+                        isVisible = true
+                    }
+                    dialog.file?.let { File(dialog.directory, it) }
+                }
+                file?.let { onPicked(it.toURI().toString()) }
+            }
+        }
+    }
+
+    // The phone's backup as a way to start: its WebDAV directory asked for, then read.
+    @Composable
+    override fun onboardingStarts(container: AppContainer, next: () -> Unit) =
+        listOf(cc.hyoban.moments.ui.settings.phoneBackupStart((container as DesktopContainer).phoneBackup, next))
+
+    /** A folder chosen in the system's dialog, or null when it was left. */
+    private suspend fun chooseFolder(): File? = withContext(Dispatchers.IO) {
+        System.setProperty("apple.awt.fileDialogForDirectories", "true")
+        try {
+            val dialog = FileDialog(null as Frame?, "", FileDialog.LOAD).apply { isVisible = true }
+            dialog.file?.let { File(dialog.directory, it) }
+        } finally {
+            System.setProperty("apple.awt.fileDialogForDirectories", "false")
+        }
+    }
+
+    /** Fetches each of [photos] (a URL or a file) into [folder], numbered in order after [day]; how many arrived. */
+    private fun savePhotos(photos: List<String>, folder: File, day: String): Int = photos.withIndex().count { (index, source) ->
+        runCatching {
+            val name = "$day-${index + 1}.${source.substringAfterLast('.', "jpg").substringBefore('?').takeIf { it.length in 2..4 } ?: "jpg"}"
+            val into = File(folder, name)
+            if (source.startsWith("http")) {
+                cc.hyoban.moments.data.Http.client.newCall(okhttp3.Request.Builder().url(source).build()).execute().use { response ->
+                    check(response.isSuccessful)
+                    into.outputStream().use { response.body!!.byteStream().copyTo(it) }
+                }
+            } else {
+                File(URI(source).takeIf { source.startsWith("file:") }?.path ?: source).copyTo(into, overwrite = true)
+            }
+        }.isSuccess
     }
 
     @Composable
     override fun EditPlace(container: AppContainer, id: String, onDismiss: () -> Unit) = cc.hyoban.moments.ui.compose.EditPlace(container, id, onDismiss)
 
+    // Where the phone backs up to, read here for its ledger and footprints.
     @Composable
-    override fun StorageSettings(container: AppContainer) {
-    }
+    override fun StorageSettings(container: AppContainer) =
+        cc.hyoban.moments.ui.settings.PhoneBackupSection((container as DesktopContainer).phoneBackup)
 
     @Composable
     override fun UpdateSettings(container: AppContainer) {

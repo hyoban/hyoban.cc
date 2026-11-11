@@ -39,6 +39,8 @@ kotlin {
             api(libs.lifecycle.viewmodel.compose.multiplatform)
             api(libs.maplibre.compose)
             implementation(libs.zip4j)
+            // The viewer's zoom and pan, the phone's and the Mac's alike.
+            api(libs.telephoto.zoomable)
             implementation(libs.gson)
         }
         commonTest.dependencies {

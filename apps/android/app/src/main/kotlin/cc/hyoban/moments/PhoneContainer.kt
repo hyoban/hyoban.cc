@@ -63,13 +63,9 @@ class PhoneContainer private constructor(
     /** The app's own updates, from its GitHub releases. */
     val updates = cc.hyoban.moments.update.Updates(context)
 
-    /** Swarm's check-ins brought in from its export, their photos beside the phone's own Moments'. */
-    val swarm = cc.hyoban.moments.data.swarm.SwarmImport(
-        open = { uri -> appContext.contentResolver.openInputStream(uri) ?: error("Can't read $uri") },
-        repository = repository,
-        mediaDirectory = File(localStore.root, "media"),
-        scope = scope,
-    )
+    override fun openSource(source: String): java.io.InputStream =
+        appContext.contentResolver.openInputStream(android.net.Uri.parse(source)) ?: error("Can't read $source")
+
     /** Places by name and around a point, for a new Moment's place. */
     override val placeSearch = PlaceSearch(BuildConfig.PLACE_SEARCH_URL, tencentKey = { settings.tencentMapKey.value },
         amapKey = { settings.amapKey.value },

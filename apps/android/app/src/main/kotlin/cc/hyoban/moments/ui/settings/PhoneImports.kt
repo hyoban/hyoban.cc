@@ -63,37 +63,6 @@ fun importSources(): List<String> {
     )
 }
 
-/** 导入: Swarm's export, iCost's backup or bill export, and GPX tracks, on one page under 我. */
-@Composable
-fun ImportScreen(container: PhoneContainer, onBack: () -> Unit) {
-    SubPage(stringResource(Res.string.import_title), onBack, Modifier.background(AppColors.page)) {
-        PageWidth(maxColumns = 1) { columns ->
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = LocalTopClearance.current)
-                    .navigationBarsPadding()
-                    .padding(horizontal = columns.margin)
-                    .padding(bottom = Space.xl),
-            ) {
-                // Each source under the module it feeds, so one turned off (记录项与公开) isn't offered.
-                val settings = LocalSettings.current
-                if (settings.isOn(Module.CHECKIN)) SwarmGroup(container.swarm)
-                if (settings.isOn(Module.LEDGER)) ICostGroup(container)
-                if (settings.isOn(Module.FOOTPRINTS)) GpxGroup(container)
-                // Opened by a link with every one of them off: why there is nothing here.
-                if (importSources().isEmpty()) Text(
-                    stringResource(Res.string.import_none),
-                    style = AppTheme.typography.body,
-                    color = tokens.tx2,
-                    modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.l).testTag("import_none"),
-                )
-            }
-        }
-    }
-}
-
 /** iCost's backup or bill export into the ledger, what it found shown before it is written. */
 @Composable
 private fun ICostGroup(container: PhoneContainer) {
@@ -190,4 +159,12 @@ private fun GpxGroup(container: PhoneContainer) {
             confirmButton = { TextButton(onClick = { state = null }) { Text(stringResource(Res.string.action_confirm)) } },
         )
     }
+}
+
+/** 导入's groups the phone has beyond Swarm's: iCost into its ledger and GPX into its footprints, each while its module is on. */
+@Composable
+fun PhoneImportGroups(container: PhoneContainer) {
+    val settings = LocalSettings.current
+    if (settings.isOn(Module.LEDGER)) ICostGroup(container)
+    if (settings.isOn(Module.FOOTPRINTS)) GpxGroup(container)
 }

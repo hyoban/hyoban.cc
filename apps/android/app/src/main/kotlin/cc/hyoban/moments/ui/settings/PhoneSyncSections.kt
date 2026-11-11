@@ -19,7 +19,10 @@ fun PhoneStorageSettings(container: PhoneContainer) {
     if (editingBackup) {
         val backup = container.backup
         WebDavDialog(
-            backup,
+            backup.url.value,
+            backup.user.value,
+            passwordSet = backup.password.isSet,
+            configured = backup.configured,
             onDismiss = { editingBackup = false },
             onForget = {
                 backup.forget()

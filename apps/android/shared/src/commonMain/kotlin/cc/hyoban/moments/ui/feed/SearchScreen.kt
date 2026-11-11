@@ -239,7 +239,8 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
         }
         // On a phone on its side, the keyboard down, the kinds and the time stand in a column at
         // the start, wrapped rather than scrolled, the results beside them (H06).
-        val sideways = isPhoneLandscape() && !cc.hyoban.moments.ui.components.imeVisible()
+        // A desktop has them so too, its kinds and years in a column on the left (D06).
+        val sideways = cc.hyoban.moments.ui.design.LocalDesktop.current || (isPhoneLandscape() && !cc.hyoban.moments.ui.components.imeVisible())
         val results: @Composable ColumnScope.() -> Unit = {
             // What the search found, said as it changes, so a screen reader hears it too; shown only
             // when there is nothing to list, as the kinds' counts say how many there are.

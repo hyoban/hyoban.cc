@@ -42,7 +42,7 @@ import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.ledger.Account
 import cc.hyoban.moments.ledger.AccountKind
@@ -66,7 +66,7 @@ private fun parseSigned(text: String): Long? {
 
 /** An account: its balance in its currency, a way to set it to what it really is, and its bills. */
 @Composable
-fun AccountScreen(container: PhoneContainer, id: String, nav: LedgerNav) {
+fun AccountScreen(container: AppContainer, id: String, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val account = ledger.accountsById[id] ?: return
     val scope = rememberCoroutineScope()
@@ -79,7 +79,7 @@ fun AccountScreen(container: PhoneContainer, id: String, nav: LedgerNav) {
         nav.back,
         subtitle = accountKindLabel(account.kind) + " " + account.currency,
         actions = {
-            Tooltip(stringResource(Res.string.action_edit), below = true) {
+            if (container.ledger.writable) Tooltip(stringResource(Res.string.action_edit), below = true) {
                 IconButton(onClick = { nav.editAccount(id) }, modifier = Modifier.testTag("edit_account")) {
                     Icon(AppIcons.Pen, contentDescription = stringResource(Res.string.action_edit))
                 }
@@ -90,7 +90,7 @@ fun AccountScreen(container: PhoneContainer, id: String, nav: LedgerNav) {
             Column(Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter, top = Space.s, bottom = Space.s)) {
                 Text(stringResource(Res.string.ledger_balance_label), style = AppTheme.typography.label, color = tokens.tx2)
                 Text(money(balance, account.currency), style = AppTheme.typography.titlePage, modifier = Modifier.testTag("account_balance"))
-                Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                if (container.ledger.writable) Row(Modifier.padding(top = Space.m), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                     TextButton(onClick = { nav.entry(LedgerEntryArgs(account = id)) }) {
                         Icon(AppIcons.Plus, contentDescription = null)
                         Text(stringResource(Res.string.ledger_new_bill), modifier = Modifier.padding(start = Space.s))
@@ -141,7 +141,7 @@ fun AccountScreen(container: PhoneContainer, id: String, nav: LedgerNav) {
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AccountEditScreen(container: PhoneContainer, id: String?, nav: LedgerNav) {
+fun AccountEditScreen(container: AppContainer, id: String?, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val original = id?.let(ledger.accountsById::get)
     val scope = rememberCoroutineScope()

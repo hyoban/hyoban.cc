@@ -184,7 +184,7 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.TransitionMotion
 import cc.hyoban.moments.ui.trips.TripPlayerScreen
 import cc.hyoban.moments.ui.trips.TripScreen
-import cc.hyoban.moments.ui.viewer.LocalInPictureInPicture
+import cc.hyoban.moments.ui.components.LocalInPictureInPicture
 import cc.hyoban.moments.ui.viewer.MediaViewer
 import cc.hyoban.moments.ui.viewer.rememberInPictureInPicture
 import kotlin.reflect.KClass

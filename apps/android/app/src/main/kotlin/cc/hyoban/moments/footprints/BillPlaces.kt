@@ -22,18 +22,6 @@ import kotlinx.coroutines.withContext
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 
-/** Where a bill with no place of its own was, as worked out for it, and how that is known. */
-data class BillSpot(
-    val name: String,
-    /** The known place it is, ready to be the bill's; null for a spot that is only named. */
-    val place: String?,
-    /** The footprints' point, for a spot to be kept as a new place; null for a check-in's. */
-    val point: Fix?,
-    val from: From,
-) {
-    enum class From { CHECKIN, FOOTPRINTS }
-}
-
 /**
  * Where a bill was paid, for one with no place of its own nor a Moment's: the place of the
  * check-in whose time covers it, else the footprints' sample nearest its time, which is a known

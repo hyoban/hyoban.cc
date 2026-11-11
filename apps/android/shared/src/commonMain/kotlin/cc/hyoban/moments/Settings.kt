@@ -136,6 +136,20 @@ class Settings(private val prefs: Prefs, secrets: File) {
         prefs.edit { putBoolean("demo", on).remove("ledger_hidden") }
     }
 
+    /** Where a desktop's window opens: `timeline`, `map`, or `last`, the section it was left on. */
+    var startPage: String by mutableStateOf(prefs.getString("start_page", "timeline") ?: "timeline")
+        private set
+
+    fun changeStartPage(page: String) {
+        startPage = page
+        prefs.edit { putString("start_page", page) }
+    }
+
+    /** The section a desktop's window was last left on, for [startPage] `last`. */
+    var lastSection: String
+        get() = prefs.getString("last_section", "") ?: ""
+        set(value) = prefs.edit { putString("last_section", value) }
+
     /**
      * The modules turned off in 记录项与公开, by the spec's keys: every module is on until turned
      * off, one the app gains later too. Off, a module's rows, pages and records are put away and

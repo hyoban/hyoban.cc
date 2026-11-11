@@ -128,7 +128,7 @@ fun MomentCard(
             }
         }
         if (bills.isNotEmpty() && ledger != null) LinkedBills(bills, ledger, onBill)
-        cc.hyoban.moments.ui.LocalDevice.current.MomentMenu(moment, urls, menu, onDismiss = { menu = null })
+        cc.hyoban.moments.ui.moment.MomentMenu(moment, urls, menu, onDismiss = { menu = null })
     }
 }
 
@@ -204,7 +204,7 @@ private fun MomentBubble(
                     Box(Modifier.align(Alignment.End)) { foot() }
                 }
             }
-            cc.hyoban.moments.ui.LocalDevice.current.MomentMenu(moment, urls, menu, onDismiss = { menu = null })
+            cc.hyoban.moments.ui.moment.MomentMenu(moment, urls, menu, onDismiss = { menu = null })
         }
     }
 }

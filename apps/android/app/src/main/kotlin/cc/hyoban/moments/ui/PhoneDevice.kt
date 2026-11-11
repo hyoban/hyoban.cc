@@ -128,10 +128,6 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
 
     override fun toast(text: String) = android.widget.Toast.makeText(context, text, android.widget.Toast.LENGTH_SHORT).show()
 
-    @Composable
-    override fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: () -> Unit) =
-        cc.hyoban.moments.ui.moment.MomentMenu(moment, urls, at, onDismiss)
-
     // The sheet of where to share stays under the page it opens, as it did when the Moment's page held both.
     @Composable
     override fun ShareMoment(moment: MomentRecord, urls: MediaUrls, place: String?, onDismiss: () -> Unit) {
@@ -139,6 +135,43 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
         ShareMenu(onSelect = { target = it }, onDismiss = onDismiss)
         target?.let { cc.hyoban.moments.ui.moment.ShareMoment(moment, urls, it, onDismiss = { target = null }, place = place) }
     }
+
+    @Composable
+    override fun rememberLedgerImport(container: AppContainer): cc.hyoban.moments.ui.LedgerImport =
+        cc.hyoban.moments.ui.ledger.rememberICostImport(container as PhoneContainer).let { cc.hyoban.moments.ui.LedgerImport(it.pick, it.Dialog) }
+
+    @Composable
+    override fun billSpot(txn: cc.hyoban.moments.ledger.Txn) = cc.hyoban.moments.footprints.billSpot(txn)
+
+    @Composable
+    override fun rememberFilePicker(types: List<String>, onPicked: (String) -> Unit): () -> Unit {
+        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) onPicked(uri.toString()) }
+        val mimes = types.filter { '/' in it }.toTypedArray()
+        return { launcher.launch(mimes) }
+    }
+
+    @Composable
+    override fun ImportGroups(container: AppContainer) = cc.hyoban.moments.ui.settings.PhoneImportGroups(container as PhoneContainer)
+
+    override fun importsMore(settings: cc.hyoban.moments.Settings) =
+        settings.isOn(cc.hyoban.moments.data.spec.Module.LEDGER) || settings.isOn(cc.hyoban.moments.data.spec.Module.FOOTPRINTS)
+
+    override val recordsFootprints: Boolean get() = true
+
+    @Composable
+    override fun OnboardingFootprints(container: AppContainer, onBack: () -> Unit, onDone: () -> Unit) =
+        cc.hyoban.moments.ui.onboarding.PhoneOnboardingFootprints(container as PhoneContainer, onBack, onDone)
+
+    override fun viewerMotion(media: cc.hyoban.moments.data.spec.MomentMedia) = cc.hyoban.moments.ui.viewer.phoneViewerMotion(media)
+
+    override suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls) =
+        cc.hyoban.moments.data.media.Share.media(context, media, urls)
+
+    override val hasPhotoInfo: Boolean get() = true
+
+    @Composable
+    override fun PhotoInfo(container: AppContainer, media: cc.hyoban.moments.data.spec.MomentMedia, modifier: Modifier) =
+        cc.hyoban.moments.ui.viewer.PhonePhotoInfo(container as PhoneContainer, media, modifier)
 
     @Composable
     override fun EditPlace(container: AppContainer, id: String, onDismiss: () -> Unit) =

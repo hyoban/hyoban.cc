@@ -20,8 +20,6 @@ import androidx.core.util.Consumer
 // In that window the viewer shows only the video, and the system's own play and pause come from
 // the video's media session.
 
-/** Whether the app's window is a picture-in-picture one. */
-val LocalInPictureInPicture = staticCompositionLocalOf { false }
 
 /** Whether [LocalActivity]'s window is a picture-in-picture one, kept up as it goes in and out. */
 @Composable
