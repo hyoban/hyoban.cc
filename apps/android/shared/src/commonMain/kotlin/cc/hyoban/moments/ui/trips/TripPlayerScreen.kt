@@ -660,7 +660,7 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
                         ) { onMoment(moment.uid) }
                         .padding(horizontal = Space.xs),
                 )
-                cc.hyoban.moments.ui.LocalDevice.current.MomentMenu(moment, urls, menu, onDismiss = { menu = null })
+                cc.hyoban.moments.ui.moment.MomentMenu(moment, urls, menu, onDismiss = { menu = null })
             }
         }
     }

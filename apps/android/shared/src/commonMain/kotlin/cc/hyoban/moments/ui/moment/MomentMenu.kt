@@ -9,8 +9,6 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.theme.dividerColor
 import cc.hyoban.moments.ui.design.HorizontalDivider
-import android.content.ClipData
-import android.content.ClipboardManager
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import cc.hyoban.moments.ui.design.DropdownMenuItem
@@ -24,7 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalContext
+import cc.hyoban.moments.ui.LocalDevice
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.DpOffset
@@ -49,11 +47,10 @@ private class MenuChoice(val text: String, val icon: ImageVector, val tag: Strin
 @Composable
 fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: () -> Unit) {
     val actions = LocalMomentActions.current
-    val context = LocalContext.current
+    val device = LocalDevice.current
     val show = rememberShowMessage()
     val copied = stringResource(Res.string.message_text_copied)
     var sharing by remember { mutableStateOf(false) }
-    var target by remember { mutableStateOf<ShareTarget?>(null) }
     // Kept while it closes, so it doesn't jump to the corner as it goes.
     var shownAt by remember { mutableStateOf(DpOffset.Zero) }
     if (at != null) shownAt = at
@@ -67,7 +64,7 @@ fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: 
         if (moment.text.isNotBlank()) {
             add(
                 MenuChoice(copy, AppIcons.Copy, "menu_copy_text") {
-                    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("", moment.text))
+                    device.copyText(moment.text)
                     show(copied)
                 },
             )
@@ -116,13 +113,7 @@ fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: 
         }
     }
     if (sharing) {
-        ShareMenu(
-            onSelect = { target = it },
-            onDismiss = { sharing = false },
-        )
-    }
-    target?.let {
         val place = remember(actions, moment) { moment.places.firstOrNull()?.let { id -> actions?.places()?.get(id)?.name } }
-        ShareMoment(moment, urls, it, onDismiss = { target = null }, place = place)
+        device.ShareMoment(moment, urls, place, onDismiss = { sharing = false })
     }
 }

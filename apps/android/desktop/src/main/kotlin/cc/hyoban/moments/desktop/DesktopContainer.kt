@@ -14,29 +14,42 @@ import kotlinx.coroutines.launch
 
 /**
  * The Mac's container: what every device shares, kept under [root], the app's folder in the
- * user's Application Support. It has no ledger or footprints of its own, so nothing publishes
- * beside the Moments.
+ * user's Application Support. Its ledger and footprints are the phone's, read from the phone's
+ * latest WebDAV backup and only shown, so nothing publishes beside the Moments.
  */
-class DesktopContainer(root: File) : AppContainer(
+class DesktopContainer(private val root: File) : AppContainer(
     settings = Settings(FilePrefs(File(root, "settings.json")), File(root, "private").apply { mkdirs() }),
     files = root,
     private = File(root, "private"),
     driver = BundledSQLiteDriver(),
     outside = NothingOutside,
 ) {
-    override val ledger = cc.hyoban.moments.ledger.NoLedger
+    /** The phone's latest backup, read from its WebDAV directory: the ledger and footprints shown here. */
+    val phoneBackup by lazy {
+        cc.hyoban.moments.backup.PhoneBackup(
+            FilePrefs(File(root, "phone-backup.json")),
+            File(root, "private"),
+            File(root, "private/phone-backup"),
+            BundledSQLiteDriver(),
+        )
+    }
+
+    // Read lazily: the shared container asks for them while it is being made.
+    override val ledger: cc.hyoban.moments.ledger.LedgerSource get() = phoneBackup.ledger
     override val placeSearch = cc.hyoban.moments.data.local.PlaceSearch(
         cc.hyoban.moments.data.local.PHOTON_URL,
         tencentKey = { settings.tencentMapKey.value },
         amapKey = { settings.amapKey.value },
         tencentFirst = { settings.chinaPlaces.value == cc.hyoban.moments.CHINA_PLACES_TENCENT },
     )
-    override val footprints = cc.hyoban.moments.footprints.NoFootprints
+    override val footprints: cc.hyoban.moments.footprints.Footprints get() = phoneBackup.footprints
 
     private var publish: Job? = null
 
     init {
         start()
+        // The backup read again each time the app opens, as the phone backs up once a day.
+        scope.launch { phoneBackup.refresh() }
     }
 
     override fun openCities(): Reader =
@@ -61,6 +74,9 @@ class DesktopContainer(root: File) : AppContainer(
     }
 
     companion object {
+        /** The app's version, as its packaged jar says; none in a trial run. */
+        fun version(): String? = DesktopContainer::class.java.`package`?.implementationVersion
+
         /** `~/Library/Application Support/Here`, or `HERE_HOME` when set, as a test's own folder. */
         fun home(): File = System.getenv("HERE_HOME")?.takeIf { it.isNotBlank() }?.let(::File)
             ?: File(System.getProperty("user.home"), "Library/Application Support/Here")

@@ -84,16 +84,22 @@ private fun RowContent(
     headlineContent: @Composable () -> Unit,
 ) {
     val typography = AppTheme.typography
+    // A desktop's rows are the design's denser ones (Inspector): 40 at least, 12 each side, icons 18.
+    val desktop = LocalDesktop.current
+    val two = supportingContent != null || overlineContent != null
     Row(
         modifier
             .fillMaxWidth()
-            .heightIn(min = if (supportingContent != null || overlineContent != null) 64.dp else 56.dp)
+            .heightIn(min = if (desktop) (if (two) 52.dp else 40.dp) else if (two) 64.dp else 56.dp)
             .background(colors.containerColor)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = if (desktop) 12.dp else 16.dp, vertical = if (desktop) 6.dp else 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (desktop) 12.dp else 16.dp),
     ) {
-        if (leadingContent != null) CompositionLocalProvider(LocalContentColor provides colors.leadingColor) { leadingContent() }
+        if (leadingContent != null) CompositionLocalProvider(
+            LocalContentColor provides colors.leadingColor,
+            LocalIconSize provides if (desktop) 18.dp else LocalIconSize.current,
+        ) { leadingContent() }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             if (overlineContent != null) {
                 CompositionLocalProvider(LocalContentColor provides colors.overlineColor) { ProvideTextStyle(typography.caption) { overlineContent() } }

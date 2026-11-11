@@ -128,8 +128,10 @@ fun ModalBottomSheet(
     }
     // On a window 840 wide or more the panel is a dialog in the middle, rounded all round (L01);
     // on a phone on its side it slides in from the end, the whole height and 360 wide (H00).
-    val wide = cc.hyoban.moments.ui.components.isExpandedWidth()
-    val side = !wide && cc.hyoban.moments.ui.components.hidesSystemBars()
+    // On a desktop it is the design's inspector (D10, D20, D29): 360 wide down the window's end.
+    val desktop = LocalDesktop.current
+    val wide = !desktop && cc.hyoban.moments.ui.components.isExpandedWidth()
+    val side = desktop || (!wide && cc.hyoban.moments.ui.components.hidesSystemBars())
     val ltr = LocalLayoutDirection.current == LayoutDirection.Ltr
     val noSystemBars = cc.hyoban.moments.ui.components.hidesSystemBars()
     Dialog(onDismissRequest = leave, properties = cc.hyoban.moments.ui.components.fullWindowDialogProperties()) {

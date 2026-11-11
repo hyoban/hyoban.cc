@@ -53,7 +53,7 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ledger.Reimburse
 import cc.hyoban.moments.ledger.TxnKind
@@ -74,7 +74,7 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun BillScreen(container: PhoneContainer, id: String, nav: LedgerNav) {
+fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -86,7 +86,8 @@ fun BillScreen(container: PhoneContainer, id: String, nav: LedgerNav) {
     val moment = txn.moment?.let { uid -> moments.firstOrNull { it.uid == uid } }
     val placeId = txn.place ?: moment?.places?.firstOrNull()
     val tripId = txn.trip ?: moment?.let { tripOf(it, trips)?.id }
-    val spot = cc.hyoban.moments.footprints.billSpot(txn)
+    val writable = container.ledger.writable
+    val spot = if (writable) cc.hyoban.moments.ui.LocalDevice.current.billSpot(txn) else null
     // The footprints' spot and its name, while it is being kept as a place in the place picker.
     var keeping by remember { mutableStateOf<Pair<cc.hyoban.moments.data.local.Fix, String>?>(null) }
     keeping?.let { (point, name) ->
@@ -100,12 +101,12 @@ fun BillScreen(container: PhoneContainer, id: String, nav: LedgerNav) {
         nav.back,
         subtitle = ledger.books.firstOrNull { it.id == txn.book }?.name,
         actions = {
-            Tooltip(stringResource(Res.string.action_edit), below = true) {
+            if (writable) Tooltip(stringResource(Res.string.action_edit), below = true) {
                 IconButton(onClick = { nav.entry(LedgerEntryArgs(edit = txn.id)) }, modifier = Modifier.testTag("edit_bill")) {
                     Icon(AppIcons.Pen, contentDescription = stringResource(Res.string.action_edit))
                 }
             }
-            Tooltip(stringResource(Res.string.action_delete), below = true) {
+            if (writable) Tooltip(stringResource(Res.string.action_delete), below = true) {
                 IconButton(onClick = { deleting = true }, modifier = Modifier.testTag("delete_bill")) {
                     Icon(AppIcons.Trash, contentDescription = stringResource(Res.string.action_delete))
                 }
@@ -255,7 +256,7 @@ fun BillScreen(container: PhoneContainer, id: String, nav: LedgerNav) {
                             },
                         )
                     }
-                    Row(Modifier.padding(horizontal = Space.gutter, vertical = Space.l), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                    if (writable) Row(Modifier.padding(horizontal = Space.gutter, vertical = Space.l), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                         TextButton(onClick = { nav.entry(LedgerEntryArgs(kind = TxnKind.REFUND, related = txn.id)) }, modifier = Modifier.testTag("refund")) {
                             Icon(AppIcons.Undo, contentDescription = null)
                             Text(stringResource(Res.string.ledger_action_refund), modifier = Modifier.padding(start = Space.s))

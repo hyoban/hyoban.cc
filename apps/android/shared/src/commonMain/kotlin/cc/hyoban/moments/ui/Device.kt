@@ -102,11 +102,44 @@ interface Device {
     /** Says [text] for a moment, over whatever is shown. */
     fun toast(text: String)
 
-    /** A Moment's menu, opened [at] where it was pressed; nothing while [at] is null. */
-    @Composable fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: () -> Unit)
-
     /** Choosing where a Moment is shared to, then sharing it there, [place] its place's name. */
     @Composable fun ShareMoment(moment: MomentRecord, urls: MediaUrls, place: String?, onDismiss: () -> Unit)
+
+    /** What moves of [media] in the viewer, a live photo's clip or a video; null for a still. */
+    fun viewerMotion(media: cc.hyoban.moments.data.spec.MomentMedia): cc.hyoban.moments.ui.viewer.ViewerMotion?
+
+    /** Shares the one item [media] shown in the viewer, fetched first when it is the site's. */
+    suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls)
+
+    /** Whether the viewer offers what an item says of itself (its EXIF), [PhotoInfo] drawing it. */
+    val hasPhotoInfo: Boolean get() = false
+
+    /** What [media] says of itself, in the panel under the viewer. */
+    @Composable fun PhotoInfo(container: AppContainer, media: cc.hyoban.moments.data.spec.MomentMedia, modifier: Modifier) {}
+
+    /** Bringing a ledger in from another app, for an empty one; null where the device keeps none to write. */
+    @Composable fun rememberLedgerImport(container: AppContainer): LedgerImport? = null
+
+    /** Where a bill with no place of its own was, from the device's check-ins and footprints; null where it can't tell. */
+    @Composable fun billSpot(txn: cc.hyoban.moments.ledger.Txn): cc.hyoban.moments.footprints.BillSpot? = null
+
+    /** Choosing a file of [types] (media types, or a name's ending): what the returned call opens, its address told to [onPicked]. */
+    @Composable fun rememberFilePicker(types: List<String>, onPicked: (String) -> Unit): () -> Unit
+
+    /** 导入's groups beyond Swarm's, for what the device keeps itself (the phone's ledger and footprints). */
+    @Composable fun ImportGroups(container: AppContainer) {}
+
+    /** Whether [ImportGroups] has anything to offer with these modules on. */
+    fun importsMore(settings: cc.hyoban.moments.Settings): Boolean = false
+
+    /** Whether the device records footprints itself, 初次打开 then asking about them. */
+    val recordsFootprints: Boolean get() = false
+
+    /** 初次打开's footprints step, where the device records them. */
+    @Composable fun OnboardingFootprints(container: AppContainer, onBack: () -> Unit, onDone: () -> Unit) {}
+
+    /** More ways to start in 初次打开, beside a site, an import and nothing (a computer's: the phone's backup); [next] goes on. */
+    @Composable fun onboardingStarts(container: AppContainer, next: () -> Unit): List<cc.hyoban.moments.ui.settings.Segment> = emptyList()
 
     /** A place's name, point and kind, to change. */
     @Composable fun EditPlace(container: AppContainer, id: String, onDismiss: () -> Unit)
@@ -134,3 +167,6 @@ interface Device {
 }
 
 val LocalDevice = staticCompositionLocalOf<Device> { error("No device provided") }
+
+/** Bringing a ledger in from a file: [pick] chooses it, [Dialog] asks what to do with what was found. */
+class LedgerImport(val pick: () -> Unit, val Dialog: @Composable () -> Unit)

@@ -346,7 +346,8 @@ private fun MapContent(
     val expanded = cc.hyoban.moments.ui.components.isExpandedWidth()
     val wide = expanded || cc.hyoban.moments.ui.components.isLandscape()
     val floatingPanel = !expanded
-    val panelWidth = if (floatingPanel) FLOATING_PANEL else WIDE_PANEL
+    // A desktop's trips column is the design's 300 (D09).
+    val panelWidth = if (floatingPanel) FLOATING_PANEL else if (cc.hyoban.moments.ui.design.LocalDesktop.current) DESKTOP_PANEL else WIDE_PANEL
     val railed = wide
     val rail = LocalRailSpace.current
     val clearance = LocalBottomClearance.current
@@ -1098,3 +1099,6 @@ private fun RouteCard(trip: TripRecord, cover: MomentMedia?, year: Color?, km: D
         }
     }
 }
+
+/** The map's trips column on a desktop (D09). */
+private val DESKTOP_PANEL = 300.dp

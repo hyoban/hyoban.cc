@@ -1,8 +1,6 @@
 package cc.hyoban.moments.ui.settings
 
 import cc.hyoban.moments.res.*
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
@@ -31,10 +29,10 @@ import cc.hyoban.moments.ui.theme.Space
 fun SwarmGroup(swarm: SwarmImport) {
     val state by swarm.state.collectAsStateWithLifecycle()
     val running = state.running
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) swarm.start(uri) }
+    val pick = cc.hyoban.moments.ui.LocalDevice.current.rememberFilePicker(SWARM_TYPES) { swarm.start(it) }
     val row: Segment = { shapes ->
         SegmentedListItem(
-            onClick = { if (!running) picker.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
+            onClick = { if (!running) pick() },
             shapes = shapes,
             colors = segmentColors(),
             leadingContent = { Icon(AppIcons.Timeline, contentDescription = null) },
@@ -80,3 +78,6 @@ fun SwarmGroup(swarm: SwarmImport) {
         else -> Unit
     }
 }
+
+/** What Swarm's export is: a zip, by its media types and its name's ending. */
+private val SWARM_TYPES = listOf("application/zip", "application/x-zip-compressed", "application/octet-stream", "zip")

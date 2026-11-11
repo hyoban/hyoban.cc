@@ -9,3 +9,8 @@ actual fun DialogSystemBars(hidden: Boolean) {
 }
 
 actual fun fullWindowDialogProperties(): DialogProperties = DialogProperties(usePlatformDefaultWidth = false)
+
+// A window on a computer has no system bars to put away.
+@Composable
+actual fun ViewerSystemBars(hidden: Boolean) {
+}

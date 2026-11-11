@@ -1,5 +1,8 @@
 package cc.hyoban.moments.ui.feed
 
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.isMetaPressed
 import cc.hyoban.moments.ui.components.BackHandler
 import cc.hyoban.moments.ui.Feed
 import cc.hyoban.moments.ui.compose.icon
@@ -182,6 +185,18 @@ fun FeedScreen(
         onDispose { if (accessory.value === newBeside) accessory.value = null }
     }
     val moments by container.shownMoments.collectAsStateWithLifecycle()
+    // On a computer, the arrows go from one Moment to the next in the pane beside the list, and
+    // Return opens the one chosen as its page (D01).
+    cc.hyoban.moments.ui.components.OnDesktopKey(enabled = twoPane && cc.hyoban.moments.ui.design.LocalDesktop.current) { event ->
+        if (event.type != androidx.compose.ui.input.key.KeyEventType.KeyDown || event.isMetaPressed) return@OnDesktopKey false
+        val index = moments.indexOfFirst { it.uid == chosen }
+        when (event.key) {
+            androidx.compose.ui.input.key.Key.DirectionDown -> { moments.getOrNull(index + 1)?.let { chosen = it.uid }; true }
+            androidx.compose.ui.input.key.Key.DirectionUp -> { moments.getOrNull((index - 1).coerceAtLeast(0))?.let { chosen = it.uid }; true }
+            androidx.compose.ui.input.key.Key.Enter -> chosen?.let { onMoment(it); true } ?: false
+            else -> false
+        }
+    }
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.shownTrips.collectAsStateWithLifecycle()
     val loaded by container.repository.loaded.collectAsStateWithLifecycle()

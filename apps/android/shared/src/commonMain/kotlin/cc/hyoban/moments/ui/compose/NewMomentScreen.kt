@@ -1,5 +1,11 @@
 package cc.hyoban.moments.ui.compose
 
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import cc.hyoban.moments.ui.components.BackHandler
 import cc.hyoban.moments.res.*
 import org.jetbrains.compose.resources.StringResource
@@ -383,7 +389,28 @@ fun NewMomentScreen(
                 },
             ),
             onBack = leave,
-            modifier = Modifier.background(AppColors.page),
+            // On a computer: pictures dropped on it or pasted (⌘V) join it, and ⌘↩ saves it (D07).
+            modifier = Modifier.background(AppColors.page)
+                .dropPhotos { added -> photos = (photos + added).distinct().take(MAX_PHOTOS) }
+                .onPreviewKeyEvent { event ->
+                    if (event.type != KeyEventType.KeyDown || !event.isMetaPressed) return@onPreviewKeyEvent false
+                    when (event.key) {
+                        Key.Enter -> {
+                            if (!saving && !keypad) when {
+                                withMoment && !written -> emptyError = true
+                                original != null && !changed -> onBack()
+                                else -> save()
+                            }
+                            true
+                        }
+                        Key.V -> {
+                            val pasted = if (withMoment) clipboardPhotos() else emptyList()
+                            if (pasted.isNotEmpty()) photos = (photos + pasted).distinct().take(MAX_PHOTOS)
+                            pasted.isNotEmpty()
+                        }
+                        else -> false
+                    }
+                },
             close = true,
             small = keypad,
             centre = if (withMoment) {
@@ -498,7 +525,7 @@ fun NewMomentScreen(
                 // its icon; only those of modules that are on (记录项与公开), a meal already written
                 // staying as it is while meals are off.
                 val foodOn = LocalSettings.current.isOn(Module.FOOD)
-                val billOn = LocalSettings.current.isOn(Module.LEDGER) && container.ledger.kept
+                val billOn = LocalSettings.current.isOn(Module.LEDGER) && container.ledger.writable
                 if (foodOn || billOn) {
                     PageCaption(stringResource(Res.string.section_add_item))
                     FlowRow(

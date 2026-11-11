@@ -1,5 +1,11 @@
 package cc.hyoban.moments.ui.ledger
 
+import androidx.compose.foundation.layout.heightIn
+
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.width
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
@@ -380,6 +386,10 @@ fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false, withTime:
  */
 @Composable
 fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = Modifier, showDate: Boolean = false, showBook: Boolean = false) {
+    if (cc.hyoban.moments.ui.design.LocalDesktop.current) {
+        DesktopTxnRow(txn, ledger, onClick, modifier, showDate, showBook)
+        return
+    }
     ListItem(
         headlineContent = { Text(txnTitle(txn, ledger), maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = { Text(txnSupporting(txn, ledger, showDate, withTime = false, place = footprintPlace(txn)), maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -408,3 +418,49 @@ fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = M
 
 /** A row tapped as a whole, with Material 3's ripple across it. */
 fun Modifier.clickableRow(onClick: () -> Unit): Modifier = clickable(onClick = onClick)
+
+/**
+ * A bill as a row of the desktop's table (D17): its time, its icon, what it was with its note,
+ * its account, and its amount at the end in tabular figures, 40 tall.
+ */
+@Composable
+private fun DesktopTxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier, showDate: Boolean, showBook: Boolean) {
+    androidx.compose.foundation.layout.Row(
+        modifier.fillMaxWidth().heightIn(min = 40.dp).clickableRow(onClick).padding(horizontal = 12.dp).testTag("bill_${txn.id}"),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            if (showDate) txn.dateKey.drop(5) + " " + txn.local.format(TIME) else txn.local.format(TIME),
+            style = AppTheme.typography.caption,
+            color = tokens.tx3,
+            modifier = Modifier.width(if (showDate) 88.dp else 44.dp),
+        )
+        androidx.compose.runtime.CompositionLocalProvider(cc.hyoban.moments.ui.design.LocalIconSize provides 18.dp, cc.hyoban.moments.ui.design.LocalContentColor provides tokens.tx2) {
+            Icon(txnIcon(txn, ledger), contentDescription = null)
+        }
+        Text(
+            listOfNotNull(txnTitle(txn, ledger), txn.note.lineSequence().firstOrNull()?.takeIf { it.isNotBlank() }).joinToString("\u3000"),
+            style = AppTheme.typography.body,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        val book = if (showBook) ledger.books.firstOrNull { it.id == txn.book }?.name else null
+        Text(
+            listOfNotNull(book, txn.account?.let(ledger.accountsById::get)?.let { accountName(it) }).joinToString(" "),
+            style = AppTheme.typography.caption,
+            color = tokens.tx2,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.width(140.dp),
+        )
+        Text(
+            if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
+            style = AppTheme.typography.body,
+            color = amountColor(txn),
+            textAlign = androidx.compose.ui.text.style.TextAlign.End,
+            modifier = Modifier.width(110.dp),
+        )
+    }
+}

@@ -70,7 +70,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.ledger.AccountKind
 import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.netAssetsByMonth
@@ -108,13 +108,20 @@ private enum class LedgerTab(val label: StringResource, val tag: String) {
  * Bills are written from the timeline's 记录, where they show too.
  */
 @Composable
-fun LedgerScreen(container: PhoneContainer, nav: LedgerNav, startTab: Int = 0) {
+fun LedgerScreen(
+    container: AppContainer,
+    nav: LedgerNav,
+    startTab: Int = 0,
+    /** Where a ledger only shown came from, said after the month's sums: the phone's backup and its time. */
+    source: String? = null,
+) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val loaded by container.ledger.loaded.collectAsStateWithLifecycle()
     val book = ledger.book
     var tab by rememberSaveable { mutableIntStateOf(startTab.coerceIn(0, LedgerTab.entries.lastIndex)) }
     // An empty ledger imports right here, rather than opening 记账 on top of the ledger.
-    val importer = rememberICostImport(container)
+    val importer = cc.hyoban.moments.ui.LocalDevice.current.rememberLedgerImport(container)
+    val writable = container.ledger.writable
 
     // The chosen book's bills, or every book's, summed in the chosen book's currency.
     val shown = ledger.shownBooks
@@ -129,6 +136,7 @@ fun LedgerScreen(container: PhoneContainer, nav: LedgerNav, startTab: Int = 0) {
     } else {
         null
     }
+    val subtitleShown = listOfNotNull(subtitle, source).joinToString("　").ifEmpty { null }
 
     val title = when {
         book == null -> stringResource(Res.string.tab_ledger)
@@ -158,8 +166,8 @@ fun LedgerScreen(container: PhoneContainer, nav: LedgerNav, startTab: Int = 0) {
         Column(Modifier.fillMaxSize()) {
             when {
                 !loaded -> Unit
-                LedgerTab.entries[tab] == LedgerTab.ASSETS -> AssetsView(ledger, currency, nav)
-                book == null || bills.isEmpty() -> EmptyLedger(onImport = importer.pick, onNew = { nav.entry(LedgerEntryArgs()) })
+                LedgerTab.entries[tab] == LedgerTab.ASSETS -> AssetsView(ledger, currency, nav, writable)
+                book == null || bills.isEmpty() -> EmptyLedger(onImport = importer?.pick, readOnly = !writable)
                 LedgerTab.entries[tab] == LedgerTab.BILLS -> BillsView(ledger, bills, currency, nav)
                 else -> StatsView(ledger, shown, currency, nav, byName = ledger.allBooks)
             }
@@ -168,11 +176,11 @@ fun LedgerScreen(container: PhoneContainer, nav: LedgerNav, startTab: Int = 0) {
     SubPage(
         title,
         onBack = nav.back,
-        subtitle = subtitle.takeUnless { sideways },
+        subtitle = subtitleShown.takeUnless { sideways },
         titleMenu = titleMenu.takeUnless { sideways },
         actions = {
-            // Its settings live here, beside what they are about, not on 我.
-            Tooltip(stringResource(Res.string.ledger_settings_title), below = true) {
+            // Its settings live here, beside what they are about, not on 我; where it is only shown, on the phone alone.
+            if (writable) Tooltip(stringResource(Res.string.ledger_settings_title), below = true) {
                 IconButton(onClick = nav.settings, modifier = Modifier.testTag("ledger_settings")) {
                     Icon(AppIcons.Settings, contentDescription = stringResource(Res.string.ledger_settings_title))
                 }
@@ -211,12 +219,12 @@ fun LedgerScreen(container: PhoneContainer, nav: LedgerNav, startTab: Int = 0) {
             views()
         }
     }
-    importer.Dialog()
+    importer?.Dialog?.invoke()
 }
 
 /** The books to switch between, from the title; they are managed in 记账, from the bar's settings. */
 @Composable
-private fun ColumnScope.BookMenuItems(container: PhoneContainer, ledger: Ledger, close: () -> Unit) {
+private fun ColumnScope.BookMenuItems(container: AppContainer, ledger: Ledger, close: () -> Unit) {
     val scope = rememberCoroutineScope()
     DropdownMenuItem(
         text = { Text(stringResource(Res.string.ledger_all_books)) },
@@ -262,20 +270,21 @@ fun DemoButton() {
 
 /** A ledger with no bills yet: where they come from. */
 @Composable
-private fun EmptyLedger(onImport: () -> Unit, onNew: () -> Unit) {
+private fun EmptyLedger(onImport: (() -> Unit)?, readOnly: Boolean) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current).padding(horizontal = Space.gutter, vertical = Space.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Space.l),
     ) {
-        Text(stringResource(Res.string.ledger_empty_title), style = AppTheme.typography.title, textAlign = TextAlign.Center)
+        // Shown from the phone's backup, an empty ledger is one not read yet.
+        Text(stringResource(if (readOnly) Res.string.desktop_no_backup else Res.string.ledger_empty_title), style = AppTheme.typography.title, textAlign = TextAlign.Center)
         Text(
-            stringResource(Res.string.ledger_empty_body),
+            stringResource(if (readOnly) Res.string.desktop_backup_hint else Res.string.ledger_empty_body),
             style = AppTheme.typography.body,
             color = tokens.tx2,
             textAlign = TextAlign.Center,
         )
-        TextButton(onClick = onImport, modifier = Modifier.testTag("ledger_import_empty")) {
+        if (onImport != null && !readOnly) TextButton(onClick = onImport, modifier = Modifier.testTag("ledger_import_empty")) {
             Icon(AppIcons.FileOpen, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.size(Space.s))
             Text(stringResource(Res.string.ledger_import_icost))
@@ -404,7 +413,7 @@ private fun MonthTotals(month: String, expense: Long, income: Long, currency: St
  * accounts by kind as segmented lists, each with its balance in its own currency.
  */
 @Composable
-private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
+private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav, writable: Boolean) {
     val assets = remember(ledger, currency) { assetsOf(ledger, currency) }
     PageWidth(maxColumns = 1) { columns ->
         Column(
@@ -465,7 +474,7 @@ private fun AssetsView(ledger: Ledger, currency: String, nav: LedgerNav) {
                 )
             }
             Spacer(Modifier.height(Space.l))
-            TextButton(onClick = { nav.editAccount(null) }, modifier = Modifier.padding(horizontal = Space.gutter).fillMaxWidth().testTag("add_account")) {
+            if (writable) TextButton(onClick = { nav.editAccount(null) }, modifier = Modifier.padding(horizontal = Space.gutter).fillMaxWidth().testTag("add_account")) {
                 Icon(AppIcons.Plus, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.size(Space.s))
                 Text(stringResource(Res.string.ledger_add_account))

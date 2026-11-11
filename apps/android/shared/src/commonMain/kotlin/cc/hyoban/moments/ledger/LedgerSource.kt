@@ -8,6 +8,9 @@ interface LedgerSource {
     /** Whether the device keeps a ledger at all: where it doesn't, nothing offers to write a bill. */
     val kept: Boolean get() = true
 
+    /** Whether bills, books and accounts are written here; a copy read from the phone's backup only shows them. */
+    val writable: Boolean get() = kept
+
     val ledger: StateFlow<Ledger>
 
     /** Keeps [book] as changed: its name, or who sees its new bills. */
@@ -18,6 +21,21 @@ interface LedgerSource {
 
     /** Makes the first book, named [defaultName] with the usual categories, when there is none yet. */
     suspend fun ensureBook(defaultName: String, chinese: Boolean)
+
+    /** Whether it has been read since the app started; until then an empty ledger isn't yet known to be empty. */
+    val loaded: StateFlow<Boolean> get() = MutableStateFlow(true)
+
+    /** Shows the book [id] alone, a new bill going to it. */
+    suspend fun setCurrentBook(id: String) {}
+
+    /** Shows every book at once. */
+    suspend fun showAllBooks() {}
+
+    /** Deletes bills, and the refunds and reimbursements of any of them with them. */
+    suspend fun deleteTxns(ids: Collection<String>) {}
+
+    /** Deletes an account no bill uses. */
+    suspend fun deleteAccount(id: String) {}
 }
 
 /** No ledger: a device that keeps none. */

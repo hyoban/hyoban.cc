@@ -1,16 +1,14 @@
 package cc.hyoban.moments.ui.onboarding
 
+import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.ui.LocalDevice
+import cc.hyoban.moments.ui.design.LocalDesktop
+import cc.hyoban.moments.ui.components.BackHandler
+import cc.hyoban.moments.ui.settings.ImportScreen
+import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.res.*
 import org.jetbrains.compose.resources.StringResource
-import cc.hyoban.moments.ui.settings.importSources
 import cc.hyoban.moments.data.spec.Module
-import android.Manifest
-import android.content.Intent
-import android.os.Build
-import android.provider.Settings
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.heading
@@ -48,19 +45,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import cc.hyoban.moments.PhoneContainer
-import cc.hyoban.moments.footprints.BackgroundAllowances
 import cc.hyoban.moments.Setting
-import cc.hyoban.moments.footprints.RecordingService
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
-import cc.hyoban.moments.ui.components.hasPermission
-import cc.hyoban.moments.ui.components.openAppSettings
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Button
@@ -91,7 +82,9 @@ private enum class Step { Welcome, Start, Connect, Import, Footprints, Backgroun
  * there and only when turned on. Every step can be left undone; [onDone] when through.
  */
 @Composable
-fun OnboardingScreen(container: PhoneContainer, onDone: () -> Unit) {
+fun OnboardingScreen(container: AppContainer, onDone: () -> Unit) {
+    val device = LocalDevice.current
+    val desktop = LocalDesktop.current
     var step by rememberSaveable { mutableStateOf(Step.Welcome) }
     val back = {
         step = when (step) {
@@ -101,12 +94,12 @@ fun OnboardingScreen(container: PhoneContainer, onDone: () -> Unit) {
         }
     }
     // The footprints step only while the footprints are on (记录项与公开).
-    val toFootprints: () -> Unit = { if (container.settings.isOn(Module.FOOTPRINTS)) step = Step.Footprints else onDone() }
+    val toFootprints: () -> Unit = { if (device.recordsFootprints && container.settings.isOn(Module.FOOTPRINTS)) step = Step.Footprints else onDone() }
     BackHandler(enabled = step != Step.Welcome, onBack = back)
     Box(Modifier.fillMaxSize().background(AppColors.page).testTag("onboarding")) {
         when (step) {
             Step.Welcome -> Welcome { step = Step.Start }
-            Step.Start -> Start(back, onSite = { step = Step.Connect }, onImport = { step = Step.Import }, onBlank = toFootprints)
+            Step.Start -> Start(back, onSite = { step = Step.Connect }, onImport = { step = Step.Import }, onBlank = toFootprints, desktop = desktop, more = device.onboardingStarts(container, toFootprints))
             Step.Connect -> Connect(container, back, toFootprints)
             // The 导入 page as it is in 我, with the way on at its foot; back is back to where to start.
             Step.Import -> Column(Modifier.fillMaxSize()) {
@@ -116,15 +109,15 @@ fun OnboardingScreen(container: PhoneContainer, onDone: () -> Unit) {
                     modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = Space.gutter).padding(top = Space.s, bottom = Space.xl).testTag("onboarding_import_next"),
                 ) { Text(stringResource(Res.string.onboarding_continue)) }
             }
-            Step.Footprints -> Footprints(container, back, onBackground = { step = Step.Background }, onDone = onDone)
-            Step.Background -> Background(back, onDone)
+            // Recording the footprints is the phone's own, with what it asks of the system.
+            Step.Footprints, Step.Background -> device.OnboardingFootprints(container, back, onDone)
         }
     }
 }
 
-/** A step's page: its large title over [content], the step's buttons kept at its foot. */
+/** A step's page of 初次打开: its large title over [content], the step's buttons kept at its foot; the phone's footprint steps use it too. */
 @Composable
-private fun StepPage(title: String, onBack: () -> Unit, subtitle: String? = null, actions: @Composable ColumnScope.() -> Unit, content: @Composable ColumnScope.() -> Unit) {
+fun StepPage(title: String, onBack: () -> Unit, subtitle: String? = null, actions: @Composable ColumnScope.() -> Unit, content: @Composable ColumnScope.() -> Unit) {
     SubPage(title, onBack, Modifier.background(AppColors.page)) {
         PageWidth(maxColumns = 1) { columns ->
             Column(Modifier.fillMaxSize().imePadding()) {
@@ -158,7 +151,7 @@ private fun Welcome(onStart: () -> Unit) {
             Preview()
         }
         Text(stringResource(Res.string.onboarding_name), Modifier.semantics { heading() }, style = AppTheme.typography.titlePage)
-        Text(stringResource(Res.string.onboarding_line), Modifier.padding(top = Space.xs), style = AppTheme.typography.body, color = tokens.tx2)
+        Text(stringResource(if (LocalDesktop.current) Res.string.onboarding_line_desktop else Res.string.onboarding_line), Modifier.padding(top = Space.xs), style = AppTheme.typography.body, color = tokens.tx2)
         Button(onClick = onStart, modifier = Modifier.fillMaxWidth().padding(top = Space.xl, bottom = Space.xl).testTag("onboarding_start")) {
             Text(stringResource(Res.string.onboarding_start))
         }
@@ -207,7 +200,7 @@ private fun Record(time: String, icon: ImageVector, words: String, amount: Strin
 }
 
 @Composable
-private fun Start(onBack: () -> Unit, onSite: () -> Unit, onImport: () -> Unit, onBlank: () -> Unit) {
+private fun Start(onBack: () -> Unit, onSite: () -> Unit, onImport: () -> Unit, onBlank: () -> Unit, desktop: Boolean, more: List<Segment>) {
     StepPage(stringResource(Res.string.onboarding_where), onBack, actions = {}) {
         val row = { icon: ImageVector, title: StringResource, note: StringResource, tag: String, onClick: () -> Unit ->
             val segment: Segment = { shapes ->
@@ -224,16 +217,21 @@ private fun Start(onBack: () -> Unit, onSite: () -> Unit, onImport: () -> Unit, 
             segment
         }
         // Importing only while a source's module is on (记录项与公开).
-        SegmentedGroup(null, stringResource(Res.string.onboarding_where_note), listOfNotNull(
+        // A computer keeps what is written on itself, and reads the phone's ledger and footprints from its backup.
+        val device = LocalDevice.current
+        val settings = LocalSettings.current
+        val imports = settings.isOn(Module.CHECKIN) || device.importsMore(settings)
+        SegmentedGroup(null, stringResource(if (desktop) Res.string.onboarding_where_note_desktop else Res.string.onboarding_where_note), listOfNotNull(
             row(AppIcons.Link, Res.string.onboarding_site, Res.string.onboarding_site_note, "onboarding_site", onSite),
-            row(AppIcons.Download, Res.string.onboarding_import, Res.string.onboarding_import_note, "onboarding_import", onImport).takeIf { importSources().isNotEmpty() },
-            row(AppIcons.Phone, Res.string.onboarding_blank, Res.string.onboarding_blank_note, "onboarding_blank", onBlank),
+        ) + more + listOfNotNull(
+            row(AppIcons.Download, Res.string.onboarding_import, if (desktop) Res.string.onboarding_import_note_desktop else Res.string.onboarding_import_note, "onboarding_import", onImport).takeIf { imports },
+            row(if (desktop) AppIcons.Laptop else AppIcons.Phone, Res.string.onboarding_blank, if (desktop) Res.string.onboarding_blank_note_desktop else Res.string.onboarding_blank_note, "onboarding_blank", onBlank),
         ))
     }
 }
 
 @Composable
-private fun Connect(container: PhoneContainer, onBack: () -> Unit, onNext: () -> Unit) {
+private fun Connect(container: AppContainer, onBack: () -> Unit, onNext: () -> Unit) {
     val settings = container.settings
     var url by rememberSaveable { mutableStateOf(settings.apiUrl.value) }
     var token by rememberSaveable { mutableStateOf("") }
@@ -303,134 +301,4 @@ private fun Connect(container: PhoneContainer, onBack: () -> Unit, onNext: () ->
             Text(stringResource(Res.string.onboarding_connect_note), Modifier.padding(horizontal = Space.xs), style = AppTheme.typography.caption, color = tokens.tx2)
         }
     }
-}
-
-@Composable
-private fun Footprints(container: PhoneContainer, onBack: () -> Unit, onBackground: () -> Unit, onDone: () -> Unit) {
-    val context = LocalContext.current
-    val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-        if (!RecordingService.hasPreciseLocation(context)) return@rememberLauncherForActivityResult onDone()
-        container.scope.launch {
-            try { RecordingService.control(context, "daily_on") }
-            catch (e: CancellationException) { throw e }
-            catch (e: Exception) { android.util.Log.w("Footprints", "Could not start recording", e) }
-        }
-        if (context.hasPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) onDone() else onBackground()
-    }
-    StepPage(stringResource(Res.string.onboarding_footprints), onBack, subtitle = stringResource(Res.string.onboarding_footprints_line), actions = {
-        Button(
-            onClick = {
-                val asked = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-                if (Build.VERSION.SDK_INT >= 33) asked += Manifest.permission.POST_NOTIFICATIONS
-                permissions.launch(asked.toTypedArray())
-            },
-            modifier = Modifier.fillMaxWidth().testTag("onboarding_footprints_on"),
-        ) { Text(stringResource(Res.string.onboarding_fp_on)) }
-        TextButton(onClick = onDone, modifier = Modifier.fillMaxWidth().testTag("onboarding_later")) { Text(stringResource(Res.string.onboarding_later)) }
-    }) {
-        Fact(AppIcons.Shield, stringResource(Res.string.onboarding_fp_local))
-        Fact(AppIcons.Eye, stringResource(Res.string.onboarding_fp_public))
-        Fact(AppIcons.Bell, stringResource(Res.string.onboarding_fp_notification))
-    }
-}
-
-@Composable
-private fun Fact(icon: ImageVector, text: String) {
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = Space.gutter, vertical = Space.s),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.l),
-    ) {
-        Icon(icon, contentDescription = null, tint = tokens.tx2)
-        Text(text, style = AppTheme.typography.body)
-    }
-}
-
-/** Footprints given location only while the app is used: what that leaves, and the way to the system's settings. */
-@Composable
-private fun Background(onBack: () -> Unit, onDone: () -> Unit) {
-    val context = LocalContext.current
-    var background by remember { mutableStateOf(context.hasPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) }
-    var notifying by remember { mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled()) }
-    var live by remember { mutableStateOf(BackgroundAllowances.liveUpdates(context)) }
-    var battery by remember { mutableStateOf(BackgroundAllowances.unrestrictedBattery(context)) }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        background = context.hasPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        notifying = NotificationManagerCompat.from(context).areNotificationsEnabled()
-        live = BackgroundAllowances.liveUpdates(context)
-        battery = BackgroundAllowances.unrestrictedBattery(context)
-    }
-    StepPage(stringResource(Res.string.onboarding_footprints), onBack, actions = {
-        Button(onClick = onDone, modifier = Modifier.fillMaxWidth().testTag("onboarding_done")) { Text(stringResource(Res.string.onboarding_done)) }
-    }) {
-        val rows = buildList<Segment> {
-            add { shapes ->
-                SegmentedListItem(
-                    onClick = { context.openAppSettings() },
-                    shapes = shapes,
-                    colors = segmentColors(),
-                    leadingContent = {
-                        Icon(if (background) AppIcons.Check else AppIcons.Alert, contentDescription = null, tint = if (background) tokens.accent else tokens.danger)
-                    },
-                    supportingContent = { Text(stringResource(if (background) Res.string.onboarding_allowed else Res.string.onboarding_background_note)) },
-                    trailingContent = { Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                    modifier = Modifier.testTag("onboarding_background"),
-                ) { Text(stringResource(if (background) Res.string.footprints_needs_location else Res.string.onboarding_background)) }
-            }
-            add { shapes ->
-                SegmentedListItem(
-                    onClick = {
-                        if (!notifying) context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName))
-                    },
-                    shapes = shapes,
-                    colors = segmentColors(),
-                    leadingContent = { Icon(AppIcons.Bell, contentDescription = null) },
-                    supportingContent = { Text(stringResource(if (notifying) Res.string.onboarding_allowed else Res.string.onboarding_notifications_off)) },
-                    trailingContent = {
-                        if (notifying) Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent)
-                        else Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp))
-                    },
-                ) { Text(stringResource(Res.string.onboarding_notifications)) }
-            }
-            if (Build.VERSION.SDK_INT >= 36 && notifying) add { shapes ->
-                AllowanceRow(AppIcons.Stream, Res.string.footprints_needs_live, Res.string.footprints_needs_live_note, live, shapes, "onboarding_live") {
-                    BackgroundAllowances.openLiveUpdates(context)
-                }
-            }
-            add { shapes ->
-                AllowanceRow(AppIcons.BatteryCharging, Res.string.footprints_needs_battery, Res.string.footprints_needs_battery_note, battery, shapes, "onboarding_battery") {
-                    BackgroundAllowances.requestUnrestrictedBattery(context)
-                }
-            }
-            if (BackgroundAllowances.autoStartSettings) add { shapes ->
-                SegmentedListItem(
-                    onClick = { BackgroundAllowances.openAutoStart(context) },
-                    shapes = shapes,
-                    colors = segmentColors(),
-                    leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
-                    supportingContent = { Text(stringResource(Res.string.footprints_auto_start_path)) },
-                    trailingContent = { Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                    modifier = Modifier.testTag("onboarding_auto_start"),
-                ) { Text(stringResource(Res.string.footprints_auto_start)) }
-            }
-        }
-        SegmentedGroup(null, null, rows)
-    }
-}
-
-/** A system allowance on the footprints' last step: allowed, it is checked and does nothing; otherwise it opens the system's settings. */
-@Composable
-private fun AllowanceRow(icon: ImageVector, title: StringResource, off: StringResource, allowed: Boolean, shapes: cc.hyoban.moments.ui.design.ListItemShapes, tag: String, onOpen: () -> Unit) {
-    SegmentedListItem(
-        onClick = { if (!allowed) onOpen() },
-        shapes = shapes,
-        colors = segmentColors(),
-        leadingContent = { Icon(icon, contentDescription = null) },
-        supportingContent = { Text(stringResource(if (allowed) Res.string.onboarding_allowed else off)) },
-        trailingContent = {
-            if (allowed) Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent)
-            else Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp))
-        },
-        modifier = Modifier.testTag(tag),
-    ) { Text(stringResource(title)) }
 }

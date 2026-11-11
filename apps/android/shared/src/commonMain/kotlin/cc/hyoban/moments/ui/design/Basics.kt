@@ -155,8 +155,11 @@ fun Icon(painter: Painter, contentDescription: String?, modifier: Modifier = Mod
     } else {
         Modifier
     }
-    Box(modifier.size(24.dp).paint(painter, colorFilter = filter, contentScale = ContentScale.Fit).then(named))
+    Box(modifier.size(LocalIconSize.current).paint(painter, colorFilter = filter, contentScale = ContentScale.Fit).then(named))
 }
+
+/** How large an [Icon] is drawn unless sized: 24, or 18 in a desktop toolbar's square. */
+val LocalIconSize = androidx.compose.runtime.staticCompositionLocalOf { 24.dp }
 
 // ---------------------------------------------------------------- surfaces
 
@@ -300,6 +303,10 @@ fun IconButton(
     content: @Composable () -> Unit,
 ) {
     val color = LocalContentColor.current
+    if (LocalToolbarButtons.current) {
+        ToolbarIconButton(onClick, modifier, enabled, interactionSource, content)
+        return
+    }
     if (LocalFloatingIconButtons.current) {
         // Floating over the page, as a page's buttons do now it has no bar: a 40 circle on the
         // floating surface, its hairline and soft shadow, its touch target still 48.
