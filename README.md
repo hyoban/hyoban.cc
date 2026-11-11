@@ -10,7 +10,7 @@ and the pieces around it that record and serve them.
 ├─ data/                   the car's records, and a local copy of the API's (docs/data.md)
 ├─ apps/api/               Cloudflare Worker serving the records from D1 (@hyoban/api)
 ├─ apps/android/           Here, the Android app that reads and writes Moments, and its start on the Mac (Gradle)
-├─ apps/apple/             HereKit, the start of Here on iPhone and iPad (Swift)
+├─ apps/apple/             Here on the Mac in SwiftUI, and HereKit for iPhone and iPad to come (Swift)
 ├─ packages/data-spec/     the Zod schemas every side shares (@hyoban/data-spec)
 ├─ packages/trip-map/      the map page and trip player (@hyoban/trip-map)
 ├─ packages/drawer/        the calendar's and map's drawers (@hyoban/drawer)
@@ -71,8 +71,9 @@ The scripts that upload to R2 use Wrangler's login, or `CLOUDFLARE_API_TOKEN`;
 `media:generate` needs `TMDB_API_TOKEN` or `TMDB_API_KEY`.
 
 To run the API locally, see [apps/api](apps/api/README.md); for the app,
-[apps/android](apps/android/README.md), built with its own `./gradlew`; for the Apple apps'
-shared package, [apps/apple](apps/apple/README.md), checked with `swift test`.
+[apps/android](apps/android/README.md), built with its own `./gradlew`; for the native Mac
+app and the Apple apps' shared package, [apps/apple](apps/apple/README.md), built with
+`scripts/mac-app.sh` and checked with `swift test`.
 
 ## Deployment
 
