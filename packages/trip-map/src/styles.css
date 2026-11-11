@@ -1156,9 +1156,21 @@
   z-index: 100001;
 }
 
-/* A pin's or route's name over the whole pile. */
+/* The pile stays inside the map, under what's laid over it: the toolbar, the panels and
+   the names. */
+.trip-map-page .mapboxgl-canvas-container {
+  isolation: isolate;
+}
+
+/* A pin's or route's name over the whole pile; only read, so a wheel or a drag over it
+   still moves the map. */
 .trip-map-page .mapboxgl-popup.trip-map-popup {
-  z-index: 100002;
+  z-index: 1;
+}
+
+/* Mapbox sets the content's own `pointer-events: auto` inline. */
+.trip-map-page .trip-map-popup :is(.mapboxgl-popup-content, .mapboxgl-popup-tip) {
+  pointer-events: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
