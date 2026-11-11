@@ -19,33 +19,40 @@ import {
 // one a balloon in its year's colour with its kind's icon and its name under it. They
 // gather into stacks where they crowd at the zoom shown. The clusters are worked out
 // here rather than by a clustered source, whose tiles mid-zoom mix two zooms' worth of
-// them: here they're always the zoom's own, so they part and join as a zoom goes. The
+// them: here they're always the zoom's own, so they part and join as a zoom goes. Every
+// pin stays on its very spot: one with no room there steps down, as MapKit's do, from its
+// photo or named balloon to its kind's balloon alone, and then to its year's dot. The
 // pins are buttons placed over the map, so they can be hovered, focused and pressed like
 // any other.
 
 export type { PlaceMarker }
 export { CLUSTER_MAX_ZOOM }
 
-/** How far a pin is pushed on screen, in pixels, to clear the pins beside it. */
-type Nudge = { x: number; y: number }
+/**
+ * How much of a place's pin there's room for: its photo, or its balloon and name; its
+ * kind's balloon alone; or its year's dot.
+ */
+type PinLevel = 'full' | 'icon' | 'dot'
+
+/** The levels, most room first. */
+const PIN_LEVELS: readonly PinLevel[] = ['full', 'icon', 'dot']
 
 /** Where a pin is on screen: around its place, or a balloon's tail on it. */
 type PinShape = {
-  anchor: 'bottom' | 'center'
   /** How far above its place the pin's middle is, in pixels. */
   lift: number
   radius: number
 }
 
-type MarkerEntry = PinShape & {
+type MarkerEntry = {
   button: HTMLButtonElement
   coordinates: [number, number]
   count: number
-  /** A balloon's name under it, shown where it clears the other pins and names. */
-  label?: HTMLElement
-  labelWidth?: number
+  hasPhoto: boolean
+  level: PinLevel
   marker: mapboxgl.Marker
-  nudge: Nudge
+  /** How wide its name is under a balloon, measured once. */
+  nameWidth: number
   popup: mapboxgl.Popup
 }
 
@@ -62,31 +69,31 @@ type ClusterMarkerEntry = PinShape & {
   marker: mapboxgl.Marker
   /** Busiest first. */
   members: PlaceMarker[]
-  nudge: Nudge
   popup: mapboxgl.Popup
 }
 
+type Box = { bottom: number; left: number; right: number; top: number }
+
 // How close on screen, in pixels of a 512-pixel tile as Mapbox draws them, places are
 // gathered into one cluster, and how many it takes: two places side by side aren't a
-// crowd, so they stay as they are, even if one covers part of the other.
+// crowd, so they stay as they are.
 const CLUSTER_RADIUS = 32
 const CLUSTER_MIN_POINTS = 3
 // The pins' sizes on screen, in pixels, as styles.css draws them: a photo's side, a
-// balloon's circle and its tail, and a stack's photo.
-const PIN = { balloon: 28, cluster: 38, photo: 34, tail: 6 }
-const PHOTO_SHAPE: PinShape = { anchor: 'center', lift: 0, radius: PIN.photo / 2 }
-const BALLOON_SHAPE: PinShape = {
-  anchor: 'bottom',
-  lift: PIN.tail + PIN.balloon / 2,
-  radius: PIN.balloon / 2,
-}
-const CLUSTER_SHAPE: PinShape = { anchor: 'center', lift: 0, radius: PIN.cluster / 2 }
-// How much of two pins may overlap before they're pushed apart: they crowd as MapKit's
-// do, each still showing enough to tell it by.
-const PIN_OVERLAP = 0.3
-const PIN_SPREAD_ROUNDS = 8
-// A balloon's name: how tall a line, and the gap kept around it.
+// balloon's circle and its tail, a stack's photo, and a dot.
+const PIN = { balloon: 28, cluster: 38, dot: 10, photo: 34, tail: 6 }
+const PHOTO_SHAPE: PinShape = { lift: 0, radius: PIN.photo / 2 }
+const BALLOON_SHAPE: PinShape = { lift: PIN.tail + PIN.balloon / 2, radius: PIN.balloon / 2 }
+const DOT_SHAPE: PinShape = { lift: 0, radius: PIN.dot / 2 }
+const CLUSTER_SHAPE: PinShape = { lift: 0, radius: PIN.cluster / 2 }
+// How far a stack's cards reach past its photo, as styles.css draws them.
+const STACK_CARDS = 3
+// How far two pins may reach into each other and both keep their room, in pixels: they
+// may touch, as MapKit's do, but not cover one another.
+const PIN_TOUCH = 2
+// A balloon's name: how tall a line, its type as styles.css sets it, and the gap above it.
 const LABEL_HEIGHT = 14
+const LABEL_FONT = '600 11px system-ui, sans-serif'
 const LABEL_GAP = 2
 // Opening a cluster frames its places, no closer than this.
 const CLUSTER_OPEN_MAX_ZOOM = 11
@@ -172,157 +179,129 @@ export function createPlaceMarkers({
    */
   function placeOnMap(map: mapboxgl.Map, entry: MarkerEntry | ClusterMarkerEntry) {
     const point = map.project(entry.coordinates).round()
-    const anchor = entry.anchor === 'bottom' ? '-50%, -100%' : '-50%, -50%'
 
-    entry.button.style.transform = `translate(${point.x}px, ${point.y}px) translate(${anchor}) translate(${entry.nudge.x}px, ${entry.nudge.y}px)`
+    entry.button.style.transform = `translate(${point.x}px, ${point.y}px) translate(-50%, -50%)`
     entry.marker.addTo(map)
   }
 
-  /** Where a dot sits once pushed aside, for its name to hang over. */
-  function getNudgedLngLat(map: mapboxgl.Map, coordinates: [number, number], nudge: Nudge) {
-    const point = map.project(coordinates)
-    point.x += nudge.x
-    point.y += nudge.y
-    return map.unproject(point)
-  }
-
-  function setNudge(
-    map: mapboxgl.Map,
-    entry: MarkerEntry | ClusterMarkerEntry,
-    x: number,
-    y: number,
-  ) {
-    if (entry.nudge.x === x && entry.nudge.y === y) {
-      return
+  /** What a place's pin takes up at a level, around its place. */
+  function getPinShape(entry: MarkerEntry, level: PinLevel) {
+    if (level === 'dot') {
+      return DOT_SHAPE
     }
 
-    entry.nudge = { x, y }
-    entry.marker.setOffset([x, y])
+    return level === 'full' && entry.hasPhoto ? PHOTO_SHAPE : BALLOON_SHAPE
+  }
 
-    if (entry.popup.isOpen()) {
-      entry.popup.setLngLat(getNudgedLngLat(map, entry.coordinates, entry.nudge))
+  /** The room a pin takes on screen at `point`, its place: its balloon reaches to its tip. */
+  function getPinBox(point: mapboxgl.Point, shape: PinShape, balloon: boolean): Box {
+    const y = point.y - shape.lift
+
+    return {
+      bottom: balloon ? point.y : y + shape.radius,
+      left: point.x - shape.radius,
+      right: point.x + shape.radius,
+      top: y - shape.radius,
     }
   }
 
-  /**
-   * Pushes pins that would mostly cover one another apart on screen, each a little,
-   * until every one shows enough to tell it by: two places side by side stay two pins,
-   * and a place beside a stack keeps clear of it.
-   */
-  function spreadDots(map: mapboxgl.Map) {
-    const dots = [...markers.values(), ...clusterMarkers.values()]
-      .filter((entry) => !entry.button.hidden && entry.button.isConnected)
-      .map((entry) => {
-        const point = map.project(entry.coordinates)
-        const y = point.y - entry.lift
+  /** The room a balloon's name takes under it. */
+  function getNameBox(point: mapboxgl.Point, width: number): Box {
+    const top = point.y + LABEL_GAP
 
-        return { entry, x: point.x, x0: point.x, y, y0: y }
-      })
-
-    for (let round = 0; round < PIN_SPREAD_ROUNDS; round++) {
-      let moved = false
-
-      for (let i = 0; i < dots.length; i++) {
-        for (let j = i + 1; j < dots.length; j++) {
-          const first = dots[i]!
-          const second = dots[j]!
-          const minimum = (first.entry.radius + second.entry.radius) * (1 - PIN_OVERLAP)
-          let dx = second.x - first.x
-          let dy = second.y - first.y
-          let distance = Math.hypot(dx, dy)
-
-          if (distance >= minimum) {
-            continue
-          }
-
-          // Two pins on the very same spot part sideways.
-          if (distance === 0) {
-            dx = 1
-            dy = 0
-            distance = 1
-          }
-
-          const push = (minimum - distance) / 2
-          first.x -= (dx / distance) * push
-          first.y -= (dy / distance) * push
-          second.x += (dx / distance) * push
-          second.y += (dy / distance) * push
-          moved = true
-        }
-      }
-
-      if (!moved) {
-        break
-      }
+    return {
+      bottom: top + LABEL_HEIGHT,
+      left: point.x - width / 2,
+      right: point.x + width / 2,
+      top,
     }
+  }
 
-    for (const dot of dots) {
-      setNudge(map, dot.entry, Math.round(dot.x - dot.x0), Math.round(dot.y - dot.y0))
-    }
-
-    placeLabels(
-      map,
-      dots.map((dot) => dot.entry),
+  function overlaps(first: Box, second: Box) {
+    return (
+      first.left < second.right - PIN_TOUCH &&
+      second.left < first.right - PIN_TOUCH &&
+      first.top < second.bottom - PIN_TOUCH &&
+      second.top < first.bottom - PIN_TOUCH
     )
   }
 
+  function setLevel(entry: MarkerEntry, level: PinLevel) {
+    if (entry.level === level) {
+      return
+    }
+
+    entry.level = level
+    entry.button.dataset.level = level
+    entry.popup.setOffset(getPopupOffset(getPinShape(entry, level)))
+  }
+
   /**
-   * Shows the balloons' names where they clear every pin and the names already shown,
-   * the busiest places' first, as MapKit leaves out the names it has no room for.
+   * Gives every pin in view what room its spot has, the open place's first and then the
+   * busiest places', as MapKit makes room for its markers: a photo, or a balloon with its
+   * name, where it clears every pin and name already there; else its kind's balloon
+   * alone; else its year's dot, which takes no room. The stacks keep theirs. While the
+   * map moves a pin only steps down, so none crowd another as a zoom goes out, and none
+   * flicker between levels; it takes back what room it has once the map settles.
    */
-  function placeLabels(map: mapboxgl.Map, entries: (MarkerEntry | ClusterMarkerEntry)[]) {
-    type Box = { bottom: number; left: number; right: number; top: number }
-    const boxes = new Map<MarkerEntry | ClusterMarkerEntry, Box>()
+  function layoutPins(map: mapboxgl.Map, settled = true) {
+    const taken: Box[] = []
+
+    for (const cluster of clusterMarkers.values()) {
+      if (cluster.button.isConnected) {
+        // Its cards behind reach a little past its photo.
+        taken.push(
+          getPinBox(
+            map.project(cluster.coordinates),
+            { lift: 0, radius: cluster.radius + STACK_CARDS },
+            false,
+          ),
+        )
+      }
+    }
+
+    const entries = [...markers.values()]
+      .filter((entry) => !entry.button.hidden && entry.button.isConnected)
+      .sort(
+        (first, second) =>
+          Number(second.button.getAttribute('aria-pressed') === 'true') -
+            Number(first.button.getAttribute('aria-pressed') === 'true') ||
+          second.count - first.count,
+      )
 
     for (const entry of entries) {
       const point = map.project(entry.coordinates)
-      const x = point.x + entry.nudge.x
-      const y = point.y + entry.nudge.y - entry.lift
+      const full = entry.hasPhoto
+        ? [getPinBox(point, PHOTO_SHAPE, false)]
+        : [getPinBox(point, BALLOON_SHAPE, true), getNameBox(point, entry.nameWidth)]
+      const icon = [getPinBox(point, BALLOON_SHAPE, true)]
+      const pressed = entry.button.getAttribute('aria-pressed') === 'true'
+      const fits = (boxes: Box[]) =>
+        boxes.every((box) => !taken.some((other) => overlaps(box, other)))
+      const room: PinLevel = pressed || fits(full) ? 'full' : fits(icon) ? 'icon' : 'dot'
+      const level =
+        settled || PIN_LEVELS.indexOf(room) > PIN_LEVELS.indexOf(entry.level) ? room : entry.level
 
-      boxes.set(entry, {
-        // A balloon reaches down to its tail's tip.
-        bottom: y + entry.radius + (entry.anchor === 'bottom' ? PIN.tail : 0),
-        left: x - entry.radius,
-        right: x + entry.radius,
-        top: y - entry.radius,
-      })
+      if (level !== 'dot') {
+        taken.push(...(level === 'full' ? full : icon))
+      }
+
+      setLevel(entry, level)
+    }
+  }
+
+  let measureContext: CanvasRenderingContext2D | null | undefined
+
+  /** How wide a balloon's name is set, as styles.css sets it, for the room it takes. */
+  function measureName(name: string) {
+    measureContext ??= document.createElement('canvas').getContext('2d')
+
+    if (!measureContext) {
+      return name.length * 11
     }
 
-    const overlaps = (first: Box, second: Box) =>
-      first.left < second.right + LABEL_GAP &&
-      second.left < first.right + LABEL_GAP &&
-      first.top < second.bottom + LABEL_GAP &&
-      second.top < first.bottom + LABEL_GAP
-    const shown: Box[] = []
-    const labelled = entries
-      .filter((entry): entry is MarkerEntry => 'label' in entry && entry.label !== undefined)
-      .sort((first, second) => second.count - first.count)
-
-    for (const entry of labelled) {
-      const label = entry.label!
-      // Measured once, the first time it's on the map.
-      entry.labelWidth ??= label.offsetWidth
-      const point = map.project(entry.coordinates)
-      const x = point.x + entry.nudge.x
-      const top = point.y + entry.nudge.y + LABEL_GAP
-      const box = {
-        bottom: top + LABEL_HEIGHT,
-        left: x - entry.labelWidth / 2,
-        right: x + entry.labelWidth / 2,
-        top,
-      }
-      const clear =
-        !shown.some((other) => overlaps(box, other)) &&
-        ![...boxes].some(([other, otherBox]) => other !== entry && overlaps(box, otherBox))
-
-      if (clear) {
-        shown.push(box)
-      }
-
-      if (label.hidden === clear) {
-        label.hidden = !clear
-      }
-    }
+    measureContext.font = LABEL_FONT
+    return Math.ceil(measureContext.measureText(name).width)
   }
 
   /**
@@ -343,7 +322,7 @@ export function createPlaceMarkers({
     const ordered = entries
       .map((entry) => {
         const point = map.project(entry.coordinates)
-        return { button: entry.button, x: point.x + entry.nudge.x, y: point.y + entry.nudge.y }
+        return { button: entry.button, x: point.x, y: point.y }
       })
       .sort(
         (first, second) =>
@@ -489,41 +468,48 @@ export function createPlaceMarkers({
   function createMarkers() {
     for (const place of places) {
       const momentCount = t(messages, 'momentCount', { count: place.count })
-      const shape = place.photo ? PHOTO_SHAPE : BALLOON_SHAPE
       const button = createDotButton(
         'trip-map-marker',
         t(messages, 'placeLabel', { count: place.count, name: place.name, year: place.firstYear }),
         place.color,
       )
-      const popup = createPlacePopup(getPopupOffset(shape), momentCount, place.name)
-      let label: HTMLElement | undefined
+      const level: PinLevel = 'full'
+      const popup = createPlacePopup(
+        getPopupOffset(place.photo ? PHOTO_SHAPE : BALLOON_SHAPE),
+        momentCount,
+        place.name,
+      )
+      // Every level's pin, each shown as its level comes: a photo shows its name only
+      // while it's open, lifted over its place, and a balloon's under it at full.
+      const dot = document.createElement('span')
 
+      dot.className = 'trip-map-pin-dot'
+      dot.setAttribute('aria-hidden', 'true')
       button.setAttribute('aria-pressed', 'false')
-
-      if (place.photo) {
-        // A photo shows its name only while it's open, lifted over its place.
-        button.append(
-          createPhoto(place.photo),
-          createAnchor(),
-          createLabel(place.name, 'trip-map-pin-label trip-map-pin-label--open'),
-        )
-      } else {
-        label = createLabel(place.name, 'trip-map-pin-label')
-        label.hidden = true
-        button.append(createBalloon(place.kind), createAnchor(), label)
-      }
+      button.dataset.level = level
+      // The dot first, under the pins it fades into and out of.
+      button.append(
+        dot,
+        ...(place.photo ? [createPhoto(place.photo)] : []),
+        createBalloon(place.kind),
+        createAnchor(),
+        createLabel(
+          place.name,
+          place.photo ? 'trip-map-pin-label trip-map-pin-label--open' : 'trip-map-pin-label',
+        ),
+      )
 
       const entry: MarkerEntry = {
-        ...shape,
         button,
         coordinates: [place.longitude, place.latitude],
         count: place.count,
-        ...(label && { label }),
-        marker: new mapboxgl.Marker({ anchor: shape.anchor, element: button }).setLngLat([
+        hasPhoto: Boolean(place.photo),
+        level,
+        marker: new mapboxgl.Marker({ anchor: 'center', element: button }).setLngLat([
           place.longitude,
           place.latitude,
         ]),
-        nudge: { x: 0, y: 0 },
+        nameWidth: place.photo ? 0 : measureName(place.name),
         popup,
       }
       const showPopup = () => {
@@ -531,7 +517,7 @@ export function createPlaceMarkers({
 
         // The open place's pin, lifted, already has its name under it.
         if (map && !quietFocus && button.getAttribute('aria-pressed') !== 'true') {
-          popup.setLngLat(getNudgedLngLat(map, entry.coordinates, entry.nudge)).addTo(map)
+          popup.setLngLat(entry.coordinates).addTo(map)
         }
       }
       const hidePopup = () => popup.remove()
@@ -773,7 +759,7 @@ export function createPlaceMarkers({
       passFocus(focusedIds, visibleIds)
     }
 
-    spreadDots(map)
+    layoutPins(map, options.settled !== false)
     syncDimDots(map)
 
     if (options.settled !== false) {
@@ -926,14 +912,12 @@ export function createPlaceMarkers({
         cluster.coordinates,
       ),
       members,
-      nudge: { x: 0, y: 0 },
       popup,
     }
 
     placeOnMap(map, entry)
 
-    const showPopup = () =>
-      popup.setLngLat(getNudgedLngLat(map, entry.coordinates, entry.nudge)).addTo(map)
+    const showPopup = () => popup.setLngLat(entry.coordinates).addTo(map)
     const hidePopup = () => popup.remove()
 
     button.addEventListener('mouseenter', showPopup, { signal })
@@ -1055,8 +1039,15 @@ export function createPlaceMarkers({
     },
     /** Marks the open place's dot as pressed, or none. */
     setPressed(id: string | undefined) {
+      const map = getMap()
+
       for (const [markerId, marker] of markers) {
         marker.button.setAttribute('aria-pressed', String(markerId === id))
+      }
+
+      // The open place gets its room first.
+      if (map && !isPaused()) {
+        layoutPins(map)
       }
     },
     sync,
