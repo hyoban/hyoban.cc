@@ -130,6 +130,8 @@ export function createPlaceMarkers({
   const yearColors = new Map(places.map((place) => [place.firstYear, place.color]))
   const markers = new Map<string, MarkerEntry>()
   const clusterMarkers = new Map<number, ClusterMarkerEntry>()
+  // The places outside the period picked, left on the map as gray dots near the view.
+  const dimDots = new Map<string, mapboxgl.Marker>()
   // The year or month picked: only the places with Moments then are on the map.
   let period: Period | undefined
   // The places of the trip whose sidebar is open: the only ones left on the map then.
@@ -600,6 +602,67 @@ export function createPlaceMarkers({
     )
   }
 
+  /**
+   * Whether a place is left on the map as a gray dot: outside the period picked, it steps
+   * back rather than leaving, so the period is still seen among every place. A trip's
+   * sidebar keeps only its own places, so none are left then.
+   */
+  function isDimmed(place: PlaceMarker) {
+    return (
+      period !== undefined &&
+      !tripPlaces &&
+      !place.months.some((month) => isInPeriod(month, period!))
+    )
+  }
+
+  /** Puts the gray dots near the view on the map, under every pin, and takes off the rest. */
+  function syncDimDots(map: mapboxgl.Map) {
+    const [west, south, east, north] = getNearBounds(map)
+    const isNear = (longitude: number, latitude: number) =>
+      latitude >= south &&
+      latitude <= north &&
+      (west <= east
+        ? longitude >= west && longitude <= east
+        : longitude >= west || longitude <= east)
+
+    for (const place of places) {
+      const wanted = isDimmed(place) && isNear(place.longitude, place.latitude)
+      const dot = dimDots.get(place.id)
+
+      if (wanted && !dot) {
+        const element = document.createElement('span')
+
+        // Named before Mapbox adds its own classes to it.
+        element.className = 'trip-map-dim-place'
+        element.setAttribute('aria-hidden', 'true')
+
+        const point = map.project([place.longitude, place.latitude]).round()
+        const marker = new mapboxgl.Marker({ anchor: 'center', element }).setLngLat([
+          place.longitude,
+          place.latitude,
+        ])
+
+        // Where it belongs from the start, as `placeOnMap` places a pin.
+        element.style.transform = `translate(${point.x}px, ${point.y}px) translate(-50%, -50%)`
+        marker.addTo(map)
+        // Right over the map, under the pins that follow it.
+        map.getCanvas().after(element)
+        dimDots.set(place.id, marker)
+      } else if (!wanted && dot) {
+        dot.remove()
+        dimDots.delete(place.id)
+      }
+    }
+  }
+
+  function clearDimDots() {
+    for (const dot of dimDots.values()) {
+      dot.remove()
+    }
+
+    dimDots.clear()
+  }
+
   function clearClusterMarkers() {
     for (const cluster of clusterMarkers.values()) {
       cluster.popup.remove()
@@ -711,6 +774,7 @@ export function createPlaceMarkers({
     }
 
     spreadDots(map)
+    syncDimDots(map)
 
     if (options.settled !== false) {
       orderMarkers(map)
@@ -955,6 +1019,7 @@ export function createPlaceMarkers({
       }
 
       clearClusterMarkers()
+      clearDimDots()
     },
     /** Focuses a place's dot without popping its name up, as the drawer closes. */
     focusQuietly(button: HTMLElement) {
@@ -980,6 +1045,7 @@ export function createPlaceMarkers({
 
       if (hidden) {
         clearClusterMarkers()
+        clearDimDots()
       } else {
         sync()
       }

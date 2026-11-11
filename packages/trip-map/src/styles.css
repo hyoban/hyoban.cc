@@ -291,6 +291,20 @@
   transform: scale(1.15);
 }
 
+/* A place outside the year or month picked, stepping back to a small gray dot rather than
+   leaving, so the period is seen among every place. */
+.trip-map-dim-place {
+  display: block;
+  width: 0.5rem;
+  height: 0.5rem;
+  pointer-events: none;
+  background: var(--color-tx-3);
+  border: 1.5px solid #fff;
+  border-radius: 9999px;
+  box-shadow: 0 0 0.125rem rgb(0 0 0 / 0.25);
+  opacity: 0.8;
+}
+
 /* The dot that keeps a place's very spot while its open pin floats above it. */
 .trip-map-pin-anchor {
   position: absolute;
@@ -1173,6 +1187,7 @@
 }
 
 .trip-map-page[data-trip-map-active] :is(.trip-map-marker, .trip-map-cluster) > span,
+.trip-map-page[data-trip-map-active] .trip-map-dim-place,
 .trip-map-page[data-trip-map-active] .trip-map-legend {
   visibility: hidden;
   opacity: 0;
