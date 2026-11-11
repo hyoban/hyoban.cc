@@ -246,30 +246,28 @@
   display: none;
 }
 
-/* A stack of places: its busiest place's photo, or its year's colour, on two more cards. */
-.trip-map-pin-photo--stack {
-  width: 2.375rem;
-  height: 2.375rem;
-  isolation: isolate;
+/* A stack of places: its busiest places' prints, each in its white frame and shadow, the
+   two behind tilted out to either side so their photos show past the one on top. */
+.trip-map-pin-stack {
+  position: relative;
+  display: block;
+  width: 2.5rem;
+  height: 2.5rem;
 }
 
-.trip-map-pin-photo--stack::before,
-.trip-map-pin-photo--stack::after {
+.trip-map-pin-stack > .trip-map-pin-photo {
   position: absolute;
-  inset: -2px;
-  z-index: -1;
-  content: '';
-  background: #fff;
-  border-radius: inherit;
-  box-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 0.25);
+  inset: 0;
+  width: auto;
+  height: auto;
 }
 
-.trip-map-pin-photo--stack::before {
-  transform: translate(0.1875rem, -0.1875rem) rotate(6deg);
+.trip-map-pin-stack > .trip-map-pin-photo:nth-last-child(3) {
+  transform: translate(0.5625rem, -0.1875rem) rotate(10deg) scale(0.86);
 }
 
-.trip-map-pin-photo--stack::after {
-  transform: translate(-0.125rem, -0.25rem) rotate(-5deg);
+.trip-map-pin-stack > .trip-map-pin-photo:nth-last-child(2) {
+  transform: translate(-0.5rem, -0.125rem) rotate(-9deg) scale(0.9);
 }
 
 .trip-map-pin-photo__face {
@@ -283,11 +281,11 @@
 /* How many Moments a stack holds, at its top right. */
 .trip-map-pin-count {
   position: absolute;
-  top: -0.4375rem;
-  right: -0.5rem;
-  min-width: 1.125rem;
-  height: 1.125rem;
-  padding: 0 0.3125rem;
+  top: -0.75rem;
+  right: -0.875rem;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.25rem;
   font-family: var(
     --font-mono,
     ui-monospace,
@@ -299,9 +297,9 @@
     'Courier New',
     monospace
   );
-  font-size: 0.625rem;
+  font-size: 0.5625rem;
   font-weight: 600;
-  line-height: calc(1.125rem - 3px);
+  line-height: calc(1rem - 3px);
   color: #fff;
   text-align: center;
   background: var(--marker-color);
@@ -438,7 +436,7 @@
 }
 
 .trip-map-marker:focus-visible :is(.trip-map-pin-photo, .trip-map-pin-balloon),
-.trip-map-cluster:focus-visible > span:first-child {
+.trip-map-cluster:focus-visible .trip-map-pin-stack > :last-child {
   box-shadow:
     0 0.0625rem 0.375rem rgb(0 0 0 / 0.3),
     0 0 0 2px var(--color-tx);
