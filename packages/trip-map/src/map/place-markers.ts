@@ -5,7 +5,6 @@ import { t, type Messages } from '../messages.ts'
 import { createPopupContent, MAP_POPUP_CLASS } from '../player/dom.ts'
 import type { PlaceMarker } from '../player/types.ts'
 import { isInPeriod, type Period } from './period.ts'
-import { getFramingPitch, getMapPitch } from './basemap.ts'
 import type { ScreenshotPlace } from './screenshot.ts'
 import {
   ALL_PLACES_MAX_ZOOM,
@@ -16,26 +15,13 @@ import {
 
 // The places on the map, drawn as the Mac app's MapKit draws them: the newest photo taken
 // at a place, framed in white with its year's dot at the corner, or for a place without
-// one a balloon in its year's colour with its kind's icon and its name under it. They
-// gather into stacks where they crowd at the zoom shown. The clusters are worked out
-// here rather than by a clustered source, whose tiles mid-zoom mix two zooms' worth of
-// them: here they're always the zoom's own, so they part and join as a zoom goes. Every
-// pin stays on its very spot: one with no room there steps down, as MapKit's do, from its
-// photo or named balloon to its kind's balloon alone, and then to its year's dot. The
-// pins are buttons placed over the map, so they can be hovered, focused and pressed like
-// any other.
+// one a balloon in its year's colour with its kind's icon and its name under it where
+// there's room. Every pin stays on its very spot, and where places crowd their pins pile
+// up there as MapKit's do, the busiest on top. The pins are buttons placed over the map,
+// so they can be hovered, focused and pressed like any other.
 
 export type { PlaceMarker }
 export { CLUSTER_MAX_ZOOM }
-
-/**
- * How much of a place's pin there's room for: its photo, or its balloon and name; its
- * kind's balloon alone; or its year's dot.
- */
-type PinLevel = 'full' | 'icon' | 'dot'
-
-/** The levels, most room first. */
-const PIN_LEVELS: readonly PinLevel[] = ['full', 'icon', 'dot']
 
 /** Where a pin is on screen: around its place, or a balloon's tail on it. */
 type PinShape = {
@@ -48,58 +34,32 @@ type MarkerEntry = {
   button: HTMLButtonElement
   coordinates: [number, number]
   count: number
-  hasPhoto: boolean
-  level: PinLevel
+  /** A balloon's name under it, shown where it clears the pins and names around it. */
+  label?: HTMLElement
   marker: mapboxgl.Marker
   /** How wide its name is under a balloon, measured once. */
   nameWidth: number
   popup: mapboxgl.Popup
-}
-
-type ClusterInfo = {
-  coordinates: [number, number]
-  firstYear: number
-  locationCount: number
-  momentCount: number
-}
-
-type ClusterMarkerEntry = PinShape & {
-  button: HTMLButtonElement
-  coordinates: [number, number]
-  marker: mapboxgl.Marker
-  /** Busiest first. */
-  members: PlaceMarker[]
-  popup: mapboxgl.Popup
+  shape: PinShape
 }
 
 type Box = { bottom: number; left: number; right: number; top: number }
 
 // How close on screen, in pixels of a 512-pixel tile as Mapbox draws them, places are
-// gathered into one cluster, and how many it takes: two places side by side aren't a
-// crowd, so they stay as they are.
+// gathered into one in a screenshot, and how many it takes.
 const CLUSTER_RADIUS = 32
 const CLUSTER_MIN_POINTS = 3
-// The pins' sizes on screen, in pixels, as styles.css draws them: a photo's side, a
-// balloon's circle and its tail, a stack's photo, and a dot.
-const PIN = { balloon: 28, cluster: 38, dot: 10, photo: 34, tail: 6 }
+// The pins' sizes on screen, in pixels, as styles.css draws them: a photo's side, and a
+// balloon's circle and its tail.
+const PIN = { balloon: 28, photo: 34, tail: 6 }
 const PHOTO_SHAPE: PinShape = { lift: 0, radius: PIN.photo / 2 }
 const BALLOON_SHAPE: PinShape = { lift: PIN.tail + PIN.balloon / 2, radius: PIN.balloon / 2 }
-const DOT_SHAPE: PinShape = { lift: 0, radius: PIN.dot / 2 }
-const CLUSTER_SHAPE: PinShape = { lift: 0, radius: PIN.cluster / 2 }
-// How far a stack's cards reach past its photo, as styles.css draws them.
-const STACK_CARDS = 3
-// How far two pins may reach into each other and both keep their room, in pixels: they
-// may touch, as MapKit's do, but not cover one another.
+// How far a name may reach into a pin and still be read, in pixels.
 const PIN_TOUCH = 2
 // A balloon's name: how tall a line, its type as styles.css sets it, and the gap above it.
 const LABEL_HEIGHT = 14
 const LABEL_FONT = '600 11px system-ui, sans-serif'
 const LABEL_GAP = 2
-// Opening a cluster frames its places, no closer than this.
-const CLUSTER_OPEN_MAX_ZOOM = 11
-const CLUSTER_OPEN_PADDING = 80
-// The map's width up to which it's a phone's, as the page's styles have it (48rem).
-const NARROW_WIDTH = 768
 // The markers are set in reading order for the keyboard, in rows this tall.
 const MARKER_ROW_HEIGHT = 48
 
@@ -109,8 +69,6 @@ type ClusterProperties = { firstYear: number; momentCount: number }
 export type PlaceMarkers = ReturnType<typeof createPlaceMarkers>
 
 export function createPlaceMarkers({
-  getAnimationDuration,
-  getClearPadding,
   getMap,
   isPaused,
   messages,
@@ -119,9 +77,6 @@ export function createPlaceMarkers({
   places,
   signal,
 }: {
-  getAnimationDuration: () => number
-  /** Room kept on the map for what's open on its side, and around the rest. */
-  getClearPadding: () => Required<mapboxgl.PaddingOptions>
   getMap: () => mapboxgl.Map | undefined
   /** Until the map has loaded, and while a trip plays, the markers stay off the map. */
   isPaused: () => boolean
@@ -136,7 +91,6 @@ export function createPlaceMarkers({
   // A cluster takes the colour of its latest year, like a place does.
   const yearColors = new Map(places.map((place) => [place.firstYear, place.color]))
   const markers = new Map<string, MarkerEntry>()
-  const clusterMarkers = new Map<number, ClusterMarkerEntry>()
   // The places outside the period picked, left on the map as gray dots near the view.
   const dimDots = new Map<string, mapboxgl.Marker>()
   // The year or month picked: only the places with Moments then are on the map.
@@ -145,7 +99,7 @@ export function createPlaceMarkers({
   let tripPlaces: ReadonlySet<string> | undefined
   // Focus put back on a marker as the drawer closes shouldn't pop its name up.
   let quietFocus = false
-  // The shown places, gathered at each zoom.
+  // The shown places, gathered at each zoom for a screenshot.
   let index = createIndex()
 
   /**
@@ -177,28 +131,19 @@ export function createPlaceMarkers({
    * map's next frame, which during a quick drag leaves a new one in the map's corner, or
    * one shown again where it last was, for a moment.
    */
-  function placeOnMap(map: mapboxgl.Map, entry: MarkerEntry | ClusterMarkerEntry) {
+  function placeOnMap(map: mapboxgl.Map, entry: MarkerEntry) {
     const point = map.project(entry.coordinates).round()
 
     entry.button.style.transform = `translate(${point.x}px, ${point.y}px) translate(-50%, -50%)`
     entry.marker.addTo(map)
   }
 
-  /** What a place's pin takes up at a level, around its place. */
-  function getPinShape(entry: MarkerEntry, level: PinLevel) {
-    if (level === 'dot') {
-      return DOT_SHAPE
-    }
-
-    return level === 'full' && entry.hasPhoto ? PHOTO_SHAPE : BALLOON_SHAPE
-  }
-
-  /** The room a pin takes on screen at `point`, its place: its balloon reaches to its tip. */
-  function getPinBox(point: mapboxgl.Point, shape: PinShape, balloon: boolean): Box {
+  /** The room a pin takes on screen at `point`, its place: a balloon reaches to its tip. */
+  function getPinBox(point: mapboxgl.Point, shape: PinShape): Box {
     const y = point.y - shape.lift
 
     return {
-      bottom: balloon ? point.y : y + shape.radius,
+      bottom: shape.lift > 0 ? point.y : y + shape.radius,
       left: point.x - shape.radius,
       right: point.x + shape.radius,
       top: y - shape.radius,
@@ -226,40 +171,12 @@ export function createPlaceMarkers({
     )
   }
 
-  function setLevel(entry: MarkerEntry, level: PinLevel) {
-    if (entry.level === level) {
-      return
-    }
-
-    entry.level = level
-    entry.button.dataset.level = level
-    entry.popup.setOffset(getPopupOffset(getPinShape(entry, level)))
-  }
-
   /**
-   * Gives every pin in view what room its spot has, the open place's first and then the
-   * busiest places', as MapKit makes room for its markers: a photo, or a balloon with its
-   * name, where it clears every pin and name already there; else its kind's balloon
-   * alone; else its year's dot, which takes no room. The stacks keep theirs. While the
-   * map moves a pin only steps down, so none crowd another as a zoom goes out, and none
-   * flicker between levels; it takes back what room it has once the map settles.
+   * Piles the pins in view on their spots as MapKit does, the open place's on top and
+   * then the busiest places', and shows a balloon's name where it clears every pin and
+   * the names over it, as MapKit leaves out the titles it has no room for.
    */
-  function layoutPins(map: mapboxgl.Map, settled = true) {
-    const taken: Box[] = []
-
-    for (const cluster of clusterMarkers.values()) {
-      if (cluster.button.isConnected) {
-        // Its cards behind reach a little past its photo.
-        taken.push(
-          getPinBox(
-            map.project(cluster.coordinates),
-            { lift: 0, radius: cluster.radius + STACK_CARDS },
-            false,
-          ),
-        )
-      }
-    }
-
+  function layoutPins(map: mapboxgl.Map) {
     const entries = [...markers.values()]
       .filter((entry) => !entry.button.hidden && entry.button.isConnected)
       .sort(
@@ -268,26 +185,36 @@ export function createPlaceMarkers({
             Number(first.button.getAttribute('aria-pressed') === 'true') ||
           second.count - first.count,
       )
+    const points = new Map(entries.map((entry) => [entry, map.project(entry.coordinates)]))
+    const pins = entries.map((entry) => getPinBox(points.get(entry)!, entry.shape))
+    const names: Box[] = []
 
-    for (const entry of entries) {
-      const point = map.project(entry.coordinates)
-      const full = entry.hasPhoto
-        ? [getPinBox(point, PHOTO_SHAPE, false)]
-        : [getPinBox(point, BALLOON_SHAPE, true), getNameBox(point, entry.nameWidth)]
-      const icon = [getPinBox(point, BALLOON_SHAPE, true)]
-      const pressed = entry.button.getAttribute('aria-pressed') === 'true'
-      const fits = (boxes: Box[]) =>
-        boxes.every((box) => !taken.some((other) => overlaps(box, other)))
-      const room: PinLevel = pressed || fits(full) ? 'full' : fits(icon) ? 'icon' : 'dot'
-      const level =
-        settled || PIN_LEVELS.indexOf(room) > PIN_LEVELS.indexOf(entry.level) ? room : entry.level
+    entries.forEach((entry, rank) => {
+      const z = String(entries.length - rank)
 
-      if (level !== 'dot') {
-        taken.push(...(level === 'full' ? full : icon))
+      // Synced every frame of a move: only what changes is touched.
+      if (entry.button.style.getPropertyValue('--pin-z') !== z) {
+        entry.button.style.setProperty('--pin-z', z)
       }
 
-      setLevel(entry, level)
-    }
+      if (!entry.label) {
+        return
+      }
+
+      const box = getNameBox(points.get(entry)!, entry.nameWidth)
+      const clear =
+        entry.button.getAttribute('aria-pressed') === 'true' ||
+        (!names.some((other) => overlaps(box, other)) &&
+          !pins.some((other, index) => index !== rank && overlaps(box, other)))
+
+      if (clear) {
+        names.push(box)
+      }
+
+      if (entry.label.hidden === clear) {
+        entry.label.hidden = !clear
+      }
+    })
   }
 
   let measureContext: CanvasRenderingContext2D | null | undefined
@@ -311,7 +238,7 @@ export function createPlaceMarkers({
    */
   function orderMarkers(map: mapboxgl.Map) {
     const container = map.getCanvasContainer()
-    const entries = [...markers.values(), ...clusterMarkers.values()].filter(
+    const entries = [...markers.values()].filter(
       (entry) => !entry.button.hidden && entry.button.isConnected,
     )
 
@@ -330,9 +257,7 @@ export function createPlaceMarkers({
           first.x - second.x,
       )
       .map((item) => item.button)
-    const current = [
-      ...container.querySelectorAll(':scope > .trip-map-marker, :scope > .trip-map-cluster'),
-    ]
+    const current = [...container.querySelectorAll(':scope > .trip-map-marker')]
 
     if (
       ordered.length === current.length &&
@@ -346,7 +271,7 @@ export function createPlaceMarkers({
     }
   }
 
-  /** A place's or cluster's name on hover, styled like a route's. */
+  /** A place's name on hover, styled like a route's. */
   function createPlacePopup(
     offset: NonNullable<mapboxgl.PopupOptions['offset']>,
     meta: string,
@@ -388,27 +313,6 @@ export function createPlaceMarkers({
     image.src = src
     dot.className = 'trip-map-pin-photo__year'
     frame.append(image, dot)
-    return frame
-  }
-
-  /** A stack of cards: a photo on top, or the year's colour without one. */
-  function createStack(photo: string | undefined) {
-    const frame = document.createElement('span')
-    const face = document.createElement(photo ? 'img' : 'span')
-
-    frame.className = 'trip-map-pin-photo trip-map-pin-photo--stack'
-    frame.setAttribute('aria-hidden', 'true')
-
-    if (face instanceof HTMLImageElement) {
-      face.alt = ''
-      face.loading = 'lazy'
-      face.decoding = 'async'
-      face.src = photo!
-    } else {
-      face.className = 'trip-map-pin-photo__face'
-    }
-
-    frame.append(face)
     return frame
   }
 
@@ -473,44 +377,33 @@ export function createPlaceMarkers({
         t(messages, 'placeLabel', { count: place.count, name: place.name, year: place.firstYear }),
         place.color,
       )
-      const level: PinLevel = 'full'
-      const popup = createPlacePopup(
-        getPopupOffset(place.photo ? PHOTO_SHAPE : BALLOON_SHAPE),
-        momentCount,
+      const shape = place.photo ? PHOTO_SHAPE : BALLOON_SHAPE
+      const popup = createPlacePopup(getPopupOffset(shape), momentCount, place.name)
+      // A photo shows its name only while it's open, lifted over its place.
+      const label = createLabel(
         place.name,
+        place.photo ? 'trip-map-pin-label trip-map-pin-label--open' : 'trip-map-pin-label',
       )
-      // Every level's pin, each shown as its level comes: a photo shows its name only
-      // while it's open, lifted over its place, and a balloon's under it at full.
-      const dot = document.createElement('span')
 
-      dot.className = 'trip-map-pin-dot'
-      dot.setAttribute('aria-hidden', 'true')
       button.setAttribute('aria-pressed', 'false')
-      button.dataset.level = level
-      // The dot first, under the pins it fades into and out of.
       button.append(
-        dot,
-        ...(place.photo ? [createPhoto(place.photo)] : []),
-        createBalloon(place.kind),
+        place.photo ? createPhoto(place.photo) : createBalloon(place.kind),
         createAnchor(),
-        createLabel(
-          place.name,
-          place.photo ? 'trip-map-pin-label trip-map-pin-label--open' : 'trip-map-pin-label',
-        ),
+        label,
       )
 
       const entry: MarkerEntry = {
         button,
         coordinates: [place.longitude, place.latitude],
         count: place.count,
-        hasPhoto: Boolean(place.photo),
-        level,
+        ...(!place.photo && { label }),
         marker: new mapboxgl.Marker({ anchor: 'center', element: button }).setLngLat([
           place.longitude,
           place.latitude,
         ]),
         nameWidth: place.photo ? 0 : measureName(place.name),
         popup,
+        shape,
       }
       const showPopup = () => {
         const map = getMap()
@@ -563,12 +456,10 @@ export function createPlaceMarkers({
 
   function refilter() {
     index = createIndex()
-    // The clusters are numbered afresh with the new places.
-    clearClusterMarkers()
     sync()
   }
 
-  /** Gathers the shown places at every zoom, as Mapbox's clustered sources do. */
+  /** Gathers the shown places at every zoom for a screenshot, as Mapbox's clustered sources do. */
   function createIndex() {
     return new Supercluster<PlaceProperties, ClusterProperties>({
       map: (place) => ({ firstYear: place.firstYear, momentCount: place.count }),
@@ -603,13 +494,7 @@ export function createPlaceMarkers({
 
   /** Puts the gray dots near the view on the map, under every pin, and takes off the rest. */
   function syncDimDots(map: mapboxgl.Map) {
-    const [west, south, east, north] = getNearBounds(map)
-    const isNear = (longitude: number, latitude: number) =>
-      latitude >= south &&
-      latitude <= north &&
-      (west <= east
-        ? longitude >= west && longitude <= east
-        : longitude >= west || longitude <= east)
+    const isNear = getIsNear(map)
 
     for (const place of places) {
       const wanted = isDimmed(place) && isNear(place.longitude, place.latitude)
@@ -649,13 +534,16 @@ export function createPlaceMarkers({
     dimDots.clear()
   }
 
-  function clearClusterMarkers() {
-    for (const cluster of clusterMarkers.values()) {
-      cluster.popup.remove()
-      cluster.marker.remove()
-    }
+  /** Whether a place is near enough the view to be on the map: in it, or about to come in. */
+  function getIsNear(map: mapboxgl.Map) {
+    const [west, south, east, north] = getNearBounds(map)
 
-    clusterMarkers.clear()
+    return (longitude: number, latitude: number) =>
+      latitude >= south &&
+      latitude <= north &&
+      (west <= east
+        ? longitude >= west && longitude <= east
+        : longitude >= west || longitude <= east)
   }
 
   /** The places and clusters within `bounds` (west, south, east, north) at the map's zoom. */
@@ -691,9 +579,8 @@ export function createPlaceMarkers({
   }
 
   /**
-   * Puts the places and clusters gathered at this zoom on the map, and takes off the
-   * rest. `settled` is false while the map moves, when only what's in view needs
-   * keeping up.
+   * Puts the shown places near the view on the map, and takes off the rest. `settled` is
+   * false while the map moves, when only what's in view needs keeping up.
    */
   function sync(options: { settled?: boolean } = {}) {
     const map = getMap()
@@ -702,87 +589,17 @@ export function createPlaceMarkers({
       return
     }
 
-    const visibleIds = new Set<string>()
-    const clusters = new Map<number, ClusterInfo>()
-
-    for (const feature of getClusters(map, getNearBounds(map))) {
-      const [longitude, latitude] = feature.geometry.coordinates as [number, number]
-      const properties = feature.properties
-
-      if ('cluster_id' in properties) {
-        clusters.set(properties.cluster_id, {
-          coordinates: [longitude, latitude],
-          firstYear: properties.firstYear,
-          locationCount: properties.point_count,
-          momentCount: properties.momentCount,
-        })
-      } else {
-        visibleIds.add(properties.id)
-      }
-    }
-
-    // The places whose dot had the focus as it went off the map: a cluster opened from
-    // the keyboard, or a place gathered into one.
-    let focusedIds: string[] | undefined
+    const isNear = getIsNear(map)
 
     for (const [id, marker] of markers) {
-      const shown = visibleIds.has(id)
-
-      if (!shown && marker.button === document.activeElement) {
-        focusedIds = [id]
-      }
-
-      setMarkerShown(marker, shown)
+      setMarkerShown(marker, isShown(id) && isNear(...marker.coordinates))
     }
 
-    // A cluster's id stands for the same places at the same spot, so the ones still
-    // shown are kept: a focused cluster keeps its focus, and a hovered one its name.
-    for (const [id, cluster] of clusterMarkers) {
-      if (!clusters.has(id)) {
-        if (cluster.button === document.activeElement) {
-          focusedIds = cluster.members.map((member) => member.id)
-        }
-
-        cluster.popup.remove()
-        cluster.marker.remove()
-        clusterMarkers.delete(id)
-      }
-    }
-
-    for (const [id, cluster] of clusters) {
-      if (!clusterMarkers.has(id)) {
-        clusterMarkers.set(id, createClusterMarker(map, id, cluster))
-      }
-    }
-
-    if (focusedIds) {
-      passFocus(focusedIds, visibleIds)
-    }
-
-    layoutPins(map, options.settled !== false)
+    layoutPins(map)
     syncDimDots(map)
 
     if (options.settled !== false) {
       orderMarkers(map)
-    }
-  }
-
-  /**
-   * Hands the focus on from a dot gone off the map to its busiest place still on it, or
-   * to the cluster that place has gathered into, rather than dropping it on the page.
-   */
-  function passFocus(ids: string[], visibleIds: Set<string>) {
-    for (const id of ids) {
-      const button = visibleIds.has(id)
-        ? markers.get(id)?.button
-        : [...clusterMarkers.values()].find((cluster) =>
-            cluster.members.some((member) => member.id === id),
-          )?.button
-
-      if (button) {
-        button.focus({ preventScroll: true })
-        return
-      }
     }
   }
 
@@ -809,141 +626,8 @@ export function createPlaceMarkers({
   }
 
   /**
-   * Frames a cluster's places close enough to tell apart, in one move, and never short
-   * of the zoom it parts at: framing places spread wide, on a phone's narrow screen
-   * above all, would leave them gathered as they were.
-   */
-  function openCluster(map: mapboxgl.Map, id: number, entry: ClusterMarkerEntry) {
-    const { members } = entry
-
-    if (members.length === 0) {
-      return
-    }
-
-    const bounds = new mapboxgl.LngLatBounds()
-
-    for (const member of members) {
-      bounds.extend([member.longitude, member.latitude])
-    }
-
-    const padding = getClusterOpenPadding(map)
-    const pitch = getFramingPitch(map, bounds, { maxZoom: CLUSTER_OPEN_MAX_ZOOM, padding })
-    const framed = map.cameraForBounds(bounds, {
-      maxZoom: CLUSTER_OPEN_MAX_ZOOM,
-      padding,
-      pitch,
-    })
-    let partZoom = 0
-
-    try {
-      // Past it by a little: the places are gathered at the zoom rounded down.
-      partZoom = index.getClusterExpansionZoom(id) + 0.01
-    } catch {
-      // A cluster of the places before the period changed: framed as it is.
-    }
-
-    const framedZoom = framed?.zoom ?? map.getZoom()
-    const parting = framedZoom < partZoom
-
-    map.easeTo({
-      // Closer than its places' frame, around the cluster, where its parts gather.
-      center: parting || !framed?.center ? entry.coordinates : framed.center,
-      duration: getAnimationDuration(),
-      padding,
-      pitch: parting ? getMapPitch(map, partZoom) : pitch,
-      zoom: Math.max(framedZoom, partZoom),
-    })
-  }
-
-  /**
-   * Room around a cluster's places as it opens: little at the sides of a phone held
-   * upright, and clear of what's open on the map's side.
-   */
-  function getClusterOpenPadding(map: mapboxgl.Map) {
-    const side = map.getContainer().clientWidth <= NARROW_WIDTH ? 32 : CLUSTER_OPEN_PADDING
-    const clear = getClearPadding()
-
-    return {
-      bottom: Math.max(CLUSTER_OPEN_PADDING, clear.bottom),
-      left: Math.max(side, clear.left),
-      right: Math.max(side, clear.right),
-      top: Math.max(CLUSTER_OPEN_PADDING, clear.top),
-    }
-  }
-
-  function createClusterMarker(
-    map: mapboxgl.Map,
-    id: number,
-    cluster: ClusterInfo,
-  ): ClusterMarkerEntry {
-    const members = getClusterMembers(id)
-    const meta = t(messages, 'momentCount', { count: cluster.momentCount })
-    // Named after its busiest place, on the card and to the screen reader, so it tells
-    // where it is without opening it.
-    const title =
-      members.length > 0
-        ? t(messages, 'clusterNamedTitle', {
-            count: cluster.locationCount,
-            name: getClusterName(members),
-          })
-        : t(messages, 'clusterTitle', { count: cluster.locationCount })
-    const button = createDotButton(
-      'trip-map-cluster',
-      t(messages, 'clusterLabel', { count: cluster.momentCount, title }),
-      yearColors.get(cluster.firstYear) ?? 'var(--color-tx)',
-    )
-    const popup = createPlacePopup(getPopupOffset(CLUSTER_SHAPE), meta, title)
-    const count = document.createElement('span')
-    // A stack of its places' photos, the busiest one's on top, or of balloons without one.
-    const photo = members.find((member) => member.photo)?.photo
-
-    button.append(createStack(photo))
-
-    count.className = 'trip-map-pin-count'
-    count.setAttribute('aria-hidden', 'true')
-    count.textContent = String(cluster.momentCount)
-    button.append(count)
-
-    const entry: ClusterMarkerEntry = {
-      ...CLUSTER_SHAPE,
-      button,
-      coordinates: cluster.coordinates,
-      marker: new mapboxgl.Marker({ anchor: 'center', element: button }).setLngLat(
-        cluster.coordinates,
-      ),
-      members,
-      popup,
-    }
-
-    placeOnMap(map, entry)
-
-    const showPopup = () => popup.setLngLat(entry.coordinates).addTo(map)
-    const hidePopup = () => popup.remove()
-
-    button.addEventListener('mouseenter', showPopup, { signal })
-    button.addEventListener('mouseleave', hidePopup, { signal })
-    button.addEventListener('focus', showPopup, { signal })
-    button.addEventListener('blur', hidePopup, { signal })
-    button.addEventListener(
-      'click',
-      (event) => {
-        event.stopPropagation()
-        hidePopup()
-        onOpenCluster()
-        openCluster(map, id, entry)
-      },
-      { signal },
-    )
-
-    return entry
-  }
-
-  // Opening a cluster leaves the view that framed every place.
-  let onOpenCluster = () => {}
-
-  /**
-   * The places a screenshot draws, gathered as the map gathers them at its framing:
-   * each cluster named after its busiest place, with every place in it.
+   * The places a screenshot draws, gathered where they crowd at its framing: each
+   * cluster named after its busiest place, with every place in it.
    */
   function getScreenshotPlaces(map: mapboxgl.Map): ScreenshotPlace[] {
     const bounds = map.getBounds()
@@ -1002,7 +686,6 @@ export function createPlaceMarkers({
         marker.marker.remove()
       }
 
-      clearClusterMarkers()
       clearDimDots()
     },
     /** Focuses a place's dot without popping its name up, as the drawer closes. */
@@ -1028,14 +711,10 @@ export function createPlaceMarkers({
       }
 
       if (hidden) {
-        clearClusterMarkers()
         clearDimDots()
       } else {
         sync()
       }
-    },
-    set onOpenCluster(handler: () => void) {
-      onOpenCluster = handler
     },
     /** Marks the open place's dot as pressed, or none. */
     setPressed(id: string | undefined) {
@@ -1045,7 +724,7 @@ export function createPlaceMarkers({
         marker.button.setAttribute('aria-pressed', String(markerId === id))
       }
 
-      // The open place gets its room first.
+      // The open place goes on top of the pile.
       if (map && !isPaused()) {
         layoutPins(map)
       }
@@ -1055,8 +734,8 @@ export function createPlaceMarkers({
       return period
     },
     /**
-     * Leaves only the places with Moments in `next` on the map, or every place again,
-     * gathered afresh.
+     * Leaves only the places with Moments in `next` on the map, the others as gray dots,
+     * or every place again.
      */
     setPeriod(next: Period | undefined) {
       period = next

@@ -128,9 +128,8 @@ dragging. `trip-map-toolbar__actions` on the toolbar's buttons moves them aside 
    framed in white with its year's dot; without one it's a balloon in its year's colour
    with its `kind`'s icon (`cafe`, `station`…, as `@hyoban/data-spec` names them) and its
    name under it where there's room. An open place's pin lifts off it, larger, over a dot
-   left on the spot with its name in bold. Crowded places stack, with their Moments counted;
-   a pin with no room on its spot steps down to its kind's balloon alone, then to its
-   year's dot.
+   left on the spot with its name in bold. Every pin stays on its spot, and where places
+   crowd their pins pile up there, the busiest on top, as MapKit's do.
    Give a trip summary a `color` and its route is drawn in it, else in the text colour.
 
    ```ts
@@ -238,9 +237,7 @@ formatted. Dates travel as `YYYY-MM-DD` keys and are formatted where they are sh
 | Message                  | Default                                      |
 | ------------------------ | -------------------------------------------- |
 | `locale`                 | zh-CN                                        |
-| `clusterLabel`           | {title}，共 {count} 条记录                   |
 | `clusterName`            | {name}等                                     |
-| `clusterNamedTitle`      | {name} {count} 个地点                        |
 | `clusterPlaces`          | {count} 处                                   |
 | `clusterTitle`           | {count} 个地点                               |
 | `drawerFailed`           | 没能加载这个地点的记录。                     |
