@@ -123,7 +123,12 @@ dragging. `trip-map-toolbar__actions` on the toolbar's buttons moves them aside 
 3. **Shape the data.** `shapeTripData` turns a built trip into the `TripData` the player
    plays, with what only you know about each stop; `getTripSummary` gives the overview
    every trip's route; `getPlaceMarkers` and `getMapStats` turn
-   `groupMomentsByLocation`'s groups into the map's places and totals.
+   `groupMomentsByLocation`'s groups into the map's places and totals. Give a place a
+   `photo` (a square thumbnail about 96 pixels wide) and the map draws it as that photo,
+   framed in white with its year's dot; without one it's a balloon in its year's colour
+   with its `kind`'s icon (`cafe`, `station`…, as `@hyoban/data-spec` names them) and its
+   name under it where there's room. Crowded places stack, with their Moments counted.
+   Give a trip summary a `color` and its route is drawn in it, else in the text colour.
 
    ```ts
    const data = shapeTripData(trip, {

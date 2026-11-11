@@ -42,6 +42,21 @@ const ICONS = {
   'volume-x':
     '<path d="M11 4.702a.7.7 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.7.7 0 0 0 11 19.298zm5.5 9.798 5-5m-5 0 5 5"/>',
   x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  'bed-double':
+    '<path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4m-8-6v6M2 18h20"/>',
+  'building-2':
+    '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Zm0-10H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2m12-13h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2M10 6h4m-4 4h4m-4 4h4m-4 4h4"/>',
+  coffee:
+    '<path d="M10 2v2m4-2v2m2 4a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1M6 2v2"/>',
+  'map-pin':
+    '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+  'shopping-bag':
+    '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4ZM3 6h18m-5 4a4 4 0 0 1-8 0"/>',
+  star: '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
+  store:
+    '<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8m-5 10v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4M2 7h20m0 0v3a2 2 0 0 1-2 2 2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"/>',
+  utensils:
+    '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>',
 } as const
 
 export type IconName = keyof typeof ICONS
@@ -69,4 +84,38 @@ export function getIconBody(name: IconName) {
 /** The icon as markup, for a page rendered on the server. Decorative: hidden from screen readers. */
 export function renderIcon(name: IconName) {
   return `<svg class="${ICON_CLASS}" viewBox="0 0 24 24" aria-hidden="true" data-icon="${name}">${getIconBody(name)}</svg>`
+}
+
+// The icon on a place's pin, by its kind, then by its kind's group (`placeKindGroups` in
+// @hyoban/data-spec), as the Mac app's balloons have it.
+const KIND_ICONS: Record<string, IconName> = {
+  airport: 'plane',
+  cafe: 'coffee',
+  charging: 'plug-zap',
+  metro: 'train-front',
+  nature: 'mountain',
+  park: 'mountain',
+  port: 'ship',
+  station: 'train-front',
+}
+const KIND_GROUP_ICONS: [readonly string[], IconName][] = [
+  [['city', 'town', 'region'], 'building-2'],
+  [['food', 'tea', 'bar', 'dessert'], 'utensils'],
+  [['shopping', 'supermarket', 'market'], 'shopping-bag'],
+  [['stay', 'camp'], 'bed-double'],
+  [['scenic', 'museum', 'temple'], 'camera'],
+  [['leisure', 'show', 'sport'], 'star'],
+  [['transport', 'bus', 'parking', 'fuel'], 'car-front'],
+  [['life', 'hospital', 'school', 'work', 'residential'], 'store'],
+]
+
+/** The icon on the pin of a place of this kind; a plain pin for one of no known kind. */
+export function getPlaceKindIcon(kind: string | undefined): IconName {
+  if (!kind) {
+    return 'map-pin'
+  }
+
+  return (
+    KIND_ICONS[kind] ?? KIND_GROUP_ICONS.find(([kinds]) => kinds.includes(kind))?.[1] ?? 'map-pin'
+  )
 }

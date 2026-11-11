@@ -29,6 +29,8 @@ import { getTripDescription, getTripTitle, tripMapBrand, tripMapMessages, tripMa
 import { getMapText, getPageCardPath, getPageTitle } from '@/page-cards'
 import { getPlaceDetail } from '@/data/place-info'
 import { readPlaces } from '@/data/store'
+import { getCoverThumbnailUrl } from '@/asset-url'
+import { getShowcaseMedia } from '@/moments/showcase'
 import { canDrawMapPlaceholders, getMapPlaceholderKey,getMapPlaceholderPath, getMapPlaceholderView, MAP_PLACEHOLDER_SIZE } from '@/map-placeholder'
 
 // The map's settings, by the names @hyoban/trip-map reads them by.
@@ -118,12 +120,21 @@ const placeholderView = showPlaceholder
   ? { ...(await getMapPlaceholderView(placeholderKey)), maxZoom: ALL_PLACES_MAX_ZOOM, size: MAP_PLACEHOLDER_SIZE }
   : undefined
 const pageText = getMapText(period, tripList)
-// Each place with what and where it is, under its name in the drawer.
+// Each place with what and where it is, under its name in the drawer, its kind for the
+// icon on its pin, and the newest photo taken there, which the map draws it as.
 const placeRecords = readPlaces()
+const groupsById = new Map(locationGroups.map(group => [group.id, group]))
+const getPlacePhoto = (id: string) => {
+  const still = groupsById.get(id)?.moments
+    .flatMap(moment => 'media' in moment ? getShowcaseMedia(moment.media) : [])
+    .map(item => (item.type === 'video' ? item.poster : item.src))
+    .find(image => image !== undefined)
+  return still && getCoverThumbnailUrl(still, 96, 1)
+}
 const placesJson = toScriptJson(
   getPlaceMarkers(locationGroups, yearColor).map(marker => {
     const record = placeRecords[marker.id]
-    return { ...marker, detail: record && getPlaceDetail(record) }
+    return { ...marker, detail: record && getPlaceDetail(record), kind: record?.kind, photo: getPlacePhoto(marker.id) }
   }),
 )
 const trips = getTrips(moments).toSorted((first, second) => second.start.localeCompare(first.start))
@@ -268,7 +279,7 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
       </li>
       <li class="trip-map-legend__fog-area" data-trip-map-fog-area hidden />
       {
-        // The grey lines are trips: say so, and open their list beside the map (the
+        // The coloured lines are trips: say so, and open their list beside the map (the
         // trips page without scripts).
         trips.length > 0 && (
           <li class="trip-map-legend__trips">

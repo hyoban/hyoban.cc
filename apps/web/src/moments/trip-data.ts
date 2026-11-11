@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import {
+  createYearPalette,
   getTripSummary,
   getWeatherKey,
   shapeTripData,
@@ -9,6 +10,7 @@ import {
 import { tripVideoMusic } from '@/data/music'
 import tripWeather from '@/data/trip-weather.json'
 import {
+  getMapYears,
   getMomentPath,
   getMoments,
   getMomentTripOdometer,
@@ -35,7 +37,14 @@ export function getTripSummaries() {
     const trips = getTrips(moments).toSorted((first, second) =>
       second.start.localeCompare(first.start),
     )
-    const json = JSON.stringify(trips.map(getTripSummary))
+    // Each route in its year's colour, as the legend and the places have it.
+    const yearColor = createYearPalette(getMapYears(moments))
+    const json = JSON.stringify(
+      trips.map((trip) => ({
+        ...getTripSummary(trip),
+        color: yearColor(Number.parseInt(trip.start.slice(0, 4), 10)),
+      })),
+    )
     const hash = createHash('sha256').update(json).digest('hex').slice(0, 12)
 
     return { json, path: `/trip/summaries/${hash}.json` }

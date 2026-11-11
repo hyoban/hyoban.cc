@@ -50,6 +50,13 @@ export type PlaceMarker = {
   months: string[]
   /** The years it has posts in, newest first. */
   years: number[]
+  /** What sort of place it is (`cafe`, `station`), for the icon on its pin. */
+  kind?: string | undefined
+  /**
+   * A square thumbnail of the newest photo taken there, about 96 pixels wide: the place
+   * is drawn as that photo rather than a pin.
+   */
+  photo?: string | undefined
 }
 
 /** The totals a screenshot of the map puts in its header (see `getMapStats`). */
@@ -141,6 +148,8 @@ export type Slide = TripSlide<TripDataStop>
 
 /** The overview's view of a trip: its route to draw and name. Its playback data loads when it starts. */
 export type TripSummary = {
+  /** Its route's colour, its year's (see `createYearPalette`); the text colour without. */
+  color?: string | undefined
   end: string
   id: string
   /** The places of its stops, by id: the only ones on the map while its sidebar is open. */
