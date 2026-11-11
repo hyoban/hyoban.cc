@@ -21,11 +21,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import cc.hyoban.moments.data.spec.Visibility
 import kotlinx.coroutines.launch
 import cc.hyoban.moments.ui.trips.TripCard
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
@@ -98,8 +93,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -111,12 +104,11 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.footprints.FootprintsOnMap
-import cc.hyoban.moments.footprints.FootprintsMapState
-import cc.hyoban.moments.footprints.TravelMode
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.footprints.TrackPoint
+import cc.hyoban.moments.ui.LocalDevice
+import cc.hyoban.moments.ui.components.BackHandler
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
@@ -169,6 +161,22 @@ import cc.hyoban.moments.ui.theme.cardBorder
 import java.time.LocalDate
 import kotlin.math.roundToInt
 
+/**
+ * The device's footprints as the atlas draws them, from its own store and panel: [drawing] on the
+ * map, the part chosen to [frame] once [frameRequested], [open] for its panel, and whether the
+ * device is [recording]. A device that records none gives none, and the atlas leaves them out.
+ */
+data class AtlasFootprintsOnMap(
+    val drawing: AtlasFootprints,
+    val frame: List<TrackPoint>,
+    val frameRequested: Boolean,
+    val onFramed: () -> Unit,
+    val open: () -> Unit,
+    val recording: Boolean,
+)
+
+private val NoFootprints = AtlasFootprints()
+
 /** What another page shows on the map tab: a place, with its panel up, or a trip's route, lifted with its card. */
 sealed interface MapFocus {
     data class Place(val id: String) : MapFocus
@@ -186,7 +194,7 @@ sealed interface MapFocus {
  */
 @Composable
 fun MapScreen(
-    container: PhoneContainer,
+    container: AppContainer,
     onMoment: (String) -> Unit,
     onPlace: (String) -> Unit,
     onTrip: (String) -> Unit,
@@ -200,14 +208,14 @@ fun MapScreen(
     modifier: Modifier = Modifier,
     active: Boolean = true,
 ) {
-    FootprintsOnMap(container, onFootprintSettings) { footprints ->
+    LocalDevice.current.FootprintsOnMap(container, onFootprintSettings) { footprints ->
         MapContent(container, onMoment, onPlace, onTrip, onPlay, onSearch, focus, onFocused, footprints, onNewTrip, onSuggestedTrip, modifier, active)
     }
 }
 
 @Composable
 private fun MapContent(
-    container: PhoneContainer,
+    container: AppContainer,
     onMoment: (String) -> Unit,
     onPlace: (String) -> Unit,
     onTrip: (String) -> Unit,
@@ -215,7 +223,7 @@ private fun MapContent(
     onSearch: () -> Unit,
     focus: MapFocus?,
     onFocused: () -> Unit,
-    footprints: FootprintsMapState,
+    footprints: AtlasFootprintsOnMap?,
     onNewTrip: () -> Unit,
     onSuggestedTrip: (TripSuggestion) -> Unit,
     modifier: Modifier,
@@ -236,7 +244,7 @@ private fun MapContent(
     val checkinsOn = settings.isOn(Module.CHECKIN)
     val byPlace = atlas.byPlace
     val checkinsByPlace = if (checkinsOn) atlas.checkinsByPlace else emptyMap()
-    val footprintsOn = settings.isOn(Module.FOOTPRINTS)
+    val footprintsOn = footprints != null && settings.isOn(Module.FOOTPRINTS)
     val mapPlaces = if (checkinsOn) atlas.placesWithCheckins else atlas.placesWithoutCheckins
     val colors = if (checkinsOn) atlas.colorsWithCheckins else atlas.colorsWithoutCheckins
     val mapRoutes = atlas.routes
@@ -247,8 +255,7 @@ private fun MapContent(
 
     // The fog of war: the cities read from the app's assets the first time it's turned on or a
     // 可能的旅程 is named, and those a Moment was written in, the phone's own among them, lit.
-    val context = LocalContext.current
-    val resources = LocalResources.current
+    val device = LocalDevice.current
     var fogRegions by remember { mutableStateOf<List<FogRegion>?>(null) }
     val readRegions = suspend { container.cityRegions().also { fogRegions = it } }
     // 可能的旅程: worked out off the main thread as the records change, at home in the places set
@@ -309,7 +316,7 @@ private fun MapContent(
             MapFocus.Footprints -> {
                 selected = null
                 highlighted = null
-                if (footprintsOn) footprints.open()
+                if (footprintsOn) footprints?.open?.invoke()
                 onFocused()
             }
             null -> Unit
@@ -328,13 +335,8 @@ private fun MapContent(
         locating = true
         locate++
     }
-    val permission = cc.hyoban.moments.ui.components.rememberPermissionAsk(LOCATION_PERMISSIONS, cc.hyoban.moments.ui.components.PermissionWords(
-        AppIcons.Locate,
-        stringResource(Res.string.permission_locate_title),
-        stringResource(Res.string.permission_locate_body),
-        stringResource(Res.string.permission_not_now),
-        listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Pin, stringResource(Res.string.permission_locate_fact))),
-    )) { granted ->
+    // The phone asks with the sheet first (PermissionSheet), as it does everywhere it locates.
+    val permission = device.rememberLocationAsk { granted ->
         if (granted) startLocating() else show(textOf(Res.string.error_location_permission))
     }
     val requestLocate: () -> Unit = { permission() }
@@ -352,25 +354,9 @@ private fun MapContent(
         fogSweep++
         settings.changeMapFog(!settings.mapFog)
     }
-    val openFootprints: () -> Unit = { selected = null; highlighted = null; footprints.open() }
+    val openFootprints: () -> Unit = { selected = null; highlighted = null; footprints?.open?.invoke() }
     val shownFog = fog.takeIf { settings.mapFog }
-    val atlasFootprints = remember(footprints.drawing, footprintsOn) {
-        val drawing = footprints.drawing.takeIf { footprintsOn }
-        AtlasFootprints(
-            lines = drawing?.lines.orEmpty().map { (mode, points) ->
-                AtlasFootprintLine(
-                    mode = when (mode) {
-                        TravelMode.WALK -> AtlasFootprintMode.WALK
-                        TravelMode.CYCLE -> AtlasFootprintMode.CYCLE
-                        TravelMode.DRIVE -> AtlasFootprintMode.DRIVE
-                    },
-                    points = points,
-                )
-            },
-            ends = drawing?.ends.orEmpty(),
-            stays = drawing?.stays.orEmpty(),
-        )
-    }
+    val atlasFootprints = footprints?.drawing?.takeIf { footprintsOn } ?: NoFootprints
 
     val sheetState = rememberStandardBottomSheetState(initialValue = SheetValue.PartiallyExpanded, skipHiddenState = false)
     var screenHeight by remember { mutableIntStateOf(0) }
@@ -394,9 +380,9 @@ private fun MapContent(
             north = north,
             onBearing = { bearing = it },
             footprints = atlasFootprints,
-            footprintFrame = footprints.frame,
-            frameFootprints = footprints.frameRequested,
-            onFootprintsFramed = footprints.onFramed,
+            footprintFrame = footprints?.frame.orEmpty(),
+            frameFootprints = footprints?.frameRequested == true,
+            onFootprintsFramed = { footprints?.onFramed?.invoke() },
             onFootprint = openFootprints,
             tab = Atlas,
             focusedPlace = (focus as? MapFocus.Place)?.id,
@@ -477,8 +463,8 @@ private fun MapContent(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             CompassButton(turned, bearing, onClick = { north++ })
-            if (footprintsOn) FootprintsButton(footprints.recording, onClick = openFootprints)
-            LocateButton(locating, onClick = requestLocate)
+            if (footprintsOn) FootprintsButton(footprints?.recording == true, onClick = openFootprints)
+            if (device.hasLocation) LocateButton(locating, onClick = requestLocate)
         }
         // Kept while the card leaves, after the route is let go.
         var shown by remember { mutableStateOf(trip) }
@@ -539,7 +525,7 @@ private fun MapContent(
                 onAdd = { suggestion ->
                     // Once each, however many times it's tapped before it goes, and not the next
                     // one that moves up under the finger as it goes.
-                    val now = android.os.SystemClock.uptimeMillis()
+                    val now = System.nanoTime() / 1_000_000
                     if (suggestion.key !in added && now - addedAt > ADD_PAUSE_MS) {
                         added = added + suggestion.key
                         addedAt = now
@@ -557,7 +543,7 @@ private fun MapContent(
             PlaceSheet(
                 place, id, here, checkins, years, colors, places, container.mediaUrls,
                 bottom = if (wide) Space.l else clearance,
-                onNavigate = { if (!navigateTo(context, place)) show(textOf(Res.string.no_map_app)) },
+                onNavigate = { if (!device.navigateTo(place)) show(textOf(Res.string.no_map_app)) },
                 onAll = { selected = null; onPlace(id) },
                 onMoment = onMoment,
             )
@@ -628,7 +614,6 @@ private fun PlaceSheet(
     onAll: () -> Unit,
     onMoment: (String) -> Unit,
 ) {
-    val resources = LocalResources.current
     Column(Modifier.fillMaxHeight()) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = Space.gutter),
@@ -904,8 +889,6 @@ private fun TripRow(
         trailing()
     }
 }
-
-private val LOCATION_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
 /** Opens the search: a pill floating over the map, or set into the panel on a wide window. */
 @Composable
