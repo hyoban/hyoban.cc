@@ -2,3 +2,9 @@
 # rather than interpreted until the JIT warms to it; the libraries bring profiles of their own.
 Lcc/hyoban/moments/**;
 HSPLcc/hyoban/moments/**;->**(**)**
+# The atlas's first style composition is library code. Compile it with the app rather than making
+# the first map visit JIT the large generated Compose layer methods on the user's phone.
+Lorg/maplibre/compose/**;
+HSPLorg/maplibre/compose/**;->**(**)**
+Lorg/maplibre/nativeffi/**;
+HSPLorg/maplibre/nativeffi/**;->**(**)**

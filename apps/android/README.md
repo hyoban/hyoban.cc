@@ -643,21 +643,32 @@ its EXIF; a swipe down puts it away.
 - **Language and appearance.** Always the phone's: Chinese, or English when the phone speaks
   it, and light or dark as the system is. The API has no default and is set in 我 → 同步与来源,
   and the origin the photos and videos are served from is what the API says at `GET /`, asked
-  after each sync and kept; the map's styles default to `BuildConfig` and can be changed there
-  too, beside the AMap and Tencent keys, which have none either and stays on the phone, out
-  of the backup.
-- **Maps.** OpenFreeMap's vector tiles drawn by MapLibre, needing no key.
+  after each sync and kept. The AMap and Tencent keys have no default and stay on the phone,
+  out of the backup.
+- **Maps.** OpenFreeMap's vector tiles drawn by MapLibre, needing no key. The light and dark
+  style documents are packaged with the app after choosing Chinese labels and quieting minor
+  roads, so opening a map does not fetch and then rewrite its base style before labels appear;
+  `node scripts/update-map-styles.mjs` refreshes both packaged documents from OpenFreeMap. On
+  Android, Chinese, Japanese and Korean ideographs come from the system sans font instead of
+  remote glyph ranges, leaving the map cache for tiles and making labels available with them. The
+  map draws on demand at the display's refresh rate, including 90 and 120 Hz screens.
 - **Name and icon.** Here, in English whatever the phone speaks: a white cat with a grey cap
   peeking in from the lower left on blue, an adaptive icon with a monochrome layer.
 
 ## Building
 
 Android Studio opens `apps/android` as a project. From a shell, with the Android SDK in
-`local.properties` (`sdk.dir=…`) and JDK 17 or newer:
+`local.properties` (`sdk.dir=…`) and JDK 25 or newer:
 
 ```sh
+./scripts/prepare-maplibre-maven.sh
 ./gradlew :app:testDebugUnitTest :app:assembleDebug
 ```
+
+The preparation script downloads the pinned MapLibre Compose and Native FFI fork releases,
+checks their SHA-256 hashes, and unpacks their Android and JVM/macOS Maven variants under
+`.maplibre-maven`. A local fork can override them with `maplibre.repository` and
+`maplibre.nativeFfiRepository` in `local.properties`; CI uses the same pinned release archives.
 
 The same project holds the start of Here on the Mac, a Compose Desktop app in `:desktop` over
 the code it shares with the phone in `:shared`. For now it is a window with the design system's

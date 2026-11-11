@@ -15,6 +15,7 @@ import cc.hyoban.moments.footprints.FootprintStore
 import cc.hyoban.moments.ledger.LedgerStore
 import cc.hyoban.moments.publish.PublishWorker
 import cc.hyoban.moments.ui.viewer.MotionCache
+import cc.hyoban.moments.ui.map.AtlasPreparedStore
 import cc.hyoban.moments.widget.Widgets
 import java.io.File
 import java.io.Reader
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.maplibre.nativeffi.loadNativeLibrary
 
 /**
  * The phone's container: what every device shares, and over it what only the phone has, its
@@ -83,6 +85,9 @@ class PhoneContainer private constructor(
     /** Where shared photos wait for a Moment; copied again into its own store when it is saved. */
     private val sharedDirectory = File(context.cacheDir, "shared")
 
+    /** The atlas's record grouping and GeoJSON, prepared before its tab is first visited. */
+    internal val atlasPrepared = AtlasPreparedStore(this, scope)
+
     init {
         // Shared photos no draft took within a day are left behind.
         sharedDirectory.listFiles()?.filter { System.currentTimeMillis() - it.lastModified() > DAY_MS }?.forEach(File::delete)
@@ -103,9 +108,13 @@ class PhoneContainer private constructor(
         // The videos' disk cache opens its index and database off the main thread, before a
         // video is first opened, rather than in the frame that opens it.
         scope.launch(Dispatchers.IO) { MotionCache.of(appContext) }
-        // The map's native library, 13 MB, loaded off the main thread too, so the map tab's
-        // first showing doesn't load it in the frame that opens it.
-        scope.launch(Dispatchers.IO) { runCatching { System.loadLibrary("maplibre") } }
+        // Load the FFI JNI entry point and its native core off main without opening a runtime.
+        // The old MapView used libmaplibre.so; the Compose runtime packages different library
+        // names, so System.loadLibrary("maplibre") silently did no work after the migration.
+        scope.launch(Dispatchers.IO) {
+            runCatching { loadNativeLibrary() }
+                .onFailure { android.util.Log.w("MapLibre", "Could not preload the native library", it) }
+        }
     }
 
     override suspend fun billPointAt(time: Long) = billPlaces.pointAt(time)

@@ -9,7 +9,7 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(25)
 
     android {
         namespace = "cc.hyoban.moments.shared"
@@ -37,8 +37,12 @@ kotlin {
             api(libs.coil.network.okhttp)
             api(libs.lifecycle.runtime.compose.multiplatform)
             api(libs.lifecycle.viewmodel.compose.multiplatform)
+            api(libs.maplibre.compose)
             implementation(libs.zip4j)
             implementation(libs.gson)
+        }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
         }
         jvmMain.dependencies {
             implementation(libs.icu4j)

@@ -115,6 +115,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.footprints.FootprintsOnMap
 import cc.hyoban.moments.footprints.FootprintsMapState
+import cc.hyoban.moments.footprints.TravelMode
 import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
@@ -165,7 +166,6 @@ import cc.hyoban.moments.ui.design.AssistChip
 import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.ui.design.minimumInteractiveComponentSize
 import cc.hyoban.moments.ui.theme.cardBorder
-import cc.hyoban.moments.ui.trips.haversineKm
 import java.time.LocalDate
 import kotlin.math.roundToInt
 
@@ -197,9 +197,11 @@ fun MapScreen(
     onFootprintSettings: () -> Unit = {},
     onNewTrip: () -> Unit = {},
     onSuggestedTrip: (TripSuggestion) -> Unit = {},
+    modifier: Modifier = Modifier,
+    active: Boolean = true,
 ) {
     FootprintsOnMap(container, onFootprintSettings) { footprints ->
-        MapContent(container, onMoment, onPlace, onTrip, onPlay, onSearch, focus, onFocused, footprints, onNewTrip, onSuggestedTrip)
+        MapContent(container, onMoment, onPlace, onTrip, onPlay, onSearch, focus, onFocused, footprints, onNewTrip, onSuggestedTrip, modifier, active)
     }
 }
 
@@ -216,44 +218,35 @@ private fun MapContent(
     footprints: FootprintsMapState,
     onNewTrip: () -> Unit,
     onSuggestedTrip: (TripSuggestion) -> Unit,
+    modifier: Modifier,
+    active: Boolean,
 ) {
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.shownTrips.collectAsStateWithLifecycle()
     val routes by container.tripRoutes.collectAsStateWithLifecycle()
-    val byPlace = remember(moments) {
-        moments.flatMap { moment -> moment.places.distinct().map { it to moment } }.groupBy({ it.first }, { it.second })
-    }
     // The check-ins alone at each place, an import's waiting to be published among them.
     val checkins by container.repository.checkins.collectAsStateWithLifecycle()
-    val checkinsByPlace = if (LocalSettings.current.isOn(Module.CHECKIN)) checkins.byPlace else emptyMap()
-    val footprintsOn = LocalSettings.current.isOn(Module.FOOTPRINTS)
-    val mapPlaces = remember(byPlace, checkinsByPlace, places) {
-        (byPlace.keys + checkinsByPlace.keys).mapNotNull { id ->
-            val moments = byPlace[id].orEmpty()
-            val checkins = checkinsByPlace[id].orEmpty()
-            val years = moments.map { yearOf(it.occurredAt) } + checkins.map { yearOf(it.at) }
-            places[id]?.let { MapPlace(id, it, moments.size + checkins.size, years.min()) }
-        }
+    val prepared by container.atlasPrepared.value.collectAsStateWithLifecycle()
+    val inputs = remember(moments, places, checkins, trips, routes) { AtlasInputs(moments, places, checkins, trips, routes) }
+    val atlas = remember(prepared, inputs) {
+        prepared?.takeIf { it.matches(inputs) } ?: prepareAtlas(inputs)
     }
-    // The site's year colours as they are, in either mode, so a place is the same colour on the
-    // phone as on the site's map: one of the design's two palette exceptions.
-    val colors = remember(mapPlaces) { yearColors(mapPlaces.map { it.firstYear }) }
-    val mapRoutes = remember(trips, routes) {
-        trips.sortedByDescending { it.start }.mapNotNull { trip -> routes[trip.id]?.let { MapRoute(trip.id, it) } }
-    }
-    // How far each trip's route runs, for its row and the panel's total.
-    val kilometres = remember(mapRoutes) {
-        mapRoutes.associate { route ->
-            route.id to route.segments.sumOf { segment -> segment.line.zipWithNext { (lng1, lat1), (lng2, lat2) -> haversineKm(lat1, lng1, lat2, lng2) }.sum() }
-        }
-    }
+    val settings = LocalSettings.current
+    val checkinsOn = settings.isOn(Module.CHECKIN)
+    val byPlace = atlas.byPlace
+    val checkinsByPlace = if (checkinsOn) atlas.checkinsByPlace else emptyMap()
+    val footprintsOn = settings.isOn(Module.FOOTPRINTS)
+    val mapPlaces = if (checkinsOn) atlas.placesWithCheckins else atlas.placesWithoutCheckins
+    val colors = if (checkinsOn) atlas.colorsWithCheckins else atlas.colorsWithoutCheckins
+    val mapRoutes = atlas.routes
+    val kilometres = atlas.kilometres
+    val mapData = if (checkinsOn) atlas.mapDataWithCheckins else atlas.mapDataWithoutCheckins
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var highlighted by rememberSaveable { mutableStateOf<String?>(null) }
 
     // The fog of war: the cities read from the app's assets the first time it's turned on or a
     // 可能的旅程 is named, and those a Moment was written in, the phone's own among them, lit.
-    val settings = LocalSettings.current
     val context = LocalContext.current
     val resources = LocalResources.current
     var fogRegions by remember { mutableStateOf<List<FogRegion>?>(null) }
@@ -302,7 +295,7 @@ private fun MapContent(
     // A trip shown from its page is lifted from the map's first frame, its card already up for
     // the page to shrink into, as going back from the trip into its card does.
     val lifted = (focus as? MapFocus.Trip)?.id ?: highlighted
-    BackHandler(enabled = lifted != null) { highlighted = null }
+    BackHandler(enabled = active && lifted != null) { highlighted = null }
     LaunchedEffect(focus) {
         when (focus) {
             is MapFocus.Place -> {
@@ -361,13 +354,30 @@ private fun MapContent(
     }
     val openFootprints: () -> Unit = { selected = null; highlighted = null; footprints.open() }
     val shownFog = fog.takeIf { settings.mapFog }
+    val atlasFootprints = remember(footprints.drawing, footprintsOn) {
+        val drawing = footprints.drawing.takeIf { footprintsOn }
+        AtlasFootprints(
+            lines = drawing?.lines.orEmpty().map { (mode, points) ->
+                AtlasFootprintLine(
+                    mode = when (mode) {
+                        TravelMode.WALK -> AtlasFootprintMode.WALK
+                        TravelMode.CYCLE -> AtlasFootprintMode.CYCLE
+                        TravelMode.DRIVE -> AtlasFootprintMode.DRIVE
+                    },
+                    points = points,
+                )
+            },
+            ends = drawing?.ends.orEmpty(),
+            stays = drawing?.stays.orEmpty(),
+        )
+    }
 
     val sheetState = rememberStandardBottomSheetState(initialValue = SheetValue.PartiallyExpanded, skipHiddenState = false)
     var screenHeight by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
     val statusTop = WindowInsets.statusBars.getTop(density)
-    Box(Modifier.fillMaxSize().onSizeChanged { screenHeight = it.height }) {
-        PlacesMap(
+    Box(modifier.fillMaxSize().onSizeChanged { screenHeight = it.height }) {
+        SharedAtlasMap(
             mapPlaces,
             colors,
             mapRoutes,
@@ -378,17 +388,19 @@ private fun MapContent(
             // A tap on nothing closes the place panel.
             onEmptyTap = { selected = null },
             onTrip = onTrip,
+            prepared = mapData,
             modifier = Modifier.fillMaxSize(),
             locate = locate,
             north = north,
             onBearing = { bearing = it },
-            footprints = if (footprintsOn) footprints.drawing else cc.hyoban.moments.footprints.FootprintDrawing(),
+            footprints = atlasFootprints,
             footprintFrame = footprints.frame,
             frameFootprints = footprints.frameRequested,
             onFootprintsFramed = footprints.onFramed,
             onFootprint = openFootprints,
             tab = Atlas,
-            focus = focus.takeUnless { it == MapFocus.Footprints },
+            focusedPlace = (focus as? MapFocus.Place)?.id,
+            focusedTrip = (focus as? MapFocus.Trip)?.id,
             onFocused = onFocused,
             fog = shownFog,
             fogSweep = fogSweep,
@@ -713,6 +725,9 @@ private val MAP_EDGE = 16.dp
 /** How far a 40 button's 48 target reaches past it on each side. */
 private val FLOATING_INSET = 4.dp
 
+/** How much of a portrait map the selected place's sheet keeps. */
+private const val PLACE_SHEET_SHARE = 0.55f
+
 /** How long after adding a 可能的旅程 the others' + is still, as the rows move up into its place. */
 private const val ADD_PAUSE_MS = 800L
 
@@ -1025,6 +1040,9 @@ private fun FogCount(fog: FogOfWar) {
 
 /** How tall the legend and the fog's count stand. */
 private val LEGEND_HEIGHT = 28.dp
+
+/** The opacity of an ordinary trip in the map and its legend. */
+private const val ROUTE_OPACITY = 0.4f
 
 /** A bar floating over the map, at the floating level with its hairline and shadow. */
 @Composable

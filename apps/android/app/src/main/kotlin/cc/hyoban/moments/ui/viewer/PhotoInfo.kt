@@ -41,7 +41,7 @@ import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.sheetSurface
-import cc.hyoban.moments.ui.map.PointMap
+import cc.hyoban.moments.ui.map.SharedPointMap
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.DarkTokens
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
@@ -206,7 +206,7 @@ fun PhotoInfoPanel(container: PhoneContainer, details: PhotoDetails?, modifier: 
             }
             details.fix?.let { fix ->
                 InfoRow(AppIcons.Pin, place ?: stringResource(Res.string.photo_info_place), "%.4f, %.4f".format(Locale.ROOT, fix.latitude, fix.longitude)) {
-                    PointMap(fix, Modifier.padding(top = Space.s).fillMaxWidth().height(112.dp).background(tokens.fill, AppTheme.shapes.medium))
+                    SharedPointMap(fix, Modifier.padding(top = Space.s).fillMaxWidth().height(112.dp).background(tokens.fill, AppTheme.shapes.medium))
                 }
             }
             val file = listOfNotNull(

@@ -13,6 +13,7 @@ import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.trips.RouteSegment
 import cc.hyoban.moments.data.trips.Stop
 import cc.hyoban.moments.ui.trips.PlaybackController
+import cc.hyoban.moments.ui.map.AtlasMapStateStore
 
 /** A point on the map, in degrees. */
 data class MapPoint(val latitude: Double, val longitude: Double)
@@ -34,6 +35,9 @@ class LocationAsk(private val wasAsked: () -> Boolean, private val start: () -> 
  * The app's shell provides it; a page calls it where it would draw the thing itself.
  */
 interface Device {
+    /** The phone keeps its main atlas alive across tab changes; null until another device needs that host. */
+    val atlasMapStateStore: AtlasMapStateStore? get() = null
+
     /** A trip's stops and its route between them. */
     @Composable fun TripMap(stops: List<Stop>, segments: List<RouteSegment>, modifier: Modifier)
 

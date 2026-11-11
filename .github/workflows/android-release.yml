@@ -22,8 +22,15 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
       - uses: gradle/actions/setup-gradle@v5
+      - name: Prepare MapLibre Maven repositories
+        env:
+          MAPLIBRE_MAVEN_ROOT: ${{ runner.temp }}/maplibre-maven
+        run: |
+          ./scripts/prepare-maplibre-maven.sh
+          echo "MAPLIBRE_COMPOSE_REPOSITORY=$MAPLIBRE_MAVEN_ROOT/compose" >> "$GITHUB_ENV"
+          echo "MAPLIBRE_NATIVE_FFI_REPOSITORY=$MAPLIBRE_MAVEN_ROOT/native-ffi" >> "$GITHUB_ENV"
       - name: Restore the release key
         env:
           ANDROID_RELEASE_KEYSTORE: ${{ secrets.ANDROID_RELEASE_KEYSTORE }}

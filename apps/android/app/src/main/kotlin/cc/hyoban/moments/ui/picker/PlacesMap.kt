@@ -23,14 +23,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -39,14 +37,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.LocalTopClearance
@@ -59,19 +56,24 @@ import cc.hyoban.moments.ui.design.rememberBottomSheetScaffoldState
 import cc.hyoban.moments.ui.design.rememberStandardBottomSheetState
 import cc.hyoban.moments.ui.design.softShadow
 import cc.hyoban.moments.ui.design.strong
-import cc.hyoban.moments.ui.map.MapLibreView
-import cc.hyoban.moments.ui.map.edges
+import cc.hyoban.moments.ui.map.SharedMap
+import cc.hyoban.moments.ui.map.mapStyle
+import cc.hyoban.moments.ui.map.positionOf
 import cc.hyoban.moments.ui.theme.MediaOverlay
+import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
 import kotlinx.coroutines.flow.drop
-import org.maplibre.android.camera.CameraPosition
-import org.maplibre.android.camera.CameraUpdateFactory
-import org.maplibre.android.geometry.LatLng
-import org.maplibre.android.geometry.LatLngBounds
-import org.maplibre.android.maps.MapLibreMap
-import kotlin.math.roundToInt
+import kotlinx.coroutines.flow.collectLatest
+import org.maplibre.compose.camera.CameraFit
+import org.maplibre.compose.camera.CameraPosition
+import org.maplibre.compose.interaction.ClickResult
+import org.maplibre.compose.interaction.MapInteractions
+import org.maplibre.compose.map.MapState
+import org.maplibre.compose.map.rememberMapState
+import org.maplibre.compose.util.DpPadding
+import org.maplibre.compose.util.VisibleBounds
 
 /** A heap's photo on the map, and how near two stand before they are one heap: the photo and a little air. */
 private val HEAP = 48.dp
@@ -146,7 +148,7 @@ internal fun PlacesMap(places: Places, sideways: Boolean, grid: @Composable (onN
 }
 
 /** A heap as it stands on the screen now. */
-private class Placed(val heap: Heap, val x: Float, val y: Float)
+private class Placed(val heap: Heap, val at: DpOffset)
 
 /**
  * The map and its heaps over it. The heaps are grouped again each half zoom, and laid over the
@@ -154,59 +156,72 @@ private class Placed(val heap: Heap, val x: Float, val y: Float)
  */
 @Composable
 private fun HeapsMap(places: Places, spots: List<Spot>, opened: List<Spot>?, modifier: Modifier) {
-    var map by remember { mutableStateOf<MapLibreMap?>(null) }
     var placed by remember { mutableStateOf<List<Placed>>(emptyList()) }
-    // Where the map looked, kept across the map being built again when light and dark switch.
-    var looked by remember { mutableStateOf<CameraPosition?>(null) }
-    val pad = with(LocalDensity.current) { (HEAP + Space.xl).roundToPx() }
-    val top = with(LocalDensity.current) { LocalTopClearance.current.roundToPx() }
+    var framed by remember { mutableStateOf(false) }
+    val dark = LocalDarkTheme.current
+    val top = LocalTopClearance.current
     val heapsAt = remember(spots) { HashMap<Double, List<Heap>>() }
-    val all by rememberUpdatedState(spots)
-
-    val lay = remember(spots) {
-        { on: MapLibreMap ->
-            val step = PhotoHeaps.step(on.cameraPosition.zoom)
-            val heaps = heapsAt.getOrPut(step) { PhotoHeaps.at(all, step, REACH) }
-            val seen = on.projection.visibleRegion.latLngBounds
-            // A heap just off an edge still shows the half of it that is on.
-            val latitude = seen.latitudeSpan * 0.1
-            val longitude = seen.longitudeSpan * 0.1
-            placed = heaps.filter {
-                it.latitude in (seen.latitudeSouth - latitude)..(seen.latitudeNorth + latitude) &&
-                    it.longitude in (seen.longitudeWest - longitude)..(seen.longitudeEast + longitude)
-            }.map { heap ->
-                val at = on.projection.toScreenLocation(LatLng(heap.latitude, heap.longitude))
-                Placed(heap, at.x, at.y)
+    val close = remember(places) { { places.open(null) } }
+    val interactions = remember(close) {
+        MapInteractions(MapInteractions.Standard) {
+            camera {
+                rotate { enabled = false }
+                pitch { enabled = false }
+            }
+            callbacks {
+                click {
+                    onUnhandled {
+                        close()
+                        ClickResult.Consume
+                    }
+                }
             }
         }
     }
-    // Deleted photos leave their heaps; the map's listeners call the grouping of the photos there are now.
-    val layNow by rememberUpdatedState(lay)
-    LaunchedEffect(lay) { map?.let(lay) }
-    val close by rememberUpdatedState { places.open(null) }
+    val state = rememberMapState(
+        baseStyle = mapStyle(dark),
+        initialCameraPosition = CameraPosition(center = positionOf(latitude = 32.0, longitude = 110.0), zoom = 3.0),
+    )
+
+    LaunchedEffect(state, spots, framed) {
+        state.awaitViewport()
+        if (!framed) {
+            frame(state, spots, HEAP + Space.xl, top + HEAP + Space.xl)
+            framed = true
+        }
+    }
+    // Deleted photos leave their heaps; camera and photo changes both rebuild what is over the map.
+    LaunchedEffect(state, spots) {
+        snapshotFlow { state.viewport }.collectLatest { viewport ->
+            if (viewport == null) return@collectLatest
+            val step = PhotoHeaps.step(viewport.cameraPosition.zoom)
+            val heaps = heapsAt.getOrPut(step) { PhotoHeaps.at(spots, step, REACH) }
+            val seen = viewport.visibleBounds
+            placed = heaps.asSequence()
+                .filter { seen.near(it.latitude, it.longitude) }
+                .mapNotNull { heap ->
+                    viewport.screenLocationFromPosition(positionOf(heap.latitude, heap.longitude))?.let { Placed(heap, it) }
+                }
+                .toList()
+        }
+    }
 
     Box(modifier.clip(androidx.compose.ui.graphics.RectangleShape)) {
-        MapLibreView(
-            Modifier.fillMaxSize().testTag("picker_map"), interactive = true, compass = false,
-            attributionPadding = edges(Space.m, 0.dp, 0.dp, WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + Space.m),
-        ) { ready, _, _ ->
-            ready.uiSettings.isRotateGesturesEnabled = false
-            val before = looked
-            if (before != null) ready.moveCamera(CameraUpdateFactory.newCameraPosition(before))
-            else frame(ready, all, intArrayOf(pad, top + pad, pad, pad))
-            ready.addOnCameraMoveListener { layNow(ready) }
-            ready.addOnCameraIdleListener { looked = ready.cameraPosition; layNow(ready) }
-            ready.addOnMapClickListener { close(); false }
-            map = ready
-            layNow(ready)
-        }
-        DisposableEffect(Unit) { onDispose { map = null } }
-        val half = with(LocalDensity.current) { (HEAP / 2).toPx() }
+        SharedMap(
+            state = state,
+            interactive = true,
+            modifier = Modifier.fillMaxSize().testTag("picker_map"),
+            interactions = interactions,
+            attributionPadding = androidx.compose.foundation.layout.PaddingValues(
+                start = Space.m,
+                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + Space.m,
+            ),
+        )
         placed.forEach { at ->
             key(at.heap.cover.id) {
                 HeapMark(
                     places, at.heap, chosen = opened != null && opened.first().id == at.heap.cover.id,
-                    modifier = Modifier.offset { IntOffset((at.x - half).roundToInt(), (at.y - half).roundToInt()) },
+                    modifier = Modifier.offset(at.at.x - HEAP / 2, at.at.y - HEAP / 2),
                 ) { places.open(at.heap.spots) }
             }
         }
@@ -214,16 +229,27 @@ private fun HeapsMap(places: Places, spots: List<Spot>, opened: List<Spot>?, mod
 }
 
 /** All of [spots] in view, clear of [padding] at each edge; a lone place no closer than its streets. */
-private fun frame(map: MapLibreMap, spots: List<Spot>, padding: IntArray) {
-    val points = spots.map { LatLng(it.latitude, it.longitude) }
+private suspend fun frame(map: MapState, spots: List<Spot>, padding: androidx.compose.ui.unit.Dp, topPadding: androidx.compose.ui.unit.Dp) {
+    val points = spots.map { positionOf(it.latitude, it.longitude) }
     val first = points.firstOrNull() ?: return
     if (points.all { it.latitude == first.latitude && it.longitude == first.longitude }) {
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(first, CLOSEST))
+        map.setCameraPosition(CameraPosition(center = first, zoom = CLOSEST))
         return
     }
-    val bounds = LatLngBounds.Builder().includes(points).build()
-    val camera = map.getCameraForLatLngBounds(bounds, padding) ?: return
-    map.moveCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.Builder(camera).zoom(minOf(camera.zoom, CLOSEST)).build()))
+    val camera = map.cameraForCoordinates(
+        points,
+        CameraFit(fitPadding = DpPadding(left = padding, top = topPadding, right = padding, bottom = padding)),
+    )
+    if (camera != null) map.setCameraPosition(camera.copy(zoom = minOf(camera.zoom, CLOSEST)))
+}
+
+/** A heap just off an edge still shows the half of it that is on, including across the antimeridian. */
+private fun VisibleBounds.near(latitude: Double, longitude: Double): Boolean {
+    val latitudeMargin = (north - south) * 0.1
+    if (latitude !in (south - latitudeMargin)..(north + latitudeMargin)) return false
+    val span = if (east >= west) east - west else east + 360.0 - west
+    val margin = span * 0.1
+    return (-1..1).any { turn -> longitude + turn * 360.0 in (west - margin)..(west + span + margin) }
 }
 
 /** A heap on the map: its first photo, how many it holds at its corner when more than one, the accent around it while it is the one opened. */
