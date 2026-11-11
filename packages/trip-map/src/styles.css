@@ -97,7 +97,8 @@
 
 /* A place's pin, drawn as the Mac app's MapKit draws them: a button no bigger than the
    pin, so it doesn't cover the pins beside it. */
-.trip-map-marker {
+.trip-map-marker,
+.trip-map-cluster {
   display: block;
   padding: 0;
   cursor: pointer;
@@ -105,8 +106,14 @@
   border: 0;
 }
 
-.trip-map-marker:focus-visible {
+.trip-map-marker:focus-visible,
+.trip-map-cluster:focus-visible {
   outline: none;
+}
+
+/* A stack sits over the pile, centred on where its places gather. */
+.trip-map-cluster {
+  z-index: var(--pin-z, 0);
 }
 
 /* A place's pin is a point on its place, its pin laid around it: a photo centred on it, a
@@ -132,7 +139,8 @@
   margin-bottom: 0;
 }
 
-.trip-map-marker > span:not(.trip-map-pin-label) {
+.trip-map-marker > span:not(.trip-map-pin-label),
+.trip-map-cluster > span {
   transition:
     opacity 200ms,
     visibility 200ms,
@@ -238,7 +246,72 @@
   display: none;
 }
 
-.trip-map-marker:is(:hover, :focus-visible) .trip-map-pin-photo {
+/* A stack of places: its busiest place's photo, or its year's colour, on two more cards. */
+.trip-map-pin-photo--stack {
+  width: 2.375rem;
+  height: 2.375rem;
+  isolation: isolate;
+}
+
+.trip-map-pin-photo--stack::before,
+.trip-map-pin-photo--stack::after {
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  content: '';
+  background: #fff;
+  border-radius: inherit;
+  box-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 0.25);
+}
+
+.trip-map-pin-photo--stack::before {
+  transform: translate(0.1875rem, -0.1875rem) rotate(6deg);
+}
+
+.trip-map-pin-photo--stack::after {
+  transform: translate(-0.125rem, -0.25rem) rotate(-5deg);
+}
+
+.trip-map-pin-photo__face {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--marker-color);
+  border-radius: 0.5rem;
+}
+
+/* How many Moments a stack holds, at its top right. */
+.trip-map-pin-count {
+  position: absolute;
+  top: -0.4375rem;
+  right: -0.5rem;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.3125rem;
+  font-family: var(
+    --font-mono,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    'Liberation Mono',
+    'Courier New',
+    monospace
+  );
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: calc(1.125rem - 3px);
+  color: #fff;
+  text-align: center;
+  background: var(--marker-color);
+  border: 1.5px solid #fff;
+  border-radius: 9999px;
+  box-shadow: 0 0.0625rem 0.25rem rgb(0 0 0 / 0.25);
+}
+
+.trip-map-marker:is(:hover, :focus-visible) .trip-map-pin-photo,
+.trip-map-cluster:is(:hover, :focus-visible) > span {
   transform: scale(1.12);
 }
 
@@ -364,7 +437,8 @@
   top: calc(50% + 0.5rem);
 }
 
-.trip-map-marker:focus-visible :is(.trip-map-pin-photo, .trip-map-pin-balloon) {
+.trip-map-marker:focus-visible :is(.trip-map-pin-photo, .trip-map-pin-balloon),
+.trip-map-cluster:focus-visible > span:first-child {
   box-shadow:
     0 0.0625rem 0.375rem rgb(0 0 0 / 0.3),
     0 0 0 2px var(--color-tx);
@@ -1136,19 +1210,19 @@
   opacity: 0.4;
 }
 
-.trip-map-page[data-trip-map-active] .trip-map-marker > span,
+.trip-map-page[data-trip-map-active] :is(.trip-map-marker, .trip-map-cluster) > span,
 .trip-map-page[data-trip-map-active] .trip-map-dim-place,
 .trip-map-page[data-trip-map-active] .trip-map-legend {
   visibility: hidden;
   opacity: 0;
 }
 
-.trip-map-page[data-trip-map-active] .trip-map-marker {
+.trip-map-page[data-trip-map-active] :is(.trip-map-marker, .trip-map-cluster) {
   pointer-events: none;
 }
 
 /* The pin being pointed at, or on, comes out from under the pile, the open one highest. */
-.trip-map-page .trip-map-marker:is(:hover, :focus-visible) {
+.trip-map-page :is(.trip-map-marker, .trip-map-cluster):is(:hover, :focus-visible) {
   z-index: 100000;
 }
 
@@ -1174,7 +1248,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .trip-map-page .trip-map-marker > span,
+  .trip-map-page :is(.trip-map-marker, .trip-map-cluster) > span,
   .trip-map-legend {
     transition: none;
   }
