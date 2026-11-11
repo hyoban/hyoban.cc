@@ -152,6 +152,10 @@ system dark mode and reduced-motion behavior. The app Here follows its own
 platform-neutral design system instead (see its guide). Shared working agreements apply
 equally to both platforms.
 
+Map optimizations must preserve interaction responsiveness and label detail; bandwidth
+savings do not justify slower zooming, panning or playback. Compare both cold- and
+warm-cache motion with the previous implementation.
+
 Use `vp run dev` for the Astro site and `vp run build` for its production build.
 The `dev`, `build` and `check` scripts differ from Vite+'s built-in commands.
 For website, package or API changes, run `vp check` and `vp test`; also run

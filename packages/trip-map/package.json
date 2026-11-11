@@ -67,14 +67,16 @@
   "dependencies": {
     "@mapbox/mapbox-gl-language": "^1.0.1",
     "@types/geojson": "^7946.0.16",
-    "mapbox-gl": "^3.33.0",
+    "mapbox-gl": "3.33.0",
     "number-flow": "~0.6.2",
     "supercluster": "^9.1.0"
   },
   "devDependencies": {
     "@hyoban/drawer": "workspace:*",
+    "@mapbox/tiny-sdf": "2.2.0",
     "@types/three": "0.186.0",
     "happy-dom": "^21.0.4",
+    "magic-string": "1.4.5",
     "sharp": "^0.35.5",
     "three": "0.186.1",
     "vite-plus": "catalog:"

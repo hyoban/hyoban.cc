@@ -187,6 +187,18 @@ Everything is found by attribute on the root `[data-trip-map]`:
 | `data-trip-map-trip-pick="<id>"`, `data-trip-map-stop-play="<id>"`, `data-trip-map-place-link="<id>"` in the fragments          | no       | A trip's link, opening its sidebar (`getPickedTripPath(id)`); playing it, from the card `data-trip-map-stop` names; in the drawer, another place's, opening its drawer. The drawer's years in its line of totals narrow the map to them, keeping the place in view.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `data-trip-map-token`                                                                                                           | no       | The Mapbox token, unless passed as an option.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
+CJK basemap labels are drawn from installed system fonts in a worker, rather than
+downloading whole 256-character glyph ranges or rasterizing a batch on the main
+thread. Mapbox caches the generated glyphs in memory for the current style; reloading
+the page or rebuilding the style generates them again. Browsers without worker
+OffscreenCanvas, or whose worker cannot start, use Mapbox's native local rasterizer.
+The adapter uses Mapbox's internal glyph cache, so Mapbox GL JS and TinySDF are pinned
+to versions verified together; check glyph equivalence in the browser when updating them.
+Standard also asks Mapbox's glyph service to compose the remaining fallback fonts
+in one request per font stack and range, avoiding separate downloads and composition
+in the browser. A custom style keeps the default client composition for compatibility
+with its glyph service.
+
 ## Options
 
 `createTripMap(options)` takes:
@@ -376,6 +388,10 @@ The package is a workspace member of hyoban.cc and is imported there from source
 declaration files, source maps and the standalone stylesheet), which is what gets
 published. See [CHANGELOG.md](./CHANGELOG.md) for versions.
 
+With `vp run dev` running, `vp run map:bench --scenarios glyphs --throttle 1 --dpr 2`
+compares the worker's glyph pixels and metrics with Mapbox's own rasterizer in Chrome,
+at all four weights, and checks that no new glyphs are drawn on the main thread.
+
 ## License
 
-[MIT](./LICENSE). `dist` bundles [@hyoban/drawer](../drawer), a port of Base UI and shadcn/ui (both MIT), and mapbox-gl's stylesheet; their notices are in [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).
+[MIT](./LICENSE). `dist` bundles [@hyoban/drawer](../drawer), a port of Base UI and shadcn/ui (both MIT), TinySDF (BSD 2-Clause), and mapbox-gl's stylesheet; their notices are in [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).

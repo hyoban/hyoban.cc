@@ -11,6 +11,7 @@ import type { MapStats, PlaceMarker, TripData, TripSummary } from '../player/typ
 import { readTheme } from '../dom-theme.ts'
 import { getMapPitch, syncBasemapRoads, setMapPitch } from './basemap.ts'
 import { createFogLayer } from './fog-layer.ts'
+import { installLocalGlyphWorker } from './local-glyphs.ts'
 import { createMapCamera, VIEW_STATE_KEY, type MapCamera } from './map-camera.ts'
 import { createMapSettings, type MapSettings } from './map-settings.ts'
 import { createMapSides } from './map-sides.ts'
@@ -1373,9 +1374,11 @@ export function createTripMap(options: TripMapOptions): TripMap {
         ...(mapStyle.config && { config: mapStyle.config }),
         // Standard puts its names in the language itself; another style has the plugin.
         ...(mapLanguage && { language: mapLanguage }),
-        // Chinese, Japanese and Korean names in the style's own glyphs, fetched: drawn here
-        // instead, each new one costs the main thread a frame as the names come into view.
-        localIdeographFontFamily: false as unknown as string,
+        // Draw CJK locally rather than fetching whole 256-character glyph ranges.
+        localIdeographFontFamily:
+          '"PingFang SC", "Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei", sans-serif',
+        // Mapbox's basemaps can resolve the remaining fallback fonts in one request.
+        ...(mapStyle.config && { fontstackCompositing: 'server' as const }),
         locale: {
           'AttributionControl.ToggleAttribution': messages.mapAttribution,
           'LogoControl.Title': messages.mapLogo,
@@ -1383,6 +1386,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
         },
         touchPitch: true,
       })
+      installLocalGlyphWorker(map, signal)
       setMapPitch(map, mapStyle.pitch)
 
       // The attribution stays folded into its ⓘ button at every width, opening on a click.
