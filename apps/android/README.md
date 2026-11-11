@@ -670,10 +670,12 @@ checks their SHA-256 hashes, and unpacks their Android and JVM/macOS Maven varia
 `.maplibre-maven`. A local fork can override them with `maplibre.repository` and
 `maplibre.nativeFfiRepository` in `local.properties`; CI uses the same pinned release archives.
 
-The same project holds the start of Here on the Mac, a Compose Desktop app in `:desktop` over
-the code it shares with the phone in `:shared`. For now it is a window with the design system's
-theme and its sections down a sidebar, in the phone's own words; it reads the records from the
-API as the phone does and shows them in the phone's pages:
+The same project holds Here on the Mac, a Compose Desktop app in `:desktop` over the code it
+shares with the phone in `:shared`. It takes the design's desktop structure: a sidebar of
+sections, a toolbar over each page in place of the phone's floating circles, its rows denser,
+what is looked at (a bill, a place, a device) in an inspector at the window's end in place of a
+bottom sheet, and what is written or decided (a Moment, a trip, sharing) in a dialog in the middle
+of the window:
 
 ```sh
 ./gradlew :desktop:run
@@ -681,16 +683,27 @@ API as the phone does and shows them in the phone's pages:
 
 It keeps its settings, its copy of the records and the token under
 `~/Library/Application Support/Here`, or under `HERE_HOME` when that is set, as a trial run's own
-folder. It speaks the Mac's language; `HERE_LANGUAGE=zh` (or `en`) sets it for a run. 设置 is the phone's 同步与来源, where the API and its token go; the sidebar then leads to
-时间线, 地图 (⌘2), 旅程, 东西 and 纪念日, the phone's own pages, with a Moment, a day, a place and a trip opening
-over them and ⌘[ going back. 记录 (⌘N) writes a Moment as the phone does, its pictures chosen from
-the Mac's files and its place searched for by name or pinned on the map; what is written waits
-under 发布更改, which publishes it. The maps are the phone's, drawn by MapLibre with Metal: the
-atlas with its trips and 可能的旅程, a trip's route and its playback, a place's map. A computer
-isn't asked where it is, so the atlas has no locate button, and it records no footprints, so none
-are drawn. The photo viewer is still to come, videos aren't taken yet, and there is no ledger, so
-no bill. `HERE_OPEN` opens it on a page for a trial run: `map`, `trips`, `things`, `occasions`, `settings`,
-`items`, `changes`, `search`, `new`, or `moment:<uid>`, `edit:<uid>`, `trip:<id>`, `play:<id>`,
+folder. It speaks the Mac's language; `HERE_LANGUAGE=zh` (or `en`) sets it for a run. The first
+time it opens with nothing set up, 初次打开 asks where to start in a small window of its own: a
+site, the phone's WebDAV backup, an import, or nothing. 设置 (⌘,) is a window of its own, its
+pages down its side: 通用 (demo mode, ⌘⇧D, and the page the window opens on), 记录项与公开, 家,
+同步与来源 (the API and its token, and the WebDAV directory the phone backs up to) and 导入 (Swarm's
+export). The sidebar leads to 时间线 (⌘1), 地图 (⌘2), 旅程 (⌘3) and 足迹, then under 我的 to 账本,
+东西 and 纪念日, with 发布更改 at its foot; a Moment, a day, a place and a trip open over them, and
+⌘[ or Esc goes back. 记录 (⌘N) writes a Moment as the phone does, its pictures chosen from the
+Mac's files, dropped on it or pasted with ⌘V, its place searched for by name or pinned on the
+map, ⌘↩ saving it and Esc asking before a draft is dropped; what is written waits under
+发布更改, which publishes it. On the timeline the arrows go from one Moment to the next beside
+the list and Return opens it as its page; search has its kinds and years in a column on the left.
+A Moment's photos open full window, a video played by whatever the
+Mac opens it with; a Moment's menu (right click) copies its words and shares it, which on a
+computer copies the words and keeps the photos in a folder chosen. The maps are the phone's,
+drawn by MapLibre with Metal; a trip played back has the whole window. A computer isn't asked
+where it is, so the atlas has no locate button. The ledger and the footprints are the phone's,
+read from its latest WebDAV backup each time the app opens (or from 同步与来源) and only shown:
+nothing writes a bill or records a footprint here. `HERE_OPEN` opens it on a page for a trial run:
+`map`, `trips`, `footprints`, `ledger`, `things`, `occasions`, `settings`, `changes`, `search`, `new`,
+or `moment:<uid>`, `photo:<uid>`, `edit:<uid>`, `trip:<id>`, `play:<id>`, `tripedit:<id>`,
 `day:<date>`, `place:<id>`.
 
 The unit tests round-trip every record under the repository's `data/` through the app's
@@ -726,6 +739,24 @@ the key is in `local.properties` (`release.storeFile`, `release.storePassword`,
 `ANDROID_RELEASE_KEY_ALIAS` and `ANDROID_RELEASE_KEY_PASSWORD`. The keystore itself stays out of
 the repository, kept somewhere safe: a lost key can't sign an update to the app installed with it.
 
+The Mac app is released the same way, by a tag: pushing `mac-v1.2.3` runs
+`.github/workflows/mac-release.yml` on a macOS runner, which packages the app at version 1.2.3
+(`./gradlew :desktop:packageReleaseDmg -PappVersion=1.2.3`, its jars shrunk by ProGuard with
+`desktop/rules.pro`, the build without it being `packageDmg`) and puts `Here-1.2.3.dmg` in a GitHub release
+of the same name. Other builds take their version from the newest such tag, 1.0.0 before there is
+one; a Mac bundle's version can't start at 0. The bundle id is `site.config.json`'s
+`android.applicationId`, its icon the phone's, kept as `desktop/icon/here.svg` and made into an
+`.icns` by `desktop/icon/icns.swift` as it is packaged. It is packaged with Temurin 25, which
+Gradle fetches when it isn't installed (Compose needs a jpackage that Android Studio's JDK lacks,
+and refuses Homebrew's), with the JDK's modules trimmed and compressed, MapLibre's other
+backends and Compose's Material left out, and what the packaged jars carry unread taken out of them
+(Skiko's library, loaded from beside them, SQLite's for other systems, the ICU data the lunar
+calendar doesn't use): a DMG of about 84 MB, about 110 MB installed. ProGuard only takes away
+what nothing reaches, neither renaming nor optimizing, and keeps whole what is reached by name, JNI or
+ServiceLoader; it reads the JDK's classes from a jar the build exports from the JDK's own image, as
+Temurin since 24 carries no jmods for Compose to give it. It isn't signed yet: the first
+time, open it with right-click › Open (or `xattr -dr com.apple.quarantine /Applications/Here.app`).
+
 ## On the phone, from adb
 
 Every page has a link, `moments://moments`, `map`, `trips`, `settings` (我), `sync`,
@@ -749,12 +780,13 @@ scripts/ui.py tap tab_map
 ## Layout
 
 The packages below are split between `:app` (the phone's own) and `:shared` (what the Mac app
-runs too: so far the records and their stores under `data`, the ledger's and the footprints'
-models, the settings and the container every device shares, the timeline's, a Moment's, the
-trips', the things' and the occasions' pages, writing a Moment with its place picker and bill form,
-the changes to publish, 同步与来源 and 记录项与公开, with the components they are made of, and the
-design system in `ui/design` and `ui/theme`, and every page's words as Compose resources);
-`:desktop` is the Mac's window.
+runs too: the records and their stores under `data`, the ledger's and the footprints' models and
+the reading of the phone's backup (`backup`), the settings and the container every device shares,
+the timeline's, a Moment's, the photo viewer's, the trips', the ledger's, the things' and the
+occasions' pages, writing a Moment with its place picker and bill form, the changes to publish,
+the settings pages, 导入 and 初次打开, with the components they are made of, and the design system
+in `ui/design` and `ui/theme` (its desktop parts in `ui/design/Desktop.kt`), and every page's words
+as Compose resources); `:desktop` is the Mac's window and its device.
 
 - `data/spec`: the records as Kotlin, each keeping the fields it doesn't know.
 - `data/api`: the API's rows and writes.
