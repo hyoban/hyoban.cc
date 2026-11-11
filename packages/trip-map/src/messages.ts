@@ -7,7 +7,9 @@ export const zhCN = {
   locale: 'zh-CN',
 
   // The map page
+  clusterLabel: '{title}，共 {count} 条记录',
   clusterName: '{name}等',
+  clusterNamedTitle: '{name} {count} 个地点',
   clusterPlaces: '{count} 处',
   clusterTitle: '{count} 个地点',
   drawerFailed: '没能加载这个地点的记录。',

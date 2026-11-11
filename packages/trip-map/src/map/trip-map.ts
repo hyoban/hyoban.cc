@@ -285,6 +285,8 @@ export function createTripMap(options: TripMapOptions): TripMap {
     trips,
   })
   const markers = createPlaceMarkers({
+    getAnimationDuration: camera.getAnimationDuration,
+    getClearPadding: () => sides.getClearPadding(),
     getMap: () => map,
     isPaused: () => !mapLoaded || Boolean(tripPlayer.activeId) || Boolean(tripScroll?.drawn),
     messages,
@@ -461,6 +463,9 @@ export function createTripMap(options: TripMapOptions): TripMap {
     signal,
     url: options.fogUrl ?? '/map/fog.json',
   })
+
+  // A cluster opened is the viewer's own browsing, as a drag is.
+  markers.onOpenCluster = camera.moveByHand
 
   /**
    * Shows the map as `next` has it, and remembers it: another style built again, Standard's
