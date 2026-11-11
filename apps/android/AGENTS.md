@@ -13,7 +13,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   Multiplatform, for Android and the desktop's JVM) what both run. The Mac app is to do what
   the phone's does, so code moves from `:app` into `:shared` a part at a time, keeping its
   package and leaving the phone's behaviour as it was; each step builds and tests `:app`.
-  The Mac is not SwiftUI's: `apps/apple` is for iPhone and iPad.
+  The native SwiftUI Mac app in `apps/apple` is only a full-window map drawn on its own boards (M), and shares no code with this project; `:desktop` stays as it is and keeps following the desktop boards (D).
 - Shared code may use the JDK and JVM libraries (OkHttp, `java.time`): both targets are JVMs.
   What it may not touch is Android's own: `android.*`, `R`, `Context`, `BuildConfig`, and
   the Android-only libraries (Media3, Glance, WorkManager, Capsule). Maps use MapLibre
@@ -147,7 +147,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   the site's restraint on a phone. The design is platform-neutral, one design for the iOS,
   Android and web versions to come: keep Android-only conventions out of it (name things by
   what they are, not by Compose or Material), and record only where Android implements it.
-  Desktops (Mac, the web on a computer) keep its look but take a desktop's structure, a sidebar,
+  Desktops (Compose Desktop's Mac app, the web on a computer) keep its look but take a desktop's structure, a sidebar,
   toolbars, hover, context menus and shortcuts, as the page canvas's desktop boards (D, beside each
   page) and the design system's Desktop cards draw them. Tablets (iPad, Android tablets) stay touch,
   sized by the window, not the device: wider than 1024 a touch sidebar and list beside detail, 600–1023
