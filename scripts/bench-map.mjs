@@ -154,6 +154,78 @@ const compileStats = `(() => {
   }
 })()`
 
+// Exercise the installed adapter, not a separate copy of its worker protocol. The
+// reference rasterizer is the one shipped inside the installed Mapbox release.
+const checkGlyphs = `(async () => {
+  const manager = window.__map?.style?.glyphManager
+  if (!manager) throw new Error('The map was not captured.')
+
+  const prototype = manager.constructor.TinySDF.prototype
+  const draw = prototype.draw
+  let mainThreadDraws = 0
+  let drawingReference = false
+
+  prototype.draw = function (...args) {
+    if (!drawingReference) mainThreadDraws++
+    return draw.apply(this, args)
+  }
+
+  const reference = new manager.constructor(
+    manager.requestManager,
+    manager.localGlyphMode,
+    manager.localFontFamily,
+  )
+  const ids = [12288, 12300, 12354, 12450, 44032, 44033, 131072, 134000]
+  for (let id = 0x3400; id <= 0x4dbf; id += 173) ids.push(id)
+  for (let id = 0x4e00; id <= 0x9fff; id += 89) ids.push(id)
+  for (let id = 0xac00; id <= 0xd7a3; id += 509) ids.push(id)
+
+  const load = (source, stack) => new Promise((resolve, reject) => {
+    source.getGlyphs({[stack]: ids}, (error, glyphs) => {
+      if (error) reject(error)
+      else resolve(glyphs[stack].glyphs)
+    })
+  })
+  let checked = 0
+
+  try {
+    for (const name of ['Light', 'Regular', 'Medium', 'Bold']) {
+      const stack = 'DIN Pro ' + name
+      const result = await load(manager, stack)
+      drawingReference = true
+      const expectedResult = await load(reference, stack)
+      drawingReference = false
+
+      for (const id of ids) {
+        const actual = result[id]
+        const expected = expectedResult[id]
+        if (!actual || !expected) throw new Error('Missing glyph ' + name + ':' + id)
+
+        const sameSize = actual.bitmap.width === expected.bitmap.width &&
+          actual.bitmap.height === expected.bitmap.height
+        const sameMetrics = Object.keys(actual.metrics).length === Object.keys(expected.metrics).length &&
+          Object.entries(expected.metrics).every(([key, value]) => actual.metrics[key] === value)
+
+        if (!sameSize || !sameMetrics) {
+          throw new Error('Glyph metrics differ for ' + name + ':' + id)
+        }
+        if (actual.bitmap.data.length !== expected.bitmap.data.length ||
+            actual.bitmap.data.some((value, index) => value !== expected.bitmap.data[index])) {
+          throw new Error('Glyph pixels differ for ' + name + ':' + id)
+        }
+        checked++
+      }
+    }
+  } finally {
+    prototype.draw = draw
+  }
+
+  if (mainThreadDraws !== 0) {
+    throw new Error(mainThreadDraws + ' glyphs were rasterized on the main thread.')
+  }
+  return {checked, mainThreadDraws}
+})()`
+
 const chrome = await startChrome()
 const browser = await connect(chrome.url)
 
@@ -199,6 +271,24 @@ function createScenarios() {
   }
 
   return {
+    // All four weights, including CJK extensions, punctuation, kana and Hangul.
+    glyphs: async () => {
+      const page = await browser.open('/map/')
+
+      try {
+        await page.evaluate(catchMap)
+        await page.wheel(center, -1, 1, 90)
+        await sleep(500)
+        const result = await page.evaluate(checkGlyphs)
+
+        if (!result?.checked) throw new Error('The glyph equivalence check did not finish.')
+        console.log(
+          `glyphs        ${result.checked} pixel-identical glyphs, ${result.mainThreadDraws} main-thread draws`,
+        )
+      } finally {
+        await page.close()
+      }
+    },
     // The whole country, dragged about, as the map opens.
     'country-pan': () =>
       measure('country-pan', '/map/', async (page) => {
@@ -432,9 +522,21 @@ async function connect(url) {
       const { targetId } = await send('Target.createTarget', { url: 'about:blank' })
       const { sessionId } = await send('Target.attachToTarget', { flatten: true, targetId })
       const command = (method, params) => send(method, params, sessionId)
-      const evaluate = async (expression) =>
-        (await command('Runtime.evaluate', { awaitPromise: true, expression, returnByValue: true }))
-          .result?.value
+      const evaluate = async (expression) => {
+        const response = await command('Runtime.evaluate', {
+          awaitPromise: true,
+          expression,
+          returnByValue: true,
+        })
+
+        if (response.exceptionDetails) {
+          throw new Error(
+            response.exceptionDetails.exception?.description ?? response.exceptionDetails.text,
+          )
+        }
+
+        return response.result?.value
+      }
       const mouse = (type, { x, y }, extra = {}) =>
         command('Input.dispatchMouseEvent', { button: 'left', type, x, y, ...extra })
 
