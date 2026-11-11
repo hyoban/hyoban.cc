@@ -72,9 +72,8 @@ type Box = { bottom: number; left: number; right: number; top: number }
 const CLUSTER_RADIUS = 40
 const CLUSTER_MIN_POINTS = 8
 // The pins' sizes on screen, in pixels, as styles.css draws them: a photo's side, a
-// balloon's circle and its tail, and a stack's photo with its cards behind reaching a
-// little past it.
-const PIN = { balloon: 28, cluster: 44, photo: 34, tail: 6 }
+// balloon's circle and its tail, and a stack's top print with the two fanned out behind.
+const PIN = { balloon: 28, cluster: 56, photo: 34, tail: 6 }
 const PHOTO_SHAPE: PinShape = { lift: 0, radius: PIN.photo / 2 }
 const BALLOON_SHAPE: PinShape = { lift: PIN.tail + PIN.balloon / 2, radius: PIN.balloon / 2 }
 const CLUSTER_SHAPE: PinShape = { lift: 0, radius: PIN.cluster / 2 }
@@ -363,25 +362,38 @@ export function createPlaceMarkers({
     return frame
   }
 
-  /** A stack of cards: a photo on top, or the year's colour without one. */
-  function createStack(photo: string | undefined) {
-    const frame = document.createElement('span')
-    const face = document.createElement(photo ? 'img' : 'span')
+  /**
+   * A stack of prints: its busiest places' photos, the busiest one's on top and the next
+   * two's tilted behind it, each framed so it stands apart from the one under it; a card
+   * in the year's colour stands in for a place without one.
+   */
+  function createStack(photos: (string | undefined)[]) {
+    const stack = document.createElement('span')
 
-    frame.className = 'trip-map-pin-photo trip-map-pin-photo--stack'
-    frame.setAttribute('aria-hidden', 'true')
+    stack.className = 'trip-map-pin-stack'
+    stack.setAttribute('aria-hidden', 'true')
 
-    if (face instanceof HTMLImageElement) {
-      face.alt = ''
-      face.loading = 'lazy'
-      face.decoding = 'async'
-      face.src = photo!
-    } else {
-      face.className = 'trip-map-pin-photo__face'
+    // The farthest first, so the busiest is drawn last, on top.
+    for (const photo of photos.toReversed()) {
+      const frame = document.createElement('span')
+      const face = document.createElement(photo ? 'img' : 'span')
+
+      frame.className = 'trip-map-pin-photo'
+
+      if (face instanceof HTMLImageElement) {
+        face.alt = ''
+        face.loading = 'lazy'
+        face.decoding = 'async'
+        face.src = photo!
+      } else {
+        face.className = 'trip-map-pin-photo__face'
+      }
+
+      frame.append(face)
+      stack.append(frame)
     }
 
-    frame.append(face)
-    return frame
+    return stack
   }
 
   /** A balloon in the year's colour with the kind's icon, its tail on the place. */
@@ -869,10 +881,11 @@ export function createPlaceMarkers({
     )
     const popup = createPlacePopup(getPopupOffset(CLUSTER_SHAPE), meta, title)
     const count = document.createElement('span')
-    // A stack of its places' photos, the busiest one's on top, or of balloons without one.
-    const photo = members.find((member) => member.photo)?.photo
+    // Its busiest places' photos, the busiest first, and cards in its colour for the
+    // rest of three.
+    const photos = members.flatMap((member) => (member.photo ? [member.photo] : [])).slice(0, 3)
 
-    button.append(createStack(photo))
+    button.append(createStack([...photos, ...Array<undefined>(3 - photos.length).fill(undefined)]))
 
     count.className = 'trip-map-pin-count'
     count.setAttribute('aria-hidden', 'true')
