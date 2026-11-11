@@ -37,6 +37,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
@@ -83,6 +84,7 @@ import cc.hyoban.moments.ui.design.SnackbarResult
 import cc.hyoban.moments.ui.design.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -109,6 +111,7 @@ import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -357,7 +360,11 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
 
     // A place or a trip shown on the map tab from its page, until the map has flown to it.
     var mapFocus by remember { mutableStateOf<MapFocus?>(null) }
+    // Once visited, the atlas stays composed behind navigation. Its Surface then survives tab
+    // changes instead of paying SurfaceView and EGL setup again on every return.
+    var atlasMounted by rememberSaveable { mutableStateOf(pages.any { it == Atlas }) }
     val selectTab: (Int) -> Unit = { index ->
+        if (index == Tab.MAP.ordinal) atlasMounted = true
         navController.navigate(Tab.entries[index].route) {
             // The tab takes the place of the one before rather than going on top of it, so
             // back on any tab leaves the app, as the system's back to home; each keeps its state.
@@ -502,6 +509,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                 // The activity, which the way to a place and the sharing start from.
                 val deviceContext = androidx.compose.ui.platform.LocalContext.current
                 val device = remember(deviceContext) { PhoneDevice(deviceContext) }
+                DisposableEffect(device) { onDispose(device::close) }
                 val footprintPlaceName: @Composable (cc.hyoban.moments.ledger.Txn) -> String? = { cc.hyoban.moments.footprints.billSpot(it)?.name }
                 SharedTransitionLayout(Modifier.fillMaxSize().hazeSource(pageHaze).background(AppColors.page)) {
                     CompositionLocalProvider(
@@ -519,6 +527,37 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                         cc.hyoban.moments.ui.feed.LocalThingNav provides thingNav,
                         cc.hyoban.moments.ui.feed.LocalCheckinNav provides checkinNav,
                     ) {
+                        var atlasAnimatedScope by remember { mutableStateOf<AnimatedVisibilityScope?>(null) }
+                        val atlasShown = current == Tab.MAP
+                        if (atlasMounted) {
+                            CompositionLocalProvider(LocalNavAnimatedScope provides atlasAnimatedScope) {
+                                MapScreen(
+                                    container,
+                                    onMoment = openMoment,
+                                    onPlace = openPlace,
+                                    onTrip = openTrip,
+                                    onPlay = { navController.navigate(TripPlay(it)) },
+                                    onSearch = { navController.navigate(Search) },
+                                    focus = mapFocus,
+                                    onFocused = { mapFocus = null },
+                                    onFootprintSettings = { navController.navigate(FootprintSettings) },
+                                    onNewTrip = { navController.navigate(TripEdit()) },
+                                    onSuggestedTrip = { navController.navigate(TripEdit(start = it.start, end = it.end, title = it.name)) },
+                                    modifier = if (atlasShown) Modifier else Modifier.clearAndSetSemantics {},
+                                    active = atlasShown,
+                                )
+                            }
+                        }
+                        // A different top-level tab covers the retained Surface. Pushed pages from
+                        // the atlas do not: they need it underneath their shared-card transition.
+                        AnimatedVisibility(
+                            visible = atlasMounted && current != null && !atlasShown,
+                            enter = fadeIn(tween(FADE_THROUGH_OUT_MS)),
+                            exit = fadeOut(tween(FADE_THROUGH_IN_MS)),
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            Box(Modifier.fillMaxSize().background(AppColors.page))
+                        }
                         // The pages, made once, and a link's page put over its tab before the first
                         // frame, as the NavHost below would set them up: the app opens on it
                         // rather than sliding it in, and back, the top bar's and the system's, and
@@ -540,19 +579,14 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                     )
                                 }
                                 screen<Atlas> {
-                                    MapScreen(
-                                        container,
-                                        onMoment = openMoment,
-                                        onPlace = openPlace,
-                                        onTrip = openTrip,
-                                        onPlay = { navController.navigate(TripPlay(it)) },
-                                        onSearch = { navController.navigate(Search) },
-                                        focus = mapFocus,
-                                        onFocused = { mapFocus = null },
-                                        onFootprintSettings = { navController.navigate(FootprintSettings) },
-                                        onNewTrip = { navController.navigate(TripEdit()) },
-                                        onSuggestedTrip = { navController.navigate(TripEdit(start = it.start, end = it.end, title = it.name)) },
-                                    )
+                                    val scope = LocalNavAnimatedScope.current
+                                    DisposableEffect(scope) {
+                                        atlasAnimatedScope = scope
+                                        onDispose {
+                                            if (atlasAnimatedScope === scope) atlasAnimatedScope = null
+                                        }
+                                    }
+                                    Box(Modifier.fillMaxSize())
                                 }
                                 screen<Moment> { entry ->
                                     MomentScreen(

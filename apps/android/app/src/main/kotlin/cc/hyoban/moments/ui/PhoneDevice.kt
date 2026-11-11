@@ -34,25 +34,28 @@ import cc.hyoban.moments.data.trips.Stop
 import cc.hyoban.moments.ui.moment.ShareMenu
 import cc.hyoban.moments.ui.moment.ShareTarget
 import cc.hyoban.moments.ui.trips.PlaybackController
+import cc.hyoban.moments.ui.map.AtlasMapStateStore
 
 private val LOCATION_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
 /** The phone's own way with what the pages ask of their device: MapLibre's maps, Android's sharing, the pages only it has. */
-class PhoneDevice(private val context: Context) : Device {
-    @Composable
-    override fun TripMap(stops: List<Stop>, segments: List<RouteSegment>, modifier: Modifier) =
-        cc.hyoban.moments.ui.map.TripMap(stops, segments, modifier)
+class PhoneDevice(private val context: Context) : Device, AutoCloseable {
+    override val atlasMapStateStore = AtlasMapStateStore()
 
     @Composable
-    override fun PlaceMap(place: Place, modifier: Modifier, topInset: Dp) = cc.hyoban.moments.ui.map.PlaceMap(place, modifier, topInset)
+    override fun TripMap(stops: List<Stop>, segments: List<RouteSegment>, modifier: Modifier) =
+        cc.hyoban.moments.ui.map.SharedTripMap(stops, segments, modifier)
+
+    @Composable
+    override fun PlaceMap(place: Place, modifier: Modifier, topInset: Dp) = cc.hyoban.moments.ui.map.SharedPlaceMap(place, modifier, topInset)
 
     @Composable
     override fun DayTrackMap(stretches: List<List<Pair<Double, Double>>>, marks: List<DayMark>, modifier: Modifier, topInset: Dp) =
-        cc.hyoban.moments.ui.map.DayTrackMap(stretches, marks, modifier, topInset)
+        cc.hyoban.moments.ui.map.SharedDayTrackMap(stretches, marks, modifier, topInset)
 
     @Composable
     override fun PlaybackMap(controller: PlaybackController, clear: List<Dp>, modifier: Modifier, credit: IntArray?) =
-        cc.hyoban.moments.ui.map.PlaybackMap(controller, clear, modifier, credit)
+        cc.hyoban.moments.ui.map.SharedPlaybackMap(controller, clear, modifier, credit)
 
     @Composable
     override fun PickerMap(
@@ -63,7 +66,7 @@ class PhoneDevice(private val context: Context) : Device {
         onPlace: (String) -> Unit,
         modifier: Modifier,
         onDrag: (Boolean) -> Unit,
-    ) = cc.hyoban.moments.ui.map.PickerMap(places, chosen, target, onCenter, onPlace, modifier, onDrag)
+    ) = cc.hyoban.moments.ui.map.SharedPickerMap(places, chosen, target, onCenter, onPlace, modifier, onDrag)
 
     @Composable
     override fun PhotoPicker(container: AppContainer, limit: Int, onDismiss: () -> Unit, onPicked: (List<android.net.Uri>) -> Unit) =
@@ -154,4 +157,6 @@ class PhoneDevice(private val context: Context) : Device {
     }
 
     override fun navigateTo(place: Place): Boolean = cc.hyoban.moments.ui.map.navigateTo(context, place)
+
+    override fun close() = atlasMapStateStore.close()
 }

@@ -6,7 +6,7 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(25)
 }
 
 // The cities the map's fog of war lights, the site's own file, as the phone takes it into its assets.

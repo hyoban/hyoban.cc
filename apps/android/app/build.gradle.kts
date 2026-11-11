@@ -147,7 +147,7 @@ dependencies {
     implementation(libs.coil.network.okhttp)
     implementation(libs.coil.video)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.maplibre)
+    runtimeOnly(libs.maplibre.compose.runtime.opengl.android)
     implementation(libs.okhttp)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.datasource.okhttp)

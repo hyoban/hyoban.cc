@@ -63,6 +63,7 @@ apps/web/src/content/moments/**/*.webp
 # Android app build output and machine-specific files
 apps/android/.gradle/
 apps/android/.kotlin/
+apps/android/.maplibre-maven/
 apps/android/**/build/
 apps/android/local.properties
 # The release key stays out of the repository.

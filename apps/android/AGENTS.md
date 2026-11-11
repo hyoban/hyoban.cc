@@ -4,7 +4,7 @@ These instructions extend the repository's [shared guide](../../AGENTS.md) for
 `apps/android`. They apply equally to Codex and Claude. Maintain durable Android
 rules here and product behavior in [README.md](README.md).
 
-Run the commands below from `apps/android`, with JDK 17 or newer and the Android
+Run the commands below from `apps/android`, with JDK 25 or newer and the Android
 SDK configured in `local.properties` (`sdk.dir=…`).
 
 ## One Gradle project, two apps
@@ -16,7 +16,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   The Mac is not SwiftUI's: `apps/apple` is for iPhone and iPad.
 - Shared code may use the JDK and JVM libraries (OkHttp, `java.time`): both targets are JVMs.
   What it may not touch is Android's own: `android.*`, `R`, `Context`, `BuildConfig`, and
-  the Android-only libraries (MapLibre's Android SDK, Media3, Glance, WorkManager, Capsule).
+  the Android-only libraries (Media3, Glance, WorkManager, Capsule). Maps use MapLibre
+  Compose; each app supplies its platform runtime and presentation host. Do not add the classic
+  Android SDK back.
   Where the platforms differ, `commonMain` declares it `expect` and `androidMain` and
   `jvmMain` each give theirs, the phone's being what it already did.
 - `AppContainer` in `:shared` is what every device shares (the settings, the records, their copy
@@ -26,10 +28,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   abstract or open member the device's container gives, not a `Context`. Settings are kept
   through `Prefs`: the phone's shared preferences, a JSON file on the Mac.
 - A page in `:shared` asks its device for what the phone and the Mac each do their own way
-  through `LocalDevice` (`ui/Device.kt`): the maps, a Moment's menu, sharing, choosing photos,
-  where the device is, and what it asks before publishing.
-  `PhoneDevice` hands each to the phone's own code; `DesktopDevice` leaves a map's space blank
-  and closes what would open until the Mac has its own. A page that needs something only the
+  through `LocalDevice` (`ui/Device.kt`): a Moment's menu, sharing, choosing photos, where the
+  device is, what it asks before publishing, and its map host. `PhoneDevice` uses the shared
+  MapLibre Compose maps; `DesktopDevice` leaves a map's space blank until its runtime and window
+  host are connected. A page that needs something only the
   phone has takes it that way, or as a read-only interface on `AppContainer` (`LedgerSource`,
   `Footprints`), rather than staying in `:app`. Small differences (the language shown, back,
   the keyboard, a dialog's window) are `expect` functions in `ui/components/Platform.kt`.
@@ -206,6 +208,35 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - The map's year colours are the tokens' `YearColors`, the same as `packages/trip-map/src/theme.ts`, and the
   fog is the site's `packages/trip-map/src/map/fog-layer.ts`. The ledger's charts are drawn on a
   Compose `Canvas` (`ui/ledger/Charts.kt`), not with a chart library.
+- Full-screen interactive Android maps use a `Surface` to avoid the extra texture composition;
+  embedded, noninteractive maps use a `Texture` so Compose clipping and transforms still apply.
+  Leave MapLibre's maximum frame rate unset so requested frames follow the display's refresh rate;
+  do not cap a 90 or 120 Hz phone at 60 FPS.
+  Attach the full-screen `Surface` while its style loads, and cover it with the map's load colour
+  until its render loop presents the first frame, so Android's surface traversal and style loading
+  overlap. Its EGL and native frame loop runs on its own Android looper, not the UI thread. Never
+  draw a placeholder into that `Surface`, which prevents EGL from attaching to it.
+- Keep the phone's main atlas `MapState` alive at the app/device scope across tab changes, as the
+  classic retained `MapView` was: returning to the map must not reload its style, labels, tiles or
+  markers. After its first visit, also keep its presentation composed behind navigation: cover it
+  and disable its interaction on another tab instead of destroying and rebuilding its Android
+  `Surface`. Preload the FFI native library off main, but do not prewarm its runtime during
+  ordinary app startup: native completion work can compete with tab motion on main. Apply
+  base-layer adjustments to the packaged style document before MapLibre loads it; do not mutate
+  every base layer after the style reports ready. Prepare the atlas's record grouping, route
+  distances and immutable GeoJSON at container scope on a background dispatcher; use a prepared
+  result only while its source snapshots are still the current ones.
+- Keep MapLibre Native's Android local-ideograph rasterizer enabled with the system sans font.
+  Downloading CJK glyph PBF ranges delays labels and fills the 50 MiB ambient cache with fonts,
+  evicting the tiles that make later map entries fast.
+- Keep the local FFI fork's Android Release native code aligned with the classic SDK's size
+  settings: `-Oz`, full LTO, lld and `--icf=all`; its Rust image decoder uses `opt-level = "s"`
+  and aborting panics. Measure changes as stripped, APK-compressed arm64 libraries, and recheck
+  first-map time on the release build before trading these settings for speed.
+- Distribute the MapLibre Compose and Native FFI forks as pinned GitHub Release archives of
+  static Maven repositories. `scripts/prepare-maplibre-maven.sh` verifies their fixed SHA-256
+  hashes before a build uses them; each release includes Android plus KMP/JVM and macOS arm64
+  Metal artifacts so `:desktop` can be connected without republishing the forks.
 - Follow what the app should be rather than the web version, except where the shared guide
   asks it to match.
 
