@@ -111,7 +111,13 @@ import org.maplibre.compose.desktop.ProvideMapPresentationHost
 import org.maplibre.compose.desktop.rememberAwtComposeMapPresentationHost
 import org.jetbrains.compose.resources.stringResource
 
-fun main() = application {
+fun main() {
+    // A trial run's language (`HERE_LANGUAGE=zh`), in place of the Mac's own.
+    System.getenv("HERE_LANGUAGE")?.takeIf { it.isNotBlank() }?.let { java.util.Locale.setDefault(java.util.Locale.forLanguageTag(it)) }
+    app()
+}
+
+private fun app() = application {
     val container = remember { DesktopContainer(DesktopContainer.home()) }
     val shell = remember { Shell().apply { System.getenv("HERE_OPEN")?.let(::openLink) } }
     Window(
