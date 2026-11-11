@@ -111,6 +111,57 @@
   outline: none;
 }
 
+/* A place's pin is a point on its place, its levels' pins laid around it: a photo centred
+   on it, a balloon's tail and a dot's middle on it. */
+.trip-map-marker {
+  width: 0;
+  height: 0;
+}
+
+.trip-map-marker > :is(.trip-map-pin-photo, .trip-map-pin-balloon, .trip-map-pin-dot) {
+  position: absolute;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.trip-map-marker > .trip-map-pin-photo {
+  top: -1.0625rem;
+  left: -1.0625rem;
+}
+
+.trip-map-marker > .trip-map-pin-balloon {
+  bottom: 0.375rem;
+  left: -0.875rem;
+  margin-bottom: 0;
+}
+
+/* Its level's pin shows: a photo, or a balloon with its name; its kind's balloon alone;
+   or its year's dot, each fading into the next as the room around it comes and goes. */
+.trip-map-marker[data-level='full'] > .trip-map-pin-photo,
+.trip-map-marker[data-level='full']:not(:has(> .trip-map-pin-photo)) > .trip-map-pin-balloon,
+.trip-map-marker[data-level='icon'] > .trip-map-pin-balloon,
+.trip-map-marker[data-level='dot'] > .trip-map-pin-dot {
+  visibility: visible;
+  opacity: 1;
+}
+
+.trip-map-marker:not([data-level='full']) > .trip-map-pin-label {
+  display: none;
+}
+
+/* A place with no room for more: its year's colour, ringed in white. */
+.trip-map-pin-dot {
+  top: -0.3125rem;
+  left: -0.3125rem;
+  display: block;
+  width: 0.625rem;
+  height: 0.625rem;
+  background: var(--marker-color);
+  border: 1.5px solid #fff;
+  border-radius: 9999px;
+  box-shadow: 0 0 0.1875rem rgb(0 0 0 / 0.3);
+}
+
 .trip-map-marker > span:not(.trip-map-pin-label),
 .trip-map-cluster > span {
   transition:
@@ -291,6 +342,10 @@
   transform: scale(1.15);
 }
 
+.trip-map-marker:is(:hover, :focus-visible) .trip-map-pin-dot {
+  transform: scale(1.3);
+}
+
 /* A place outside the year or month picked, stepping back to a small gray dot rather than
    leaving, so the period is seen among every place. */
 .trip-map-dim-place {
@@ -326,13 +381,9 @@
   transition-duration: 80ms;
 }
 
-/* A photo's place is its middle; a balloon's, its tail's tip. */
-.trip-map-pin-photo + .trip-map-pin-anchor {
-  top: 50%;
-}
-
-.trip-map-pin-balloon + .trip-map-pin-anchor {
-  top: 100%;
+/* On the place itself. */
+.trip-map-marker > .trip-map-pin-anchor {
+  top: 0;
 }
 
 /* A photo's tail, shown once it lifts off its place: a corner of its frame, shadowed like
@@ -413,7 +464,7 @@
   top: calc(50% + 0.5rem);
 }
 
-.trip-map-marker:focus-visible :is(.trip-map-pin-photo, .trip-map-pin-balloon),
+.trip-map-marker:focus-visible :is(.trip-map-pin-photo, .trip-map-pin-balloon, .trip-map-pin-dot),
 .trip-map-cluster:focus-visible > span:first-child {
   box-shadow:
     0 0.0625rem 0.375rem rgb(0 0 0 / 0.3),
@@ -1187,6 +1238,7 @@
 }
 
 .trip-map-page[data-trip-map-active] :is(.trip-map-marker, .trip-map-cluster) > span,
+.trip-map-page[data-trip-map-active] .trip-map-marker[data-level] > span,
 .trip-map-page[data-trip-map-active] .trip-map-dim-place,
 .trip-map-page[data-trip-map-active] .trip-map-legend {
   visibility: hidden;
