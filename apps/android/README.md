@@ -681,7 +681,7 @@ API as the phone does and shows them in the phone's pages:
 
 It keeps its settings, its copy of the records and the token under
 `~/Library/Application Support/Here`, or under `HERE_HOME` when that is set, as a trial run's own
-folder. 设置 is the phone's 同步与来源, where the API and its token go; the sidebar then leads to
+folder. It speaks the Mac's language; `HERE_LANGUAGE=zh` (or `en`) sets it for a run. 设置 is the phone's 同步与来源, where the API and its token go; the sidebar then leads to
 时间线, 地图 (⌘2), 旅程, 东西 and 纪念日, the phone's own pages, with a Moment, a day, a place and a trip opening
 over them and ⌘[ going back. 记录 (⌘N) writes a Moment as the phone does, its pictures chosen from
 the Mac's files and its place searched for by name or pinned on the map; what is written waits
