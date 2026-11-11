@@ -34,9 +34,10 @@ const ALL_SIDES = {
   top: REVEAL_PADDING,
 }
 const FRAME_DURATION = 800
-const BASE = { opacity: 0.5, width: 1.5 }
-const DIMMED = { opacity: 0.15, width: 1.5 }
-const LIFTED = { opacity: 1, width: 2.5 }
+// Drawn in its year's colour, as bold as MapKit draws the Mac app's routes.
+const BASE = { opacity: 0.85, width: 2.5 }
+const DIMMED = { opacity: 0.2, width: 2.5 }
+const LIFTED = { opacity: 1, width: 4 }
 // The width the trip player draws its route at, so the two meet without a jump.
 const PLAYING = { opacity: 1, width: 3 }
 const HOVER = 160
@@ -173,7 +174,7 @@ export function createTripOverview({
       const id = `${PREFIX}${trip.id}`
       const look = getLook(trip.id)
       const paint = {
-        'line-color': getInk(),
+        'line-color': trip.color ?? getInk(),
         // Unlit, the same colour by day and by night.
         'line-emissive-strength': 1,
         'line-opacity': look.opacity,
@@ -210,7 +211,9 @@ export function createTripOverview({
         {
           filter: ['get', 'straight'],
           id: `${id}${STRAIGHT_SUFFIX}`,
-          paint: { ...paint, 'line-dasharray': [2, 2] },
+          // Dotted, round dots apart, as MapKit draws a flight or a ferry.
+          layout: { 'line-cap': 'round' },
+          paint: { ...paint, 'line-dasharray': [0, 2] },
           source: id,
           type: 'line',
           ...(slot && { slot }),

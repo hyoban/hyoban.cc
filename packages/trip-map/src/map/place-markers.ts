@@ -1,5 +1,6 @@
 import mapboxgl from 'mapbox-gl'
 import Supercluster, { type PointFeature } from 'supercluster'
+import { getIconBody, getPlaceKindIcon } from '../icons.ts'
 import { t, type Messages } from '../messages.ts'
 import { createPopupContent, MAP_POPUP_CLASS } from '../player/dom.ts'
 import type { PlaceMarker } from '../player/types.ts'
@@ -13,27 +14,39 @@ import {
   type FramingInset,
 } from '../static-map.ts'
 
-// The places on the map: a dot per place, coloured by the year it was last visited,
-// gathered into clusters where they crowd at the zoom shown. The clusters are worked
-// out here rather than by a clustered source, whose tiles mid-zoom mix two zooms' worth
-// of them: here they're always the zoom's own, so they part and join as a zoom goes. The
-// dots are buttons placed over the map, so they can be hovered, focused and pressed like
+// The places on the map, drawn as the Mac app's MapKit draws them: the newest photo taken
+// at a place, framed in white with its year's dot at the corner, or for a place without
+// one a balloon in its year's colour with its kind's icon and its name under it. They
+// gather into stacks where they crowd at the zoom shown. The clusters are worked out
+// here rather than by a clustered source, whose tiles mid-zoom mix two zooms' worth of
+// them: here they're always the zoom's own, so they part and join as a zoom goes. The
+// pins are buttons placed over the map, so they can be hovered, focused and pressed like
 // any other.
 
 export type { PlaceMarker }
 export { CLUSTER_MAX_ZOOM }
 
-/** How far a dot is pushed on screen, in pixels, to clear the dots beside it. */
+/** How far a pin is pushed on screen, in pixels, to clear the pins beside it. */
 type Nudge = { x: number; y: number }
 
-type MarkerEntry = {
+/** Where a pin is on screen: around its place, or a balloon's tail on it. */
+type PinShape = {
+  anchor: 'bottom' | 'center'
+  /** How far above its place the pin's middle is, in pixels. */
+  lift: number
+  radius: number
+}
+
+type MarkerEntry = PinShape & {
   button: HTMLButtonElement
   coordinates: [number, number]
-  dot: HTMLElement
+  count: number
+  /** A balloon's name under it, shown where it clears the other pins and names. */
+  label?: HTMLElement
+  labelWidth?: number
   marker: mapboxgl.Marker
   nudge: Nudge
   popup: mapboxgl.Popup
-  radius: number
 }
 
 type ClusterInfo = {
@@ -43,28 +56,38 @@ type ClusterInfo = {
   momentCount: number
 }
 
-type ClusterMarkerEntry = {
+type ClusterMarkerEntry = PinShape & {
   button: HTMLButtonElement
   coordinates: [number, number]
-  dot: HTMLElement
   marker: mapboxgl.Marker
   /** Busiest first. */
   members: PlaceMarker[]
   nudge: Nudge
   popup: mapboxgl.Popup
-  radius: number
 }
 
 // How close on screen, in pixels of a 512-pixel tile as Mapbox draws them, places are
 // gathered into one cluster, and how many it takes: two places side by side aren't a
 // crowd, so they stay as they are, even if one covers part of the other.
-const CLUSTER_RADIUS = 20
+const CLUSTER_RADIUS = 32
 const CLUSTER_MIN_POINTS = 3
-// The dots' radii on screen, in pixels (a place with one Moment, one with more, and a
-// cluster), and the gap kept between dots pushed apart so none covers another.
-const DOT_RADIUS = { cluster: 12, place: 9, single: 7 }
-const DOT_GAP = 2
-const DOT_SPREAD_ROUNDS = 8
+// The pins' sizes on screen, in pixels, as styles.css draws them: a photo's side, a
+// balloon's circle and its tail, and a stack's photo.
+const PIN = { balloon: 28, cluster: 38, photo: 34, tail: 6 }
+const PHOTO_SHAPE: PinShape = { anchor: 'center', lift: 0, radius: PIN.photo / 2 }
+const BALLOON_SHAPE: PinShape = {
+  anchor: 'bottom',
+  lift: PIN.tail + PIN.balloon / 2,
+  radius: PIN.balloon / 2,
+}
+const CLUSTER_SHAPE: PinShape = { anchor: 'center', lift: 0, radius: PIN.cluster / 2 }
+// How much of two pins may overlap before they're pushed apart: they crowd as MapKit's
+// do, each still showing enough to tell it by.
+const PIN_OVERLAP = 0.3
+const PIN_SPREAD_ROUNDS = 8
+// A balloon's name: how tall a line, and the gap kept around it.
+const LABEL_HEIGHT = 14
+const LABEL_GAP = 2
 // Opening a cluster frames its places, no closer than this.
 const CLUSTER_OPEN_MAX_ZOOM = 11
 const CLUSTER_OPEN_PADDING = 80
@@ -141,14 +164,15 @@ export function createPlaceMarkers({
   }
 
   /**
-   * Adds a dot to the map already where it belongs: Mapbox moves it there only on the
+   * Adds a pin to the map already where it belongs: Mapbox moves it there only on the
    * map's next frame, which during a quick drag leaves a new one in the map's corner, or
    * one shown again where it last was, for a moment.
    */
   function placeOnMap(map: mapboxgl.Map, entry: MarkerEntry | ClusterMarkerEntry) {
     const point = map.project(entry.coordinates).round()
+    const anchor = entry.anchor === 'bottom' ? '-50%, -100%' : '-50%, -50%'
 
-    entry.button.style.transform = `translate(${point.x}px, ${point.y}px) translate(-50%, -50%) translate(${entry.nudge.x}px, ${entry.nudge.y}px)`
+    entry.button.style.transform = `translate(${point.x}px, ${point.y}px) translate(${anchor}) translate(${entry.nudge.x}px, ${entry.nudge.y}px)`
     entry.marker.addTo(map)
   }
 
@@ -178,48 +202,29 @@ export function createPlaceMarkers({
     }
   }
 
-  // How wide each kind of dot is with a number of so many digits, measured the first
-  // time one is shown: measuring every new cluster as a zoom goes would have the page
-  // laid out again in the middle of its frames.
-  const dotRadii = new Map<string, number>()
-
   /**
-   * Pushes dots that would cover one another apart on screen, each a little, until
-   * every one shows: two places side by side stay two dots, and a place beside a
-   * cluster keeps clear of it.
+   * Pushes pins that would mostly cover one another apart on screen, each a little,
+   * until every one shows enough to tell it by: two places side by side stay two pins,
+   * and a place beside a stack keeps clear of it.
    */
   function spreadDots(map: mapboxgl.Map) {
     const dots = [...markers.values(), ...clusterMarkers.values()]
       .filter((entry) => !entry.button.hidden && entry.button.isConnected)
       .map((entry) => {
         const point = map.project(entry.coordinates)
-        const key = `${entry.dot.className}:${entry.dot.textContent.length}`
-        let radius = dotRadii.get(key)
+        const y = point.y - entry.lift
 
-        if (radius === undefined) {
-          // A cluster's number widens its dot.
-          radius = Math.max(entry.radius, entry.dot.offsetWidth / 2)
-          dotRadii.set(key, radius)
-        }
-
-        return {
-          entry,
-          radius,
-          x: point.x,
-          x0: point.x,
-          y: point.y,
-          y0: point.y,
-        }
+        return { entry, x: point.x, x0: point.x, y, y0: y }
       })
 
-    for (let round = 0; round < DOT_SPREAD_ROUNDS; round++) {
+    for (let round = 0; round < PIN_SPREAD_ROUNDS; round++) {
       let moved = false
 
       for (let i = 0; i < dots.length; i++) {
         for (let j = i + 1; j < dots.length; j++) {
           const first = dots[i]!
           const second = dots[j]!
-          const minimum = first.radius + second.radius + DOT_GAP
+          const minimum = (first.entry.radius + second.entry.radius) * (1 - PIN_OVERLAP)
           let dx = second.x - first.x
           let dy = second.y - first.y
           let distance = Math.hypot(dx, dy)
@@ -228,7 +233,7 @@ export function createPlaceMarkers({
             continue
           }
 
-          // Two dots on the very same spot part sideways.
+          // Two pins on the very same spot part sideways.
           if (distance === 0) {
             dx = 1
             dy = 0
@@ -251,6 +256,70 @@ export function createPlaceMarkers({
 
     for (const dot of dots) {
       setNudge(map, dot.entry, Math.round(dot.x - dot.x0), Math.round(dot.y - dot.y0))
+    }
+
+    placeLabels(
+      map,
+      dots.map((dot) => dot.entry),
+    )
+  }
+
+  /**
+   * Shows the balloons' names where they clear every pin and the names already shown,
+   * the busiest places' first, as MapKit leaves out the names it has no room for.
+   */
+  function placeLabels(map: mapboxgl.Map, entries: (MarkerEntry | ClusterMarkerEntry)[]) {
+    type Box = { bottom: number; left: number; right: number; top: number }
+    const boxes = new Map<MarkerEntry | ClusterMarkerEntry, Box>()
+
+    for (const entry of entries) {
+      const point = map.project(entry.coordinates)
+      const x = point.x + entry.nudge.x
+      const y = point.y + entry.nudge.y - entry.lift
+
+      boxes.set(entry, {
+        // A balloon reaches down to its tail's tip.
+        bottom: y + entry.radius + (entry.anchor === 'bottom' ? PIN.tail : 0),
+        left: x - entry.radius,
+        right: x + entry.radius,
+        top: y - entry.radius,
+      })
+    }
+
+    const overlaps = (first: Box, second: Box) =>
+      first.left < second.right + LABEL_GAP &&
+      second.left < first.right + LABEL_GAP &&
+      first.top < second.bottom + LABEL_GAP &&
+      second.top < first.bottom + LABEL_GAP
+    const shown: Box[] = []
+    const labelled = entries
+      .filter((entry): entry is MarkerEntry => 'label' in entry && entry.label !== undefined)
+      .sort((first, second) => second.count - first.count)
+
+    for (const entry of labelled) {
+      const label = entry.label!
+      // Measured once, the first time it's on the map.
+      entry.labelWidth ??= label.offsetWidth
+      const point = map.project(entry.coordinates)
+      const x = point.x + entry.nudge.x
+      const top = point.y + entry.nudge.y + LABEL_GAP
+      const box = {
+        bottom: top + LABEL_HEIGHT,
+        left: x - entry.labelWidth / 2,
+        right: x + entry.labelWidth / 2,
+        top,
+      }
+      const clear =
+        !shown.some((other) => overlaps(box, other)) &&
+        ![...boxes].some(([other, otherBox]) => other !== entry && overlaps(box, otherBox))
+
+      if (clear) {
+        shown.push(box)
+      }
+
+      if (label.hidden === clear) {
+        label.hidden = !clear
+      }
     }
   }
 
@@ -297,7 +366,11 @@ export function createPlaceMarkers({
   }
 
   /** A place's or cluster's name on hover, styled like a route's. */
-  function createPlacePopup(offset: number, meta: string, title: string) {
+  function createPlacePopup(
+    offset: NonNullable<mapboxgl.PopupOptions['offset']>,
+    meta: string,
+    title: string,
+  ) {
     return new mapboxgl.Popup({
       className: MAP_POPUP_CLASS,
       closeButton: false,
@@ -307,7 +380,7 @@ export function createPlaceMarkers({
     }).setDOMContent(createPopupContent({ meta, title }))
   }
 
-  /** A dot's button: no bigger than the dot and a thin ring, or it would cover the dots beside it. */
+  /** A pin's button: no bigger than the pin, or it would cover the pins beside it. */
   function createDotButton(className: string, label: string, color: string) {
     const button = document.createElement('button')
 
@@ -319,37 +392,114 @@ export function createPlaceMarkers({
     return button
   }
 
+  /** A photo framed in white with its year's dot at the corner. */
+  function createPhoto(src: string, className = 'trip-map-pin-photo') {
+    const frame = document.createElement('span')
+    const image = document.createElement('img')
+    const dot = document.createElement('span')
+
+    frame.className = className
+    frame.setAttribute('aria-hidden', 'true')
+    image.alt = ''
+    // Fetched only once the pin is on the map and near the view.
+    image.loading = 'lazy'
+    image.decoding = 'async'
+    image.src = src
+    dot.className = 'trip-map-pin-photo__year'
+    frame.append(image, dot)
+    return frame
+  }
+
+  /** A stack of cards: a photo on top, or the year's colour without one. */
+  function createStack(photo: string | undefined) {
+    const frame = document.createElement('span')
+    const face = document.createElement(photo ? 'img' : 'span')
+
+    frame.className = 'trip-map-pin-photo trip-map-pin-photo--stack'
+    frame.setAttribute('aria-hidden', 'true')
+
+    if (face instanceof HTMLImageElement) {
+      face.alt = ''
+      face.loading = 'lazy'
+      face.decoding = 'async'
+      face.src = photo!
+    } else {
+      face.className = 'trip-map-pin-photo__face'
+    }
+
+    frame.append(face)
+    return frame
+  }
+
+  /** A balloon in the year's colour with the kind's icon, its tail on the place. */
+  function createBalloon(kind: string | undefined) {
+    const balloon = document.createElement('span')
+
+    balloon.className = 'trip-map-pin-balloon'
+    balloon.setAttribute('aria-hidden', 'true')
+    balloon.innerHTML = `<svg viewBox="0 0 24 24">${getIconBody(getPlaceKindIcon(kind))}</svg>`
+    return balloon
+  }
+
+  /** Where a pin's name pops up: above it, or beside or under it near the map's edges. */
+  function getPopupOffset({
+    lift,
+    radius,
+  }: PinShape): NonNullable<mapboxgl.PopupOptions['offset']> {
+    const gap = 6
+    const side = radius + gap
+
+    return {
+      bottom: [0, -lift - side],
+      'bottom-left': [0, -lift - side],
+      'bottom-right': [0, -lift - side],
+      center: [0, -lift],
+      left: [side, -lift],
+      right: [-side, -lift],
+      top: [0, -lift + side],
+      'top-left': [0, -lift + side],
+      'top-right': [0, -lift + side],
+    }
+  }
+
   /** Builds every place's marker; `sync` puts the ones in view on the map. */
   function createMarkers() {
     for (const place of places) {
       const momentCount = t(messages, 'momentCount', { count: place.count })
+      const shape = place.photo ? PHOTO_SHAPE : BALLOON_SHAPE
       const button = createDotButton(
         'trip-map-marker',
         t(messages, 'placeLabel', { count: place.count, name: place.name, year: place.firstYear }),
         place.color,
       )
-      const dot = document.createElement('span')
-      const popup = createPlacePopup(12, momentCount, place.name)
+      const popup = createPlacePopup(getPopupOffset(shape), momentCount, place.name)
+      let label: HTMLElement | undefined
 
       button.setAttribute('aria-pressed', 'false')
-      // A single Moment is a smaller dot, without a number.
-      dot.className =
-        'trip-map-marker__dot' + (place.count > 1 ? ' trip-map-marker__dot--many' : '')
-      dot.setAttribute('aria-hidden', 'true')
-      dot.textContent = place.count > 1 ? String(place.count) : ''
-      button.append(dot)
+
+      if (place.photo) {
+        button.append(createPhoto(place.photo))
+      } else {
+        label = document.createElement('span')
+        label.className = 'trip-map-pin-label'
+        label.setAttribute('aria-hidden', 'true')
+        label.textContent = place.name
+        label.hidden = true
+        button.append(createBalloon(place.kind), label)
+      }
 
       const entry: MarkerEntry = {
+        ...shape,
         button,
         coordinates: [place.longitude, place.latitude],
-        dot,
-        marker: new mapboxgl.Marker({ anchor: 'center', element: button }).setLngLat([
+        count: place.count,
+        ...(label && { label }),
+        marker: new mapboxgl.Marker({ anchor: shape.anchor, element: button }).setLngLat([
           place.longitude,
           place.latitude,
         ]),
         nudge: { x: 0, y: 0 },
         popup,
-        radius: place.count > 1 ? DOT_RADIUS.place : DOT_RADIUS.single,
       }
       const showPopup = () => {
         const map = getMap()
@@ -668,25 +818,28 @@ export function createPlaceMarkers({
       t(messages, 'clusterLabel', { count: cluster.momentCount, title }),
       yearColors.get(cluster.firstYear) ?? 'var(--color-tx)',
     )
-    const dot = document.createElement('span')
-    const popup = createPlacePopup(16, meta, title)
+    const popup = createPlacePopup(getPopupOffset(CLUSTER_SHAPE), meta, title)
+    const count = document.createElement('span')
+    // A stack of its places' photos, the busiest one's on top, or of balloons without one.
+    const photo = members.find((member) => member.photo)?.photo
 
-    dot.className = 'trip-map-cluster__dot'
-    dot.setAttribute('aria-hidden', 'true')
-    dot.textContent = String(cluster.momentCount)
-    button.append(dot)
+    button.append(createStack(photo))
+
+    count.className = 'trip-map-pin-count'
+    count.setAttribute('aria-hidden', 'true')
+    count.textContent = String(cluster.momentCount)
+    button.append(count)
 
     const entry: ClusterMarkerEntry = {
+      ...CLUSTER_SHAPE,
       button,
       coordinates: cluster.coordinates,
-      dot,
       marker: new mapboxgl.Marker({ anchor: 'center', element: button }).setLngLat(
         cluster.coordinates,
       ),
       members,
       nudge: { x: 0, y: 0 },
       popup,
-      radius: DOT_RADIUS.cluster,
     }
 
     placeOnMap(map, entry)
