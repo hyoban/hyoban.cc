@@ -593,6 +593,12 @@ export function createPlaceMarkers({
 
     for (const [id, marker] of markers) {
       setMarkerShown(marker, isShown(id) && isNear(...marker.coordinates))
+
+      // A name shown as the map moves would be left behind by the pin pointed at, whose
+      // pointer has moved off it without leaving it.
+      if (options.settled === false && marker.popup.isOpen()) {
+        marker.popup.remove()
+      }
     }
 
     layoutPins(map)
