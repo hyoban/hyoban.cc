@@ -140,7 +140,9 @@ even when starting from the repository root.
 - Trips' routes come from routers that need no key (Valhalla for drives, OpenRailRouting
   for trains), so the app can route its own trips as the API does; don't bring a keyed
   router back.
-- Map year colors and fog behavior match across Web and App; change both together.
+- Map year colors, fog behavior and the places' pins (photos, balloons, piling and stacks,
+  the open place lifted, routes in their year's colour, a year picked from the legend) match across Web and App; change
+  both together.
   The app's trip playback follows `packages/trip-map/src/player`, including a route
   that keeps moving during playback.
 

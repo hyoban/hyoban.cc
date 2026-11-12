@@ -2,6 +2,7 @@ package cc.hyoban.moments.ui.map
 
 import androidx.compose.ui.graphics.Color
 import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
@@ -83,7 +84,7 @@ fun prepareAtlas(inputs: AtlasInputs): AtlasPrepared {
     val placesWithoutCheckins = mapPlaces(byPlace, emptyMap(), inputs.places)
     val routes = inputs.trips
         .sortedByDescending { it.start }
-        .mapNotNull { trip -> inputs.routes[trip.id]?.let { MapRoute(trip.id, it) } }
+        .mapNotNull { trip -> inputs.routes[trip.id]?.let { MapRoute(trip.id, it, yearOf(trip.start), yearOf(trip.end)) } }
     val kilometres = routes.associate { route ->
         route.id to route.segments.sumOf { segment ->
             segment.line.zipWithNext { (lng1, lat1), (lng2, lat2) ->
@@ -91,18 +92,20 @@ fun prepareAtlas(inputs: AtlasInputs): AtlasPrepared {
             }.sum()
         }
     }
+    val colorsWithCheckins = yearColors(placesWithCheckins.map(MapPlace::firstYear))
+    val colorsWithoutCheckins = yearColors(placesWithoutCheckins.map(MapPlace::firstYear))
     return AtlasPrepared(
         inputs = inputs,
         byPlace = byPlace,
         checkinsByPlace = checkinsByPlace,
         placesWithCheckins = placesWithCheckins,
         placesWithoutCheckins = placesWithoutCheckins,
-        colorsWithCheckins = yearColors(placesWithCheckins.map(MapPlace::firstYear)),
-        colorsWithoutCheckins = yearColors(placesWithoutCheckins.map(MapPlace::firstYear)),
+        colorsWithCheckins = colorsWithCheckins,
+        colorsWithoutCheckins = colorsWithoutCheckins,
         routes = routes,
         kilometres = kilometres,
-        mapDataWithCheckins = prepareAtlasMapData(placesWithCheckins, routes),
-        mapDataWithoutCheckins = prepareAtlasMapData(placesWithoutCheckins, routes),
+        mapDataWithCheckins = prepareAtlasMapData(placesWithCheckins, routes, colorsWithCheckins),
+        mapDataWithoutCheckins = prepareAtlasMapData(placesWithoutCheckins, routes, colorsWithoutCheckins),
     )
 }
 
@@ -114,5 +117,13 @@ private fun mapPlaces(
     val here = moments[id].orEmpty()
     val visits = checkins[id].orEmpty()
     val years = here.map { yearOf(it.occurredAt) } + visits.map { yearOf(it.at) }
-    places[id]?.let { MapPlace(id, it, here.size + visits.size, years.min()) }
+    places[id]?.let { MapPlace(id, it, here.size + visits.size, years.min(), newestPhoto(here), years.toSet()) }
 }
+
+/**
+ * The newest still taken at a place, as the site draws it: the first photo or video of its
+ * newest Moment that has one, leaving out those kept for the record rather than to be shown.
+ */
+private fun newestPhoto(moments: List<MomentRecord>): MomentMedia? = moments
+    .sortedByDescending { it.occurredAt }
+    .firstNotNullOfOrNull { moment -> moment.media.firstOrNull { it.utility != true } }

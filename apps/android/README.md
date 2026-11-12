@@ -73,7 +73,18 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   bubble. A banner marks where each trip begins, or, for the trip under way, says
   进行中 and which day it is. Scrolling folds the tabs away.
 - **地图** shows the places, the trips' routes (listed in the sheet at its foot) and the
-  footprints. Search sits at the top beside the fog's switch, over a legend of the years;
+  footprints, drawn as the site's map draws them: a place as the newest photo taken there,
+  framed in white with its year's dot, or without one a balloon in its year's colour with its
+  kind's icon and its name under it where there's room; the pins pile up on their spots, the
+  busiest on top, and only a thick crowd gathers into a stack of its busiest places' prints,
+  counted, that opens as the map comes closer. The open place's pin lifts off it, larger, over
+  a dot left on the spot with its name in bold, and each route is drawn in its year's colour,
+  a flight or ferry dotted. The pins' images are drawn as the map asks for them
+  (`ui/map/PlacePins.kt`). Search sits at the top beside the fog's switch, over a legend of the years;
+  a year tapped there narrows the map to it, as the site's does: only the places with records
+  then keep their pins, the rest stepping back to gray dots, only the trips under way then keep
+  their routes and stay in the list, and the map frames them; tapped again, or its close,
+  every year comes back and the map returns to where it was unless it was moved since;
   the footprints and the phone's place are buttons down the side. A place tapped fills the
   sheet with its Moments and the way there; a route tapped floats its trip's card, which
   opens the trip or plays it back. 迷雾地图 lays a fog over it, as the site's map does, thinner

@@ -97,7 +97,9 @@ import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
@@ -252,6 +254,16 @@ private fun MapContent(
     val mapData = if (checkinsOn) atlas.mapDataWithCheckins else atlas.mapDataWithoutCheckins
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var highlighted by rememberSaveable { mutableStateOf<String?>(null) }
+    // The year picked from the legend, or none: the map, its trips and their list narrowed to it.
+    var pickedYear by rememberSaveable { mutableStateOf<Int?>(null) }
+    val year = pickedYear?.takeIf { it in colors }
+    val inYear: (String, String) -> Boolean = { start, end -> year == null || (yearOf(start) <= year && yearOf(end) >= year) }
+    // What the year leaves off the map lets go: a place open, a route lifted.
+    LaunchedEffect(year, mapPlaces) {
+        if (year == null) return@LaunchedEffect
+        if (selected != null && mapPlaces.firstOrNull { it.id == selected }?.years?.contains(year) == false) selected = null
+        if (highlighted != null && trips.firstOrNull { it.id == highlighted }?.let { inYear(it.start, it.end) } == false) highlighted = null
+    }
 
     // The fog of war: the cities read from the app's assets the first time it's turned on or a
     // 可能的旅程 is named, and those a Moment was written in, the phone's own among them, lit.
@@ -305,13 +317,16 @@ private fun MapContent(
     BackHandler(enabled = active && lifted != null) { highlighted = null }
     LaunchedEffect(focus) {
         when (focus) {
+            // Shown from its page, a place or trip the year picked leaves off brings every year back.
             is MapFocus.Place -> {
                 highlighted = null
                 selected = focus.id
+                if (mapPlaces.firstOrNull { it.id == focus.id }?.years?.contains(pickedYear) == false) pickedYear = null
             }
             is MapFocus.Trip -> {
                 selected = null
                 highlighted = focus.id
+                if (trips.firstOrNull { it.id == focus.id }?.let { inYear(it.start, it.end) } == false) pickedYear = null
             }
             MapFocus.Footprints -> {
                 selected = null
@@ -376,6 +391,7 @@ private fun MapContent(
             onEmptyTap = { selected = null },
             onTrip = onTrip,
             prepared = mapData,
+            mediaUrls = container.mediaUrls,
             modifier = Modifier.fillMaxSize(),
             locate = locate,
             north = north,
@@ -397,6 +413,7 @@ private fun MapContent(
                 if (!found) show(textOf(Res.string.error_location))
             },
             panel = if (wide) panelWidth + Space.m else 0.dp,
+            year = year,
         )
         // At the top: the search and the fog's switch on one line, the legend under them and,
         // while the fog is on, how much of it is lit. On a wide window the search is the panel's
@@ -415,13 +432,13 @@ private fun MapContent(
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                 if (wide) {
-                    Box(Modifier.weight(1f)) { if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty()) }
+                    Box(Modifier.weight(1f)) { if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty(), year) { pickedYear = it } }
                 } else {
                     SearchPill(onSearch, Modifier.weight(1f), floating = true)
                 }
                 FogButton(settings.mapFog, toggleFog)
             }
-            if (!wide && colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty())
+            if (!wide && colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty(), year) { pickedYear = it }
             AnimatedVisibility(
                 shownFog != null,
                 enter = expandVertically(AppTheme.motionScheme.fastSpatialSpec()) + fadeIn(AppTheme.motionScheme.fastEffectsSpec()),
@@ -513,13 +530,13 @@ private fun MapContent(
         val place = id?.let { places[it] }
         if (id == null || place == null) {
             TripsSheet(
-                trips, moments, colors, kilometres, container.mediaUrls, bottom = if (wide) Space.l else clearance,
+                trips.filter { inYear(it.start, it.end) }, moments, colors, kilometres, container.mediaUrls, bottom = if (wide) Space.l else clearance,
                 inCard = wide && floatingPanel,
                 // Resting, only its title line shows above the tabs; its rows come in as it's drawn up.
                 shown = { if (wide) 1f else (sheetState.raised * TRIPS_REVEAL).coerceAtMost(1f) },
                 onTrip = onTrip,
                 onNew = onNewTrip,
-                suggestions = suggestions,
+                suggestions = suggestions.filter { inYear(it.start, it.end) },
                 onSuggestion = onSuggestedTrip,
                 onDismiss = { settings.dismissTrip(it.key) },
                 // Added in one tap, private, its page there to change it.
@@ -1043,10 +1060,12 @@ private fun FloatingPill(content: @Composable () -> Unit) {
 
 /**
  * What the colours and lines mean, as on the site: each year's colour, and the routes for trips.
- * Read only; when it doesn't fit it scrolls sideways, its far end fading out.
+ * A year tapped narrows the map to it, the other years stepping back, and tapped again, or the
+ * close beside it, brings every year back. When it doesn't fit it scrolls sideways, its far end
+ * fading out.
  */
 @Composable
-private fun Legend(colors: Map<Int, Color>, trips: Boolean) {
+private fun Legend(colors: Map<Int, Color>, trips: Boolean, picked: Int?, onPick: (Int?) -> Unit) {
     FloatingPill {
         val scroll = rememberScrollState()
         val surface = SurfaceLevel.Floating.fill()
@@ -1057,9 +1076,33 @@ private fun Legend(colors: Map<Int, Color>, trips: Boolean) {
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 colors.forEach { (year, color) ->
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                    val chosen = year == picked
+                    val label = if (chosen) stringResource(Res.string.map_year_all) else stringResource(Res.string.map_year_pick, year)
+                    Row(
+                        Modifier.fillMaxHeight()
+                            .graphicsLayer { alpha = if (picked == null || chosen) 1f else 0.4f }
+                            .clickable(role = Role.Button, onClickLabel = label) { onPick(if (chosen) null else year) }
+                            .semantics { selected = chosen },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Space.xs),
+                    ) {
                         Box(Modifier.size(8.dp).background(color, CircleShape))
-                        Text("$year", style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, softWrap = false)
+                        Text(
+                            "$year",
+                            style = if (chosen) AppTheme.typography.caption.strong else AppTheme.typography.caption,
+                            color = if (chosen) tokens.tx else tokens.tx2,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    }
+                }
+                if (picked != null) {
+                    val clear = stringResource(Res.string.map_year_all)
+                    Box(
+                        Modifier.fillMaxHeight().clickable(role = Role.Button) { onPick(null) }.semantics { contentDescription = clear },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(AppIcons.Close, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(14.dp))
                     }
                 }
                 if (trips) {
