@@ -18,6 +18,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
+import cc.hyoban.moments.ui.theme.LocalDarkTheme
 
 /** How long after the last frame is drawn the strip under the status bar is looked at again. */
 private const val SAMPLE_DELAY_MS = 120L
@@ -30,6 +32,11 @@ private const val SAMPLE_MAX_WAIT_MS = 1000L
 private const val DARK_ICONS_ABOVE = 0.6f
 private const val LIGHT_ICONS_BELOW = 0.45f
 
+// What shows through where the window is clear, as over the full-screen map, drawn into a surface
+// of its own that the copy can't see: its land, pale by day and dark by night.
+private const val CLEAR_LIGHT = 0.93
+private const val CLEAR_DARK = 0.12
+
 /** How many of the strip's 48 columns at each end the icons take: the clock's side and the battery's. */
 private const val ICON_END = 14
 
@@ -38,12 +45,14 @@ private const val ICON_END = 14
  * under them: a moment after drawing stops, the strip under the bar is copied small and the
  * brightness at its ends, under the icons, picks them. Nothing is copied while nothing is
  * drawn, nor while the bar is hidden; while frames keep coming, once a second at most, as
- * each copy holds up the frame being drawn.
+ * each copy holds up the frame being drawn. Where the window is clear, over a surface drawn
+ * apart (the map's), the copy holds nothing, so that part counts as the map's land in the theme.
  */
 @Composable
 fun AdaptiveStatusBarIcons() {
     val view = LocalView.current
     val window = (view.context as? Activity)?.window ?: return
+    val dark = rememberUpdatedState(LocalDarkTheme.current)
 
     DisposableEffect(view, window) {
         val controller = WindowCompat.getInsetsController(window, view)
@@ -62,8 +71,12 @@ fun AdaptiveStatusBarIcons() {
             strip.getPixels(pixels, 0, strip.width, 0, 0, strip.width, strip.height)
             // Only the ends, where the clock and the battery are, not the middle between them.
             val ends = pixels.filterIndexed { index, _ -> (index % strip.width).let { it < ICON_END || it >= strip.width - ICON_END } }
+            val clear = if (dark.value) CLEAR_DARK else CLEAR_LIGHT
             val brightness = ends.sumOf { pixel ->
-                (0.299 * Color.red(pixel) + 0.587 * Color.green(pixel) + 0.114 * Color.blue(pixel)) / 255
+                val shown = Color.alpha(pixel) / 255.0
+                val own = (0.299 * Color.red(pixel) + 0.587 * Color.green(pixel) + 0.114 * Color.blue(pixel)) / 255
+                // Laid over what shows through, as much as the window leaves clear.
+                own * shown + clear * (1 - shown)
             } / ends.size
             when {
                 brightness > DARK_ICONS_ABOVE -> controller.isAppearanceLightStatusBars = true
