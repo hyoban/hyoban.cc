@@ -77,7 +77,7 @@ internal object PinSize {
      * Room around each image for its shadow, on every side but a pointed pin's foot, where its
      * tip is, so the room it takes on the map ends at its place.
      */
-    const val Pad = 4f
+    const val Pad = 5f
 }
 
 private const val Prefix = "here-pin"
@@ -328,20 +328,34 @@ private fun DrawScope.drawPhoto(photo: Painter?, frame: Rect, corner: CornerRadi
 private fun Size.isSpecified() = this != Size.Unspecified
 
 /**
- * A soft shadow under [shape], [blur] wide, drawn as rings of a faint black growing outwards: the
- * images are drawn in software, where a blurred paint isn't to be had on every platform.
+ * A soft shadow under [shape], as CSS draws `0 dy blur rgba(0, 0, 0, alpha)`: half as dark as
+ * [alpha] at the shape's edge, fading out as a gaussian does to nothing at the image's edge. Drawn as a ring a pixel wide at
+ * a time, each as dark as makes the rings under it add up to that fade: the images are drawn in
+ * software, where a blurred paint isn't to be had on every platform.
  */
 private fun DrawScope.shadow(shape: RoundRect, blur: Float, alpha: Float, dy: Float = 0f) {
-    val steps = 6
-    val each = 1f - (1f - alpha).pow(1f / steps)
-    for (step in steps downTo 1) {
-        val grow = blur * step / steps / 2
-        val rect = Rect(shape.left - grow, shape.top - grow + dy, shape.right + grow, shape.bottom + grow + dy)
+    val sigma = blur / 2
+    // No further than the room around the image, where it comes down to nothing rather than
+    // being cut off.
+    val reach = minOf(sigma * 3, PinSize.Pad.dp.toPx() - dy)
+    val steps = ceil(reach).toInt().coerceIn(4, 32)
+    fun fall(distance: Float) = kotlin.math.exp(-(distance * distance) / (2 * sigma * sigma))
+    val floor = fall(reach)
+    fun target(distance: Float) = alpha / 2 * (fall(distance) - floor) / (1 - floor)
+    var outside = 0f
+    for (step in steps downTo 0) {
+        val distance = reach * step / steps
+        val wanted = target(distance)
+        // Over what the wider rings already laid down, only what's still missing.
+        val each = (1f - (1f - wanted) / (1f - outside)).coerceAtLeast(0f)
+        outside = wanted
+        if (each <= 0f) continue
+        val rect = Rect(shape.left - distance, shape.top - distance + dy, shape.right + distance, shape.bottom + distance + dy)
         drawRoundRect(
             Color.Black.copy(alpha = each),
             rect.topLeft,
             rect.size,
-            CornerRadius(shape.topLeftCornerRadius.x + grow),
+            CornerRadius(shape.topLeftCornerRadius.x + distance),
         )
     }
 }
