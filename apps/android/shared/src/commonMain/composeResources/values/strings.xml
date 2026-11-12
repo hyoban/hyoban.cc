@@ -114,6 +114,8 @@
     <string name="map_km">%1$s 公里</string>
     <string name="footprints_map_recording">足迹，正在记录</string>
     <string name="legend_trips">旅程</string>
+    <string name="map_year_pick">只看 %1$d 年</string>
+    <string name="map_year_all">显示所有年份</string>
     <string name="trip_day">第 %1$d 天</string>
     <string name="trip_ongoing">进行中</string>
     <string name="trip_since">%1$s起</string>

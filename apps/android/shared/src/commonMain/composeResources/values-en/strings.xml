@@ -118,6 +118,8 @@
     <string name="map_km">%1$s km</string>
     <string name="footprints_map_recording">Footprints, recording</string>
     <string name="legend_trips">Trips</string>
+    <string name="map_year_pick">Show only %1$d</string>
+    <string name="map_year_all">Show every year</string>
     <string name="trip_day">Day %1$d</string>
     <string name="trip_ongoing">Ongoing</string>
     <string name="trip_since">Since %1$s</string>

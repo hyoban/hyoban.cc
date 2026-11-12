@@ -1,6 +1,19 @@
 package cc.hyoban.moments.ui.map
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.ui.text.rememberTextMeasurer
+import cc.hyoban.moments.data.media.MediaUrls
+import cc.hyoban.moments.data.spec.MomentMedia
+import cc.hyoban.moments.data.spec.PlaceKind
+import cc.hyoban.moments.ui.compose.icon
+import coil3.compose.LocalPlatformContext
+import kotlinx.coroutines.delay
+import org.maplibre.compose.expressions.dsl.and
+import org.maplibre.compose.expressions.dsl.gte
+import org.maplibre.compose.expressions.dsl.lte
+import org.maplibre.compose.expressions.dsl.unaryMinus
+import org.maplibre.compose.expressions.value.ImageValue
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.systemBars
@@ -122,17 +135,33 @@ import org.maplibre.spatialk.geojson.LineString
 import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
 
-/** A place on the atlas: its total records and the first year that colours it. */
-data class MapPlace(val id: String, val place: Place, val count: Int, val firstYear: Int)
+/**
+ * A place on the atlas: its total records, the first year that colours it, and the newest photo
+ * taken there, which its pin is drawn as.
+ */
+data class MapPlace(
+    val id: String,
+    val place: Place,
+    val count: Int,
+    val firstYear: Int,
+    val photo: MomentMedia? = null,
+    /** The years it has records in, which keep it on the map when one is picked. */
+    val years: Set<Int> = emptySet(),
+)
 
-/** One trip and its route stretches on the atlas. */
-data class MapRoute(val id: String, val segments: List<RouteSegment>)
+/**
+ * One trip and its route stretches on the atlas, drawn in the colour of the year it began, and
+ * on it while a year it runs into is picked.
+ */
+data class MapRoute(val id: String, val segments: List<RouteSegment>, val year: Int? = null, val endYear: Int? = year)
 
 /** The costly immutable GeoJSON projection of an atlas snapshot, safe to prepare off main. */
 class AtlasMapData internal constructor(
     internal val places: GeoJsonData,
     internal val routes: GeoJsonData,
     internal val placePositions: List<Position>,
+    /** Names the places a stack's image is drawn from, so a stack of other places is drawn anew. */
+    internal val stackKey: String,
 )
 
 enum class AtlasFootprintMode { WALK, CYCLE, DRIVE }
@@ -183,15 +212,24 @@ class AtlasMapStateStore {
     }
 }
 
-private const val DotSingle = 7
-private const val DotMany = 9
-private const val DotCluster = 12
-private const val DotChosen = 13
+// Places gather into a stack only in a thick crowd, as on the site: this many within this many
+// pixels of a 512-pixel tile, up to the zoom past which every place stands on its own.
 private const val ClusterMaxZoom = 9
+private const val ClusterRadius = 40
+private const val ClusterMinPoints = 8
 private const val ClusterOpenMaxZoom = 11.0
+private const val ClusterOpenPadding = 80
 private const val NearbyZoom = 10.0
-private const val RouteOpacity = 0.4f
-private const val RouteDimmedOpacity = 0.18f
+// Routes in their year's colour, as bold as the site and MapKit draw them.
+private const val RouteOpacity = 0.85f
+private const val RouteDimmedOpacity = 0.2f
+private const val RouteWidth = 2.5
+private const val RouteLiftedWidth = 4.0
+// An open place's pin lifts off it with a little overshoot, and comes down quicker.
+private const val LiftMillis = 220
+private const val DropMillis = 120
+private const val AnchorDelay = 60
+private val LiftEasing = CubicBezierEasing(0.34f, 1.4f, 0.64f, 1f)
 private const val PlacesDimmedOpacity = 0.45f
 private const val PlaceSheetShare = 0.55f
 private const val FogThick = 0.22f
@@ -287,6 +325,8 @@ private fun routeData(routes: List<MapRoute>) = GeoJsonData.Features(
                     buildJsonObject {
                         put("trip", route.id)
                         put("straight", segment.straight)
+                        route.year?.let { put("year", it) }
+                        route.endYear?.let { put("endYear", it) }
                     },
                 )
             }
@@ -294,31 +334,64 @@ private fun routeData(routes: List<MapRoute>) = GeoJsonData.Features(
     ),
 )
 
-private fun placeData(places: List<MapPlace>) = GeoJsonData.Features(
-    FeatureCollection(
-        places.map { item ->
-            pointFeature(
-                positionOf(item.place.latitude, item.place.longitude),
-                buildJsonObject {
-                    put("id", item.id)
-                    put("count", item.count)
-                    put("firstYear", item.firstYear)
-                    put("name", item.place.name)
-                },
-            )
+/** A place's point, with the names of its pin's images, regular and lifted. */
+private fun placeFeature(item: MapPlace, colors: Map<Int, Color>): Feature<Point, JsonObject?> {
+    val (pin, open) = pinImageIds(colors[item.firstYear] ?: Color.Gray, item.photo, item.place.kind)
+    return pointFeature(
+        positionOf(item.place.latitude, item.place.longitude),
+        buildJsonObject {
+            put("id", item.id)
+            put("count", item.count)
+            put("firstYear", item.firstYear)
+            put("name", item.place.name)
+            put("balloon", item.photo == null)
+            put("pin", pin)
+            put("open", open)
         },
-    ),
+    )
+}
+
+private fun placeData(places: List<MapPlace>, colors: Map<Int, Color>) = GeoJsonData.Features(
+    FeatureCollection(places.map { placeFeature(it, colors) }),
 )
 
+private fun stackKey(places: List<MapPlace>, colors: Map<Int, Color>): String {
+    var hash = colors.hashCode()
+    for (item in places) {
+        hash = 31 * hash + item.id.hashCode()
+        hash = 31 * hash + item.count
+        hash = 31 * hash + item.firstYear
+        hash = 31 * hash + (item.photo?.uid?.hashCode() ?: 0)
+    }
+    return hash.toUInt().toString(16)
+}
+
 /** Builds what MapLibre sources need without making the first map composition do the conversion. */
-fun prepareAtlasMapData(places: List<MapPlace>, routes: List<MapRoute>) = AtlasMapData(
-    places = placeData(places),
+fun prepareAtlasMapData(places: List<MapPlace>, routes: List<MapRoute>, colors: Map<Int, Color>) = AtlasMapData(
+    places = placeData(places, colors),
     routes = routeData(routes),
     placePositions = places.map { positionOf(it.place.latitude, it.place.longitude) },
+    stackKey = stackKey(places, colors),
 )
 
 private fun featureString(feature: Feature<*, JsonObject?>, name: String) =
     (feature.properties?.get(name) as? JsonPrimitive)?.contentOrNull
+
+/** A stand-in for a cluster of the places' source, for asking it what places it holds. */
+private fun clusterFeature(id: Long) = Feature(
+    Point(Position(0.0, 0.0)),
+    buildJsonObject {
+        put("cluster", true)
+        put("cluster_id", id)
+    },
+)
+
+/** Reads a stack's places from the map's source, once the style has one. */
+private class ClusterLeaves {
+    var read: (suspend (Long) -> List<String>?)? = null
+}
+
+private fun lerp(from: Float, to: Float, fraction: Float) = from + (to - from) * fraction
 
 private fun Position.southBy(dp: Double, zoom: Double): Position {
     val world = 512.0 * 2.0.pow(zoom)
@@ -383,6 +456,13 @@ fun SharedAtlasMap(
     onFootprintsFramed: () -> Unit = {},
     onFootprint: () -> Unit = {},
     panel: Dp = 0.dp,
+    mediaUrls: MediaUrls? = null,
+    /**
+     * The year picked: only the places with records then and the trips under way then stay on
+     * the map, the other places stepping back to gray dots; the map frames them, and going back
+     * to every year puts it back where it was, unless it was moved since.
+     */
+    year: Int? = null,
 ) {
     val reduced = LocalReducedMotion.current
     val dark = LocalDarkTheme.current
@@ -442,8 +522,26 @@ fun SharedAtlasMap(
     val ring = tokens.bg
     val unknown = tokens.borderStrong
     val me = tokens.accent
-    val pin = rememberVectorPainter(AppIcons.Pin)
-    val placeGeoJson = remember(places, prepared) { prepared?.places ?: placeData(places) }
+    val shownPlaces = remember(places, year) { if (year == null) places else places.filter { year in it.years } }
+    val dimGeoJson = remember(places, year) {
+        GeoJsonData.Features(
+            FeatureCollection(
+                if (year == null) {
+                    emptyList()
+                } else {
+                    places.filter { year !in it.years }.map { pointFeature(positionOf(it.place.latitude, it.place.longitude)) }
+                },
+            ),
+        )
+    }
+    val placeGeoJson = remember(shownPlaces, colors, prepared, year) {
+        prepared?.places?.takeIf { year == null } ?: placeData(shownPlaces, colors)
+    }
+    val stackPrefix = stackImagePrefix(
+        remember(shownPlaces, colors, prepared, year) { prepared?.stackKey?.takeIf { year == null } ?: stackKey(shownPlaces, colors) },
+    )
+    val yearPositions = remember(shownPlaces) { shownPlaces.map { positionOf(it.place.latitude, it.place.longitude) } }
+    val routeYearTest = year?.let { feature["year"].asNumber() lte const(it) and (feature["endYear"].asNumber() gte const(it)) }
     val routeGeoJson = remember(routes, prepared) { prepared?.routes ?: routeData(routes) }
     val driveGeoJson = remember(footprints) { lineFeatures(footprints.lines.filter { it.mode == AtlasFootprintMode.DRIVE }.map { it.points }) }
     val cycleGeoJson = remember(footprints) { lineFeatures(footprints.lines.filter { it.mode == AtlasFootprintMode.CYCLE }.map { it.points }) }
@@ -455,33 +553,51 @@ fun SharedAtlasMap(
             footprints.points.map { positionOf(it.latitude, it.longitude) }
     }
 
-    val selectedTest = feature["id"] eq const(selected ?: "")
+    // The open place's pin lifts off it, larger, over a dot left on the spot with its name under
+    // it, as MapKit lifts a selected one; closed, it comes down before another lifts.
+    var openPin by remember { mutableStateOf<String?>(null) }
+    val lift = remember { Animatable(0f) }
+    val anchorShown = remember { Animatable(0f) }
+    LaunchedEffect(selected, reduced) {
+        if (openPin != null && openPin != selected) {
+            anchorShown.snapTo(0f)
+            lift.animateTo(0f, tween(if (reduced) 0 else DropMillis))
+        }
+        openPin = selected
+        if (selected == null) return@LaunchedEffect
+        launch {
+            if (!reduced) delay(AnchorDelay.milliseconds)
+            anchorShown.animateTo(1f, tween(if (reduced) 0 else LiftMillis))
+        }
+        lift.animateTo(1f, tween(if (reduced) 0 else LiftMillis, easing = LiftEasing))
+    }
+    val openPlace = remember(openPin, places) { places.firstOrNull { it.id == openPin } }
+    val openGeoJson = remember(openPlace, colors) {
+        GeoJsonData.Features(FeatureCollection(listOfNotNull(openPlace?.let { placeFeature(it, colors) })))
+    }
+
     val clusterTest = feature.has("point_count")
-    val manyTest = feature["count"].asNumber() gt const(1)
+    val openTest = feature["id"] eq const(openPin ?: "")
+    val balloonTest = feature["balloon"] eq const(true)
     val liftedTest = feature["trip"] eq const(highlighted ?: "")
-    val baseRadius = switch(
-        condition(clusterTest, const(DotCluster.dp)),
-        condition(manyTest, const(DotMany.dp)),
-        fallback = const(DotSingle.dp),
-    )
-    val placeRadius = switch(condition(selectedTest, const(DotChosen.dp)), fallback = baseRadius)
-    val placeOpacity = const(if (highlighted == null) 1f else PlacesDimmedOpacity)
+    val placeAlpha = if (highlighted == null) 1f else PlacesDimmedOpacity
+    val placeOpacity = const(placeAlpha)
     val routeOpacity = if (highlighted == null) {
         const(RouteOpacity)
     } else {
         switch(condition(liftedTest, const(1f)), fallback = const(RouteDimmedOpacity))
     }
-    val routeWidth = if (highlighted == null) {
-        const(2.dp)
+    fun routeWidthAt(scale: Double) = if (highlighted == null) {
+        const((RouteWidth * scale).dp)
     } else {
-        switch(condition(liftedTest, const(3.5.dp)), fallback = const(2.dp))
+        switch(condition(liftedTest, const((RouteLiftedWidth * scale).dp)), fallback = const((RouteWidth * scale).dp))
     }
     val scaledRouteWidth = interpolate(
         linear(),
         zoom(),
-        4 to routeWidth,
-        10 to if (highlighted == null) const(2.8.dp) else switch(condition(liftedTest, const(4.9.dp)), fallback = const(2.8.dp)),
-        14 to if (highlighted == null) const(4.dp) else switch(condition(liftedTest, const(7.dp)), fallback = const(4.dp)),
+        4 to routeWidthAt(1.0),
+        10 to routeWidthAt(1.4),
+        14 to routeWidthAt(2.0),
     )
     val yearColor = remember(colors, unknown) {
         switch(
@@ -490,11 +606,32 @@ fun SharedAtlasMap(
             fallback = const(unknown),
         )
     }
-    val countText = switch(
-        condition(clusterTest, feature["momentCount"].convertToString()),
-        condition(manyTest, feature["count"].convertToString()),
-        fallback = const(""),
-    )
+    // Each route in the colour of the year its trip began, as the places have it.
+    val routeColor = remember(colors, ink) {
+        switch(
+            input = feature["year"],
+            cases = colors.map { (year, color) -> case(year, const(color)) },
+            fallback = const(ink),
+        )
+    }
+    // A stack's image is named after its cluster, drawn once its places are known.
+    val pinImage = switch(
+        condition(clusterTest, const(stackPrefix) + feature["cluster_id"].convertToString()),
+        fallback = feature["pin"].asString(),
+    ).cast<ImageValue?>()
+    // The stacks over the pile, then the busiest places over the rest.
+    val pinSortKey = switch(condition(clusterTest, const(1_000_000f)), fallback = feature["count"].asNumber())
+    val pinAnchor = switch(condition(balloonTest, const(SymbolAnchor.Bottom)), fallback = const(SymbolAnchor.Center))
+    val leaves = remember { ClusterLeaves() }
+    val platformContext = LocalPlatformContext.current
+    val pinDensity = LocalDensity.current
+    val pinDirection = LocalLayoutDirection.current
+    val textMeasurer = rememberTextMeasurer()
+    val kindIcons = PlaceKind.entries.associate { it.value to rememberVectorPainter(it.icon) }
+    val pinIcon = rememberVectorPainter(AppIcons.Pin)
+    val pinImages = remember(pinDensity, pinDirection, platformContext, mediaUrls, textMeasurer) {
+        mediaUrls?.let { PlacePinImages(pinDensity, pinDirection, platformContext, it, textMeasurer, kindIcons, pinIcon) }
+    }
     val fogCount = renderedFog?.weights.orEmpty()
     // The region-dependent part stays stable through a sweep. Each animation frame then changes
     // only a ring's constant opacity, as the classic map did, instead of replacing 24
@@ -538,8 +675,8 @@ fun SharedAtlasMap(
         val routeSource = rememberGeoJsonSource(routeGeoJson)
         val placeSource = rememberGeoJsonSource(placeGeoJson) {
             cluster = true
-            clusterRadius = 20
-            clusterMinPoints = 3
+            clusterRadius = ClusterRadius
+            clusterMinPoints = ClusterMinPoints
             clusterMaxZoom = ClusterMaxZoom
             clusterProperties = mapOf(
                 "firstYear" to GeoJsonOptions.ClusterPropertyAggregator(
@@ -551,6 +688,16 @@ fun SharedAtlasMap(
                     reducer = feature["momentCount"].asNumber() + feature.accumulated().asNumber(),
                 ),
             )
+        }
+        val openSource = rememberGeoJsonSource(openGeoJson)
+        val dimSource = rememberGeoJsonSource(dimGeoJson)
+        SideEffect {
+            leaves.read = { id ->
+                mapState.style.sources[placeSource]
+                    ?.getClusterLeaves(clusterFeature(id), Int.MAX_VALUE, 0)
+                    ?.features
+                    ?.mapNotNull { featureString(it, "id") }
+            }
         }
         val drives = rememberGeoJsonSource(driveGeoJson)
         val cycles = rememberGeoJsonSource(cycleGeoJson)
@@ -572,17 +719,23 @@ fun SharedAtlasMap(
             } else {
                 val handle = mapState.style.sources[placeSource]
                 if (handle?.isCluster(hit) == true) {
+                    // Frames the stack's places close enough to tell apart, never short of the
+                    // zoom it parts at, around the stack itself when they spread wider than that.
                     scope.launch {
                         val positions = handle.getClusterLeaves(hit, Int.MAX_VALUE, 0)?.features.orEmpty()
                             .mapNotNull { (it.geometry as? Point)?.coordinates }
-                        if (positions.isNotEmpty()) {
-                            val fitted = mapState.cameraForCoordinates(
-                                positions,
-                                CameraFit(fitPadding = DpPadding(80.dp, 80.dp, 80.dp, 80.dp)),
-                            ) ?: return@launch
-                            val camera = fitted.copy(zoom = minOf(fitted.zoom, ClusterOpenMaxZoom))
-                            mapState.animateCamera(camera.toCameraUpdate(), cameraAnimation(reduced, 300))
+                        if (positions.isEmpty()) return@launch
+                        val part = handle.getClusterExpansionZoom(hit)?.plus(0.01) ?: 0.0
+                        val edge = ClusterOpenPadding.dp
+                        val fitted = mapState.cameraForCoordinates(positions, CameraFit(fitPadding = DpPadding(edge, edge, edge, edge)))
+                        val framedZoom = minOf(fitted?.zoom ?: mapState.cameraPosition.zoom, ClusterOpenMaxZoom)
+                        val center = (hit.geometry as? Point)?.coordinates
+                        val camera = if (fitted == null || framedZoom < part) {
+                            mapState.cameraPosition.copy(center = center ?: mapState.cameraPosition.center, zoom = maxOf(framedZoom, part))
+                        } else {
+                            fitted.copy(zoom = framedZoom)
                         }
+                        mapState.animateCamera(camera.toCameraUpdate(), cameraAnimation(reduced, 300))
                     }
                 } else {
                     featureString(hit, "id")?.let(tapPlace.value)
@@ -655,8 +808,8 @@ fun SharedAtlasMap(
             LineLayer(
                 id = "shared-routes",
                 source = routeSource,
-                filter = !feature["straight"].asBoolean(),
-                color = const(ink),
+                filter = (!feature["straight"].asBoolean()).let { if (routeYearTest == null) it else it and routeYearTest },
+                color = routeColor,
                 opacity = routeOpacity,
                 opacityTransition = quickTransition,
                 width = scaledRouteWidth,
@@ -669,13 +822,15 @@ fun SharedAtlasMap(
             LineLayer(
                 id = "shared-routes-dashed",
                 source = routeSource,
-                filter = feature["straight"].asBoolean(),
-                color = const(ink),
+                filter = feature["straight"].asBoolean().let { if (routeYearTest == null) it else it and routeYearTest },
+                color = routeColor,
                 opacity = routeOpacity,
                 opacityTransition = quickTransition,
                 width = scaledRouteWidth,
                 widthTransition = quickTransition,
-                dasharray = const(listOf(2, 2)),
+                // Dotted, round dots apart, as MapKit draws a flight or a ferry.
+                cap = const(LineCap.Round),
+                dasharray = const(listOf(0, 2)),
                 onClick = routeClick,
                 hitPadding = 22.dp,
             )
@@ -686,87 +841,107 @@ fun SharedAtlasMap(
             CircleLayer("shared-footprint-stays", stays, radius = const(5.dp), color = const(ring), strokeWidth = const(2.5.dp), strokeColor = const(ink), onClick = footprintClick, hitPadding = 22.dp)
         }
         Anchor.Top {
+            // Places outside the year picked, stepping back to small gray dots under every pin
+            // rather than leaving, so the year is seen among every place.
             CircleLayer(
-                id = "shared-places-shadow",
-                source = placeSource,
-                radius = placeRadius + const(3.dp),
-                translate = const(DpOffset(0.dp, 1.5.dp)),
-                color = const(Color.Black),
-                opacity = const(0.18f) * placeOpacity,
-                opacityTransition = quickTransition,
-                blur = const(0.6f),
+                id = "shared-places-dim",
+                source = dimSource,
+                radius = const(4.dp - 1.5.dp),
+                color = const(tokens.tx3),
+                opacity = const(0.8f * placeAlpha),
+                strokeWidth = const(1.5.dp),
+                strokeColor = const(Color.White),
+                strokeOpacity = const(0.8f * placeAlpha),
             )
-            CircleLayer(
-                id = "shared-places",
-                source = placeSource,
-                radius = placeRadius,
-                radiusTransition = quickTransition,
-                color = yearColor,
-                opacity = placeOpacity,
-                opacityTransition = quickTransition,
-                strokeWidth = const(2.dp),
-                strokeColor = const(ring),
-                strokeOpacity = placeOpacity,
-                strokeOpacityTransition = quickTransition,
-                sortKey = switch(condition(selectedTest, const(1f)), fallback = const(0f)),
-                onClick = placeClick,
-                hitPadding = 16.dp,
-            )
-            SymbolLayer(
-                id = "shared-places-count",
-                source = placeSource,
-                filter = !selectedTest,
-                textField = countText,
-                textFont = const(listOf("Noto Sans Bold")),
-                textSize = switch(condition(clusterTest, const(11.sp)), fallback = const(10.sp)),
-                textColor = const(Color.White),
-                textOpacity = placeOpacity,
-                textOpacityTransition = quickTransition,
-                textAllowOverlap = const(true),
-                textIgnorePlacement = const(true),
-                onClick = placeClick,
-                hitPadding = 16.dp,
-            )
-            SymbolLayer(
-                id = "shared-places-pin",
-                source = placeSource,
-                filter = selectedTest,
-                iconImage = image(pin, size = androidx.compose.ui.unit.DpSize(14.dp, 14.dp), colorFilter = ColorFilter.tint(Color.White)),
-                iconAllowOverlap = const(true),
-                iconIgnorePlacement = const(true),
-                onClick = placeClick,
-                hitPadding = 16.dp,
-            )
+            // A balloon's name under its tip, where it clears the pins and names around it:
+            // placed after the pins over it, so it gives way to them.
             SymbolLayer(
                 id = "shared-places-names",
                 source = placeSource,
-                filter = !clusterTest,
+                filter = balloonTest and !openTest,
+                sortKey = -feature["count"].asNumber(),
                 textField = feature["name"].asString(),
-                textFont = const(listOf("Noto Sans Regular")),
-                textSize = const(12.sp),
+                textFont = const(listOf("Noto Sans Bold")),
+                textSize = const(11.sp),
                 textAnchor = const(SymbolAnchor.Top),
-                textOffset = textOffset(0.em, 1.3.em),
+                textOffset = textOffset(0.em, 0.2.em),
+                textMaxWidth = const(100f.em),
                 textColor = const(ink),
                 textHaloColor = const(ring),
                 textHaloWidth = const(1.5.dp),
                 textOpacity = placeOpacity,
                 textOpacityTransition = quickTransition,
-                onClick = placeClick,
-                hitPadding = 16.dp,
             )
-            // Dots take part in label placement even though circle layers do not. This unseen
-            // symbol keeps place and basemap names from being laid over a dot.
+            // Every pin on its very spot, piling up where places crowd, as MapKit's do.
             SymbolLayer(
-                id = "shared-places-label-block",
+                id = "shared-places",
                 source = placeSource,
-                iconImage = image(
-                    pin,
-                    size = androidx.compose.ui.unit.DpSize(26.dp, 26.dp),
-                    colorFilter = ColorFilter.tint(Color.Transparent),
-                ),
-                iconOpacity = const(0f),
+                filter = !openTest,
+                sortKey = pinSortKey,
+                iconImage = pinImage,
+                iconAnchor = pinAnchor,
+                iconPadding = const(DpPadding.Zero),
                 iconAllowOverlap = const(true),
                 iconIgnorePlacement = const(false),
+                iconOpacity = placeOpacity,
+                iconOpacityTransition = quickTransition,
+                onClick = placeClick,
+                hitPadding = 4.dp,
+            )
+            val lifted = lift.value
+            val openBalloon = openPlace?.photo == null
+            val openScale = if (openBalloon) PinSize.OpenBalloon else PinSize.OpenPhoto
+            val openSize = lerp(1f / openScale, 1f, lifted)
+            val openTip = if (openBalloon) {
+                lerp(0f, -PinSize.OpenBalloonTip, lifted)
+            } else {
+                lerp(PhotoTailTip, -PinSize.OpenPhotoTip, lifted)
+            }
+            val shown = anchorShown.value * placeAlpha
+            CircleLayer(
+                id = "shared-place-anchor",
+                source = openSource,
+                radius = const(PinSize.Anchor.dp),
+                color = yearColor,
+                opacity = const(shown),
+                opacityTransition = instantTransition,
+                strokeWidth = const(1.5.dp),
+                strokeColor = const(Color.White),
+                strokeOpacity = const(shown),
+                strokeOpacityTransition = instantTransition,
+            )
+            SymbolLayer(
+                id = "shared-place-open-name",
+                source = openSource,
+                textField = feature["name"].asString(),
+                textFont = const(listOf("Noto Sans Bold")),
+                textSize = const(12.sp),
+                textAnchor = const(SymbolAnchor.Top),
+                textOffset = textOffset(0.em, 0.67.em),
+                textMaxWidth = const(10.7f.em),
+                textColor = const(ink),
+                textHaloColor = const(ring),
+                textHaloWidth = const(1.5.dp),
+                textOpacity = const(shown),
+                textOpacityTransition = instantTransition,
+                textAllowOverlap = const(true),
+                textIgnorePlacement = const(true),
+            )
+            // Its size and its lift are both laid out, so they move together; the lift is
+            // given in the scaled pin's units.
+            SymbolLayer(
+                id = "shared-place-open",
+                source = openSource,
+                iconImage = feature["open"].asString().cast<ImageValue?>(),
+                iconAnchor = const(SymbolAnchor.Bottom),
+                iconSize = const(openSize),
+                iconOffset = const(DpOffset(0.dp, (openTip / openSize).dp)),
+                iconAllowOverlap = const(true),
+                iconIgnorePlacement = const(true),
+                iconOpacity = const(placeAlpha),
+                iconOpacityTransition = instantTransition,
+                onClick = placeClick,
+                hitPadding = 4.dp,
             )
             LocationIndicatorLayer(
                 id = "shared-user-location",
@@ -788,6 +963,17 @@ fun SharedAtlasMap(
         val retained = remember(store) { store.getOrCreate(baseStyle, styleContent) }
         SideEffect { store.update(baseStyle, styleContent) }
         retained
+    }
+
+    SideEffect {
+        pinImages?.inputs = PinInputs(
+            photos = places.mapNotNull { it.photo }.associateBy { it.uid },
+            places = places.associateBy { it.id },
+            colors = colors,
+            unknown = unknown,
+            leaves = { id -> leaves.read?.invoke(id) },
+        )
+        state.missingImageResolver = pinImages
     }
 
     val density = LocalDensity.current
@@ -845,16 +1031,44 @@ fun SharedAtlasMap(
             }
         }
     }
+    // What the map frames: the year's places while one is picked, else everything on it.
+    val homePositions = if (year != null && yearPositions.isNotEmpty()) yearPositions else allPositions
     LaunchedEffect(state, allPositions, shape) {
         state.awaitViewport()
-        if ((!framed || framedShape != shape) && allPositions.isNotEmpty()) {
-            framePositions(state, allPositions, framePadding, closest = 12.0, animated = false, reduced = reduced)
+        if ((!framed || framedShape != shape) && homePositions.isNotEmpty()) {
+            framePositions(state, homePositions, framePadding, closest = 12.0, animated = false, reduced = reduced)
             framed = true
             framedShape = shape
         }
     }
     OnTabReselect(tab) {
-        if (allPositions.isNotEmpty()) framePositions(state, allPositions, framePadding, 12.0, animated = true, reduced = reduced)
+        if (homePositions.isNotEmpty()) framePositions(state, homePositions, framePadding, 12.0, animated = true, reduced = reduced)
+    }
+    // Where the map was before a year was picked, and where picking it left the map: going back
+    // to every year returns there only if the map hasn't been moved since.
+    var framedYear by rememberSaveable { mutableStateOf(year) }
+    var beforeYear by remember { mutableStateOf<CameraPosition?>(null) }
+    var yearView by remember { mutableStateOf<CameraPosition?>(null) }
+    LaunchedEffect(state, year, framed) {
+        if (!framed || year == framedYear) return@LaunchedEffect
+        val previous = framedYear
+        framedYear = year
+        if (year != null) {
+            if (previous == null) beforeYear = state.cameraPosition
+            if (yearPositions.isNotEmpty() && focusedPlace == null && selected == null) {
+                framePositions(state, yearPositions, framePadding, 12.0, animated = true, reduced = reduced)
+            }
+            yearView = state.cameraPosition
+        } else {
+            val back = beforeYear
+            if (back != null && state.cameraPosition == yearView) {
+                state.animateCamera(back.toCameraUpdate(), cameraAnimation(reduced, 600, fly = true))
+            } else if (selected == null && allPositions.isNotEmpty()) {
+                framePositions(state, allPositions, framePadding, 12.0, animated = true, reduced = reduced)
+            }
+            beforeYear = null
+            yearView = null
+        }
     }
     LaunchedEffect(state, focusedPlace, focusedTrip, framed, places, routes) {
         if (!framed) return@LaunchedEffect
