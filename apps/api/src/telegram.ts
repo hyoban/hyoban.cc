@@ -2,12 +2,12 @@ import { isMomentShown, type MomentRecord } from '@hyoban/data-spec'
 import { entryToMoment, isMomentEntry } from '@hyoban/data-spec/entry'
 import type { Bucket } from './bucket.ts'
 import { readAll, revisionQuery, toRevision, type Database } from './database.ts'
-import { IMAGE_ORIGIN, SITE_URL } from './site.ts'
+import { IMAGE_ORIGIN } from './site.ts'
 import { toEntry } from './writes.ts'
 
 // The Moments the site shows, posted to the Telegram channel as they publish: the words
-// with the place, a meal's share and verdict, and a link to the Moment's page, under its
-// photos and videos. A Moment that changes edits its post, or posts again when its media
+// with the place and a meal's share and verdict, under its photos and videos, with no
+// link. A Moment that changes edits its post, or posts again when its media
 // changed; one the site no longer shows has its post deleted. Only Moments published since
 // the channel was first synced are posted, so a restore of the backup never floods it. Runs
 // after a write the site shows, after `POST /v2/build` and on the Worker's schedule, which
@@ -235,10 +235,11 @@ const VERDICTS = { good: '😋 好吃', ok: '🙂 一般', bad: '😖 踩雷' } 
 
 /**
  * The words and media a Moment is posted with: its own words exactly, then a line of the
- * place and, for a meal, each one's share and its verdict, as the app shares it, then the
- * link. A bill without its people fed one.
+ * place and, for a meal, each one's share and its verdict, as the app shares it. A bill
+ * without its people fed one. A Moment with neither words, a line nor media has nothing
+ * to post.
  */
-function toPost(moment: MomentRecord, placeNames: Map<string, string>): Post {
+function toPost(moment: MomentRecord, placeNames: Map<string, string>): Post | null {
   const place = moment.places[0] && placeNames.get(moment.places[0])
   const bill = moment.food?.bill
   const verdict = moment.food?.verdict
@@ -249,11 +250,10 @@ function toPost(moment: MomentRecord, placeNames: Map<string, string>): Post {
   ]
     .filter(Boolean)
     .join(' ')
-  const link = `${SITE_URL}/m/${moment.uid.toLowerCase()}/`
-  const footer = line ? `${line}\n${link}` : link
-  const text = moment.text ? `${moment.text}\n\n${footer}` : footer
+  const text = [moment.text, line].filter(Boolean).join('\n\n')
+  const media = moment.media.flatMap((item) => toPostMedia(item))
 
-  return { text, media: moment.media.flatMap((media) => toPostMedia(media)) }
+  return text || media.length > 0 ? { text, media } : null
 }
 
 function toPostMedia(media: MomentRecord['media'][number]): PostMedia[] {
