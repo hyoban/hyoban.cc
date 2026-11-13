@@ -84,7 +84,7 @@ import kotlinx.coroutines.launch
 
 /** Menu order: complete text/photo composers, assisted sharing, manual captions, then manual albums. */
 enum class ShareTarget(val tag: String, val title: StringResource, val limit: Int = Int.MAX_VALUE, val app: String? = null) {
-    X("x", Res.string.action_share_x, 4, app = "com.twitter.android"),
+    X("x", Res.string.action_share_x, 20, app = "com.twitter.android"),
     BLUESKY("bluesky", Res.string.action_share_bluesky, 4, app = "xyz.blueskyweb.app"),
     BILIBILI("bilibili", Res.string.action_share_bilibili, app = "tv.danmaku.bili"),
     TELEGRAM("telegram", Res.string.action_share_telegram, app = "org.telegram.messenger"),

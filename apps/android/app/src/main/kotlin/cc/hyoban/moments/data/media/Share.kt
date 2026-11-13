@@ -33,7 +33,7 @@ object Share {
 
     /** Opens X's post composer, never its separate direct-message share target. */
     suspend fun toX(context: Context, text: String, photos: List<MomentMedia>, urls: MediaUrls) {
-        require(photos.size <= 4)
+        require(photos.size <= 20)
         toApp(context, "com.twitter.android", text, photos, urls,
             activity = "com.twitter.composer.ComposerActivity")
     }
