@@ -305,7 +305,7 @@ ends with a line of its place, each one's share of the bill and its verdict (好
 
 | Destination    | How                                                                                     |
 | -------------- | --------------------------------------------------------------------------------------- |
-| 发布到 X       | the X app's composer, up to four photos (stills of live photos, no video)              |
+| 发布到 X       | the X app's composer, up to twenty photos (stills of live photos, no video)            |
 | 发布到 Bluesky | `bluesky://intent/compose?text=…` for text, else its share receiver, text and up to four photos |
 | 发布到 B 站    | Bilibili's dynamic composer (`FollowingPublishActivity`) with text and photos          |
 | 分享到 Telegram | Telegram's share receiver; with several photos the text is copied to paste as caption |
