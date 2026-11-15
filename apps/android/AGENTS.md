@@ -161,7 +161,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   hand; change `tokens.json` there, regenerate, and publish it to the artifact. Text takes
   the design's six styles by their names (`titlePage`, `title`, `bodyReading`, `body`,
   `label`, `caption`), all in the system sans with tabular figures; a heading is a style
-  `.strong` (600), never a size larger; the timeline and a trip are a conversation (`MomentFeed(chat = true)`: `DateCapsule`, Moments as `MomentCard(bubble = true)`, records in `RecordsBubble`), and a ledger's day opens with its header row (`DayHeader`). The app
+  `.strong` (600), never a size larger; the timeline and a trip are a conversation (`MomentFeed(chat = true)`: `DateCapsule`, Moments as `MomentCard(bubble = true)` and check-ins as `CheckinBubble` from the right, the records between them in `RecordsBubble`), and a ledger's day opens with its header row (`DayHeader`). The app
   has no Material dependency (`androidx.compose.material3`, `glance-material3`): its
   components are its own, in `ui/design`, on Compose foundation. Don't add Material
   components or icon packs back.

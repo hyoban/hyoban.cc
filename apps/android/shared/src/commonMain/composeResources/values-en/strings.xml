@@ -940,7 +940,6 @@
     <string name="day_track_stats">%1$s km moving %2$d min</string>
     <string name="day_still_recording">Still recording</string>
     <string name="timeline_day_no_places">No places that day</string>
-    <string name="timeline_more_records">%1$d more</string>
     <string name="timeline_track">Track</string>
     <plurals name="timeline_track_moving">
         <item quantity="one">Moving %1$d min</item>

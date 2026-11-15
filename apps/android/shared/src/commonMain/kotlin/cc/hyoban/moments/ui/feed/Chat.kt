@@ -58,15 +58,20 @@ import cc.hyoban.moments.ui.theme.isLargeFont
 import cc.hyoban.moments.ui.theme.tokens
 
 // The timeline and a trip as a conversation with oneself: each day opens with its date in a
-// capsule at the middle, a Moment is a bubble sent from the right, and the ledger's bills, the
-// car's charges and the footprints come in from the left, those in a row in one outlined bubble.
+// capsule at the middle, a Moment or a check-in is a bubble sent from the right, and the ledger's
+// bills, the car's charges and the footprints come in from the left, those in a row in one
+// outlined bubble.
 
-/** What one day of the conversation holds, in order: Moments, and the records between them gathered. */
+/** What one day of the conversation holds, in order: Moments and check-ins, and the records between them gathered. */
 sealed interface ChatItem {
     val key: String
 
     data class Moment(val moment: MomentRecord) : ChatItem {
         override val key get() = moment.uid
+    }
+
+    data class CheckinStop(val checkin: Checkin) : ChatItem {
+        override val key get() = "checkin-${checkin.uid}"
     }
 
     data class Records(val lines: List<RecordLine>) : ChatItem {
@@ -90,10 +95,6 @@ sealed interface RecordLine {
         override val key get() = "thing-${thing.uid}"
     }
 
-    data class CheckinLine(val checkin: Checkin) : RecordLine {
-        override val key get() = "checkin-${checkin.uid}"
-    }
-
     data class Track(val day: String, val piece: TrackPiece) : RecordLine {
         override val key get() = "track-$day-${piece.start}"
     }
@@ -101,8 +102,8 @@ sealed interface RecordLine {
 
 /**
  * [items] of one day, oldest first, as the conversation shows them: each Moment, the bills
- * written with it ([linked]) right after it, and every run of records between Moments in one
- * bubble.
+ * written with it ([linked]) right after it, each check-in, and every run of records between
+ * them in one bubble.
  */
 fun chatItems(items: List<DayItem>, linked: Map<String, List<Txn>>): List<ChatItem> {
     val out = mutableListOf<ChatItem>()
@@ -120,7 +121,10 @@ fun chatItems(items: List<DayItem>, linked: Map<String, List<Txn>>): List<ChatIt
             is DayItem.Bills -> item.txns.sortedBy { it.time }.forEach { run += RecordLine.Bill(it) }
             is DayItem.ChargeItem -> run += RecordLine.ChargeLine(item.charge)
             is DayItem.ThingItem -> run += RecordLine.ThingLine(item.thing)
-            is DayItem.CheckinItem -> run += RecordLine.CheckinLine(item.checkin)
+            is DayItem.CheckinItem -> {
+                flush()
+                out += ChatItem.CheckinStop(item.checkin)
+            }
             is DayItem.Track -> run += RecordLine.Track(item.day, item.piece)
         }
     }
@@ -232,8 +236,8 @@ fun DateCapsule(day: String, onClick: (() -> Unit)?, modifier: Modifier = Modifi
 
 /**
  * Records in a row as one bubble from the left: a line each, when, its icon and what it is,
- * and its amount or figure at the end, no total under them. More
- * than five show four and how many more. One record opens itself; several, their day.
+ * and its amount or figure at the end, no total under them, every one of them shown.
+ * One record opens itself; several, their day.
  */
 @Composable
 fun RecordsBubble(
@@ -246,11 +250,9 @@ fun RecordsBubble(
     val shown = lines
     val single = shown.size == 1
     val openThing = LocalThingNav.current
-    val openCheckin = LocalCheckinNav.current
     val open: (() -> Unit)? = when (val only = shown.singleOrNull()) {
         is RecordLine.Bill -> ({ onBill(only.txn.id) })
         is RecordLine.ThingLine -> openThing?.let { { it(only.thing.uid) } }
-        is RecordLine.CheckinLine -> openCheckin?.let { { it(only.checkin.uid) } } ?: onDay
         is RecordLine.Track, is RecordLine.ChargeLine -> onDay
         null -> onDay
     }
@@ -270,10 +272,9 @@ fun RecordsBubble(
                 .padding(horizontal = Space.m, vertical = Space.xs)
                 .testTag("records_${lines.first().key}"),
         ) {
-            val visible = if (shown.size > MAX_LINES) shown.take(MAX_LINES - 1) else shown
             // Only a device or a subscription alone has no time, and no column for one.
             val timed = shown.any { it !is RecordLine.ThingLine }
-            visible.forEach { line ->
+            shown.forEach { line ->
                 when (line) {
                     is RecordLine.Bill -> RecordRow(
                         icon = { Icon(txnIcon(line.txn, ledger), contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
@@ -294,16 +295,6 @@ fun RecordsBubble(
                         large = large,
                         timed = timed,
                         tag = "charge_${line.charge.uid}",
-                    )
-                    is RecordLine.CheckinLine -> RecordRow(
-                        icon = { Icon(AppIcons.Pin, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
-                        title = checkinTitle(line.checkin),
-                        time = formatTime(line.checkin.at),
-                        end = "",
-                        endColor = tokens.tx,
-                        large = large,
-                        timed = timed,
-                        tag = "checkin_${line.checkin.uid}",
                     )
                     is RecordLine.ThingLine -> RecordRow(
                         icon = { Icon(if (line.thing.device) AppIcons.Laptop else AppIcons.Subscription, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
@@ -328,16 +319,9 @@ fun RecordsBubble(
                     )
                 }
             }
-            if (shown.size > MAX_LINES) {
-                Row(Modifier.heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(Res.string.timeline_more_records, shown.size - visible.size), style = AppTheme.typography.caption, color = tokens.tx3)
-                }
-            }
         }
     }
 }
-
-private const val MAX_LINES = 5
 
 /** One line of a records bubble; with the font set large, the figure goes under the words. */
 @Composable
@@ -375,6 +359,39 @@ private fun RecordRow(
         } else {
             words(Modifier.weight(1f))
             Text(end, style = AppTheme.typography.body, color = endColor, maxLines = 1)
+        }
+    }
+}
+
+/**
+ * A check-in as the conversation has it: sent from the right as a Moment is, on the pressed fill
+ * and drawn with the Moments beside it, only as wide as it needs; the place's pin, its venue on
+ * one line and, faint at the end, whether it is private and when. It sets the records around it
+ * apart, and a tap opens its sheet.
+ */
+@Composable
+fun CheckinBubble(checkin: Checkin, joinedAbove: Boolean, joinedBelow: Boolean, modifier: Modifier = Modifier) {
+    val open = LocalCheckinNav.current
+    val shape = androidx.compose.runtime.remember(joinedAbove, joinedBelow) { BubbleShape(sent = true, joinedAbove, joinedBelow) }
+    val title = checkinTitle(checkin)
+    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+        Row(
+            Modifier
+                .bubbleWidth(fill = false) { column -> minOf(column * 0.88f, 420.dp) }
+                .clip(shape)
+                .background(tokens.fill)
+                .then(if (open != null) Modifier.clickable { open(checkin.uid) } else Modifier)
+                .padding(end = TAIL)
+                .padding(horizontal = Space.m, vertical = Space.s)
+                .semantics(mergeDescendants = true) { contentDescription = title }
+                .testTag("checkin_${checkin.uid}"),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.s),
+        ) {
+            Icon(AppIcons.Pin, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
+            Text(checkin.venue, style = AppTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+            val meta = listOfNotNull(stringResource(Res.string.visibility_private).takeIf { checkin.private }, formatTime(checkin.at)).joinToString(" ")
+            if (meta.isNotEmpty()) Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 1)
         }
     }
 }

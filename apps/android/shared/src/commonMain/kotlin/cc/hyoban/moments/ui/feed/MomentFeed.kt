@@ -309,8 +309,10 @@ fun MomentFeed(
                         val lastChat = chats.lastOrNull()?.key
                         items(chats, key = { it.key }, contentType = { it::class }) { item ->
                             val index = chats.indexOf(item)
-                            val joinedAbove = index > 0 && (chats[index - 1] is ChatItem.Moment) == (item is ChatItem.Moment)
-                            val joinedBelow = index < chats.lastIndex && (chats[index + 1] is ChatItem.Moment) == (item is ChatItem.Moment)
+                            // Moments and check-ins come from the right, records from the left.
+                            fun sent(at: ChatItem) = at !is ChatItem.Records
+                            val joinedAbove = index > 0 && sent(chats[index - 1]) == sent(item)
+                            val joinedBelow = index < chats.lastIndex && sent(chats[index + 1]) == sent(item)
                             val itemModifier = Modifier.animateItem().padding(
                                 start = Space.xs,
                                 end = Space.xs,
@@ -331,6 +333,7 @@ fun MomentFeed(
                                     joinedAbove = joinedAbove,
                                     joinedBelow = joinedBelow,
                                 )
+                                is ChatItem.CheckinStop -> CheckinBubble(item.checkin, joinedAbove, joinedBelow, itemModifier)
                                 is ChatItem.Records -> RecordsBubble(
                                     item.lines, bills.ledger, onBill,
                                     onDay = onDay?.let { { it(day) } },
