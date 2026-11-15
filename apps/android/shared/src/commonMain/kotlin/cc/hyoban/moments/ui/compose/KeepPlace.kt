@@ -16,8 +16,9 @@ import kotlinx.coroutines.launch
 
 /**
  * A spot of the footprints kept as a place, in the new Moment's place picker: it opens on [at]
- * as a new place called [name], which can be moved, renamed or traded for a known place. What
- * is chosen goes to [onKept], a new place kept first; choosing none leaves as dismissing does.
+ * as a new place called [name], or named after what is around it when [name] is blank, which
+ * can be moved, renamed or traded for a known place. What is chosen goes to [onKept], a new
+ * place kept first; choosing none leaves as dismissing does.
  * With [onCheckin], the picker also offers to keep it as a check-in there, given the place's id
  * and name, in place of choosing none.
  */

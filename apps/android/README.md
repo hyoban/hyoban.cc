@@ -480,7 +480,7 @@ behaves.
   thinner, a walk dotted and a stay as a ring; 足迹 → 行程分段 lists them with distance, average
   and top speed, names a stay after one of the phone's own places within 300 m (no request
   leaves for it), and frames one on the map when tapped; a stay's + opens the same picker on
-  its middle, named as a bill's spot is, to keep it as a place of the phone's, or with 保存为签到
+  its middle at once, named after what is around it as a dragged pin is, to keep it as a place of the phone's, or with 保存为签到
   as a public check-in there too (`source.app` `phone`), from the stay's start to its end,
   its uid made from the start so keeping it again changes it; a check-in whose time meets the
   stay's, Swarm's or another, one begun the day before included, is that visit, and none is

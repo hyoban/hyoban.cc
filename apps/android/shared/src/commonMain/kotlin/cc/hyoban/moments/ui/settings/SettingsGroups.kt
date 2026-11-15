@@ -28,7 +28,11 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -124,7 +128,7 @@ fun SegmentedGroup(
         Column(
             modifier
                 .fillMaxWidth()
-                .clip(shape)
+                .clipDrawing(shape)
                 .background(SurfaceLevel.Card.fill())
                 .border(cardBorder(), shape),
         ) {
@@ -144,6 +148,16 @@ fun SegmentedGroup(
             )
         }
     }
+}
+
+/**
+ * Clips what is drawn to [shape], leaving touches to the group's plain bounds: a clip to the
+ * continuous corners' path also tests each touch against it, which misses the rows deep in a
+ * tall group.
+ */
+private fun Modifier.clipDrawing(shape: Shape): Modifier = drawWithCache {
+    val path = Path().apply { addOutline(shape.createOutline(size, layoutDirection, this@drawWithCache)) }
+    onDrawWithContent { clipPath(path) { this@onDrawWithContent.drawContent() } }
 }
 
 /** A row's shapes in a group, square in every state: the group's corners round its ends. */

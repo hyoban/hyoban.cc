@@ -43,7 +43,6 @@ import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.Space
 import kotlinx.coroutines.*
 import cc.hyoban.moments.data.local.Fix
-import cc.hyoban.moments.data.local.coordinatesName
 import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.entryUid
@@ -151,13 +150,10 @@ fun FootprintsOnMap(container: PhoneContainer, onSettings: () -> Unit, content: 
         if (!checkinsOn) emptyMap()
         else view.parts.filterIsInstance<TrackStay>().mapNotNull { stay -> checkins.overlapping(stay.start, stay.end).firstOrNull()?.let { stay.start to it } }.toMap()
     }
-    // A stay kept as a place or a check-in there, named as a bill's spot is, and the name to give it.
-    var keeping by remember { mutableStateOf<Pair<TrackStay, String>?>(null) }
-    fun keep(stay: TrackStay) {
-        val point = Fix(stay.latitude, stay.longitude)
-        scope.launch { keeping = stay to (container.billPlaces.nameOf(point) ?: coordinatesName(point)) }
-    }
-    keeping?.let { (stay, name) ->
+    // A stay kept as a place or a check-in there: the picker opens at once and names it after
+    // what is around it, so a slow or stalled lookup never leaves the tap without an answer.
+    var keeping by remember { mutableStateOf<TrackStay?>(null) }
+    keeping?.let { stay ->
         val keepCheckin: suspend (String, String) -> Unit = { place, venue ->
             val entry = stayCheckin(stay, place, venue)
             // A check-in already there over the stay, Swarm's or one kept before, is that visit,
@@ -171,7 +167,7 @@ fun FootprintsOnMap(container: PhoneContainer, onSettings: () -> Unit, content: 
             }
         }
         // Kept as a check-in only while check-ins are on (记录项与公开).
-        KeepPlace(container, Fix(stay.latitude, stay.longitude), name, onDismiss = { keeping = null }, onCheckin = keepCheckin.takeIf { LocalSettings.current.isOn(Module.CHECKIN) })
+        KeepPlace(container, Fix(stay.latitude, stay.longitude), "", onDismiss = { keeping = null }, onCheckin = keepCheckin.takeIf { LocalSettings.current.isOn(Module.CHECKIN) })
     }
     // Recording in the background needs location 始终允许, which only the system's settings give:
     // said once, after recording first starts without it (35).
@@ -432,7 +428,7 @@ fun FootprintsOnMap(container: PhoneContainer, onSettings: () -> Unit, content: 
                                         Icon(AppIcons.Flag, contentDescription = stringResource(Res.string.footprints_stay_kept), tint = tokens.tx3,
                                             modifier = Modifier.minimumInteractiveComponentSize().testTag("footprints_stay_kept_${part.start}"))
                                     } else if (part is TrackStay) {
-                                        IconButton(onClick = { keep(part) }, modifier = Modifier.testTag("footprints_save_place_${part.start}")) {
+                                        IconButton(onClick = { keeping = part }, modifier = Modifier.testTag("footprints_save_place_${part.start}")) {
                                             Icon(AppIcons.Plus, contentDescription = stringResource(Res.string.share_save_place))
                                         }
                                     } else {

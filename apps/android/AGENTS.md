@@ -201,7 +201,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - The continuous corners are paths, which the graphics pipeline draws and clips by a mask made in
   software every frame: `clip` to one masks every word and photo inside it. Where what a shape
   holds keeps clear of its corners, draw the shape behind it (`background(colour, shape)`) rather
-  than clipping to it, and a large surface round at its top (a sheet) with `sheetSurface`.
+  than clipping to it, and a large surface round at its top (a sheet) with `sheetSurface`. A
+  `clip` to their path also tests each touch against it, which misses inside a tall surface (the
+  rows deep in a long group took no taps): where one must clip, clip only what is drawn, as
+  `SegmentedGroup` does.
 - Top bars switch between what the page is one of with `TitleMenu` and put a control over the
   subtitle's figures in `subtitleAction`. Settings are `SegmentedGroup` with `SwitchRow` and
   `ActionRow`, switches `AppSwitch`. What floats over a photo or the map is `FloatingButton`.
@@ -290,8 +293,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   writes that bypass it.
 - The ledger and the footprints follow the shared guide's privacy rules and publish only
   through 全部发布到网站 (`data/store/Outside.kt`). Their only other requests are exchange
-  rates, when asked, Photon naming a bill's footprint point or a stay being kept as a place
-  (`footprints/BillPlaces`), the point alone, and the WebDAV backup the owner sets up (`backup/`). Private and unpublished are two things, said 私有 and 未发布, never 仅本机.
+  rates, when asked, Photon naming a bill's footprint point (`footprints/BillPlaces`), the point
+  alone, the place picker naming a stay being kept as a place, and the WebDAV backup the owner sets up (`backup/`). Private and unpublished are two things, said 私有 and 未发布, never 仅本机.
 - The ledger replaces iCost, so what iCost's backup and export hold must keep importing:
   check a change to the importers against real ones with
   `ICOST_BACKUP=<backup> ICOST_EXPORT=<xlsx> ./gradlew :app:testDebugUnitTest --tests '*LedgerTest*'`

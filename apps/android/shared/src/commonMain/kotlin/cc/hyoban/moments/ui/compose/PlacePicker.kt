@@ -189,10 +189,11 @@ fun PlacePicker(
     val device = cc.hyoban.moments.ui.LocalDevice.current
     val scope = rememberCoroutineScope()
     var pick by remember { mutableStateOf(current) }
-    var named by remember { mutableStateOf(current is PlaceChoice.New) }
+    // A new place opened without a name is named after what is around it, as a pin dragged there is.
+    var named by remember { mutableStateOf(current is PlaceChoice.New && current.name.isNotBlank()) }
     var name by remember { mutableStateOf((current as? PlaceChoice.New)?.name.orEmpty()) }
     // A name typed stays where the pin goes; one taken from a row follows the pin to what is there next.
-    var typedName by remember { mutableStateOf(current is PlaceChoice.New) }
+    var typedName by remember { mutableStateOf(named) }
     // A kind chosen by hand stays; until then it follows what the pin is named after.
     var kindChosen by remember { mutableStateOf((current as? PlaceChoice.New)?.kind != null) }
     val opening = remember {
