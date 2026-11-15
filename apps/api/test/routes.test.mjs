@@ -459,3 +459,54 @@ test('a write the site shows brings the routes up to date before calling the dep
     globalThis.fetch = realFetch
   }
 })
+
+test("a trip's public check-ins are stops its route is fetched through, its private ones not", async () => {
+  const { env } = setUpWithData()
+  const realFetch = globalThis.fetch
+  const checkin = (seed, at, visibility) => ({
+    uid: getStableUlid(at, seed),
+    at,
+    place: 'wai-tan',
+    parts: { checkin: { v: 1, venue: '外滩', source: { app: 'phone' } } },
+    ...(visibility ? { visibility } : {}),
+    createdAt: at,
+    updatedAt: at,
+  })
+
+  // The write's own fill and deploy reach no network here.
+  globalThis.fetch = async () => new Response('{}', { status: 500 })
+
+  try {
+    const hidden = await call(env, 'POST', '/v2/changes', {
+      body: { entries: [checkin('hidden', '2026-04-04T12:00:00+08:00', 'private')] },
+    })
+    assert.equal(hidden.status, 200)
+    const asked = []
+    const record = async (leg) => {
+      asked.push(leg)
+      return {
+        coordinates: [
+          [leg.from.longitude, leg.from.latitude],
+          [leg.to.longitude, leg.to.latitude],
+        ],
+        distance: 1,
+        duration: 1,
+      }
+    }
+
+    await fillRoutes({ db: env.DB, bucket: env.BUCKET, now }, record)
+    assert.deepEqual(asked, [], 'a private check-in is no stop')
+
+    const shown = await call(env, 'POST', '/v2/changes', {
+      body: { entries: [checkin('shown', '2026-04-04T13:00:00+08:00')] },
+    })
+    assert.equal(shown.status, 200)
+    await fillRoutes({ db: env.DB, bucket: env.BUCKET, now }, record)
+    assert.ok(
+      asked.some((leg) => leg.from.id === 'wai-tan' || leg.to.id === 'wai-tan'),
+      'the legs to and from a public one are fetched',
+    )
+  } finally {
+    globalThis.fetch = realFetch
+  }
+})

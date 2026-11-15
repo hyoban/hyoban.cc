@@ -5,6 +5,7 @@ import {
   getDeviceIssues,
   getUploadEntry,
   isImportedCharge,
+  isPublicCheckin,
   publicTrackSchema,
   type Collection,
   type Entry,
@@ -129,14 +130,19 @@ export async function readEntrySnapshot(db: Database) {
 }
 
 /**
- * What of an entry the trips' routes are built from, as text to compare: a mark whole, and a
- * Moment's time and place while it is published and not private; nothing of any other.
+ * What of an entry the trips' routes are built from, as text to compare: a mark whole, a
+ * public check-in's time and place, and a Moment's while it is published and not private;
+ * nothing of any other.
  */
 function routeView(entry: Entry | undefined) {
   const kind = entry && getEntryKind(entry)
 
   if (kind === 'mark') {
     return JSON.stringify(entry)
+  }
+
+  if (kind === 'entry' && isPublicCheckin(entry!)) {
+    return JSON.stringify(['checkin', entry!.at, entry!.place])
   }
 
   return kind === 'moment' && entry!.published && entry!.visibility !== 'private'

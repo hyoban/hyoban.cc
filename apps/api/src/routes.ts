@@ -93,9 +93,9 @@ export async function readTripInputs(db: Database) {
     revisionQuery(db),
     placesQuery(db),
     db.prepare(`SELECT record FROM collections WHERE deleted_at IS NULL ORDER BY start_day, key`),
-    // Moments for the stops, and marks for the waypoints.
+    // Moments for the stops, and marks and check-ins for the waypoints.
     db.prepare(
-      `SELECT record FROM entries WHERE deleted_at IS NULL AND kind IN ('moment', 'mark')`,
+      `SELECT record FROM entries WHERE deleted_at IS NULL AND (kind IN ('moment', 'mark') OR json_type(record, '$.parts.checkin') IS NOT NULL)`,
     ),
     routesQuery(db),
     db.prepare(`SELECT value FROM meta WHERE key = ?1`).bind(NO_ROUTE),
