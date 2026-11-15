@@ -102,13 +102,19 @@ sealed interface RecordLine {
 
 /**
  * [items] of one day, oldest first, as the conversation shows them: each Moment and check-in
- * (its linked bills inside its bubble), and every run of records between them in one bubble.
+ * (its linked bills inside its bubble), and every run of records between them in one bubble,
+ * a run parted at [breakAt] (epoch milliseconds), where a trip begins, so none straddles it.
  */
-fun chatItems(items: List<DayItem>): List<ChatItem> {
+fun chatItems(items: List<DayItem>, breakAt: Long? = null): List<ChatItem> {
     val out = mutableListOf<ChatItem>()
     var run = mutableListOf<RecordLine>()
     fun flush() {
         if (run.isNotEmpty()) out += ChatItem.Records(run).also { run = mutableListOf() }
+    }
+    fun add(line: RecordLine) {
+        val at = line.at()
+        if (breakAt != null && at != null && at >= breakAt && run.any { (it.at() ?: Long.MIN_VALUE) < breakAt }) flush()
+        run += line
     }
     for (item in items) {
         when (item) {
@@ -116,18 +122,33 @@ fun chatItems(items: List<DayItem>): List<ChatItem> {
                 flush()
                 out += ChatItem.Moment(item.moment)
             }
-            is DayItem.Bills -> item.txns.sortedBy { it.time }.forEach { run += RecordLine.Bill(it) }
-            is DayItem.ChargeItem -> run += RecordLine.ChargeLine(item.charge)
-            is DayItem.ThingItem -> run += RecordLine.ThingLine(item.thing)
+            is DayItem.Bills -> item.txns.sortedBy { it.time }.forEach { add(RecordLine.Bill(it)) }
+            is DayItem.ChargeItem -> add(RecordLine.ChargeLine(item.charge))
+            is DayItem.ThingItem -> add(RecordLine.ThingLine(item.thing))
             is DayItem.CheckinItem -> {
                 flush()
                 out += ChatItem.CheckinStop(item.checkin)
             }
-            is DayItem.Track -> run += RecordLine.Track(item.day, item.piece)
+            is DayItem.Track -> add(RecordLine.Track(item.day, item.piece))
         }
     }
     flush()
     return out
+}
+
+/** When a line of a records bubble was, in epoch milliseconds; a device or a subscription has no time. */
+private fun RecordLine.at(): Long? = when (this) {
+    is RecordLine.Bill -> txn.time
+    is RecordLine.ChargeLine -> instantOf(charge.at)
+    is RecordLine.ThingLine -> null
+    is RecordLine.Track -> piece.start
+}
+
+/** When a bubble of the conversation was, in epoch milliseconds: a records bubble by its first line with a time. */
+fun ChatItem.at(): Long? = when (this) {
+    is ChatItem.Moment -> instantOf(moment.occurredAt)
+    is ChatItem.CheckinStop -> instantOf(checkin.at)
+    is ChatItem.Records -> lines.firstNotNullOfOrNull { it.at() }
 }
 
 /** How wide the strip a bubble keeps on its side for the tail; the bubble itself stands this far in. */

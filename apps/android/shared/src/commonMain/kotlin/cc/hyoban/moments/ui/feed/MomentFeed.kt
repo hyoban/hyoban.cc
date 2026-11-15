@@ -286,15 +286,20 @@ fun MomentFeed(
                             Box(Modifier.animateItem()) { MonthHeader(name, year) }
                         }
                     }
-                    // Where a trip begins, reading down: above its last day on the timeline.
+                    // Where a trip begins, reading down: above its last day on the timeline, or, read from
+                    // the first day, at the time it began on its first, when that is known to the minute.
                     val trip = if (onTrip != null) trips.firstOrNull { day >= it.start && day <= it.end && it.id !in bannered } else null
-                    if (trip != null && onTrip != null) {
-                        headed = true
-                        bannered += trip.id
-                        item(key = "trip-${trip.id}", contentType = "trip") {
+                    if (trip != null) bannered += trip.id
+                    val tripBanner: (Dp, Dp) -> Unit = { top, bottom ->
+                        if (trip != null && onTrip != null) item(key = "trip-${trip.id}", contentType = "trip") {
                             val count = remember(trip, allMoments, trips) { countOf(trip, allMoments, trips) }
-                            TripBanner(trip, count, onClick = { onTrip(trip.id) }, modifier = Modifier.animateItem().padding(horizontal = Space.gutter).padding(top = if (chat && day != timeline.first().first) Space.xl else Space.s, bottom = Space.s))
+                            TripBanner(trip, count, onClick = { onTrip(trip.id) }, modifier = Modifier.animateItem().padding(horizontal = Space.gutter).padding(top = top, bottom = bottom))
                         }
+                    }
+                    val begins = trip?.takeIf { chat && chronological && day == it.start }?.startAt?.let(::instantOf)
+                    if (trip != null && begins == null) {
+                        headed = true
+                        tripBanner(if (chat && day != timeline.first().first) Space.xl else Space.s, Space.s)
                     }
                     if (chat) {
                         // The day's date in a capsule at the middle, a section's gap above it; then
@@ -309,43 +314,49 @@ fun MomentFeed(
                                 description = pluralStringResource(Res.plurals.count_moments, dayMoments.size, dayMoments.size),
                             )
                         }
-                        val chats = chatItems(dayItems)
-                        val lastChat = chats.lastOrNull()?.key
-                        items(chats, key = { it.key }, contentType = { it::class }) { item ->
-                            val index = chats.indexOf(item)
-                            // Moments and check-ins come from the right, records from the left.
-                            fun sent(at: ChatItem) = at !is ChatItem.Records
-                            val joinedAbove = index > 0 && sent(chats[index - 1]) == sent(item)
-                            val joinedBelow = index < chats.lastIndex && sent(chats[index + 1]) == sent(item)
-                            val itemModifier = Modifier.animateItem().padding(
-                                start = Space.xs,
-                                end = Space.xs,
-                                top = if (index == 0) 0.dp else if (joinedAbove) Space.xs else Space.m,
-                                bottom = if (item.key == lastChat) Space.s else 0.dp,
-                            )
-                            when (item) {
-                                // Where a trip's banner marks its days, the bubbles within them needn't name it.
-                                is ChatItem.Moment -> MomentCard(
-                                    item.moment, places,
-                                    trip = if (showTrip && onTrip == null) tripOf(item.moment, trips) else null,
-                                    urls = urls,
-                                    onOpen = { onMoment(item.moment.uid) },
-                                    modifier = itemModifier,
-                                    selected = item.moment.uid == selected,
-                                    hidePlace = hidePlace,
-                                    bubble = true,
-                                    joinedAbove = joinedAbove,
-                                    joinedBelow = joinedBelow,
-                                    bills = bills.linked[item.moment.uid].orEmpty(),
-                                    ledger = bills.ledger,
-                                    onBill = onBill,
+                        val all = chatItems(dayItems, breakAt = begins)
+                        val lastChat = all.lastOrNull()?.key
+                        // The trip's banner among the day's bubbles, before the first from when it began.
+                        val cut = if (begins == null) all.size else all.indexOfFirst { (it.at() ?: Long.MIN_VALUE) >= begins }.let { if (it < 0) all.size else it }
+                        val parts = if (begins == null) listOf(all) else listOf(all.subList(0, cut), all.subList(cut, all.size))
+                        parts.forEachIndexed { part, chats ->
+                            if (part == 1) tripBanner(if (cut == 0) 0.dp else Space.m, Space.m)
+                            items(chats, key = { it.key }, contentType = { it::class }) { item ->
+                                val index = chats.indexOf(item)
+                                // Moments and check-ins come from the right, records from the left.
+                                fun sent(at: ChatItem) = at !is ChatItem.Records
+                                val joinedAbove = index > 0 && sent(chats[index - 1]) == sent(item)
+                                val joinedBelow = index < chats.lastIndex && sent(chats[index + 1]) == sent(item)
+                                val itemModifier = Modifier.animateItem().padding(
+                                    start = Space.xs,
+                                    end = Space.xs,
+                                    top = if (index == 0) 0.dp else if (joinedAbove) Space.xs else Space.m,
+                                    bottom = if (item.key == lastChat) Space.s else 0.dp,
                                 )
-                                is ChatItem.CheckinStop -> CheckinBubble(item.checkin, joinedAbove, joinedBelow, itemModifier, bills.linked[item.checkin.uid].orEmpty(), bills.ledger, onBill)
-                                is ChatItem.Records -> RecordsBubble(
-                                    item.lines, bills.ledger, onBill,
-                                    onDay = onDay?.let { { it(day) } },
-                                    modifier = itemModifier,
-                                )
+                                when (item) {
+                                    // Where a trip's banner marks its days, the bubbles within them needn't name it.
+                                    is ChatItem.Moment -> MomentCard(
+                                        item.moment, places,
+                                        trip = if (showTrip && onTrip == null) tripOf(item.moment, trips) else null,
+                                        urls = urls,
+                                        onOpen = { onMoment(item.moment.uid) },
+                                        modifier = itemModifier,
+                                        selected = item.moment.uid == selected,
+                                        hidePlace = hidePlace,
+                                        bubble = true,
+                                        joinedAbove = joinedAbove,
+                                        joinedBelow = joinedBelow,
+                                        bills = bills.linked[item.moment.uid].orEmpty(),
+                                        ledger = bills.ledger,
+                                        onBill = onBill,
+                                    )
+                                    is ChatItem.CheckinStop -> CheckinBubble(item.checkin, joinedAbove, joinedBelow, itemModifier, bills.linked[item.checkin.uid].orEmpty(), bills.ledger, onBill)
+                                    is ChatItem.Records -> RecordsBubble(
+                                        item.lines, bills.ledger, onBill,
+                                        onDay = onDay?.let { { it(day) } },
+                                        modifier = itemModifier,
+                                    )
+                                }
                             }
                         }
                         return@forEach

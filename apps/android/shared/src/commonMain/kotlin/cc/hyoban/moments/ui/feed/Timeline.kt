@@ -412,7 +412,7 @@ fun dayItems(
 }
 
 /** When an ISO date and time was, in epoch milliseconds; one written without an offset is read in this device's zone. */
-private fun instantOf(at: String): Long? = runCatching { java.time.OffsetDateTime.parse(at).toInstant().toEpochMilli() }.getOrNull()
+internal fun instantOf(at: String): Long? = runCatching { java.time.OffsetDateTime.parse(at).toInstant().toEpochMilli() }.getOrNull()
     ?: runCatching { java.time.LocalDateTime.parse(at).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() }.getOrNull()
 
 /** Bills next to each other on the timeline: rows on the page, one under another, lined up with the Moments' words. */

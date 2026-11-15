@@ -5,6 +5,7 @@ import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ui.feed.ChatItem
 import cc.hyoban.moments.ui.feed.DayItem
+import cc.hyoban.moments.ui.feed.at
 import cc.hyoban.moments.ui.feed.chatItems
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,6 +21,15 @@ class ChatItemsTest {
         )
         assertEquals(listOf("records-bill-a", "checkin-s", "records-bill-c"), items.map { it.key })
         assertEquals(2, (items[0] as ChatItem.Records).lines.size)
+    }
+
+    @Test
+    fun `a run of records is parted where a trip begins, and each bubble says when it was`() {
+        val begins = 1_700_000_000_000L + 100 * 60_000L
+        val items = chatItems(listOf(DayItem.Bills(listOf(bill("a", 0), bill("b", 100), bill("c", 200)))), breakAt = begins)
+        assertEquals(listOf("records-bill-a", "records-bill-b"), items.map { it.key })
+        assertEquals(listOf(1_700_000_000_000L, begins), items.map { it.at() })
+        assertEquals(1, chatItems(listOf(DayItem.Bills(listOf(bill("a", 0), bill("b", 100))))).size, "without a trip, one bubble")
     }
 
     @Test
