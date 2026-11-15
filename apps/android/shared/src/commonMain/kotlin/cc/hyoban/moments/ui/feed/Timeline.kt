@@ -120,7 +120,7 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
     val allCheckins by container.repository.checkins.collectAsStateWithLifecycle()
     // Only the records of modules that are on (记录项与公开).
     val off = LocalSettings.current.modulesOff
-    return remember(ledger, records, entries, allCheckins, moments, filter, kind, off) {
+    return remember(ledger, records, entries, allCheckins, moments, filter, kind, off) { keptBills.get(ledger, records, entries, allCheckins, moments, filter, kind, off) {
         val inFilter = { day: String ->
             (filter.year == null || day.take(4).toInt() == filter.year) && (filter.month == null || day.substring(5, 7).toInt() == filter.month)
         }
@@ -150,7 +150,7 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
         val checkins = if ((kind != FeedKind.ALL && kind != FeedKind.CHECKINS) || Module.CHECKIN.key in off) emptyMap() else allCheckins.byDay.filterKeys(inFilter)
         val book = ledger.book
         if (book == null || (kind != FeedKind.ALL && kind != FeedKind.BILLS) || Module.LEDGER.key in off) {
-            return@remember TimelineBills(ledger, emptyMap(), emptyMap(), emptyMap(), book?.currency ?: "CNY", charges, things, checkins)
+            return@get TimelineBills(ledger, emptyMap(), emptyMap(), emptyMap(), book?.currency ?: "CNY", charges, things, checkins)
         }
         val shown = ledger.books.filterNot { it.archived }.mapTo(HashSet()) { it.id }
         val uids = moments.mapTo(HashSet()) { it.uid }
@@ -172,6 +172,27 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
             things = things,
             checkins = checkins,
         )
+    } }
+}
+
+private val keptBills = Kept<TimelineBills>(4)
+
+/**
+ * The last few results worked out from the same inputs, kept past the composition that made them.
+ * A page left and come back to, a Moment opened over it or another tab, is composed afresh, and
+ * would otherwise work out every day's bills and rows again in the frame it comes back in. Only
+ * read and written while composing, on the one thread that composes.
+ */
+internal class Kept<T>(private val size: Int) {
+    private val kept = ArrayDeque<Pair<List<Any?>, T>>()
+
+    fun get(vararg inputs: Any?, make: () -> T): T {
+        val key = inputs.asList()
+        kept.firstOrNull { it.first == key }?.let { return it.second }
+        return make().also {
+            kept.addFirst(key to it)
+            if (kept.size > size) kept.removeLast()
+        }
     }
 }
 

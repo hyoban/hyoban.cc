@@ -528,8 +528,19 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                     ) {
                         var atlasAnimatedScope by remember { mutableStateOf<AnimatedVisibilityScope?>(null) }
                         val atlasShown = current == Tab.MAP
+                        // Made once: a new one each time the app is composed again would differ from
+                        // the last, and the map, covered on another tab, would be composed again with it.
+                        val atlasHidden = remember { Modifier.clearAndSetSemantics {} }
                         if (atlasMounted) {
-                            CompositionLocalProvider(LocalNavAnimatedScope provides atlasAnimatedScope) {
+                            // What the tabs cover of it, as a tab's page in the NavHost below keeps, with a
+                            // page over it too: the map is the map tab's page. With what it is given the
+                            // same as pages come and go, the map, covered, is left as it is rather than
+                            // composed again under locals that changed.
+                            CompositionLocalProvider(
+                                LocalNavAnimatedScope provides atlasAnimatedScope,
+                                LocalBottomClearance provides tabClearance,
+                                LocalFabClearance provides tabFab,
+                            ) {
                                 MapScreen(
                                     container,
                                     onMoment = openMoment,
@@ -544,7 +555,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                     onCheckin = checkinNav,
                                     onNewTrip = { navController.navigate(TripEdit()) },
                                     onSuggestedTrip = { navController.navigate(TripEdit(start = it.startAt, end = it.endAt, title = it.name, from = it.from, to = it.to)) },
-                                    modifier = if (atlasShown) Modifier else Modifier.clearAndSetSemantics {},
+                                    modifier = if (atlasShown) Modifier else atlasHidden,
                                     active = atlasShown,
                                 )
                             }

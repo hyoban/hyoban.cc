@@ -102,6 +102,10 @@ class FeedLeading {
     }
 }
 
+// The feed's days and rows, kept past its composition, as [Kept] says.
+private val keptDays = Kept<List<Pair<String, List<MomentRecord>>>>(4)
+private val keptTimeline = Kept<List<Triple<String, List<MomentRecord>, List<DayItem>>>>(4)
+
 /** The rows of [leading] in a list. */
 fun LazyListScope.leadingRows(leading: FeedLeading.() -> Unit) {
     FeedLeading().apply(leading).rows.forEach { (key, content) -> item(key = key) { Box(Modifier.animateItem()) { content() } } }
@@ -165,18 +169,18 @@ fun MomentFeed(
     fromEnd: Boolean = false,
     leading: FeedLeading.() -> Unit = {},
 ) {
-    val days = remember(moments) { moments.groupBy { it.dateKey }.toList() }
+    val days = remember(moments) { keptDays.get(moments) { moments.groupBy { it.dateKey }.toList() } }
     // The single column's days: those with Moments and those with bills alone, newest first.
     // Footprints join a day that is there, never make one of their own.
     // Each day's footprints as read so far, the day laid out again as its own are read.
     val read = tracks.days.associateWith { tracks.cached(it) }
-    val timeline = remember(days, bills, read, oldestFirst, chat, chronological) {
+    val timeline = remember(days, bills, read, oldestFirst, chat, chronological) { keptTimeline.get(days, bills, read, oldestFirst, chat, chronological) {
         val byDay = days.toMap()
         (byDay.keys + bills.loose.keys + bills.charges.keys + bills.things.keys + bills.checkins.keys).sortedDescending().let { if (chronological) it.reversed() else it }.map { day ->
             val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty(), bills.things[day].orEmpty(), bills.checkins[day].orEmpty(), oldestFirst = oldestFirst || chat, day = day, track = read[day])
             Triple(day, byDay[day].orEmpty(), items)
         }
-    }
+    } }
     val bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl
     val card: @Composable (MomentRecord, Modifier, Boolean) -> Unit = { moment, cardModifier, showDate ->
         MomentCard(

@@ -160,9 +160,10 @@ fun sentBodyShape(joinedAbove: Boolean, joinedBelow: Boolean) = androidx.compose
  * A bubble as Telegram draws one: large corners, and on its side ([sent], the right; else the
  * left) a strip [TAIL] wide where its last bubble of a run curls a tail out of its foot. Within a
  * run from the same side, the corners on that side where it meets its neighbours are small, and
- * only the last has the tail.
+ * only the last has the tail. Equal for the same bubble, so one made again as it is composed
+ * again keeps its clip's and border's outline.
  */
-class BubbleShape(private val sent: Boolean, private val joinedAbove: Boolean, private val joinedBelow: Boolean) : Shape {
+data class BubbleShape(private val sent: Boolean, private val joinedAbove: Boolean, private val joinedBelow: Boolean) : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline = with(density) {
         val w = size.width
         val h = size.height
