@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.map
 
+import androidx.compose.ui.text.withStyle
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.design.strong
@@ -270,14 +271,14 @@ private fun MapContent(
     val device = LocalDevice.current
     var fogRegions by remember { mutableStateOf<List<FogRegion>?>(null) }
     val readRegions = suspend { container.cityRegions().also { fogRegions = it } }
-    // 可能的旅程: worked out off the main thread as the records change, at home in the places set
-    // by hand as well, each named after the cities the fog's regions find it went to, the
-    // dismissed left out.
+    // 可能的旅程: worked out off the main thread as the records change, between the check-ins at
+    // the places chosen as home, each named after the cities the fog's regions find it went to,
+    // the dismissed left out.
     val entries by container.repository.entries.collectAsStateWithLifecycle()
     val homes = settings.homes
     val discovered by produceState(emptyList<TripSuggestion>(), moments, entries, places, trips, homes) {
         val sightings = withContext(Dispatchers.Default) { TripDiscovery.sightingsOf(moments, entries.values, places) }
-        if (sightings.isEmpty()) {
+        if (sightings.isEmpty() || homes.isEmpty()) {
             value = emptyList()
             return@produceState
         }
@@ -286,7 +287,7 @@ private fun MapContent(
             TripDiscovery.discover(
                 sightings,
                 trips,
-                atHome = { lat, lng -> homes.isNotEmpty() && TripDiscovery.isHome(regionAt(regions, lng, lat)?.id, homes) },
+                homes = homes.mapNotNull { id -> places[id]?.let { id to it } }.toMap(),
                 cityAt = { lat, lng -> regionAt(regions, lng, lat)?.name },
             )
         }
@@ -548,7 +549,10 @@ private fun MapContent(
                         added = added + suggestion.key
                         addedAt = now
                         scope.launch {
-                            container.repository.createTrip(suggestion.name, suggestion.start, suggestion.end, Visibility.PRIVATE)
+                            container.repository.createTrip(
+                                suggestion.name, suggestion.startAt, suggestion.endAt, Visibility.PRIVATE,
+                                from = suggestion.from, to = suggestion.to,
+                            )
                             show(textOf(Res.string.message_trip_added, suggestion.name))
                         }
                     }
@@ -844,8 +848,9 @@ private fun SuggestionRow(suggestion: TripSuggestion, coverSize: Int, onDismiss:
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(suggestion.name, style = AppTheme.typography.body.strong, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(
-                listOf(
+            val ongoing = if (suggestion.ongoing) stringResource(Res.string.trip_suggestion_ongoing) else null
+            val accent = tokens.accent
+            val about = listOf(
                     formatDate(suggestion.start),
                     pluralStringResource(Res.plurals.count_days, days, days),
                     if (suggestion.photos > 0) {
@@ -853,12 +858,22 @@ private fun SuggestionRow(suggestion: TripSuggestion, coverSize: Int, onDismiss:
                     } else {
                         pluralStringResource(Res.plurals.count_records, suggestion.records, suggestion.records)
                     },
-                ).joinToString(" "),
+                ).joinToString(" ")
+            // Under way, said first in the accent.
+            Text(
+                androidx.compose.ui.text.buildAnnotatedString {
+                    if (ongoing != null) {
+                        withStyle(androidx.compose.ui.text.SpanStyle(color = accent)) { append(ongoing) }
+                        append(" ")
+                    }
+                    append(about)
+                },
                 style = AppTheme.typography.caption,
                 color = tokens.tx2,
             )
         }
-        IconButton(onClick = onAdd, modifier = Modifier.testTag("add_${suggestion.start}")) {
+        // Under way, it is added once back home and checked in there.
+        if (!suggestion.ongoing) IconButton(onClick = onAdd, modifier = Modifier.testTag("add_${suggestion.start}")) {
             Icon(AppIcons.Plus, contentDescription = stringResource(Res.string.trip_suggestion_add, suggestion.name), tint = tokens.tx, modifier = Modifier.size(20.dp))
         }
         IconButton(onClick = onDismiss, modifier = Modifier.testTag("dismiss_${suggestion.start}")) {

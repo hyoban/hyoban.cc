@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
-import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -264,17 +263,13 @@ private fun MeRow(icon: ImageVector, title: String, tag: String, shapes: ListIte
     ) { Text(title) }
 }
 
-/** What 家 says on 我: the places set by hand, by name, else that where one lives is found by itself. */
+/** What 家 says on 我: the places chosen as home, by name, else that none is. */
 @Composable
 private fun homesSummary(container: PhoneContainer): String {
     val homes = container.settings.homes
-    val provinces = stringArrayResource(Res.array.province_codes).zip(stringArrayResource(Res.array.province_names)).toMap()
-    val cities by produceState<List<cc.hyoban.moments.ui.map.FogRegion>?>(null, homes) { if (homes.any { it.length > 2 }) value = container.cityRegions() }
-    if (homes.isEmpty()) return stringResource(Res.string.homes_found_note)
-    val names = homes.sorted().map { id ->
-        if (id.length == 2) provinces[id] ?: id else cities?.firstOrNull { it.id == id }?.name?.let(cc.hyoban.moments.data.trips.TripDiscovery::shortCity) ?: ""
-    }.filter { it.isNotEmpty() }
-    return stringResource(Res.string.me_homes_some, names.joinToString(stringResource(Res.string.separator_list)))
+    val places by container.repository.places.collectAsStateWithLifecycle()
+    val names = homes.mapNotNull { places[it]?.name }.sorted()
+    return if (names.isEmpty()) stringResource(Res.string.setting_unset) else names.joinToString(stringResource(Res.string.separator_list))
 }
 
 /** The app and its version at the foot of the page, and 馒头, the cat the icon is drawn from. */

@@ -541,7 +541,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                     onFocused = { mapFocus = null },
                                     onFootprintSettings = { navController.navigate(FootprintSettings) },
                                     onNewTrip = { navController.navigate(TripEdit()) },
-                                    onSuggestedTrip = { navController.navigate(TripEdit(start = it.start, end = it.end, title = it.name)) },
+                                    onSuggestedTrip = { navController.navigate(TripEdit(start = it.startAt, end = it.endAt, title = it.name, from = it.from, to = it.to)) },
                                     modifier = if (atlasShown) Modifier else Modifier.clearAndSetSemantics {},
                                     active = atlasShown,
                                 )
@@ -620,6 +620,8 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                         startDay = edit.start,
                                         endDay = edit.end,
                                         name = edit.title,
+                                        fromRecord = edit.from,
+                                        toRecord = edit.to,
                                         onBack = back,
                                         // A trip made opens in place of the page that made it.
                                         onMade = { id -> navController.popBackStack(); openTrip(id) },

@@ -1,4 +1,4 @@
-import type { Trip, TripImage } from '@hyoban/trip-map'
+import { isInTrip, type Trip, type TripImage } from '@hyoban/trip-map'
 import { tripCovers } from '@/data/trips'
 import type { Moment, ResolvedMomentMedia } from '@/moments'
 import { getShowcaseMedia } from '@/moments/showcase'
@@ -62,7 +62,7 @@ export function getTripCollage(trip: Trip<Moment>, moments: readonly Moment[], l
   }
 
   return moments
-    .filter((moment) => moment.dateKey >= trip.start && moment.dateKey <= trip.end)
+    .filter((moment) => isInTrip(trip, moment.occurredAt))
     .flatMap((moment) => getTripImages(getShowcaseMedia(moment.media).slice(0, 1)))
     .slice(0, limit)
 }

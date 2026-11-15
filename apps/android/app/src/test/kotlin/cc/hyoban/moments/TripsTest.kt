@@ -63,6 +63,21 @@ class TripsTest {
     private fun trip(id: String, start: String, end: String, waypoints: List<Waypoint> = emptyList()) =
         TripRecord(id, id, start, end, waypoints = waypoints, createdAt = "$start", updatedAt = "$start")
 
+    @Test
+    fun `a trip known to the minute holds only what lies between its start and end`() {
+        val trip = TripRecord(
+            "t", "t", "2026-04-02", "2026-04-07",
+            startAt = "2026-04-02T08:30:00+08:00", endAt = "2026-04-07T21:10:00+08:00",
+            createdAt = "2026-04-02", updatedAt = "2026-04-02",
+        )
+        val trips = listOf(trip)
+
+        assertNull(tripOf(moment("before", "2026-04-02T07:00:00+08:00"), trips))
+        assertEquals("t", tripOf(moment("after start", "2026-04-02T09:00:00+08:00"), trips)?.id)
+        assertEquals("t", tripOf(moment("a day", "2026-04-07"), trips)?.id)
+        assertNull(tripOf(moment("after end", "2026-04-07T22:00:00+08:00"), trips))
+    }
+
     private fun moment(uid: String, occurredAt: String, place: String? = null, trip: String? = null) =
         MomentRecord(uid, occurredAt, listOfNotNull(place), "", trip = trip, createdAt = occurredAt, updatedAt = occurredAt)
 }

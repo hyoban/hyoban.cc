@@ -142,7 +142,12 @@ while the footprints are recording. A trip's days and each day's Moments read fr
 to latest. A trip's page has 回放旅程, which plays the trip back as the site's player does
 (`packages/trip-map/src/player`): the route never still, a vehicle at its tip, a card per
 Moment stepped through from a toolbar, by a swipe or with a keyboard's arrows and Space.
-编辑旅程 changes its name, days, public switch, Moments and covers, published as a collection;
+编辑旅程 changes its name, its two ends (起止: 出发 and 回来), its public switch, Moments and
+covers, published as a collection. Each end is a record or a time set by hand: chosen on a page
+of its own from every check-in and Moment, searched by words and place, the nearest in time
+first, it shows only that record and is its time, followed when the record is edited; set by
+hand, a day or to the minute, it follows none. What came before the start on its first day, or
+after the end on its last, is not in the trip, on the site as here;
 its days' Moments are counted in one row that opens them, each with a switch to leave it
 out, and those of the two days either side are listed under it, out until added. The + on
 the map's trips makes one (新建旅程, `moments://trip-edit`) on the phone alone: a collection of
@@ -151,13 +156,16 @@ site's are. Until then it can be deleted from its 编辑旅程; once published i
 the rest.
 
 Below the trips, after a hairline, 可能的旅程 are the trips the records suggest
-(`data/trips/TripDiscovery.kt`, with `TripEvidence.kt` and `TripNames.kt`): runs of days
-away from home, with evidence of a visit beyond passing through, from the check-ins and the
-Moments with places, not the footprints; nothing leaves the phone. Home is where the records
-fall on the most days around each one, so it follows a move; 我 → 家 (`moments://homes`)
-shows it and takes more by hand, a city or a whole province each. The best come first, by
-photos and days with records, each named after the cities visited, with the holiday it spans
-(国庆香港) or 一日 or 周末 (南京一日). Its + adds it as it is, private; opened, it is 新建旅程 with its days and name filled in; one dismissed doesn't come back.
+(`data/trips/TripDiscovery.kt`, with `TripNames.kt`): the time between a check-in at home on
+leaving and the next one at home on coming back, when a record in between is more than 50 km
+from every home, or more than 30 km on another day than it left; nothing leaves the phone.
+Home is the saved places chosen in 我 → 家 (`moments://homes`), any number of them, picked from
+the saved places, searched by name or address; without one there are none. One checked in to
+leave and not back yet is 进行中, first, its days counted to today, and can be added once back.
+The best come first, by photos and days with records, each named after the cities visited, with
+the holiday it spans (国庆香港) or 一日 or 周末 (南京一日). Its + adds it as it is, private;
+opened, it is 新建旅程 with its times, its two check-ins and its name filled in; one dismissed
+doesn't come back. A trip made from one keeps its two check-ins as its ends' records.
 The thresholds live in the code and its tests.
 
 No page has a bar: its way back and actions float as circles over it, its title large

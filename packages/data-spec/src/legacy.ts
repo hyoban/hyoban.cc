@@ -107,6 +107,9 @@ export const tripRecordSchema = z
     title: z.string().min(1),
     start: dateKey,
     end: dateKey,
+    /** When on its first day it began, and on its last it ended, when known to the minute. */
+    startAt: timestamp.optional(),
+    endAt: timestamp.optional(),
     /** A track from apps/web/src/data/music.ts. */
     music: id.optional(),
     note: z.string().optional(),

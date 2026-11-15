@@ -259,6 +259,11 @@ export const collectionSchema = z
     kind: z.literal('trip'),
     title: z.string().min(1),
     span: z.looseObject({ start: occurredAt, end: occurredAt }),
+    /**
+     * The check-ins it runs between, leaving and coming back, either or both: that end of the
+     * span is its time, and follows it when it changes. Gone from an end set by hand.
+     */
+    bounds: z.looseObject({ from: ulid.optional(), to: ulid.optional() }).optional(),
     /** Entries outside the span that belong to it, and inside it that don't. */
     include: z.array(ulid).default([]),
     exclude: z.array(ulid).default([]),
@@ -718,6 +723,8 @@ const TRIP_KEYS = new Set([
   'straightLegs',
   'sameWayBack',
   'covers',
+  'startAt',
+  'endAt',
   'createdAt',
   'updatedAt',
 ])
@@ -732,7 +739,7 @@ export function tripToCollection(
 ): { collection: Collection; marks: Entry[] } {
   const rest = Object.fromEntries(Object.entries(trip).filter(([key]) => !TRIP_KEYS.has(key)))
   const uid = getStableUlid(trip.createdAt, `trip:${trip.id}`)
-  const inSpan = (at: string) => isWithin(at, trip.start, trip.end)
+  const inSpan = (at: string) => isWithin(at, trip.startAt ?? trip.start, trip.endAt ?? trip.end)
   let previous: string | undefined
   const marks = trip.waypoints.map((waypoint, index): Entry => {
     const at = waypoint.at ?? previous!.slice(0, 10)
@@ -758,7 +765,7 @@ export function tripToCollection(
       slug: trip.id,
       kind: 'trip',
       title: trip.title,
-      span: { start: trip.start, end: trip.end },
+      span: { start: trip.startAt ?? trip.start, end: trip.endAt ?? trip.end },
       include: moments
         .filter((moment) => moment.trip === trip.id && !inSpan(moment.occurredAt))
         .map((moment) => moment.uid),
@@ -784,6 +791,7 @@ const COLLECTION_KEYS = new Set([
   'kind',
   'title',
   'span',
+  'bounds',
   'include',
   'exclude',
   'covers',
@@ -821,6 +829,8 @@ export function collectionToTrip(collection: Collection, entries: readonly Entry
     title: collection.title,
     start: collection.span.start.slice(0, 10),
     end: collection.span.end.slice(0, 10),
+    ...(collection.span.start.length > 10 ? { startAt: collection.span.start } : {}),
+    ...(collection.span.end.length > 10 ? { endAt: collection.span.end } : {}),
     ...(collection.music ? { music: collection.music } : {}),
     ...(collection.note === undefined ? {} : { note: collection.note }),
     waypoints,

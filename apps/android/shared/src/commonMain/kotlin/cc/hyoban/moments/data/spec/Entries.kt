@@ -183,7 +183,7 @@ object Entries {
         put("slug", trip.id)
         put("kind", "trip")
         put("title", trip.title)
-        put("span", buildJsonObject { put("start", trip.start); put("end", trip.end) })
+        put("span", buildJsonObject { put("start", trip.startAt ?: trip.start); put("end", trip.endAt ?: trip.end) })
         put("include", JsonArray(emptyList()))
         put("exclude", JsonArray(emptyList()))
         put("covers", JsonArray(trip.covers.map { buildJsonObject { put("entry", it.moment); put("media", it.media) } }))
@@ -266,6 +266,8 @@ object Entries {
             put("title", collection.getValue("title"))
             put("start", span.string("start").take(10))
             put("end", span.string("end").take(10))
+            span.string("start").takeIf { it.length > 10 }?.let { put("startAt", it) }
+            span.string("end").takeIf { it.length > 10 }?.let { put("endAt", it) }
             collection["music"]?.let { put("music", it) }
             collection["note"]?.let { put("note", it) }
             put("waypoints", JsonArray(waypoints))

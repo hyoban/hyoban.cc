@@ -23,6 +23,9 @@ export type TripDefinition = Readonly<{
    */
   sameWayBack?: readonly (readonly [string, string])[]
   start: string
+  /** When on its first day it began, and on its last it ended, when known to the minute. */
+  startAt?: string
+  endAt?: string
   /**
    * Legs between two location ids taken by ferry, plane or train; drawn dashed instead
    * of along roads. A train leg follows its rail line once one is cached, otherwise straight.
@@ -209,10 +212,7 @@ export function buildTrip<T extends TripMoment>(
 
   let waypointIndex = 0
   const stops = moments
-    .filter(
-      (moment) =>
-        moment.locations.length > 0 && moment.dateKey >= trip.start && moment.dateKey <= trip.end,
-    )
+    .filter((moment) => moment.locations.length > 0 && isInTrip(trip, moment.occurredAt))
     .map((moment): TripStop<T> => {
       const before: TripWaypoint[] = []
 
@@ -376,6 +376,31 @@ export function getDayOffset(start: string, dateKey: string) {
   return Math.round(
     (Date.parse(`${dateKey}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / DAY_MS,
   )
+}
+
+/**
+ * Whether a record at `at`, a day or a time, falls in a trip: on its days, and not before it
+ * began on its first nor after it ended on its last, where those are known to the minute.
+ */
+export function isInTrip(
+  trip: Pick<TripDefinition, 'start' | 'end' | 'startAt' | 'endAt'>,
+  at: string,
+) {
+  const day = at.slice(0, 10)
+
+  if (day < trip.start || day > trip.end) {
+    return false
+  }
+
+  if (at.length <= 10) {
+    return true
+  }
+
+  if (trip.startAt && day === trip.start && Date.parse(at) < Date.parse(trip.startAt)) {
+    return false
+  }
+
+  return !(trip.endAt && day === trip.end && Date.parse(at) > Date.parse(trip.endAt))
 }
 
 /** Orders dates and timestamps; a date sorts before any time on that day. */

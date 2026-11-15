@@ -348,6 +348,7 @@ class MomentsRepository(
             )
             letGo(before, changedEntries[uid])
             local.writePlaces(phonePlaces)
+            followBounds()
             publishPlaces()
             publish()
         }
@@ -358,6 +359,7 @@ class MomentsRepository(
         checkNotNull(local) { "No store for the phone's changes" }
         withContext(io) {
             deleteNow(uid)
+            followBounds()
             publishPlaces()
             publish()
         }
@@ -369,6 +371,7 @@ class MomentsRepository(
             val before = changedEntries[uid]
             setChanges(changedEntries - uid, removedEntries - uid)
             letGo(before, null)
+            followBounds()
             publishPlaces()
             publish()
         }
@@ -542,6 +545,7 @@ class MomentsRepository(
             setAside = setAside - uid
             deleteNow(uid)
             writeHeld()
+            followBounds()
             publishPlaces()
             publish()
         }
@@ -594,6 +598,7 @@ class MomentsRepository(
             holding = holding - uid
             revertNow(uid)
             writeHeld()
+            followBounds()
             publishPlaces()
             publish()
         }
@@ -895,6 +900,8 @@ class MomentsRepository(
                 title = (changed["title"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: trip.title,
                 start = (span?.get("start") as? kotlinx.serialization.json.JsonPrimitive)?.content?.take(10) ?: trip.start,
                 end = (span?.get("end") as? kotlinx.serialization.json.JsonPrimitive)?.content?.take(10) ?: trip.end,
+                startAt = (span?.get("start") as? kotlinx.serialization.json.JsonPrimitive)?.content?.takeIf { it.length > 10 },
+                endAt = (span?.get("end") as? kotlinx.serialization.json.JsonPrimitive)?.content?.takeIf { it.length > 10 },
             )
         }.sortedByDescending { it.start }
     }
@@ -926,6 +933,8 @@ class MomentsRepository(
         include: List<String> = emptyList(),
         exclude: List<String> = emptyList(),
         covers: List<Pair<String, String>> = emptyList(),
+        from: String? = null,
+        to: String? = null,
     ): String = lock.withLock {
         val local = checkNotNull(local) { "No store for the phone's changes" }
         withContext(io) {
@@ -936,6 +945,7 @@ class MomentsRepository(
                 put("createdAt", kotlinx.serialization.json.JsonPrimitive(now))
             }
             val collection = Entries.editCollection(base, title, start, end, visibility, now, include, exclude, covers)
+                .let { made -> withBounds(made, from, to) }
             val id = Entries.collectionKey(collection)
             changedTrips = changedTrips + (id to collection)
             local.writeChangedTrips(changedTrips)
@@ -943,6 +953,64 @@ class MomentsRepository(
             publish()
             id
         }
+    }
+
+    /** An entry's time as the phone has it now, or none once it is deleted. */
+    private fun entryAt(uid: String): String? =
+        (changedEntries[uid] ?: copyEntries[uid]?.takeIf { uid !in removedEntries })
+            ?.let { (it["at"] as? kotlinx.serialization.json.JsonPrimitive)?.content }
+
+    /**
+     * A trip running from the record [from] to the record [to], either or both: that end of
+     * its span the record's time, kept following it; without one, the end as given.
+     */
+    private fun withBounds(collection: kotlinx.serialization.json.JsonObject, from: String?, to: String?): kotlinx.serialization.json.JsonObject {
+        val span = collection["span"] as? kotlinx.serialization.json.JsonObject ?: return collection
+        val start = from?.let(::entryAt)
+        val end = to?.let(::entryAt)
+        val kept = listOfNotNull(start?.let { "from" to from }, end?.let { "to" to to })
+        return kotlinx.serialization.json.JsonObject(
+            collection - "bounds" + ("span" to kotlinx.serialization.json.JsonObject(
+                span + listOfNotNull(start?.let { "start" to kotlinx.serialization.json.JsonPrimitive(it) }, end?.let { "end" to kotlinx.serialization.json.JsonPrimitive(it) }),
+            )) + if (kept.isEmpty()) emptyMap() else mapOf(
+                "bounds" to kotlinx.serialization.json.JsonObject(kept.associate { (key, uid) -> key to kotlinx.serialization.json.JsonPrimitive(uid) }),
+            ),
+        )
+    }
+
+    /** The records a trip runs between, each end's if it has one, or none. */
+    fun boundsOf(collection: kotlinx.serialization.json.JsonObject): Pair<String?, String?>? {
+        val bounds = collection["bounds"] as? kotlinx.serialization.json.JsonObject ?: return null
+        val from = (bounds["from"] as? kotlinx.serialization.json.JsonPrimitive)?.content
+        val to = (bounds["to"] as? kotlinx.serialization.json.JsonPrimitive)?.content
+        return if (from == null && to == null) null else from to to
+    }
+
+    /**
+     * Has each trip between records follow them: each end of its span its record's time as it
+     * now is, and, the record deleted, that end its own. A trip brought back to what the site
+     * has is no longer a change.
+     */
+    private fun followBounds() {
+        val now by lazy { cc.hyoban.moments.data.local.recordTime() }
+        val site = _records.value.collections
+        var trips = changedTrips
+        for ((id, collection) in site.filterKeys { it !in changedTrips } + changedTrips) {
+            val (from, to) = boundsOf(collection) ?: continue
+            // A record gone, its end stays where it was, its own from then on.
+            val followed = withBounds(collection, from?.takeIf { entryAt(it) != null }, to?.takeIf { entryAt(it) != null })
+            if (followed == collection) continue
+            val onSite = site[id]?.takeIf { apiTrips.any { trip -> trip.id == id } }
+            trips = if (onSite != null && JsonObjectsEqualApartFrom(onSite, followed, "updatedAt")) {
+                trips - id
+            } else {
+                trips + (id to kotlinx.serialization.json.JsonObject(followed + ("updatedAt" to kotlinx.serialization.json.JsonPrimitive(now))))
+            }
+        }
+        if (trips == changedTrips) return
+        changedTrips = trips
+        local?.writeChangedTrips(changedTrips)
+        showTrips()
     }
 
     /** A trip as its collection, with the phone's change to it. */
@@ -959,6 +1027,8 @@ class MomentsRepository(
         include: List<String>? = null,
         exclude: List<String>? = null,
         covers: List<Pair<String, String>>? = null,
+        from: String? = null,
+        to: String? = null,
     ) = lock.withLock {
         val local = checkNotNull(local) { "No store for the phone's changes" }
         withContext(io) {
@@ -974,7 +1044,7 @@ class MomentsRepository(
                 include = include ?: Entries.strings(base, "include"),
                 exclude = exclude ?: Entries.strings(base, "exclude"),
                 covers = covers ?: Entries.coversOf(base),
-            )
+            ).let { edited -> withBounds(edited, from, to) }
             val same = made == null && JsonObjectsEqualApartFrom(base, edited, "updatedAt")
             changedTrips = if (same) changedTrips - id else changedTrips + (id to edited)
             local.writeChangedTrips(changedTrips)

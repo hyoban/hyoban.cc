@@ -112,15 +112,15 @@ class Settings(private val prefs: Prefs, secrets: File) {
     }
 
     /**
-     * The places set by hand as home for the map's 可能的旅程, beside the one found by itself: a
-     * city by its region's id, a province by its two digits.
+     * 家: the saved places, by id, that count as home. A check-in at one leaving and another
+     * coming back mark out the map's 可能的旅程.
      */
-    var homes: Set<String> by mutableStateOf(prefs.getStringSet("homes", null).orEmpty().toSet())
+    var homes: Set<String> by mutableStateOf(prefs.getStringSet("home_places", null).orEmpty().toSet())
         private set
 
     fun changeHomes(homes: Set<String>) {
         this.homes = homes
-        prefs.edit { putStringSet("homes", homes) }
+        prefs.edit { putStringSet("home_places", homes) }
     }
 
     /**

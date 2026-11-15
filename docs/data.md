@@ -41,6 +41,9 @@ data/
   away a change set that breaks either.
 - A **trip** is a collection taking the entries in its span (with `include` and
   `exclude`), its waypoints marks of their own (entries with a place and no parts).
+  Either end of its span may be a time: what came before it on its first day, or after it on
+  its last, is not in it. The app can tie an end to a record in `bounds` (`from`, `to`, an
+  entry's uid each, a check-in or a Moment): that end is the record's time and follows it.
 - A **place** has a name, WGS-84 coordinates, a kind, the province, city and district it is
   in (`vp run places:locate`), an optional note, for a train's end its `station`, and for one
   brought in from Swarm the venue it was made for (`source`). Places are never merged for

@@ -832,6 +832,61 @@ class MomentsRepositoryTest {
         assertTrue(!restarted.isTripNew(again))
     }
 
+    @Test
+    fun `a trip between check-ins follows their times until its days are set by hand`() = runBlocking {
+        val repository = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = FakeWriter())
+        repository.load()
+        fun checkin(uid: String, at: String) = kotlinx.serialization.json.buildJsonObject {
+            put("uid", kotlinx.serialization.json.JsonPrimitive(uid))
+            put("at", kotlinx.serialization.json.JsonPrimitive(at))
+            put("parts", kotlinx.serialization.json.buildJsonObject {
+                put("checkin", kotlinx.serialization.json.buildJsonObject {
+                    put("venue", kotlinx.serialization.json.JsonPrimitive("家"))
+                    put("source", kotlinx.serialization.json.buildJsonObject { put("app", kotlinx.serialization.json.JsonPrimitive("phone")) })
+                })
+            })
+            put("createdAt", kotlinx.serialization.json.JsonPrimitive(at))
+            put("updatedAt", kotlinx.serialization.json.JsonPrimitive(at))
+        }
+        val span: (String) -> Triple<String, String, Boolean> = { id ->
+            val collection = repository.tripCollection(id)!!
+            val span = collection["span"] as kotlinx.serialization.json.JsonObject
+            Triple(
+                (span["start"] as kotlinx.serialization.json.JsonPrimitive).content,
+                (span["end"] as kotlinx.serialization.json.JsonPrimitive).content,
+                collection.containsKey("bounds"),
+            )
+        }
+        repository.saveEntry(checkin("01KA0000000000000000000001", "2026-10-01T08:00:00+08:00"))
+        repository.saveEntry(checkin("01KA0000000000000000000002", "2026-10-03T21:00:00+08:00"))
+        val leaving = "01KA0000000000000000000001"
+        val back = "01KA0000000000000000000002"
+        val private = cc.hyoban.moments.data.spec.Visibility.PRIVATE
+
+        val id = repository.createTrip("江南", "2026-10-01", "2026-10-03", private, from = leaving, to = back)
+        assertEquals(Triple("2026-10-01T08:00:00+08:00", "2026-10-03T21:00:00+08:00", true), span(id), "at the records' times")
+        val made = repository.trips.value.single()
+        assertEquals(listOf("2026-10-01", "2026-10-03", "2026-10-01T08:00:00+08:00", "2026-10-03T21:00:00+08:00"), listOf(made.start, made.end, made.startAt, made.endAt))
+
+        repository.saveEntry(checkin(back, "2026-10-04T10:00:00+08:00"))
+        assertEquals(Triple("2026-10-01T08:00:00+08:00", "2026-10-04T10:00:00+08:00", true), span(id), "following a record moved")
+
+        // A Moment can be an end too; the other end set by hand to the minute follows nothing.
+        repository.addLocal(moment("M", "2026-09-30T19:00:00+08:00", published = false))
+        repository.editTrip(id, "江南游", "2026-10-01", "2026-10-04T12:00:00+08:00", private, from = "M")
+        assertEquals(Triple("2026-09-30T19:00:00+08:00", "2026-10-04T12:00:00+08:00", true), span(id))
+        repository.updateLocal(moment("M", "2026-09-30T18:00:00+08:00", published = false))
+        assertEquals("2026-09-30T18:00:00+08:00", span(id).first, "following the Moment")
+
+        repository.editTrip(id, "江南游", "2026-09-30", "2026-10-04", private)
+        assertEquals(Triple("2026-09-30", "2026-10-04", false), span(id), "both ends by hand, its own")
+
+        val other = repository.createTrip("又一次", "2026-10-01", "2026-10-04", private, from = leaving, to = back)
+        repository.deleteEntry(leaving)
+        assertEquals(Triple("2026-10-01T08:00:00+08:00", "2026-10-04T10:00:00+08:00", true), span(other), "a record gone, its end stays")
+        assertEquals(null to back, repository.boundsOf(repository.tripCollection(other)!!))
+    }
+
     private fun moment(uid: String, day: String, text: String = "", hidden: Boolean = false, published: Boolean = true) =
         MomentRecord(
             uid = uid,

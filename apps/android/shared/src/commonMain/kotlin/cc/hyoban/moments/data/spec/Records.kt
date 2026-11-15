@@ -168,6 +168,9 @@ data class TripRecord(
     val title: String,
     val start: String,
     val end: String,
+    /** When on its first day it began, and on its last it ended, when known to the minute. */
+    val startAt: String? = null,
+    val endAt: String? = null,
     val music: String? = null,
     val note: String? = null,
     val waypoints: List<Waypoint> = emptyList(),

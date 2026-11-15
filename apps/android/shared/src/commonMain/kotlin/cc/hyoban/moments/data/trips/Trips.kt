@@ -18,8 +18,24 @@ fun tripOf(moment: MomentRecord, trips: List<TripRecord>): TripRecord? =
     if (moment.trip != null) {
         trips.firstOrNull { it.id == moment.trip }
     } else {
-        trips.firstOrNull { moment.dateKey >= it.start && moment.dateKey <= it.end }
+        trips.firstOrNull { isInTrip(it, moment.occurredAt) }
     }
+
+/**
+ * Whether a record at [at], a day or a time, falls in [trip]: on its days, and not before it
+ * began on its first nor after it ended on its last, where those are known to the minute, as
+ * trip-map's `isInTrip`.
+ */
+fun isInTrip(trip: TripRecord, at: String): Boolean {
+    val day = at.take(10)
+    if (day < trip.start || day > trip.end) return false
+    if (at.length <= 10) return true
+    val time = runCatching { OffsetDateTime.parse(at).toInstant() }.getOrNull() ?: return true
+    val instant = { stamp: String? -> stamp?.let { runCatching { OffsetDateTime.parse(it).toInstant() }.getOrNull() } }
+    instant(trip.startAt)?.let { if (day == trip.start && time < it) return false }
+    instant(trip.endAt)?.let { if (day == trip.end && time > it) return false }
+    return true
+}
 
 /** A trip's Moments, oldest first, each one's time read once rather than at every comparison. */
 fun momentsOf(trip: TripRecord, moments: List<MomentRecord>, trips: List<TripRecord>): List<MomentRecord> =

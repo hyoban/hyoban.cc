@@ -638,7 +638,8 @@ private fun Route(
             onMap = { shell.showOnMap(MapFocus.Trip(it)) }, onEdit = { shell.open(TripEdit(it)) },
         )
         is TripEdit -> TripEditScreen(
-            container, route.id, startDay = route.start, endDay = route.end, name = route.title, onBack = back,
+            container, route.id, startDay = route.start, endDay = route.end, name = route.title,
+            fromRecord = route.from, toRecord = route.to, onBack = back,
             // A trip made opens in place of the page that made it; deleted, its own page goes with it.
             onMade = { id -> shell.back(); openTrip(id) },
             onDeleted = { shell.back(); if (shell.stack.lastOrNull() is Trip) shell.back() },
@@ -653,7 +654,7 @@ private fun Route(
             focus = shell.mapFocus,
             onFocused = { shell.mapFocus = null },
             onNewTrip = { shell.open(TripEdit()) },
-            onSuggestedTrip = { shell.open(TripEdit(start = it.start, end = it.end, title = it.name)) },
+            onSuggestedTrip = { shell.open(TripEdit(start = it.startAt, end = it.endAt, title = it.name, from = it.from, to = it.to)) },
         )
         is TripPlay -> TripPlayerScreen(container, route.id, onMoment = openMoment, onBack = back)
         Search -> SearchScreen(container, onMoment = openMoment, onBack = back)

@@ -22,7 +22,15 @@ data class Trip(val id: String)
 
 /** A trip's name, days and who sees it, to change, or with no [id] to make one, from [start] to [end] and named [title] when they're given. */
 @Serializable
-data class TripEdit(val id: String? = null, val start: String? = null, val end: String? = null, val title: String? = null)
+data class TripEdit(
+    val id: String? = null,
+    val start: String? = null,
+    val end: String? = null,
+    val title: String? = null,
+    /** The check-ins a new trip from a 可能的旅程 runs between. */
+    val from: String? = null,
+    val to: String? = null,
+)
 
 /** A trip played back along its route. */
 @Serializable

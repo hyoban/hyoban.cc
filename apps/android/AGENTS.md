@@ -328,9 +328,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   hiding amounts) hides amounts, account names and private Moments and trips everywhere, the
   widgets included; screens read `container.shownMoments` and `shownTrips`, not the
   repository's, so a new screen keeps to it.
-- Trip discovery uses general time and location evidence, never exceptions for a particular
-  export, city or date. Cover its rules with made-up records; private exports are local
-  regression checks, not fixtures.
+- Trip discovery marks a trip out by check-ins at the saved places chosen as home (家), leaving
+  and coming back, never by guessing where home is; a check-in at home is public or private as
+  that check-in says, like any other. It uses general distance and time thresholds, never
+  exceptions for a particular export, city or date. Cover its rules with made-up records;
+  private exports are local regression checks, not fixtures.
 - The paired camera is spoken to only over Bluetooth and its own Wi‑Fi (`camera/`): the
   location goes to the camera alone and its photos come straight to the gallery.
 - The owner's UGREEN NAS (`nas/`), once set up in 同步与来源, is asked only from 选照片: UGREENlink

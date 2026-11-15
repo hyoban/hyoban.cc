@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
 import { getDistanceKm } from '../src/geo.ts'
-import { buildTrip, defineTrips, getLegKey } from '../src/trips.ts'
+import { buildTrip, defineTrips, getLegKey, isInTrip } from '../src/trips.ts'
 
 const hefei = { id: 'hefei', latitude: 31.8206, longitude: 117.2272, name: '合肥' }
 const nanjing = { id: 'nanjing', latitude: 32.0603, longitude: 118.7969, name: '南京' }
@@ -301,4 +301,23 @@ test('a leg a public track covers takes what was recorded over the route', () =>
   assert.equal(trip.legs[0].route.duration, 3 * 3600)
   // A day alone can't be placed on the track, so that leg keeps what it had.
   assert.equal(trip.legs[1].tracked, undefined)
+})
+
+test('a trip known to the minute leaves out what came before it began and after it ended', () => {
+  const trip = {
+    start: '2026-04-02',
+    end: '2026-04-07',
+    startAt: '2026-04-02T08:30:00+08:00',
+    endAt: '2026-04-07T21:10:00+08:00',
+  }
+
+  assert.equal(isInTrip(trip, '2026-04-02T07:00:00+08:00'), false)
+  assert.equal(isInTrip(trip, '2026-04-02T09:00:00+08:00'), true)
+  assert.equal(isInTrip(trip, '2026-04-04'), true)
+  assert.equal(isInTrip(trip, '2026-04-07T21:30:00+08:00'), false)
+  assert.equal(isInTrip(trip, '2026-04-08T08:00:00+08:00'), false)
+  assert.equal(
+    isInTrip({ start: '2026-04-02', end: '2026-04-07' }, '2026-04-02T00:10:00+08:00'),
+    true,
+  )
 })

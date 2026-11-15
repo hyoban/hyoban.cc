@@ -312,8 +312,11 @@ suspend fun setTrackShared(container: AppContainer, trip: cc.hyoban.moments.data
             container.footprints.saveShare(
                 cc.hyoban.moments.footprints.TrackShare(
                     uid = current?.uid ?: cc.hyoban.moments.data.local.Ulid.next(),
-                    start = java.time.LocalDate.parse(trip.start).atStartOfDay(zone).toInstant().toEpochMilli(),
-                    end = java.time.LocalDate.parse(trip.end).plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1,
+                    // From when it began to when it ended, where those are known to the minute.
+                    start = trip.startAt?.let { java.time.OffsetDateTime.parse(it).toInstant().toEpochMilli() }
+                        ?: java.time.LocalDate.parse(trip.start).atStartOfDay(zone).toInstant().toEpochMilli(),
+                    end = trip.endAt?.let { java.time.OffsetDateTime.parse(it).toInstant().toEpochMilli() }
+                        ?: (java.time.LocalDate.parse(trip.end).plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1),
                     collection = collection,
                 ),
             )
@@ -358,7 +361,7 @@ private fun TripFacets(
         if (!carOn) emptyList() else records.entries.values.mapNotNull { entry ->
             val at = (entry["at"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
             val charge = (entry["parts"] as? kotlinx.serialization.json.JsonObject)?.get("charge") as? kotlinx.serialization.json.JsonObject
-            if (charge == null || at.take(10) < trip.start || at.take(10) > trip.end) null
+            if (charge == null || !cc.hyoban.moments.data.trips.isInTrip(trip, at)) null
             else (charge["energyWh"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull() ?: 0.0
         }
     }

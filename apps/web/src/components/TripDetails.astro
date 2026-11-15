@@ -1,4 +1,5 @@
 ---
+import { isInTrip } from '@hyoban/trip-map'
 import MomentEntry from '@/components/MomentEntry.astro'
 import TripCoverCollage from '@/components/TripCoverCollage.astro'
 import { formatRate, formatYuan } from '@/data/vehicle-costs'
@@ -17,7 +18,7 @@ interface Props {
 }
 
 const { moments, trip } = Astro.props
-const tripMoments = moments.filter(moment => moment.dateKey >= trip.start && moment.dateKey <= trip.end)
+const tripMoments = moments.filter(moment => isInTrip(trip, moment.occurredAt))
 // The trip at a glance, three figures with a word under each: how long and where, how
 // far the car went and how often it charged, and what it cost on the road, from the car's
 // ledger, in all and a kilometre. The last two only when it drove and the records have it.

@@ -53,6 +53,20 @@
       ],
       "additionalProperties": {}
     },
+    "bounds": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+        },
+        "to": {
+          "type": "string",
+          "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+        }
+      },
+      "additionalProperties": {}
+    },
     "include": {
       "default": [],
       "type": "array",

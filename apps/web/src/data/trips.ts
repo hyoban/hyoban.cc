@@ -23,6 +23,8 @@ function toDefinition(record: TripRecord): TripDefinition {
     ...(record.music === undefined ? {} : { music: record.music }),
     sameWayBack: record.sameWayBack.map(({ from, to }) => [from, to] as const),
     start: record.start,
+    ...(record.startAt === undefined ? {} : { startAt: record.startAt }),
+    ...(record.endAt === undefined ? {} : { endAt: record.endAt }),
     straightLegs: record.straightLegs.map(({ from, to, by }) => [from, to, by] as const),
     title: record.title,
     waypoints: record.waypoints.map(({ at, place }) => ({

@@ -311,7 +311,7 @@ fun tripPlayback(trip: TripRecord, moments: List<MomentRecord>, places: Map<Stri
     var next = 0
     val stopPlaces = mutableListOf<Pair<List<Pair<String, Place>>, List<Pair<String, Place>>>>()
     val stops = moments
-        .filter { moment -> moment.dateKey >= trip.start && moment.dateKey <= trip.end && moment.places.any { it in places } }
+        .filter { moment -> isInTrip(trip, moment.occurredAt) && moment.places.any { it in places } }
         .map { moment ->
             // On the same day, a waypoint comes before a Moment that has no time.
             val before = mutableListOf<Triple<String, Place, String>>()
