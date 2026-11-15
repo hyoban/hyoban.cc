@@ -66,7 +66,7 @@ object SideKeySettings
 @Serializable
 object CameraSettings
 
-/** Who sees what by default: the Moments about tech, the books' new bills and the public spans of the footprints. */
+/** Who sees what by default: the Moments about tech and the books' new bills; the footprints stay on the phone. */
 @Serializable
 object Items
 

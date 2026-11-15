@@ -92,11 +92,9 @@ fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val revision by container.footprints.revision.collectAsStateWithLifecycle()
-    // How many spans of the footprints are public, and whether they are being recorded now.
-    val footprints by produceState(0 to false, revision) {
-        value = withContext(Dispatchers.IO) {
-            container.footprints.shares().count { !it.removed } to container.footprints.state().recording
-        }
+    // Whether the footprints are being recorded now.
+    val recording by produceState(false, revision) {
+        value = withContext(Dispatchers.IO) { container.footprints.state().recording }
     }
     val sideKey by SideKeys.state.collectAsStateWithLifecycle()
     val camera by CameraStore.camera.collectAsStateWithLifecycle()
@@ -133,7 +131,7 @@ fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
             ) { routes.ledger(0) }
             if (settings.isOn(Module.FOOTPRINTS)) MeRow(
                 AppIcons.Footprints, stringResource(Res.string.footprints_title), "me_footprints", shapes,
-                supporting = stringResource(Res.string.me_footprints_recording).takeIf { footprints.second },
+                supporting = stringResource(Res.string.me_footprints_recording).takeIf { recording },
                 onClick = routes.footprints,
             )
             if (things.isNotEmpty()) MeRow(
@@ -153,7 +151,7 @@ fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
         PageRows { shapes ->
             MeRow(
                 AppIcons.Eye, stringResource(Res.string.me_items), "settings_items", shapes,
-                supporting = stringResource(Res.string.me_items_public, books.count { it.visibility == "public" }, footprints.first),
+                supporting = stringResource(Res.string.me_items_public, books.count { it.visibility == "public" }),
                 onClick = routes.items,
             )
             MeRow(

@@ -135,31 +135,13 @@ abstract class AppContainer(
         }.flowOn(Dispatchers.Default).stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
 
     /**
-     * Each trip's route as the screens draw and play it: the footprints recorded on it where a
-     * span following the trip is public (each unbroken stretch solid, the gaps between dashed,
-     * never guessed), else the route along the roads, the API's or, for a trip it hasn't
-     * routed, the phone's.
+     * Each trip's route as the screens draw and play it: the route along the roads, the API's
+     * or, for a trip it hasn't routed, the phone's.
      */
     val tripRoutes: kotlinx.coroutines.flow.StateFlow<Map<String, List<cc.hyoban.moments.data.trips.RouteSegment>>> =
-        kotlinx.coroutines.flow.combine(routes.routes, repository.records, repository.trips, phoneLegs, phoneRoutes.lines) { roads, records, trips, legs, lines ->
+        kotlinx.coroutines.flow.combine(routes.routes, phoneLegs, phoneRoutes.lines) { roads, legs, lines ->
             val own = legs.mapValues { (_, tripLegs) -> cc.hyoban.moments.data.trips.segmentsOf(tripLegs, lines) }.filterValues { it.isNotEmpty() }
-            roads + own + trips.mapNotNull { trip ->
-                val uid = repository.tripUid(trip)
-                val track = records.tracks.values.firstOrNull { (it["collection"] as? kotlinx.serialization.json.JsonPrimitive)?.content == uid }
-                    ?: return@mapNotNull null
-                val stretches = (track["segments"] as? kotlinx.serialization.json.JsonArray).orEmpty().mapNotNull { segment ->
-                    (segment as? kotlinx.serialization.json.JsonObject)?.get("coordinates")?.let { it as? kotlinx.serialization.json.JsonArray }
-                        ?.mapNotNull { point ->
-                            val pair = point as? kotlinx.serialization.json.JsonArray ?: return@mapNotNull null
-                            val lng = (pair.getOrNull(0) as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()
-                            val lat = (pair.getOrNull(1) as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()
-                            if (lng != null && lat != null) lng to lat else null
-                        }?.takeIf { it.size > 1 }
-                }
-                if (stretches.isEmpty()) null
-                else trip.id to (stretches.map { cc.hyoban.moments.data.trips.RouteSegment(it, straight = false) } +
-                    stretches.zipWithNext { a, b -> cc.hyoban.moments.data.trips.RouteSegment(listOf(a.last(), b.first()), straight = true) })
-            }
+            roads + own
         }.flowOn(Dispatchers.Default).stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
 
     /** The atlas's record grouping and GeoJSON, prepared before its page is first visited. */

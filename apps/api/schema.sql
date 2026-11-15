@@ -51,18 +51,6 @@ CREATE INDEX entries_rev ON entries (rev, key);
 
 CREATE INDEX entries_day ON entries (day, key);
 
-CREATE TABLE tracks (
-  key TEXT PRIMARY KEY,
-  rev INTEGER NOT NULL,
-  deleted_at TEXT,
-  record TEXT NOT NULL,
-  start_at GENERATED ALWAYS AS (json_extract(record, '$.start')) VIRTUAL,
-  end_at GENERATED ALWAYS AS (json_extract(record, '$.end')) VIRTUAL,
-  collection GENERATED ALWAYS AS (json_extract(record, '$.collection')) VIRTUAL
-);
-
-CREATE INDEX tracks_rev ON tracks (rev, key);
-
 CREATE TABLE vehicle_months (
   key TEXT PRIMARY KEY,
   rev INTEGER NOT NULL,

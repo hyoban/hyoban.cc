@@ -97,8 +97,6 @@ fun TripScreen(
     val places by container.repository.places.collectAsStateWithLifecycle()
     val routes by container.tripRoutes.collectAsStateWithLifecycle()
     val trip = remember(trips, id) { trips.firstOrNull { it.id == id } } ?: return
-    val connected = LocalSettings.current.connected
-    val footprintsOn = LocalSettings.current.isOn(Module.FOOTPRINTS)
     val ledgerOn = LocalSettings.current.isOn(Module.LEDGER)
     // Its check-ins, in its time, read down among its Moments as the timeline has them; the
     // private ones out of sight in 演示模式.
@@ -122,15 +120,9 @@ fun TripScreen(
     val dayLabel = { day: String -> textOf(Res.string.trip_day, daysBetween(trip.start, day)) + " " + formatDay(day) }
     // 第 n 天 at the end of each day's header.
     val dayNote = { day: String -> textOf(Res.string.trip_day, daysBetween(trip.start, day)) }
-    // What of it stays off the site, said as a property, not a switch: the trip, or else its track
-    // while its footprints aren't public (with an API to publish to). The switches are in 编辑旅程.
+    // Whether it stays off the site, said as a property, not a switch, which is in 编辑旅程.
     val tripPrivate = remember(trips, trip.id) { container.repository.isTripPrivate(trip.id) }
-    val trackShared = rememberTrackShared(container, trip)
-    val privateTag = when {
-        tripPrivate -> stringResource(Res.string.visibility_private)
-        connected && footprintsOn && trackShared == false -> stringResource(Res.string.trip_track_private)
-        else -> null
-    }
+    val privateTag = if (tripPrivate) stringResource(Res.string.visibility_private) else null
     // The title is the bar's; under it, what the trip covered.
     val sideways = isPhoneLandscape()
     val summary: @Composable () -> Unit = {
@@ -303,45 +295,6 @@ fun TripScreen(
         }
     }
 }
-
-/** Whether the trip's footprints are public, null until it is known. */
-@Composable
-fun rememberTrackShared(container: AppContainer, trip: cc.hyoban.moments.data.spec.TripRecord): Boolean? {
-    val revision by container.footprints.revision.collectAsStateWithLifecycle()
-    val collection = remember(trip) { container.repository.tripUid(trip) }
-    val shared by androidx.compose.runtime.produceState<Boolean?>(null, revision, collection) {
-        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            container.footprints.shares().any { it.collection == collection && !it.removed }
-        }
-    }
-    return shared
-}
-
-/**
- * Makes the trip's footprints public or takes them back: on, a span following the trip goes out
- * with the next publish, simplified, and the site draws the trip's route from it; off, it is taken back.
- */
-suspend fun setTrackShared(container: AppContainer, trip: cc.hyoban.moments.data.spec.TripRecord, on: Boolean) =
-    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-        val collection = container.repository.tripUid(trip)
-        val current = container.footprints.shares().firstOrNull { it.collection == collection && !it.removed }
-        if (on) {
-            val zone = java.time.ZoneId.systemDefault()
-            container.footprints.saveShare(
-                cc.hyoban.moments.footprints.TrackShare(
-                    uid = current?.uid ?: cc.hyoban.moments.data.local.Ulid.next(),
-                    // From when it began to when it ended, where those are known to the minute.
-                    start = trip.startAt?.let { java.time.OffsetDateTime.parse(it).toInstant().toEpochMilli() }
-                        ?: java.time.LocalDate.parse(trip.start).atStartOfDay(zone).toInstant().toEpochMilli(),
-                    end = trip.endAt?.let { java.time.OffsetDateTime.parse(it).toInstant().toEpochMilli() }
-                        ?: (java.time.LocalDate.parse(trip.end).plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1),
-                    collection = collection,
-                ),
-            )
-        } else if (current != null) {
-            container.footprints.removeShare(current.uid)
-        }
-    }
 
 /** What of a trip stays private, as a small label in the caption's grey. */
 @Composable

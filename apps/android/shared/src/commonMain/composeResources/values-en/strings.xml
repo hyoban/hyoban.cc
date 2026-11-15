@@ -890,19 +890,12 @@
     <string name="visibility_private">Private</string>
     <string name="changes_bill_public_note">Only the amount, category and note</string>
     <string name="changes_bill_private">Made private: taken off the site</string>
-    <string name="changes_tracks">Tracks</string>
-    <string name="changes_track_removed">No longer public: taken off the site</string>
-    <string name="changes_track_public">Public %1$s</string>
-    <string name="trip_track_private">Track private</string>
-    <string name="trip_track_private_note">Turned off, the site draws the route from the recorded track, simplified</string>
-    <string name="trip_track_public_note">The site draws its route from the recorded track, simplified</string>
     <string name="items_title">Items and visibility</string>
     <string name="items_books">Books</string>
     <string name="items_book_public">New bills are public</string>
     <string name="items_book_note">A public bill publishes its amount, category and note alone; accounts and balances stay private. Each bill can still say otherwise.</string>
     <string name="items_tracks">Tracks</string>
-    <string name="items_tracks_note">Tracks are private; a trip’s page can make its span public.</string>
-    <string name="items_track_shares">%1$d public</string>
+    <string name="items_tracks_note">Tracks stay on the phone; the site routes trips by navigation.</string>
     <string name="items_modules">Items</string>
     <string name="items_modules_note">An item turned off is put away on every page; its data stays on the phone. Footprints stop recording, and automatic and side-key billing stop. Turned on, it all comes back.</string>
     <string name="module_checkin">Check-ins</string>
@@ -932,10 +925,6 @@
         <item quantity="other">kWh in %1$d charges</item>
     </plurals>
     <string name="facet_spent">spent</string>
-    <string name="footprints_public_spans">Public spans</string>
-    <string name="footprints_span_trip">Follows its trip’s days</string>
-    <string name="footprints_span_manual">Made public by hand</string>
-    <string name="footprints_make_public">Make this span public</string>
     <string name="day_track_stats">%1$s km moving %2$d min</string>
     <string name="day_still_recording">Still recording</string>
     <string name="timeline_day_no_places">No places that day</string>
@@ -1058,7 +1047,7 @@
     <string name="me_sync_token_set">Token set</string>
     <string name="me_sync_token_unset">No token, can’t sync</string>
     <string name="me_sync_no_api">No API connected</string>
-    <string name="me_items_public">Public: %1$d books, %2$d spans</string>
+    <string name="me_items_public">Public: %1$d books</string>
     <string name="side_key_needs">Requires</string>
     <string name="side_key_service">Share and bill assistant</string>
     <string name="side_key_service_on">Accessibility service on</string>

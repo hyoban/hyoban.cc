@@ -1,31 +1,18 @@
 package cc.hyoban.moments.data.store
 
 import cc.hyoban.moments.data.spec.Entries
-import cc.hyoban.moments.footprints.TrackPoint
-import cc.hyoban.moments.footprints.TrackSelection
-import cc.hyoban.moments.footprints.TrackShare
-import cc.hyoban.moments.footprints.connected
-import cc.hyoban.moments.footprints.distanceMetres
 import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.time.Instant
-import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.hypot
 
-// What publishing sends beside the Moments, from the stores that are the phone's own: the
-// ledger's public bills and the footprints' public spans. Each is private until said public;
-// what is public of it is worked out here, and only that leaves the phone. Each remembers what
-// last went, so 发布更改 lists what changed and a bill or span made private again is taken off.
+// What publishing sends beside the Moments, from the store that is the phone's own: the
+// ledger's public bills. Each is private until said public; what is public of it is worked out
+// here, and only that leaves the phone. Each remembers what last went, so 发布更改 lists what
+// changed and a bill made private again is taken off. The footprints never leave the phone.
 
 /** A bill whose public part isn't what the site has: [part] to send, or null to take it off. */
 data class BillChange(val txn: Txn, val part: JsonObject?, val label: String) {
@@ -33,12 +20,9 @@ data class BillChange(val txn: Txn, val part: JsonObject?, val label: String) {
     val uid: String get() = txn.id
 }
 
-/** A public span of the footprints whose line isn't what the site has: [line] to send, or null to take it off. */
-data class TrackChange(val share: TrackShare, val line: JsonObject?)
-
 /** What waits to publish beside the Moments. */
-data class Outside(val bills: List<BillChange> = emptyList(), val tracks: List<TrackChange> = emptyList()) {
-    val size get() = bills.size + tracks.size
+data class Outside(val bills: List<BillChange> = emptyList()) {
+    val size get() = bills.size
 }
 
 /** Where [Outside] comes from, and where what went is noted; the tests stand in with their own. */
@@ -90,70 +74,5 @@ fun BillChange.entry(): JsonObject = Entries.bill(
     createdAt = Instant.ofEpochMilli(txn.createdAt).atOffset(ZoneOffset.UTC).format(ISO),
     updatedAt = Instant.ofEpochMilli(txn.updatedAt).atOffset(ZoneOffset.UTC).format(ISO),
 )
-
-/**
- * A span's public line: a segment for each unbroken stretch, each simplified to the span's
- * metres, `[longitude, latitude, unix seconds]` a point, and how far it went.
- */
-fun publicLine(share: TrackShare, points: List<TrackPoint>): JsonObject? {
-    val stretches = mutableListOf<MutableList<TrackPoint>>()
-    points.forEach { point ->
-        val last = stretches.lastOrNull()?.lastOrNull()
-        if (last == null || !connected(last, point)) stretches += mutableListOf<TrackPoint>()
-        stretches.last() += point
-    }
-    val segments = stretches.filter { it.size >= 2 }.map { simplify(it, share.simplify) }
-    if (segments.isEmpty()) return null
-    val distance = stretches.sumOf { stretch -> stretch.zipWithNext(::distanceMetres).sum() }
-    return buildJsonObject {
-        put("uid", share.uid)
-        put("start", Instant.ofEpochMilli(share.start).atZone(ZoneId.systemDefault()).toOffsetDateTime().format(ISO))
-        put("end", Instant.ofEpochMilli(share.end).atZone(ZoneId.systemDefault()).toOffsetDateTime().format(ISO))
-        share.collection?.let { put("collection", it) }
-        put("simplify", share.simplify)
-        put("segments", JsonArray(segments.map { segment ->
-            buildJsonObject {
-                put("coordinates", JsonArray(segment.map { point ->
-                    JsonArray(listOf(JsonPrimitive(round(point.longitude)), JsonPrimitive(round(point.latitude)), JsonPrimitive(point.time / 1000)))
-                }))
-            }
-        }))
-        put("distance", Math.round(distance))
-    }
-}
-
-/** Douglas–Peucker to [tolerance] metres, on a plane local to the stretch. */
-fun simplify(points: List<TrackPoint>, tolerance: Double): List<TrackPoint> {
-    if (points.size < 3) return points
-    val metresPerLongitude = 111_320.0 * cos(Math.toRadians(points.first().latitude))
-    fun x(point: TrackPoint) = point.longitude * metresPerLongitude
-    fun y(point: TrackPoint) = point.latitude * 110_540.0
-    val keep = BooleanArray(points.size).also { it[0] = true; it[points.lastIndex] = true }
-    val stack = ArrayDeque(listOf(0 to points.lastIndex))
-    while (stack.isNotEmpty()) {
-        val (first, last) = stack.removeLast()
-        val ax = x(points[first]); val ay = y(points[first])
-        val bx = x(points[last]); val by = y(points[last])
-        val length = hypot(bx - ax, by - ay)
-        var farthest = -1
-        var distance = tolerance
-        for (index in first + 1 until last) {
-            val px = x(points[index]); val py = y(points[index])
-            val d = if (length == 0.0) hypot(px - ax, py - ay) else abs((bx - ax) * (ay - py) - (ax - px) * (by - ay)) / length
-            if (d > distance) {
-                distance = d
-                farthest = index
-            }
-        }
-        if (farthest >= 0) {
-            keep[farthest] = true
-            stack += first to farthest
-            stack += farthest to last
-        }
-    }
-    return points.filterIndexed { index, _ -> keep[index] }
-}
-
-private fun round(degrees: Double) = Math.round(degrees * 1e6) / 1e6
 
 private val ISO: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX")

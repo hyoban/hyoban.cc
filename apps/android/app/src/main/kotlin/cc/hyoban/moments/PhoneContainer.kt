@@ -36,14 +36,14 @@ class PhoneContainer private constructor(
     context: Context,
     /** The ledger stays on this phone, outside API sync and Android's backup; only its public bills publish. */
     override val ledger: LedgerStore,
-    /** GPS tracks stay on this phone, private; only the spans made public publish, simplified. */
+    /** GPS tracks stay on this phone, private; none of them publish. */
     override val footprints: FootprintStore,
 ) : AppContainer(
     settings = Settings(SharedPrefs(context.getSharedPreferences("settings", Context.MODE_PRIVATE)), context.noBackupFilesDir),
     files = context.filesDir,
     private = context.noBackupFilesDir,
     driver = androidx.sqlite.driver.AndroidSQLiteDriver(),
-    outside = PhoneOutside(ledger, footprints),
+    outside = PhoneOutside(ledger),
 ) {
     constructor(context: Context) : this(context, LedgerStore(context), FootprintStore(context))
 

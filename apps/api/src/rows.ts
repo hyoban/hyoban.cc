@@ -5,7 +5,6 @@ import {
   isMomentEntry,
   type Collection,
   type Entry,
-  type PublicTrack,
 } from '@hyoban/data-spec/entry'
 import type { TableName } from '@hyoban/data-spec/tables'
 
@@ -41,7 +40,6 @@ const row = (key: string, record: unknown): Row => ({ key, record: JSON.stringif
 export const entryRow = (entry: Entry) => row(entry.uid, entry)
 export const collectionRow = (collection: Collection) =>
   row(getCollectionKey(collection), collection)
-export const trackRow = (track: PublicTrack) => row(track.uid, track)
 export const placeRow = (id: string, record: unknown) => row(id, record)
 export const routeRow = (key: string, record: unknown) => row(key, record)
 

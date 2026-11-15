@@ -3,7 +3,7 @@
 /// The tables the copy keeps the API's records in, as D1 keeps them.
 public enum CopyTables {
     /// Every table, in the order `GET /v2/rows` hands them out.
-    public static let names = ["places", "collections", "entries", "tracks", "vehicle_months", "vehicle_assisted", "vehicle_captures"]
+    public static let names = ["places", "collections", "entries", "vehicle_months", "vehicle_assisted", "vehicle_captures"]
 
     /// The statements that make them, one per table and index.
     public static let statements = [
@@ -55,20 +55,6 @@ public enum CopyTables {
         """#,
         #"""
         CREATE INDEX entries_day ON entries (day, key)
-        """#,
-        #"""
-        CREATE TABLE tracks (
-          key TEXT PRIMARY KEY,
-          rev INTEGER NOT NULL,
-          deleted_at TEXT,
-          record TEXT NOT NULL,
-          start_at GENERATED ALWAYS AS (json_extract(record, '$.start')) VIRTUAL,
-          end_at GENERATED ALWAYS AS (json_extract(record, '$.end')) VIRTUAL,
-          collection GENERATED ALWAYS AS (json_extract(record, '$.collection')) VIRTUAL
-        )
-        """#,
-        #"""
-        CREATE INDEX tracks_rev ON tracks (rev, key)
         """#,
         #"""
         CREATE TABLE vehicle_months (

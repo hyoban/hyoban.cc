@@ -12,12 +12,7 @@ import {
   vehicleAssistedDrivingCaptureSchema,
   vehicleExpensesSchema,
 } from '@hyoban/data-spec'
-import {
-  collectionSchema,
-  entrySchema,
-  publicTrackSchema,
-  trackShareSchema,
-} from '@hyoban/data-spec/entry'
+import { collectionSchema, entrySchema } from '@hyoban/data-spec/entry'
 
 /** The spec's schemas by the name of the JSON Schema file each becomes. */
 export function getDataSchemas() {
@@ -27,9 +22,7 @@ export function getDataSchemas() {
     manifest: manifestSchema,
     moment: momentRecordSchema,
     places: placesSchema,
-    'public-track': publicTrackSchema,
     routes: routesSchema,
-    'track-share': trackShareSchema,
     trip: tripRecordSchema,
     'vehicle-capture': vehicleCaptureSchema,
     'vehicle-month': vehicleMonthSchema,

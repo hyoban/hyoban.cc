@@ -15,7 +15,6 @@ data/
 ├─ manifest.json                 schemaVersion, generator, updatedAt
 ├─ entries/YYYY/MM/<ulid>.json   an entry
 ├─ collections/<slug>.json       a collection, such as a trip
-├─ tracks/<ulid>.json            a public span of the footprints
 ├─ places.json                   places by id
 ├─ routes.json                   each trip leg's route by its key, as the API fetched it
 ├─ zeekr/                        the car's statistics, expenses and sources

@@ -851,19 +851,12 @@
     <string name="visibility_private">私有</string>
     <string name="changes_bill_public_note">只发布金额、分类和备注</string>
     <string name="changes_bill_private">改为私有，会从网站删除</string>
-    <string name="changes_tracks">轨迹</string>
-    <string name="changes_track_removed">不再公开，会从网站删除</string>
-    <string name="changes_track_public">公开 %1$s</string>
-    <string name="trip_track_private">轨迹私有</string>
-    <string name="trip_track_private_note">关掉后，网站上的路线换成精简过的真实轨迹</string>
-    <string name="trip_track_public_note">网站上的路线换成精简过的真实轨迹</string>
     <string name="items_title">记录项与公开</string>
     <string name="items_books">账本</string>
     <string name="items_book_public">新账单默认公开</string>
     <string name="items_book_note">公开的账单只发布金额、分类和备注，账户和余额永远私有。每一笔还能单独改。</string>
     <string name="items_tracks">轨迹</string>
-    <string name="items_tracks_note">轨迹默认私有，可以在旅程页公开某一段。</string>
-    <string name="items_track_shares">%1$d 段公开</string>
+    <string name="items_tracks_note">轨迹只留在手机上，网站上的旅程路线由导航算出。</string>
     <string name="items_modules">记录项</string>
     <string name="items_modules_note">关掉的记录项从各页收起，数据留在手机上；足迹停止记录，自动记账和侧键记账停下。打开就都回来。</string>
     <string name="module_checkin">签到</string>
@@ -891,10 +884,6 @@
         <item quantity="other">千瓦时 %1$d 次充电</item>
     </plurals>
     <string name="facet_spent">花费</string>
-    <string name="footprints_public_spans">公开的时间段</string>
-    <string name="footprints_span_trip">跟着旅程，旅程改了时间也跟着改</string>
-    <string name="footprints_span_manual">手动公开的</string>
-    <string name="footprints_make_public">公开这一段</string>
     <string name="day_track_stats">%1$s 公里 在移动 %2$d 分钟</string>
     <string name="day_still_recording">还在记录</string>
     <string name="timeline_day_no_places">这一天没有地点</string>
@@ -1013,7 +1002,7 @@
     <string name="me_sync_token_set">令牌已设置</string>
     <string name="me_sync_token_unset">没有令牌，不能同步</string>
     <string name="me_sync_no_api">未连接 API</string>
-    <string name="me_items_public">公开：%1$d 个账本 %2$d 段轨迹</string>
+    <string name="me_items_public">公开：%1$d 个账本</string>
     <string name="side_key_needs">需要</string>
     <string name="side_key_service">分享与记账助手</string>
     <string name="side_key_service_on">无障碍服务已开启</string>

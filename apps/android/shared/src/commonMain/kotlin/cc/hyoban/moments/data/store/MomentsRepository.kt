@@ -53,7 +53,7 @@ class MomentsRepository(
     private val io: CoroutineDispatcher = Dispatchers.IO,
     private val local: DataStore? = null,
     private val writer: MomentsWriter? = null,
-    /** The ledger's public bills and the footprints' public spans, which publish with the Moments. */
+    /** The ledger's public bills, which publish with the Moments. */
     private val outside: OutsideChanges? = null,
 ) {
     private val lock = Mutex()
@@ -108,7 +108,7 @@ class MomentsRepository(
     /**
      * The API's records beside the Moments and trips: the entries with no Moment (a
      * charge, a public bill, a mark) and the Moments with parts the first shape doesn't hold,
-     * the collections and the public spans of the footprints.
+     * and the collections.
      */
     val records: StateFlow<Records> = _records.asStateFlow()
 
@@ -240,7 +240,6 @@ class MomentsRepository(
             copy.revision(),
             copyEntries.filterValues(::isMoreThanMoment),
             objects("collections"),
-            objects("tracks"),
             objects("vehicle_months"),
             objects("vehicle_assisted"),
         )
@@ -271,7 +270,6 @@ class MomentsRepository(
             revision,
             records.entries - touched + touched.mapNotNull { uid -> copyEntries[uid]?.takeIf(::isMoreThanMoment)?.let { uid to it } },
             merge(records.collections, "collections", ::parse),
-            merge(records.tracks, "tracks", ::parse),
             merge(records.vehicleMonths, "vehicle_months", ::parse),
             merge(records.vehicleAssisted, "vehicle_assisted", ::parse),
         )
@@ -760,8 +758,6 @@ class MomentsRepository(
                         deletions + alone.filter { it.part == null }.map { it.uid },
                         entries = alone.filter { it.part != null }.map { it.entry() } + things.values,
                         parts = parts,
-                        tracks = extra.tracks.mapNotNull { it.line },
-                        deletedTracks = extra.tracks.filter { it.line == null }.map { it.share.uid },
                         collections = trips.values.toList(),
                     ),
                 )
@@ -909,13 +905,6 @@ class MomentsRepository(
     /** Whether a trip is private: by the phone's change to it, else as the API has it. */
     fun isTripPrivate(id: String): Boolean =
         (changedTrips[id] ?: _records.value.collections[id])?.let(Entries::isPrivate) == true
-
-    /**
-     * A trip's collection uid, which its public footprints name: its collection's own, as one
-     * made on the phone or since the migration has, else the migration's stable one.
-     */
-    fun tripUid(trip: TripRecord): String =
-        (tripCollection(trip.id)?.get("uid") as? kotlinx.serialization.json.JsonPrimitive)?.content ?: Entries.collectionUid(trip)
 
     /** Whether a trip was made on the phone and isn't published yet. */
     fun isTripNew(id: String): Boolean = id in changedTrips && apiTrips.none { it.id == id }

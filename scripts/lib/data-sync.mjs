@@ -22,7 +22,7 @@ const execFile = promisify(execFileCallback)
 
 /** The records the API holds that git leaves out, which a refresh would overwrite. */
 const API_FILES = ['manifest.json', 'places.json', 'routes.json']
-const API_DIRECTORIES = ['trips', 'moments', 'entries', 'collections', 'tracks']
+const API_DIRECTORIES = ['trips', 'moments', 'entries', 'collections']
 
 /** The car's statistics, which git keeps and a refresh would overwrite too. */
 const TRACKED_API_PATHS = [

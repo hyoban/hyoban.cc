@@ -18,7 +18,7 @@ import {
   type PublishedVideo,
 } from '@hyoban/data-spec'
 import { trips } from '@/data/trips'
-import { readCheckins, readPublicTracks, readRoutes } from '@/data/store'
+import { readCheckins, readRoutes } from '@/data/store'
 import {
   getTripOdometer,
   getVehicleCharges,
@@ -214,9 +214,6 @@ export type MomentTrip = ReturnType<typeof getTrips>[number]
 /** The legs' routes the API fetched, read once; the spec's optional `duration` is only ever left out. */
 const tripRoutes = readRoutes() as Readonly<Record<string, TripRoute>>
 
-/** The footprints made public, which a trip's legs take over the routes where they cover them. */
-const publicTracks = readPublicTracks()
-
 const vehicleMonths = readVehicleMonths()
 const vehicleDays = getVehicleDays(vehicleMonths)
 const vehicleCharges = getVehicleCharges(vehicleMonths)
@@ -254,7 +251,6 @@ export function getTrips(moments: Moment[]) {
       const built = buildTrip(trip, moments, {
         resolveLocation: (id) => ({ id, ...getLocation(locations, id as LocationId) }),
         routes: tripRoutes,
-        tracks: publicTracks,
       })
       const odometer = getMomentTripOdometer(built)
 

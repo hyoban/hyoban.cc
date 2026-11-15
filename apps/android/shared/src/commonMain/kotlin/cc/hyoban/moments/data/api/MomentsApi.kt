@@ -33,8 +33,8 @@ import java.io.IOException
 /**
  * Everything the phone changed: the places only it knows, the Moments to publish, the uids to
  * delete; and what only the second shape holds (`POST /v2/changes`): the entries beside the
- * Moments (a public bill alone), parts a Moment carries there (a public bill of its meal) by
- * its uid, and the public spans of the footprints, with those taken back.
+ * Moments (a public bill alone) and parts a Moment carries there (a public bill of its meal) by
+ * its uid.
  */
 @Serializable
 data class ChangeSet(
@@ -43,8 +43,6 @@ data class ChangeSet(
     val deleted: List<String>,
     val entries: List<JsonObject> = emptyList(),
     val parts: Map<String, Map<String, JsonObject>> = emptyMap(),
-    val tracks: List<JsonObject> = emptyList(),
-    val deletedTracks: List<String> = emptyList(),
     /** Trips changed on the phone, as collections. */
     val collections: List<JsonObject> = emptyList(),
 )
@@ -55,8 +53,6 @@ private data class EntryChangeSet(
     val places: Map<String, Place>,
     val entries: List<JsonObject>,
     val deleted: List<String>,
-    val tracks: List<JsonObject>,
-    val deletedTracks: List<String>,
     val collections: List<JsonObject>,
 )
 
@@ -177,8 +173,6 @@ class MomentsApi(
             places = changes.places,
             entries = changes.moments.map { Entries.fromMoment(it, changes.parts[it.uid].orEmpty()) } + changes.entries,
             deleted = changes.deleted,
-            tracks = changes.tracks,
-            deletedTracks = changes.deletedTracks,
             collections = changes.collections,
         )
         val text = write("POST", "/v2/changes", encode(EntryChangeSet.serializer(), second), publishing)

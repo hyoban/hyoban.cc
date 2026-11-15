@@ -62,16 +62,6 @@ export const tables = [
     indexes: [['day', 'key']],
   },
   {
-    name: 'tracks',
-    key: "the public track's uid",
-    columns: [
-      { name: 'start_at', as: field('start') },
-      { name: 'end_at', as: field('end') },
-      { name: 'collection', as: field('collection') },
-    ],
-    indexes: [],
-  },
-  {
     name: 'vehicle_months',
     key: '`<device>/<YYYY-MM>`',
     columns: [

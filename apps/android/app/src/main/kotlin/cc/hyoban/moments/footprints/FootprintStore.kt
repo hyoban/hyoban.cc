@@ -20,7 +20,7 @@ import java.util.UUID
  * The points table is the original sample ledger; the displayed route is a bounded streaming view.
  */
 class FootprintStore(context: Context) : SQLiteOpenHelper(
-    context, File(context.noBackupFilesDir, "footprints.sqlite").absolutePath, null, 5,
+    context, File(context.noBackupFilesDir, "footprints.sqlite").absolutePath, null, 6,
 ), Footprints {
     private val _revision = MutableStateFlow(0L)
     override val revision = _revision.asStateFlow()
@@ -33,7 +33,6 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         db.execSQL("CREATE INDEX points_day ON points(day, time)")
         db.execSQL("CREATE INDEX points_session ON points(session, time)")
         db.execSQL("CREATE INDEX points_time ON points(time)")
-        createShares(db)
         createPlaceNames(db)
         addContext(db)
     }
@@ -50,20 +49,16 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         db.execSQL("CREATE INDEX events_time ON events(time)")
     }
 
-    private fun createShares(db: SQLiteDatabase) {
-        db.execSQL("CREATE TABLE track_shares (uid TEXT PRIMARY KEY, start INTEGER NOT NULL, end INTEGER NOT NULL, collection TEXT, simplify REAL NOT NULL, removed INTEGER NOT NULL, published TEXT)")
-    }
-
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) {
             // Version 1 retained only accepted points. Preserve those originals; missing fixes cannot be recovered.
             db.execSQL("ALTER TABLE points ADD COLUMN speed REAL")
             db.execSQL("ALTER TABLE points ADD COLUMN speed_accuracy REAL")
         }
-        // The footprints stay private, but spans of them can be made public.
-        if (oldVersion < 3) createShares(db)
         if (oldVersion < 4) createPlaceNames(db)
         if (oldVersion < 5) addContext(db)
+        // Versions 3 to 5 kept the spans made public; the footprints never leave the phone now.
+        if (oldVersion < 6) db.execSQL("DROP TABLE IF EXISTS track_shares")
     }
 
     /** What Photon calls the spots bills were paid at (`BillPlaces`), by a cell of about ten metres; empty where nothing is named. */
@@ -253,39 +248,6 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
             selection.from != null && selection.to != null -> "time BETWEEN ? AND ?" to arrayOf(selection.from.toString(), selection.to.toString())
             else -> "1=1" to emptyArray()
         }
-    }
-
-    /** Every public span, those taken back and not yet let go by the site among them. */
-    @Synchronized override fun shares(): List<TrackShare> = readableDatabase.rawQuery(
-        "SELECT uid, start, end, collection, simplify, removed, published FROM track_shares ORDER BY start", null,
-    ).use { c ->
-        buildList {
-            while (c.moveToNext()) add(TrackShare(c.getString(0), c.getLong(1), c.getLong(2), if (c.isNull(3)) null else c.getString(3), c.getDouble(4), c.getInt(5) != 0, if (c.isNull(6)) null else c.getString(6)))
-        }
-    }
-
-    @Synchronized override fun saveShare(share: TrackShare) {
-        writableDatabase.insertWithOnConflict("track_shares", null, ContentValues().apply {
-            put("uid", share.uid); put("start", share.start); put("end", share.end); put("collection", share.collection)
-            put("simplify", share.simplify); put("removed", if (share.removed) 1 else 0); put("published", share.published)
-        }, SQLiteDatabase.CONFLICT_REPLACE)
-        _revision.value++
-    }
-
-    /** Takes a span back: gone at once if the site never had it, else kept as removed until it is published. */
-    @Synchronized override fun removeShare(uid: String) {
-        val share = shares().firstOrNull { it.uid == uid } ?: return
-        if (share.published == null) writableDatabase.delete("track_shares", "uid=?", arrayOf(uid)) else saveShare(share.copy(removed = true))
-        _revision.value++
-    }
-
-    /** Notes what the site now has of each span, by uid: its line as JSON, or null when it let it go. */
-    @Synchronized fun markSharesPublished(published: Map<String, String?>) {
-        published.forEach { (uid, line) ->
-            if (line == null) writableDatabase.delete("track_shares", "uid=? AND removed=1", arrayOf(uid))
-            else writableDatabase.update("track_shares", ContentValues().apply { put("published", line) }, "uid=?", arrayOf(uid))
-        }
-        _revision.value++
     }
 
     private fun cursor(selection: TrackSelection): Cursor {

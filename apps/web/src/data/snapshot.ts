@@ -9,15 +9,13 @@ import {
 import {
   getCollectionFile,
   getEntryFile,
-  getPublicTrackFile,
   type Collection,
   type Entry,
-  type PublicTrack,
 } from '@hyoban/data-spec/entry'
 import siteConfig from '../../../../site.config.json' with { type: 'json' }
 import { listJsonFiles } from './store.ts'
 
-// The API's export, `GET /v2/export` (entries, collections and public tracks), and how it
+// The API's export, `GET /v2/export` (entries and collections), and how it
 // lands on disk in data/'s layout: for the site's build (api-data.ts) and for the copy in
 // data/ (`pnpm data:export`).
 
@@ -34,7 +32,6 @@ export interface Snapshot {
   /** The second shape's, from `/v2/export`. */
   entries?: Pick<Entry, 'uid' | 'at'>[]
   collections?: Pick<Collection, 'uid' | 'slug'>[]
-  tracks?: Pick<PublicTrack, 'uid'>[]
   /** Each trip leg's route by its key; missing from an API that doesn't keep them yet. */
   routes?: Record<string, unknown>
   /** The car's statistics; missing from an API that doesn't keep them yet. */
@@ -79,10 +76,6 @@ export async function writeSnapshot(snapshot: Snapshot, root: string) {
       getCollectionFile(collection),
       collection,
     ]),
-    ...(snapshot.tracks ?? []).map((track): [string, unknown] => [
-      getPublicTrackFile(track),
-      track,
-    ]),
     ...(snapshot.vehicleMonths ?? []).map((month): [string, unknown] => [
       `zeekr/months/${month.deviceId}/${month.month}.json`,
       month,
@@ -117,7 +110,6 @@ export async function writeSnapshot(snapshot: Snapshot, root: string) {
     'trips',
     'entries',
     'collections',
-    'tracks',
     ...(snapshot.vehicleMonths ? VEHICLE_DIRECTORIES : []),
   ]) {
     for (const file of listJsonFiles(directory, root)) {

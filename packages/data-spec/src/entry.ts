@@ -243,7 +243,7 @@ export type EntryInput = z.input<typeof entrySchema>
 export type EntryParts = Entry['parts']
 export type EntryPoint = z.output<typeof entryPointSchema>
 
-/** The route a trip falls back on where it has no public track: legs not driven, and back the same way. */
+/** How a trip's route is worked out between its places: legs not driven, and back the same way. */
 const routeHintsSchema = z.looseObject({
   straightLegs: z
     .array(z.looseObject({ from: id, to: id, by: z.enum(['ferry', 'plane', 'train']) }))
@@ -296,34 +296,7 @@ export const trackSchema = z.looseObject({
   ),
 })
 
-/** A span of the footprints made public, by hand or with a trip it follows. */
-export const trackShareSchema = z.looseObject({
-  uid: ulid,
-  start: timestamp,
-  end: timestamp,
-  collection: ulid.optional(),
-  /** Metres the public line is simplified to. */
-  simplify: z.number().positive().default(30),
-})
-
-/** What a public span publishes: its line simplified, `[lng, lat, unix seconds]`, a segment per unbroken stretch. */
-export const publicTrackSchema = trackShareSchema.extend({
-  segments: z
-    .array(
-      z.looseObject({
-        mode: z.enum(['walk', 'ride', 'drive', 'train', 'flight']).optional(),
-        coordinates: z.array(z.array(z.number()).min(2).max(3)).min(2),
-      }),
-    )
-    .default([]),
-  /** Metres along it all. */
-  distance: z.number().nonnegative().optional(),
-  updatedAt: timestamp.optional(),
-})
-
 export type Track = z.output<typeof trackSchema>
-export type TrackShare = z.output<typeof trackShareSchema>
-export type PublicTrack = z.output<typeof publicTrackSchema>
 
 // Plugins: the data half (its part, its version, its default audience, its public fields and
 // whether it keeps to the phone) shared by the site, the API and the app; each client has its
@@ -413,7 +386,7 @@ export type PluginId = keyof typeof plugins
 
 // Modules: what a client lets the owner turn on or off as one, in 记录项与公开 on the phone.
 // Each owns the plugins whose parts are its and, past the entries, the tables it keeps (the
-// footprints' public tracks, the car's statistics). Words and photos are every entry's and no
+// car's statistics). Words and photos are every entry's and no
 // module's. Off, a module's pages, rows and background work are put away and its records
 // kept, so the data is the same either way; a part of a module the client doesn't know
 // travels through like any other.
@@ -427,7 +400,7 @@ export interface Module {
 }
 
 export const modules = [
-  { id: 'footprints', plugins: [], tables: ['tracks'] },
+  { id: 'footprints', plugins: [], tables: [] },
   { id: 'ledger', plugins: ['bill'], tables: [] },
   { id: 'things', plugins: ['device', 'subscription'], tables: [] },
   {
@@ -923,7 +896,7 @@ export function getStableUlid(time: string, seed: string) {
 }
 
 // Where each lives under `data/`: an entry by its month like a Moment, a collection by its
-// slug (or uid), a public track by its uid.
+// slug (or uid).
 
 /** An entry's file under `data/`, like `entries/2026/10/01K7….json`. */
 export function getEntryFile(entry: Pick<Entry, 'at' | 'uid'>) {
@@ -938,11 +911,6 @@ export function getCollectionFile(collection: Pick<Collection, 'slug' | 'uid'>) 
 /** What a collection is known by in addresses and the database: its slug, else its uid in lowercase. */
 export function getCollectionKey(collection: Pick<Collection, 'slug' | 'uid'>) {
   return collection.slug ?? collection.uid.toLowerCase()
-}
-
-/** A public track's file under `data/`. */
-export function getPublicTrackFile(track: Pick<PublicTrack, 'uid'>) {
-  return `tracks/${track.uid}.json`
 }
 
 /** Whether an entry is a charge imported from the car's statistics, which only an import changes. */

@@ -343,16 +343,6 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                     }?.takeUnless { busy }
                     SwipeToRevert(revert) { OutsideCard(change.label, formatDate(change.txn.dateKey), billAmount(change), stringResource(if (change.part == null) Res.string.changes_bill_private else Res.string.changes_bill_public_note), revert) }
                 }
-                section(Res.string.changes_tracks, pending.outside.tracks, key = { "track-${it.share.uid}" }) { change ->
-                    val span = listOf(change.share.start, change.share.end).map { formatDate(java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString()) }.distinct().joinToString(" – ")
-                    OutsideCard(
-                        stringResource(Res.string.changes_track_public, span),
-                        null,
-                        null,
-                        if (change.line == null) stringResource(Res.string.changes_track_removed) else stringResource(Res.string.trip_track_public_note),
-                        null,
-                    )
-                }
                 section(Res.string.section_removed, pending.removed, key = { it.uid }) { moment ->
                     val revert = { container.revert(moment.uid) }.takeUnless { busy }
                     SwipeToRevert(revert) {

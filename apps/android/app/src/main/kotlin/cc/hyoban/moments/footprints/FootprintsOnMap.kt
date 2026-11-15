@@ -6,7 +6,6 @@ import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.components.openAppSettings
 
-import androidx.compose.runtime.produceState
 import cc.hyoban.moments.ui.design.ModalBottomSheet
 import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.FilterChip
@@ -437,44 +436,6 @@ fun FootprintsOnMap(container: PhoneContainer, onSettings: () -> Unit, content: 
                                 },
                                 modifier = Modifier.testTag("footprints_part_${part.start}"),
                             ) { Text(title) }
-                        }
-                    },
-                )
-            }
-            item {
-                // The spans made public: private by default, each taken back by its switch; the
-                // day or trip chosen above can be made one.
-                val revision by store.revision.collectAsStateWithLifecycle()
-                val shares by produceState(emptyList<TrackShare>(), revision) {
-                    value = withContext(Dispatchers.IO) { store.shares().filter { !it.removed } }
-                }
-                val selectedTrip = view.history.sessions.firstOrNull { it.id == session }
-                val zone = ZoneId.systemDefault()
-                val span = when {
-                    selectedTrip != null -> selectedTrip.started to (selectedTrip.ended ?: System.currentTimeMillis())
-                    else -> LocalDate.parse(day).atStartOfDay(zone).toInstant().toEpochMilli() to
-                        LocalDate.parse(day).plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1
-                }
-                SegmentedGroup(
-                    stringResource(Res.string.footprints_public_spans),
-                    stringResource(Res.string.items_tracks_note),
-                    shares.map<TrackShare, cc.hyoban.moments.ui.settings.Segment> { share ->
-                        { shapes ->
-                            SwitchRow(true, AppIcons.Eye, stamp(share.start) + " – " + stamp(share.end), "share_${share.uid}", shapes,
-                                supporting = stringResource(if (share.collection != null) Res.string.footprints_span_trip else Res.string.footprints_span_manual)) {
-                                work { withContext(Dispatchers.IO) { store.removeShare(share.uid) } }
-                            }
-                        }
-                    } + listOf<cc.hyoban.moments.ui.settings.Segment> { shapes ->
-                        ActionRow(AppIcons.Plus, stringResource(Res.string.footprints_make_public), shapes,
-                            supporting = stamp(span.first) + " – " + stamp(span.second),
-                            tag = "footprints_make_public",
-                            enabled = loaded && !busy && view.points.isNotEmpty() && shares.none { it.start == span.first && it.end == span.second }) {
-                            work {
-                                withContext(Dispatchers.IO) {
-                                    store.saveShare(TrackShare(cc.hyoban.moments.data.local.Ulid.next(), span.first, span.second))
-                                }
-                            }
                         }
                     },
                 )

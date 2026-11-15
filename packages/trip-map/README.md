@@ -108,13 +108,8 @@ dragging. `trip-map-toolbar__actions` on the toolbar's buttons moves them aside 
    const trip = buildTrip(definition, posts, {
      resolveLocation: (id) => ({ id, ...locations[id] }),
      routes, // { [getLegKey(from, to)]: { coordinates, distance, duration } }, cached
-     tracks, // optional: footprints made public, [{ segments: [{ coordinates: [[lng, lat, unix seconds]] }] }]
    })
    ```
-
-   A leg between two places reached at known times that a public track covers takes what
-   was recorded between them over any route, marked `tracked`; a place with only a day can't
-   be placed on a track, so its legs keep their routes.
 
    Routes come from Valhalla (FOSSGIS's public server, no key) and OpenRailRouting for
    trains; fetch them once and cache them (hyoban.cc's API, `apps/api/src/routes.ts`, shows how).

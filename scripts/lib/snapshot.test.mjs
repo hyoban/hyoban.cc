@@ -21,7 +21,6 @@ const snapshot = {
   places: readJson('places.json', fixtureRoot),
   entries: listJsonFiles('entries', fixtureRoot).map((file) => readJson(file, fixtureRoot)),
   collections: listJsonFiles('collections', fixtureRoot).map((file) => readJson(file, fixtureRoot)),
-  tracks: listJsonFiles('tracks', fixtureRoot).map((file) => readJson(file, fixtureRoot)),
   routes: readJson('routes.json', fixtureRoot),
 }
 

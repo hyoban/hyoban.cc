@@ -12,7 +12,6 @@ import cc.hyoban.moments.footprints.Footprints
 import cc.hyoban.moments.footprints.RecordingState
 import cc.hyoban.moments.footprints.TrackPoint
 import cc.hyoban.moments.footprints.TrackSelection
-import cc.hyoban.moments.footprints.TrackShare
 import cc.hyoban.moments.footprints.refinedTrack
 import cc.hyoban.moments.ledger.Account
 import cc.hyoban.moments.ledger.AccountKind
@@ -191,17 +190,6 @@ class PhoneBackup(prefs: Prefs, secrets: File, private val folder: File, private
                 refinedTrack(sequence { while (statement.step()) yield(statement.point()) }).toList()
             }
         }
-
-        override fun shares(): List<TrackShare> = read(FOOTPRINTS, emptyList()) {
-            prepare("SELECT uid, start, end, collection, simplify, removed, published FROM track_shares ORDER BY start").use { c ->
-                buildList {
-                    while (c.step()) add(TrackShare(c.getText(0), c.getLong(1), c.getLong(2), c.textOrNull(3), c.getDouble(4), c.getLong(5) != 0L, c.textOrNull(6)))
-                }
-            }
-        }
-
-        override fun saveShare(share: TrackShare) {}
-        override fun removeShare(uid: String) {}
     }
 
     init {

@@ -6,10 +6,8 @@ import {
   getUploadEntry,
   isImportedCharge,
   isPublicCheckin,
-  publicTrackSchema,
   type Collection,
   type Entry,
-  type PublicTrack,
 } from '@hyoban/data-spec/entry'
 import pLimit from 'p-limit'
 import {
@@ -21,7 +19,7 @@ import {
   type Statement,
 } from './database.ts'
 import { HttpError, validate } from './http.ts'
-import { collectionRow, deleteSql, entryRow, getEntryKind, trackRow } from './rows.ts'
+import { collectionRow, deleteSql, entryRow, getEntryKind } from './rows.ts'
 import {
   COPIES_AT_ONCE,
   commit,
@@ -37,7 +35,7 @@ import {
   type WriteResult,
 } from './writes.ts'
 
-// The second shape's side of the API, `/v2`: entries, collections and public tracks, read
+// The second shape's side of the API, `/v2`: entries and collections, read
 // and written as one change set, in the tables @hyoban/data-spec/tables defines. Every read
 // is the owner's and sees everything kept here; the site trims what it shows to what is
 // public itself. What stays on the phone (a private bill, the raw footprints) never comes
@@ -91,42 +89,30 @@ export function readCollection(db: Database, key: string) {
   return readOne(db, 'collections', key)
 }
 
-const tracksQuery = (db: Database) =>
-  db.prepare(`SELECT ${COLUMNS} FROM tracks WHERE deleted_at IS NULL ORDER BY start_at, key`)
-
-/** `{ revision, tracks }`: the spans of footprints made public, by when they start. */
-export async function readTracks(db: Database) {
-  const [revision, rows] = await readAll(db, [revisionQuery(db), tracksQuery(db)])
-
-  return `{"revision":${toRevision(revision)},"tracks":${arrayText((rows as StoredRow[]).map(readRow))}}`
-}
-
 /**
  * Everything kept here, drafts included, in the shape `data/` keeps it:
- * `{ revision, manifest, places, entries, collections, tracks, routes }`, and the car's
+ * `{ revision, manifest, places, entries, collections, routes }`, and the car's
  * statistics as `vehicleMonths`, `vehicleAssisted` and `vehicleCaptures`.
  */
 export async function readEntrySnapshot(db: Database) {
   const live = (table: string, order = 'key') =>
     db.prepare(`SELECT ${COLUMNS} FROM ${table} WHERE deleted_at IS NULL ORDER BY ${order}`)
-  const [revision, manifest, places, entries, collections, tracks, routes, ...vehicle] =
-    await readAll(db, [
-      revisionQuery(db),
-      db.prepare(`SELECT value FROM meta WHERE key = 'manifest'`),
-      live('places'),
-      live('entries'),
-      live('collections', 'start_day, key'),
-      tracksQuery(db),
-      live('routes'),
-      ...VEHICLE_TABLES.map(({ table }) => live(table)),
-    ])
+  const [revision, manifest, places, entries, collections, routes, ...vehicle] = await readAll(db, [
+    revisionQuery(db),
+    db.prepare(`SELECT value FROM meta WHERE key = 'manifest'`),
+    live('places'),
+    live('entries'),
+    live('collections', 'start_day, key'),
+    live('routes'),
+    ...VEHICLE_TABLES.map(({ table }) => live(table)),
+  ])
   const [manifestRow] = manifest as { value: string }[]
   const read = (rows: unknown[] | undefined) => ((rows ?? []) as StoredRow[]).map(readRow)
   const vehicleText = VEHICLE_TABLES.map(
     ({ name }, index) => `,${JSON.stringify(name)}:${arrayText(read(vehicle[index]))}`,
   ).join('')
 
-  return `{"revision":${toRevision(revision)},"manifest":${manifestRow?.value ?? 'null'},"places":${keyedText(read(places))},"entries":${arrayText(read(entries))},"collections":${arrayText(read(collections))},"tracks":${arrayText(read(tracks))},"routes":${keyedText(read(routes))}${vehicleText}}`
+  return `{"revision":${toRevision(revision)},"manifest":${manifestRow?.value ?? 'null'},"places":${keyedText(read(places))},"entries":${arrayText(read(entries))},"collections":${arrayText(read(collections))},"routes":${keyedText(read(routes))}${vehicleText}}`
 }
 
 /**
@@ -157,14 +143,12 @@ export interface AppliedEntryChanges {
   deleted: string[]
   collections: Collection[]
   deletedCollections: string[]
-  tracks: PublicTrack[]
-  deletedTracks: string[]
   revision?: number
 }
 
 /**
  * A change set in the second shape, as one write: `{ places, entries, deleted, collections,
- * deletedCollections, tracks, deletedTracks }`: the places are named first,
+ * deletedCollections }`: the places are named first,
  * each entry is published (its media's originals uploaded first) and checked, and all of it is
  * committed in one transaction or none of it is. A collection is known by its slug, else its
  * uid in lowercase.
@@ -180,7 +164,7 @@ export async function applyEntryChanges(
     if (!Array.isArray(value)) {
       throw new HttpError(
         422,
-        'Send { places, entries, deleted, collections, deletedCollections, tracks, deletedTracks }.',
+        'Send { places, entries, deleted, collections, deletedCollections }.',
       )
     }
 
@@ -228,8 +212,6 @@ export async function applyEntryChanges(
 
   const givenCollections = list('collections').map((value) => validate(collectionSchema, value))
   const deletedCollections = strings('deletedCollections')
-  const givenTracks = list('tracks').map((value) => validate(publicTrackSchema, value))
-  const deletedTracks = strings('deletedTracks')
   const state = await readEntryWriteState(context.db, [
     ...inputs.map((input) => input.uid),
     ...deletedUids,
@@ -328,15 +310,6 @@ export async function applyEntryChanges(
       statements.push(context.db.prepare(deleteSql('collections')).bind(context.now, key))
     }
 
-    for (const track of givenTracks) {
-      statements.push(upsert(context.db, 'tracks', trackRow(track)))
-      changesRoutes = true
-    }
-
-    for (const uid of deletedTracks) {
-      statements.push(context.db.prepare(deleteSql('tracks')).bind(context.now, uid))
-    }
-
     if (statements.length > 0) {
       revision = await commit(context, [
         ...statements,
@@ -359,8 +332,6 @@ export async function applyEntryChanges(
       deleted,
       collections: givenCollections,
       deletedCollections,
-      tracks: givenTracks,
-      deletedTracks,
       ...(revision ? { revision } : {}),
     },
     status: 200,

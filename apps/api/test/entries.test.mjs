@@ -4,7 +4,7 @@ import { test } from 'vite-plus/test'
 import { getStableUlid, momentToEntry, tripToCollection } from '@hyoban/data-spec/entry'
 import { call, get, getMoment, momentsOf, readChanges, setUp, snapshot, token } from './setup.mjs'
 
-// The entries, collections and public tracks, as /v2 reads and writes them, all of them the
+// The entries and collections, as /v2 reads and writes them, all of them the
 // owner's to read.
 
 const owner = { auth: token }
@@ -175,37 +175,6 @@ test('a collection and its marks are kept, and go when it is deleted', async () 
 
   await commit(env, { deletedCollections: ['test-trip'] })
   assert.equal((await get(env, '/v2/collections/test-trip')).status, 404)
-})
-
-test('a public span of footprints is kept and read, and goes when deleted', async () => {
-  const { env } = setUpWithData()
-  const track = {
-    uid: uid('track'),
-    start: '2026-10-29T08:00:00+08:00',
-    end: '2026-10-29T18:00:00+08:00',
-    simplify: 30,
-    segments: [
-      {
-        mode: 'drive',
-        coordinates: [
-          [118.4, 31.3, 0],
-          [118.5, 31.4, 60],
-        ],
-      },
-    ],
-    distance: 14000,
-  }
-
-  assert.equal((await commit(env, { tracks: [track] })).status, 200)
-  assert.deepEqual((await get(env, '/v2/tracks')).body.tracks, [track])
-
-  const feed = await readChanges(env, 1)
-
-  assert.deepEqual(feed.tracks, [track])
-
-  await commit(env, { deletedTracks: [track.uid] })
-  assert.deepEqual((await get(env, '/v2/tracks')).body.tracks, [])
-  assert.deepEqual((await readChanges(env, 2)).deletedTracks, [track.uid])
 })
 
 test('an entry made private comes back on the feed as private, its Moment hidden', async () => {

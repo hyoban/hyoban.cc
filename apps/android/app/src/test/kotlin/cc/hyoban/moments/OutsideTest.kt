@@ -4,18 +4,12 @@ import cc.hyoban.moments.data.store.categoryLabel
 import cc.hyoban.moments.data.store.entry
 import cc.hyoban.moments.data.store.isPublic
 import cc.hyoban.moments.data.store.pendingBills
-import cc.hyoban.moments.data.store.publicLine
-import cc.hyoban.moments.data.store.simplify
-import cc.hyoban.moments.footprints.TrackPoint
-import cc.hyoban.moments.footprints.TrackShare
 import cc.hyoban.moments.ledger.Book
 import cc.hyoban.moments.ledger.Category
 import cc.hyoban.moments.ledger.CategoryType
 import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -67,18 +61,6 @@ class OutsideTest {
         assertTrue(ledger(published, public = true).pendingBills().isEmpty())
         val off = ledger(published).pendingBills().single()
         assertNull(off.part)
-    }
-
-    @Test
-    fun `a span's line keeps its breaks and drops what lies on a straight line`() {
-        val straight = (0..20).map { TrackPoint(time + it * 10_000L, 31.0 + it * 0.0001, 118.0, 5.0) }
-        assertEquals(2, simplify(straight, 30.0).size)
-        val share = TrackShare("01K7TYA270CFFQRXN6M58XARSC", time, time + 3_600_000)
-        val line = publicLine(share, straight)!!
-        val segment = line["segments"]!!.jsonArray.single().jsonObject["coordinates"]!!.jsonArray
-        assertEquals(2, segment.size)
-        assertEquals((time / 1000).toString(), segment.first().jsonArray[2].jsonPrimitive.content)
-        assertNull(publicLine(share, emptyList()))
     }
 
     @Test

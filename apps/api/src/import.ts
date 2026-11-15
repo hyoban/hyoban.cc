@@ -12,7 +12,6 @@ import {
   collectionSchema,
   entrySchema,
   momentToEntry,
-  publicTrackSchema,
   tripToCollection,
 } from '@hyoban/data-spec/entry'
 import {
@@ -22,7 +21,6 @@ import {
   entryRow,
   placeRow,
   routeRow,
-  trackRow,
   upsertSql,
   vehicleAssistedRow,
   vehicleCaptureRow,
@@ -38,8 +36,8 @@ import {
 // API (`pnpm data:push`). Either way only rows that change take the new revision, so a
 // client syncing afterwards gets just the difference. Runs in Node, not in the Worker.
 //
-// The records come in either shape: Moments and trips, or entries, collections and public
-// tracks. Either is written as entries and collections, the tables
+// The records come in either shape: Moments and trips, or entries and collections. Either
+// is written as entries and collections, the tables
 // @hyoban/data-spec/tables defines.
 
 export interface ImportSnapshot {
@@ -49,7 +47,6 @@ export interface ImportSnapshot {
   moments?: unknown[]
   entries?: unknown[]
   collections?: unknown[]
-  tracks?: unknown[]
   /** The legs' routes; a backup from before they were kept leaves the database's alone. */
   routes?: Record<string, unknown>
   /** The car's statistics; a backup without them leaves the database's alone. */
@@ -77,7 +74,7 @@ export function buildImportSql(snapshot: ImportSnapshot, now: string): string {
 
   const rows = toRows(snapshot)
 
-  for (const table of ['collections', 'entries', 'tracks'] as const) {
+  for (const table of ['collections', 'entries'] as const) {
     const kept = rows[table]
 
     if (kept) {
@@ -112,7 +109,6 @@ export interface MergeRecords {
   moments?: unknown[]
   entries?: unknown[]
   collections?: unknown[]
-  tracks?: unknown[]
   vehicleMonths?: unknown[]
   vehicleAssisted?: unknown[]
   vehicleCaptures?: unknown[]
@@ -133,14 +129,13 @@ export function buildMergeSql(records: MergeRecords, now: string, generator: str
     ...Object.entries(records.places).map(([id, place]) => upsert('places', placeRow(id, place))),
     ...rows.collections.map((row) => upsert('collections', row)),
     ...rows.entries.map((row) => upsert('entries', row)),
-    ...(rows.tracks ?? []).map((row) => upsert('tracks', row)),
     ...toVehicleRows(records).flatMap(({ table, rows }) => rows.map((row) => upsert(table, row))),
   ]
 
   return script(statements)
 }
 
-/** The entries, collections and public tracks of either shape's records. */
+/** The entries and collections of either shape's records. */
 function toRows(records: Omit<MergeRecords, 'places'>) {
   // The first shape: Moments, and trips with their waypoints as marks.
   const moments = (records.moments ?? []).map((raw) => momentRecordSchema.parse(raw))
@@ -159,7 +154,6 @@ function toRows(records: Omit<MergeRecords, 'places'>) {
   return {
     entries: entries.map(entryRow),
     collections: collections.map(collectionRow),
-    tracks: records.tracks?.map((raw) => trackRow(publicTrackSchema.parse(raw))),
   }
 }
 

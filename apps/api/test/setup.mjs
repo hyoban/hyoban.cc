@@ -31,7 +31,6 @@ export const entrySnapshot = {
   places: readJson('places.json', fixtureRoot),
   entries: listJsonFiles('entries', fixtureRoot).map((file) => readJson(file, fixtureRoot)),
   collections: listJsonFiles('collections', fixtureRoot).map((file) => readJson(file, fixtureRoot)),
-  tracks: [],
   routes: readJson('routes.json', fixtureRoot),
 }
 
@@ -158,7 +157,6 @@ const KINDS = {
   entries: ['entries', 'deleted'],
   places: ['places', 'deletedPlaces'],
   collections: ['collections', 'deletedCollections'],
-  tracks: ['tracks', 'deletedTracks'],
   vehicle_months: ['vehicleMonths', 'deletedVehicleMonths'],
   vehicle_assisted: ['vehicleAssisted', 'deletedVehicleAssisted'],
   vehicle_captures: ['vehicleCaptures', 'deletedVehicleCaptures'],

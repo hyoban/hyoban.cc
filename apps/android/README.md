@@ -16,7 +16,7 @@ screens show only from the rows it brought, and skips a table the copy doesn't k
 copy only follows the API: each start, each pull down on a list, and 刷新 in 我 → 同步与来源, and
 each publish ask only for the rows changed since, from `/v2/rows`. The screens take the
 entries as Moments when they have words and as they are otherwise (charges, public bills,
-marks), with the places, collections and public tracks; the trips are worked out from the
+marks), with the places and collections; the trips are worked out from the
 collections and their marks, as the spec's `collectionToTrip` does. It is the platform's
 SQLite, through `androidx.sqlite`'s driver: from Android 12, the oldest the app runs on, it
 has the tables' generated columns. The routes (`GET /v2/routes`) are asked for again only
@@ -244,8 +244,8 @@ Publishing needs an API: its address and token, set under 我 → 同步与来�
 backups leave out). Without them there is nothing to publish to: the card for it stays away,
 and nothing is marked 未发布, on the timeline or on a Moment's page, until they are set. With
 them the site's Moments can be changed and deleted too. Nothing reaches the site as it is
-saved: new, changed and deleted Moments, changed places, public bills, trips and footprint
-spans, check-ins, occasions and things wait on the phone, past a restart. 发布更改, from the card
+saved: new, changed and deleted Moments, changed places, public bills, trips,
+check-ins, occasions and things wait on the phone, past a restart. 发布更改, from the card
 at the top of 我, lists them, shows what changed, each field of a changed Moment, place,
 check-in, occasion, device or subscription struck through beside what it is now, and takes a
 change back. 全部发布到网站 runs as WorkManager work in a foreground
@@ -256,8 +256,7 @@ API takes whole or not at all. What is published leaves the phone's store for th
 stays for the next try, and a change set already on its way still goes through and is noted.
 清除全部更改 takes back everything waiting, after asking: the Moments written on the phone are
 deleted with their photos' copies, and the site's records, places, trips and bills go back
-to what the site has. A public bill whose words or amount changed, and a footprint span,
-stay to be published.
+to what the site has. A public bill whose words or amount changed stays to be published.
 
 ## Backup
 
@@ -523,9 +522,9 @@ behaves.
   of 8 MiB, about two days, with each request, fix, filter decision and state change, never
   a coordinate, network name or token. 足迹记录 → 诊断 → 导出诊断日志 exports them with a replay of the
   latest day through the current filter.
-- **Publishing.** 编辑旅程 has 轨迹私有, and the trip's page shows it as a small label while it's
-  on. Turned off and saved, at the next 全部发布到网站 its line goes out simplified to 30 m (`track_shares`), and the site draws the trip along it. The raw
-  samples never leave the phone.
+- **Never published.** The footprints never leave the phone but in the owner's WebDAV backup:
+  nothing of them goes out with 全部发布到网站, and the site and the app route a trip along the
+  roads between its stops (Valhalla, OpenRailRouting) instead.
 
 ### Connection automation
 

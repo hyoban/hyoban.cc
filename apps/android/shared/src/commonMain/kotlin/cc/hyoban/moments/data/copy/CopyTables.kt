@@ -5,7 +5,7 @@ package cc.hyoban.moments.data.copy
 /** The tables the copy keeps the API's records in, as D1 keeps them. */
 object CopyTables {
     /** Every table, in the order `GET /v2/rows` hands them out. */
-    val names = listOf("places", "collections", "entries", "tracks", "vehicle_months", "vehicle_assisted", "vehicle_captures")
+    val names = listOf("places", "collections", "entries", "vehicle_months", "vehicle_assisted", "vehicle_captures")
 
     /** The statements that make them, one per table and index. */
     val statements = listOf(
@@ -57,20 +57,6 @@ object CopyTables {
         """.trimIndent(),
         """
         CREATE INDEX entries_day ON entries (day, key)
-        """.trimIndent(),
-        """
-        CREATE TABLE tracks (
-          key TEXT PRIMARY KEY,
-          rev INTEGER NOT NULL,
-          deleted_at TEXT,
-          record TEXT NOT NULL,
-          start_at GENERATED ALWAYS AS (json_extract(record, '${'$'}.start')) VIRTUAL,
-          end_at GENERATED ALWAYS AS (json_extract(record, '${'$'}.end')) VIRTUAL,
-          collection GENERATED ALWAYS AS (json_extract(record, '${'$'}.collection')) VIRTUAL
-        )
-        """.trimIndent(),
-        """
-        CREATE INDEX tracks_rev ON tracks (rev, key)
         """.trimIndent(),
         """
         CREATE TABLE vehicle_months (

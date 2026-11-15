@@ -30,7 +30,7 @@ public enum Module: String, CaseIterable, Sendable {
     /// The tables past the entries that are this module's.
     public var tables: [String] {
         switch self {
-        case .footprints: ["tracks"]
+        case .footprints: []
         case .ledger: []
         case .things: []
         case .car: ["vehicle_months", "vehicle_assisted", "vehicle_captures"]

@@ -10,7 +10,7 @@ package cc.hyoban.moments.data.spec
  * when it is turned on again.
  */
 enum class Module(val key: String, val plugins: List<String>, val tables: List<String>) {
-    FOOTPRINTS("footprints", emptyList(), listOf("tracks")),
+    FOOTPRINTS("footprints", emptyList(), emptyList()),
     LEDGER("ledger", listOf("bill"), emptyList()),
     THINGS("things", listOf("device", "subscription"), emptyList()),
     CAR("car", listOf("charge"), listOf("vehicle_months", "vehicle_assisted", "vehicle_captures")),

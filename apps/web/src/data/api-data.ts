@@ -58,7 +58,7 @@ export function apiData(): AstroIntegration {
         process.env[DATA_ROOT_VARIABLE] = directory
         logger.info(
           `Read revision ${snapshot.revision} from ${url}: ` +
-            `${snapshot.entries?.length ?? 0} entries, ${snapshot.collections?.length ?? 0} collections, ${snapshot.tracks?.length ?? 0} tracks, ` +
+            `${snapshot.entries?.length ?? 0} entries, ${snapshot.collections?.length ?? 0} collections, ` +
             `${Object.keys(snapshot.places).length} places, ` +
             `${Object.keys(snapshot.routes ?? {}).length} routes`,
         )

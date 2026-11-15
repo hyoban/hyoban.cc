@@ -72,7 +72,7 @@ even when starting from the repository root.
 
 ## Data shared by Web and App
 
-- Records are entries, collections and public tracks (`@hyoban/data-spec/entry`): every
+- Records are entries and collections (`@hyoban/data-spec/entry`): every
   record a moment and an optional point with parts by plugin, a trip a collection, each
   thing public or private by its own say, its container's, its plugin's (a bill's is
   private), else its entry's; an entry is public unless it says otherwise. The plugins are
@@ -87,7 +87,7 @@ even when starting from the repository root.
   is public. `vp run data:migrate` moves `data/` between the layouts (dry run by default,
   `--rollback` back); `vp run data:import` writes either layout to D1 as entries and
   collections. Ask before either touches live data.
-- D1 holds entries, places, collections, public tracks, routes and the car's statistics. A
+- D1 holds entries, places, collections, routes and the car's statistics. A
   device or a subscription is an entry with its plugin's part, not a record of its own.
   Git keeps no copy of them and nothing backs them up to GitHub: `data/` is a local working
   copy in canonical JSON that `vp run data:export` writes and git ignores, except
@@ -95,7 +95,7 @@ even when starting from the repository root.
   there in the repository. Tests read the made-up `packages/data-spec/test/fixtures/data/`,
   never real records. The formatter leaves `data/` alone.
 - What leaves the phone keeps one shape on both sides: the app keeps a complete copy of D1's
-  records in SQLite, every kind (entries, collections, places, public tracks, the car's
+  records in SQLite, every kind (entries, collections, places, the car's
   statistics and captures) in the same table, with the same columns and the same
   record JSON, defined once in `@hyoban/data-spec/tables` and generated for each by
   `vp run data:tables`, so changing one changes both. The copy only follows `GET /v2/rows`;
@@ -124,8 +124,8 @@ even when starting from the repository root.
   Android's backup; the one copy that leaves it is the opt-in WebDAV backup, to the owner's
   own server, of every database but photos and videos. A book can make its new bills public and each bill can say otherwise; a
   public bill publishes its kind, amount, currency, category and note alone, never its account or
-  balance. Spans of the footprints can be made public (编辑旅程 has a switch), and
-  only their line, simplified, is published; the raw samples never leave the phone. A stay
+  balance. The footprints are never published, not even simplified: a trip's public route
+  is only the routers' (below), along the roads between its stops. A stay
   kept as a check-in, by hand, is a check-in entry like Swarm's, its point the stay's middle. A check-in
   starts public, so the site's map dots it at its place, unless Swarm kept it private; its sheet on the phone
   makes it private. Raw Zeekr captures and report links stay under `.private/`;

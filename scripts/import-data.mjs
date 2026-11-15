@@ -31,7 +31,6 @@ const sql = buildImportSql(
     moments: listJsonFiles('moments', dataRoot).map((file) => readJson(file, dataRoot)),
     entries: listJsonFiles('entries', dataRoot).map((file) => readJson(file, dataRoot)),
     collections: listJsonFiles('collections', dataRoot).map((file) => readJson(file, dataRoot)),
-    tracks: listJsonFiles('tracks', dataRoot).map((file) => readJson(file, dataRoot)),
     routes: /** @type {Record<string, unknown>} */ (readJson('routes.json', dataRoot)),
     ...readVehicle(
       ['zeekr/months', 'zeekr/assisted-driving', 'zeekr/captures'].flatMap((directory) =>

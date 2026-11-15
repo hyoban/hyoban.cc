@@ -11,7 +11,6 @@ import {
   readCollections,
   readEntry,
   readEntrySnapshot,
-  readTracks,
 } from './entries.ts'
 import { error, HttpError, json, jsonText, readBody } from './http.ts'
 import { createRouteFetcher, fillRoutes, readTripRoutes, routeDrivesAgain } from './routes.ts'
@@ -19,7 +18,7 @@ import { createTelegram, syncChannel } from './telegram.ts'
 import { readUpload, uploadMedia, type WriteContext, type WriteResult } from './writes.ts'
 
 // The API, the owner's alone: every request needs a token, and reads see everything,
-// drafts and private records included. `/v2` serves entries, collections and public tracks
+// drafts and private records included. `/v2` serves entries and collections
 // (entries.ts) and the places beside them. Records come back exactly as stored, in the shape
 // @hyoban/data-spec defines. A write the site shows first brings the trips' routes up to
 // date, when the write changed what the trips are built from,
@@ -169,13 +168,6 @@ async function route(request: Request, env: Env, executionContext?: ExecutionCon
       }
 
       return method === 'GET' ? found(await readCollection(db, key)) : notAllowed('GET')
-    }
-    case 'tracks': {
-      if (key !== undefined) {
-        return notFound()
-      }
-
-      return method === 'GET' ? jsonText(await readTracks(db)) : notAllowed('GET')
     }
     case 'places': {
       if (rest.length > 0) {

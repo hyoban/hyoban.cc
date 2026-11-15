@@ -47,7 +47,8 @@ import Testing
 
 @Test func everyModuleOwnsSomething() {
     for module in Module.allCases {
-        #expect(!module.plugins.isEmpty || !module.tables.isEmpty, "\(module)")
+        // The footprints own only what stays on the phone, none of the shared records.
+        #expect(module == .footprints || !module.plugins.isEmpty || !module.tables.isEmpty, "\(module)")
         #expect(Module(rawValue: module.rawValue) == module)
     }
 }

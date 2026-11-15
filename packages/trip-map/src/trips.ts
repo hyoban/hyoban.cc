@@ -57,8 +57,6 @@ export type TripLeg = Readonly<{
   /** Driven back along the route the other way (see `sameWayBack`), so not fetched. */
   retraced?: true
   route?: TripRoute
-  /** The route is the footprints actually recorded, from a public track, not a router's. */
-  tracked?: true
   to: TripLocation
 }>
 
@@ -177,16 +175,7 @@ export type BuildTripOptions = {
   resolveLocation: (id: string) => TripLocation
   /** Cached routes by `getLegKey` or `getTrainLegKey`; a leg without one is drawn straight. */
   routes?: Readonly<Record<string, TripRoute>> | undefined
-  /**
-   * Footprints made public, `[longitude, latitude, unix seconds]` a point: a leg between two
-   * timed places they cover takes what was recorded between those times over any route.
-   */
-  tracks?: readonly TripTrack[] | undefined
 }
-
-export type TripTrack = Readonly<{
-  segments: readonly Readonly<{ coordinates: readonly (readonly number[])[] }>[]
-}>
 
 /**
  * Collects the located moments inside a trip's date range and threads the trip's
@@ -195,7 +184,7 @@ export type TripTrack = Readonly<{
 export function buildTrip<T extends TripMoment>(
   trip: TripDefinition,
   moments: readonly T[],
-  { resolveLocation, routes = {}, tracks = [] }: BuildTripOptions,
+  { resolveLocation, routes = {} }: BuildTripOptions,
 ): Trip<T> {
   const waypoints: (TripWaypoint & { at: string })[] = []
 
@@ -240,16 +229,6 @@ export function buildTrip<T extends TripMoment>(
     ]),
     ...trailingWaypoints.map((waypoint) => waypoint.location),
   ]
-  // When each place of the path was reached, where that is known to the minute.
-  const timedWaypoints = waypoints.map((waypoint) => waypoint.at)
-  let timedIndex = 0
-  const times = [
-    ...stops.flatMap((stop) => [
-      ...stop.waypoints.map(() => timedWaypoints[timedIndex++]!),
-      ...stop.locations.map(() => stop.occurredAt),
-    ]),
-    ...trailingWaypoints.map(() => timedWaypoints[timedIndex++]!),
-  ]
   const legs = path.slice(1).map((to, index): TripLeg => {
     const from = path[index]!
     const by =
@@ -272,15 +251,12 @@ export function buildTrip<T extends TripMoment>(
               ? undefined
               : routes[getLegKey(from, to)]
 
-    const tracked =
-      by === 'car' ? getTrackedRoute(tracks, times[index]!, times[index + 1]!) : undefined
-
     return {
       by,
       from,
       to,
-      ...(retraced && !tracked ? { retraced: true as const } : {}),
-      ...(tracked ? { route: tracked, tracked: true as const } : route ? { route } : {}),
+      ...(retraced ? { retraced: true as const } : {}),
+      ...(route ? { route } : {}),
     }
   })
   // Only what was driven: road distance where a route is cached, otherwise as the
@@ -307,38 +283,6 @@ export function buildTrip<T extends TripMoment>(
     stops,
     trailingWaypoints,
   }
-}
-
-/**
- * What the public tracks recorded between two times, as a route, or undefined when either is a
- * day alone or fewer than two points fall between them.
- */
-function getTrackedRoute(
-  tracks: readonly TripTrack[],
-  from: string,
-  to: string,
-): TripRoute | undefined {
-  if (from.length <= 10 || to.length <= 10) {
-    return undefined
-  }
-
-  const start = Date.parse(from) / 1000
-  const end = Date.parse(to) / 1000
-  const coordinates = tracks
-    .flatMap((track) => track.segments.flatMap((segment) => segment.coordinates))
-    .filter((point) => point[2] !== undefined && point[2] >= start && point[2] <= end)
-    .toSorted((first, second) => first[2]! - second[2]!)
-    .map((point) => [point[0]!, point[1]!] as const)
-
-  if (coordinates.length < 2) {
-    return undefined
-  }
-
-  const distance = coordinates
-    .slice(1)
-    .reduce((total, point, index) => total + getDistanceKm(coordinates[index]!, point) * 1000, 0)
-
-  return { coordinates, distance: Math.round(distance), duration: end - start }
 }
 
 /** Identifies a leg by its end coordinates, so moving a place invalidates its route. */

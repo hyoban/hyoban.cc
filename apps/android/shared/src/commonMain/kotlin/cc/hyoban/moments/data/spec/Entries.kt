@@ -13,7 +13,7 @@ import kotlinx.serialization.json.put
 
 // The spec's second shape (packages/data-spec/src/entry.ts): every record an entry, a moment
 // and an optional point, what it holds parts by plugin (words, photos, a meal, a bill, a
-// charge), a trip a collection, and public spans of the footprints. The app reads entries and
+// charge), and a trip a collection. The app reads entries and
 // collections (`GET /v2/changes`), keeps its Moments and trips in the first shape, and writes
 // them as entries when it publishes (`POST /v2/changes`); these are the same mappings as the
 // spec's, kept as JSON so a part or a field this version doesn't know goes through as it came.

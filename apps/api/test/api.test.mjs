@@ -212,7 +212,7 @@ test('every request needs a token, and methods, paths and queries are checked', 
 
   importSnapshot(entrySnapshot)
 
-  for (const path of ['/', '/v2/export', '/v2/rows', '/v2/places', '/v2/tracks']) {
+  for (const path of ['/', '/v2/export', '/v2/rows', '/v2/places']) {
     const { status, body } = await get(env, path, { auth: null })
 
     assert.equal(status, 401, path)

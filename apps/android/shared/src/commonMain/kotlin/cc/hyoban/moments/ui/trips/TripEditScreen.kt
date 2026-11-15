@@ -98,13 +98,6 @@ fun TripEditScreen(
     var start by rememberSaveable { mutableStateOf(trip?.startAt ?: trip?.start ?: startDay ?: today) }
     var end by rememberSaveable { mutableStateOf(trip?.endAt ?: trip?.end ?: endDay ?: today) }
     var private by rememberSaveable { mutableStateOf(id != null && container.repository.isTripPrivate(id)) }
-    // Whether its footprints stay off the site, as 私有 says of the trip; set on saving, like the rest.
-    val connected = LocalSettings.current.connected
-    val footprintsOn = LocalSettings.current.isOn(cc.hyoban.moments.data.spec.Module.FOOTPRINTS)
-    val trackShared = trip?.let { rememberTrackShared(container, it) }
-    var trackPrivate by rememberSaveable { mutableStateOf<Boolean?>(null) }
-    if (trackPrivate == null && trackShared != null) trackPrivate = !trackShared
-    val showTrack = trip != null && connected && footprintsOn && !private && trackPrivate != null
     var picking by rememberSaveable { mutableStateOf<String?>(null) }
     var deleting by rememberSaveable { mutableStateOf(false) }
     val unpublished = id != null && container.repository.isTripNew(id)
@@ -306,10 +299,6 @@ fun TripEditScreen(
                     { shapes ->
                         SwitchRow(private, AppIcons.EyeOff, stringResource(Res.string.visibility_private), "trip_private", shapes) { private = !private }
                     },
-                    if (showTrack) { shapes ->
-                        SwitchRow(trackPrivate == true, AppIcons.Route, stringResource(Res.string.trip_track_private), "trip_track_private", shapes,
-                            supporting = stringResource(Res.string.trip_track_private_note)) { trackPrivate = trackPrivate != true }
-                    } else null,
                 ),
             )
             Row(
@@ -330,15 +319,6 @@ fun TripEditScreen(
                                 onMade(container.repository.createTrip(title.trim(), start, end, visibility, include, exclude, chosen, from, to))
                             } else {
                                 container.repository.editTrip(id, title.trim(), start, end, visibility, include = include, exclude = exclude, covers = chosen, from = from, to = to)
-                                // The track follows its switch, on the trip's days as saved.
-                                val shared = !private && trackPrivate == false
-                                if (trip != null && trackShared != null && shared != trackShared) {
-                                    setTrackShared(
-                                        container,
-                                        trip.copy(start = firstDay, end = lastDay, startAt = start.takeIf { it.length > 10 }, endAt = end.takeIf { it.length > 10 }),
-                                        shared,
-                                    )
-                                }
                                 onBack()
                             }
                         }

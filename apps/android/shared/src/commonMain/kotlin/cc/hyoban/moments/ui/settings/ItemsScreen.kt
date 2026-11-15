@@ -40,16 +40,11 @@ import kotlinx.coroutines.withContext
  * (`Module`), each on or off as one: off, its rows, pages and records are put away everywhere,
  * its background work stops ([applyModule]) and its data stays. Then each book says whether its
  * new bills are public, a public one publishing its amount, category and note alone; the
- * footprints are private, with the spans made public counted here and made so on a trip's
- * page. Every bill and span can still say otherwise. Nothing here opens a page further down.
+ * footprints are private and never leave the phone. Every bill can still say otherwise. Nothing here opens a page further down.
  */
 @Composable
 fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val revision by container.footprints.revision.collectAsStateWithLifecycle()
-    val shares by produceState(0, revision) {
-        value = withContext(Dispatchers.IO) { container.footprints.shares().count { !it.removed } }
-    }
     val scope = rememberCoroutineScope()
     val settings = LocalSettings.current
     val device = cc.hyoban.moments.ui.LocalDevice.current
@@ -107,7 +102,7 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
                         ListItem(
                             headlineContent = { Text(stringResource(Res.string.footprints_title)) },
                             leadingContent = { Icon(AppIcons.Footprints, contentDescription = null) },
-                            trailingContent = { Text(stringResource(Res.string.items_track_shares, shares)) },
+                            trailingContent = { Text(stringResource(Res.string.visibility_private)) },
                             modifier = Modifier.testTag("items_tracks"),
                         )
                     },
