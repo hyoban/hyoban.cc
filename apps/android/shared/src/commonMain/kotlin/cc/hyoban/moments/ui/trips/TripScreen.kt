@@ -100,6 +100,22 @@ fun TripScreen(
     val connected = LocalSettings.current.connected
     val footprintsOn = LocalSettings.current.isOn(Module.FOOTPRINTS)
     val ledgerOn = LocalSettings.current.isOn(Module.LEDGER)
+    // Its check-ins, in its time, read down among its Moments as the timeline has them; the
+    // private ones out of sight in 演示模式.
+    val allCheckins by container.repository.checkins.collectAsStateWithLifecycle()
+    val checkinsOn = LocalSettings.current.isOn(Module.CHECKIN)
+    val demo = LocalSettings.current.demo
+    val tripCheckins = remember(allCheckins, trip, checkinsOn, demo) {
+        if (!checkinsOn) {
+            cc.hyoban.moments.ui.feed.TimelineBills.EMPTY
+        } else {
+            cc.hyoban.moments.ui.feed.TimelineBills(
+                checkins = allCheckins.byDay.filterKeys { it in trip.start..trip.end }
+                    .mapValues { (_, day) -> day.filter { cc.hyoban.moments.data.trips.isInTrip(trip, it.at) && !(demo && it.private) } }
+                    .filterValues { it.isNotEmpty() },
+            )
+        }
+    }
     val moments = remember(trip, all) { momentsOf(trip, all, trips) }
     val stops = remember(trip, all, places) { stopsOf(trip, all, trips, places) }
 
@@ -251,6 +267,7 @@ fun TripScreen(
                         onDay = onDay,
                         chat = true,
                         chronological = true,
+                        bills = tripCheckins,
                     ) {
                         item(key = "summary") { summary() }
                         if (ledgerOn) item(key = "spending") { spending() }
@@ -274,6 +291,7 @@ fun TripScreen(
                     onDay = onDay,
                     chat = true,
                     chronological = true,
+                    bills = tripCheckins,
                 ) {
                     item(key = "summary") { summary() }
                     if (ledgerOn) item(key = "spending") { spending() }

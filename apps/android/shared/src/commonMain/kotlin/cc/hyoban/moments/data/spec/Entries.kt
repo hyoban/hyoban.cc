@@ -245,11 +245,25 @@ object Entries {
      * span, become the waypoints, one on the day of the waypoint before it following that one.
      */
     fun toTrip(collection: JsonObject, entries: Collection<JsonObject>): TripRecord {
+        val inside = { entry: JsonObject -> entry["place"] is JsonPrimitive && isInCollection(collection, entry) }
         val marks = entries
-            .filter { isMark(it) && it["place"] is JsonPrimitive && isInCollection(collection, it) }
+            .filter { isMark(it) && inside(it) }
             .sortedWith(compareBy<JsonObject> { (it["order"] as? JsonPrimitive)?.contentOrNull?.toLongOrNull() ?: 0 }.thenBy { it.string("at") })
+        // Its public check-ins pass where they were too, each among the marks by its time: a
+        // mark with a day alone is at the time of the one before it.
+        val checkins = ArrayDeque(entries.filter { isPublicCheckin(it) && !isMoment(it) && inside(it) }.sortedWith { a, b -> compareTimes(a.string("at"), b.string("at")) })
+        val stops = mutableListOf<JsonObject>()
+        var reached: String? = null
+        for (mark in marks) {
+            val markAt = mark.string("at")
+            val at = if (markAt.length == 10 && reached != null && reached.take(10) == markAt) reached else markAt
+            while (checkins.isNotEmpty() && compareTimes(checkins.first().string("at"), at) < 0) stops += checkins.removeFirst()
+            stops += mark
+            reached = at
+        }
+        stops += checkins
         var previous: String? = null
-        val waypoints = marks.map { mark ->
+        val waypoints = stops.map { mark ->
             val at = mark.string("at")
             val follows = at.length == 10 && previous != null && previous!!.take(10) == at
             if (!follows) previous = at
@@ -301,6 +315,22 @@ object Entries {
     }
 
     private fun instant(time: String) = java.time.OffsetDateTime.parse(time).toInstant()
+
+    /**
+     * Whether an entry is a check-in the public sees, as the spec's `isPublicCheckin`: the entry
+     * not private, nor its check-in by its own say.
+     */
+    fun isPublicCheckin(entry: JsonObject): Boolean {
+        val checkin = (entry["parts"] as? JsonObject)?.get("checkin") as? JsonObject ?: return false
+        return entry.visibility() != Visibility.PRIVATE && checkin.visibility() != Visibility.PRIVATE
+    }
+
+    /** Days and times in order, as the spec's `compareTimes`: a day before any time on it. */
+    private fun compareTimes(a: String, b: String): Int {
+        val days = a.take(10).compareTo(b.take(10))
+        if (days != 0 || a.length <= 10 || b.length <= 10) return if (days != 0) days else a.length - b.length
+        return instant(a).compareTo(instant(b))
+    }
 
     /** Whether an entry is a mark: no parts at all, as the spec's `isMarkEntry`. */
     fun isMark(entry: JsonObject): Boolean = (entry["parts"] as? JsonObject)?.isEmpty() ?: true

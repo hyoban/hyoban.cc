@@ -40,7 +40,8 @@ data/
   device's `id` names one device, and a charge's `vehicle` names one of them; the API turns
   away a change set that breaks either.
 - A **trip** is a collection taking the entries in its span (with `include` and
-  `exclude`), its waypoints marks of their own (entries with a place and no parts).
+  `exclude`), its waypoints marks of their own (entries with a place and no parts) and its
+  public check-ins with a place, each among the marks by its time.
   Either end of its span may be a time: what came before it on its first day, or after it on
   its last, is not in it. The app can tie an end to a record in `bounds` (`from`, `to`, an
   entry's uid each, a check-in or a Moment): that end is the record's time and follows it.

@@ -53,6 +53,43 @@ test('every trip becomes a collection with marks and comes back the same', () =>
   }
 })
 
+test("a trip's public check-ins with a place are stops on its way, private ones and Moments not", () => {
+  const collection = collectionSchema.parse({
+    uid: getStableUlid(at, 'trip'),
+    kind: 'trip',
+    title: '海边',
+    span: { start: '2026-10-29T08:00:00+08:00', end: '2026-10-30' },
+    createdAt: at,
+    updatedAt: at,
+  })
+  const checkin = (seed, time, place, extra = {}) =>
+    entrySchema.parse({
+      ...base,
+      uid: getStableUlid(time, seed),
+      at: time,
+      place,
+      parts: { checkin: { v: 1, venue: place, source: { app: 'phone' } } },
+      ...extra,
+    })
+  const entries = [
+    checkin('before', '2026-10-29T07:00:00+08:00', 'home'),
+    checkin('station', '2026-10-29T09:00:00+08:00', 'station'),
+    checkin('hidden', '2026-10-29T10:00:00+08:00', 'secret', { visibility: 'private' }),
+    checkin('words', '2026-10-29T11:00:00+08:00', 'cafe', {
+      parts: {
+        checkin: { v: 1, venue: 'cafe', source: { app: 'phone' } },
+        text: { v: 1, text: '咖啡' },
+      },
+    }),
+    checkin('beach', '2026-10-30T15:00:00+08:00', 'beach'),
+  ]
+
+  assert.deepEqual(
+    collectionToTrip(collection, entries).waypoints.map((waypoint) => waypoint.place),
+    ['station', 'beach'],
+  )
+})
+
 test('a migration names things the same each time', () => {
   for (const trip of trips) {
     assert.deepEqual(tripToCollection(trip, moments), tripToCollection(trip, moments))

@@ -64,6 +64,28 @@ class TripsTest {
         TripRecord(id, id, start, end, waypoints = waypoints, createdAt = "$start", updatedAt = "$start")
 
     @Test
+    fun `a trip's public check-ins with a place are stops on its way, among its marks by time`() {
+        val json = kotlinx.serialization.json.Json
+        val collection = json.parseToJsonElement(
+            """{"uid":"T","kind":"trip","title":"海边","span":{"start":"2026-10-29T08:00:00+08:00","end":"2026-10-30"},
+               "include":[],"exclude":[],"covers":[],"createdAt":"2026-10-29","updatedAt":"2026-10-29"}""",
+        ) as kotlinx.serialization.json.JsonObject
+        fun entry(uid: String, at: String, place: String, parts: String, extra: String = "") = json.parseToJsonElement(
+            """{"uid":"$uid","at":"$at","place":"$place","parts":$parts$extra,"createdAt":"$at","updatedAt":"$at"}""",
+        ) as kotlinx.serialization.json.JsonObject
+        val checkin = """{"checkin":{"v":1,"venue":"x","source":{"app":"phone"}}}"""
+        val entries = listOf(
+            entry("A", "2026-10-29T07:00:00+08:00", "home", checkin),
+            entry("B", "2026-10-29T09:00:00+08:00", "station", checkin),
+            entry("M", "2026-10-29T12:00:00+08:00", "mark", "{}"),
+            entry("C", "2026-10-29T10:00:00+08:00", "secret", checkin, ""","visibility":"private""""),
+            entry("D", "2026-10-30T15:00:00+08:00", "beach", checkin),
+        )
+
+        assertEquals(listOf("station", "mark", "beach"), cc.hyoban.moments.data.spec.Entries.toTrip(collection, entries).waypoints.map { it.place })
+    }
+
+    @Test
     fun `a trip known to the minute holds only what lies between its start and end`() {
         val trip = TripRecord(
             "t", "t", "2026-04-02", "2026-04-07",

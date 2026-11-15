@@ -566,6 +566,17 @@ export function isMarkEntry(entry: Pick<Entry, 'parts'>) {
   return Object.values(entry.parts).every((part) => part === undefined)
 }
 
+/**
+ * Whether an entry is a check-in the public sees: its place is somewhere a trip passed, a stop
+ * of its route like a mark, where a private one stays off it.
+ */
+export function isPublicCheckin(entry: Pick<Entry, 'parts' | 'visibility'>) {
+  return (
+    entry.parts.checkin !== undefined &&
+    getPartAudience(entry, 'checkin', entry.parts.checkin as { visibility?: Audience }) === 'public'
+  )
+}
+
 /** Whether a collection holds an entry: in its span, or included, and not excluded. */
 export function isInCollection(collection: Collection, entry: Pick<Entry, 'uid' | 'at'>) {
   if (collection.exclude.includes(entry.uid)) {
@@ -811,11 +822,31 @@ export function collectionToTrip(collection: Collection, entries: readonly Entry
   const rest = Object.fromEntries(
     Object.entries(collection).filter(([key]) => !COLLECTION_KEYS.has(key)),
   )
+  const inside = (entry: Entry) => entry.place !== undefined && isInCollection(collection, entry)
   const marks = entries
-    .filter((entry) => isMarkEntry(entry) && entry.place && isInCollection(collection, entry))
+    .filter((entry) => isMarkEntry(entry) && inside(entry))
     .toSorted((a, b) => (a.order ?? 0) - (b.order ?? 0) || compareAt(a.at, b.at))
+  // Its public check-ins pass where they were too, each among the marks by its time: a mark
+  // with a day alone is at the time of the one before it.
+  const checkins = entries
+    .filter((entry) => isPublicCheckin(entry) && !isMomentEntry(entry) && inside(entry))
+    .toSorted((a, b) => compareTimes(a.at, b.at))
+  const stops: Entry[] = []
+  let reached: string | undefined
+  for (const mark of marks) {
+    const at =
+      mark.at.length === 10 && reached !== undefined && reached.slice(0, 10) === mark.at
+        ? reached
+        : mark.at
+    while (checkins.length > 0 && compareTimes(checkins[0]!.at, at) < 0) {
+      stops.push(checkins.shift()!)
+    }
+    stops.push(mark)
+    reached = at
+  }
+  stops.push(...checkins)
   let previous: string | undefined
-  const waypoints = marks.map((mark) => {
+  const waypoints = stops.map((mark) => {
     const follows =
       mark.at.length === 10 && previous !== undefined && previous.slice(0, 10) === mark.at
     previous = follows ? previous : mark.at
@@ -844,6 +875,17 @@ export function collectionToTrip(collection: Collection, entries: readonly Entry
 
 function compareAt(a: string, b: string) {
   return a < b ? -1 : a > b ? 1 : 0
+}
+
+/** Orders days and times: a day before any time on it, times by the moment they name. */
+function compareTimes(a: string, b: string) {
+  const days = compareAt(a.slice(0, 10), b.slice(0, 10))
+
+  if (days !== 0 || a.length <= 10 || b.length <= 10) {
+    return days || a.length - b.length
+  }
+
+  return Date.parse(a) - Date.parse(b)
 }
 
 const CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'

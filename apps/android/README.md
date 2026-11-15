@@ -139,7 +139,9 @@ footprints on a map, its Moments and check-ins marked on it by their place's kin
 their category, as icons without words (each at its place, a bill at its Moment's or the check-in it was paid in, else where the
 footprints were within ten minutes), its bills and charges read down by their times, and today's says 还在记录
 while the footprints are recording. A trip's days and each day's Moments read from earliest
-to latest. A trip's page has 回放旅程, which plays the trip back as the site's player does
+to latest, its check-ins in its time among them as on the timeline (private ones too, but in
+演示模式); its public check-ins' places are stops on its route and in its playback, as on the site.
+A trip's page has 回放旅程, which plays the trip back as the site's player does
 (`packages/trip-map/src/player`): the route never still, a vehicle at its tip, a card per
 Moment stepped through from a toolbar, by a swipe or with a keyboard's arrows and Space.
 编辑旅程 changes its name, its two ends (起止: 出发 and 回来), its public switch, Moments and
