@@ -71,8 +71,10 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   oneself, opening at its end, today, and staying there as new records come while it is
   read there; the tab tapped again goes back to it. Each day opens
   with its date in a capsule, Moments are bubbles from the right with their photos across
-  the top, and the day's bills, charges and footprints come from the left in one records
-  bubble. A banner marks where each trip begins, or, for the trip under way, says
+  the top, and the day's bills, charges and footprints come from the left in records
+  bubbles. The footprints are cut at every record with a time, a Moment, a check-in, a bill or
+  a charge, each piece where the phone moved between two of them, with when it set off, how
+  far it went and its line; a piece that barely moved shows nothing. A banner marks where each trip begins, or, for the trip under way, says
   进行中 and which day it is. Reading back to older days folds the tabs and the title away;
   heading back to today brings them back.
 - **地图** shows the places, the trips' routes (listed in the sheet at its foot) and the

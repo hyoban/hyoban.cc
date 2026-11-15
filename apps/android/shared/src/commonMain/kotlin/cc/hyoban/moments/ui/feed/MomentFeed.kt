@@ -145,7 +145,7 @@ fun MomentFeed(
     onBill: (String) -> Unit = {},
     /** Opens a trip's page from the banner where it begins; without it, no banners. */
     onTrip: ((String) -> Unit)? = null,
-    /** The footprints, a row at the foot of each day that has any; they open the day. */
+    /** The footprints, each day's cut at its records into rows between them; they open the day. */
     tracks: TimelineTracks = TimelineTracks.EMPTY,
     /** Each day read from its morning, as a day's own page reads it, rather than newest first. */
     oldestFirst: Boolean = false,
@@ -168,11 +168,13 @@ fun MomentFeed(
     val days = remember(moments) { moments.groupBy { it.dateKey }.toList() }
     // The single column's days: those with Moments and those with bills alone, newest first.
     // Footprints join a day that is there, never make one of their own.
-    val timeline = remember(days, bills, tracks.days, oldestFirst, chat, chronological) {
+    // Each day's footprints as read so far, the day laid out again as its own are read.
+    val read = tracks.days.associateWith { tracks.cached(it) }
+    val timeline = remember(days, bills, read, oldestFirst, chat, chronological) {
         val byDay = days.toMap()
         (byDay.keys + bills.loose.keys + bills.charges.keys + bills.things.keys + bills.checkins.keys).sortedDescending().let { if (chronological) it.reversed() else it }.map { day ->
-            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty(), bills.things[day].orEmpty(), bills.checkins[day].orEmpty(), oldestFirst = oldestFirst || chat)
-            Triple(day, byDay[day].orEmpty(), if (day in tracks.days) items + DayItem.Track(day) else items)
+            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty(), bills.things[day].orEmpty(), bills.checkins[day].orEmpty(), oldestFirst = oldestFirst || chat, day = day, track = read[day])
+            Triple(day, byDay[day].orEmpty(), items)
         }
     }
     val bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl
@@ -263,6 +265,10 @@ fun MomentFeed(
                 var month: String? = null
                 val bannered = mutableSetOf<String>()
                 timeline.forEach { (day, dayMoments, dayItems) ->
+                    // A day's footprints read from the phone as the day comes into view, then cut among its records.
+                    if (tracks.unread(day)) item(key = "trackread-$day", contentType = "trackread") {
+                        LaunchedEffect(day, tracks) { tracks.load(day) }
+                    }
                     // Right under a month's header or a trip's banner, a day needs less room above it; so
                     // does the conversation's first day, right under the page's own top.
                     var headed = chat && day == timeline.first().first
@@ -326,7 +332,7 @@ fun MomentFeed(
                                     joinedBelow = joinedBelow,
                                 )
                                 is ChatItem.Records -> RecordsBubble(
-                                    item.lines, bills.ledger, tracks, onBill,
+                                    item.lines, bills.ledger, onBill,
                                     onDay = onDay?.let { { it(day) } },
                                     modifier = itemModifier,
                                 )
@@ -369,7 +375,7 @@ fun MomentFeed(
                             is DayItem.ChargeItem -> ChargeRow(item.charge, itemModifier)
                             is DayItem.ThingItem -> ThingRow(item.thing, itemModifier)
                             is DayItem.CheckinItem -> CheckinRow(item.checkin, itemModifier)
-                            is DayItem.Track -> TrackRow(item.day, tracks, onClick = { onDay?.invoke(item.day) }, itemModifier)
+                            is DayItem.Track -> TrackRow(item.day, item.piece, onClick = { onDay?.invoke(item.day) }, itemModifier)
                         }
                     }
                 }

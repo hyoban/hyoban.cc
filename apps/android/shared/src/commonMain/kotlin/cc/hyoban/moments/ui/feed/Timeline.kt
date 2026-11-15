@@ -206,9 +206,9 @@ sealed interface DayItem {
         override val key get() = "checkin-${checkin.uid}"
     }
 
-    /** The day's footprints, after everything else of the day. */
-    data class Track(val day: String) : DayItem {
-        override val key get() = "track-$day"
+    /** A piece of the day's footprints, between the records it moved between. */
+    data class Track(val day: String, val piece: TrackPiece) : DayItem {
+        override val key get() = "track-$day-${piece.start}"
     }
 }
 
@@ -343,7 +343,9 @@ fun BillRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = 
 
 /**
  * [moments], [bills] and [charges] of one day merged by the time of day, newest first or, with
- * [oldestFirst], from the morning, bills next to each other in one group read the same way.
+ * [oldestFirst], from the morning, bills next to each other in one group read the same way. The
+ * day's footprints ([track]) are cut at every record with a time, each piece between the two it
+ * moved between, so a run of bills is parted where the phone moved.
  */
 fun dayItems(
     moments: List<MomentRecord>,
@@ -352,16 +354,29 @@ fun dayItems(
     things: List<ThingRecord> = emptyList(),
     checkins: List<Checkin> = emptyList(),
     oldestFirst: Boolean = false,
+    day: String = "",
+    track: DayTrack? = null,
 ): List<DayItem> {
     // A device or a subscription has its day alone, so it comes first in the day.
-    val timed = moments.map { it.occurredAt.drop(11).take(8) to DayItem.Moment(it) as Any } +
-        bills.map { it.local.toLocalTime().toString().take(8) to it as Any } +
-        charges.map { it.at.drop(11).take(8) to DayItem.ChargeItem(it) as Any } +
-        checkins.map { it.at.drop(11).take(8) to DayItem.CheckinItem(it) as Any } +
-        things.map { "" to DayItem.ThingItem(it) as Any }
+    val timed = moments.map { Triple(it.occurredAt.drop(11).take(8), instantOf(it.occurredAt), DayItem.Moment(it) as Any) } +
+        bills.map { Triple(it.local.toLocalTime().toString().take(8), it.time, it as Any) } +
+        charges.map { Triple(it.at.drop(11).take(8), instantOf(it.at), DayItem.ChargeItem(it) as Any) } +
+        checkins.map { Triple(it.at.drop(11).take(8), instantOf(it.at), DayItem.CheckinItem(it) as Any) } +
+        things.map { Triple("", null, DayItem.ThingItem(it) as Any) }
+    // From the morning: each record with a time cuts the footprints, and the piece before it goes in ahead of it.
+    val morning = timed.sortedByDescending { it.first }.asReversed()
+    val cuts = morning.mapNotNull { it.second }
+    val pieces = track?.pieces(cuts).orEmpty()
+    val read = mutableListOf<Any>()
+    var p = 0
+    for ((_, at, item) in morning) {
+        if (at != null) while (p < pieces.size && pieces[p].start < at) read += DayItem.Track(day, pieces[p++])
+        read += item
+    }
+    while (p < pieces.size) read += DayItem.Track(day, pieces[p++])
     val out = mutableListOf<DayItem>()
     var group = mutableListOf<Txn>()
-    for ((_, item) in timed.sortedByDescending { it.first }) {
+    for (item in read.asReversed()) {
         if (item is Txn) {
             group += item
         } else {
@@ -372,6 +387,10 @@ fun dayItems(
     if (group.isNotEmpty()) out += DayItem.Bills(group)
     return if (!oldestFirst) out else out.asReversed().map { if (it is DayItem.Bills) DayItem.Bills(it.txns.asReversed()) else it }
 }
+
+/** When an ISO date and time was, in epoch milliseconds; one written without an offset is read in this device's zone. */
+private fun instantOf(at: String): Long? = runCatching { java.time.OffsetDateTime.parse(at).toInstant().toEpochMilli() }.getOrNull()
+    ?: runCatching { java.time.LocalDateTime.parse(at).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() }.getOrNull()
 
 /** Bills next to each other on the timeline: rows on the page, one under another, lined up with the Moments' words. */
 @Composable
@@ -442,12 +461,108 @@ private fun tripBannerSummary(trip: TripRecord, count: Int): AnnotatedString {
     )
 }
 
-/** A day's footprints as the timeline lists them: the line, its stretches in lon/lat, and how far and long it moved. */
-class DayTrack(val stretches: List<List<Pair<Double, Double>>>, val metres: Double, val movingMillis: Long)
+/** A stretch of a day's footprints between two of its records: when it began and ended, its line in lon/lat, and how far and long it moved. */
+class TrackPiece(val start: Long, val end: Long, val stretches: List<List<Pair<Double, Double>>>, val metres: Double, val movingMillis: Long)
+
+/**
+ * A day's footprints as the timeline reads them: the line thinned to a few hundred samples, each
+ * with the distance and moving time from the day's start worked out from every fix, so the day
+ * can be cut at any of its records' times and each piece keeps its own figures.
+ */
+class DayTrack(
+    private val times: LongArray,
+    private val lons: DoubleArray,
+    private val lats: DoubleArray,
+    private val metresSoFar: DoubleArray,
+    private val movingSoFar: LongArray,
+    /** Whether a sample carries on the line from the one before it, rather than starting a new stretch. */
+    private val joined: BooleanArray,
+) {
+    val metres: Double get() = metresSoFar.lastOrNull() ?: 0.0
+    val movingMillis: Long get() = movingSoFar.lastOrNull() ?: 0L
+
+    /**
+     * The day cut at [cuts] (epoch milliseconds), oldest first: one piece before the first cut, one
+     * between each two and one after the last, a fix at a cut going with the piece after it. A piece
+     * that moved too little to list is left out.
+     */
+    fun pieces(cuts: List<Long>): List<TrackPiece> {
+        val bounds = (listOf(Long.MIN_VALUE) + cuts.sorted().distinct() + Long.MAX_VALUE)
+        var i = 0
+        return bounds.zipWithNext().mapNotNull { (from, to) ->
+            while (i < times.size && times[i] < from) i++
+            val first = i
+            while (i < times.size && times[i] < to) i++
+            piece(first, i)
+        }
+    }
+
+    private fun piece(from: Int, until: Int): TrackPiece? {
+        if (until - from < 2) return null
+        val stretches = mutableListOf<MutableList<Pair<Double, Double>>>()
+        var metres = 0.0
+        var moving = 0L
+        for (k in from until until) {
+            if (k == from || !joined[k]) stretches += mutableListOf<Pair<Double, Double>>()
+            else {
+                metres += metresSoFar[k] - metresSoFar[k - 1]
+                moving += movingSoFar[k] - movingSoFar[k - 1]
+            }
+            stretches.last() += lons[k] to lats[k]
+        }
+        val lines = stretches.filter { it.size > 1 }
+        // A piece with no stretch that moved, the phone only lying still, lists nothing.
+        if (lines.isEmpty() || metres < MIN_TRACK_METRES) return null
+        return TrackPiece(times[from], times[until - 1], lines, metres, moving)
+    }
+
+    companion object {
+        /** [points] of one day, oldest first, thinned to about [budget] samples, every break and each stretch's ends kept. */
+        fun of(points: List<cc.hyoban.moments.footprints.TrackPoint>, budget: Int = 600): DayTrack? {
+            if (points.size < 2) return null
+            val stride = maxOf(1, kotlin.math.ceil(points.size.toDouble() / budget).toInt())
+            val kept = ArrayList<Int>()
+            var metres = 0.0
+            var moving = 0L
+            val metresAt = DoubleArray(points.size)
+            val movingAt = LongArray(points.size)
+            val joinedAt = BooleanArray(points.size)
+            points.forEachIndexed { index, point ->
+                val prev = points.getOrNull(index - 1)
+                val linked = prev != null && cc.hyoban.moments.footprints.connected(prev, point)
+                if (linked) {
+                    metres += cc.hyoban.moments.footprints.distanceMetres(prev!!, point)
+                    moving += point.time - prev.time
+                }
+                metresAt[index] = metres
+                movingAt[index] = moving
+                joinedAt[index] = linked
+                val next = points.getOrNull(index + 1)
+                val ends = !linked || next == null || !cc.hyoban.moments.footprints.connected(point, next)
+                if (ends || index % stride == 0) kept += index
+            }
+            if (metres < MIN_TRACK_METRES) return null
+            // A kept sample joins the one kept before it only if every fix between them was joined too.
+            val joined = BooleanArray(kept.size) { k -> k > 0 && (kept[k - 1] + 1..kept[k]).all { joinedAt[it] } }
+            return DayTrack(
+                LongArray(kept.size) { points[kept[it]].time },
+                DoubleArray(kept.size) { points[kept[it]].longitude },
+                DoubleArray(kept.size) { points[kept[it]].latitude },
+                DoubleArray(kept.size) { metresAt[kept[it]] },
+                LongArray(kept.size) { movingAt[kept[it]] },
+                joined,
+            )
+        }
+    }
+}
+
+/** Less than this and the footprints, a day's or a piece's, list nothing. */
+private const val MIN_TRACK_METRES = 100.0
 
 /**
  * The footprints on the timeline: the days that have any, and each day's line and figures, read
- * from the phone when its row comes into view and kept; today's again as it is recorded.
+ * from the phone when the day comes into view and kept; today's again as it is recorded. What is
+ * kept is state, so the timeline lays a day out again, its pieces between its records, once read.
  */
 class TimelineTracks(
     val days: Set<String>,
@@ -462,6 +577,9 @@ class TimelineTracks(
     val ready: Boolean = true,
 ) {
     fun cached(day: String): DayTrack? = cache[day]
+
+    /** Whether [day] has footprints still to be read, or read again. */
+    fun unread(day: String): Boolean = day in days && (day in stale || !cache.containsKey(day))
 
     suspend fun load(day: String): DayTrack? {
         if (day !in stale && cache.containsKey(day)) return cache[day]
@@ -482,8 +600,8 @@ class TimelineTracks(
  * and moving its rows as they arrive.
  */
 private object TrackMemory {
-    /** Each day read, null for one that didn't move, which a ConcurrentHashMap couldn't hold. */
-    val cache: MutableMap<String, DayTrack?> = java.util.Collections.synchronizedMap(HashMap())
+    /** Each day read, null for one that didn't move; state, so what shows it follows a read. */
+    val cache: MutableMap<String, DayTrack?> = androidx.compose.runtime.mutableStateMapOf()
     val stale: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
     @Volatile
@@ -512,12 +630,7 @@ fun rememberTimelineTracks(container: AppContainer): TimelineTracks {
     val revision by store.revision.collectAsStateWithLifecycle()
     val read: (String) -> DayTrack? = remember(store) {
         { day ->
-            val points = store.points(cc.hyoban.moments.footprints.TrackSelection(day = day))
-            val stretches = cc.hyoban.moments.footprints.trackSegments(points, budget = 400).filter { it.size > 1 }
-            val stats = cc.hyoban.moments.footprints.trackStats(points)
-            // A day with no stretch that moved, the phone only lying still, lists nothing.
-            if (stretches.isEmpty() || stats.metres < 100) null
-            else DayTrack(stretches.map { stretch -> stretch.map { it.longitude to it.latitude } }, stats.metres, stats.recordedMillis)
+            DayTrack.of(store.points(cc.hyoban.moments.footprints.TrackSelection(day = day)))
         }
     }
     val days by androidx.compose.runtime.produceState(TrackMemory.days.takeIf { TrackMemory.ready }, revision) {
@@ -548,29 +661,29 @@ fun rememberTimelineTracks(container: AppContainer): TimelineTracks {
 /** How many of the newest days with footprints are read before the timeline first shows. */
 private const val PRELOADED_DAYS = 7
 
-/** A day's footprints as a row after its bills: the line itself where a bill's icon goes, how far it went and for how long it moved; tapped for the day. */
+/** A piece of a day's footprints as a row between its records: the line itself where a bill's icon goes, when it set off, how far it went and for how long it moved; tapped for the day. */
 @Composable
-fun TrackRow(day: String, tracks: TimelineTracks, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val track by androidx.compose.runtime.produceState(tracks.cached(day), day, tracks) { value = tracks.load(day) }
-    val shown = track ?: return
-    val minutes = (shown.movingMillis / 60_000).toInt()
+fun TrackRow(day: String, piece: TrackPiece, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val minutes = (piece.movingMillis / 60_000).toInt()
     PageRow(
-        leading = { TrackGlyph(shown.stretches, Modifier.size(24.dp), tokens.tx2) },
+        leading = { TrackGlyph(piece.stretches, Modifier.size(24.dp), tokens.tx2) },
         title = org.jetbrains.compose.resources.stringResource(Res.string.timeline_track),
         supporting = org.jetbrains.compose.resources.pluralStringResource(Res.plurals.timeline_track_moving, minutes, minutes),
         onClick = onClick,
-        // The day's page grows out of the row and shrinks back into it.
-        modifier = modifier.testTag("track_$day"),
-        // No time of its own, the column kept so its glyph stays in line with the bills' icons.
-        time = "",
+        modifier = modifier.testTag("track_${day}_${piece.start}"),
+        time = trackTime(piece),
     ) {
         Text(
-            org.jetbrains.compose.resources.stringResource(Res.string.distance_kilometres, decimals(shown.metres / 1000, 1)),
+            org.jetbrains.compose.resources.stringResource(Res.string.distance_kilometres, decimals(piece.metres / 1000, 1)),
             style = AppTheme.typography.body,
             color = tokens.tx2,
         )
     }
 }
+
+/** When a piece of the footprints set off, as the records' times read. */
+fun trackTime(piece: TrackPiece): String =
+    java.time.Instant.ofEpochMilli(piece.start).atZone(java.time.ZoneId.systemDefault()).toLocalTime().toString().take(5)
 
 /** The day's line, where a bill's icon goes, drawn in an icon's stroke. */
 @Composable

@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -95,8 +94,8 @@ sealed interface RecordLine {
         override val key get() = "checkin-${checkin.uid}"
     }
 
-    data class Track(val day: String) : RecordLine {
-        override val key get() = "track-$day"
+    data class Track(val day: String, val piece: TrackPiece) : RecordLine {
+        override val key get() = "track-$day-${piece.start}"
     }
 }
 
@@ -122,7 +121,7 @@ fun chatItems(items: List<DayItem>, linked: Map<String, List<Txn>>): List<ChatIt
             is DayItem.ChargeItem -> run += RecordLine.ChargeLine(item.charge)
             is DayItem.ThingItem -> run += RecordLine.ThingLine(item.thing)
             is DayItem.CheckinItem -> run += RecordLine.CheckinLine(item.checkin)
-            is DayItem.Track -> run += RecordLine.Track(item.day)
+            is DayItem.Track -> run += RecordLine.Track(item.day, item.piece)
         }
     }
     flush()
@@ -240,17 +239,11 @@ fun DateCapsule(day: String, onClick: (() -> Unit)?, modifier: Modifier = Modifi
 fun RecordsBubble(
     lines: List<RecordLine>,
     ledger: Ledger,
-    tracks: TimelineTracks,
     onBill: (String) -> Unit,
     onDay: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    // A day's footprints read from the phone as the bubble comes into view; a day that moved
-    // too little to list has no line, and a bubble of that alone isn't drawn.
-    val trackDay = (lines.lastOrNull() as? RecordLine.Track)?.day
-    val track by produceState(trackDay?.let { tracks.cached(it) }, trackDay, tracks) { value = trackDay?.let { tracks.load(it) } }
-    val shown = lines.filter { it !is RecordLine.Track || track != null }
-    if (shown.isEmpty()) return
+    val shown = lines
     val single = shown.size == 1
     val openThing = LocalThingNav.current
     val openCheckin = LocalCheckinNav.current
@@ -278,8 +271,8 @@ fun RecordsBubble(
                 .testTag("records_${lines.first().key}"),
         ) {
             val visible = if (shown.size > MAX_LINES) shown.take(MAX_LINES - 1) else shown
-            // The footprints alone have no time, and no column for one.
-            val timed = shown.any { it !is RecordLine.Track }
+            // Only a device or a subscription alone has no time, and no column for one.
+            val timed = shown.any { it !is RecordLine.ThingLine }
             visible.forEach { line ->
                 when (line) {
                     is RecordLine.Bill -> RecordRow(
@@ -323,18 +316,16 @@ fun RecordsBubble(
                         timed = timed,
                         tag = "thing_${line.thing.uid}",
                     )
-                    is RecordLine.Track -> track?.let { day ->
-                        RecordRow(
-                            icon = { Icon(AppIcons.Footprints, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
-                            title = stringResource(Res.string.timeline_track),
-                            time = null,
-                            end = stringResource(Res.string.distance_kilometres, decimals(day.metres / 1000, 1)),
-                            endColor = tokens.tx,
-                            large = large,
-                            timed = timed,
-                            tag = "track_${line.day}",
-                        )
-                    }
+                    is RecordLine.Track -> RecordRow(
+                        icon = { Icon(AppIcons.Footprints, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
+                        title = stringResource(Res.string.timeline_track),
+                        time = trackTime(line.piece),
+                        end = stringResource(Res.string.distance_kilometres, decimals(line.piece.metres / 1000, 1)),
+                        endColor = tokens.tx,
+                        large = large,
+                        timed = timed,
+                        tag = "track_${line.day}_${line.piece.start}",
+                    )
                 }
             }
             if (shown.size > MAX_LINES) {
@@ -367,7 +358,7 @@ private fun RecordRow(
     ) {
         // The time leads, a column of its own read down the bubble as the day goes, as wide as
         // 00:00 since the system's monospace doesn't always keep its digits one width; a line with
-        // no time (the footprints) keeps the column empty, so the icons stay in line.
+        // no time (a device or a subscription) keeps the column empty, so the icons stay in line.
         if (timed) Box {
             Text("00:00", style = AppTheme.typography.caption, color = androidx.compose.ui.graphics.Color.Transparent, maxLines = 1, modifier = Modifier.clearAndSetSemantics {})
             time?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 1) }
