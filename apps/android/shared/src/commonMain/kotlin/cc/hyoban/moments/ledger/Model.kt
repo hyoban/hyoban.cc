@@ -23,9 +23,14 @@ data class Book(
     val currency: String = "CNY",
     val position: Int = 0,
     val archived: Boolean = false,
-    /** Whether its new bills are public: a [cc.hyoban.moments.data.spec.Visibility]'s value, private unless set. */
+    /** Whether its bills are public by default: a [cc.hyoban.moments.data.spec.Visibility]'s value, private unless set. */
     val visibility: String = "private",
-)
+    /** The first day, `yyyy-MM-dd`, whose bills a public book makes public; null for all of them. */
+    val publicFrom: String? = null,
+) {
+    /** Whether a bill of [day] that says nothing itself is public by this book's say. */
+    fun publicOn(day: LocalDate): Boolean = visibility == "public" && (publicFrom == null || day.toString() >= publicFrom)
+}
 
 /** What sort of account: how the assets page groups it and whether its balance is owed. */
 @Serializable

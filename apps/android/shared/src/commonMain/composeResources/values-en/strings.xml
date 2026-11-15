@@ -893,7 +893,9 @@
     <string name="changes_bill_private">Made private: taken off the site</string>
     <string name="items_title">Items and visibility</string>
     <string name="items_books">Books</string>
-    <string name="items_book_public">New bills are public</string>
+    <string name="items_book_public">Bills are public</string>
+    <string name="items_book_public_from">Starting</string>
+    <string name="items_book_public_all">All bills</string>
     <string name="items_book_note">A public bill publishes its amount, category and note alone; accounts and balances stay private. Each bill can still say otherwise.</string>
     <string name="items_tracks">Tracks</string>
     <string name="items_tracks_note">Tracks stay on the phone; the site routes trips by navigation.</string>

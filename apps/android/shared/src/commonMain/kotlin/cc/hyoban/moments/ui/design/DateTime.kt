@@ -78,6 +78,24 @@ fun DateTimeDialog(day: LocalDate, hour: Int, minute: Int, onDismiss: () -> Unit
     )
 }
 
+/** Picking a day alone, as [DateTimeDialog] does without the time, under a [title]. */
+@Composable
+fun DateDialog(day: LocalDate, title: String, onDismiss: () -> Unit, onPick: (LocalDate) -> Unit) {
+    var chosen by rememberSaveable { mutableLongStateOf(day.toEpochDay()) }
+    var month by rememberSaveable { mutableStateOf(YearMonth.from(day).toString()) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = { onPick(LocalDate.ofEpochDay(chosen)) }, modifier = Modifier.testTag("date_confirm")) {
+                Text(stringResource(Res.string.action_confirm))
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
+        title = { Text(title) },
+        text = { MonthGrid(YearMonth.parse(month), LocalDate.ofEpochDay(chosen), onMonth = { month = it.toString() }, onDay = { chosen = it.toEpochDay() }) },
+    )
+}
+
 /** Two digits of the time, typed into a capsule on the pressed grey. */
 @Composable
 private fun TimePart(value: String, onChange: (String) -> Unit, tag: String) {

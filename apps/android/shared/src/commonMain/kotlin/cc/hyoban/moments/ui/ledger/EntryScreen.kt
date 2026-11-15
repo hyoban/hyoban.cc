@@ -884,10 +884,10 @@ private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraf
             ) { draft.reimburse = if (draft.reimburse == Reimburse.NONE) Reimburse.PENDING else Reimburse.NONE }
         }
         ToggleChip(draft.excluded, stringResource(Res.string.ledger_excluded), "excluded") { draft.excluded = !draft.excluded }
-        // Public follows the book's say for new bills until this one says otherwise; only its
-        // amount, category and note would publish.
+        // Public follows the book's say for a bill of its day until this one says otherwise; only
+        // its amount, category and note would publish.
         if (kind == TxnKind.EXPENSE || kind == TxnKind.INCOME) {
-            val bookPublic = ledger.books.firstOrNull { it.id == (draft.book ?: ledger.book?.id) }?.visibility == "public"
+            val bookPublic = ledger.books.firstOrNull { it.id == (draft.book ?: ledger.book?.id) }?.publicOn(at.toLocalDate()) == true
             val public = (draft.visibility ?: if (bookPublic) "public" else "private") == "public"
             ToggleChip(public, stringResource(Res.string.visibility_public), "public") { draft.visibility = if (public) "private" else "public" }
         }

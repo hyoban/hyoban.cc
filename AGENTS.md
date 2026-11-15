@@ -122,7 +122,7 @@ even when starting from the repository root.
   change: pushes to `main` deploy it.
 - Android's ledger and GPS footprints are private by default and stay on the phone, out of
   Android's backup; the one copy that leaves it is the opt-in WebDAV backup, to the owner's
-  own server, of every database but photos and videos. A book can make its new bills public and each bill can say otherwise; a
+  own server, of every database but photos and videos. A book can make its bills public from a day on, by the bill's date, and each bill can say otherwise; a
   public bill publishes its kind, amount, currency, category and note alone, never its account or
   balance. The footprints are never published, not even simplified: a trip's public route
   is only the routers' (below), along the roads between its stops. A stay

@@ -35,7 +35,7 @@ interface OutsideChanges {
 
 /** Whether a bill is public: its own say, else its book's, else private. */
 fun Ledger.isPublic(txn: Txn): Boolean =
-    (txn.visibility ?: books.firstOrNull { it.id == txn.book }?.visibility ?: "private") == "public"
+    txn.visibility?.let { it == "public" } ?: (books.firstOrNull { it.id == txn.book }?.publicOn(txn.date) ?: false)
 
 /** What of a bill the site may have: an expense's or an income's amount, kind, category and note, when it is public. */
 fun Ledger.publicPart(txn: Txn): JsonObject? {

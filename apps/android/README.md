@@ -423,8 +423,10 @@ The data:
   writes the bills in iCost's columns.
 
 `ledger/LedgerStore` keeps it in `noBackupFilesDir/ledger.sqlite`, outside sync and
-Android's backup. Bills are private: 记录项与公开 (`moments://items`) makes a book's new bills
-public (under the 记录项, while the ledger is on), and a bill's 公开 chip says otherwise for one. A public bill publishes only its
+Android's backup. Bills are private: 记录项与公开 (`moments://items`) makes a book's bills
+public from a day on, by each bill's own date (under the 记录项, while the ledger is on): switching
+a book on asks for the day, today unless another is picked, and 开始日期 under it changes it; a book
+made public before there was a day keeps all its bills public. A bill's 公开 chip says otherwise for one. A public bill publishes only its
 kind, amount, currency, category and note (`data/store/Outside.kt`). `ledger/ICostImport`,
 `ledger/Accounting` and `ledger/Links` are plain Kotlin tested in `LedgerTest`, which also
 reads a real export when `ICOST_EXPORT` names one and a real backup when `ICOST_BACKUP` does.

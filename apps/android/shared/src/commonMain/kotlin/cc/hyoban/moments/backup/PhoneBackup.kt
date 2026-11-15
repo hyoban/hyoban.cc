@@ -216,8 +216,10 @@ private fun SQLiteStatement.point() = TrackPoint(
 
 /** The ledger in [this] database, as the phone's store reads its own. */
 private fun SQLiteConnection.readLedger(): Ledger {
-    val books = prepare("SELECT id, name, currency, position, archived, visibility FROM books ORDER BY position, rowid").use { c ->
-        buildList { while (c.step()) add(Book(c.getText(0), c.getText(1), c.getText(2), c.getLong(3).toInt(), c.getLong(4) != 0L, c.getText(5))) }
+    // A backup from before a book could be public from a day on has no such column.
+    val from = prepare("SELECT COUNT(*) FROM pragma_table_info('books') WHERE name = 'public_from'").use { it.step(); it.getLong(0) > 0 }
+    val books = prepare("SELECT id, name, currency, position, archived, visibility, ${if (from) "public_from" else "NULL"} FROM books ORDER BY position, rowid").use { c ->
+        buildList { while (c.step()) add(Book(c.getText(0), c.getText(1), c.getText(2), c.getLong(3).toInt(), c.getLong(4) != 0L, c.getText(5), c.textOrNull(6))) }
     }
     val accounts = prepare("SELECT id, name, kind, currency, opening, counted, archived, note, position FROM accounts ORDER BY position, rowid").use { c ->
         buildList {

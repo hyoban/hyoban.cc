@@ -41,6 +41,17 @@ class OutsideTest {
     }
 
     @Test
+    fun `a book public from a day makes only bills of that day on public`() {
+        val day = txn.date
+        val from = { start: java.time.LocalDate -> Ledger(books = listOf(book.copy(visibility = "public", publicFrom = start.toString())), txns = listOf(txn)) }
+        assertTrue(from(day).isPublic(txn))
+        assertTrue(from(day.minusDays(1)).isPublic(txn))
+        assertFalse(from(day.plusDays(1)).isPublic(txn))
+        assertTrue(from(day.plusDays(1)).isPublic(txn.copy(visibility = "public")))
+        assertFalse(from(day).isPublic(txn.copy(visibility = "private")))
+    }
+
+    @Test
     fun `a public bill publishes its amount, category and note, never its account`() {
         val pending = ledger(txn, public = true).pendingBills().single()
         val part = pending.part!!
@@ -66,13 +77,14 @@ class OutsideTest {
     @Test
     fun `a backup keeps who sees each book and bill, and what of each was published`() {
         val backup = cc.hyoban.moments.ledger.LedgerBackup(
-            books = listOf(book.copy(visibility = "public")),
+            books = listOf(book.copy(visibility = "public", publicFrom = "2026-11-15")),
             accounts = emptyList(),
             categories = listOf(food, snack),
             txns = listOf(txn.copy(visibility = "private", published = "{}")),
         )
         val back = cc.hyoban.moments.ledger.LedgerBackup.decode(cc.hyoban.moments.ledger.LedgerBackup.encode(backup))
         assertEquals("public", back.books.single().visibility)
+        assertEquals("2026-11-15", back.books.single().publicFrom)
         assertEquals("private", back.txns.single().visibility)
         assertEquals("{}", back.txns.single().published)
     }

@@ -19,14 +19,14 @@ import kotlinx.coroutines.withContext
 
 /**
  * The ledger on this phone: an SQLite database in `noBackupFilesDir`, outside the API's sync and
- * Android's backup, as the footprints are. A bill is private unless its book says new bills are
- * public or it says so itself; only then does what is public of it (its amount, kind, category
+ * Android's backup, as the footprints are. A bill is private unless its book says bills of its
+ * day are public or it says so itself; only then does what is public of it (its amount, kind, category
  * and note) go out with 全部发布到网站, and [Txn.published] keeps what last went. What it holds is read whole
  * into [ledger] after each change, a few thousand bills being quick to read. Its own JSON
  * backup is the way to keep a copy elsewhere.
  */
 class LedgerStore(private val context: Context) : SQLiteOpenHelper(
-    context, File(context.noBackupFilesDir, "ledger.sqlite").absolutePath, null, 3,
+    context, File(context.noBackupFilesDir, "ledger.sqlite").absolutePath, null, 4,
 ), LedgerSource {
     private val _ledger = MutableStateFlow(Ledger())
     override val ledger: StateFlow<Ledger> = _ledger.asStateFlow()
@@ -36,7 +36,7 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
-        db.execSQL("CREATE TABLE books (id TEXT PRIMARY KEY, name TEXT NOT NULL, currency TEXT NOT NULL, position INTEGER NOT NULL, archived INTEGER NOT NULL, visibility TEXT NOT NULL DEFAULT 'private')")
+        db.execSQL("CREATE TABLE books (id TEXT PRIMARY KEY, name TEXT NOT NULL, currency TEXT NOT NULL, position INTEGER NOT NULL, archived INTEGER NOT NULL, visibility TEXT NOT NULL DEFAULT 'private', public_from TEXT)")
         db.execSQL(
             "CREATE TABLE accounts (id TEXT PRIMARY KEY, name TEXT NOT NULL, kind TEXT NOT NULL, currency TEXT NOT NULL, opening INTEGER NOT NULL, " +
                 "counted INTEGER NOT NULL, archived INTEGER NOT NULL, note TEXT NOT NULL, position INTEGER NOT NULL)",
@@ -69,6 +69,8 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
             db.execSQL("ALTER TABLE txns ADD COLUMN visibility TEXT")
             db.execSQL("ALTER TABLE txns ADD COLUMN published TEXT")
         }
+        // A public book could start making its bills public from a day on.
+        if (oldVersion < 4) db.execSQL("ALTER TABLE books ADD COLUMN public_from TEXT")
     }
 
     /** Reads the ledger, the bundled rates going in first the first time. */
@@ -93,8 +95,8 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
 
     private fun read(): Ledger {
         val db = readableDatabase
-        val books = db.rawQuery("SELECT id, name, currency, position, archived, visibility FROM books ORDER BY position, rowid", null).use { c ->
-            buildList { while (c.moveToNext()) add(Book(c.getString(0), c.getString(1), c.getString(2), c.getInt(3), c.getInt(4) != 0, c.getString(5))) }
+        val books = db.rawQuery("SELECT id, name, currency, position, archived, visibility, public_from FROM books ORDER BY position, rowid", null).use { c ->
+            buildList { while (c.moveToNext()) add(Book(c.getString(0), c.getString(1), c.getString(2), c.getInt(3), c.getInt(4) != 0, c.getString(5), c.stringOrNull(6))) }
         }
         val accounts = db.rawQuery("SELECT id, name, kind, currency, opening, counted, archived, note, position FROM accounts ORDER BY position, rowid", null).use { c ->
             buildList {
@@ -266,7 +268,7 @@ private fun Account.values() = ContentValues().apply {
 
 private fun Book.values() = ContentValues().apply {
     put("id", id); put("name", name); put("currency", currency); put("position", position); put("archived", if (archived) 1 else 0)
-    put("visibility", visibility)
+    put("visibility", visibility); put("public_from", publicFrom)
 }
 
 private fun Category.values() = ContentValues().apply {

@@ -854,7 +854,9 @@
     <string name="changes_bill_private">改为私有，会从网站删除</string>
     <string name="items_title">记录项与公开</string>
     <string name="items_books">账本</string>
-    <string name="items_book_public">新账单默认公开</string>
+    <string name="items_book_public">账单默认公开</string>
+    <string name="items_book_public_from">开始日期</string>
+    <string name="items_book_public_all">全部账单</string>
     <string name="items_book_note">公开的账单只发布金额、分类和备注，账户和余额永远私有。每一笔还能单独改。</string>
     <string name="items_tracks">轨迹</string>
     <string name="items_tracks_note">轨迹只留在手机上，网站上的旅程路线由导航算出。</string>
