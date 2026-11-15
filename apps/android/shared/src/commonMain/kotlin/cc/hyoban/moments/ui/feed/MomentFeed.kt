@@ -51,6 +51,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -83,6 +85,9 @@ import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.fill
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 
 /**
  * What goes above a feed's Moments, a row at a time, each by its key: the page's header,
@@ -153,6 +158,11 @@ fun MomentFeed(
     chat: Boolean = false,
     /** The days from the first, as a trip's are read, rather than newest first. */
     chronological: Boolean = false,
+    /**
+     * Opens the single column at its end, where the newest of a [chronological] feed is, and keeps
+     * it there as records arrive while it is read there; the tab tapped again goes back to it.
+     */
+    fromEnd: Boolean = false,
     leading: FeedLeading.() -> Unit = {},
 ) {
     val days = remember(moments) { moments.groupBy { it.dateKey }.toList() }
@@ -225,7 +235,25 @@ fun MomentFeed(
                 item(key = "end", contentType = "end", span = StaggeredGridItemSpan.FullLine) { Spacer(Modifier) }
             }
         } else {
-            OnTabReselect(tab) { state.animateScrollToItem(0) }
+            if (fromEnd) {
+                // At the end until it is scrolled away from, and again once scrolled back to it.
+                var atEnd by rememberSaveable { mutableStateOf(true) }
+                LaunchedEffect(state) {
+                    launch {
+                        snapshotFlow { state.isScrollInProgress }.drop(1).filter { !it }.collect { atEnd = !state.canScrollForward }
+                    }
+                    snapshotFlow { state.layoutInfo.totalItemsCount }.collect { count ->
+                        if (atEnd && count > 0) state.scrollToItem(count - 1)
+                    }
+                }
+                OnTabReselect(tab) {
+                    val count = state.layoutInfo.totalItemsCount
+                    if (count > 0) state.animateScrollToItem(count - 1)
+                    atEnd = true
+                }
+            } else {
+                OnTabReselect(tab) { state.animateScrollToItem(0) }
+            }
             LazyColumn(
                 Modifier.fillMaxSize(),
                 state = state,

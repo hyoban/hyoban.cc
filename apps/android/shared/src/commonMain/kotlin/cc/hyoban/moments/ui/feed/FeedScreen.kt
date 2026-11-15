@@ -191,8 +191,9 @@ fun FeedScreen(
         if (event.type != androidx.compose.ui.input.key.KeyEventType.KeyDown || event.isMetaPressed) return@OnDesktopKey false
         val index = moments.indexOfFirst { it.uid == chosen }
         when (event.key) {
-            androidx.compose.ui.input.key.Key.DirectionDown -> { moments.getOrNull(index + 1)?.let { chosen = it.uid }; true }
-            androidx.compose.ui.input.key.Key.DirectionUp -> { moments.getOrNull((index - 1).coerceAtLeast(0))?.let { chosen = it.uid }; true }
+            // The list reads from the oldest down, so down is the next newer one.
+            androidx.compose.ui.input.key.Key.DirectionDown -> { (if (index < 0) moments.firstOrNull() else moments.getOrNull(index - 1))?.let { chosen = it.uid }; true }
+            androidx.compose.ui.input.key.Key.DirectionUp -> { moments.getOrNull(index + 1)?.let { chosen = it.uid }; true }
             androidx.compose.ui.input.key.Key.Enter -> chosen?.let { onMoment(it); true } ?: false
             else -> false
         }
@@ -215,8 +216,8 @@ fun FeedScreen(
     // Moment coming into view on a fling is ready rather than composed within the frame it shows.
     val feedState = rememberLazyListState(cacheWindow = LazyLayoutCacheWindow(aheadFraction = 1f, behindFraction = 0.5f))
     val gridState = rememberLazyStaggeredGridState()
-    // The header over the views folds away as they scroll on and opens again as they scroll back,
-    // or as the tab tapped again takes them to their top. How far it is folded is kept, so a page
+    // The header over the views folds away as they are read back to older days and opens again as
+    // they head to today, or as the tab tapped again takes them back to today. How far it is folded is kept, so a page
     // made again (the theme switched) doesn't open it mid-list.
     val headerScroll = rememberSaveable(saver = HeaderScroll.Saver) { HeaderScroll() }
     // Opening out with the list as it goes back to its top, on the same spring.
@@ -227,17 +228,19 @@ fun FeedScreen(
     val rowMotion = AppTheme.motionScheme
     val rowIn = expandVertically(rowMotion.defaultSpatialSpec()) + fadeIn(rowMotion.defaultEffectsSpec())
     val rowOut = shrinkVertically(rowMotion.defaultSpatialSpec()) + fadeOut(rowMotion.defaultEffectsSpec())
-    // The tabs fold away down the screen as the timeline is scrolled on, and come back as it is
-    // scrolled back, or when it is left.
+    // The tabs fold away down the screen as the timeline is read back to older days, the finger
+    // going down, and come back as it heads to today again, or when it is left.
     val tabsHidden = LocalTabsHidden.current
     DisposableEffect(tabsHidden) { onDispose { tabsHidden.value = false } }
+    // Taken back to today without a finger, the tabs come back with it.
+    OnTabReselect(Feed) { tabsHidden.value = false }
     val tabsFold = remember(tabsHidden) {
         object : NestedScrollConnection {
             // Seen before the header and the list take any of it, so the tabs follow the finger
             // whichever of them moves.
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (available.y < -TABS_FOLD_STEP) tabsHidden.value = true
-                else if (available.y > TABS_FOLD_STEP) tabsHidden.value = false
+                if (available.y > TABS_FOLD_STEP) tabsHidden.value = true
+                else if (available.y < -TABS_FOLD_STEP) tabsHidden.value = false
                 return Offset.Zero
             }
         }
@@ -334,6 +337,9 @@ fun FeedScreen(
                                     onTrip = onTrip,
                                     tracks = tracks,
                                     chat = true,
+                                    // Read as a conversation, from the first day down to today, opening at today.
+                                    chronological = true,
+                                    fromEnd = true,
                                 )
                             }
                         }
@@ -414,10 +420,12 @@ class HeaderScroll {
     var offset by mutableFloatStateOf(0f)
 
     val connection = object : NestedScrollConnection {
-        // Folding away as the list is scrolled on and coming back as soon as it is scrolled back,
-        // wherever it is, as the floating tabs do, rather than only at the list's top.
+        // Folding away as the list is read back to older days, the finger going down, and coming
+        // back as soon as it heads to today again, wherever it is, as the floating tabs do. What
+        // it takes is its own change in height, so the list makes up the rest and what is under
+        // the finger keeps with it either way.
         override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset =
-            Offset(0f, move(available.y))
+            Offset(0f, move(-available.y))
     }
 
     /** Moves it by [delta] within its height, saying how much of that it took. */

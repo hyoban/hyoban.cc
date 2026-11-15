@@ -67,11 +67,14 @@ bill, 设备, 订阅 and 车 keep their figures in a column at the left beside t
 ledger's segments in the bar; 我 is two columns; 记一笔's keys take the right half; 记录 is a page
 rather than a dialog. Controls keep clear of the camera's cutout on whichever side it is.
 
-- **时间线** is everything newest first, as a conversation with oneself: each day opens
+- **时间线** is everything from the oldest down to the newest, as a conversation with
+  oneself, opening at its end, today, and staying there as new records come while it is
+  read there; the tab tapped again goes back to it. Each day opens
   with its date in a capsule, Moments are bubbles from the right with their photos across
   the top, and the day's bills, charges and footprints come from the left in one records
   bubble. A banner marks where each trip begins, or, for the trip under way, says
-  进行中 and which day it is. Scrolling folds the tabs away.
+  进行中 and which day it is. Reading back to older days folds the tabs and the title away;
+  heading back to today brings them back.
 - **地图** shows the places, the trips' routes (listed in the sheet at its foot) and the
   footprints, drawn as the site's map draws them: a place as the newest photo taken there,
   framed in white with its year's dot, or without one a balloon in its year's colour with its
