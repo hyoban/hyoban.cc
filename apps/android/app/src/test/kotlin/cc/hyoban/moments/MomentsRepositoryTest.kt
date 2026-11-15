@@ -361,7 +361,7 @@ class MomentsRepositoryTest {
     }
 
     @Test
-    fun `a Moment of the phone's changed keeps its file, photos and places in step`() = runBlocking {
+    fun `a Moment of the phone's changed keeps its photos and places in step`() = runBlocking {
         val repository = repository()
         repository.load()
         val kept = File(localDirectory, "media/K.jpg").apply { parentFile.mkdirs(); writeText("kept") }
@@ -377,11 +377,7 @@ class MomentsRepositoryTest {
         repository.updateLocal(mine.copy(occurredAt = "2026-11-03", text = "after", places = listOf("p-saved"), media = listOf(photo("K", kept))))
 
         assertEquals("after", repository.moment("L")?.text)
-        assertEquals(
-            listOf("moments/2026/11/L.json"),
-            File(localDirectory, "moments").walkTopDown().filter { it.isFile }.map { it.relativeTo(localDirectory).path }.toList(),
-            "moved to another month, its file moves with it",
-        )
+        assertEquals("2026-11-03", repository.moment("L")?.occurredAt)
         assertTrue(kept.exists())
         assertTrue(!dropped.exists(), "a photo taken out goes")
         assertEquals(null, repository.places.value["p-made"], "the place it made, now unused, goes")
@@ -392,6 +388,58 @@ class MomentsRepositoryTest {
         restarted.load()
         assertEquals("after", restarted.moment("L")?.text)
         assertEquals("书店", restarted.places.value["p-saved"]?.name)
+    }
+
+    @Test
+    fun `the Moments and deletions an older app kept as files of their own come in as entries`() = runBlocking {
+        api.put(moment("S", "2026-10-01"))
+        repository().apply { load(); refresh() }
+        val old = moment("L", "2026-10-02", text = "written before", published = false)
+        File(localDirectory, "moments/2026/10/L.json").apply { parentFile.mkdirs() }
+            .writeText(Spec.json.encodeToString(MomentRecord.serializer(), old))
+        File(localDirectory, "removed.json").writeText("""{"uids":["S"]}""")
+
+        val repository = repository()
+        repository.load()
+
+        assertEquals(listOf("L"), repository.moments.value.map { it.uid })
+        assertEquals("written before", repository.moment("L")?.text)
+        assertTrue(repository.isLocal("L"))
+        assertEquals(listOf("S"), repository.pending.value.removed.map { it.uid })
+        assertFalse(File(localDirectory, "moments").exists(), "the old files go once kept as entries")
+        assertFalse(File(localDirectory, "removed.json").exists())
+        val restarted = repository()
+        restarted.load()
+        assertEquals(listOf("L"), restarted.moments.value.map { it.uid }, "and stay entries after a restart")
+    }
+
+    @Test
+    fun `a Moment cleared of its words is a check-in, and one given words again a Moment`() = runBlocking {
+        val repository = repository()
+        repository.load()
+        val mine = moment("L", "2026-10-02", text = "湖边", published = false).copy(places = listOf("p-made"))
+        repository.addLocal(mine, "p-made" to Place("湖边", 32.0, 118.8))
+        val checkin = kotlinx.serialization.json.JsonObject(
+            Entries.fromMoment(mine) + ("parts" to kotlinx.serialization.json.buildJsonObject {
+                put("checkin", kotlinx.serialization.json.buildJsonObject {
+                    put("v", kotlinx.serialization.json.JsonPrimitive(1))
+                    put("venue", kotlinx.serialization.json.JsonPrimitive("湖边"))
+                    put("source", kotlinx.serialization.json.buildJsonObject { put("app", kotlinx.serialization.json.JsonPrimitive("phone")) })
+                })
+            }),
+        )
+        repository.saveEntry(checkin)
+
+        assertEquals(null, repository.moment("L"))
+        assertEquals(emptyList(), repository.moments.value.map { it.uid })
+        assertEquals(listOf("L"), repository.checkins.value.byDay["2026-10-02"]?.map { it.uid })
+        assertEquals("湖边", repository.places.value["p-made"]?.name, "its place stays with the check-in")
+
+        repository.updateLocal(mine.copy(text = "again"))
+        assertEquals("again", repository.moment("L")?.text)
+        assertEquals(null, repository.checkins.value.byDay["2026-10-02"])
+        assertEquals(listOf("L"), repository.pending.value.added.map { it.uid })
+        assertEquals(0, repository.pending.value.entries.size)
     }
 
     @Test
@@ -406,7 +454,7 @@ class MomentsRepositoryTest {
         repository.refresh()
         val copy = File(localDirectory, "media/P.jpg").apply { parentFile.mkdirs(); writeText("photo") }
         val mine = moment("L", "2026-10-02", text = "湖边", published = false).copy(
-            places = listOf("p-made", "nanjing"),
+            places = listOf("p-made"),
             media = listOf(MomentMedia("P", MediaType.IMAGE, width = 4, height = 3, local = LocalMedia(copy.toURI().toString(), copied = true))),
         )
         val other = moment("M", "2026-10-03", published = false).copy(places = listOf("p-made"))
@@ -438,7 +486,7 @@ class MomentsRepositoryTest {
         assertEquals(
             listOf(
                 "upload P image/jpeg",
-                "changes places=[p-made] moments=[L [p-made, nanjing], M [p-made], T []] deleted=[S]",
+                "changes places=[p-made] moments=[L [p-made], M [p-made], T []] deleted=[S]",
             ),
             writer.calls,
             "the photo first, then everything else in one write, oldest first, the phone's place with it",

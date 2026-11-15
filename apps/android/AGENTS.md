@@ -291,6 +291,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Nothing reaches the site until 全部发布到网站, after the changes waiting have been
   reviewed: one change set, like a commit, sent as entries to `POST /v2/changes`. Don't add
   writes that bypass it.
+- The phone keeps every record it writes or changes as the entry it will be published as
+  (`changedEntries`, a Moment, a check-in and a device alike), and a Moment is only worked out
+  from one, so a record changes shape by being saved as it now is. Don't bring back a store of
+  Moments of their own beside the entries.
 - The ledger and the footprints follow the shared guide's privacy rules and publish only
   through 全部发布到网站 (`data/store/Outside.kt`). Their only other requests are exchange
   rates, when asked, Photon naming a bill's footprint point (`footprints/BillPlaces`), the point

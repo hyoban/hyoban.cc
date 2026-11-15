@@ -157,7 +157,7 @@ class SwarmTest {
         val again = repository().apply { load() }
         assertEquals(0, again.addImported(moments, entries, places))
         assertEquals(2, again.moments.value.size)
-        assertEquals(setOf((entries.single()["uid"] as JsonPrimitive).content), again.entries.value.keys)
+        assertEquals(listOf((entries.single()["uid"] as JsonPrimitive).content), again.checkins.value.byDay.values.flatten().map { it.uid }, "the check-in alone, beside the Moments")
         assertEquals("Book Shop", again.places.value[ids["v3"]]?.name, "a place only a check-in is at stays")
 
         again.publishPending()

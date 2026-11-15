@@ -22,9 +22,9 @@ data class Records(
 )
 
 /**
- * What the phone keeps of its own as files in the spec's layout under one directory: the
- * Moments written on it and the places they made, and its notes of what it changed of the
- * site's until that is published. The copy of what the API serves is [cc.hyoban.moments.data.copy.CopyStore].
+ * What the phone keeps of its own as files under one directory: the places made on it, and its
+ * notes of what it wrote and what it changed of the site's until that is published, every
+ * record among them an entry, Moments too. The copy of what the API serves is [cc.hyoban.moments.data.copy.CopyStore].
  */
 class DataStore(val root: File) {
     private val placesSerializer = MapSerializer(String.serializer(), Place.serializer())
@@ -54,10 +54,8 @@ class DataStore(val root: File) {
     @Serializable
     private data class Removed(val uids: List<String>)
 
-    /** The site's Moments deleted on the phone and not yet on the site: the app's own note, outside the spec. */
-    fun readRemoved(): Set<String> = read("removed.json", Removed.serializer())?.uids?.toSet().orEmpty()
-
-    fun writeRemoved(uids: Set<String>) = write("removed.json", Removed.serializer(), Removed(uids.sorted()))
+    /** The site's Moments an app from before noted as deleted on the phone, before such deletions were entries'. */
+    fun readOldRemoved(): Set<String> = read(OLD_REMOVED, Removed.serializer())?.uids?.toSet().orEmpty()
 
     @Serializable
     private data class Held(val deleting: List<String> = emptyList(), val reverting: List<String> = emptyList())
@@ -77,8 +75,8 @@ class DataStore(val root: File) {
     private data class ChangedEntries(val entries: Map<String, JsonObject> = emptyMap(), val removed: List<String> = emptyList())
 
     /**
-     * The entries changed on the phone that aren't Moments (a device, a subscription), by uid,
-     * and those deleted, until published: the app's own note.
+     * The entries written or changed on the phone, Moments, check-ins and devices alike, by uid,
+     * and the site's deleted there, until published: the app's own note.
      */
     fun readChangedEntries(): Pair<Map<String, JsonObject>, Set<String>> =
         read("changed-entries.json", ChangedEntries.serializer())?.let { it.entries to it.removed.toSet() } ?: (emptyMap<String, JsonObject>() to emptySet())
@@ -86,22 +84,19 @@ class DataStore(val root: File) {
     fun writeChangedEntries(entries: Map<String, JsonObject>, removed: Set<String>) =
         write("changed-entries.json", ChangedEntries.serializer(), ChangedEntries(entries.toSortedMap(), removed.sorted()))
 
-    fun readMoments(): List<MomentRecord> = list("moments").map { file -> decode(file, MomentRecord.serializer()) }
+    /** The Moments an app from before kept as files of their own, `moments/YYYY/MM/<uid>.json`, before they were entries. */
+    fun readOldMoments(): List<MomentRecord> = list(OLD_MOMENTS).map { file -> decode(file, MomentRecord.serializer()) }
 
-    fun writeMoment(moment: MomentRecord) = write(fileOf(moment), MomentRecord.serializer(), moment)
-
-    fun deleteMoment(moment: MomentRecord) {
-        File(root, fileOf(moment)).delete()
+    /** Those files and that note gone, once they are kept as entries. */
+    fun dropOldMoments() {
+        File(root, OLD_MOMENTS).deleteRecursively()
+        File(root, OLD_REMOVED).delete()
     }
 
     /** Drops the whole copy, revision and all. */
     fun clear() {
         root.deleteRecursively()
     }
-
-    /** `moments/YYYY/MM/<uid>.json`, as the spec places it. */
-    fun fileOf(moment: MomentRecord) =
-        "moments/${moment.occurredAt.take(4)}/${moment.occurredAt.substring(5, 7)}/${moment.uid}.json"
 
     private fun <T> read(path: String, serializer: KSerializer<T>): T? {
         val file = File(root, path)
@@ -125,3 +120,6 @@ class DataStore(val root: File) {
     private fun list(directory: String): List<File> =
         File(root, directory).walkTopDown().filter { it.isFile && it.extension == "json" }.sortedBy { it.path }.toList()
 }
+
+private const val OLD_MOMENTS = "moments"
+private const val OLD_REMOVED = "removed.json"
