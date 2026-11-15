@@ -164,7 +164,7 @@ dialogs.
 
 The search (`moments://search`) filters by kind (Moments, bills, charges, check-ins, each
 while its module is on) and by year and month, and lists what it finds under its years; a
-check-in matches by its venue or its place's name and opens its sheet; with nothing to list it says why and
+check-in matches by its venue or its place's name and opens in the editor; with nothing to list it says why and
 what to try next.
 
 ## Writing a Moment
@@ -175,6 +175,14 @@ has its words, up to nine photos and videos, a time and a place, and under 加�
 is 公开 or 私有; a private one is published for its owner but never shown on the site.
 The home screen widgets are the owner's own and show private Moments and trips too,
 except in 演示模式.
+
+The same page writes a check-in: with no words, photos or meal but a place, it is saved as a
+check-in there (the page says 新签到), named after the place, `source.app` `phone`, public unless
+made private, while 签到 is on in 记录项与公开. A check-in tapped, on the timeline, a day, a place or
+in the search, opens here (编辑签到) as a Moment with nothing but its place, to change its time,
+place or who sees it, or to delete it. Words or photos written into it make it a Moment that keeps
+its check-in, as Swarm's with words are; a Moment cleared of them again is a check-in. Its venue
+is its place's name once the place is another, and the check-in goes with the place when none is left.
 
 - **Media.** Picked in 选照片 (below), or shared in from the gallery (Here (写一个时刻)).
   They are copied in whole; a motion
@@ -212,8 +220,10 @@ except in 演示模式.
   of the site's is a change under 改过的地点 until published, which the API takes the name,
   point and kind of, looking its division up again and routing its trips again when it moved.
 
-New Moments and places live under the app's `local/` directory in the spec's layout, the
-places with ids of their own (`p-<ulid>`), marked 未发布 until published. A place keeps its id
+New Moments and places live under the app's `local/` directory, every record written or changed
+there kept as the entry it will be published as (`changed-entries.json`; an app from before kept
+Moments as files of their own, taken in as entries when it starts), the places with ids of their
+own (`p-<ulid>`), marked 未发布 until published. A place keeps its id
 when it is published, so whatever names it (Moments, check-ins, bills) stays at it.
 
 ## Publishing
@@ -292,8 +302,7 @@ one beside the English it exports, at its most accurate check-in's point, with t
 counts a place's check-ins with its Moments, and its sheet and page list them. Their
 uids are made from the time and Swarm's id, so importing the same export again adds only what
 is new and copies no photo twice. Tapping a check-in, in the timeline, a day or a place, opens
-its sheet: its venue, when, and a 公开 switch, kept as a change at once, the site's map dotting
-it while public. All of it waits with the other unpublished changes for
+it in the editor (Writing a Moment), the site's map dotting it while public. All of it waits with the other unpublished changes for
 发布更改. Check a change to the importer against a real export with
 `SWARM_EXPORT=<zip> ./gradlew :app:testDebugUnitTest --tests '*SwarmTest*'`, and never commit it.
 

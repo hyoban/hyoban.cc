@@ -1,9 +1,12 @@
 package cc.hyoban.moments.data.things
 
 import cc.hyoban.moments.data.spec.Entries
+import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.entryUid
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.time.OffsetDateTime
 
 /**
@@ -61,4 +64,44 @@ fun checkinOf(entry: JsonObject): Checkin? {
     val checkin = (entry["parts"] as? JsonObject)?.get("checkin") as? JsonObject ?: return null
     val text = { key: String -> (entry[key] as? JsonPrimitive)?.content }
     return Checkin(entry.entryUid, text("at") ?: return null, Entries.checkinName(checkin) ?: return null, text("place"), text("end"), Entries.isPrivate(entry))
+}
+
+/**
+ * A check-in alone as the Moment the editor opens it as: no words nor photos, at its place, when
+ * it was, public or private as it is, its check-in and the rest of the entry kept beside them.
+ */
+fun checkinAsMoment(entry: JsonObject): MomentRecord? {
+    if (checkinOf(entry) == null) return null
+    val parts = entry["parts"] as? JsonObject ?: return null
+    val text = buildJsonObject {
+        put("v", 1)
+        put("text", "")
+    }
+    return Entries.toMoment(JsonObject(entry + ("parts" to JsonObject(parts + ("text" to text)))))
+}
+
+/**
+ * What the editor keeps of [moment]: with words, photos or a meal, a Moment; with none, at a
+ * place, a check-in there. The check-in it had stays, named [venue] (its place's name) when its
+ * place is another now, and goes when it is at no place; one with nothing but its place becomes
+ * a check-in of the phone's, named [venue].
+ */
+fun editedEntry(moment: MomentRecord, venue: String?, placeChanged: Boolean): JsonObject {
+    val entry = Entries.fromMoment(moment)
+    val parts = entry["parts"] as? JsonObject ?: JsonObject(emptyMap())
+    val written = moment.text.isNotBlank() || moment.media.isNotEmpty() || moment.food != null
+    val had = parts["checkin"] as? JsonObject
+    val checkin = when {
+        moment.places.isEmpty() || venue.isNullOrBlank() && had == null -> null
+        had != null && (!placeChanged || venue.isNullOrBlank()) -> had
+        had != null -> JsonObject(had - "alias" + ("venue" to JsonPrimitive(venue)))
+        written -> null
+        else -> buildJsonObject {
+            put("v", 1)
+            put("venue", venue)
+            put("source", buildJsonObject { put("app", "phone") })
+        }
+    }
+    val kept = (if (written) parts else parts - setOf("text", "media", "food")) - "checkin"
+    return JsonObject(entry + ("parts" to JsonObject(if (checkin != null) kept + ("checkin" to checkin) else kept)))
 }

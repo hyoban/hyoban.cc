@@ -336,9 +336,8 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
             }
         }
     }
-    // A check-in's record, on the timeline, a day or a place, opens its sheet over the page.
-    var openCheckin by rememberSaveable { mutableStateOf<String?>(null) }
-    val checkinNav: (String) -> Unit = remember { { uid -> openCheckin = uid } }
+    // A check-in's record, on the timeline, a day or a place, opens it in the editor, as a Moment with nothing but its place.
+    val checkinNav: (String) -> Unit = { uid -> openEditor(uid, false) }
     val ledgerNav = remember(navController) {
         LedgerNav(
             bill = { navController.goTo(LedgerBill(it)) },
@@ -802,9 +801,6 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                     onBack = closeViewer,
                                 )
                             }
-                        }
-                        openCheckin?.let { uid ->
-                            cc.hyoban.moments.ui.feed.CheckinSheet(container, uid) { openCheckin = null }
                         }
                         if (onboarding) cc.hyoban.moments.ui.onboarding.OnboardingScreen(container) {
                             container.settings.onboarded = true

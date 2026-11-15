@@ -1,7 +1,11 @@
 package cc.hyoban.moments
 
 import cc.hyoban.moments.data.spec.Spec
+import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.things.Checkins
+import cc.hyoban.moments.data.things.checkinAsMoment
+import cc.hyoban.moments.data.things.checkinOf
+import cc.hyoban.moments.data.things.editedEntry
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import java.time.OffsetDateTime
@@ -55,5 +59,34 @@ class CheckinsTest {
     @Test
     fun nothingCoversABillOutsideEveryCheckin() {
         assertNull(checkins.covering(ms("2026-03-02T18:00:00+08:00"), zone))
+    }
+
+    private fun parts(entry: JsonObject) = entry.getValue("parts").jsonObject
+
+    @Test
+    fun aMomentWithNothingButItsPlaceIsACheckinThereNamedAfterIt() {
+        val moment = MomentRecord("NEW", "2026-03-06T10:00:00+08:00", listOf("p-park"), "", createdAt = "2026-03-06T10:00:00+08:00", updatedAt = "2026-03-06T10:00:00+08:00")
+        val entry = editedEntry(moment, "公园", placeChanged = true)
+        assertEquals(setOf("checkin"), parts(entry).keys)
+        assertEquals("公园", checkinOf(entry)?.venue)
+        assertEquals("p-park", checkinOf(entry)?.place)
+        assertNull(editedEntry(moment.copy(text = "风很大"), "公园", placeChanged = true).let { parts(it)["checkin"] }, "a Moment written there isn't one")
+    }
+
+    @Test
+    fun aCheckinGivenWordsIsAMomentThatKeepsItsCheckinAndClearedIsOneAgain() {
+        val opened = checkinAsMoment(entry("CAFE", "2026-03-03T09:00:00+08:00", null, "p-cafe"))!!
+        assertEquals("", opened.text)
+        val written = editedEntry(opened.copy(text = "拿铁"), "Cafe", placeChanged = false)
+        assertEquals(setOf("text", "checkin"), parts(written).keys)
+        assertEquals("CAFE", parts(written).getValue("checkin").jsonObject["venue"]?.toString()?.trim('"'), "its venue kept while its place is the same")
+        assertNull(checkinOf(written), "a Moment, not a check-in alone")
+
+        val cleared = editedEntry(cc.hyoban.moments.data.spec.Entries.toMoment(written)!!.copy(text = ""), "咖啡馆", placeChanged = true)
+        assertEquals(setOf("checkin"), parts(cleared).keys)
+        assertEquals("咖啡馆", checkinOf(cleared)?.venue, "renamed after the place it moved to")
+
+        val nowhere = editedEntry(cc.hyoban.moments.data.spec.Entries.toMoment(written)!!.copy(places = emptyList()), null, placeChanged = true)
+        assertEquals(setOf("text"), parts(nowhere).keys, "a check-in goes with its place")
     }
 }

@@ -118,6 +118,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.local.Around
+import cc.hyoban.moments.data.things.checkinAsMoment
+import cc.hyoban.moments.data.things.editedEntry
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.PhotoInfo
 import cc.hyoban.moments.data.local.Photos
@@ -207,7 +209,13 @@ fun NewMomentScreen(
 
     // The Moment being changed, and its photos, time and place as it was saved.
     val canPublish = container.canPublish
-    val original = remember(edit) { edit?.let { container.repository.moment(it) }?.takeIf { it.published == null || canPublish } }
+    // A check-in opens as a Moment with nothing but its place, and is kept as one while it has nothing more.
+    val checkinEntry = remember(edit) { edit?.takeIf { container.repository.moment(it) == null }?.let { container.repository.entries.value[it] } }
+    val original = remember(edit) {
+        (edit?.let { container.repository.moment(it) } ?: checkinEntry?.let(::checkinAsMoment))
+            ?.takeIf { container.repository.isLocal(it.uid) || canPublish }
+    }
+    val openedAsCheckin = original != null && checkinEntry != null
     val published = original?.published != null
     // Each photo it had by where it is shown from: the phone's copy, or the site's still.
     val originalMedia = remember(original) {
@@ -317,6 +325,9 @@ fun NewMomentScreen(
     }
 
     val written = text.isNotBlank() || photos.isNotEmpty()
+    // Nothing written, nothing eaten, but somewhere: a check-in there, while check-ins are on.
+    val checkinsOn = LocalSettings.current.isOn(Module.CHECKIN)
+    val asCheckin = withMoment && checkinsOn && !written && food == null && place != PlaceChoice.None
     val billWritten = withBill && (bill.amount.isNotBlank() || bill.note.isNotBlank())
     // The bill's time is the Moment's, while there is one.
     val billAt = if (withMoment) time else OffsetDateTime.parse(bill.time)
@@ -355,9 +366,15 @@ fun NewMomentScreen(
                 withContext(NonCancellable) {
                     val moment = if (withMoment) {
                         val (moment, newPlace) = buildMoment(container, text, photos, utility, stills, infos, time, place, food, private, original, originalMedia)
-                        when {
-                            original == null -> container.addLocal(moment, newPlace)
-                            momentChanged -> container.updateLocal(moment, newPlace)
+                        // Kept as what it now is, a Moment or a check-in, named after its place when that moved.
+                        if (original == null || momentChanged) {
+                            val venue = when (place) {
+                                is PlaceChoice.Known -> places[place.id]?.name
+                                is PlaceChoice.New -> place.name
+                                PlaceChoice.None -> null
+                            }
+                            val moved = (place as? PlaceChoice.Known)?.id != (originalPlace as? PlaceChoice.Known)?.id || place is PlaceChoice.New
+                            container.saveEntry(editedEntry(moment, venue, moved), newPlace)
                         }
                         // A known place's kind changed in the picker, kept as a change of its own.
                         (place as? PlaceChoice.Known)?.kind?.let { container.repository.setPlaceKind(place.id, it.value) }
@@ -373,7 +390,7 @@ fun NewMomentScreen(
         }
     }
 
-    LaunchedEffect(written) { if (written) emptyError = false }
+    LaunchedEffect(written, asCheckin) { if (written || asCheckin) emptyError = false }
     // A full-screen dialog: an X to leave, whether it is public in the middle of the bar, and
     // the ink 保存, never greyed out, telling what is missing rather than refusing to be tapped.
     // A bill alone is typed on the keypad, pinned under its fields, as iCost has it.
@@ -383,8 +400,10 @@ fun NewMomentScreen(
         SubPage(
             stringResource(
                 when {
-                    original != null -> Res.string.title_edit_moment
                     !withMoment -> Res.string.ledger_new_bill
+                    original != null && asCheckin -> Res.string.title_edit_checkin
+                    original != null -> Res.string.title_edit_moment
+                    asCheckin -> Res.string.title_new_checkin
                     else -> Res.string.title_new_moment
                 },
             ),
@@ -397,7 +416,7 @@ fun NewMomentScreen(
                     when (event.key) {
                         Key.Enter -> {
                             if (!saving && !keypad) when {
-                                withMoment && !written -> emptyError = true
+                                withMoment && !written && !asCheckin -> emptyError = true
                                 original != null && !changed -> onBack()
                                 else -> save()
                             }
@@ -423,7 +442,7 @@ fun NewMomentScreen(
                 if (!keypad) Button(
                     onClick = {
                         when {
-                            withMoment && !written -> emptyError = true
+                            withMoment && !written && !asCheckin -> emptyError = true
                             original != null && !changed -> onBack()
                             else -> save()
                         }
@@ -452,7 +471,7 @@ fun NewMomentScreen(
                         null
                     },
                     supportingText = if (emptyError) {
-                        { Text(stringResource(Res.string.error_empty_moment)) }
+                        { Text(stringResource(if (checkinsOn) Res.string.error_empty_entry else Res.string.error_empty_moment)) }
                     } else {
                         null
                     },
@@ -562,7 +581,7 @@ fun NewMomentScreen(
                     PageRows(Modifier.padding(top = Space.xl)) { shapes ->
                         SegmentedListItem(
                             onClick = {
-                                container.delete(original.uid)
+                                container.delete(original.uid, if (openedAsCheckin) Res.string.message_checkin_deleted else Res.string.message_moment_deleted)
                                 onDeleted()
                             },
                             shapes = shapes,
@@ -573,7 +592,7 @@ fun NewMomentScreen(
                             ),
                             leadingContent = { Icon(AppIcons.Trash, contentDescription = null) },
                             modifier = Modifier.testTag("delete"),
-                        ) { Text(stringResource(Res.string.action_delete_moment)) }
+                        ) { Text(stringResource(if (openedAsCheckin) Res.string.action_delete_checkin else Res.string.action_delete_moment)) }
                     }
                 }
             }

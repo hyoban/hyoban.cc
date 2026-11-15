@@ -3,6 +3,7 @@ package cc.hyoban.moments
 import cc.hyoban.moments.res.*
 import androidx.compose.runtime.snapshotFlow
 import androidx.sqlite.SQLiteDriver
+import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.data.api.MomentsApi
 import cc.hyoban.moments.data.copy.CopyStore
 import cc.hyoban.moments.data.media.MediaUrls
@@ -276,6 +277,15 @@ abstract class AppContainer(
         recordsChanged()
     }
 
+    /**
+     * Keeps an entry written or changed on the phone, a Moment or a check-in as the editor made
+     * it, with the place it made if it made one, and draws the widgets again with it.
+     */
+    suspend fun saveEntry(entry: kotlinx.serialization.json.JsonObject, place: Pair<String, Place>?) {
+        repository.saveEntry(entry, place)
+        recordsChanged()
+    }
+
     /** Whether the app may write to the API: it has one, and the owner's token. */
     val canPublish get() = settings.connected
 
@@ -344,17 +354,17 @@ abstract class AppContainer(
     }
 
     /**
-     * Deletes a Moment, as Material 3 has a deletion undone from its snackbar rather than
+     * Deletes a Moment, or a check-in, saying so with [said], as Material 3 has a deletion undone from its snackbar rather than
      * confirmed first: it goes from sight at once, and is deleted only once the snackbar
      * saying so goes without its undo, one of the phone's then for good, one of the site's
      * when the changes are published.
      */
-    fun delete(uid: String) {
+    fun delete(uid: String, said: StringResource = Res.string.message_moment_deleted) {
         scope.launch {
             repository.setAside(uid)
             _messages.send(
                 Message(
-                    textOf(Res.string.message_moment_deleted),
+                    textOf(said),
                     action = textOf(Res.string.action_undo),
                     onAction = { scope.launch { repository.bringBack(uid) } },
                     onDismiss = {

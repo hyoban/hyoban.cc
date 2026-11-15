@@ -591,7 +591,9 @@ private fun Page(container: DesktopContainer, shell: Shell, route: Any) {
             back = { shell.back() },
         )
     }
-    CompositionLocalProvider(LocalLedgerNav provides ledgerNav) { Route(container, shell, route, ledgerNav, openMoment, openDay, openPlace, openTrip, back, openMedia) }
+    // A check-in opens in the editor, as a Moment with nothing but its place.
+    val checkinNav: (String) -> Unit = { shell.open(EditMoment(it)) }
+    CompositionLocalProvider(LocalLedgerNav provides ledgerNav, cc.hyoban.moments.ui.feed.LocalCheckinNav provides checkinNav) { Route(container, shell, route, ledgerNav, openMoment, openDay, openPlace, openTrip, back, openMedia) }
 }
 
 @Composable

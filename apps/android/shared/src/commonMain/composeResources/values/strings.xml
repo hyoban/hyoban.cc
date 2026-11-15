@@ -264,6 +264,7 @@
     <!-- The Mac sidebar's button that opens a new Moment. -->
     <string name="action_record">记录</string>
     <string name="title_new_moment">新时刻</string>
+    <string name="title_new_checkin">新签到</string>
     <string name="section_bill">账单</string>
     <string name="action_new_moment">记录时刻或账单</string>
     <string name="action_save">保存</string>
@@ -309,6 +310,7 @@
     <string name="error_no_camera">没有可以拍照的相机应用</string>
     <string name="label_on_phone">未发布</string>
     <string name="action_delete_moment">删除这个时刻</string>
+    <string name="action_delete_checkin">删除这个签到</string>
     <string name="place_kind">类型</string>
     <string name="place_kind_city">城市</string>
     <string name="place_kind_town">城镇乡村</string>
@@ -358,12 +360,15 @@
     <string name="message_checkin_known">这段停留已有签到</string>
     <string name="share_save_place">保存为地点</string>
     <string name="title_edit_moment">编辑时刻</string>
+    <string name="title_edit_checkin">编辑签到</string>
     <string name="action_edit_moment">编辑这个时刻</string>
     <string name="action_more">更多</string>
     <string name="action_close">关闭</string>
     <string name="message_moment_deleted">已删除这个时刻</string>
+    <string name="message_checkin_deleted">已删除这个签到</string>
     <string name="action_undo">撤销</string>
     <string name="error_empty_moment">写点什么，或者加一张照片</string>
+    <string name="error_empty_entry">写点什么，加一张照片，或者选个地点</string>
     <string name="label_whole_day">这一天的全部时刻</string>
     <string name="action_show_on_map">在地图上查看</string>
     <string name="source_saved">保存时的</string>
@@ -1119,7 +1124,6 @@
     <string name="occasion_first_label">第一天叫</string>
     <string name="occasion_note">备注</string>
     <string name="occasion_public_note">标在网站的日历上</string>
-    <string name="checkin_public_note">标在网站的地图上</string>
     <string name="occasion_today">今天</string>
     <string name="occasion_in_days">还有 %1$d 天</string>
     <string name="occasion_days_ago">%1$d 天前</string>
