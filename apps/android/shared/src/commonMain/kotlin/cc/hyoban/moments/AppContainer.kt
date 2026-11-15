@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -135,13 +136,20 @@ abstract class AppContainer(
         }.flowOn(Dispatchers.Default).stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
 
     /**
-     * Each trip's route as the screens draw and play it: the route along the roads, the API's
-     * or, for a trip it hasn't routed, the phone's.
+     * The routes of the trips the device kept footprints over, drawn from them: filled once
+     * [start] runs, as the footprints are the device's.
+     */
+    private val footprintRoutes = MutableStateFlow<Map<String, List<cc.hyoban.moments.data.trips.RouteSegment>>>(emptyMap())
+
+    /**
+     * Each trip's route as the screens draw and play it: its footprints where the device kept
+     * any over its time, else the route along the roads, the API's or, for a trip it hasn't
+     * routed, the phone's.
      */
     val tripRoutes: kotlinx.coroutines.flow.StateFlow<Map<String, List<cc.hyoban.moments.data.trips.RouteSegment>>> =
-        kotlinx.coroutines.flow.combine(routes.routes, phoneLegs, phoneRoutes.lines) { roads, legs, lines ->
+        kotlinx.coroutines.flow.combine(routes.routes, phoneLegs, phoneRoutes.lines, footprintRoutes) { roads, legs, lines, tracks ->
             val own = legs.mapValues { (_, tripLegs) -> cc.hyoban.moments.data.trips.segmentsOf(tripLegs, lines) }.filterValues { it.isNotEmpty() }
-            roads + own
+            roads + own + tracks
         }.flowOn(Dispatchers.Default).stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
 
     /** The atlas's record grouping and GeoJSON, prepared before its page is first visited. */
@@ -169,6 +177,24 @@ abstract class AppContainer(
      * the device's container once it is built, so nothing here runs before it is.
      */
     protected fun start() {
+        // The trips' footprints, read again as they change, while the module is on: at most
+        // every few seconds, as a recording adds to them that often.
+        scope.launch {
+            val reader = cc.hyoban.moments.data.trips.FootprintRoutes(footprints)
+            @OptIn(kotlinx.coroutines.FlowPreview::class)
+            kotlinx.coroutines.flow.combine(
+                repository.trips,
+                footprints.revision.sample(ROUTE_SETTLE_MS),
+                snapshotFlow { settings.isOn(cc.hyoban.moments.data.spec.Module.FOOTPRINTS) },
+            ) { trips, _, on -> trips.takeIf { on } }
+                .map { trips ->
+                    if (trips == null) emptyMap()
+                    // A change while nothing is recording is an import or a deletion, which may reach any trip.
+                    else reader.routes(trips, fresh = !footprints.state().recording)
+                }
+                .flowOn(Dispatchers.IO)
+                .collect { footprintRoutes.value = it }
+        }
         // The legs of the trips the API hasn't routed are routed here, once they settle.
         scope.launch {
             @OptIn(kotlinx.coroutines.FlowPreview::class)

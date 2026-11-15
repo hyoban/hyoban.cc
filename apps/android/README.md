@@ -32,6 +32,12 @@ stayed put for two seconds, and kept in `phone-routes.json` by the API's keys; a
 along it is drawn straight and not asked for again, and one that failed is asked for the next
 time the trips change.
 
+A trip the device kept footprints over, from when it began to when it ended (its whole days
+where those aren't known), is drawn and played along them instead, on the device alone
+(`data/trips/FootprintRoutes.kt`): each recorded stretch a line of its own, simplified as the
+routers' are, read again at most every two seconds while a recording adds to it. The site still
+draws it along the roads.
+
 ## First run and permissions
 
 The first time the app opens with no API set, 初次打开 (`ui/onboarding`) goes over it once:
@@ -523,8 +529,9 @@ behaves.
   a coordinate, network name or token. 足迹记录 → 诊断 → 导出诊断日志 exports them with a replay of the
   latest day through the current filter.
 - **Never published.** The footprints never leave the phone but in the owner's WebDAV backup:
-  nothing of them goes out with 全部发布到网站, and the site and the app route a trip along the
-  roads between its stops (Valhalla, OpenRailRouting) instead.
+  nothing of them goes out with 全部发布到网站, and the site routes a trip along the roads
+  between its stops (Valhalla, OpenRailRouting) instead; the app draws a trip along its
+  footprints where it has them.
 
 ### Connection automation
 
