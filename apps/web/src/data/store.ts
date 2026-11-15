@@ -157,8 +157,24 @@ export function readCheckins(root = getDataRoot()): (CheckinPart & {
   )
 }
 
+export type BillPart = NonNullable<EntryParts['bill']>
+
+/**
+ * The bills the public sees, the ledger's expenses and incomes the phone made public, each down
+ * to its kind, amount, currency, category and note, with its entry's uid, time and place.
+ */
+export function readBills(
+  root = getDataRoot(),
+): (BillPart & { uid: string; at: string; place?: string })[] {
+  return readPublicParts('bill', root).flatMap(({ entry, part }) =>
+    part.kind === 'transfer'
+      ? []
+      : [{ ...part, uid: entry.uid, at: entry.at, ...(entry.place ? { place: entry.place } : {}) }],
+  )
+}
+
 /** The public entries with a part of this plugin, and that part as the public sees it. */
-function readPublicParts<K extends 'device' | 'subscription' | 'occasion' | 'checkin'>(
+function readPublicParts<K extends 'device' | 'subscription' | 'occasion' | 'checkin' | 'bill'>(
   plugin: K,
   root: string,
 ) {

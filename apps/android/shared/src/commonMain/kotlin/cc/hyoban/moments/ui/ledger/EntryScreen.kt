@@ -104,7 +104,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.data.spec.MomentRecord
-import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.epochOf
 import cc.hyoban.moments.ledger.Account
 import cc.hyoban.moments.ledger.AccountKind
@@ -120,7 +119,6 @@ import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ledger.currencySymbol
 import cc.hyoban.moments.ledger.formatCents
 import cc.hyoban.moments.ledger.formatMoney
-import cc.hyoban.moments.ledger.tripOnDay
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
@@ -154,7 +152,7 @@ fun fieldOf(cents: Long?): String = cents?.let { formatCents(it).replace(",", ""
  * Writing a bill or changing one, a full-screen dialog as Material 3 has a form that is saved
  * as a whole: what it is, how much in which currency, its category, the account or accounts
  * paid from, its time and book, what it saved or cost besides, its note, and the
- * Moment, place and trip it belongs to. A new bill of its own is written on the new Moment's
+ * Moment and place it belongs to; its trip is the one its time falls in. A new bill of its own is written on the new Moment's
  * page instead, beside a Moment or alone; this one changes a bill, refunds or reimburses one,
  * or starts from a Moment, an account or a day.
  */
@@ -162,7 +160,6 @@ fun fieldOf(cents: Long?): String = cents?.let { formatCents(it).replace(",", ""
 fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) {
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val moments by container.shownMoments.collectAsStateWithLifecycle()
-    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val show = rememberShowMessage()
     EnsureBook(container)
@@ -185,7 +182,7 @@ fun EntryScreen(container: AppContainer, args: LedgerEntryArgs, nav: LedgerNav) 
 
     val haptics = rememberHaptics()
     fun save() {
-        val txn = draft.toTxn(ledger, at, trips, original, related, fixedKind) { show(textOf(it)) } ?: run { haptics.reject(); return }
+        val txn = draft.toTxn(ledger, at, original, related, fixedKind) { show(textOf(it)) } ?: run { haptics.reject(); return }
         scope.launch {
             container.ledger.saveTxn(txn)
             haptics.confirm()
@@ -267,8 +264,6 @@ class BillDraft(
     excluded: Boolean,
     moment: String?,
     place: String?,
-    tripChosen: Boolean,
-    trip: String?,
     visibility: String? = null,
 ) {
     var kind by mutableStateOf(kind)
@@ -293,9 +288,6 @@ class BillDraft(
     var excluded by mutableStateOf(excluded)
     var moment by mutableStateOf(moment)
     var place by mutableStateOf(place)
-    /** The trip under way that day, unless one was chosen or taken away. */
-    var tripChosen by mutableStateOf(tripChosen)
-    var trip by mutableStateOf(trip)
 
     /** What is open over the form, a sheet or a dialog, wherever it was opened from; not kept as the phone turns. */
     var sheet by mutableStateOf<Sheet?>(null)
@@ -308,14 +300,11 @@ class BillDraft(
             if (parts.size == 2) parts[0] to parts[1] else null
         }
 
-    fun tripOn(at: OffsetDateTime, trips: List<TripRecord>): String? =
-        if (tripChosen) trip else tripOnDay(at.toLocalDate().toString(), trips)?.id.takeIf { kind != TxnKind.TRANSFER }
-
     /**
      * The bill as written, at [at], or null after telling [onError] what is missing. A changed
      * bill keeps what the form doesn't show.
      */
-    fun toTxn(ledger: Ledger, at: OffsetDateTime, trips: List<TripRecord>, original: Txn?, related: Txn?, fixedKind: TxnKind?, onError: (org.jetbrains.compose.resources.StringResource) -> Unit): Txn? {
+    fun toTxn(ledger: Ledger, at: OffsetDateTime, original: Txn?, related: Txn?, fixedKind: TxnKind?, onError: (org.jetbrains.compose.resources.StringResource) -> Unit): Txn? {
         val value = parseAmount(amount)
         val bookId = book ?: ledger.book?.id
         when {
@@ -368,7 +357,6 @@ class BillDraft(
             excluded = excluded,
             moment = moment,
             place = place,
-            trip = tripOn(at, trips),
             createdAt = original?.createdAt ?: now,
             updatedAt = now,
             visibility = visibility,
@@ -385,7 +373,7 @@ class BillDraft(
                 listOf(
                     it.kind.name, it.transfer.name, it.book, it.amount, it.currency, it.category, it.account, it.splitting, it.splits,
                     it.toAccount, it.toAmount, it.fee, it.discount, it.time, it.note, it.reimburse.name, it.excluded,
-                    it.moment, it.place, it.tripChosen, it.trip,
+                    it.moment, it.place,
                 )
             },
             restore = {
@@ -393,7 +381,7 @@ class BillDraft(
                     TxnKind.valueOf(it[0] as String), TransferType.valueOf(it[1] as String), it[2] as String?, it[3] as String, it[4] as String?,
                     it[5] as String?, it[6] as String?, it[7] as Boolean, it[8] as String, it[9] as String?, it[10] as String, it[11] as String,
                     it[12] as String, it[13] as String, it[14] as String, Reimburse.valueOf(it[15] as String), it[16] as Boolean,
-                    it[17] as String?, it[18] as String?, it[19] as Boolean, it[20] as String?,
+                    it[17] as String?, it[18] as String?,
                 )
             },
         )
@@ -436,8 +424,6 @@ fun rememberBillDraft(ledger: Ledger, original: Txn?, related: Txn?, moment: Mom
             excluded = original?.excluded ?: false,
             moment = original?.moment ?: args.moment,
             place = original?.place ?: moment?.places?.firstOrNull(),
-            tripChosen = original != null || args.trip != null,
-            trip = original?.trip ?: args.trip,
             visibility = original?.visibility,
         )
     }
@@ -469,7 +455,6 @@ fun BillFields(
 ) {
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val bookId = draft.book ?: ledger.book?.id
     val bookRecord = ledger.books.firstOrNull { it.id == bookId }
@@ -479,7 +464,6 @@ fun BillFields(
     val toRecord = draft.toAccount?.let(ledger.accountsById::get)
     val cents = parseAmount(draft.amount)
     val splitList = draft.splitList
-    val trip = draft.tripOn(at, trips)
 
     var sheet by draft::sheet
     var timeOpen by draft::timeOpen
@@ -669,15 +653,10 @@ fun BillFields(
                 }
             }
         }
-        Sheet.Trip -> ChoiceSheet(trips.sortedByDescending { it.start }.map { it.id to it.title }, onDismiss = { sheet = null }) { id ->
-            draft.tripChosen = true
-            draft.trip = id
-            sheet = null
-        }
     }
 }
 
-enum class Sheet { Account, From, To, Split, Book, Moment, Place, Trip }
+enum class Sheet { Account, From, To, Split, Book, Moment, Place }
 
 @Composable
 private fun accountName(ledger: Ledger, id: String?): String? = id?.let(ledger.accountsById::get)?.let { accountName(it) }
@@ -845,12 +824,10 @@ private fun RowScope.CategoryTile(name: String, icon: androidx.compose.ui.graphi
 private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraft, at: OffsetDateTime, fixedKind: TxnKind?, withMoment: Boolean, keypad: Boolean) {
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val kind = draft.kind
     val account = draft.account
     val shownCurrency = draft.shownCurrency(ledger)
     val bookRecord = ledger.books.firstOrNull { it.id == (draft.book ?: ledger.book?.id) }
-    val trip = draft.tripOn(at, trips)
     val momentRecord = draft.moment?.let { uid -> moments.firstOrNull { it.uid == uid } }
     val discount = parseAmount(draft.discount)?.takeIf { it > 0 }
     val chips: @Composable () -> Unit = {
@@ -904,11 +881,6 @@ private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraf
                 onClear = { draft.place = null },
             ) { draft.sheet = Sheet.Place }
         }
-        LinkChip(
-            trip?.let { id -> trips.firstOrNull { it.id == id }?.title ?: id },
-            stringResource(Res.string.ledger_link_trip), AppIcons.Luggage, "link_trip",
-            onClear = { draft.tripChosen = true; draft.trip = null },
-        ) { draft.sheet = Sheet.Trip }
     }
 
     if (keypad) {

@@ -310,7 +310,7 @@ private fun Txn.values() = ContentValues().apply {
     put("to_account", toAccount); put("to_amount", toAmount); put("fee", fee); put("fee_account", feeAccount)
     put("discount", discount); put("discount_account", discountAccount); put("note", note); put("tags", "")
     put("related", related); put("reimburse", reimburse.value); put("excluded", if (excluded) 1 else 0)
-    put("moment", moment); put("place", place); put("trip", trip); put("created", createdAt); put("updated", updatedAt)
+    put("moment", moment); put("place", place); put("created", createdAt); put("updated", updatedAt)
     put("visibility", visibility); put("published", published)
 }
 

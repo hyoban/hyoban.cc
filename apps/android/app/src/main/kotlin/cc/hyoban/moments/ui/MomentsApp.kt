@@ -744,7 +744,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                     EntryScreen(
                                         container,
                                         LedgerEntryArgs(
-                                            route.edit, route.kind?.let(TxnKind::of), route.related, route.moment, route.date, route.account, route.trip,
+                                            route.edit, route.kind?.let(TxnKind::of), route.related, route.moment, route.date, route.account,
                                             route.amount?.toLongOrNull(), route.time?.toLongOrNull(), route.note, route.category,
                                         ),
                                         ledgerNav,
@@ -1020,7 +1020,7 @@ const val DEEP_LINK_SCHEME = "moments"
 
 /** A bill's form for [this], as a route. */
 private fun LedgerEntryArgs.route() = LedgerEntry(
-    edit, kind?.value, related, moment, date, account, trip, amount?.toString(), time?.toString(), note, category,
+    edit, kind?.value, related, moment, date, account, amount?.toString(), time?.toString(), note, category,
 )
 
 /**

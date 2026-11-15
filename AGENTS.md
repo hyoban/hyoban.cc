@@ -124,7 +124,8 @@ even when starting from the repository root.
   Android's backup; the one copy that leaves it is the opt-in WebDAV backup, to the owner's
   own server, of every database but photos and videos. A book can make its bills public from a day on, by the bill's date, and each bill can say otherwise; a
   public bill publishes its kind, amount, currency, category and note alone, never its account or
-  balance. The footprints are never published, not even simplified: a trip's public route
+  balance. A trip's bills, on the phone and the site alike, are those paid in its span, by
+  time alone; a bill names no trip. The footprints are never published, not even simplified: a trip's public route
   is only the routers' (below), along the roads between its stops. A stay
   kept as a check-in, by hand, is a check-in entry like Swarm's, its point the stay's middle. A check-in
   starts public, so the site's map dots it at its place, unless Swarm kept it private; its sheet on the phone

@@ -43,7 +43,7 @@ fun filterBills(ledger: Ledger, filter: LedgerFilter, query: String, moments: Ma
         (filter.book == null || txn.book == filter.book) &&
             (filter.account == null || txn.payers.any { it.account == filter.account } || txn.toAccount == filter.account) &&
             (categories == null || txn.category in categories) &&
-            (filter.trip == null || (txn.kind != TxnKind.TRANSFER && tripOfTxn(txn, moments, trips) == filter.trip)) &&
+            (filter.trip == null || (txn.kind != TxnKind.TRANSFER && tripOfTxn(txn, trips) == filter.trip)) &&
             (filter.place == null || (txn.kind != TxnKind.TRANSFER && placeOfTxn(txn, moments) == filter.place)) &&
             (filter.day == null || txn.dateKey == filter.day) &&
             filter.period.let { it == null || txn.dateKey.startsWith(it) } &&

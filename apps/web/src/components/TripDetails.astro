@@ -1,15 +1,17 @@
 ---
-import { isInTrip } from '@hyoban/trip-map'
+import { compareMoments, isInTrip } from '@hyoban/trip-map'
+import BillEntry from '@/components/BillEntry.astro'
 import MomentEntry from '@/components/MomentEntry.astro'
 import TripCoverCollage from '@/components/TripCoverCollage.astro'
 import { formatRate, formatYuan } from '@/data/vehicle-costs'
-import { getMomentTripCosts, getMomentTripOdometer, type Moment, type MomentTrip } from '@/moments'
+import { getBills, getMomentTripCosts, getMomentTripOdometer, type Moment, type MomentTrip } from '@/moments'
+import { formatBillAmount, getSpending } from '@/moments/bills'
 import { getTripCollage } from '@/moments/trip-images'
 
 // A trip's sidebar beside the map: its photos and totals, the button that plays it, and
-// its days' Moments in order, each stop playing the trip from its own card. The map
-// fetches it as a fragment (see pages/trip/[id]/moments.astro); a trip's page renders
-// it in place.
+// its days' Moments in order, each stop playing the trip from its own card, with the
+// public bills paid in its span among them. The map fetches it as a fragment (see
+// pages/trip/[id]/moments.astro); a trip's page renders it in place.
 
 interface Props {
   /** Every Moment, of which the trip's days are shown. */
@@ -19,9 +21,14 @@ interface Props {
 
 const { moments, trip } = Astro.props
 const tripMoments = moments.filter(moment => isInTrip(trip, moment.occurredAt))
-// The trip at a glance, three figures with a word under each: how long and where, how
+// A trip's bills are the public ones paid in its span, as it holds every entry there.
+const tripBills = getBills().filter(bill => isInTrip(trip, bill.occurredAt))
+const records = [...tripMoments, ...tripBills].sort(compareMoments)
+const [spent, ...otherSpent] = getSpending(tripBills)
+// The trip at a glance, figures with a word under each: how long and where, how
 // far the car went and how often it charged, and what it cost on the road, from the car's
-// ledger, in all and a kilometre. The last two only when it drove and the records have it.
+// ledger, in all and a kilometre, when it drove and the records have them; and what its
+// public bills spent, in the currency paid most often, the others under it.
 const odometer = getMomentTripOdometer(trip)
 const charges = odometer?.charges.length ?? 0
 const costs = odometer && getMomentTripCosts(trip, odometer)
@@ -37,12 +44,19 @@ const figures = [
         note: costs.distanceMeters > 0 ? `每公里 ${formatRate(costs.total / 100 / (costs.distanceMeters / 1000))}` : '花费',
       }]
     : []),
+  ...(spent
+    ? [{
+        value: formatBillAmount(spent.amount, spent.currency),
+        unit: '',
+        note: [`${tripBills.filter(bill => bill.kind === 'expense').length} 笔支出`, ...otherSpent.map(other => formatBillAmount(other.amount, other.currency))].join(' · '),
+      }]
+    : []),
 ]
 ---
 
 <div class="trip-details">
   <TripCoverCollage images={getTripCollage(trip, moments)} priority sizes="(max-width: 48rem) 100vw, 26rem" />
-  <ul class="trip-details__figures">
+  <ul class="trip-details__figures" data-figures={figures.length} style={`--figure-columns: ${Math.max(3, figures.length)}`}>
     {figures.map(({ value, unit, note }) => (
       <li>
         <span class="trip-details__figure">{value}{unit && <small>{unit}</small>}</span>
@@ -56,7 +70,9 @@ const figures = [
   </a>
 </div>
 <div class="trip-details__moments">
-  {tripMoments.map(moment => <MomentEntry date="day" moment={moment} tripLink="play" />)}
+  {records.map(record => 'kind' in record
+    ? <BillEntry bill={record} />
+    : <MomentEntry date="day" moment={record} tripLink="play" />)}
 </div>
 
 <style>
@@ -70,9 +86,16 @@ const figures = [
 
   .trip-details__figures {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--figure-columns), minmax(0, 1fr));
     gap: 0.75rem;
     font-variant-numeric: tabular-nums;
+
+    /* Four figures in a row leave their words no room on a phone: two rows of two there. */
+    @media (max-width: 30rem) {
+      &[data-figures='4'] {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
 
     & li {
       display: flex;

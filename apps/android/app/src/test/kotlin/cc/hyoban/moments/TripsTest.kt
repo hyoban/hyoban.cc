@@ -10,6 +10,12 @@ import cc.hyoban.moments.data.trips.coversOf
 import cc.hyoban.moments.data.trips.daysOf
 import cc.hyoban.moments.data.trips.stopsOf
 import cc.hyoban.moments.data.trips.tripOf
+import cc.hyoban.moments.ledger.Ledger
+import cc.hyoban.moments.ledger.Txn
+import cc.hyoban.moments.ledger.TxnKind
+import cc.hyoban.moments.ledger.tripOfTxn
+import cc.hyoban.moments.ledger.txnsOfTrip
+import java.time.OffsetDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -98,6 +104,26 @@ class TripsTest {
         assertEquals("t", tripOf(moment("after start", "2026-04-02T09:00:00+08:00"), trips)?.id)
         assertEquals("t", tripOf(moment("a day", "2026-04-07"), trips)?.id)
         assertNull(tripOf(moment("after end", "2026-04-07T22:00:00+08:00"), trips))
+    }
+
+    @Test
+    fun `a trip's bills are those paid in its span, as the site counts its public ones`() {
+        val trip = TripRecord(
+            "t", "t", "2026-04-02", "2026-04-07",
+            startAt = "2026-04-02T08:30:00+08:00",
+            createdAt = "2026-04-02", updatedAt = "2026-04-02",
+        )
+        fun bill(id: String, at: String, kind: TxnKind = TxnKind.EXPENSE) =
+            Txn(id, "b", kind, OffsetDateTime.parse(at).toInstant().toEpochMilli(), 8 * 60, 100, "CNY")
+        val before = bill("before", "2026-04-02T07:00:00+08:00")
+        val during = bill("during", "2026-04-03T12:00:00+08:00")
+        val moved = bill("moved", "2026-04-04T12:00:00+08:00", TxnKind.TRANSFER)
+        val after = bill("after", "2026-04-08T09:00:00+08:00")
+
+        assertEquals("2026-04-03T12:00:00+08:00", during.at)
+        assertNull(tripOfTxn(before, listOf(trip)))
+        assertEquals("t", tripOfTxn(during, listOf(trip)))
+        assertEquals(listOf("during"), txnsOfTrip(Ledger(txns = listOf(before, during, moved, after)), trip).map { it.id })
     }
 
     private fun moment(uid: String, occurredAt: String, place: String? = null, trip: String? = null) =

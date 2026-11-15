@@ -779,8 +779,8 @@
     <string name="ledger_rate_set_note">从今天起使用，之前的账单仍用当时的汇率</string>
     <string name="ledger_data">数据</string>
     <string name="ledger_data_note">账本只存在这台手机上，不参与同步、发布和系统备份。卸载前请先备份。</string>
-    <string name="ledger_link_all">关联时刻和旅程</string>
-    <string name="ledger_link_all_note">餐费金额相同的时刻、旅游账本里旅程期间的账单</string>
+    <string name="ledger_link_all">关联时刻</string>
+    <string name="ledger_link_all_note">餐费金额相同的时刻</string>
     <string name="ledger_backup">备份到文件</string>
     <string name="ledger_backup_done">已备份</string>
     <string name="ledger_restore">从备份恢复</string>

@@ -1,0 +1,17 @@
+{
+  "uid": "01KNE5H2M0P3Q4R5S6T7V8W9X0",
+  "at": "2026-04-05T12:10:00+08:00",
+  "parts": {
+    "bill": {
+      "v": 1,
+      "kind": "expense",
+      "amount": 1200,
+      "currency": "CNY",
+      "category": "住房 › 房租",
+      "book": "daily",
+      "account": "made-up-account"
+    }
+  },
+  "createdAt": "2026-04-05T12:10:00+08:00",
+  "updatedAt": "2026-04-05T12:10:00+08:00"
+}

@@ -109,7 +109,7 @@ private fun JsonObject.text(key: String) = (get(key) as? kotlinx.serialization.j
 /** A bill alone as an entry, at its local time. */
 fun BillChange.entry(): JsonObject = Entries.bill(
     uid = uid,
-    at = txn.local.atOffset(ZoneOffset.ofTotalSeconds(txn.offsetMinutes * 60)).format(ISO),
+    at = txn.at,
     place = txn.place,
     bill = part!!,
     createdAt = Instant.ofEpochMilli(txn.createdAt).atOffset(ZoneOffset.UTC).format(ISO),

@@ -278,7 +278,6 @@ fun NewMomentScreen(
     val withMoment = original != null || !startWithBill
     var withBill by rememberSaveable { mutableStateOf(original == null && startWithBill) }
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val bill = rememberBillDraft(ledger, null, null, null, LedgerEntryArgs())
     EnsureBook(container, enabled = withBill)
 
@@ -374,7 +373,7 @@ fun NewMomentScreen(
     val save: () -> Unit = save@{
         if (saving) return@save
         // The bill is checked first, so that nothing is kept while it can't be.
-        val txn = if (withBill) bill.toTxn(ledger, billAt, trips, null, null, null) { saveError = textOf(it) } ?: return@save else null
+        val txn = if (withBill) bill.toTxn(ledger, billAt, null, null, null) { saveError = textOf(it) } ?: return@save else null
         // A stay's check-in has its uid made from the stay's start, as 保存为签到 makes it, so
         // keeping it again changes that one; another check-in over the stay is that visit.
         val stayCheckin = stay?.takeIf { original == null && asCheckin }

@@ -54,7 +54,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.data.trips.tripOf
+import cc.hyoban.moments.ledger.tripOfTxn
 import cc.hyoban.moments.ledger.Reimburse
 import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ui.components.PageWidth
@@ -85,7 +85,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
     val returns = ledger.returns[txn.id].orEmpty()
     val moment = txn.moment?.let { uid -> moments.firstOrNull { it.uid == uid } }
     val placeId = txn.place ?: moment?.places?.firstOrNull()
-    val tripId = txn.trip ?: moment?.let { tripOf(it, trips)?.id }
+    val tripId = tripOfTxn(txn, trips).takeIf { txn.kind != TxnKind.TRANSFER }
     val writable = container.ledger.writable
     val spot = if (writable) cc.hyoban.moments.ui.LocalDevice.current.billSpot(txn) else null
     // The footprints' spot and its name, while it is being kept as a place in the place picker.

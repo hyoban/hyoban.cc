@@ -394,9 +394,10 @@ opening on its place, else that point, else where the phone is. An account's 校
 opening balance.
 
 The ledger meets the Moments: a Moment's page lists its bills, a meal with no bill offers
-记一笔, a trip's and a day's page show what was spent, a place's page, opening on its map, lists its bills by their days
-among its Moments and check-ins with what was spent there beside its counts, and 关联时刻和旅程 links meals and a
-travel book's bills to their Moments and trips.
+记一笔, a trip's and a day's page show what was spent, a trip's page lists its bills among its Moments and
+check-ins by time (one written with its Moment under that Moment), a place's page, opening on its map, lists its bills by their days
+among its Moments and check-ins with what was spent there beside its counts, and 关联时刻 links meals to
+their bills. A trip's bills are those paid in its span, as the site counts its public ones; a bill names no trip.
 
 记账, under 我 (`moments://ledger-settings`), manages the books, the exchange rates, 自动记账 and
 the data. A book opens as a sheet with its name, currency and categories (chips, each opening

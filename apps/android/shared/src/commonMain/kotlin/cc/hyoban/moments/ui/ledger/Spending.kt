@@ -35,7 +35,7 @@ sealed interface SpendingOf {
 }
 
 fun billsOf(of: SpendingOf, ledger: Ledger, moments: Map<String, MomentRecord>, trips: List<TripRecord>): List<Txn> = when (of) {
-    is SpendingOf.Trip -> txnsOfTrip(ledger, of.id, moments, trips)
+    is SpendingOf.Trip -> trips.firstOrNull { it.id == of.id }?.let { txnsOfTrip(ledger, it) }.orEmpty()
     is SpendingOf.Place -> txnsOfPlace(ledger, of.id, moments)
     is SpendingOf.Day -> txnsOfDay(ledger, of.date)
 }

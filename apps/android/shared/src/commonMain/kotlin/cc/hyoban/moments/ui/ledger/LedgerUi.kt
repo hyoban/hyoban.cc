@@ -71,7 +71,6 @@ data class LedgerEntryArgs(
     val moment: String? = null,
     val date: String? = null,
     val account: String? = null,
-    val trip: String? = null,
     /** A payment read by 自动记账: its amount in cents, its time, its payee for the note, its category. */
     val amount: Long? = null,
     val time: Long? = null,

@@ -18,7 +18,7 @@ import {
   type PublishedVideo,
 } from '@hyoban/data-spec'
 import { trips } from '@/data/trips'
-import { readCheckins, readRoutes } from '@/data/store'
+import { readBills, readCheckins, readRoutes } from '@/data/store'
 import {
   getTripOdometer,
   getVehicleCharges,
@@ -167,6 +167,49 @@ export function getCheckins() {
     })
     .sort(compareMoments)
   return checkins
+}
+
+/** A bill the public sees, as a trip's sidebar lists it among its Moments. */
+export type PublicBill = {
+  amount: number
+  category?: string
+  currency: string
+  dateKey: string
+  /** Its uid in lowercase. */
+  id: string
+  kind: 'expense' | 'income'
+  /** Where it was paid, when the ledger says and the site has the place. */
+  locations: ResolvedMomentLocation[]
+  note?: string
+  occurredAt: string
+  occurredLabel?: string
+  uid: string
+}
+
+let bills: PublicBill[] | undefined
+
+/** The bills the public sees, oldest first. */
+export function getBills() {
+  bills ??= readBills()
+    .map((bill): PublicBill => ({
+      amount: bill.amount,
+      ...(bill.category ? { category: bill.category } : {}),
+      currency: bill.currency,
+      dateKey: bill.at.slice(0, 10),
+      id: bill.uid.toLowerCase(),
+      kind: bill.kind === 'income' ? 'income' : 'expense',
+      // Its place, when the site has it: a bill names one the phone may keep to itself.
+      locations:
+        bill.place && bill.place in locations
+          ? [{ id: bill.place as LocationId, ...getLocation(locations, bill.place) }]
+          : [],
+      ...(bill.note ? { note: bill.note } : {}),
+      occurredAt: bill.at,
+      ...(bill.at.length > 10 ? { occurredLabel: bill.at.slice(11, 16) } : {}),
+      uid: bill.uid,
+    }))
+    .sort(compareMoments)
+  return bills
 }
 
 /** The places on the map, each with its Moments and the check-ins there, newest first. */

@@ -173,10 +173,9 @@ data class Txn(
     val reimburse: Reimburse = Reimburse.NONE,
     /** Kept out of the books' sums, still moving its accounts. */
     val excluded: Boolean = false,
-    /** The Moment it belongs to, its place and its trip, as the site names them. */
+    /** The Moment it belongs to and its place, as the site names them. */
     val moment: String? = null,
     val place: String? = null,
-    val trip: String? = null,
     val createdAt: Long = time,
     val updatedAt: Long = time,
     /** Public or private by its own say, over its book's: a [cc.hyoban.moments.data.spec.Visibility]'s value. */
@@ -188,6 +187,8 @@ data class Txn(
     val date: LocalDate get() = local.toLocalDate()
     /** The day it happened, `YYYY-MM-DD`, as a Moment's day is keyed. */
     val dateKey: String get() = date.toString()
+    /** When it happened, `2026-10-01T12:30:00+08:00`, as an entry's `at` is written. */
+    val at: String get() = local.atOffset(ZoneOffset.ofTotalSeconds(offsetMinutes * 60)).format(AT)
 
     /** The accounts it pays from or into, each with its share in the bill's currency. */
     val payers: List<Split> get() = if (splits.isNotEmpty()) splits else listOfNotNull(account?.let { Split(it, amount) })
@@ -319,3 +320,5 @@ fun noteWithTags(note: String, tags: List<String>): String {
     return (listOf(note.trim()) + tags.map { "#" + it.trim().removePrefix("#") }.filter { it.length > 1 && it !in words }.distinct())
         .filter { it.isNotEmpty() }.joinToString(" ")
 }
+
+private val AT: java.time.format.DateTimeFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX")

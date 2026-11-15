@@ -1,0 +1,16 @@
+{
+  "uid": "01KNE2A9C0R4T6V8X0Z2B4D6F8",
+  "at": "2026-04-05T09:30:00+08:00",
+  "parts": {
+    "bill": {
+      "v": 1,
+      "visibility": "public",
+      "kind": "expense",
+      "amount": 20,
+      "currency": "CNY",
+      "category": "交通 › 停车"
+    }
+  },
+  "createdAt": "2026-04-05T09:30:00+08:00",
+  "updatedAt": "2026-04-05T09:30:00+08:00"
+}

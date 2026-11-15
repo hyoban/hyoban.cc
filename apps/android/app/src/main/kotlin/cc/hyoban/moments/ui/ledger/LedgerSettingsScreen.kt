@@ -194,7 +194,7 @@ fun LedgerSettingsScreen(container: PhoneContainer, nav: LedgerNav, startImport:
                             SegmentedListItem(
                                 onClick = {
                                     scope.launch {
-                                        val changed = autoLink(container.ledger.ledger.value, container.repository.moments.value, container.repository.trips.value)
+                                        val changed = autoLink(container.ledger.ledger.value, container.repository.moments.value)
                                         container.ledger.saveTxns(changed)
                                         show(pluralTextOf(Res.plurals.ledger_linked, changed.size, changed.size))
                                     }
@@ -394,7 +394,7 @@ fun rememberICostImport(container: PhoneContainer): ICostImporter {
                     container.ledger.putAll(chosen.books, chosen.accounts, chosen.categories, chosen.txns, replace = replace)
                     // The book with the most bills is the one shown.
                     chosen.txns.groupingBy { it.book }.eachCount().maxByOrNull { it.value }?.key?.let { container.ledger.setCurrentBook(it) }
-                    val linked = autoLink(container.ledger.ledger.value, container.repository.moments.value, container.repository.trips.value)
+                    val linked = autoLink(container.ledger.ledger.value, container.repository.moments.value)
                     container.ledger.saveTxns(linked)
                     show(pluralTextOf(Res.plurals.ledger_import_done, chosen.txns.size, chosen.txns.size, linked.size))
                 }

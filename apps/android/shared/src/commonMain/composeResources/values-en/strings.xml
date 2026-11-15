@@ -807,8 +807,8 @@
     <string name="ledger_rate_set_note">Used from today; earlier bills keep their day's rate</string>
     <string name="ledger_data">Data</string>
     <string name="ledger_data_note">The ledger stays on this phone, outside sync, publishing and system backup. Back it up before uninstalling.</string>
-    <string name="ledger_link_all">Link Moments and trips</string>
-    <string name="ledger_link_all_note">Moments with a meal of the same amount, and travel book bills during a trip</string>
+    <string name="ledger_link_all">Link Moments</string>
+    <string name="ledger_link_all_note">Moments with a meal of the same amount</string>
     <string name="ledger_backup">Back up to a file</string>
     <string name="ledger_backup_done">Backed up</string>
     <string name="ledger_restore">Restore from backup</string>

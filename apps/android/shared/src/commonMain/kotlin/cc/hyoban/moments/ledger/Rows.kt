@@ -5,7 +5,7 @@ package cc.hyoban.moments.ledger
 
 /** The columns of `txns` a bill is read from. */
 const val TXN_COLUMNS = "id, book, kind, transfer, time, offset, amount, currency, category, account, account_amount, splits, " +
-    "to_account, to_amount, fee, fee_account, discount, discount_account, note, related, reimburse, excluded, moment, place, trip, " +
+    "to_account, to_amount, fee, fee_account, discount, discount_account, note, related, reimburse, excluded, moment, place, " +
     "created, updated, visibility, published"
 
 /** A bill from its row, each column read by name as text ([s]) or a whole number ([l]). */
@@ -34,7 +34,6 @@ fun txnOf(s: (String) -> String?, l: (String) -> Long?): Txn = Txn(
     excluded = l("excluded") == 1L,
     moment = s("moment"),
     place = s("place"),
-    trip = s("trip"),
     createdAt = l("created")!!,
     updatedAt = l("updated")!!,
     visibility = s("visibility"),
