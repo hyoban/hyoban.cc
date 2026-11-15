@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter
 // changed and a bill made private again is taken off. The footprints never leave the phone.
 
 /** A bill whose public part isn't what the site has: [part] to send, or null to take it off. */
-data class BillChange(val txn: Txn, val part: JsonObject?, val label: String) {
+data class BillChange(val txn: Txn, val part: JsonObject?, val label: String, val deleted: Boolean = false) {
     /** Its entry's uid: the bill's own, a ULID. */
     val uid: String get() = txn.id
 }
@@ -48,22 +48,63 @@ fun Ledger.categoryLabel(txn: Txn): String? = categoriesById[txn.category]?.let 
     listOfNotNull(category.parent?.let { categoriesById[it]?.name }, category.name).joinToString(" › ")
 }
 
-/** Every bill whose public part isn't what was last published. */
+/** Every bill whose public part isn't what was last published, and every one deleted that the site still has. */
 fun Ledger.pendingBills(): List<BillChange> = txns.mapNotNull { txn ->
     val part = publicPart(txn)
     if (part?.toString() == txn.published) null else BillChange(txn, part, categoryLabel(txn).orEmpty())
-}
+} + gone.map { txn -> BillChange(txn, null, categoryLabel(txn) ?: txn.note, deleted = true) }
 
 /**
  * The visibility that takes this change back, saying again what the site has: private for a
- * bill going public, public for one going private; null for a public bill that changed, which
- * has no undo.
+ * bill going public, public for one going private; null for a public bill that changed or one
+ * deleted, which have no undo.
  */
 fun BillChange.undo(): String? = when {
+    deleted -> null
     part == null -> "public"
     txn.published == null -> "private"
     else -> null
 }
+
+/** A bill the site has: its entry's uid and time, its bill part, and whether that entry is a Moment carrying it. */
+data class SiteBill(val uid: String, val at: String, val part: JsonObject, val moment: Boolean)
+
+/**
+ * The bills here that are bills the site has though they don't say so, as an import in place of
+ * the ledger once left them, under new ids and with nothing published: by the id here, the site's.
+ * A bill of a Moment is the bill that Moment carries; one alone is a bill of the site's the ledger
+ * has no bill for, of the same kind, amount and currency, the nearest within ten minutes (a bill
+ * written here before iCost had it), each taken once.
+ */
+fun Ledger.readoptions(site: List<SiteBill>): Map<String, SiteBill> {
+    val taken = (txns.map(Txn::id) + gone.map(Txn::id)).toSet()
+    val carried = site.filter { it.moment }.associateBy { it.uid }
+    val open = site.filter { !it.moment && it.uid !in taken }
+        .mapNotNull { bill -> runCatching { java.time.OffsetDateTime.parse(bill.at).toInstant().toEpochMilli() }.getOrNull()?.let { it to bill } }
+        .toMutableList()
+    val out = mutableMapOf<String, SiteBill>()
+    for (txn in txns.sortedBy { it.time }) {
+        if (txn.published != null || (txn.kind != TxnKind.EXPENSE && txn.kind != TxnKind.INCOME)) continue
+        val moment = txn.moment
+        if (moment != null) {
+            carried[moment]?.let { out[txn.id] = it }
+            continue
+        }
+        val same = open.filter { (time, bill) ->
+            kotlin.math.abs(time - txn.time) <= SAME_BILL_MS &&
+                bill.part.text("kind") == txn.kind.value && bill.part.text("currency") == txn.currency &&
+                bill.part.text("amount")?.toDoubleOrNull()?.let { kotlin.math.abs(it * 100 - txn.amount) < 0.5 } == true
+        }.minByOrNull { (time, _) -> kotlin.math.abs(time - txn.time) } ?: continue
+        open.remove(same)
+        out[txn.id] = same.second
+    }
+    return out
+}
+
+/** How far apart a bill here and the site's can be and still be the same, as an import finds them. */
+private const val SAME_BILL_MS = 10 * 60_000L
+
+private fun JsonObject.text(key: String) = (get(key) as? kotlinx.serialization.json.JsonPrimitive)?.content
 
 /** A bill alone as an entry, at its local time. */
 fun BillChange.entry(): JsonObject = Entries.bill(

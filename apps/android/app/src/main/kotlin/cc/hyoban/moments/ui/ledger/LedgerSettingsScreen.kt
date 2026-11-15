@@ -351,6 +351,7 @@ private fun SheetCaption(title: String) {
 /** An iCost import under way: its file picker, and the dialog that says what it found before it is written. */
 class ICostImporter internal constructor(val pick: () -> Unit, val read: (Uri) -> Unit, val Dialog: @Composable () -> Unit)
 
+/** An import beside the ledger, and one in its place that still keeps what the phone said of its books and bills. */
 private class Found(val merged: ICostImport.Result, val alone: ICostImport.Result)
 
 @Composable
@@ -426,7 +427,7 @@ private suspend fun readExport(context: Context, uri: Uri, ledger: Ledger): Foun
             withContext(Dispatchers.Default) {
                 Found(
                     ICostBackup.read(tables, zone, ledger.rates, ledger) { Ulid.next() },
-                    ICostBackup.read(tables, zone, ledger.rates) { Ulid.next() },
+                    ICostImport.keeping(ICostBackup.read(tables, zone, ledger.rates) { Ulid.next() }, ledger),
                 )
             }
         } else {
@@ -434,7 +435,7 @@ private suspend fun readExport(context: Context, uri: Uri, ledger: Ledger): Foun
             withContext(Dispatchers.Default) {
                 Found(
                     ICostImport.read(table, zone, ledger.rates, ledger) { Ulid.next() },
-                    ICostImport.read(table, zone, ledger.rates) { Ulid.next() },
+                    ICostImport.keeping(ICostImport.read(table, zone, ledger.rates) { Ulid.next() }, ledger),
                 )
             }
         }

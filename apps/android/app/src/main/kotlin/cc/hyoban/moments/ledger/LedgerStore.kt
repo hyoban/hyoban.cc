@@ -26,7 +26,7 @@ import kotlinx.coroutines.withContext
  * backup is the way to keep a copy elsewhere.
  */
 class LedgerStore(private val context: Context) : SQLiteOpenHelper(
-    context, File(context.noBackupFilesDir, "ledger.sqlite").absolutePath, null, 4,
+    context, File(context.noBackupFilesDir, "ledger.sqlite").absolutePath, null, 5,
 ), LedgerSource {
     private val _ledger = MutableStateFlow(Ledger())
     override val ledger: StateFlow<Ledger> = _ledger.asStateFlow()
@@ -50,6 +50,7 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
                 "visibility TEXT, published TEXT)",
         )
         db.execSQL("CREATE INDEX txns_time ON txns(time)")
+        db.execSQL(GONE)
         db.execSQL("CREATE TABLE rates (currency TEXT NOT NULL, day TEXT NOT NULL, per_cny REAL NOT NULL, PRIMARY KEY (currency, day))")
     }
 
@@ -71,6 +72,8 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
         }
         // A public book could start making its bills public from a day on.
         if (oldVersion < 4) db.execSQL("ALTER TABLE books ADD COLUMN public_from TEXT")
+        // A published bill deleted here is kept until the site has it taken off.
+        if (oldVersion < 5) db.execSQL(GONE)
     }
 
     /** Reads the ledger, the bundled rates going in first the first time. */
@@ -115,7 +118,10 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
             Rates(out)
         }
         val current = db.rawQuery("SELECT value FROM meta WHERE key='book'", null).use { if (it.moveToFirst()) it.getString(0) else null }
-        return Ledger(books, accounts, categories, txns, rates, current, allBooks)
+        val gone = db.rawQuery("SELECT txn FROM gone", null).use { c ->
+            buildList { while (c.moveToNext()) runCatching { GONE_JSON.decodeFromString(Txn.serializer(), c.getString(0)) }.getOrNull()?.let(::add) }
+        }
+        return Ledger(books, accounts, categories, txns, rates, current, allBooks, gone)
     }
 
     private suspend fun write(block: (SQLiteDatabase) -> Unit) = withContext(Dispatchers.IO) {
@@ -128,12 +134,29 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
         }
     }
 
-    override suspend fun saveTxn(txn: Txn) { write { it.replace("txns", txn.values()) } }
+    override suspend fun saveTxn(txn: Txn) { write { it.putTxn(txn) } }
 
     /** Deletes bills, and the refunds and reimbursements of any of them with them. */
     override suspend fun deleteTxns(ids: Collection<String>) = write { db ->
         val all = ids.toSet() + _ledger.value.txns.filter { it.related in ids }.map { it.id }
-        all.forEach { db.delete("txns", "id=?", arrayOf(it)) }
+        db.deleteTxns(all)
+    }
+
+    /** Writes a bill, which the site no longer has to have taken off if it was deleted before. */
+    private fun SQLiteDatabase.putTxn(txn: Txn) {
+        delete("gone", "id=?", arrayOf(txn.id))
+        replace("txns", txn.values())
+    }
+
+    /** Deletes the bills of [ids], keeping each the site has until a publish takes it off. */
+    private fun SQLiteDatabase.deleteTxns(ids: Collection<String>) {
+        val byId = _ledger.value.txnsById
+        for (id in ids) {
+            byId[id]?.takeIf { it.published != null }?.let { txn ->
+                replace("gone", ContentValues().apply { put("id", txn.id); put("txn", GONE_JSON.encodeToString(Txn.serializer(), txn)) })
+            }
+            delete("txns", "id=?", arrayOf(id))
+        }
     }
 
     override suspend fun saveAccount(account: Account) { write { it.replace("accounts", account.values()) } }
@@ -168,7 +191,7 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
 
     /** Deletes a book with its bills and categories. */
     suspend fun deleteBook(id: String) = write { db ->
-        db.delete("txns", "book=?", arrayOf(id))
+        db.deleteTxns(_ledger.value.txns.filter { it.book == id }.map(Txn::id))
         db.delete("categories", "book=?", arrayOf(id))
         db.delete("books", "id=?", arrayOf(id))
     }
@@ -221,19 +244,45 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
      * beside it, a book, an account or a category taking the place of one of the same id.
      */
     suspend fun putAll(books: List<Book>, accounts: List<Account>, categories: List<Category>, txns: List<Txn>, replace: Boolean) = write { db ->
-        if (replace) listOf("books", "accounts", "categories", "txns").forEach { db.delete(it, null, null) }
+        if (replace) {
+            listOf("books", "accounts", "categories").forEach { db.delete(it, null, null) }
+            db.deleteTxns(_ledger.value.txns.map(Txn::id))
+        }
         books.forEach { db.replace("books", it.values()) }
         accounts.forEach { db.replace("accounts", it.values()) }
         categories.forEach { db.replace("categories", it.values()) }
-        txns.forEach { db.replace("txns", it.values()) }
+        txns.forEach { db.putTxn(it) }
     }
 
     /** Sets several bills' links to Moments, places and trips at once. */
-    suspend fun saveTxns(txns: List<Txn>) = write { db -> txns.forEach { db.replace("txns", it.values()) } }
+    suspend fun saveTxns(txns: List<Txn>) = write { db -> txns.forEach { db.putTxn(it) } }
 
-    /** Notes what of each bill the site now has, by id: its public part as JSON, or null when it has none. */
+    /**
+     * Notes what of each bill the site now has, by id: its public part as JSON, or null when it
+     * has none, a deleted one then forgotten.
+     */
     suspend fun markPublished(parts: Map<String, String?>) = write { db ->
-        parts.forEach { (id, part) -> db.update("txns", ContentValues().apply { put("published", part) }, "id = ?", arrayOf(id)) }
+        parts.forEach { (id, part) ->
+            db.update("txns", ContentValues().apply { put("published", part) }, "id = ?", arrayOf(id))
+            if (part == null) db.delete("gone", "id=?", arrayOf(id))
+        }
+    }
+
+    /**
+     * Takes back what the site has of the bills [found] to be its own: each bill alone the site's
+     * uid, its refunds and reimbursements following it, and every one what of it the site has.
+     */
+    suspend fun readopt(found: Map<String, cc.hyoban.moments.data.store.SiteBill>) = write { db ->
+        val byId = _ledger.value.txnsById
+        val ids = found.mapValues { (id, bill) -> if (bill.moment) id else bill.uid }
+        for ((id, bill) in found) {
+            val txn = byId[id] ?: continue
+            db.delete("txns", "id=?", arrayOf(id))
+            db.putTxn(txn.copy(id = ids.getValue(id), published = bill.part.toString()))
+        }
+        for ((from, to) in ids) {
+            if (from != to) db.update("txns", ContentValues().apply { put("related", to) }, "related=?", arrayOf(from))
+        }
     }
 
     private fun SQLiteDatabase.replace(table: String, values: ContentValues) {
@@ -241,6 +290,10 @@ class LedgerStore(private val context: Context) : SQLiteOpenHelper(
     }
 }
 
+
+/** Where a bill deleted here waits, as it last was, for the site to have it taken off. */
+private const val GONE = "CREATE TABLE gone (id TEXT PRIMARY KEY, txn TEXT NOT NULL)"
+private val GONE_JSON = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
 
 private fun Cursor.stringOrNull(index: Int): String? = if (isNull(index)) null else getString(index)
 private fun Cursor.longOrNull(index: Int): Long? = if (isNull(index)) null else getLong(index)

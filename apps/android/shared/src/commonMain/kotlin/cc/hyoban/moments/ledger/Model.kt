@@ -204,6 +204,8 @@ data class Ledger(
     val currentBook: String? = null,
     /** Every book shown at once, the tab's bills and sums across them all. */
     val allBooks: Boolean = false,
+    /** Bills deleted here that the site still has, as they last were, until a publish takes them off. */
+    val gone: List<Txn> = emptyList(),
 ) {
     val accountsById: Map<String, Account> by lazy { accounts.associateBy { it.id } }
     val categoriesById: Map<String, Category> by lazy { categories.associateBy { it.id } }

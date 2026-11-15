@@ -4,6 +4,14 @@ import cc.hyoban.moments.data.store.categoryLabel
 import cc.hyoban.moments.data.store.entry
 import cc.hyoban.moments.data.store.isPublic
 import cc.hyoban.moments.data.store.pendingBills
+import cc.hyoban.moments.data.store.publicPart
+import cc.hyoban.moments.data.store.readoptions
+import cc.hyoban.moments.data.store.SiteBill
+import cc.hyoban.moments.data.store.undo
+import cc.hyoban.moments.data.spec.Entries
+import cc.hyoban.moments.ui.publish.after
+import cc.hyoban.moments.ui.publish.before
+import cc.hyoban.moments.ui.publish.group
 import cc.hyoban.moments.ledger.Book
 import cc.hyoban.moments.ledger.Category
 import cc.hyoban.moments.ledger.CategoryType
@@ -49,6 +57,45 @@ class OutsideTest {
         assertFalse(from(day.plusDays(1)).isPublic(txn))
         assertTrue(from(day.plusDays(1)).isPublic(txn.copy(visibility = "public")))
         assertFalse(from(day).isPublic(txn.copy(visibility = "private")))
+    }
+
+    @Test
+    fun `a bill waiting is new, changed or going off, the site's part read back`() {
+        val public = ledger(txn, public = true)
+        val new = public.pendingBills().single()
+        assertEquals(cc.hyoban.moments.ui.publish.BillGroup.NEW, new.group)
+        val published = txn.copy(published = new.part.toString(), amount = 1300)
+        val changed = ledger(published, public = true).pendingBills().single()
+        assertEquals(cc.hyoban.moments.ui.publish.BillGroup.CHANGED, changed.group)
+        assertEquals(1250L, changed.before?.cents)
+        assertEquals(1300L, changed.after?.cents)
+        assertEquals("餐饮 › 零食", changed.before?.category)
+        assertEquals(cc.hyoban.moments.ui.publish.BillGroup.OFF, ledger(published).pendingBills().single().group)
+    }
+
+    @Test
+    fun `a published bill deleted here is taken off, with no undo`() {
+        val change = Ledger(books = listOf(book), gone = listOf(txn.copy(published = "{}"))).pendingBills().single()
+        assertTrue(change.deleted)
+        assertNull(change.part)
+        assertNull(change.undo())
+    }
+
+    @Test
+    fun `a bill an import gave a new id takes back the site's`() {
+        val part = ledger(txn, public = true).publicPart(txn)!!
+        val at = java.time.Instant.ofEpochMilli(txn.time).atOffset(java.time.ZoneOffset.ofHours(8)).toString()
+        val site = listOf(
+            SiteBill("OLD", at, part, moment = false),
+            SiteBill("M1", at, part, moment = true),
+            SiteBill("OTHER", at, Entries.billPart("expense", 99.0, "CNY", null, null), moment = false),
+        )
+        val renamed = txn.copy(id = "NEW", time = txn.time + 60_000)
+        assertEquals("OLD", ledger(renamed).readoptions(site)["NEW"]?.uid)
+        assertEquals("M1", ledger(renamed.copy(moment = "M1")).readoptions(site)["NEW"]?.uid)
+        assertTrue(ledger(renamed.copy(published = part.toString())).readoptions(site).isEmpty())
+        assertTrue(ledger(txn.copy(id = "OLD")).readoptions(site).isEmpty())
+        assertTrue(ledger(renamed.copy(time = txn.time + 11 * 60_000)).readoptions(site).isEmpty())
     }
 
     @Test

@@ -733,7 +733,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                     SearchScreen(container, onMoment = openMoment, onBack = back, onBill = { ledgerNav.bill(it) })
                                 }
                                 screen<Changes> {
-                                    ChangesScreen(container, onMoment = openMoment, onBack = back)
+                                    ChangesScreen(container, onMoment = openMoment, onBack = back, onBill = { ledgerNav.bill(it) })
                                 }
                                 screen<LedgerHome> { entry ->
                                     LedgerScreen(container, ledgerNav, startTab = entry.toRoute<LedgerHome>().tab)

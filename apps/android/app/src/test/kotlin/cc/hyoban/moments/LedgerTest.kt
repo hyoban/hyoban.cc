@@ -151,6 +151,30 @@ class LedgerTest {
         assertNull(split.account)
     }
 
+    @Test fun replacingKeepsWhatThePhoneSaid() {
+        val first = read(row("2025/01/02 18:10", "支出", "-4.28", "饮料", "", "钱包", note = "奶茶"))
+        val book = first.books.single().copy(visibility = "public", publicFrom = "2025-01-01")
+        val bill = first.txns.single().copy(visibility = "private", published = "{}", moment = "m1")
+        val ledger = ledgerOf(first).copy(books = listOf(book), txns = listOf(bill))
+        val replaced = ICostImport.keeping(
+            read(
+                row("2025/01/02 18:10", "支出", "-4.28", "饮料", "", "钱包", note = "奶茶"),
+                row("2025/01/03 18:10", "支出", "-5", "饮料", "", "钱包"),
+            ),
+            ledger,
+        )
+        assertEquals(listOf(book), replaced.books.map { it.copy(position = book.position) })
+        assertTrue(replaced.categories.all { it.book == book.id })
+        val kept = replaced.txns.single { it.id == bill.id }
+        assertEquals(book.id, kept.book)
+        assertEquals("private", kept.visibility)
+        assertEquals("{}", kept.published)
+        assertEquals("m1", kept.moment)
+        val fresh = replaced.txns.single { it.id != bill.id }
+        assertEquals(book.id, fresh.book)
+        assertNull(fresh.published)
+    }
+
     @Test fun leavesOutWhatIsAlreadyThere() {
         val first = read(row("2025/01/02 18:10", "支出", "-4.28", "饮料", "", "中国银行 储蓄卡4049", note = "山楂莓莓"))
         val again = read(

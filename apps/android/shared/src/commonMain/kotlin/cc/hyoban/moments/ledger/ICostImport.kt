@@ -403,26 +403,8 @@ object ICostImport {
         val txns = txns.toMutableList()
         // A bill already in the ledger, as an earlier import of the same export left it, isn't
         // written twice: it takes the id it has there, so a refund or reimbursement new to this
-        // export still finds the expense it is for. Two alike in one export match two there.
-        val names = accounts.associate { it.id to it.name }
-        fun key(txn: Txn, accountName: (String?) -> String?) =
-            listOf(txn.time, txn.kind.value, txn.amount, txn.currency, txn.note, accountName(txn.account), accountName(txn.toAccount)).joinToString("|")
-        val have = existing.txns.groupBy { txn -> key(txn) { id -> existing.accountsById[id]?.name } }.mapValues { it.value.map(Txn::id).toMutableList() }
-        val existingId = mutableMapOf<String, String>()
-        for (txn in txns) have[key(txn, names::get)]?.removeFirstOrNull()?.let { existingId[txn.id] = it }
-        // Else one written here, by hand or from 自动记账, is the same bill when its book, kind,
-        // amount and currency are and it is within ten minutes of it, whatever its note and
-        // account: the nearest, each taken once.
-        val unclaimed = existing.txns.filter { it.id !in existingId.values }.toMutableList()
-        for (txn in txns.sortedBy { it.time }) {
-            if (txn.id in existingId) continue
-            val same = unclaimed.filter {
-                it.book == txn.book && it.kind == txn.kind && it.amount == txn.amount && it.currency == txn.currency &&
-                    abs(it.time - txn.time) <= SAME_BILL_MS
-            }.minByOrNull { abs(it.time - txn.time) } ?: continue
-            unclaimed.remove(same)
-            existingId[txn.id] = same.id
-        }
+        // export still finds the expense it is for.
+        val existingId = sameBills(existing, txns, accounts.associate { it.id to it.name })
         fun idOf(id: String) = existingId[id] ?: id
         txns.replaceAll { txn -> txn.copy(id = idOf(txn.id), related = related[txn.id]?.let(::idOf) ?: txn.related) }
         val known = existingId.values.toSet()
@@ -451,6 +433,66 @@ object ICostImport {
             ),
             known,
         )
+    }
+
+    /**
+     * Which of [existing]'s bills each of [txns] is, by id, the read ones' accounts named by
+     * [names]: one of the same time, kind, amount, currency, note and accounts, two alike matching
+     * two there; else one written here, by hand or from 自动记账, of the same book, kind, amount and
+     * currency within ten minutes of it, whatever its note and account: the nearest, each taken once.
+     */
+    private fun sameBills(existing: Ledger, txns: List<Txn>, names: Map<String, String>): Map<String, String> {
+        fun key(txn: Txn, accountName: (String?) -> String?) =
+            listOf(txn.time, txn.kind.value, txn.amount, txn.currency, txn.note, accountName(txn.account), accountName(txn.toAccount)).joinToString("|")
+        val have = existing.txns.groupBy { txn -> key(txn) { id -> existing.accountsById[id]?.name } }.mapValues { it.value.map(Txn::id).toMutableList() }
+        val existingId = mutableMapOf<String, String>()
+        for (txn in txns) have[key(txn, names::get)]?.removeFirstOrNull()?.let { existingId[txn.id] = it }
+        val unclaimed = existing.txns.filter { it.id !in existingId.values }.toMutableList()
+        for (txn in txns.sortedBy { it.time }) {
+            if (txn.id in existingId) continue
+            val same = unclaimed.filter {
+                it.book == txn.book && it.kind == txn.kind && it.amount == txn.amount && it.currency == txn.currency &&
+                    abs(it.time - txn.time) <= SAME_BILL_MS
+            }.minByOrNull { abs(it.time - txn.time) } ?: continue
+            unclaimed.remove(same)
+            existingId[txn.id] = same.id
+        }
+        return existingId
+    }
+
+    /**
+     * What a read in place of the whole ledger, [read] against none of it, keeps of [existing]
+     * so nothing said on the phone is lost: a book of the same name keeps its id and who sees its
+     * bills; a bill found to be one there (as [settle] finds them) keeps its id, its own say on
+     * who sees it, what of it the site has and the Moment and place it belongs to, so what was published stays published.
+     */
+    fun keeping(read: Result, existing: Ledger): Result {
+        val byName = existing.books.associateBy { it.name }
+        val bookId = mutableMapOf<String, String>()
+        val books = read.books.map { book ->
+            val was = byName[book.name] ?: return@map book
+            bookId[book.id] = was.id
+            book.copy(id = was.id, visibility = was.visibility, publicFrom = was.publicFrom)
+        }
+        fun book(id: String) = bookId[id] ?: id
+        val categories = read.categories.map { it.copy(book = book(it.book)) }
+        val moved = read.txns.map { it.copy(book = book(it.book)) }
+        val same = sameBills(existing, moved, read.accounts.associate { it.id to it.name })
+        val was = existing.txns.associateBy { it.id }
+        fun idOf(id: String) = same[id] ?: id
+        val txns = moved.map { txn ->
+            val old = same[txn.id]?.let(was::get)
+            val kept = if (old == null) txn else txn.copy(
+                id = old.id,
+                visibility = old.visibility,
+                published = old.published,
+                moment = txn.moment ?: old.moment,
+                place = txn.place ?: old.place,
+                createdAt = old.createdAt,
+            )
+            kept.copy(related = kept.related?.let(::idOf))
+        }
+        return read.copy(books = books, categories = categories, txns = txns, matched = same.values.toSet())
     }
 
     /** How far apart an exported bill and one written here can be and still be the same. */

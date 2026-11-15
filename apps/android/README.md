@@ -254,7 +254,10 @@ saved: new, changed and deleted Moments, changed places, public bills, trips,
 check-ins, occasions and things wait on the phone, past a restart. 发布更改, from the card
 at the top of 我, lists them, shows what changed, each field of a changed Moment, place,
 check-in, occasion, device or subscription struck through beside what it is now, and takes a
-change back. 全部发布到网站 runs as WorkManager work in a foreground
+change back. Bills are a part of their own (`ui/publish/BillChanges.kt`), in three groups by
+what the site gets: new, changed (its category, amount or note marked where it shows) and taken
+off (made private or deleted here, struck through); a group of more than three folds, and opened
+falls under its days. A bill there opens its page. 全部发布到网站 runs as WorkManager work in a foreground
 service with a progress notification, waiting out a dropped link: it uploads the new
 originals a few at a time, then sends everything else as one `POST /v2/changes`, which the
 API takes whole or not at all. What is published leaves the phone's store for the site's.
@@ -406,7 +409,10 @@ The data:
 - **从 iCost 导入**, in 我 → 导入, reads either iCost's backup (`.backup`, a zip of its SQLite
   database sealed with the password iCost itself uses) or the .xlsx of its 账单导出, picked,
   shared in or opened with the app. It shows what it found before writing and skips what is
-  already there, so each newer file brings the ledger up to date. Tags become `#tag` in the
+  already there, so each newer file brings the ledger up to date; 替换现有数据 writes it in place
+  of the whole ledger instead, yet a book of the same name keeps its id and who sees its bills,
+  and a bill found to be one already here keeps its id, its 公开 say, its Moment and place and
+  what of it the site has, so nothing published needs publishing again. Tags become `#tag` in the
   note. The backup is the fuller one: `ledger/ICostBackup` takes its accounts with their
   kinds and balances, ties refunds, reimbursements and a transfer's discount to the bills
   iCost tied them to, and keeps a bill paid from several accounts as one. Every account
@@ -427,7 +433,12 @@ Android's backup. Bills are private: 记录项与公开 (`moments://items`) make
 public from a day on, by each bill's own date (under the 记录项, while the ledger is on): switching
 a book on asks for the day, today unless another is picked, and 开始日期 under it changes it; a book
 made public before there was a day keeps all its bills public. A bill's 公开 chip says otherwise for one. A public bill publishes only its
-kind, amount, currency, category and note (`data/store/Outside.kt`). `ledger/ICostImport`,
+kind, amount, currency, category and note (`data/store/Outside.kt`). A published bill deleted here,
+by hand, with its book or by an import in place of the ledger, waits in the ledger's `gone` table
+until the next publish takes it off the site. As the app starts, a bill with nothing published
+that the site has under another id (one of the same kind, amount and currency within ten
+minutes, or the bill its Moment carries), as an import in place of the ledger once left them,
+takes the site's id and what of it the site has back. `ledger/ICostImport`,
 `ledger/Accounting` and `ledger/Links` are plain Kotlin tested in `LedgerTest`, which also
 reads a real export when `ICOST_EXPORT` names one and a real backup when `ICOST_BACKUP` does.
 

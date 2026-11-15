@@ -10,6 +10,7 @@ import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.data.store.BillChange
 import cc.hyoban.moments.data.store.PhoneOutside
+import cc.hyoban.moments.data.store.readoptions
 import cc.hyoban.moments.data.store.undo
 import cc.hyoban.moments.footprints.FootprintStore
 import cc.hyoban.moments.ledger.LedgerStore
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -86,6 +88,14 @@ class PhoneContainer private constructor(
         // Routes were once kept per trip from the site's trip pages, under routes/.
         File(context.filesDir, "routes").takeIf { it.isDirectory }?.deleteRecursively()
         scope.launch { ledger.load() }
+        // Bills an import in place of the ledger once gave new ids take the site's back, so what
+        // was published isn't published again.
+        scope.launch {
+            ledger.loaded.first { it }
+            repository.loaded.first { it }
+            val found = ledger.ledger.value.readoptions(repository.siteBills())
+            if (found.isNotEmpty()) ledger.readopt(found)
+        }
         // The widgets show only what the public sees in demo mode, so they are drawn again as it turns.
         scope.launch { snapshotFlow { settings.demo }.drop(1).collect { Widgets.update(appContext) } }
         cc.hyoban.moments.backup.BackupWorker.schedule(appContext, backup, replace = false)

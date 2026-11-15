@@ -661,7 +661,7 @@ private fun Route(
         TripsList -> Trips(container, openTrip)
         is Things -> ThingsScreen(container, onBack = back, onDay = openDay, kind = ThingKind.of(route.kind), open = route.open)
         is Occasions -> OccasionsScreen(container, onBack = back, open = route.open)
-        Changes -> ChangesScreen(container, onMoment = openMoment, onBack = back)
+        Changes -> ChangesScreen(container, onMoment = openMoment, onBack = back, onBill = { shell.open(LedgerBill(it)) })
         is LedgerHome -> LedgerScreen(container, ledgerNav, route.tab, source = backupSubtitle(container))
         FootprintDays -> cc.hyoban.moments.ui.feed.FootprintDaysScreen(container, backupSubtitle(container), onDay = openDay, onBack = back)
         is LedgerBill -> BillScreen(container, route.id, ledgerNav)

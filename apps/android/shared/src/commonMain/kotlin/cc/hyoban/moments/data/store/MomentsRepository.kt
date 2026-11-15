@@ -224,6 +224,16 @@ class MomentsRepository(
         }
     }
 
+    /** The bills the site has, as the copy holds them, alone or carried by a Moment. */
+    suspend fun siteBills(): List<SiteBill> = lock.withLock {
+        copyEntries.values.mapNotNull { entry ->
+            val bill = ((entry["parts"] as? kotlinx.serialization.json.JsonObject)?.get("bill") as? kotlinx.serialization.json.JsonObject) ?: return@mapNotNull null
+            val uid = (entry["uid"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
+            val at = (entry["at"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
+            SiteBill(uid, at, bill, momentOf(entry) != null)
+        }
+    }
+
     /** The copy's entries, read once, so a sync parses only the rows it brought. */
     private var copyEntries: Map<String, kotlinx.serialization.json.JsonObject> = emptyMap()
 

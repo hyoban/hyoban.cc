@@ -135,7 +135,7 @@ import cc.hyoban.moments.ui.theme.fill
  * of it, the only way the app writes to the site.
  */
 @Composable
-fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit) {
+fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit, onBill: (String) -> Unit = {}) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val publishing by container.publishing.collectAsStateWithLifecycle()
@@ -143,6 +143,8 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
     val busy = publishing != null
     val publish = cc.hyoban.moments.ui.LocalDevice.current.beforePublishing { container.publishPending() }
 
+    // The groups of bills opened past their first few.
+    var openBills by remember { mutableStateOf(emptySet<BillGroup>()) }
     // Asked first, as clearing deletes what was written on the phone.
     var clearing by rememberSaveable { mutableStateOf(false) }
     // Back to where it was opened from once everything is published.
@@ -337,12 +339,13 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                         )
                     }
                 }
-                section(Res.string.section_visibility, pending.outside.bills, key = { "bill-${it.uid}" }) { change ->
-                    val revert = change.undo()?.let { visibility ->
-                        { container.revertBill(change) }
-                    }?.takeUnless { busy }
-                    SwipeToRevert(revert) { OutsideCard(change.label, formatDate(change.txn.dateKey), billAmount(change), stringResource(if (change.part == null) Res.string.changes_bill_private else Res.string.changes_bill_public_note), revert) }
-                }
+                billSection(
+                    pending.outside.bills,
+                    openBills,
+                    onFold = { group -> openBills = if (group in openBills) openBills - group else openBills + group },
+                    onRevert = container::revertBill.takeUnless { busy },
+                    onOpen = onBill,
+                )
                 section(Res.string.section_removed, pending.removed, key = { it.uid }) { moment ->
                     val revert = { container.revert(moment.uid) }.takeUnless { busy }
                     SwipeToRevert(revert) {
@@ -530,7 +533,7 @@ fun PendingChangesRow(container: AppContainer, onClick: () -> Unit, modifier: Mo
  * the card's own button does the same for whoever doesn't swipe. Its snackbar can undo it.
  */
 @Composable
-private fun SwipeToRevert(onRevert: (() -> Unit)?, content: @Composable () -> Unit) {
+internal fun SwipeToRevert(onRevert: (() -> Unit)?, content: @Composable () -> Unit) {
     if (onRevert == null) return content()
     // Under a card as filled as the group it is in, so what is beneath shows only as it moves.
     val fill = LocalSurfaceLevel.current.raised.fill()
@@ -618,16 +621,9 @@ private fun RevertButton(onRevert: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** A bill's amount as it would publish, an income with its plus. */
-private fun billAmount(change: cc.hyoban.moments.data.store.BillChange): String {
-    val sign = if (change.txn.kind == cc.hyoban.moments.ledger.TxnKind.INCOME) "+" else ""
-    return "$sign${change.txn.currency} ${"%.2f".format(change.txn.amount / 100.0)}"
-}
-
 /**
- * A bill or a span of footprints going public or private, or an entry the phone changed: what it
- * is, when, its figure, what will happen, and for a changed entry what it changed, each field from
- * what it was ([diffs], null for one new or deleted).
+ * An entry the phone changed: what it is, when, its figure, what will happen, and what it
+ * changed, each field from what it was ([diffs], null for one new or deleted).
  */
 @Composable
 private fun OutsideCard(title: String, date: String?, figure: String?, note: String, onRevert: (() -> Unit)?, diffs: List<EntryDiff>? = null) {
