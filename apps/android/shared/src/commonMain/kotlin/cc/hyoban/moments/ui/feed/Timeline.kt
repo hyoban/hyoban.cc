@@ -67,7 +67,7 @@ import java.time.LocalDate
 /** The bills the timeline shows, by where they go, and what each day spent, in the book's currency. */
 class TimelineBills(
     val ledger: Ledger = Ledger(),
-    /** Bills written with a Moment, by its uid, oldest first as its card lists them. */
+    /** Bills linked to a Moment or a check-in, by its uid, oldest first as it lists them. */
     val linked: Map<String, List<Txn>> = emptyMap(),
     /** The rest, by day, newest first. */
     val loose: Map<String, List<Txn>> = emptyMap(),
@@ -81,7 +81,7 @@ class TimelineBills(
     /** The check-ins with neither words nor photos, by day. */
     val checkins: Map<String, List<Checkin>> = emptyMap(),
 ) {
-    /** What of it falls on [date] alone, as a day's page shows it; the bills linked to Moments stay whole. */
+    /** What of it falls on [date] alone, as a day's page shows it; the linked bills stay whole. */
     fun onDay(date: String) = TimelineBills(
         ledger, linked, loose.filterKeys { it == date }, spent.filterKeys { it == date }, currency,
         charges.filterKeys { it == date }, things.filterKeys { it == date }, checkins.filterKeys { it == date },
@@ -153,18 +153,20 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
             return@get TimelineBills(ledger, emptyMap(), emptyMap(), emptyMap(), book?.currency ?: "CNY", charges, things, checkins)
         }
         val shown = ledger.books.filterNot { it.archived }.mapTo(HashSet()) { it.id }
-        val uids = moments.mapTo(HashSet()) { it.uid }
+        // A bill linked to a Moment or a check-in shown here goes with it.
+        val uids = moments.mapTo(HashSet()) { it.uid }.apply { checkins.values.forEach { day -> day.forEach { add(it.uid) } } }
         val bills = ledger.txns.filter { txn ->
             txn.book in shown && txn.kind in SHOWN_KINDS &&
                 (filter.year == null || txn.date.year == filter.year) &&
                 (filter.month == null || txn.date.monthValue == filter.month)
         }
-        val (withMoment, without) = bills.partition { it.moment != null && it.moment in uids }
+        val links = cc.hyoban.moments.ledger.AutoLinks(moments, checkins.values.flatten())
+        val (withMoment, without) = bills.partition { links.of(it) in uids }
         val ids = bills.mapTo(HashSet()) { it.id }
         val sums = summarize(ledger.entries.filter { it.txn.id in ids }, ledger.rates, book.currency, null, null)
         TimelineBills(
             ledger,
-            linked = withMoment.groupBy { it.moment!! }.mapValues { (_, txns) -> txns.sortedBy { it.time } },
+            linked = withMoment.groupBy { links.of(it)!! }.mapValues { (_, txns) -> txns.sortedBy { it.time } },
             loose = without.groupBy { it.dateKey },
             spent = sums.expenseByDay.mapKeys { it.key.toString() },
             currency = book.currency,

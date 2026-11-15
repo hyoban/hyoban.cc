@@ -50,7 +50,7 @@ fun momentBillRows(
     onBill: (String) -> Unit,
     onNewBill: (String) -> Unit,
 ): List<@Composable (ListItemShapes) -> Unit> {
-    val bills = txnsOfMoment(ledger, moment.uid)
+    val bills = txnsOfMoment(ledger, moment)
     if (bills.isNotEmpty()) {
         return bills.map { txn ->
             { shapes ->

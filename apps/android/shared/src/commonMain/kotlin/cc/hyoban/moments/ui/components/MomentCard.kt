@@ -84,13 +84,13 @@ fun MomentCard(
     bills: List<Txn> = emptyList(),
     ledger: Ledger? = null,
     onBill: (String) -> Unit = {},
-    /** As a bubble sent from the right, as the timeline and a trip are a conversation; its bills then follow it apart. */
+    /** As a bubble sent from the right, as the timeline and a trip are a conversation; its bills then at its foot inside it. */
     bubble: Boolean = false,
     /** As a bubble, whether the one above or below it is a Moment too, a run of them drawn together. */
     joinedAbove: Boolean = false,
     joinedBelow: Boolean = false,
 ) {
-    if (bubble) return MomentBubble(moment, places, trip, urls, onOpen, modifier, selected, hidePlace, joinedAbove, joinedBelow)
+    if (bubble) return MomentBubble(moment, places, trip, urls, onOpen, modifier, selected, hidePlace, joinedAbove, joinedBelow, bills, ledger, onBill)
     // The card grows into the Moment's page when opened; shown in the detail pane beside the
     // list, it is [selected], outlined in the accent, the one colour for state.
     val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
@@ -149,7 +149,11 @@ private fun MomentBubble(
     hidePlace: String?,
     joinedAbove: Boolean,
     joinedBelow: Boolean,
+    bills: List<Txn> = emptyList(),
+    ledger: Ledger? = null,
+    onBill: (String) -> Unit = {},
 ) {
+    val withBills = bills.isNotEmpty() && ledger != null
     val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
     var menu by remember { mutableStateOf<DpOffset?>(null) }
     val density = LocalDensity.current
@@ -158,7 +162,7 @@ private fun MomentBubble(
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
         // Most of the column, never wider than 420 on a wide screen; with photos always that
         // wide, words alone only as wide as they need. The tail's strip comes on top, at the right.
-        val width = Modifier.bubbleWidth(fill = moment.media.isNotEmpty()) { column -> minOf(column * 0.88f, 420.dp) }
+        val width = Modifier.bubbleWidth(fill = moment.media.isNotEmpty() || withBills) { column -> minOf(column * 0.88f, 420.dp) }
         PressableCard(
             onClick = onOpen,
             onLongClick = { at -> menu = with(density) { DpOffset(at.x.toDp(), at.y.toDp()) } },
@@ -167,10 +171,12 @@ private fun MomentBubble(
                 .semantics { this.selected = selected }.testTag("moment_${moment.uid}"),
             flat = true,
             shape = remember(joinedAbove, joinedBelow) { cc.hyoban.moments.ui.feed.sentBodyShape(joinedAbove, joinedBelow) },
+            // Words alone wrap the bubble to them, so where and when end at its edge.
+            fillWidth = moment.media.isNotEmpty() || withBills,
         ) {
             if (moment.media.isNotEmpty()) MediaMosaic(moment.uid, moment.media, urls, onOpen = null)
             Column(
-                (if (moment.media.isNotEmpty()) Modifier.fillMaxWidth() else Modifier).padding(start = Space.m, end = Space.m, top = Space.s, bottom = Space.s),
+                (if (moment.media.isNotEmpty() || withBills) Modifier.fillMaxWidth() else Modifier).padding(start = Space.m, end = Space.m, top = Space.s, bottom = Space.s),
                 verticalArrangement = Arrangement.spacedBy(Space.xs),
             ) {
                 val private = moment.hidden.takeIf { it }?.let { stringResource(Res.string.visibility_private) }
@@ -197,12 +203,14 @@ private fun MomentBubble(
                 if (moment.text.isNotBlank()) {
                     // As Telegram has it, where and when follow the last line of the words, on
                     // a line of their own only when they don't fit there.
-                    TrailingFoot(if (moment.media.isNotEmpty()) Modifier.fillMaxWidth() else Modifier, foot) {
+                    TrailingFoot(if (moment.media.isNotEmpty() || withBills) Modifier.fillMaxWidth() else Modifier, foot) {
                         Text(moment.text, style = AppTheme.typography.body, maxLines = 8, overflow = TextOverflow.Ellipsis, onTextLayout = it)
                     }
                 } else {
                     Box(Modifier.align(Alignment.End)) { foot() }
                 }
+                // Its linked bills at its foot, each opening its bill.
+                if (withBills) cc.hyoban.moments.ui.feed.BubbleBills(bills, ledger!!, onBill, Modifier.padding(top = Space.xs))
             }
             cc.hyoban.moments.ui.moment.MomentMenu(moment, urls, menu, onDismiss = { menu = null })
         }

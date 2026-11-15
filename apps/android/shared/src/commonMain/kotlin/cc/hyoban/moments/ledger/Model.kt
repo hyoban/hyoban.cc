@@ -173,7 +173,7 @@ data class Txn(
     val reimburse: Reimburse = Reimburse.NONE,
     /** Kept out of the books' sums, still moving its accounts. */
     val excluded: Boolean = false,
-    /** The Moment it belongs to and its place, as the site names them. */
+    /** The entry it belongs to (a Moment or a check-in, by its uid) and its place, as the site names them. */
     val moment: String? = null,
     val place: String? = null,
     val createdAt: Long = time,

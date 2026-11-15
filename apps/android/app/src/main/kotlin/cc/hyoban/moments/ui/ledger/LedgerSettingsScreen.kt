@@ -69,7 +69,6 @@ import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.LedgerBackup
 import cc.hyoban.moments.ledger.Xlsx
 import cc.hyoban.moments.ledger.addBook
-import cc.hyoban.moments.ledger.autoLink
 import cc.hyoban.moments.ledger.writeCsv
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
@@ -190,21 +189,6 @@ fun LedgerSettingsScreen(container: PhoneContainer, nav: LedgerNav, startImport:
                     stringResource(Res.string.ledger_data),
                     stringResource(Res.string.ledger_data_note),
                     listOf(
-                        { shapes ->
-                            SegmentedListItem(
-                                onClick = {
-                                    scope.launch {
-                                        val changed = autoLink(container.ledger.ledger.value, container.repository.moments.value)
-                                        container.ledger.saveTxns(changed)
-                                        show(pluralTextOf(Res.plurals.ledger_linked, changed.size, changed.size))
-                                    }
-                                },
-                                shapes = shapes, colors = segmentColors(),
-                                leadingContent = { Icon(AppIcons.Link, contentDescription = null) },
-                                supportingContent = { Text(stringResource(Res.string.ledger_link_all_note)) },
-                                modifier = Modifier.testTag("link_all"),
-                            ) { Text(stringResource(Res.string.ledger_link_all)) }
-                        },
                         { shapes ->
                             SegmentedListItem(
                                 onClick = { backup.launch("ledger-${LocalDate.now()}.json") }, shapes = shapes, colors = segmentColors(),
@@ -394,9 +378,7 @@ fun rememberICostImport(container: PhoneContainer): ICostImporter {
                     container.ledger.putAll(chosen.books, chosen.accounts, chosen.categories, chosen.txns, replace = replace)
                     // The book with the most bills is the one shown.
                     chosen.txns.groupingBy { it.book }.eachCount().maxByOrNull { it.value }?.key?.let { container.ledger.setCurrentBook(it) }
-                    val linked = autoLink(container.ledger.ledger.value, container.repository.moments.value)
-                    container.ledger.saveTxns(linked)
-                    show(pluralTextOf(Res.plurals.ledger_import_done, chosen.txns.size, chosen.txns.size, linked.size))
+                    show(pluralTextOf(Res.plurals.ledger_import_done, chosen.txns.size, chosen.txns.size))
                 }
             }
         }

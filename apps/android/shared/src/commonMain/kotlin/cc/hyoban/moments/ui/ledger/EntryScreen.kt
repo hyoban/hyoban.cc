@@ -125,6 +125,9 @@ import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.windowHeight
 import cc.hyoban.moments.ui.compose.TimeDialog
 import cc.hyoban.moments.ui.format.formatDay
+import cc.hyoban.moments.ui.LocalSettings
+import cc.hyoban.moments.data.spec.Module
+import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.segmentColors
@@ -454,6 +457,7 @@ fun BillFields(
     keypad: Boolean = false,
 ) {
     val moments by container.shownMoments.collectAsStateWithLifecycle()
+    val checkins by container.repository.checkins.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val bookId = draft.book ?: ledger.book?.id
@@ -640,6 +644,24 @@ fun BillFields(
                 sheet = null
             }
         }
+        // The check-ins of the days around it, nearest first; private ones out of sight in 演示模式.
+        Sheet.Checkin -> {
+            val day = at.toLocalDate()
+            val time = at.toInstant().toEpochMilli()
+            val demo = LocalSettings.current.demo
+            val near = (-1L..1L).flatMap { checkins.byDay[day.plusDays(it).toString()].orEmpty() }
+                .filter { !(demo && it.private) }
+                .sortedBy { checkin -> checkin.span?.let { kotlin.math.abs((it.first + it.last) / 2 - time) } ?: Long.MAX_VALUE }
+            ChoiceSheet(
+                near.map { it.uid to listOfNotNull(formatDay(it.at.take(10)), formatTime(it.at), it.venue).joinToString(" ") },
+                onDismiss = { sheet = null },
+                empty = stringResource(Res.string.ledger_no_checkins_near),
+            ) { uid ->
+                draft.moment = uid
+                near.firstOrNull { it.uid == uid }?.place?.let { if (draft.place == null) draft.place = it }
+                sheet = null
+            }
+        }
         // On the map, as a Moment's place is: on the bill's place, else where the footprints
         // put it then, else where the phone is.
         Sheet.Place -> {
@@ -656,7 +678,7 @@ fun BillFields(
     }
 }
 
-enum class Sheet { Account, From, To, Split, Book, Moment, Place }
+enum class Sheet { Account, From, To, Split, Book, Moment, Checkin, Place }
 
 @Composable
 private fun accountName(ledger: Ledger, id: String?): String? = id?.let(ledger.accountsById::get)?.let { accountName(it) }
@@ -828,7 +850,11 @@ private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraf
     val account = draft.account
     val shownCurrency = draft.shownCurrency(ledger)
     val bookRecord = ledger.books.firstOrNull { it.id == (draft.book ?: ledger.book?.id) }
+    val checkins by container.repository.checkins.collectAsStateWithLifecycle()
     val momentRecord = draft.moment?.let { uid -> moments.firstOrNull { it.uid == uid } }
+    // Linked to a check-in rather than a Moment: the same link, to the check-in's entry.
+    val checkinRecord = draft.moment?.takeIf { momentRecord == null }?.let { uid -> checkins.byDay.values.firstNotNullOfOrNull { day -> day.firstOrNull { it.uid == uid } } }
+    val checkinsOn = LocalSettings.current.isOn(Module.CHECKIN)
     val discount = parseAmount(draft.discount)?.takeIf { it > 0 }
     val chips: @Composable () -> Unit = {
         if (kind != TxnKind.TRANSFER && !draft.splitting) {
@@ -868,13 +894,19 @@ private fun BillOptions(container: AppContainer, ledger: Ledger, draft: BillDraf
             val public = (draft.visibility ?: if (bookPublic) "public" else "private") == "public"
             ToggleChip(public, stringResource(Res.string.visibility_public), "public") { draft.visibility = if (public) "private" else "public" }
         }
-        // What it belongs to among the Moments, kept on the phone with the bill alone.
+        // What it belongs to among the Moments and check-ins, one of them, kept on the phone with
+        // the bill alone.
         if (!withMoment) {
-            LinkChip(
+            if (checkinRecord == null) LinkChip(
                 momentRecord?.let { it.text.lines().firstOrNull()?.take(20)?.ifBlank { null } ?: formatDay(it.dateKey) },
                 stringResource(Res.string.ledger_link_moment), AppIcons.Photos, "link_moment",
                 onClear = { draft.moment = null },
             ) { draft.sheet = Sheet.Moment }
+            if (momentRecord == null && (checkinsOn || checkinRecord != null)) LinkChip(
+                checkinRecord?.venue,
+                stringResource(Res.string.ledger_link_checkin), AppIcons.Flag, "link_checkin",
+                onClear = { draft.moment = null },
+            ) { draft.sheet = Sheet.Checkin }
             LinkChip(
                 draft.place?.let { places[it]?.name ?: it },
                 stringResource(Res.string.ledger_link_place), AppIcons.Pin, "link_place",

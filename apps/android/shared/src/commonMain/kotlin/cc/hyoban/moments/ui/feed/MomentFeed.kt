@@ -309,7 +309,7 @@ fun MomentFeed(
                                 description = pluralStringResource(Res.plurals.count_moments, dayMoments.size, dayMoments.size),
                             )
                         }
-                        val chats = chatItems(dayItems, bills.linked)
+                        val chats = chatItems(dayItems)
                         val lastChat = chats.lastOrNull()?.key
                         items(chats, key = { it.key }, contentType = { it::class }) { item ->
                             val index = chats.indexOf(item)
@@ -336,8 +336,11 @@ fun MomentFeed(
                                     bubble = true,
                                     joinedAbove = joinedAbove,
                                     joinedBelow = joinedBelow,
+                                    bills = bills.linked[item.moment.uid].orEmpty(),
+                                    ledger = bills.ledger,
+                                    onBill = onBill,
                                 )
-                                is ChatItem.CheckinStop -> CheckinBubble(item.checkin, joinedAbove, joinedBelow, itemModifier)
+                                is ChatItem.CheckinStop -> CheckinBubble(item.checkin, joinedAbove, joinedBelow, itemModifier, bills.linked[item.checkin.uid].orEmpty(), bills.ledger, onBill)
                                 is ChatItem.Records -> RecordsBubble(
                                     item.lines, bills.ledger, onBill,
                                     onDay = onDay?.let { { it(day) } },
@@ -381,7 +384,10 @@ fun MomentFeed(
                             is DayItem.Bills -> BillGroup(item.txns, bills.ledger, onBill, itemModifier)
                             is DayItem.ChargeItem -> ChargeRow(item.charge, itemModifier)
                             is DayItem.ThingItem -> ThingRow(item.thing, itemModifier)
-                            is DayItem.CheckinItem -> CheckinRow(item.checkin, itemModifier)
+                            is DayItem.CheckinItem -> Column(itemModifier) {
+                                CheckinRow(item.checkin)
+                                bills.linked[item.checkin.uid]?.takeIf { it.isNotEmpty() }?.let { BillGroup(it, bills.ledger, onBill) }
+                            }
                             is DayItem.Track -> TrackRow(item.day, item.piece, onClick = { onDay?.invoke(item.day) }, itemModifier)
                         }
                     }

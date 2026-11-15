@@ -17,9 +17,19 @@ class ChatItemsTest {
         val stop = Checkin("s", "2023-11-14T23:00:00Z", "Cafe")
         val items = chatItems(
             listOf(DayItem.Bills(listOf(bill("a", 0), bill("b", 300))), DayItem.CheckinItem(stop), DayItem.Bills(listOf(bill("c", 400)))),
-            emptyMap(),
         )
         assertEquals(listOf("records-bill-a", "checkin-s", "records-bill-c"), items.map { it.key })
         assertEquals(2, (items[0] as ChatItem.Records).lines.size)
+    }
+
+    @Test
+    fun `a bill not linked by hand belongs to the Moment or check-in at its very time, a Moment first`() {
+        val at = "2023-11-14T22:13:20Z" // 1_700_000_000_000
+        val moment = cc.hyoban.moments.data.spec.MomentRecord(uid = "m", occurredAt = at, text = "noodles", createdAt = at, updatedAt = at)
+        val links = cc.hyoban.moments.ledger.AutoLinks(listOf(moment), listOf(Checkin("s", at, "Cafe"), Checkin("t", "2023-11-14T22:14:20Z", "Shop")))
+        assertEquals("m", links.of(bill("a", 0)))
+        assertEquals("t", links.of(bill("b", 1)))
+        assertEquals(null, links.of(bill("c", 2)), "a minute off isn't the same time")
+        assertEquals("s", links.of(bill("d", 2).copy(moment = "s")), "one linked by hand stays so")
     }
 }

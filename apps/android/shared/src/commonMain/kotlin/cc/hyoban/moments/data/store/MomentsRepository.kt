@@ -1,6 +1,7 @@
 package cc.hyoban.moments.data.store
 
 import cc.hyoban.moments.data.HttpException
+import cc.hyoban.moments.data.things.checkinOf
 import cc.hyoban.moments.data.api.ChangeSet
 import cc.hyoban.moments.data.api.MomentsSource
 import cc.hyoban.moments.data.api.MomentsWriter
@@ -224,13 +225,13 @@ class MomentsRepository(
         }
     }
 
-    /** The bills the site has, as the copy holds them, alone or carried by a Moment. */
+    /** The bills the site has, as the copy holds them, alone or carried by a Moment or a check-in. */
     suspend fun siteBills(): List<SiteBill> = lock.withLock {
         copyEntries.values.mapNotNull { entry ->
             val bill = ((entry["parts"] as? kotlinx.serialization.json.JsonObject)?.get("bill") as? kotlinx.serialization.json.JsonObject) ?: return@mapNotNull null
             val uid = (entry["uid"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
             val at = (entry["at"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
-            SiteBill(uid, at, bill, momentOf(entry) != null)
+            SiteBill(uid, at, bill, momentOf(entry) != null || checkinOf(entry) != null)
         }
     }
 
@@ -343,12 +344,15 @@ class MomentsRepository(
      * another shape than it was (a Moment as a check-in), it is that from now on. The photos the
      * app copied in for it that it no longer has go, and the places only it was at.
      */
-    suspend fun saveEntry(entry: kotlinx.serialization.json.JsonObject, place: Pair<String, Place>? = null) = lock.withLock {
+    suspend fun saveEntry(given: kotlinx.serialization.json.JsonObject, place: Pair<String, Place>? = null) = lock.withLock {
         val local = checkNotNull(local) { "No store for the phone's changes" }
         withContext(io) {
-            val uid = entry.entryUid
+            val uid = given.entryUid
             val stored = copyEntries[uid]
             val before = changedEntries[uid]
+            // A check-in keeps the bill it carries, which the ledger alone changes, through an edit
+            // that doesn't know of it.
+            val entry = keepBill(given, before ?: stored)
             if (place != null) phonePlaces = phonePlaces + place
             setChanges(
                 if (stored != null && JsonObjectsEqualApartFrom(stored, entry, "updatedAt")) changedEntries - uid else changedEntries + (uid to entry),
@@ -360,6 +364,14 @@ class MomentsRepository(
             publishPlaces()
             publish()
         }
+    }
+
+    private fun keepBill(entry: kotlinx.serialization.json.JsonObject, was: kotlinx.serialization.json.JsonObject?): kotlinx.serialization.json.JsonObject {
+        if (checkinOf(entry) == null) return entry
+        val parts = entry["parts"] as? kotlinx.serialization.json.JsonObject ?: return entry
+        if ("bill" in parts) return entry
+        val bill = (was?.get("parts") as? kotlinx.serialization.json.JsonObject)?.get("bill") ?: return entry
+        return kotlinx.serialization.json.JsonObject(entry + ("parts" to kotlinx.serialization.json.JsonObject(parts + ("bill" to bill))))
     }
 
     /** Deletes an entry: one only on the phone at once, one the site has once published. */
@@ -682,9 +694,22 @@ class MomentsRepository(
         if (changes.isEmpty() && deletions.isEmpty() && edits.isEmpty() && extra.size == 0 && trips.isEmpty()) return
         // A bill of a Moment goes as a part of it, the Moment sent again with it (or without it,
         // taken off) when it isn't among the changes already; a bill alone is an entry of its own.
-        val (ofMoments, alone) = lock.withLock {
+        val (ofMoments, notOfMoments) = lock.withLock {
             extra.bills.partition { bill -> bill.txn.moment?.let { phone[it] ?: all[it] } != null }
         }
+        // A bill of a check-in goes the same way, as a part of that check-in's entry.
+        val (ofCheckins, alone) = lock.withLock {
+            notOfMoments.partition { bill -> bill.txn.moment?.let { _entries.value[it] }?.let(::checkinOf) != null }
+        }
+        val checkinCarriers = lock.withLock {
+            ofCheckins.groupBy { it.txn.moment!! }.mapValues { (uid, bills) ->
+                val entry = things[uid] ?: _entries.value.getValue(uid)
+                val parts = (entry["parts"] as? kotlinx.serialization.json.JsonObject).orEmpty() - "bill"
+                val part = bills.firstNotNullOfOrNull { it.part }
+                kotlinx.serialization.json.JsonObject(entry + ("parts" to kotlinx.serialization.json.JsonObject(if (part == null) parts else parts + ("bill" to part))))
+            }
+        }
+        val sentThings = things + checkinCarriers
         val carriers = lock.withLock {
             ofMoments.mapNotNull { bill -> bill.txn.moment?.takeIf { uid -> written.none { it.uid == uid } }?.let { phone[it] ?: all[it] } }
         }.distinctBy { it.uid }
@@ -766,7 +791,7 @@ class MomentsRepository(
                         places,
                         moments,
                         deletions + alone.filter { it.part == null }.map { it.uid },
-                        entries = alone.filter { it.part != null }.map { it.entry() } + things.values,
+                        entries = alone.filter { it.part != null }.map { it.entry() } + sentThings.values,
                         parts = parts,
                         collections = trips.values.toList(),
                     ),
@@ -781,7 +806,7 @@ class MomentsRepository(
                     // The site has the entries as sent, and the Moments as it answered them, until the copy
                     // has them from the rows. The trips sent are the site's, so one made on the phone stays
                     // in sight until the copy has it.
-                    val sent = things + applied.moments.associate { it.uid to Entries.fromMoment(it) }
+                    val sent = sentThings + applied.moments.associate { it.uid to Entries.fromMoment(it) }
                     val gone = deletions.toSet()
                     copyEntries = copyEntries - gone + sent
                     val records = _records.value

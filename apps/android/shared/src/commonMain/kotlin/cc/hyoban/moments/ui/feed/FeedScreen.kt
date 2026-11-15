@@ -654,7 +654,7 @@ private fun DayMap(
     val dayMoments = remember(moments, date) { moments.filter { it.occurredAt.startsWith(date) } }
     val checkins = bills.checkins[date].orEmpty()
     val dayBills = remember(bills, dayMoments, date) {
-        (bills.loose[date].orEmpty() + dayMoments.flatMap { bills.linked[it.uid].orEmpty() }).distinctBy { it.id }
+        (bills.loose[date].orEmpty() + (dayMoments.map { it.uid } + bills.checkins[date].orEmpty().map { it.uid }).flatMap { bills.linked[it].orEmpty() }).distinctBy { it.id }
     }
     val marks = remember(points, dayMoments, places, checkins, dayBills) {
         fun placed(id: String?) = id?.let(places::get)?.let { cc.hyoban.moments.ui.MapPoint(it.latitude, it.longitude) }
@@ -675,6 +675,7 @@ private fun DayMap(
         } + dayBills.mapNotNull { txn ->
             val at = placed(txn.place)
                 ?: placed(txn.moment?.let(byUid::get)?.places?.firstOrNull())
+                ?: placed(checkins.firstOrNull { it.uid == txn.moment }?.place)
                 ?: placed(checkins.filter { it.place != null && it.span?.contains(txn.time) == true }.minByOrNull { it.span!!.last - it.span!!.first }?.place)
                 ?: tracked(txn.time)
                 ?: return@mapNotNull null
@@ -828,11 +829,12 @@ fun PlaceScreen(
         }
     }
     val bills = remember(checkins, placeBills, moments, ledger, currency) {
-        val uids = moments.mapTo(HashSet()) { it.uid }
-        val (withMoment, without) = placeBills.partition { it.moment != null && it.moment in uids }
+        val uids = moments.mapTo(HashSet()) { it.uid } + checkins.map { it.uid }
+        val links = cc.hyoban.moments.ledger.AutoLinks(moments, checkins)
+        val (withMoment, without) = placeBills.partition { links.of(it) in uids }
         TimelineBills(
             ledger,
-            linked = withMoment.groupBy { it.moment!! }.mapValues { (_, txns) -> txns.sortedBy { it.time } },
+            linked = withMoment.groupBy { links.of(it)!! }.mapValues { (_, txns) -> txns.sortedBy { it.time } },
             loose = without.groupBy { it.dateKey },
             spent = placeBills.groupBy { it.dateKey }.mapValues { (_, txns) -> cc.hyoban.moments.ledger.spendingOf(ledger, txns, currency).expense },
             currency = currency,

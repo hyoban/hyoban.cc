@@ -78,7 +78,8 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   read there; the tab tapped again goes back to it. Each day opens
   with its date in a capsule, Moments are bubbles from the right with their photos across
   the top, and so are check-ins, each a small bubble of its venue and time that opens its
-  sheet; the day's bills, charges and footprints come from the left, those between two
+  sheet; the bills linked to a Moment or a check-in are listed at the foot of its bubble,
+  and the day's other bills, charges and footprints come from the left, those between two
   Moments or check-ins in one records bubble that lists them all. The footprints are cut at every record with a time, a Moment, a check-in, a bill or
   a charge, each piece where the phone moved between two of them, with when it set off, how
   far it went and its line; a piece that barely moved shows nothing. A banner marks where each trip begins, or, for the trip under way, says
@@ -382,7 +383,10 @@ A bill is an expense, an income or a transfer (also a repayment or a loan), or a
 reimbursement written from its expense. `moments://new-bill`, or the ledger's +, opens one
 on a keypad (sums like `12+3.4` add up). It has an amount in any currency, a category, one
 account or several with their shares, its time and book, discounts and fees, whether it is
-to be reimbursed or left out of the sums, and the Moment, place and trip it belongs to. A
+to be reimbursed or left out of the sums, and the Moment or check-in (one of them, chosen
+among those of the day before to the day after, a check-in's place becoming the bill's), place
+and trip it belongs to. A public bill of a Moment or a check-in publishes as a part of that
+entry, and a check-in edited on the phone keeps it. A
 bill with no place nor a Moment's is shown where it was: at the place of the check-in whose
 time covers it (one with no end covering a quarter of an hour either side, the shortest when
 several do), shown as 签到位置; else by the footprints nearest its time (within a quarter of an
@@ -396,9 +400,10 @@ opening balance.
 
 The ledger meets the Moments: a Moment's page lists its bills, a meal with no bill offers
 记一笔, a trip's and a day's page show what was spent, a trip's page lists its bills among its Moments and
-check-ins by time (one written with its Moment under that Moment), a place's page, opening on its map, lists its bills by their days
-among its Moments and check-ins with what was spent there beside its counts, and 关联时刻 links meals to
-their bills. A trip's bills are those paid in its span, as the site counts its public ones; a bill names no trip.
+check-ins by time (one linked to a Moment or a check-in under it), a place's page, opening on its map, lists its bills by their days
+among its Moments and check-ins with what was spent there beside its counts. A bill not linked by
+hand is taken, as it is shown, to be the Moment's or the check-in's at its very time (a Moment
+first), never kept on the bill. A trip's bills are those paid in its span, as the site counts its public ones; a bill names no trip.
 
 记账, under 我 (`moments://ledger-settings`), manages the books, the exchange rates, 自动记账 and
 the data. A book opens as a sheet with its name, currency and categories (chips, each opening
@@ -439,7 +444,7 @@ kind, amount, currency, category and note (`data/store/Outside.kt`). A published
 by hand, with its book or by an import in place of the ledger, waits in the ledger's `gone` table
 until the next publish takes it off the site. As the app starts, a bill with nothing published
 that the site has under another id (one of the same kind, amount and currency within ten
-minutes, or the bill its Moment carries), as an import in place of the ledger once left them,
+minutes, or the bill its Moment or check-in carries), as an import in place of the ledger once left them,
 takes the site's id and what of it the site has back. `ledger/ICostImport`,
 `ledger/Accounting` and `ledger/Links` are plain Kotlin tested in `LedgerTest`, which also
 reads a real export when `ICOST_EXPORT` names one and a real backup when `ICOST_BACKUP` does.

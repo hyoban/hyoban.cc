@@ -91,6 +91,8 @@ fun PressableCard(
     flat: Boolean = false,
     /** Its corners, what it clips its content and its press to. */
     shape: androidx.compose.ui.graphics.Shape = AppTheme.shapes.large,
+    /** As wide as it may be; else only as wide as what it holds. */
+    fillWidth: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -108,7 +110,7 @@ fun PressableCard(
         // Tapped inside the card's shape, so the ripple is clipped to it and lies over its photos.
         Column(
             Modifier
-                .fillMaxWidth()
+                .then(if (fillWidth) Modifier.fillMaxWidth() else Modifier)
                 .pointerInput(Unit) {
                     awaitEachGesture {
                         val event = awaitPointerEvent(PointerEventPass.Initial)

@@ -58,9 +58,9 @@ import cc.hyoban.moments.ui.theme.isLargeFont
 import cc.hyoban.moments.ui.theme.tokens
 
 // The timeline and a trip as a conversation with oneself: each day opens with its date in a
-// capsule at the middle, a Moment or a check-in is a bubble sent from the right, and the ledger's
-// bills, the car's charges and the footprints come in from the left, those in a row in one
-// outlined bubble.
+// capsule at the middle, a Moment or a check-in is a bubble sent from the right, the bills linked
+// to it at its foot inside it, and the ledger's other bills, the car's charges and the footprints
+// come in from the left, those in a row in one outlined bubble.
 
 /** What one day of the conversation holds, in order: Moments and check-ins, and the records between them gathered. */
 sealed interface ChatItem {
@@ -101,11 +101,10 @@ sealed interface RecordLine {
 }
 
 /**
- * [items] of one day, oldest first, as the conversation shows them: each Moment, the bills
- * written with it ([linked]) right after it, each check-in, and every run of records between
- * them in one bubble.
+ * [items] of one day, oldest first, as the conversation shows them: each Moment and check-in
+ * (its linked bills inside its bubble), and every run of records between them in one bubble.
  */
-fun chatItems(items: List<DayItem>, linked: Map<String, List<Txn>>): List<ChatItem> {
+fun chatItems(items: List<DayItem>): List<ChatItem> {
     val out = mutableListOf<ChatItem>()
     var run = mutableListOf<RecordLine>()
     fun flush() {
@@ -116,7 +115,6 @@ fun chatItems(items: List<DayItem>, linked: Map<String, List<Txn>>): List<ChatIt
             is DayItem.Moment -> {
                 flush()
                 out += ChatItem.Moment(item.moment)
-                linked[item.moment.uid].orEmpty().forEach { run += RecordLine.Bill(it) }
             }
             is DayItem.Bills -> item.txns.sortedBy { it.time }.forEach { run += RecordLine.Bill(it) }
             is DayItem.ChargeItem -> run += RecordLine.ChargeLine(item.charge)
@@ -324,6 +322,33 @@ fun RecordsBubble(
     }
 }
 
+/**
+ * The bills linked to a Moment or a check-in, at the foot of its bubble under a hairline: a line
+ * each as a records bubble draws them, each opening its bill.
+ */
+@Composable
+fun BubbleBills(txns: List<Txn>, ledger: Ledger, onBill: (String) -> Unit, modifier: Modifier = Modifier) {
+    val large = isLargeFont()
+    Column(modifier.fillMaxWidth()) {
+        cc.hyoban.moments.ui.design.HorizontalDivider(Modifier.padding(bottom = Space.xs))
+        txns.forEach { txn ->
+            Box(Modifier.clickable { onBill(txn.id) }) {
+                RecordRow(
+                    icon = { Icon(txnIcon(txn, ledger), contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
+                    title = txnTitle(txn, ledger),
+                    time = txn.local.format(TIME),
+                    end = signedMoney(txn.amount, txn.currency, txn.incoming),
+                    endColor = amountColor(txn),
+                    large = large,
+                    timed = true,
+                    tag = "bill_${txn.id}",
+                    timeAtEnd = true,
+                )
+            }
+        }
+    }
+}
+
 /** One line of a records bubble; with the font set large, the figure goes under the words. */
 @Composable
 private fun RecordRow(
@@ -335,6 +360,8 @@ private fun RecordRow(
     large: Boolean,
     timed: Boolean,
     tag: String,
+    /** In a bubble from the right, the time ends the line, as a Moment's does, rather than leading it. */
+    timeAtEnd: Boolean = false,
 ) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 32.dp).padding(vertical = if (large) Space.xs else 0.dp).testTag(tag),
@@ -344,10 +371,13 @@ private fun RecordRow(
         // The time leads, a column of its own read down the bubble as the day goes, as wide as
         // 00:00 since the system's monospace doesn't always keep its digits one width; a line with
         // no time (a device or a subscription) keeps the column empty, so the icons stay in line.
-        if (timed) Box {
-            Text("00:00", style = AppTheme.typography.caption, color = androidx.compose.ui.graphics.Color.Transparent, maxLines = 1, modifier = Modifier.clearAndSetSemantics {})
-            time?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 1) }
+        val timeColumn: @Composable () -> Unit = {
+            Box(contentAlignment = Alignment.CenterEnd) {
+                Text("00:00", style = AppTheme.typography.caption, color = androidx.compose.ui.graphics.Color.Transparent, maxLines = 1, modifier = Modifier.clearAndSetSemantics {})
+                time?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 1) }
+            }
         }
+        if (timed && !timeAtEnd) timeColumn()
         icon()
         val words: @Composable (Modifier) -> Unit = { m ->
             Text(title, style = AppTheme.typography.body, maxLines = if (large) 2 else 1, overflow = TextOverflow.Ellipsis, modifier = m)
@@ -361,6 +391,7 @@ private fun RecordRow(
             words(Modifier.weight(1f))
             Text(end, style = AppTheme.typography.body, color = endColor, maxLines = 1)
         }
+        if (timed && timeAtEnd) timeColumn()
     }
 }
 
@@ -371,28 +402,43 @@ private fun RecordRow(
  * apart, and a tap opens its sheet.
  */
 @Composable
-fun CheckinBubble(checkin: Checkin, joinedAbove: Boolean, joinedBelow: Boolean, modifier: Modifier = Modifier) {
+fun CheckinBubble(
+    checkin: Checkin,
+    joinedAbove: Boolean,
+    joinedBelow: Boolean,
+    modifier: Modifier = Modifier,
+    bills: List<Txn> = emptyList(),
+    ledger: Ledger? = null,
+    onBill: (String) -> Unit = {},
+) {
     val open = LocalCheckinNav.current
     val shape = androidx.compose.runtime.remember(joinedAbove, joinedBelow) { BubbleShape(sent = true, joinedAbove, joinedBelow) }
     val title = checkinTitle(checkin)
+    val withBills = bills.isNotEmpty() && ledger != null
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
-        Row(
+        // With its bills it is as wide as a records bubble, they at its foot.
+        Column(
             Modifier
-                .bubbleWidth(fill = false) { column -> minOf(column * 0.88f, 420.dp) }
+                .bubbleWidth(fill = withBills) { column -> minOf(column * 0.88f, 420.dp) }
                 .clip(shape)
                 .background(tokens.fill)
                 .then(if (open != null) Modifier.clickable { open(checkin.uid) } else Modifier)
                 .padding(end = TAIL)
                 .padding(horizontal = Space.m, vertical = Space.s)
-                .semantics(mergeDescendants = true) { contentDescription = title }
                 .testTag("checkin_${checkin.uid}"),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.s),
         ) {
-            Icon(AppIcons.Pin, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
-            Text(checkin.venue, style = AppTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-            val meta = listOfNotNull(stringResource(Res.string.visibility_private).takeIf { checkin.private }, formatTime(checkin.at)).joinToString(" ")
-            if (meta.isNotEmpty()) Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 1)
+            // With bills under it, its time ends the line as theirs do, at the bubble's right edge.
+            Row(
+                (if (withBills) Modifier.fillMaxWidth() else Modifier).semantics(mergeDescendants = true) { contentDescription = title },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.s),
+            ) {
+                Icon(AppIcons.Pin, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
+                Text(checkin.venue, style = AppTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = withBills))
+                val meta = listOfNotNull(stringResource(Res.string.visibility_private).takeIf { checkin.private }, formatTime(checkin.at)).joinToString(" ")
+                if (meta.isNotEmpty()) Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 1)
+            }
+            if (withBills) BubbleBills(bills, ledger!!, onBill, Modifier.padding(top = Space.s))
         }
     }
 }

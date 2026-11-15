@@ -189,7 +189,7 @@ fun MomentScreen(
                     container.scope.launch { container.updateLocal(moment.copy(extra = extra), null) }
                     Unit
                 }.takeIf { container.canPublish },
-                billPublic = ledger.txns.any { it.moment == moment.uid && ledger.isPublic(it) },
+                billPublic = cc.hyoban.moments.ledger.txnsOfMoment(ledger, moment).any { ledger.isPublic(it) },
                 // The way to publish, only when the app can.
                 onChanges = onChanges.takeIf { container.canPublish },
             )

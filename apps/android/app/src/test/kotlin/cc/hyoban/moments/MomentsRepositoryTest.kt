@@ -97,6 +97,8 @@ class MomentsRepositoryTest {
         var revision: Long? = null
         /** The trips the last change set sent, as collections. */
         var collections: List<kotlinx.serialization.json.JsonObject> = emptyList()
+        /** The entries beside the Moments the last change set sent. */
+        var entries: List<kotlinx.serialization.json.JsonObject> = emptyList()
         /** Runs as a change set is sent, before the API answers. */
         var sending: (suspend () -> Unit)? = null
 
@@ -123,6 +125,7 @@ class MomentsRepositoryTest {
             sending?.invoke()
             calls += "changes places=${changes.places.keys} moments=${changes.moments.map { "${it.uid} ${it.places}" }} deleted=${changes.deleted}"
             collections = changes.collections
+            entries = changes.entries
             val places = changes.places.keys.associateWith { if (it.startsWith("p-")) "hu-bian" else it }
             val moments = changes.moments.map { moment ->
                 moment.copy(
@@ -773,6 +776,38 @@ class MomentsRepositoryTest {
         assertEquals(listOf("upload W/video video/quicktime"), writer.calls.filter { it.startsWith("upload") })
         assertEquals("video", writer.uploads["W/video"])
         assertTrue(!poster.exists() && !video.exists(), "the copies go with the Moment")
+    }
+
+    @Test
+    fun `a bill of a check-in goes as a part of it, and an edit of the check-in keeps it`() = runBlocking {
+        val writer = FakeWriter()
+        val stop = """{"uid":"STOP","at":"2026-10-02T12:00:00+08:00","place":"nanjing","parts":{"checkin":{"v":1,"venue":"Noodles","source":{"app":"phone"}}},"createdAt":"2026-10-02T04:00:00Z","updatedAt":"2026-10-02T04:00:00Z"}"""
+        api.putRow("entries", "STOP", stop)
+        val part = Entries.billPart("expense", 32.0, "CNY", "餐饮", null)
+        val txn = cc.hyoban.moments.ledger.Txn("BILL", "book", cc.hyoban.moments.ledger.TxnKind.EXPENSE, 1_790_000_000_000L, 480, 3200, "CNY", moment = "STOP")
+        var waiting = cc.hyoban.moments.data.store.Outside(listOf(cc.hyoban.moments.data.store.BillChange(txn, part, "餐饮")))
+        val outside = object : cc.hyoban.moments.data.store.OutsideChanges {
+            override fun pending() = waiting
+            override suspend fun published(sent: cc.hyoban.moments.data.store.Outside) { waiting = cc.hyoban.moments.data.store.Outside() }
+        }
+        val repository = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer, outside = outside)
+        repository.load()
+        repository.refresh()
+
+        repository.publishPending()
+
+        val sent = writer.entries.single()
+        assertEquals("STOP", sent["uid"]?.toString()?.trim('"'), "no entry of the bill's own")
+        assertEquals(setOf("checkin", "bill"), sent.getValue("parts").let { it as kotlinx.serialization.json.JsonObject }.keys)
+
+        // The site has it so now; an edit made without the bill keeps it.
+        api.putRow("entries", "STOP", sent.toString())
+        repository.refresh()
+        val edited = Spec.json.parseToJsonElement(stop.replace("Noodles", "Ramen")).let { it as kotlinx.serialization.json.JsonObject }
+        repository.saveEntry(edited)
+        repository.publishPending()
+        val again = writer.entries.single()
+        assertEquals(setOf("checkin", "bill"), (again.getValue("parts") as kotlinx.serialization.json.JsonObject).keys)
     }
 
     @Test

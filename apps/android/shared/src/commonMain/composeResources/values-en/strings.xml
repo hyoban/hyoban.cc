@@ -746,6 +746,7 @@
         <item quantity="other">%1$d bills in this stay have no place</item>
     </plurals>
     <string name="ledger_link_trip">Trip</string>
+    <string name="ledger_link_checkin">Check-in</string>
     <string name="ledger_choose">Choose</string>
     <string name="ledger_choose_account">Choose account</string>
     <string name="ledger_note_hint">Add a note</string>
@@ -762,6 +763,7 @@
     <string name="ledger_error_same_account">The two accounts can't be the same</string>
     <string name="ledger_error_splits">The accounts' amounts must add up to the total</string>
     <string name="ledger_no_moments_near">No Moments within a day</string>
+    <string name="ledger_no_checkins_near">No check-ins within a day</string>
     <string name="ledger_account_name">Account name</string>
     <string name="ledger_account_kind">Type</string>
     <string name="ledger_currency">Currency</string>
@@ -807,8 +809,6 @@
     <string name="ledger_rate_set_note">Used from today; earlier bills keep their day's rate</string>
     <string name="ledger_data">Data</string>
     <string name="ledger_data_note">The ledger stays on this phone, outside sync, publishing and system backup. Back it up before uninstalling.</string>
-    <string name="ledger_link_all">Link Moments</string>
-    <string name="ledger_link_all_note">Moments with a meal of the same amount</string>
     <string name="ledger_backup">Back up to a file</string>
     <string name="ledger_backup_done">Backed up</string>
     <string name="ledger_restore">Restore from backup</string>
@@ -852,8 +852,8 @@
     <string name="ledger_merge">Add to existing bills</string>
     <string name="ledger_replace">Replace existing data</string>
     <plurals name="ledger_import_done">
-        <item quantity="one">Imported %1$d bill, %2$d linked</item>
-        <item quantity="other">Imported %1$d bills, %2$d linked</item>
+        <item quantity="one">Imported %1$d bill</item>
+        <item quantity="other">Imported %1$d bills</item>
     </plurals>
     <plurals name="ledger_count_bills">
         <item quantity="one">%1$d bill</item>
@@ -862,10 +862,6 @@
     <plurals name="ledger_delete_with_returns">
         <item quantity="one">Its refund or reimbursement will be deleted too.</item>
         <item quantity="other">Its %1$d refunds and reimbursements will be deleted too.</item>
-    </plurals>
-    <plurals name="ledger_linked">
-        <item quantity="one">Linked %1$d bill</item>
-        <item quantity="other">Linked %1$d bills</item>
     </plurals>
     <plurals name="ledger_category_in_use">
         <item quantity="one">%1$d bill uses it; can't delete</item>

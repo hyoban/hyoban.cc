@@ -115,11 +115,12 @@ fun TripScreen(
         val bills = if (!ledgerOn) emptyList() else {
             cc.hyoban.moments.ledger.txnsOfTrip(ledger, trip).filter { it.book in shown && it.kind in cc.hyoban.moments.ui.feed.SHOWN_KINDS }
         }
-        val uids = moments.mapTo(HashSet()) { it.uid }
-        val (withMoment, without) = bills.partition { it.moment != null && it.moment in uids }
+        val uids = moments.mapTo(HashSet()) { it.uid } + checkins.values.flatten().map { it.uid }
+        val links = cc.hyoban.moments.ledger.AutoLinks(moments, checkins.values.flatten())
+        val (withMoment, without) = bills.partition { links.of(it) in uids }
         cc.hyoban.moments.ui.feed.TimelineBills(
             ledger,
-            linked = withMoment.groupBy { it.moment!! }.mapValues { (_, txns) -> txns.sortedBy { it.time } },
+            linked = withMoment.groupBy { links.of(it)!! }.mapValues { (_, txns) -> txns.sortedBy { it.time } },
             loose = without.groupBy { it.dateKey },
             spent = bills.groupBy { it.dateKey }.mapValues { (_, txns) -> cc.hyoban.moments.ledger.spendingOf(ledger, txns, currency).expense },
             currency = currency,

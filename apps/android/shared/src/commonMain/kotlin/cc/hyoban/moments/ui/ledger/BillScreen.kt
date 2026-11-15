@@ -83,8 +83,16 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
     val scope = rememberCoroutineScope()
     var deleting by remember { mutableStateOf(false) }
     val returns = ledger.returns[txn.id].orEmpty()
-    val moment = txn.moment?.let { uid -> moments.firstOrNull { it.uid == uid } }
-    val placeId = txn.place ?: moment?.places?.firstOrNull()
+    val checkins by container.repository.checkins.collectAsStateWithLifecycle()
+    // The link it names, else the Moment or check-in at its very time.
+    val dayCheckins = (-1L..1L).flatMap { checkins.byDay[txn.date.plusDays(it).toString()].orEmpty() }
+    val link = remember(txn, moments, dayCheckins) {
+        txn.moment ?: cc.hyoban.moments.ledger.AutoLinks(moments, dayCheckins).of(txn)
+    }
+    val moment = link?.let { uid -> moments.firstOrNull { it.uid == uid } }
+    val checkin = link?.takeIf { moment == null }?.let { uid -> dayCheckins.firstOrNull { it.uid == uid } ?: checkins.byDay.values.firstNotNullOfOrNull { day -> day.firstOrNull { it.uid == uid } } }
+    val openCheckin = cc.hyoban.moments.ui.feed.LocalCheckinNav.current
+    val placeId = txn.place ?: moment?.places?.firstOrNull() ?: checkin?.place
     val tripId = tripOfTxn(txn, trips).takeIf { txn.kind != TxnKind.TRANSFER }
     val writable = container.ledger.writable
     val spot = if (writable) cc.hyoban.moments.ui.LocalDevice.current.billSpot(txn) else null
@@ -223,6 +231,11 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                     if (moment != null) {
                         add { shapes ->
                             InfoRow(shapes, AppIcons.Photos, stringResource(Res.string.ledger_link_moment), moment.text.lines().firstOrNull()?.ifBlank { null } ?: formatDay(moment.dateKey)) { nav.moment(moment.uid) }
+                        }
+                    }
+                    if (checkin != null) {
+                        add { shapes ->
+                            InfoRow(shapes, AppIcons.Flag, stringResource(Res.string.ledger_link_checkin), checkin.venue, onClick = openCheckin?.let { { it(checkin.uid) } })
                         }
                     }
                     placeId?.let { place ->
