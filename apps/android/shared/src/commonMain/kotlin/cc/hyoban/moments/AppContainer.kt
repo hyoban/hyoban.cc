@@ -294,6 +294,12 @@ abstract class AppContainer(
         recordsChanged()
     }
 
+    /**
+     * Offers [place], a check-in's just kept from a stay, to the bills paid in that stay from
+     * [start] to [end] with no place of their own; a device whose ledger is only read offers nothing.
+     */
+    open fun offerPlaceToBills(place: String, start: Long, end: Long) {}
+
     /** Whether the app may write to the API: it has one, and the owner's token. */
     val canPublish get() = settings.connected
 

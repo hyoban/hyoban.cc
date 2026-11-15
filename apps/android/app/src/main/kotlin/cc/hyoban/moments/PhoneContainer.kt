@@ -129,7 +129,7 @@ class PhoneContainer private constructor(
      * [start] to [end] that have no place of their own nor a Moment's; nothing is said when
      * there are none or the ledger is off.
      */
-    fun offerPlaceToBills(place: String, start: Long, end: Long) {
+    override fun offerPlaceToBills(place: String, start: Long, end: Long) {
         if (!settings.isOn(Module.LEDGER)) return
         scope.launch {
             val bills = ledger.ledger.value.txns.filter {

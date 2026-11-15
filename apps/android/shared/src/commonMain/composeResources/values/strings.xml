@@ -281,6 +281,7 @@
     <string name="unit_food_people">人</string>
     <string name="food_share">每人 ¥%1$s</string>
     <string name="source_photo">来自照片</string>
+    <string name="source_stay">来自足迹停留</string>
     <string name="source_now">现在</string>
     <string name="source_chosen">手动选择</string>
     <string name="place_unchosen">点按选择地点</string>

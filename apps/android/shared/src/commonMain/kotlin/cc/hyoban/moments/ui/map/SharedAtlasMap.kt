@@ -305,6 +305,11 @@ private fun pointsData(points: List<TrackPoint>) = GeoJsonData.Features(
     FeatureCollection(points.map { pointFeature(positionOf(it.latitude, it.longitude)) }),
 )
 
+/** The stays, each with its start, which a tap on one gives. */
+private fun stayData(stays: List<TrackPoint>) = GeoJsonData.Features(
+    FeatureCollection(stays.map { pointFeature(positionOf(it.latitude, it.longitude), buildJsonObject { put("start", it.time.toString()) }) }),
+)
+
 private fun lineFeatures(lines: List<List<TrackPoint>>) = GeoJsonData.Features(
     FeatureCollection(
         lines.filter { it.size >= 2 }.map { line ->
@@ -455,6 +460,8 @@ fun SharedAtlasMap(
     frameFootprints: Boolean = false,
     onFootprintsFramed: () -> Unit = {},
     onFootprint: () -> Unit = {},
+    /** A stay tapped, by its start; the rest of the footprints open [onFootprint]. */
+    onFootprintStay: (Long) -> Unit = { onFootprint() },
     panel: Dp = 0.dp,
     mediaUrls: MediaUrls? = null,
     /**
@@ -473,6 +480,7 @@ fun SharedAtlasMap(
     val openTrip = rememberUpdatedState(onTrip)
     val tapEmpty = rememberUpdatedState(onEmptyTap)
     val tapFootprint = rememberUpdatedState(onFootprint)
+    val tapStay = rememberUpdatedState(onFootprintStay)
     val currentHighlighted = rememberUpdatedState(highlighted)
     val located = rememberUpdatedState(onLocated)
     val focused = rememberUpdatedState(onFocused)
@@ -547,7 +555,7 @@ fun SharedAtlasMap(
     val cycleGeoJson = remember(footprints) { lineFeatures(footprints.lines.filter { it.mode == AtlasFootprintMode.CYCLE }.map { it.points }) }
     val walkGeoJson = remember(footprints) { lineFeatures(footprints.lines.filter { it.mode == AtlasFootprintMode.WALK }.map { it.points }) }
     val endGeoJson = remember(footprints) { pointsData(footprints.ends) }
-    val stayGeoJson = remember(footprints) { pointsData(footprints.stays) }
+    val stayGeoJson = remember(footprints) { stayData(footprints.stays) }
     val allPositions = remember(places, footprints, prepared) {
         (prepared?.placePositions ?: places.map { positionOf(it.place.latitude, it.place.longitude) }) +
             footprints.points.map { positionOf(it.latitude, it.longitude) }
@@ -763,6 +771,13 @@ fun SharedAtlasMap(
                 ClickResult.Consume
             }
         }
+        val stayClick: org.maplibre.compose.layers.FeaturesClickHandler = { features ->
+            val start = features.firstNotNullOfOrNull { featureString(it, "start")?.toLongOrNull() }
+            if (start == null) ClickResult.Pass else {
+                tapStay.value(start)
+                ClickResult.Consume
+            }
+        }
 
         Anchor.Below({ it.type == "symbol" }) {
             if (fogSource != null) {
@@ -838,7 +853,7 @@ fun SharedAtlasMap(
             LineLayer("shared-footprint-cycles", cycles, color = const(ink), width = const(2.dp), cap = const(LineCap.Round), join = const(LineJoin.Round), onClick = footprintClick, hitPadding = 22.dp)
             LineLayer("shared-footprint-walks", walks, color = const(ink), width = const(3.dp), cap = const(LineCap.Round), join = const(LineJoin.Round), dasharray = const(listOf(0, 2)), onClick = footprintClick, hitPadding = 22.dp)
             CircleLayer("shared-footprint-ends", ends, radius = const(4.dp), color = const(ink), strokeWidth = const(1.5.dp), strokeColor = const(ring), onClick = footprintClick, hitPadding = 22.dp)
-            CircleLayer("shared-footprint-stays", stays, radius = const(5.dp), color = const(ring), strokeWidth = const(2.5.dp), strokeColor = const(ink), onClick = footprintClick, hitPadding = 22.dp)
+            CircleLayer("shared-footprint-stays", stays, radius = const(5.dp), color = const(ring), strokeWidth = const(2.5.dp), strokeColor = const(ink), onClick = stayClick, hitPadding = 22.dp)
         }
         Anchor.Top {
             // Places outside the year picked, stepping back to small gray dots under every pin

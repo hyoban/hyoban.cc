@@ -278,7 +278,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
     val opened: (Any) -> Any = { route ->
         when {
             !wide -> route
-            route is NewMoment -> EditorDialog(bill = route.bill)
+            route is NewMoment -> EditorDialog(bill = route.bill, stay = route.stay)
             route is EditMoment -> EditorDialog(route.uid)
             else -> route
         }
@@ -540,6 +540,8 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                     focus = mapFocus,
                                     onFocused = { mapFocus = null },
                                     onFootprintSettings = { navController.navigate(FootprintSettings) },
+                                    onWriteAtStay = { navController.navigate(opened(NewMoment(stay = it.encoded))) },
+                                    onCheckin = checkinNav,
                                     onNewTrip = { navController.navigate(TripEdit()) },
                                     onSuggestedTrip = { navController.navigate(TripEdit(start = it.startAt, end = it.endAt, title = it.name, from = it.from, to = it.to)) },
                                     modifier = if (atlasShown) Modifier else Modifier.clearAndSetSemantics {},
@@ -693,7 +695,8 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                     FootprintSettingsScreen(container, onBack = back)
                                 }
                                 screen<NewMoment> { entry ->
-                                    NewMomentScreen(container, onBack = back, onSaved = back, startWithBill = entry.toRoute<NewMoment>().bill)
+                                    val route = entry.toRoute<NewMoment>()
+                                    NewMomentScreen(container, onBack = back, onSaved = back, startWithBill = route.bill, stay = StayAt.of(route.stay))
                                 }
                                 screen<EditMoment> { entry ->
                                     NewMomentScreen(
@@ -721,6 +724,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                                 edit = edit,
                                                 onDeleted = leaveMoment,
                                                 startWithBill = route.bill,
+                                                stay = StayAt.of(route.stay),
                                             )
                                         }
                                     }

@@ -303,6 +303,7 @@
     <string name="unit_food_people">people</string>
     <string name="food_share">¥%1$s each</string>
     <string name="source_photo">From the photo</string>
+    <string name="source_stay">From a stay</string>
     <string name="source_now">Now</string>
     <string name="source_chosen">Chosen</string>
     <string name="place_unchosen">Tap to choose a place</string>

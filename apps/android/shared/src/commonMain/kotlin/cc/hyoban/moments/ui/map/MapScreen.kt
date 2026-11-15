@@ -176,6 +176,8 @@ data class AtlasFootprintsOnMap(
     val onFramed: () -> Unit,
     val open: () -> Unit,
     val recording: Boolean,
+    /** A stay on the map tapped, by its start. */
+    val openStay: (Long) -> Unit = {},
 )
 
 private val NoFootprints = AtlasFootprints()
@@ -206,12 +208,14 @@ fun MapScreen(
     focus: MapFocus? = null,
     onFocused: () -> Unit = {},
     onFootprintSettings: () -> Unit = {},
+    onWriteAtStay: (cc.hyoban.moments.ui.StayAt) -> Unit = {},
+    onCheckin: (String) -> Unit = {},
     onNewTrip: () -> Unit = {},
     onSuggestedTrip: (TripSuggestion) -> Unit = {},
     modifier: Modifier = Modifier,
     active: Boolean = true,
 ) {
-    LocalDevice.current.FootprintsOnMap(container, onFootprintSettings) { footprints ->
+    LocalDevice.current.FootprintsOnMap(container, onFootprintSettings, onWriteAtStay, onCheckin) { footprints ->
         MapContent(container, onMoment, onPlace, onTrip, onPlay, onSearch, focus, onFocused, footprints, onNewTrip, onSuggestedTrip, modifier, active)
     }
 }
@@ -402,6 +406,7 @@ private fun MapContent(
             frameFootprints = footprints?.frameRequested == true,
             onFootprintsFramed = { footprints?.onFramed?.invoke() },
             onFootprint = openFootprints,
+            onFootprintStay = { start -> selected = null; highlighted = null; footprints?.openStay?.invoke(start) },
             tab = Atlas,
             focusedPlace = (focus as? MapFocus.Place)?.id,
             focusedTrip = (focus as? MapFocus.Trip)?.id,

@@ -73,11 +73,14 @@ interface Device {
 
     /**
      * The atlas's footprints and their panel, given to [content]; null on a device that records
-     * none, [onSettings] opening their settings.
+     * none, [onSettings] opening their settings. A stay tapped on the map is written at
+     * ([onWriteAtStay]), or opens the check-in kept over it ([onCheckin]).
      */
     @Composable fun FootprintsOnMap(
         container: AppContainer,
         onSettings: () -> Unit,
+        onWriteAtStay: (StayAt) -> Unit,
+        onCheckin: (String) -> Unit,
         content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
     ) = content(null)
 

@@ -516,6 +516,10 @@ behaves.
   added. Such a stay is listed with that check-in's venue and a grey flag in place of its +.
   Kept as a check-in, its bills with no place nor a Moment's, if any, are offered its place in
   a message, 用这个地点.
+  A stay's ring tapped on the map opens 新签到 at it: the stay's start (来自足迹停留) and its place,
+  the phone's own within 300 m or a new one named after what is around it. Saved with nothing
+  written it is the stay's check-in, as 保存为签到 keeps one (its uid, its end, its bills
+  offered the place); written in, it is a Moment there. A stay kept already opens its check-in.
 - **Notification.** Its icon shows the state (recording, waiting for a fix, location off).
   On Android 16 and later it asks to be a Live Update; on ColorOS that also needs
   流体云显示实时活动, linked from 足迹记录 → 状态栏显示.

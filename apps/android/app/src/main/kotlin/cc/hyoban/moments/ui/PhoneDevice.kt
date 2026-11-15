@@ -92,8 +92,10 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
     override fun FootprintsOnMap(
         container: AppContainer,
         onSettings: () -> Unit,
+        onWriteAtStay: (StayAt) -> Unit,
+        onCheckin: (String) -> Unit,
         content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
-    ) = cc.hyoban.moments.footprints.FootprintsOnMap(container as PhoneContainer, onSettings) { state ->
+    ) = cc.hyoban.moments.footprints.FootprintsOnMap(container as PhoneContainer, onSettings, onWriteAtStay, onCheckin) { state ->
         val drawing = remember(state.drawing) {
             cc.hyoban.moments.ui.map.AtlasFootprints(
                 lines = state.drawing.lines.map { (mode, points) ->
@@ -110,7 +112,7 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
                 stays = state.drawing.stays,
             )
         }
-        content(cc.hyoban.moments.ui.map.AtlasFootprintsOnMap(drawing, state.frame, state.frameRequested, state.onFramed, state.open, state.recording))
+        content(cc.hyoban.moments.ui.map.AtlasFootprintsOnMap(drawing, state.frame, state.frameRequested, state.onFramed, state.open, state.recording, state.openStay))
     }
 
     override fun canLocate(): Boolean = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }

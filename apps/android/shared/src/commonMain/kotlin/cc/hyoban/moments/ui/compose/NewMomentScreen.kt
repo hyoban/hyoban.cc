@@ -176,6 +176,7 @@ import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import coil3.compose.AsyncImage
 import java.io.File
 import java.time.Instant
+import cc.hyoban.moments.data.spec.Entries
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlinx.coroutines.Job
@@ -193,6 +194,10 @@ import kotlinx.coroutines.withContext
  *
  * A new one can have a bill written with it, kept in the ledger at the Moment's time and place
  * and linked to it, or the bill alone, as the ledger's 记一笔 opens it ([startWithBill]).
+ *
+ * At a [stay] of the footprints, tapped on the map, it starts at the stay's start and at its place,
+ * the phone's own within reach or a new one named after what is around it; saved with nothing
+ * written it is that stay's check-in, until its end, as 保存为签到 keeps one.
  */
 @Composable
 fun NewMomentScreen(
@@ -202,6 +207,7 @@ fun NewMomentScreen(
     edit: String? = null,
     onDeleted: () -> Unit = onBack,
     startWithBill: Boolean = false,
+    stay: cc.hyoban.moments.ui.StayAt? = null,
 ) {
     val device = cc.hyoban.moments.ui.LocalDevice.current
     val scope = rememberCoroutineScope()
@@ -248,7 +254,15 @@ fun NewMomentScreen(
     var private by rememberSaveable { mutableStateOf(original?.hidden ?: false) }
     val openedAt = remember { OffsetDateTime.now() }
     var chosenTime by remember { mutableStateOf(originalTime) }
-    var chosenPlace by remember { mutableStateOf(originalPlace) }
+    val stayFix = remember(stay) { stay?.let { Fix(it.latitude, it.longitude) } }
+    val stayTime = remember(stay) { stay?.let { OffsetDateTime.ofInstant(Instant.ofEpochMilli(it.start), java.time.ZoneId.systemDefault()) } }
+    // At a stay, the phone's own place there, as the footprints' list names it.
+    var chosenPlace by remember {
+        mutableStateOf(originalPlace ?: stayFix?.let { at ->
+            cc.hyoban.moments.data.local.nearestPlaces(places, at, limit = 1).firstOrNull()
+                ?.takeIf { (_, metres) -> metres <= cc.hyoban.moments.data.local.SAME_PLACE_METRES }?.let { (id, _) -> PlaceChoice.Known(id) }
+        })
+    }
     var geocoded by remember { mutableStateOf<Pair<Fix, Around>?>(null) }
     var saving by remember { mutableStateOf(false) }
     var editingTime by remember { mutableStateOf(false) }
@@ -285,18 +299,19 @@ fun NewMomentScreen(
     // made, else when the page was opened.
     val photoTime = (photos.mapNotNull { infos[it]?.takenAt }.ifEmpty { photos.mapNotNull { infos[it]?.savedAt } })
         .minByOrNull { it.toInstant() }
-    val time = chosenTime ?: photoTime ?: openedAt
+    val time = chosenTime ?: photoTime ?: stayTime ?: openedAt
     val timeSource = when {
         original != null && chosenTime == originalTime -> Res.string.source_saved
         chosenTime != null -> Res.string.source_chosen
         photoTime != null -> Res.string.source_photo
+        stayTime != null -> Res.string.source_stay
         else -> Res.string.source_now
     }
 
     // Where: just where the first photo that says was taken, as a new place named after what
     // is around it, else none until one is chosen; the map finds the phone when asked.
     val photoFix = photos.firstNotNullOfOrNull { infos[it]?.fix }
-    val fix = photoFix
+    val fix = photoFix ?: stayFix
     LaunchedEffect(fix) {
         if (fix != null && geocoded?.first != fix) geocoded = fix to container.placeSearch.around(fix)
     }
@@ -360,12 +375,20 @@ fun NewMomentScreen(
         if (saving) return@save
         // The bill is checked first, so that nothing is kept while it can't be.
         val txn = if (withBill) bill.toTxn(ledger, billAt, trips, null, null, null) { saveError = textOf(it) } ?: return@save else null
+        // A stay's check-in has its uid made from the stay's start, as 保存为签到 makes it, so
+        // keeping it again changes that one; another check-in over the stay is that visit.
+        val stayCheckin = stay?.takeIf { original == null && asCheckin }
+        val stayUid = stayCheckin?.let { Entries.stableUlid(stamp(OffsetDateTime.ofInstant(Instant.ofEpochMilli(it.start), java.time.ZoneId.systemDefault())), "stay:${it.start}") }
+        if (stayCheckin != null && container.repository.checkins.value.overlapping(stayCheckin.start, stayCheckin.end).any { it.uid != stayUid }) {
+            saveError = textOf(Res.string.message_checkin_known)
+            return@save
+        }
         saving = true
         scope.launch {
             try {
                 withContext(NonCancellable) {
                     val moment = if (withMoment) {
-                        val (moment, newPlace) = buildMoment(container, text, photos, utility, stills, infos, time, place, food, private, original, originalMedia)
+                        val (moment, newPlace) = buildMoment(container, text, photos, utility, stills, infos, time, place, food, private, original, originalMedia, stayUid)
                         // Kept as what it now is, a Moment or a check-in, named after its place when that moved.
                         if (original == null || momentChanged) {
                             val venue = when (place) {
@@ -374,7 +397,10 @@ fun NewMomentScreen(
                                 PlaceChoice.None -> null
                             }
                             val moved = (place as? PlaceChoice.Known)?.id != (originalPlace as? PlaceChoice.Known)?.id || place is PlaceChoice.New
-                            container.saveEntry(editedEntry(moment, venue, moved), newPlace)
+                            val entry = editedEntry(moment, venue, moved)
+                            container.saveEntry(if (stayCheckin == null) entry else stayEntry(entry, stayCheckin, until = time == stayTime), newPlace)
+                            // The bills paid while there, with no place, may take this one.
+                            if (stayCheckin != null) moment.places.firstOrNull()?.let { container.offerPlaceToBills(it, stayCheckin.start, stayCheckin.end) }
                         }
                         // A known place's kind changed in the picker, kept as a change of its own.
                         (place as? PlaceChoice.Known)?.kind?.let { container.repository.setPlaceKind(place.id, it.value) }
@@ -1097,6 +1123,7 @@ private suspend fun buildMoment(
     private: Boolean,
     original: MomentRecord? = null,
     originalMedia: Map<PhotoRef, MomentMedia> = emptyMap(),
+    uid: String? = null,
 ): Pair<MomentRecord, Pair<String, Place>?> {
     val now = recordTime()
     val directory = File(container.localStore.root, "media")
@@ -1142,7 +1169,7 @@ private suspend fun buildMoment(
     }
     val moment = original?.copy(occurredAt = stamp(time), places = placeIds, text = text.trim(), media = media, food = food, hidden = private, updatedAt = now)
         ?: MomentRecord(
-            uid = Ulid.next(),
+            uid = uid ?: Ulid.next(),
             occurredAt = stamp(time),
             places = placeIds,
             text = text.trim(),
@@ -1154,6 +1181,19 @@ private suspend fun buildMoment(
         )
     return moment to newPlace
 }
+
+/**
+ * A check-in kept at [stay]: at its middle as the footprints have it, and [until] its end while
+ * its time is still the stay's.
+ */
+private fun stayEntry(entry: kotlinx.serialization.json.JsonObject, stay: cc.hyoban.moments.ui.StayAt, until: Boolean) =
+    kotlinx.serialization.json.JsonObject(
+        entry + ("point" to kotlinx.serialization.json.buildJsonObject {
+            put("lat", kotlinx.serialization.json.JsonPrimitive(stay.latitude))
+            put("lng", kotlinx.serialization.json.JsonPrimitive(stay.longitude))
+            put("from", kotlinx.serialization.json.JsonPrimitive("track"))
+        }) + if (until) mapOf("end" to kotlinx.serialization.json.JsonPrimitive(stamp(OffsetDateTime.ofInstant(Instant.ofEpochMilli(stay.end), java.time.ZoneId.systemDefault())))) else emptyMap(),
+    )
 
 /** What says why a picked file was left out. */
 private fun refusalText(refusal: Refusal): StringResource = when (refusal) {

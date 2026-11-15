@@ -79,10 +79,18 @@ data class FootprintsMapState(
     val open: () -> Unit,
     /** Whether the phone is recording now, which the map's footprints button shows. */
     val recording: Boolean = false,
+    /** A stay on the map tapped, by its start. */
+    val openStay: (Long) -> Unit = {},
 )
 
 @Composable
-fun FootprintsOnMap(container: PhoneContainer, onSettings: () -> Unit, content: @Composable (FootprintsMapState) -> Unit) {
+fun FootprintsOnMap(
+    container: PhoneContainer,
+    onSettings: () -> Unit,
+    onWriteAtStay: (cc.hyoban.moments.ui.StayAt) -> Unit,
+    onCheckin: (String) -> Unit,
+    content: @Composable (FootprintsMapState) -> Unit,
+) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     // The sheet is a window over every page, so it closes for the settings page and opens again on the way back.
     var reopen by rememberSaveable { mutableStateOf(false) }
@@ -239,6 +247,15 @@ fun FootprintsOnMap(container: PhoneContainer, onSettings: () -> Unit, content: 
         onFramed = { frameRequested = false },
         open = { expanded = true },
         recording = state.recording,
+        // A stay tapped is written at, a Moment or its check-in; one kept already opens that check-in.
+        openStay = { start ->
+            val stay = view.parts.firstOrNull { it is TrackStay && it.start == start } as? TrackStay
+            val kept = keptStays[start]
+            when {
+                kept != null -> onCheckin(kept.uid)
+                stay != null -> onWriteAtStay(cc.hyoban.moments.ui.StayAt(stay.start, stay.end, stay.latitude, stay.longitude))
+            }
+        },
     ))
     // Paused, never started or stopped by an error, the row offers to resume; otherwise to pause.
     val resumable = state.paused || status == null || status == Res.string.footprints_permission_needed || status == Res.string.footprints_error
