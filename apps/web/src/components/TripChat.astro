@@ -37,7 +37,10 @@ const formatKm = (meters: number) => `${(meters / 1000).toLocaleString('zh-CN', 
           ? <MomentBubble moment={bubble.moment} bills={bubble.bills} charges={bubble.charges} joinedAbove={bubble.joinedAbove} joinedBelow={bubble.joinedBelow} />
           : bubble.kind === 'checkin'
             ? (
-                <article class:list={['chat-sent', { 'chat-sent--joined-above': bubble.joinedAbove }]}>
+                <article
+                  class:list={['chat-sent', { 'chat-sent--joined-above': bubble.joinedAbove }]}
+                  data-trip-map-waypoint-entry={bubble.checkin.occurredAt.length > 10 ? bubble.checkin.occurredAt.slice(0, 16) : undefined}
+                >
                   <div class:list={['chat-bubble', 'chat-bubble--sent', { 'chat-bubble--fill': bubble.bills.length + bubble.charges.length > 0, 'chat-bubble--joined-above': bubble.joinedAbove, 'chat-bubble--joined-below': bubble.joinedBelow }]}>
                     <div class="chat-bubble__body">
                       <div class="chat-bubble__content">

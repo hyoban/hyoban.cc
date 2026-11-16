@@ -13,15 +13,17 @@ import { measureLine, walkLine, type MeasuredLine } from '../player/route.ts'
 import { createRouteLayers } from '../player/route-layers.ts'
 import { createRoutePlan, type RoutePlan } from '../player/route-plan.ts'
 import { getClock } from '../player/slides.ts'
-import type { TripData } from '../player/types.ts'
+import type { TripData, TripPoint } from '../player/types.ts'
 
 // A trip played along as its sidebar is read, drawn as the player draws it: the route
 // planned, the route driven so far with the car, ship or plane at its tip and the day
 // and time beside it, the stop dots, the names of the places of the Moment being read,
 // and the player's camera gliding after the tip. Each Moment in the sidebar names its
-// stop (`[data-trip-map-stop-entry="<anchor>"]`), and the line a little above the
-// sidebar's middle stands for where the reader is: reaching a Moment arrives at its
-// stop, and reading on drives on to the next one, back again scrolling up. After the
+// stop (`[data-trip-map-stop-entry="<anchor>"]`), and each check-in the waypoint it is
+// by its day and minute (`[data-trip-map-waypoint-entry="YYYY-MM-DDTHH:mm"]`); the line a
+// little above the sidebar's middle stands for where the reader is: reaching a Moment
+// arrives at its stop, a check-in at its waypoint, and reading on drives on to the next
+// one, back again scrolling up. After the
 // last Moment the route drives on to its end. With the player's flying over on, it flies
 // over here too, its car in 3D driving the roads.
 
@@ -50,6 +52,20 @@ export function findBetweenMarks(offsets: readonly number[], offset: number) {
   }
 
   return { fraction: 1, index: Math.max(last - 1, 0) }
+}
+
+/**
+ * The waypoint among `points` passed at `at` (`YYYY-MM-DDTHH:mm`, a check-in's day and
+ * minute), the first one after `after`; -1 when there is none.
+ */
+export function findWaypointPoint(
+  points: readonly Pick<TripPoint, 'dateKey' | 'time' | 'waypoint'>[],
+  at: string,
+  after = -1,
+) {
+  return points.findIndex(
+    (point, index) => index > after && point.waypoint && `${point.dateKey}T${point.time}` === at,
+  )
 }
 
 /**
@@ -119,7 +135,7 @@ export function createTripScroll({
   let leg: (MeasuredLine & { from: number; passed: number[]; to: number }) | undefined
   let tip: Coordinates | undefined
   // The stop whose places are named.
-  let labelledStop: number | undefined
+  let labelledStop: string | undefined
   let frame = 0
   let cameraFrame = 0
 
@@ -155,17 +171,43 @@ export function createTripScroll({
     reducedMotion,
   })
 
-  /** The Moments that are the trip's stops, in order, with their stops' first places. */
+  /**
+   * The Moments that are the trip's stops, with their stops' first places, and the
+   * check-ins that are its waypoints, with theirs, in the sidebar's order, each further
+   * along the route than the one before.
+   */
   function readEntries() {
     const top = content.getBoundingClientRect().top - content.scrollTop
-    const entries: { bottom: number; point: number; stopIndex: number; top: number }[] = []
+    const entries: {
+      bottom: number
+      point: number
+      stopIndex: number
+      top: number
+      waypoint: boolean
+    }[] = []
 
-    for (const element of content.querySelectorAll<HTMLElement>('[data-trip-map-stop-entry]')) {
-      const stopIndex =
-        trip?.stops.findIndex((stop) => stop.anchor === element.dataset.tripMapStopEntry) ?? -1
+    for (const element of content.querySelectorAll<HTMLElement>(
+      '[data-trip-map-stop-entry], [data-trip-map-waypoint-entry]',
+    )) {
+      if (!plan) {
+        break
+      }
+
       const previous = entries.at(-1)
+      const at = element.dataset.tripMapWaypointEntry
+      const stopIndex =
+        at === undefined
+          ? (trip?.stops.findIndex((stop) => stop.anchor === element.dataset.tripMapStopEntry) ??
+            -1)
+          : -1
+      const point =
+        at === undefined
+          ? stopIndex < 0
+            ? -1
+            : plan.placeStart(stopIndex)
+          : findWaypointPoint(plan.points, at, previous?.point ?? -1)
 
-      if (!plan || stopIndex < 0 || (previous && stopIndex <= previous.stopIndex)) {
+      if (point < 0 || (previous && point <= previous.point)) {
         continue
       }
 
@@ -173,9 +215,10 @@ export function createTripScroll({
 
       entries.push({
         bottom: rect.bottom - top,
-        point: plan.placeStart(stopIndex),
-        stopIndex,
+        point,
+        stopIndex: at === undefined ? stopIndex : plan.points[point]!.stopIndex,
         top: rect.top - top,
+        waypoint: at !== undefined,
       })
     }
 
@@ -220,6 +263,7 @@ export function createTripScroll({
       from: marks[index]!.point,
       stopIndex: marks[index]!.stopIndex,
       to: Math.max(marks[index + 1]!.point, marks[index]!.point),
+      waypoint: marks[index]!.waypoint,
     }
   }
 
@@ -258,7 +302,7 @@ export function createTripScroll({
     layers.add(plan.line(0, plan.points.length))
 
     const current = plan
-    const { fraction, from, stopIndex, to } = position
+    const { fraction, from, stopIndex, to, waypoint } = position
     const stretch = measureLeg(from, to)
     const arrived = fraction >= 1 || stretch.total === 0
     const walked = !arrived && fraction > 0 ? walkLine(stretch, fraction) : undefined
@@ -283,7 +327,7 @@ export function createTripScroll({
       current.points.map((point, pointIndex) => ({
         coordinates: point.coordinates,
         state:
-          point.stopIndex === stopIndex && !point.waypoint && !walked
+          point.stopIndex === stopIndex && !point.waypoint && !waypoint && !walked
             ? 'current'
             : pointIndex < reached
               ? 'visited'
@@ -296,14 +340,20 @@ export function createTripScroll({
       animate: !walked,
     })
 
-    if (labelledStop !== stopIndex) {
-      labelledStop = stopIndex
+    // A check-in's waypoint is named alone; a Moment's stop, by its places.
+    const labelled = waypoint ? `waypoint ${from}` : `stop ${stopIndex}`
+
+    if (labelledStop !== labelled) {
+      labelledStop = labelled
+      const passed = current.points[from]
       // The day and time ride beside the tip, so labels are just short names.
       mapLabels.show(
-        (trip?.stops[stopIndex]?.places ?? []).map((place) => ({
-          coordinates: [place.longitude, place.latitude],
-          name: getShortPlaceName(place.name),
-        })),
+        waypoint && passed
+          ? [{ coordinates: passed.coordinates, name: getShortPlaceName(passed.name) }]
+          : (trip?.stops[stopIndex]?.places ?? []).map((place) => ({
+              coordinates: [place.longitude, place.latitude],
+              name: getShortPlaceName(place.name),
+            })),
         { alignLeft: false },
       )
       followStretch(from, to)

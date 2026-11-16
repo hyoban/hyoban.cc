@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'vite-plus/test'
-import { findBetweenMarks, getReadingOffset } from '../src/map/trip-scroll.ts'
+import { findBetweenMarks, findWaypointPoint, getReadingOffset } from '../src/map/trip-scroll.ts'
 
 test('finds the pair of Moments the reading line is between, and how far', () => {
   const offsets = [100, 200, 200, 400]
@@ -24,4 +24,18 @@ test('keeps the reading line in step until the last screen, then reaches the end
   assert.equal(getReadingOffset({ ...sidebar, scrollTop: 3706 }), 4354)
   // Nothing to make up: in step all the way.
   assert.equal(getReadingOffset({ ...sidebar, end: 3000, scrollTop: 3706 }), 3706 + 266)
+})
+
+test('a check-in finds its waypoint on the route by its day and minute, after the one before', () => {
+  const points = [
+    { dateKey: '2026-03-07', time: '17:52', waypoint: true },
+    { dateKey: '2026-03-07', time: '18:29', waypoint: true },
+    { dateKey: '2026-03-07', time: '18:29', waypoint: false },
+    { dateKey: '2026-03-08', time: '18:29', waypoint: true },
+  ]
+  assert.equal(findWaypointPoint(points, '2026-03-07T17:52'), 0)
+  assert.equal(findWaypointPoint(points, '2026-03-07T18:29'), 1)
+  assert.equal(findWaypointPoint(points, '2026-03-08T18:29', 1), 3)
+  assert.equal(findWaypointPoint(points, '2026-03-07T17:52', 0), -1)
+  assert.equal(findWaypointPoint(points, '2026-03-07T09:00'), -1)
 })
