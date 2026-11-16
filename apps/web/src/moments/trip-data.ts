@@ -14,6 +14,7 @@ import {
   getMomentPath,
   getMoments,
   getMomentTripOdometer,
+  getTripCheckinPlaces,
   getTrips,
   type MomentTrip,
 } from '@/moments'
@@ -40,10 +41,16 @@ export function getTripSummaries() {
     // Each route in its year's colour, as the legend and the places have it.
     const yearColor = createYearPalette(getMapYears(moments))
     const json = JSON.stringify(
-      trips.map((trip) => ({
-        ...getTripSummary(trip),
-        color: yearColor(Number.parseInt(trip.start.slice(0, 4), 10)),
-      })),
+      trips.map((trip) => {
+        const summary = getTripSummary(trip)
+        // The places kept beside its route while it's open: its Moments', and its check-ins'
+        // too, as the app keeps them.
+        return {
+          ...summary,
+          color: yearColor(Number.parseInt(trip.start.slice(0, 4), 10)),
+          places: [...new Set([...(summary.places ?? []), ...getTripCheckinPlaces(trip)])],
+        }
+      }),
     )
     const hash = createHash('sha256').update(json).digest('hex').slice(0, 12)
 

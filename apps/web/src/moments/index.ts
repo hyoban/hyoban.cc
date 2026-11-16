@@ -3,6 +3,7 @@ import {
   compareMoments,
   getLocation,
   groupMomentsByLocation,
+  isInTrip,
   type MapLocation,
   type TripRoute,
 } from '@hyoban/trip-map'
@@ -218,6 +219,18 @@ export function getBills() {
   return bills
 }
 
+/** The places of the check-ins in a trip's time, as its Moments' places are its own. */
+export function getTripCheckinPlaces(trip: Parameters<typeof isInTrip>[0]) {
+  return getCheckins()
+    .filter((checkin) => isInTrip(trip, checkin.occurredAt))
+    .flatMap((checkin) => checkin.locations.map(({ id }) => id))
+}
+
+/** The Moments and check-ins together, oldest first, as the map lists them alike. */
+export function getMapRecords(moments: Moment[]): MapRecord[] {
+  return [...moments, ...getCheckins()].sort(compareMoments)
+}
+
 /** The places on the map, each with its Moments and the check-ins there, newest first. */
 export function getMappedLocationGroups(moments: Moment[]) {
   return groupMomentsByLocation<MapRecord>(locations, [...moments, ...getCheckins()])
@@ -329,10 +342,18 @@ export function getMomentTripCosts(
 export function getTrips(moments: Moment[]) {
   return trips
     .map((trip) => {
-      const built = buildTrip(trip, moments, {
+      const routed = buildTrip(trip, moments, {
         resolveLocation: (id) => ({ id, ...getLocation(locations, id as LocationId) }),
         routes: tripRoutes,
       })
+      // Its places are its check-ins' as much as its Moments'.
+      const built = {
+        ...routed,
+        placeCount: new Set([
+          ...routed.path.map((location) => location.id),
+          ...getTripCheckinPlaces(routed),
+        ]).size,
+      }
       const odometer = getMomentTripOdometer(built)
 
       return odometer

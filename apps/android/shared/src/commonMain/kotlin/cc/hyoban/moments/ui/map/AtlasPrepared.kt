@@ -64,7 +64,7 @@ class AtlasPreparedStore(container: AppContainer, scope: CoroutineScope) {
             combine(
                 container.shownMoments,
                 container.repository.places,
-                container.repository.checkins,
+                container.shownCheckins,
                 container.shownTrips,
                 container.tripRoutes,
                 ::AtlasInputs,

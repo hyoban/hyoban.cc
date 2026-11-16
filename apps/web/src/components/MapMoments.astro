@@ -1,8 +1,9 @@
 ---
+import CheckinEntry from '@/components/CheckinEntry.astro'
 import MomentEntry from '@/components/MomentEntry.astro'
-import { getMonthPath, type Moment } from '@/moments'
+import { getMonthPath, isMapCheckin, type MapRecord } from '@/moments'
 
-// A year's Moments for the list beside the map, newest first: its months to pick one
+// A year's Moments and check-ins for the list beside the map, alike and newest first: its months to pick one
 // by (or the whole year), then each month's, each with its day and time on one line. The map fetches it as a fragment for a year picked there
 // (see pages/map/[year]/moments.astro), and a year's page renders it in place. A month's
 // page renders only that month's, leaving the rest to the fragment, which the map
@@ -11,13 +12,13 @@ import { getMonthPath, type Moment } from '@/moments'
 interface Props {
   /** The one month rendered, of those of the year; every month without one. */
   month?: number | undefined
-  /** The year's Moments. */
-  moments: Moment[]
+  /** The year's Moments and check-ins, oldest first. */
+  moments: MapRecord[]
   year: number
 }
 
 const { month: pickedMonth, moments, year } = Astro.props
-const getMonth = (moment: Moment) => Number.parseInt(moment.dateKey.slice(5, 7), 10)
+const getMonth = (moment: MapRecord) => Number.parseInt(moment.dateKey.slice(5, 7), 10)
 const months = [...Map.groupBy(moments, getMonth)]
   .sort(([first], [second]) => second - first)
   // Newest first, down to the time of day: the Moments come oldest first.
@@ -47,7 +48,9 @@ const firstMoment = months.find(({ month }) => pickedMonth === undefined || mont
         <span>{monthMoments.length} 条记录</span>
       </h2>
       {/* The list's first Moment is in view as the sidebar opens, at any width. */}
-      {monthMoments.map(moment => <MomentEntry date="day" moment={moment} priorityMedia={moment === firstMoment ? 'all' : undefined} />)}
+      {monthMoments.map(moment => isMapCheckin(moment)
+        ? <CheckinEntry checkin={moment} placeLink />
+        : <MomentEntry date="day" moment={moment} priorityMedia={moment === firstMoment ? 'all' : undefined} />)}
     </section>
   ))
 }

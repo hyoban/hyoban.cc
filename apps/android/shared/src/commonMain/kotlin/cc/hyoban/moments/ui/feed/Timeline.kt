@@ -373,12 +373,11 @@ fun CheckinRow(checkin: Checkin, modifier: Modifier = Modifier, withDate: Boolea
 fun checkinTitle(checkin: Checkin, withDate: Boolean = false): String =
     if (withDate) stringResource(Res.string.timeline_checkin_on, formatDate(checkin.at.take(10))) else stringResource(Res.string.timeline_checkin, checkin.venue)
 
-/** How many Moments and check-ins a place has, the Moments said even when none unless it has check-ins alone. */
+/** How many records a place has, its Moments and check-ins counted as one. */
 @Composable
-fun placeCounts(moments: Int, checkins: Int): List<String> = listOfNotNull(
-    pluralStringResource(Res.plurals.count_moments, moments, moments).takeIf { moments > 0 || checkins == 0 },
-    pluralStringResource(Res.plurals.count_checkins, checkins, checkins).takeIf { checkins > 0 },
-)
+fun placeCounts(moments: Int, checkins: Int): List<String> =
+    // A check-in is a record there as a Moment is: one count of both.
+    listOf(pluralStringResource(Res.plurals.count_records, moments + checkins, moments + checkins))
 
 /** A device bought or a subscription paid as a row on the page: no time, its name, its price at the end. */
 @Composable

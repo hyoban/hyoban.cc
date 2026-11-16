@@ -11,7 +11,7 @@ import TripCoverCollage from '@/components/TripCoverCollage.astro'
 import TripDetails from '@/components/TripDetails.astro'
 import MomentLightboxMedia from '@/components/MomentLightboxMedia.astro'
 import Layout from '@/layouts/Layout.astro'
-import { getActiveDateKeys, getMapYears, getMappedLocationGroups, getMomentPath, getMoments, getMonthPath, getTrips } from '@/moments'
+import { getActiveDateKeys, getMapRecords, getMapYears, getMappedLocationGroups, getMomentPath, getMoments, getMonthPath, getTrips } from '@/moments'
 import { formatKilometers, getCarSummary } from '@/car'
 import { getTripData, getTripSummaries, getTripSummary } from '@/moments/trip-data'
 import { getTripCollage } from '@/moments/trip-images'
@@ -84,8 +84,9 @@ const locationGroups = getMappedLocationGroups(moments)
 // Every year with Moments at a place, which the legend narrows the map to.
 const years = getMapYears(moments)
 const yearColor = createYearPalette(years)
+// The period's Moments and check-ins alike, as its places have both.
 const periodMoments = period
-  ? moments.filter(moment => moment.dateKey.startsWith(`${period.year}-`))
+  ? getMapRecords(moments).filter(record => record.dateKey.startsWith(`${period.year}-`))
   : []
 // Each year's latest month with Moments: where the calendar link goes for a whole year.
 const latestMonths = Object.fromEntries(getActiveDateKeys(moments).map(dateKey => [dateKey.slice(0, 4), dateKey.slice(0, 7)]))

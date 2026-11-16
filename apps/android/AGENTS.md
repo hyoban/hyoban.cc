@@ -325,9 +325,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   its hint as its text.
 - The home screen widgets are the owner's own: they show private Moments and trips too,
   passing over only photos kept off covers. 演示模式 (`Settings.demo`, which took the place of
-  hiding amounts) hides amounts, account names and private Moments and trips everywhere, the
-  widgets included; screens read `container.shownMoments` and `shownTrips`, not the
-  repository's, so a new screen keeps to it.
+  hiding amounts) hides amounts, account names and private Moments, check-ins and trips
+  everywhere, the widgets included; screens read `container.shownMoments`, `shownCheckins` and
+  `shownTrips`, not the repository's, so a new screen keeps to it.
 - Trip discovery marks a trip out by check-ins at the saved places chosen as home (家), leaving
   and coming back, never by guessing where home is; a check-in at home is public or private as
   that check-in says, like any other. It uses general distance and time thresholds, never

@@ -157,6 +157,8 @@ even when starting from the repository root.
   the open place lifted, routes in their year's colour, a year picked from the legend) match across Web and App; change
   both together. No line on a map grows thicker: a route keeps one width whether it's lifted,
   zoomed or handed to playback, and a lifted one stands out only by the others stepping back.
+  On every map a check-in's place is a place like a Moment's: listed, counted, filtered by
+  year, month or trip and kept beside a lifted trip alike, the two read together by time.
   The app's trip playback follows `packages/trip-map/src/player`, including a route
   that keeps moving during playback.
 - A trip reads as one conversation on both: the site's trip sidebar (`TripChat.astro`) draws

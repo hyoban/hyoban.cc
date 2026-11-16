@@ -39,3 +39,12 @@
 :is(.moment-entry, .checkin-entry) + :is(.moment-entry, .checkin-entry) {
   border-top: 1px solid var(--color-border);
 }
+
+/* In the list beside the map, its venue flies the map to its place, as a Moment's does. */
+a.checkin-entry__venue {
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

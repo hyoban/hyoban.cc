@@ -2,6 +2,7 @@ package cc.hyoban.moments.ui.map
 
 import cc.hyoban.moments.data.trips.momentsOf
 import cc.hyoban.moments.data.trips.isInTrip
+import cc.hyoban.moments.data.trips.epochOf
 
 import androidx.compose.ui.text.withStyle
 import cc.hyoban.moments.res.*
@@ -248,7 +249,7 @@ private fun MapContent(
     val trips by container.shownTrips.collectAsStateWithLifecycle()
     val routes by container.tripRoutes.collectAsStateWithLifecycle()
     // The check-ins alone at each place, an import's waiting to be published among them.
-    val checkins by container.repository.checkins.collectAsStateWithLifecycle()
+    val checkins by container.shownCheckins.collectAsStateWithLifecycle()
     val prepared by container.atlasPrepared.value.collectAsStateWithLifecycle()
     val inputs = remember(moments, places, checkins, trips, routes) { AtlasInputs(moments, places, checkins, trips, routes) }
     val atlas = remember(prepared, inputs) {
@@ -331,8 +332,9 @@ private fun MapContent(
     val tripPlaces = remember(lifted, trips, moments, checkins, checkinsOn) {
         trips.firstOrNull { it.id == lifted }?.let { trip ->
             val fromMoments = momentsOf(trip, moments, trips).flatMap { it.places }
+            // A check-in is the trip's as a Moment with no trip named is: the first whose time it falls in.
             val fromCheckins = if (checkinsOn) checkins.byDay.filterKeys { it in trip.start..trip.end }.values.flatten()
-                .filter { isInTrip(trip, it.at) }.mapNotNull { it.place } else emptyList()
+                .filter { checkin -> trips.firstOrNull { isInTrip(it, checkin.at) }?.id == trip.id }.mapNotNull { it.place } else emptyList()
             (fromMoments + fromCheckins).toSet()
         }
     }
@@ -690,7 +692,15 @@ private fun PlaceSheet(
             Modifier.weight(1f),
             contentPadding = PaddingValues(top = Space.l, bottom = Space.l + bottom),
         ) {
-            items(here, key = { it.uid }) { moment ->
+            // Its Moments and check-ins as one, newest first, each its own row.
+            val records = (here.map { epochOf(it.occurredAt) to (it as Any) } + checkins.map { epochOf(it.at) to (it as Any) })
+                .sortedByDescending { it.first }.map { it.second }
+            items(records, key = { (it as? MomentRecord)?.uid ?: "checkin-${(it as Checkin).uid}" }) { record ->
+                if (record is Checkin) {
+                    CheckinRow(record, Modifier.padding(horizontal = Space.gutter), withDate = true)
+                    return@items
+                }
+                val moment = record as MomentRecord
                 // It grows into the Moment's page when opened, as a card on a list does.
                 Row(
                     Modifier.fillMaxWidth().sharedCard(moment.uid).clickable { onMoment(moment.uid) }
@@ -719,10 +729,6 @@ private fun PlaceSheet(
                         )
                     }
                 }
-            }
-            // Its check-ins alone after its Moments, newest first, a line each.
-            items(checkins, key = { "checkin-${it.uid}" }) { checkin ->
-                CheckinRow(checkin, Modifier.padding(horizontal = Space.gutter), withDate = true)
             }
             // The place's own page, read on to after its Moments.
             item(key = "all") {

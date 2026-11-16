@@ -815,7 +815,7 @@ fun PlaceScreen(
     val trips by container.shownTrips.collectAsStateWithLifecycle()
     val moments = remember(all, id) { all.filter { id in it.places } }
     // Its check-ins alone, among its Moments by their days.
-    val allCheckins by container.repository.checkins.collectAsStateWithLifecycle()
+    val allCheckins by container.shownCheckins.collectAsStateWithLifecycle()
     val checkins = if (LocalSettings.current.isOn(Module.CHECKIN)) allCheckins.byPlace[id].orEmpty() else emptyList()
     // Its bills among them, as the timeline has them: a Moment's on its card, the rest by their
     // days; what was spent there heads the page beside its counts.

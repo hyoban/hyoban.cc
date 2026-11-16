@@ -109,7 +109,8 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   every year comes back and the map returns to where it was unless it was moved since; the
   legend's 旅程 is the routes' switch, off leaving only a lifted route (as the site's 地图设置
   does); the footprints and the phone's place are buttons down the side. A place tapped fills the
-  sheet with its Moments and the way there; a route tapped floats its trip's card, which
+  sheet with its Moments and check-ins together, newest first and counted as one, and the way
+  there; a route tapped floats its trip's card, which
   opens the trip or plays it back, and leaves only the trip's own places on the map (those of its
   Moments, and of its check-ins while they're on), as the site's trip sidebar does. 迷雾地图 lays a fog over it, as the site's map does, thinner
   over a city the more Moments it has, from the site's

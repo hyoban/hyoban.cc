@@ -3,9 +3,12 @@ import type { MapCheckin } from '@/moments'
 
 interface Props {
   checkin: MapCheckin
+  /** Its venue a link that flies the map to its place, as a Moment's place is in a list. */
+  placeLink?: boolean
 }
 
-const { checkin } = Astro.props
+const { checkin, placeLink = false } = Astro.props
+const place = checkin.locations[0]
 const weekdayFormatter = new Intl.DateTimeFormat('zh-CN', { timeZone: 'UTC', weekday: 'short' })
 const [year, month, day] = checkin.dateKey.split('-').map(part => Number.parseInt(part, 10))
 const dayLabel = `${year}/${month}/${day} ${weekdayFormatter.format(new Date(`${checkin.dateKey}T00:00:00Z`))}`
@@ -17,8 +20,19 @@ const dayLabel = `${year}/${month}/${day} ${weekdayFormatter.format(new Date(`${
   <span class="i-lucide-map-pin-check-inside" aria-hidden="true" />
   <span class="sr-only">签到</span>
   <time datetime={checkin.occurredAt}>{dayLabel}{checkin.occurredLabel && ` ${checkin.occurredLabel}`}</time>
-  <span class="checkin-entry__venue">
-    {checkin.venue}
-    {checkin.alias && <span class="checkin-entry__alias">{checkin.alias}</span>}
-  </span>
+  {
+    placeLink && place
+      ? (
+          <a class="checkin-entry__venue" href={`/map/${checkin.dateKey.slice(0, 4)}/${checkin.dateKey.slice(5, 7)}/place/${place.id}/`} data-trip-map-place-link={place.id}>
+            {checkin.venue}
+            {checkin.alias && <span class="checkin-entry__alias">{checkin.alias}</span>}
+          </a>
+        )
+      : (
+          <span class="checkin-entry__venue">
+            {checkin.venue}
+            {checkin.alias && <span class="checkin-entry__alias">{checkin.alias}</span>}
+          </span>
+        )
+  }
 </article>

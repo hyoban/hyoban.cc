@@ -123,6 +123,14 @@ abstract class AppContainer(
     val shownMoments: StateFlow<List<MomentRecord>> = shown.map { it.moments }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, shown.value.moments)
     val shownTrips: StateFlow<List<cc.hyoban.moments.data.spec.TripRecord>> = shown.map { it.trips }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, shown.value.trips)
 
+    /** The check-ins the screens show, as [shownMoments]: all of them, or in demo mode only the public's. */
+    val shownCheckins: StateFlow<cc.hyoban.moments.data.things.Checkins> =
+        kotlinx.coroutines.flow.combine(repository.checkins, snapshotFlow { settings.demo }) { checkins, demo -> shownCheckins(checkins, demo) }
+            .stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, shownCheckins(repository.checkins.value, settings.demo))
+
+    private fun shownCheckins(checkins: cc.hyoban.moments.data.things.Checkins, demo: Boolean) =
+        if (demo) cc.hyoban.moments.data.things.Checkins(checkins.all.filterNot { it.private }) else checkins
+
     /**
      * The legs of each trip the API won't route, by trip id: with an API, only one made on the
      * phone and not yet published, so the site's are never asked for while their routes load.
