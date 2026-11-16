@@ -7,7 +7,7 @@ import {
   type Outing,
 } from '@/data/vehicle'
 import { pairChargePayments, readVehicleExpenses, type ChargePayment } from '@/data/vehicle-costs'
-import { readPlaces, readTripRecords } from '@/data/store'
+import { readPlaces, readTripIds, readTripRecords } from '@/data/store'
 import { getMoments } from '@/moments'
 import {
   getPlaceKindGroup,
@@ -44,7 +44,13 @@ async function loadCarSummary(): Promise<CarSummary> {
   const months = readVehicleMonths()
   const days = getVehicleDays(months)
   const charges = getVehicleCharges(months)
-  const trips = readTripRecords().map(({ end, id, start, title }) => ({ end, id, start, title }))
+  const ids = readTripIds()
+  const trips = readTripRecords().map(({ end, id, start, title }) => ({
+    end,
+    id: ids.get(id) ?? id,
+    start,
+    title,
+  }))
   const places = readPlaces()
   const moments = (await getMoments()).map((moment) => ({
     dateKey: moment.dateKey,

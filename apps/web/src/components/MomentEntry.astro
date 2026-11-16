@@ -1,4 +1,5 @@
 ---
+import { getTripPath } from '@/trip-path'
 import MomentGallery from '@/components/MomentGallery.astro'
 import MomentText from '@/components/MomentText.astro'
 import { getMomentPagePath, getMomentPath, type Moment } from '@/moments'
@@ -108,13 +109,13 @@ function formatDay(dateKey: string) {
     trip && (
       tripLink === 'play'
         ? (
-            <a class="moment-entry__trip" href={`/trip/${trip.id}/play/${trip.anchor}/`} data-trip-map-stop-play={trip.id} data-trip-map-stop={trip.anchor}>
+            <a class="moment-entry__trip" href={getTripPath(trip.id, { stop: trip.anchor })} data-trip-map-stop-play={trip.id} data-trip-map-stop={trip.anchor}>
               <span class="i-lucide-play" aria-hidden="true" />
               从这里回放
             </a>
           )
         : (
-            <a class="moment-entry__trip" href={`/trip/${trip.id}/`} data-trip-map-trip-pick={trip.id} aria-label={`旅程：${trip.title}`}>
+            <a class="moment-entry__trip" href={getTripPath(trip.id)} data-trip-map-trip-pick={trip.id} aria-label={`旅程：${trip.title}`}>
               <span class="i-lucide-route" aria-hidden="true" />
               <span class="moment-entry__trip-title">{trip.title}</span>
             </a>

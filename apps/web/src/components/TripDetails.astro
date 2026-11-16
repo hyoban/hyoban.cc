@@ -1,4 +1,5 @@
 ---
+import { getTripPath } from '@/trip-path'
 import { isInTrip } from '@hyoban/trip-map'
 import TripChat from '@/components/TripChat.astro'
 import TripCoverCollage from '@/components/TripCoverCollage.astro'
@@ -64,7 +65,7 @@ const figures = [
       </li>
     ))}
   </ul>
-  <a class="trip-details__play" href={`/trip/${trip.id}/play/`} data-trip-map-stop-play={trip.id}>
+  <a class="trip-details__play" href={getTripPath(trip.id, {})} data-trip-map-stop-play={trip.id}>
     <span class="i-lucide-play" aria-hidden="true" />
     回放旅程
   </a>

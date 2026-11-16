@@ -1,12 +1,16 @@
 import { defineTrips, type TripDefinition } from '@hyoban/trip-map'
 import type { TripRecord } from '@hyoban/data-spec'
-import { readTripRecords } from './store.ts'
+import { readTripIds, readTripRecords } from './store.ts'
 
 // Each trip (a collection in data/collections, or data/trips in the first layout) plays back every located Moment between `start` and `end`
-// (inclusive) at /trip/<id>/. `waypoints` add places the route passed through without a
+// (inclusive) at its address by its year and title, /trip/2026/xuzhou-zhoumo-xing/ (trip-slugs.ts). `waypoints` add places the route passed through without a
 // Moment. The API fetches each leg's route after a write, so the route follows roads.
 
-const records = readTripRecords().sort((first, second) => second.start.localeCompare(first.start))
+// Each by its id on the site, its year and its title in pinyin (trip-slugs.ts).
+const ids = readTripIds()
+const records = readTripRecords()
+  .map((record) => ({ ...record, id: ids.get(record.id) ?? record.id }))
+  .sort((first, second) => second.start.localeCompare(first.start))
 
 export const trips = defineTrips(records.map(toDefinition))
 

@@ -1,4 +1,5 @@
 ---
+import { getTripPath } from '@/trip-path'
 import { getAssetUrl, getCoverThumbnailUrl, getThumbnailUrl } from '@/asset-url'
 import SitePage from '@/components/SitePage.astro'
 import YearFootprint from '@/components/YearFootprint.astro'
@@ -405,7 +406,7 @@ const highlights = [
           <ul class="year-trips">
             {featuredTrips.map(({ trip, glyph, covers }, index) => (
               <li style={`--index: ${index}`}>
-                <a href={`/trip/${trip.id}/`} title={trip.title} data-trip-card={trip.id}>
+                <a href={getTripPath(trip.id)} title={trip.title} data-trip-card={trip.id}>
                   {covers[0] && (
                     <img
                       src={covers[0].thumbnail}
@@ -435,7 +436,7 @@ const highlights = [
             >
               {otherTrips.map(({ trip }) => (
                 <li>
-                  <a href={`/trip/${trip.id}/`}>
+                  <a href={getTripPath(trip.id)}>
                     <span class="year-more-trips__date">{tripDate(trip)}</span>
                     <span class="year-more-trips__title">{trip.title}</span>
                     <span class="year-more-trips__meta">{tripMeta(trip)}</span>

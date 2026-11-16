@@ -250,7 +250,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     page,
     panel: elements.panel,
     setStop: (tripId, stop) => {
-      const path = urls.getTripPath(tripId, stop || undefined, address.isNested())
+      const path = urls.getTripPath(tripId, stop || undefined)
 
       if (address.getTripId() === tripId && window.location.pathname !== path) {
         history.replaceState(getHistoryState(), '', `${path}${window.location.search}`)
@@ -537,7 +537,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
   /** Opens a trip's sidebar, its route lifted and framed: not playing yet. */
   function openTrip(id: string) {
-    setSelectionUrl(urls.getPickedTripPath(id, address.isNested()))
+    setSelectionUrl(urls.getPickedTripPath(id))
     syncSelection()
   }
 
@@ -790,7 +790,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
 
   /** Plays a trip, from the card `stop` names (a stop's anchor), or from its start. */
   function selectTrip(id: string, stop?: string) {
-    setSelectionUrl(urls.getTripPath(id, stop, address.isNested()))
+    setSelectionUrl(urls.getTripPath(id, stop))
     syncSelection({ focus: false })
   }
 

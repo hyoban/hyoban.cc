@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'astro/config'
 import { SITE_URL } from './src/consts'
 import { apiData } from './src/data/api-data.ts'
+import { tripRedirects } from './src/data/trip-redirects.ts'
 import { remarkCarModel } from './src/car-model.ts'
 import { devRewrites } from './src/dev-rewrites.ts'
 import { rehypePostImages } from './src/post-images.mjs'
@@ -18,14 +19,16 @@ export default defineConfig({
     // First, so every later read of a record sees the API's snapshot when there is one.
     apiData(),
     // The map's and trips' drawer and Moments fragments aren't pages to list, nor the pages
-    // whose canonical is another's: a trip by its year and the rest, /trip/2026/yunnan/, and
-    // /calendar/, the latest month.
+    // whose canonical is another's: a trip by its id, /trip/2026-yunnan/, its address being by
+    // its year, /trip/2026/yunnan/, and /calendar/, the latest month.
     Sitemap({
       filter: (page) =>
-        !/\/(calendar|map\/(.*\/moments|places\/\d+)|trip\/[^/]+\/moments|trip\/\d{4}\/(?!\d{2}\/$)[^/]+(\/play)?)\/$/.test(
+        !/\/(calendar|map\/(.*\/moments|places\/\d+)|trip\/[^/]+\/moments|trip\/\d{4}-[^/]+(\/play)?)\/$/.test(
           page,
         ),
     }),
+    // Last, once the build's _redirects is in place.
+    tripRedirects(),
   ],
   vite: {
     // One .env at the repository's root, shared with the scripts.

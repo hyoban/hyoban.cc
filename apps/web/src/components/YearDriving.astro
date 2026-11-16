@@ -1,4 +1,5 @@
 ---
+import { getTripPath } from '@/trip-path'
 import CarModel from '@/components/CarModel.astro'
 import YearClock from '@/components/YearClock.astro'
 import { formatCarDate, getCarDays, isDrivenDay } from '@/car-model'
@@ -129,7 +130,7 @@ for (const outing of car.outings) {
 const tabbedHrefs = new Set<string>()
 const getOutingHref = (outing: Outing, date: string) =>
   outing.trip
-    ? `/trip/${outing.trip.id}/`
+    ? getTripPath(outing.trip.id)
     : activeDates.has(date)
       ? getMomentPath(date)
       : undefined

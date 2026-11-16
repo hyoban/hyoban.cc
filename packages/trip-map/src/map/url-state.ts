@@ -42,11 +42,6 @@ export function createUrlState({
     return id && canPlay(id) ? id : undefined
   }
 
-  /** Whether the address leads to its trip by year and the rest; trips opened from it do too. */
-  function isNested() {
-    return urls.isNestedTripPath(window.location.pathname)
-  }
-
   function isTripList() {
     return hasTripList && urls.isTripListPath(window.location.pathname)
   }
@@ -86,7 +81,7 @@ export function createUrlState({
     if (urls.isMapPath(pathname) && hasPlace(id)) {
       path = urls.getMapPath(urls.getPeriod(pathname), id)
     } else if (pickedTripId && hasTrip(pickedTripId)) {
-      path = urls.getTripPath(pickedTripId, id, urls.isNestedTripPath(pathname))
+      path = urls.getTripPath(pickedTripId, id)
     }
 
     if (path) {
@@ -100,7 +95,6 @@ export function createUrlState({
     getPlaceId,
     getTripId,
     isMap,
-    isNested,
     isTripList,
     upgradeHash,
   }

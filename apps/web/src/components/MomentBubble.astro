@@ -1,4 +1,5 @@
 ---
+import { getTripPath } from '@/trip-path'
 import ChatBillRow from '@/components/ChatBillRow.astro'
 import ChatChargeRow from '@/components/ChatChargeRow.astro'
 import ChatTail from '@/components/ChatTail.astro'
@@ -61,7 +62,7 @@ const footSpace = `"${footText.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"
   <div class="chat-actions">
     {
       trip && (
-        <a class="chat-action" href={`/trip/${trip.id}/play/${trip.anchor}/`} data-trip-map-stop-play={trip.id} data-trip-map-stop={trip.anchor} aria-label="从这里回放" title="从这里回放">
+        <a class="chat-action" href={getTripPath(trip.id, { stop: trip.anchor })} data-trip-map-stop-play={trip.id} data-trip-map-stop={trip.anchor} aria-label="从这里回放" title="从这里回放">
           <span class="i-lucide-play" aria-hidden="true" />
         </a>
       )

@@ -1,14 +1,16 @@
 import { getAssetUrl, getFrameSources, getResizedSources } from './asset-url.ts'
 import { escapeHtml, getTextLang } from '@hyoban/trip-map'
 import type { MomentRecord, TripRecord } from '@hyoban/data-spec'
-import { readMomentRecords, readTripRecords } from './data/store.ts'
+import { readMomentRecords, readTripIds, readTripRecords } from './data/store.ts'
+import { getTripPath } from './trip-path.ts'
 
 // A paragraph that is only a link to a trip, like `[国庆东北自驾](/trip/2026-national-day-road-trip/)`,
 // becomes a grid of that trip's cover photos with the link below. The photos sit straight in the
 // figure, not inside a link, so Telegram's automatic Instant View keeps them; the caption's link is
 // stretched over the whole figure in CSS, so the photos still lead to the trip.
 
-const TRIP_PATH = /^\/trip\/([\w-]+)\/?$/
+// A trip by its id, or its year and the rest of it; an id it once had leads to it too.
+const TRIP_PATH = /^\/trip\/(?:(\d{4})\/)?([\w-]+)\/?$/
 // Three columns in the 40rem article column, inside the body's 1rem side padding.
 const COVER_SIZES = '(min-width: 42rem) 13rem, calc((100vw - 2rem) / 3)'
 type MdNode = { type: string; children?: MdNode[]; url?: string; value?: string }
@@ -18,7 +20,17 @@ export function remarkTripCovers() {
   let media: Map<string, MomentRecord['media'][number]> | undefined
 
   return (tree: MdNode) => {
-    trips ??= new Map(readTripRecords().map((trip) => [trip.id, trip]))
+    if (!trips) {
+      // By its id on the site, and by its key, which old links name it by.
+      const ids = readTripIds()
+      trips = new Map()
+      for (const trip of readTripRecords()) {
+        const id = ids.get(trip.id) ?? trip.id
+        const shown = { ...trip, id }
+        trips.set(id, shown)
+        trips.set(trip.id, shown)
+      }
+    }
     media ??= new Map(
       readMomentRecords().flatMap(({ record }) =>
         record.media.map((item) => [`${record.uid}/${item.uid}`, item] as const),
@@ -67,7 +79,8 @@ function replaceTripLinks(
 ) {
   for (const [index, child] of (node.children ?? []).entries()) {
     const link = getStandaloneLink(child)
-    const tripId = link?.url && TRIP_PATH.exec(link.url)?.[1]
+    const match = link?.url ? TRIP_PATH.exec(link.url) : undefined
+    const tripId = match && (match[1] ? `${match[1]}-${match[2]}` : match[2])
 
     if (!link || !tripId) {
       replaceTripLinks(child, trips, media)
@@ -82,7 +95,7 @@ function replaceTripLinks(
 
     node.children![index] = {
       type: 'html',
-      value: renderCovers(trip, link.url!, getText(link) || trip.title, media),
+      value: renderCovers(trip, getTripPath(trip.id), getText(link) || trip.title, media),
     }
   }
 }

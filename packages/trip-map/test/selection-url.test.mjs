@@ -53,12 +53,10 @@ test('leads to a trip by its id or by its year and the rest, either way', () => 
   assert.equal(defaultUrls.getPickedTripId('/trip/2026/'), '2026')
   assert.equal(defaultUrls.isNestedTripPath('/trip/2026/yunnan/play/'), true)
   assert.equal(defaultUrls.isNestedTripPath('/trip/2026-yunnan/'), false)
-  assert.equal(defaultUrls.getPickedTripPath('2026-yunnan', true), '/trip/2026/yunnan/')
-  assert.equal(defaultUrls.getTripPath('2026-yunnan', 'x', true), '/trip/2026/yunnan/play/x/')
-  assert.equal(
-    defaultUrls.getTripPath('code-and-travel', undefined, true),
-    '/trip/code-and-travel/play/',
-  )
+  // A trip's address is always by its year, whichever way it was opened.
+  assert.equal(defaultUrls.getPickedTripPath('2026-yunnan'), '/trip/2026/yunnan/')
+  assert.equal(defaultUrls.getTripPath('2026-yunnan', 'x'), '/trip/2026/yunnan/play/x/')
+  assert.equal(defaultUrls.getTripPath('code-and-travel'), '/trip/code-and-travel/play/')
 })
 
 test('knows the trip list narrowed to a year or a month, apart from a trip', () => {

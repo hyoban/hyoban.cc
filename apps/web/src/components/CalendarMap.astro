@@ -1,4 +1,5 @@
 ---
+import { getTripPath } from '@/trip-path'
 import '@hyoban/trip-map/styles.css'
 import '@/styles/trip-chat.css'
 import '@/styles/checkin-entry.css'
@@ -148,7 +149,7 @@ const pageTrip = activeTrip ?? pickedTrip
 // own until the map has loaded (src/trip-route-glyph.ts).
 const pickedSegments = pickedTrip && getTripSummary(pickedTrip).segments
 // A trip's page by its year and the rest, /trip/2026/yunnan/, is the one by its id.
-const canonicalPath = pageTrip && `/trip/${pageTrip.id}/${activeTrip ? 'play/' : ''}`
+const canonicalPath = pageTrip && getTripPath(pageTrip.id, activeTrip ? {} : undefined)
 // The totals a screenshot of the map puts in its header.
 const statsJson = toScriptJson(getMapStats(locationGroups, trips))
 // Every trip's route and title for the overview, in a file every map and trip page shares;
@@ -239,7 +240,7 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
             <ul>
               {trips.map((trip, index) => (
                 <li>
-                  <a href={`/trip/${trip.id}/play/`} data-trip-map-trip-link={trip.id} tabindex={index === 0 ? undefined : -1}><span class="sr-only">回放旅程：</span>{trip.title}</a>
+                  <a href={getTripPath(trip.id, {})} data-trip-map-trip-link={trip.id} tabindex={index === 0 ? undefined : -1}><span class="sr-only">回放旅程：</span>{trip.title}</a>
                 </li>
               ))}
             </ul>
@@ -485,7 +486,7 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
                 <ul>
                   {yearTrips.map(trip => (
                     <li hidden={!isInPeriod(trip)}>
-                      <a class="trip-map-trip-list__trip" href={`/trip/${trip.id}/`} data-trip-map-trip-link={trip.id}>
+                      <a class="trip-map-trip-list__trip" href={getTripPath(trip.id)} data-trip-map-trip-link={trip.id}>
                         <TripCoverCollage images={getTripCollage(trip, moments)} sizes="(max-width: 48rem) 100vw, 26rem" />
                         <span class="trip-map-trip-list__text">
                           <span class="trip-map-trip-list__title">{trip.title}</span>

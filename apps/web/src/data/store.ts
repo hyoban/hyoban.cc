@@ -1,9 +1,11 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { getReadableTripIds } from './trip-slugs.ts'
 import { dirname, join } from 'node:path'
 import {
   collectionSchema,
   collectionToTrip,
   entrySchema,
+  getCollectionKey,
   entryToMoment,
   getPublicEntry,
   isInCollection,
@@ -230,7 +232,24 @@ export function readCollections(root = getDataRoot()): Collection[] {
   return collections
 }
 
-/** The trips as the first shape has them, from the collections and their marks. */
+/**
+ * Each trip's id on the site by its key in the data (its slug, or its uid in lowercase): its
+ * year and its title in pinyin (data/trip-slugs.ts), which moves with the title.
+ */
+export function readTripIds(root = getDataRoot()) {
+  return getReadableTripIds(
+    readCollections(root).map((collection) => ({
+      key: getCollectionKey(collection),
+      start: collection.span.start.slice(0, 10),
+      title: collection.title,
+    })),
+  )
+}
+
+/**
+ * The trips as the first shape has them, from the collections and their marks, each by its
+ * key; the site shows them by their readable ids (readTripIds).
+ */
 export function readTripRecords(root = getDataRoot()): TripRecord[] {
   const entries = readEntries(root).map(({ record }) => record)
 

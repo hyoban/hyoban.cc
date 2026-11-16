@@ -47,7 +47,9 @@ data/
   `exclude`), its waypoints marks of their own (entries with a place and no parts) and its
   public check-ins with a place, each among the marks by its time. Its bills are the public
   bill entries in its span, by time alone: a bill names no trip, and its page lists them among
-  its Moments with what they spent.
+  its Moments with what they spent. Its slug (or uid) is its key and never changes; the site shows
+  it at an address from its year and title in pinyin, `/trip/2026/xuzhou-zhoumo-xing/`, worked out
+  at each build, and redirects the addresses it had before there.
   Either end of its span may be a time: what came before it on its first day, or after it on
   its last, is not in it. The app can tie an end to a record in `bounds` (`from`, `to`, an
   entry's uid each, a check-in or a Moment): that end is the record's time and follows it.

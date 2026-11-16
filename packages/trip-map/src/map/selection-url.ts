@@ -35,10 +35,10 @@ function getMatchedTripId(match: RegExpMatchArray | null | undefined) {
   return rest && (match?.[1] ? `${match[1]}-${rest}` : rest)
 }
 
-/** A trip's part of a path: its id, or with `nested` its year and the rest if it has one. */
-function getTripSegment(id: string, nested?: boolean) {
+/** A trip's part of a path: its year and the rest of its id, `2026/yunnan`, or its id if it has no year. */
+function getTripSegment(id: string) {
   const [, year, rest] = id.match(/^(\d{4})-(.+)$/) ?? []
-  return nested && year && rest ? `${year}/${encodeURIComponent(rest)}` : encodeURIComponent(id)
+  return year && rest ? `${year}/${encodeURIComponent(rest)}` : encodeURIComponent(id)
 }
 
 function decode(segment: string | undefined) {
@@ -116,17 +116,14 @@ export const defaultUrls = {
   /** The card of the trip playing a pathname starts on, a stop's anchor, if any. */
   getTripStop: (pathname: string) =>
     decode(withSlash(pathname).match(PLAYING_TRIP_PATH_PATTERN)?.[3]),
-  /**
-   * A trip playing, from the card `stop` names or its start; `nested`, under its year
-   * (`/trip/2026/yunnan/play/`) rather than its id.
-   */
-  getTripPath: (id: string, stop?: string, nested?: boolean) =>
-    `/trip/${getTripSegment(id, nested)}/play/${stop ? `${encodeURIComponent(stop)}/` : ''}`,
+  /** A trip playing, from the card `stop` names or its start, under its year: `/trip/2026/yunnan/play/`. */
+  getTripPath: (id: string, stop?: string) =>
+    `/trip/${getTripSegment(id)}/play/${stop ? `${encodeURIComponent(stop)}/` : ''}`,
   /** The trip whose sidebar a pathname opens, if any. */
   getPickedTripId: (pathname: string) =>
     getMatchedTripId(withSlash(pathname).match(PICKED_TRIP_PATH_PATTERN)),
-  /** A trip's sidebar beside the map, its route lifted, not playing yet; `nested`, as above. */
-  getPickedTripPath: (id: string, nested?: boolean) => `/trip/${getTripSegment(id, nested)}/`,
+  /** A trip's sidebar beside the map, its route lifted, not playing yet, under its year as above. */
+  getPickedTripPath: (id: string) => `/trip/${getTripSegment(id)}/`,
   /** Whether a pathname leads to a trip by its year and the rest, `/trip/2026/yunnan/`. */
   isNestedTripPath: (pathname: string) =>
     /^\/trip\/\d{4}\/[^/]+\//.test(withSlash(pathname)) &&

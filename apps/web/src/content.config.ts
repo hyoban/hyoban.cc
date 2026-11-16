@@ -2,7 +2,7 @@ import { glob } from 'astro/loaders'
 import { z } from 'astro/zod'
 import { defineCollection } from 'astro:content'
 import { momentRecordSchema } from '@hyoban/data-spec'
-import { readMomentRecords } from '@/data/store'
+import { readMomentRecords, readTripIds } from '@/data/store'
 
 const description = z.string().trim().min(1)
 
@@ -33,7 +33,15 @@ const pages = defineCollection({
 // words under data/ (or the API's snapshot when the build fetched one), as the store reads
 // them from either layout.
 const moments = defineCollection({
-  loader: () => readMomentRecords().map(({ record }) => ({ ...record, id: record.uid })),
+  // The trip a Moment names by its key, by its id on the site instead (trip-slugs.ts).
+  loader: () => {
+    const ids = readTripIds()
+    return readMomentRecords().map(({ record }) => ({
+      ...record,
+      id: record.uid,
+      ...(record.trip ? { trip: ids.get(record.trip) ?? record.trip } : {}),
+    }))
+  },
   schema: momentRecordSchema,
 })
 

@@ -1,4 +1,5 @@
 ---
+import { getTripPath } from '@/trip-path'
 import '@hyoban/drawer/styles.css'
 import '@/styles/trip-chat.css'
 import CalendarBackLink from '@/components/CalendarBackLink.astro'
@@ -150,7 +151,7 @@ const selectedTrip = selectedDate
 // Opens the playback on this day, or the next day with a place when this one has none.
 const selectedTripStop = selectedTrip?.stops.find(stop => stop.dateKey >= selectedDate!)
 const selectedTripHref = selectedTrip
-  ? `/trip/${selectedTrip.id}/play/${selectedTripStop ? `${getStopAnchor(selectedTripStop.id)}/` : ''}`
+  ? getTripPath(selectedTrip.id, { stop: selectedTripStop && getStopAnchor(selectedTripStop.id) })
   : undefined
 // A shared Moment is titled by its headline, and described by the words after it; one of
 // photos alone by when and where, and its photos.
