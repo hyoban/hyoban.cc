@@ -678,7 +678,8 @@ system again. Its title switches between 所有照片, the gallery's albums by s
 Moment, up to the nine a Moment holds. The grid is by day, newest first, four across (eight on its
 side), a video with its length and a motion photo marked 实况, its XMP read from the media store.
 Two fingers pinched or spread change how many go across, three, four or six (six, eight or twelve
-on its side), kept for next time; at six they are by the month and only looked through, without
+on its side), kept for next time: the grid only grows and shrinks with the fingers while they are down,
+and takes the next count, one step at most, when they lift, the photo under them held where it was unless the grid is at its top; at six they are by the month and only looked through, without
 their circles, what is chosen keeping its border and number. While the grid scrolls a handle shows
 at its right: dragged, it takes the grid through what it holds, a bubble beside it saying the
 month, and reaches only what has been read, so the NAS's reads on at the end.
