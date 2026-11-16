@@ -117,7 +117,10 @@ fun SharedMap(
             uiOptions = sharedMapUiOptions(interactive, tokens.bg),
             overlay = {
                 Box(Modifier.fillMaxSize().padding(attributionPadding)) {
-                    ExpandingAttributionButton(Modifier.align(Alignment.BottomStart))
+                    ExpandingAttributionButton(
+                        Modifier.align(Alignment.BottomStart),
+                        initiallyExpanded = false,
+                    )
                 }
             },
         )

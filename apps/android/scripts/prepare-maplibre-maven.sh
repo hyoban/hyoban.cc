@@ -32,8 +32,8 @@ download_repository \
 
 download_repository \
   "maplibre-compose" \
-  "https://github.com/hyoban/maplibre-compose/releases/download/here-android-v0.21.0-hyoban.1/maplibre-compose-maven-0.21.0-hyoban.1.zip" \
-  "5b08374375efe4873840203f2db52ebc47dbbe23eb87aa937a03702d945c7132" \
+  "https://github.com/hyoban/maplibre-compose/releases/download/here-android-v0.21.0-hyoban.2/maplibre-compose-maven-0.21.0-hyoban.2.zip" \
+  "7d794122b3f93973f8e050db6961e3354d8a47a615dd093f901dfb1db4bc55c2" \
   "$repository_root/compose"
 
 printf 'MapLibre Maven repositories are ready in %s\n' "$repository_root"

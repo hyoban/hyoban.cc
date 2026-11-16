@@ -21,7 +21,7 @@ coil = "3.6.3"
 # needs; it is built on the same Compose 1.12 as the BOM.
 junit = "4.13.2"
 testRunner = "1.7.0"
-maplibreCompose = "0.21.0-hyoban.1"
+maplibreCompose = "0.21.0-hyoban.2"
 media3 = "1.11.1"
 # The OkHttp Coil and Media3 are built against; the app shares one client with them.
 okhttp = "4.12.0"
