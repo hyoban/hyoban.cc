@@ -6,7 +6,7 @@ export type Coordinates = readonly [number, number]
 /** A point on the earth, as a pair or as a place with `latitude` and `longitude`. */
 export type LngLatLike = Coordinates | Readonly<{ latitude: number; longitude: number }>
 
-const EARTH_RADIUS_KM = 6371
+export const EARTH_RADIUS_KM = 6371
 
 export function toCoordinates(point: LngLatLike): Coordinates {
   return Array.isArray(point)

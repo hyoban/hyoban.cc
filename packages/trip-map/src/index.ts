@@ -53,10 +53,12 @@ export {
 } from './player/labels.ts'
 export {
   easeInOut,
+  getLineKm,
   getRouteLine,
   getTravelMode,
   measureLine,
   simplifyLine,
+  trimTurnBacks,
   walkLine,
   type MeasuredLine,
 } from './player/route.ts'

@@ -12,9 +12,11 @@ import {
   buildTrip,
   compareMoments,
   getLegKey,
+  getLineKm,
   getTrainLegKey,
   getTripSummary,
   simplifyLine,
+  trimTurnBacks,
   type TripDefinition,
   type TripLocation,
   type TripRoute,
@@ -446,10 +448,17 @@ async function fetchDrive({ from, to }: Leg, fetcher: typeof fetch) {
     throw new Error(`Valhalla answered ${response.status}: ${body.error ?? body.error_code}`)
   }
 
+  // Without the spurs it drives on and back to reach a place from the far side of the
+  // road, its distance and time shortened by as much.
+  const line = decodePolyline(leg.shape)
+  const trimmed = trimTurnBacks(line)
+  const routedKm = getLineKm(line)
+  const kept = routedKm > 0 ? getLineKm(trimmed) / routedKm : 1
+
   return {
-    coordinates: simplify(decodePolyline(leg.shape)),
-    distance: Math.round(body.trip.summary.length * 1000),
-    duration: Math.round(body.trip.summary.time),
+    coordinates: simplify(trimmed),
+    distance: Math.round(body.trip.summary.length * 1000 * kept),
+    duration: Math.round(body.trip.summary.time * kept),
   }
 }
 
@@ -513,7 +522,7 @@ async function fetchRail({ from, to }: Leg, fetcher: typeof fetch) {
   }
 }
 
-function simplify(line: [number, number][]) {
+function simplify(line: readonly (readonly [number, number])[]) {
   return simplifyLine(line, SIMPLIFY_TOLERANCE).map(
     ([longitude, latitude]) =>
       [Number(longitude.toFixed(5)), Number(latitude.toFixed(5))] as [number, number],

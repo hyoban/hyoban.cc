@@ -30,6 +30,7 @@ import java.io.File
 import java.io.IOException
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.hypot
 
 // The routes of the trips the API hasn't routed, worked out on the phone as the API works
@@ -200,7 +201,7 @@ object Routers {
         val shape = ((answer?.get("trip") as? JsonObject)?.get("legs") as? JsonArray)?.firstOrNull()
             ?.let { (it as? JsonObject)?.get("shape") as? JsonPrimitive }?.content
         if (code !in 200..299 || shape == null) throw IOException("Valhalla answered $code")
-        return simplify(decodePolyline(shape))
+        return simplify(trimTurnBacks(decodePolyline(shape)))
     }
 
     private fun rail(leg: LegRequest): List<LngLat>? {
@@ -248,6 +249,56 @@ object Routers {
             latitude += next()
             longitude += next()
             line += longitude / 1e6 to latitude / 1e6
+        }
+        return line
+    }
+
+    /**
+     * [line] without the spurs a router drives out and back at a leg's ends to reach a place from
+     * the far side of the road, as trip-map's `trimTurnBacks` cuts them for the API: where the leg
+     * first passes within [TURN_BACK_METRES] of its end and then runs on and returns no further than
+     * [TURN_BACK_RATIO] times as far as it reaches, it stops there and steps across.
+     */
+    fun trimTurnBacks(line: List<LngLat>): List<LngLat> {
+        if (line.size < 3 || metresBetween(line.first(), line.last()) < 2 * TURN_BACK_METRES) return line
+        return trimEnd(trimEnd(line).reversed()).reversed()
+    }
+
+    private const val TURN_BACK_METRES = 300.0
+    private const val TURN_BACK_MIN_METRES = 4 * TURN_BACK_METRES
+    private const val TURN_BACK_RATIO = 2.6
+    private const val EARTH_RADIUS_METRES = 6_371_000.0
+
+    private fun metresBetween(a: LngLat, b: LngLat): Double {
+        val scale = cos(Math.toRadians((a.second + b.second) / 2))
+        return Math.toRadians(hypot((b.first - a.first) * scale, b.second - a.second)) * EARTH_RADIUS_METRES
+    }
+
+    private fun trimEnd(line: List<LngLat>): List<LngLat> {
+        val end = line.last()
+        // Metres east and north of the end, near enough flat over a spur's few kilometres.
+        val metres = Math.toRadians(1.0) * EARTH_RADIUS_METRES
+        val scale = cos(Math.toRadians(end.second))
+        val local = line.map { (x, y) -> (x - end.first) * scale * metres to (y - end.second) * metres }
+        for (index in 0 until local.size - 2) {
+            val (ax, ay) = local[index]
+            val (bx, by) = local[index + 1]
+            val length = (bx - ax) * (bx - ax) + (by - ay) * (by - ay)
+            val t = if (length > 0) (-(ax * (bx - ax) + ay * (by - ay)) / length).coerceIn(0.0, 1.0) else 0.0
+            val passing = ax + t * (bx - ax) to ay + t * (by - ay)
+            if (hypot(passing.first, passing.second) >= TURN_BACK_METRES) continue
+            // The spur: from where it passes on to the end.
+            val spur = listOf(passing) + local.subList(index + 1, local.size)
+            var spurLength = 0.0
+            var reach = 0.0
+            for (point in 1 until spur.size) {
+                spurLength += hypot(spur[point].first - spur[point - 1].first, spur[point].second - spur[point - 1].second)
+                reach = maxOf(reach, hypot(spur[point].first - passing.first, spur[point].second - passing.second))
+            }
+            if (spurLength < TURN_BACK_MIN_METRES || spurLength > TURN_BACK_RATIO * reach) return line
+            val (first, second) = line[index] to line[index + 1]
+            val cut = first.first + t * (second.first - first.first) to first.second + t * (second.second - first.second)
+            return line.subList(0, index + 1) + listOf(cut, end)
         }
         return line
     }

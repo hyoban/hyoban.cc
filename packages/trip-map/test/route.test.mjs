@@ -8,6 +8,7 @@ import {
   getTravelMode,
   measureLine,
   simplifyLine,
+  trimTurnBacks,
   walkLine,
 } from '../src/player/route.ts'
 
@@ -146,4 +147,49 @@ test('shortens place names to what is outside brackets', () => {
   assert.equal(getShortPlaceName('Cafe (Downtown) Bar'), 'Cafe Bar')
   assert.equal(getShortPlaceName('渤海'), '渤海')
   assert.equal(getShortPlaceName('（未命名）'), '（未命名）')
+})
+
+// A drive east that passes its end 200 m off, on the far side of the road, runs on about
+// 5 km to turn and comes back to it; the same backwards is a spur at its start.
+const spurred = [
+  [118, 31],
+  [118.1, 31],
+  [118.2, 31],
+  [118.25, 31],
+  [118.25, 31.002],
+  [118.2, 31.0018],
+]
+
+test('cuts the spur a router drives on and back to reach a place across the road', () => {
+  assert.deepEqual(trimTurnBacks(spurred), [
+    [118, 31],
+    [118.1, 31],
+    [118.2, 31],
+    [118.2, 31.0018],
+  ])
+  assert.deepEqual(trimTurnBacks([...spurred].reverse()), [
+    [118.2, 31.0018],
+    [118.2, 31],
+    [118.1, 31],
+    [118, 31],
+  ])
+})
+
+test('keeps a line that reaches its places straight, or loops round to them', () => {
+  const straight = [
+    [118, 31],
+    [118.1, 31],
+    [118.2, 31],
+  ]
+  assert.deepEqual(trimTurnBacks(straight), straight)
+  // Round a block of about 2 km a side to a place beside the road it first passed.
+  const loop = [
+    [118, 31],
+    [118.1, 31],
+    [118.12, 31],
+    [118.12, 31.018],
+    [118.1, 31.018],
+    [118.1, 31.0025],
+  ]
+  assert.deepEqual(trimTurnBacks(loop), loop)
 })

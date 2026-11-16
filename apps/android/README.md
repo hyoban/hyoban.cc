@@ -25,7 +25,8 @@ everything again.
 
 A trip the API hasn't routed, every trip without an API and one made on the phone with one,
 is routed on the phone the way the API routes the rest (`data/trips/PhoneRoutes.kt`): its
-drives along the road FOSSGIS's public Valhalla finds, its trains along the rail line
+drives along the road FOSSGIS's public Valhalla finds, without the spurs it drives on and back at
+a leg's ends to reach a place across the road, its trains along the rail line
 OpenRailRouting finds between the places' stations, its ferries and flights straight. Neither
 asks for a key. The legs are asked for one at a time, a second apart, once a trip's stops have
 stayed put for two seconds, and kept in `phone-routes.json` by the API's keys; a leg with no way

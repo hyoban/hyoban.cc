@@ -82,7 +82,8 @@ Records written outside the API go in with `vp run data:push` ([docs/data.md](..
 Each leg between consecutive places of a trip (its Moments, its marks and its public
 check-ins, as `@hyoban/trip-map`'s `buildTrip` and the spec's `collectionToTrip` work them
 out) has a route in the `routes` table by its key: a drive from FOSSGIS's public
-Valhalla, or for a train leg (`train:` key) a rail line from OpenRailRouting's demo between
+Valhalla, less the spur it drives on and back at either end to reach a place across a divided
+road (trip-map's `trimTurnBacks`, its distance and time shortened by as much), or for a train leg (`train:` key) a rail line from OpenRailRouting's demo between
 the places' `station`s. Neither needs a key, so the app can route the same way. Ferries and
 flights are straight. After a write the trips see, the Worker fetches the legs it lacks (up
 to 30, 2 at once, as the public routers ask) and marks deleted those no trip has. A leg with

@@ -1,4 +1,4 @@
-import type { Coordinates } from '../geo.ts'
+import { EARTH_RADIUS_KM, getDistanceKm, type Coordinates } from '../geo.ts'
 import type { TravelMode } from '../trips.ts'
 
 // The trip's route as a line: built from its places and the road geometry between
@@ -151,6 +151,91 @@ export function lineFeature(coordinates: readonly Coordinates[]) {
     properties: {},
     type: 'Feature' as const,
   }
+}
+
+// A router reaches a place on the far side of a divided road by driving on to the next
+// turning and coming back: the leg passes within this many metres of its end, runs on and
+// returns. Such a spur, at either end, is cut there; one only a little longer than twice
+// as far as it reaches is a road driven out and back, where a loop round a block is not.
+const TURN_BACK_METRES = 300
+const TURN_BACK_MIN_METRES = 4 * TURN_BACK_METRES
+const TURN_BACK_RATIO = 2.6
+
+/** How long a line is, in kilometres. */
+export function getLineKm(line: readonly Coordinates[]) {
+  let km = 0
+
+  for (let index = 1; index < line.length; index += 1) {
+    km += getDistanceKm(line[index - 1]!, line[index]!)
+  }
+
+  return km
+}
+
+/**
+ * A routed leg without the spurs a router drives out and back at its ends to reach a place
+ * from the far side of the road (see TURN_BACK_METRES): the line instead stops where it
+ * first passes the place and steps across to it. A leg between places this close keeps
+ * its line.
+ */
+export function trimTurnBacks(line: readonly Coordinates[]): Coordinates[] {
+  if (line.length < 3 || getDistanceKm(line[0]!, line.at(-1)!) * 1000 < 2 * TURN_BACK_METRES) {
+    return [...line]
+  }
+
+  return trimEnd(trimEnd(line).reverse()).reverse()
+}
+
+/** `line` with an out-and-back spur at its end cut where it first passes its end. */
+function trimEnd(line: readonly Coordinates[]): Coordinates[] {
+  const end = line.at(-1)!
+  // Metres east and north of the end, near enough flat over a spur's few kilometres.
+  const metres = 1000 * ((Math.PI / 180) * EARTH_RADIUS_KM)
+  const scale = Math.cos((end[1] * Math.PI) / 180)
+  const local = line.map(
+    ([x, y]) => [(x - end[0]) * scale * metres, (y - end[1]) * metres] as const,
+  )
+
+  for (let index = 0; index < local.length - 2; index += 1) {
+    const [ax, ay] = local[index]!
+    const [bx, by] = local[index + 1]!
+    const length = (bx - ax) ** 2 + (by - ay) ** 2
+    const t = length ? Math.min(Math.max(-(ax * (bx - ax) + ay * (by - ay)) / length, 0), 1) : 0
+    const passing = [ax + t * (bx - ax), ay + t * (by - ay)] as const
+
+    if (Math.hypot(...passing) >= TURN_BACK_METRES) {
+      continue
+    }
+
+    // The spur: from where it passes on to the end.
+    const spur = [passing, ...local.slice(index + 1)]
+    let spurLength = 0
+    let reach = 0
+
+    for (let point = 1; point < spur.length; point += 1) {
+      spurLength += Math.hypot(
+        spur[point]![0] - spur[point - 1]![0],
+        spur[point]![1] - spur[point - 1]![1],
+      )
+      reach = Math.max(
+        reach,
+        Math.hypot(spur[point]![0] - passing[0], spur[point]![1] - passing[1]),
+      )
+    }
+
+    if (spurLength < TURN_BACK_MIN_METRES || spurLength > TURN_BACK_RATIO * reach) {
+      return [...line]
+    }
+
+    const [first, second] = [line[index]!, line[index + 1]!]
+    const cut: Coordinates = [
+      first[0] + t * (second[0] - first[0]),
+      first[1] + t * (second[1] - first[1]),
+    ]
+    return [...line.slice(0, index + 1), cut, end]
+  }
+
+  return [...line]
 }
 
 /**
