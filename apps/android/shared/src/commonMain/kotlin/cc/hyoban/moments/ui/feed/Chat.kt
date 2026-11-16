@@ -52,7 +52,7 @@ import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.ledger.TIME
 import cc.hyoban.moments.ui.ledger.amountColor
-import cc.hyoban.moments.ui.ledger.amountWithRefund
+import cc.hyoban.moments.ui.ledger.billAmount
 import cc.hyoban.moments.ui.ledger.incoming
 import cc.hyoban.moments.ui.ledger.txnIcon
 import cc.hyoban.moments.ui.ledger.txnTitle
@@ -305,7 +305,7 @@ fun RecordsBubble(
                         icon = { Icon(txnIcon(line.txn, ledger), contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
                         title = txnTitle(line.txn, ledger),
                         time = line.txn.local.format(TIME),
-                        end = amountWithRefund(line.txn, ledger),
+                        end = billAmount(line.txn, ledger),
                         endColor = amountColor(line.txn),
                         large = large,
                         timed = timed,
@@ -315,7 +315,7 @@ fun RecordsBubble(
                         icon = { Icon(AppIcons.Ev, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
                         title = stringResource(Res.string.timeline_charge),
                         time = line.charge.at.drop(11).take(5).ifEmpty { null },
-                        end = line.charge.kwh?.let { "%.1f kWh".format(it) } ?: line.charge.minutes?.let { pluralStringResource(Res.plurals.charge_minutes, it, it) }.orEmpty(),
+                        end = androidx.compose.ui.text.AnnotatedString(line.charge.kwh?.let { "%.1f kWh".format(it) } ?: line.charge.minutes?.let { pluralStringResource(Res.plurals.charge_minutes, it, it) }.orEmpty()),
                         endColor = tokens.tx,
                         large = large,
                         timed = timed,
@@ -326,7 +326,7 @@ fun RecordsBubble(
                         title = thingTitle(line.thing),
                         // Known by its day alone: the time's column stays, empty.
                         time = null,
-                        end = cc.hyoban.moments.ui.things.priceOf(line.thing.price, line.thing.currency),
+                        end = androidx.compose.ui.text.AnnotatedString(cc.hyoban.moments.ui.things.priceOf(line.thing.price, line.thing.currency)),
                         endColor = tokens.tx,
                         large = large,
                         timed = timed,
@@ -336,7 +336,7 @@ fun RecordsBubble(
                         icon = { Icon(AppIcons.Footprints, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
                         title = stringResource(Res.string.timeline_track),
                         time = trackTime(line.piece),
-                        end = stringResource(Res.string.distance_kilometres, decimals(line.piece.metres / 1000, 1)),
+                        end = androidx.compose.ui.text.AnnotatedString(stringResource(Res.string.distance_kilometres, decimals(line.piece.metres / 1000, 1))),
                         endColor = tokens.tx,
                         large = large,
                         timed = timed,
@@ -377,7 +377,7 @@ fun BubbleBills(
                     cost.people?.takeIf { it > 1 }?.let { pluralStringResource(Res.plurals.count_food_people, it, it) },
                 ).joinToString(" "),
                 time = null,
-                end = costMoney(amount, cost.currency),
+                end = androidx.compose.ui.text.AnnotatedString(costMoney(amount, cost.currency)),
                 endColor = tokens.tx,
                 large = large,
                 timed = false,
@@ -392,7 +392,7 @@ fun BubbleBills(
                     icon = { Icon(txnIcon(txn, ledger), contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
                     title = txnTitle(txn, ledger),
                     time = at,
-                    end = amountWithRefund(txn, ledger),
+                    end = billAmount(txn, ledger),
                     endColor = amountColor(txn),
                     large = large,
                     timed = at != time,
@@ -410,7 +410,7 @@ private fun RecordRow(
     icon: @Composable () -> Unit,
     title: String,
     time: String?,
-    end: String,
+    end: androidx.compose.ui.text.AnnotatedString,
     endColor: androidx.compose.ui.graphics.Color,
     large: Boolean,
     timed: Boolean,

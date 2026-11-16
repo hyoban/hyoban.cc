@@ -660,7 +660,6 @@
     <string name="ledger_no_account">No account</string>
     <string name="ledger_reimburse_pending">To be reimbursed</string>
     <string name="ledger_reimburse_done">Reimbursed</string>
-    <string name="ledger_refunded">Refunded</string>
     <string name="ledger_expense_short">Spent %1$s</string>
     <string name="ledger_income_short">Earned %1$s</string>
     <string name="ledger_balance_short">Net %1$s</string>

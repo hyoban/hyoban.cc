@@ -13,10 +13,12 @@ const [, month, day] = bill.dateKey.split('-').map(part => Number.parseInt(part,
 const dayLabel = `${month}/${day} ${weekdayFormatter.format(new Date(`${bill.dateKey}T00:00:00Z`))}`
 // The category's own name, its parent left to the category itself: `餐饮 › 晚餐` reads 晚餐.
 const category = bill.category?.split(' › ').at(-1)
+// An expense its refunds brought some of back costs what is left, what was paid struck through before it.
+const net = bill.refunded ? Math.round((bill.amount - bill.refunded) * 100) / 100 : undefined
 ---
 
 <!-- A public bill in a trip's sidebar: one quiet line, as a check-in's, the day and time
-     it was paid, what for and what it cost, and what came back of it, among the trip's Moments. -->
+     it was paid, what for and what it cost (after its refunds, what was paid struck through before it), among the trip's Moments. -->
 <article class="bill-entry">
   <span class="i-lucide-receipt" aria-hidden="true" />
   <span class="sr-only">{bill.kind === 'income' ? '收入' : '支出'}</span>
@@ -25,5 +27,7 @@ const category = bill.category?.split(' › ').at(-1)
     {category ?? (bill.kind === 'income' ? '收入' : '支出')}
     {bill.note && <span class="bill-entry__note">{bill.note}</span>}
   </span>
-  <span class="bill-entry__amount" data-kind={bill.kind}>{bill.kind === 'income' ? '+' : ''}{formatBillAmount(bill.amount, bill.currency)}{bill.refunded && <span class="bill-entry__refunded">退款 {formatBillAmount(bill.refunded, bill.currency)}</span>}</span>
+  <span class="bill-entry__amount" data-kind={bill.kind}>{bill.kind === 'income' ? '+' : ''}{net === undefined
+    ? formatBillAmount(bill.amount, bill.currency)
+    : <><s class="bill-entry__paid"><span class="sr-only">原价</span>{formatBillAmount(bill.amount, bill.currency)}</s> <span class="sr-only">退款后</span>{formatBillAmount(net, bill.currency)}</>}</span>
 </article>

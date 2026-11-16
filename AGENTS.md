@@ -126,7 +126,7 @@ even when starting from the repository root.
   public bill publishes its kind, amount, currency, category and note alone, never its account or
   balance, and an expense what its refunds brought back of it (`refunded`): a refund goes out only
   so, public with its expense unless it says private itself, and is shown and counted with that
-  expense, its amount still in full beside its refund, wherever it is. A trip's bills, on the phone and the site alike, are those paid in its span, by
+  expense wherever it is, shown as what it cost after them with what was paid struck through. A trip's bills, on the phone and the site alike, are those paid in its span, by
   time alone; a bill names no trip. The footprints are never published, not even simplified: a trip's public route
   is only the routers' (below), along the roads between its stops. A stay
   kept as a check-in, by hand, is a check-in entry like Swarm's, its point the stay's middle. A check-in

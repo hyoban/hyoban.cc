@@ -386,7 +386,8 @@ the app to others: every amount is hidden, an account goes by its kind alone (no
 bank's mark), and private Moments and trips are left out everywhere, the widgets included.
 
 A bill is an expense, an income or a transfer (also a repayment or a loan), or a refund or
-reimbursement written from its expense. `moments://new-bill`, or the ledger's +, opens one
+reimbursement written from its expense, which counts with that expense in what a trip, a place or
+a day spent, whenever it came back. `moments://new-bill`, or the ledger's +, opens one
 on a keypad (sums like `12+3.4` add up). It has an amount in any currency, a category, one
 account or several with their shares, its time and book, discounts and fees, whether it is
 to be reimbursed or left out of the sums, and the Moment or check-in (one of them, chosen
@@ -448,8 +449,9 @@ a book on asks for the day, today unless another is picked, and 开始日期 und
 made public before there was a day keeps all its bills public. A bill's 公开 chip says otherwise for one. A public bill publishes only its
 kind, amount, currency, category and note (`data/store/Outside.kt`), and an expense what its
 refunds brought back of it, up to what it cost, as `refunded`: a refund isn't a bill of its own on
-the site, and goes with its expense unless its own 公开 chip says private. The app shows it so too: an expense's
-line keeps its amount in full and says 退款 ¥5 beside it, or under it where the line has a second. A published bill deleted here,
+the site, and goes with its expense unless its own 公开 chip says private. The app shows a refunded expense with what
+it cost after its refunds, what was paid struck through before it, and a 退款 ¥5 tag under its line
+where the line has room for one. A published bill deleted here,
 by hand, with its book or by an import in place of the ledger, waits in the ledger's `gone` table
 until the next publish takes it off the site. As the app starts, a bill with nothing published
 that the site has under another id (one of the same kind, amount and currency within ten

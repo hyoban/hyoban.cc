@@ -38,8 +38,7 @@
   color: var(--color-tx-3);
 }
 
-.bill-entry__refunded {
-  margin-left: 0.5em;
+.bill-entry__paid {
   color: var(--color-tx-3);
 }
 

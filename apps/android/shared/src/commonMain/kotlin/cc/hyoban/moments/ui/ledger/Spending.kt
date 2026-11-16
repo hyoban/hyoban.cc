@@ -59,15 +59,16 @@ fun momentBillRows(
                     shapes = shapes,
                     colors = segmentColors(),
                     leadingContent = { Icon(txnIcon(txn, ledger), contentDescription = null) },
-                    supportingContent = { Text(txnSupporting(txn, ledger), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    supportingContent = {
+                        androidx.compose.foundation.layout.Column {
+                            Text(txnSupporting(txn, ledger), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            RefundTag(txn, ledger)
+                        }
+                    },
                     // Its amount in figures, as the timeline has it, before the arrow every link on the page ends in.
                     trailingContent = {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
-                            Text(
-                                if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
-                                style = AppTheme.typography.body,
-                                color = amountColor(txn),
-                            )
+                            Text(billAmount(txn, ledger), style = AppTheme.typography.body, color = amountColor(txn))
                             Icon(AppIcons.ChevronRight, contentDescription = null)
                         }
                     },

@@ -312,6 +312,8 @@ fun PageRow(
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     time: String? = null,
+    /** What goes under the supporting line, a tag. */
+    below: @Composable () -> Unit = {},
     trailing: @Composable ColumnScope.() -> Unit = {},
 ) {
     Row(
@@ -343,6 +345,7 @@ fun PageRow(
             supporting?.takeIf { it.isNotEmpty() }?.let {
                 Text(it, style = AppTheme.typography.caption, color = tokens.tx2, maxLines = lines, overflow = TextOverflow.Ellipsis)
             }
+            below()
             if (large) trailing()
         }
         if (!large) Column(horizontalAlignment = Alignment.End, content = trailing)
@@ -359,8 +362,9 @@ fun BillRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = 
         onClick = onClick,
         modifier = modifier.testTag("bill_${txn.id}"),
         time = txn.local.format(TIME),
+        below = { cc.hyoban.moments.ui.ledger.RefundTag(txn, ledger) },
     ) {
-        Text(signedMoney(txn.amount, txn.currency, txn.incoming), style = AppTheme.typography.body, color = amountColor(txn))
+        Text(cc.hyoban.moments.ui.ledger.billAmount(txn, ledger), style = AppTheme.typography.body, color = amountColor(txn))
     }
 }
 

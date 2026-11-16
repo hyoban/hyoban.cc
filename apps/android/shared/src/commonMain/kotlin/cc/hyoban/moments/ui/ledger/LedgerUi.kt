@@ -6,6 +6,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
@@ -119,10 +127,35 @@ fun Ledger.refunded(txn: Txn): Long =
 fun refundedText(txn: Txn, ledger: Ledger): String? =
     ledger.refunded(txn).takeIf { it > 0 }?.let { stringResource(Res.string.bill_refunded_amount, money(it, txn.currency)) }
 
-/** A bill's amount in a line with no room under it: its signed amount, and what its refunds brought back beside it. */
+/**
+ * A bill's amount as a row ends: signed, a transfer's plain; an expense its refunds brought some
+ * of back shows what it cost after them, what was paid struck through before it.
+ */
 @Composable
-fun amountWithRefund(txn: Txn, ledger: Ledger): String =
-    listOfNotNull(signedMoney(txn.amount, txn.currency, txn.incoming), refundedText(txn, ledger)).joinToString(" · ")
+fun billAmount(txn: Txn, ledger: Ledger): AnnotatedString {
+    val back = ledger.refunded(txn)
+    if (back <= 0) return AnnotatedString(if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming))
+    val paid = money(txn.amount, txn.currency)
+    val net = signedMoney(txn.amount - back, txn.currency, false)
+    return buildAnnotatedString {
+        withStyle(SpanStyle(color = tokens.tx3, fontWeight = FontWeight.Normal, textDecoration = TextDecoration.LineThrough)) { append(paid) }
+        append(" ")
+        append(net)
+    }
+}
+
+/** 退款 ¥5, a tag under a refunded expense's line; nothing for a bill with no refund. */
+@Composable
+fun RefundTag(txn: Txn, ledger: Ledger, modifier: Modifier = Modifier) {
+    val text = refundedText(txn, ledger) ?: return
+    Text(
+        text,
+        style = AppTheme.typography.caption,
+        color = tokens.tx2,
+        maxLines = 1,
+        modifier = modifier.padding(top = Space.xs).background(tokens.fill, cc.hyoban.moments.ui.theme.Corners.full).padding(horizontal = Space.s),
+    )
+}
 
 /** Whether a bill brings money in, as its amount is signed. */
 val Txn.incoming: Boolean get() = kind == TxnKind.INCOME || kind == TxnKind.REFUND || kind == TxnKind.REIMBURSEMENT
@@ -384,7 +417,6 @@ fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false, withTime:
         txn.reimburse == Reimburse.DONE -> stringResource(Res.string.ledger_reimburse_done)
         txn.kind == TxnKind.REFUND -> stringResource(Res.string.ledger_kind_refund)
         txn.kind == TxnKind.REIMBURSEMENT -> stringResource(Res.string.ledger_kind_reimbursement)
-        ledger.returns[txn.id].orEmpty().any { it.kind == TxnKind.REFUND } -> refundedText(txn, ledger) ?: stringResource(Res.string.ledger_refunded)
         else -> null
     }
     // The day first, so a long note doesn't cut it off; the time only where the row's end lacks it.
@@ -406,16 +438,17 @@ fun TxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = M
     }
     ListItem(
         headlineContent = { Text(txnTitle(txn, ledger), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        supportingContent = { Text(txnSupporting(txn, ledger, showDate, withTime = false, place = footprintPlace(txn)), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        supportingContent = {
+            Column {
+                Text(txnSupporting(txn, ledger, showDate, withTime = false, place = footprintPlace(txn)), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                RefundTag(txn, ledger)
+            }
+        },
         leadingContent = { LeadingIcon(txnIcon(txn, ledger)) },
         // The amount, and under it the time, after the bill's book where bills of several books are listed.
         trailingContent = {
             Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
-                    style = AppTheme.typography.body.strong,
-                    color = amountColor(txn),
-                )
+                Text(billAmount(txn, ledger), style = AppTheme.typography.body.strong, color = amountColor(txn))
                 val book = if (showBook) ledger.books.firstOrNull { it.id == txn.book }?.name else null
                 Text(
                     listOfNotNull(book, txn.local.format(TIME)).joinToString(" "),
@@ -470,11 +503,12 @@ private fun DesktopTxnRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifie
             modifier = Modifier.width(140.dp),
         )
         Text(
-            if (txn.kind == TxnKind.TRANSFER) money(txn.amount, txn.currency) else signedMoney(txn.amount, txn.currency, txn.incoming),
+            billAmount(txn, ledger),
             style = AppTheme.typography.body,
             color = amountColor(txn),
             textAlign = androidx.compose.ui.text.style.TextAlign.End,
-            modifier = Modifier.width(110.dp),
+            maxLines = 1,
+            modifier = Modifier.widthIn(min = 110.dp),
         )
     }
 }

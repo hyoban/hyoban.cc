@@ -128,6 +128,17 @@ class OutsideTest {
     }
 
     @Test
+    fun `a trip's or a day's spending counts a refund with its expense, wherever either was written`() {
+        val refund = Txn(id = "R1", book = "B", kind = TxnKind.REFUND, time = time + 86_400_000, offsetMinutes = 480, amount = 500, currency = "CNY", related = txn.id)
+        val books = ledger(txn, refund)
+        assertEquals(750L, cc.hyoban.moments.ledger.spendingOf(books, listOf(txn), "CNY").expense)
+        assertEquals(0L, cc.hyoban.moments.ledger.spendingOf(books, listOf(refund), "CNY").expense)
+        assertEquals(750L, cc.hyoban.moments.ledger.spendingOf(books, listOf(txn, refund), "CNY").expense)
+        val alone = refund.copy(related = null)
+        assertEquals(-500L, cc.hyoban.moments.ledger.spendingOf(ledger(txn, alone), listOf(alone), "CNY").expense)
+    }
+
+    @Test
     fun `a bill published as it is waits for nothing, one made private again is taken off`() {
         val part = ledger(txn, public = true).pendingBills().single().part.toString()
         val published = txn.copy(published = part)

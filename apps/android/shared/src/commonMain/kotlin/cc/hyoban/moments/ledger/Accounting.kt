@@ -163,8 +163,12 @@ fun summarize(
 /** The net of what [txns] spent and earned, in [currency]: what a trip, a place or a day cost. */
 fun spendingOf(ledger: Ledger, txns: Collection<Txn>, currency: String): Summary {
     val ids = txns.map { it.id }.toSet()
-    // A refund of one of them counts with it, wherever it was written.
-    val entries = ledger.entries.filter { it.txn.id in ids || (it.txn.related != null && it.txn.related in ids) }
+    // A refund counts with its expense, wherever either was written: one of theirs written
+    // elsewhere counts here, and one written here for an expense elsewhere counts there.
+    val entries = ledger.entries.filter { entry ->
+        val expense = entry.txn.related?.takeIf { entry.txn.kind == TxnKind.REFUND && it in ledger.txnsById }
+        (expense ?: entry.txn.id) in ids
+    }
     return summarize(entries, ledger.rates, currency, null, null, ledger::topCategory)
 }
 

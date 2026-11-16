@@ -454,7 +454,7 @@ private fun SearchBill(txn: cc.hyoban.moments.ledger.Txn, ledger: cc.hyoban.mome
         onClick = onClick,
         modifier = modifier.testTag("bill_${txn.id}"),
         trailing = {
-            Text(cc.hyoban.moments.ui.ledger.signedMoney(txn.amount, txn.currency, txn.incoming), style = AppTheme.typography.body, color = cc.hyoban.moments.ui.ledger.amountColor(txn))
+            Text(cc.hyoban.moments.ui.ledger.billAmount(txn, ledger), style = AppTheme.typography.body, color = cc.hyoban.moments.ui.ledger.amountColor(txn))
             Text(txn.local.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")), style = AppTheme.typography.caption, color = tokens.tx3)
         },
     ) {
