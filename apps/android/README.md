@@ -194,8 +194,8 @@ what to try next.
 
 记录, or `moments://new`, opens a page of its own, or a dialog on a wide window. A Moment
 has its words, up to nine photos and videos, a time and a place, and under 加一项 what it cost
-and a bill (账单). What it cost is a meal (美食: the dishes, 好吃, 一般 or 踩雷) or anything
-else (花费: what it went on, 值, 一般 or 不值), either with the amount in its currency and how
+and a bill (账单). What it cost is a meal (美食: the dishes, 好吃, 还行 or 踩雷) or anything
+else (花费: what it went on, 值, 还行 or 不值), either with the amount in its currency and how
 many it was for; the two chips are one cost, so choosing one takes the other's place with what
 was typed. A meal shows while 美食 is on, any other cost while 花费 is. It
 is 公开 or 私有; a private one is published for its owner but never shown on the site.
@@ -341,7 +341,7 @@ which leaves the recipient and the final send to the user. It never posts. It li
 the apps on the phone; 准备图文 is always there. The sheet stays
 open under each share, so the next one starts from it. The copy
 ends with a line of its place, each one's share of what it cost and how it was (a meal's 好吃,
-一般 or 踩雷, else 值, 一般 or 不值), each behind an emoji, which can be edited away like the rest.
+还行 or 踩雷, else 值, 还行 or 不值), each behind an emoji, which can be edited away like the rest.
 
 | Destination    | How                                                                                     |
 | -------------- | --------------------------------------------------------------------------------------- |

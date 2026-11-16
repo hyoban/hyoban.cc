@@ -73,7 +73,7 @@ fun costShareLine(cost: MomentCost?, place: String?): String? {
         FoodVerdict.of(cost?.verdict)?.let { verdict ->
             val face = when (verdict) {
                 FoodVerdict.GOOD -> if (cost!!.meal) "😋" else "👍"
-                FoodVerdict.OK -> "🙂"
+                FoodVerdict.OK -> if (cost!!.meal) "😌" else "👌"
                 FoodVerdict.BAD -> if (cost!!.meal) "😖" else "👎"
             }
             "$face " + stringResource(costVerdictLabel(cost!!, verdict))

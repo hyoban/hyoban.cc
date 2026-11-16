@@ -34,8 +34,8 @@ const mapMonthPath = `/map/${moment.dateKey.slice(0, 4)}/${moment.dateKey.slice(
 // along on the map, arriving there as it's reached (see trip-map's trip-scroll.ts).
 const stopEntry = tripLink === 'play' ? trip?.anchor : undefined
 const weekdayFormatter = new Intl.DateTimeFormat('zh-CN', { timeZone: 'UTC', weekday: 'short' })
-const verdictLabels: Record<FoodVerdict, string> = { good: '好吃', ok: '一般', bad: '踩雷' }
-const worthLabels: Record<FoodVerdict, string> = { good: '值', ok: '一般', bad: '不值' }
+const verdictLabels: Record<FoodVerdict, string> = { good: '好吃', ok: '还行', bad: '踩雷' }
+const worthLabels: Record<FoodVerdict, string> = { good: '值', ok: '还行', bad: '不值' }
 // What it cost, in its currency, and how many it was for.
 const spent = (amount: number | undefined, currency: string | undefined, people: number | undefined) =>
   amount !== undefined && [formatBillAmount(amount, currency ?? 'CNY'), people && `${people} 人`].filter(Boolean).join(' ')

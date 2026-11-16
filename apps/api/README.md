@@ -106,7 +106,7 @@ changed nothing drawn:
 With `TELEGRAM_BOT_TOKEN`, the Worker posts the Moments the site shows to the channel
 `TELEGRAM_CHAT_ID` names, through a bot that is an admin allowed to post and delete: the
 words exactly, a line of 📍 and the place, with 💰 人均 for what it cost and how it was (😋 好吃,
-🙂 一般 or 😖 踩雷 for a meal, else 👍 值, 🙂 一般 or 👎 不值), with no link, as the caption of its photos and videos in
+😌 还行 or 😖 踩雷 for a meal, else 👍 值, 👌 还行 or 👎 不值), with no link, as the caption of its photos and videos in
 albums of ten, or after them past 1024 characters. Photos go as
 JPEGs from Cloudflare Images; a video over 50 MB goes as its first frame.
 

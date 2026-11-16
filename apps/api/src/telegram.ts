@@ -231,8 +231,8 @@ async function postChanges(context: ChannelContext) {
   return result
 }
 
-const VERDICTS = { good: '😋 好吃', ok: '🙂 一般', bad: '😖 踩雷' } as const
-const WORTH = { good: '👍 值', ok: '🙂 一般', bad: '👎 不值' } as const
+const VERDICTS = { good: '😋 好吃', ok: '😌 还行', bad: '😖 踩雷' } as const
+const WORTH = { good: '👍 值', ok: '👌 还行', bad: '👎 不值' } as const
 
 /**
  * The words and media a Moment is posted with: its own words exactly, then a line of the

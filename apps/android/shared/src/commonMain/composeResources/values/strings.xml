@@ -274,12 +274,12 @@
     <string name="section_food">美食</string>
     <string name="hint_food_dishes">吃了什么</string>
     <string name="food_good">好吃</string>
-    <string name="food_ok">一般</string>
+    <string name="food_ok">还行</string>
     <string name="food_bad">踩雷</string>
     <string name="section_cost">花费</string>
     <string name="hint_cost_items">花在哪了</string>
     <string name="cost_good">值</string>
-    <string name="cost_ok">一般</string>
+    <string name="cost_ok">还行</string>
     <string name="cost_bad">不值</string>
     <string name="cost_share">每人 %1$s</string>
     <string name="cost_each">人均 %1$s</string>
