@@ -44,7 +44,7 @@ export async function renderTripCard(trip: MomentTrip) {
     `${trip.stops.length} 条记录`,
   ]
     .filter(Boolean)
-    .join(' · ')
+    .join(' ')
   const date = `${trip.start.replaceAll('-', '.')} — ${trip.end.replaceAll('-', '.')}`
   const background = await getTripCardMap(trip)
 
