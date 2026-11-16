@@ -414,7 +414,10 @@ class PlaybackController(val playback: TripPlayback, private val reduced: Boolea
         val start = max(n - 1, 0)
         currentWaypointPoint = n
         showLabels(listOf(MapLabel(points[n].coordinates, shortPlaceName(points[n].place.name))))
-        setShot(playback.line(start, n + 1), STOP_ZOOM, follow = true)
+        // Framed as a stop's drive is: a highway's legs from far out, a waypoint across
+        // town close in, so passing it doesn't pull the camera out to the region and back.
+        val leg = playback.line(start, n + 1)
+        setShot(leg, if (leg.any { it != leg.first() }) NEARBY_MAX_ZOOM else STOP_ZOOM, follow = true)
         val wait = if (reduced) 0 else planLeg(start, n + 1).duration
         if (drawnPointCount < n + 1) drawLeg(start, n + 1)
         pass.until = motionTime + wait

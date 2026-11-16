@@ -196,7 +196,7 @@ const val WAYPOINT_PAUSE_MS = 1_000L
 /** The closest the camera comes for a trip or a place on its own: a city's scale. */
 const val STOP_ZOOM = 9.0
 
-/** The closest the camera comes following a short drive. */
+/** The closest the camera comes following a short drive, to a stop or a waypoint. */
 const val NEARBY_MAX_ZOOM = 13.0
 
 /** A trip's playback: the places its route runs through, its Moments and its cards. */

@@ -1,6 +1,6 @@
 import type { Map as MapboxMap } from 'mapbox-gl'
 import { collectPanelElements, collectStageElements } from '../elements.ts'
-import { getDistanceKm } from '../geo.ts'
+import { getDistanceKm, type Coordinates } from '../geo.ts'
 import {
   renderShortcuts,
   renderTripPanel,
@@ -102,8 +102,14 @@ export type TripPlayerOptions = {
 // Long enough to read a waypoint's name before driving on.
 const WAYPOINT_PAUSE = 1000
 export const STOP_ZOOM = 9
-// The closest the camera comes in while following a short drive.
+// The closest the camera comes in while following a short drive, to a stop or a waypoint.
 export const NEARBY_MAX_ZOOM = 13
+
+/** Whether a drive goes anywhere: one that doesn't is shown at a city's scale. */
+function isSpread(line: readonly Coordinates[]) {
+  return line.some(([longitude, latitude]) => longitude !== line[0]![0] || latitude !== line[0]![1])
+}
+
 // Presenting or recording, a stop's photo card pops up this soon when the route is
 // already there; otherwise once the drive there is drawn.
 const CARD_POP = 400
@@ -418,12 +424,8 @@ export function createTripPlayer(options: TripPlayerOptions) {
       arrivingFrom === undefined
         ? plan.line(placeStart, plan.onwardEnd(stopIndex) + 1)
         : plan.line(arrivingFrom, placeStart + 1)
-    const spread = stretch.some(
-      ([longitude, latitude]) => longitude !== stretch[0]![0] || latitude !== stretch[0]![1],
-    )
-
     // A place with nowhere to drive on to is shown at a city's scale.
-    camera.follow(stretch, spread ? NEARBY_MAX_ZOOM : STOP_ZOOM)
+    camera.follow(stretch, isSpread(stretch) ? NEARBY_MAX_ZOOM : STOP_ZOOM)
   }
 
   function moveCamera(arrivingFrom?: number) {
@@ -480,7 +482,10 @@ export function createTripPlayer(options: TripPlayerOptions) {
       currentWaypointPoint = pointIndex
       drawer.updateStops()
       showLabels([{ coordinates: point.coordinates, name: getShortPlaceName(point.name) }])
-      camera.follow(plan!.line(legStart, pointIndex + 1), STOP_ZOOM)
+      // Framed as a stop's drive is: a highway's legs from far out, a waypoint across
+      // town close in, so passing it doesn't pull the camera out to the region and back.
+      const leg = plan!.line(legStart, pointIndex + 1)
+      camera.follow(leg, isSpread(leg) ? NEARBY_MAX_ZOOM : STOP_ZOOM)
       await Promise.all([
         drawer.drawnPointCount >= pointIndex + 1
           ? Promise.resolve()
