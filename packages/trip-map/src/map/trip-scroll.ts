@@ -1,5 +1,6 @@
 import type { Map as MapboxMap, PaddingOptions } from 'mapbox-gl'
 import type { Coordinates } from '../geo.ts'
+import { getMapPitch } from './basemap.ts'
 import type { Messages } from '../messages.ts'
 import type { Theme } from '../theme.ts'
 import { createCamera } from '../player/camera.ts'
@@ -393,10 +394,29 @@ export function createTripScroll({
     cancelAnimationFrame(cameraFrame)
     cameraFrame = 0
     camera.stop()
+    uprightMap()
     mapLabels.clear()
     layers.remove()
     drawn = false
     onDrawn(false)
+  }
+
+  /**
+   * The map as it was before the camera followed the route: flown over, it was tipped back
+   * and turned the drive's way, and comes upright again, leaning as it does at its zoom.
+   */
+  function uprightMap() {
+    const map = getMap()
+
+    if (!map) {
+      return
+    }
+
+    const pitch = getMapPitch(map, map.getZoom())
+
+    if (Math.abs(map.getBearing()) > 0.5 || Math.abs(map.getPitch() - pitch) > 0.5) {
+      map.easeTo({ bearing: 0, duration: reducedMotion.matches ? 0 : 600, pitch })
+    }
   }
 
   function schedule() {

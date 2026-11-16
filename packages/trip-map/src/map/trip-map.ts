@@ -673,8 +673,10 @@ export function createTripMap(options: TripMapOptions): TripMap {
       pickRoute(openId)
       tripScroll?.start(openId)
 
+      // Back from its playback, it flies to the route, upright and leaning as the map does,
+      // rather than nudging it into view tipped and turned as the playback left it.
       if (moveMap) {
-        camera.frameTripBeside(elements.tripDetails!, openId)
+        camera.frameTripBeside(elements.tripDetails!, openId, { lean: tripClosed === true })
       }
 
       return
@@ -683,7 +685,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     closeTripDetails()
 
     if (moveMap && tripClosed && !address.isTripList()) {
-      camera.fitAll()
+      camera.fitAll({ upright: true })
     }
 
     if (id && place) {
