@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -61,10 +60,6 @@ import java.time.ZoneId
 internal fun rememberNas(nas: Nas, deletion: Deletion): NasSource {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    DisposableEffect(nas) {
-        nas.forgetOriginals()
-        onDispose { nas.forgetOriginals() }
-    }
     return remember { NasSource(nas, context, scope, deletion) }
 }
 
@@ -81,6 +76,11 @@ internal class NasSource(
     private val root = NasListing(this, null)
     /** Where the photos were taken, for the map of them all. */
     val places = NasPlaces(this, scope)
+
+    /** Fetches [photo]'s big thumbnail ahead, for the viewer turning to it. */
+    fun prefetch(photo: NasPhoto) {
+        scope.launch { nas.thumbnail(photo, NasProtocol.BIG) }
+    }
 
     /** Reads the first page of [album]'s photos, the timeline's without one, and the albums if they aren't yet. */
     suspend fun show(album: NasAlbum?) {
@@ -202,6 +202,11 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource)
     /** The NAS keeps its own thumbnails, small for the grid and big for the viewer, and its client caches them. */
     override suspend fun thumbnail(context: Context, size: Int): Bitmap? =
         source.nas.thumbnail(photo, if (size > 320) NasProtocol.BIG else NasProtocol.SMALL)
+
+    /** The next one's big thumbnail, fetched ahead so turning to it shows it at once. */
+    override fun settled(next: Pick?) {
+        (next as? NasPick)?.let { source.prefetch(it.photo) }
+    }
 
     @Composable
     override fun badge(): String? = when {

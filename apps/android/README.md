@@ -645,8 +645,11 @@ UbiquitousBear/shutter-bridge's measurements on an a7C II for the Wi‑Fi one.
   first, with the camera's thumbnails (a JPEG behind four bytes of its length, 3:2 inside a 4:3
   frame, so cropped). A tap opens one full size, swiped through on black: its thumbnail
   enlarged, with how much of the original is down and how fast, until the original, fetched
-  for the page it settles on and going on when swiped past, is in the app's cache (emptied
-  when 选照片 opens and closes); one down shows at once when come back to. It zooms as the
+  for the page it settles on and going on when swiped past, is in the app's cache; once it is
+  down the next one's comes too, so turning to it finds it there. Thumbnails and originals are
+  kept on disk by the photo's name and size (`MediaCache`, Coil's disk cache: 100 MB of
+  thumbnails, 1 GB of originals, the least lately used going first), so one looked at before
+  shows at once, this visit or the next. It zooms as the
   photo viewer does (two fingers or a double tap), the original read in tiles as it zooms
   (`ZoomableOriginal`, telephoto's subsampling), so its detail holds up. The ring in the corner, or
   选中 there, chooses it. JPEG and HEIF can be chosen, RAW only looked at. The camera's Wi‑Fi
@@ -710,8 +713,9 @@ been read. Its `create_time_utc` is the clock's reading written as if UTC, so it
 phone's time. Thumbnails are the stream's (`picture/stream`, `size_type` 1 in the grid, 3 in the
 viewer, 0 the original); a photo's info reads its EXIF from the first 256 KB of the original.
 Zoomed into, a photo's original comes down to the app's cache, the big thumbnail standing in
-meanwhile, and is then read in tiles as it zooms; it is kept for 加入, which copies it rather than
-fetching it again, and the cache is emptied when 选照片 opens and closes.
+meanwhile, and is then read in tiles as it zooms; 加入 copies it rather than fetching it again.
+Thumbnails and originals are kept on disk as the camera's are (`MediaCache`), by the photo's id
+and when it was uploaded, and the viewer fetches the next photo's big thumbnail ahead.
 With all the NAS's photos listed, a button in the bar switches between the grid and a map
 (`ui/picker/PlacesMap.kt`): the photo app's own list of where its photos were taken
 (`ai/map/gps/list`, five thousand at a time, read whole the first time the map shows; WGS‑84, as the

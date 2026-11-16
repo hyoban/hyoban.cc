@@ -15,16 +15,14 @@ import cc.hyoban.moments.Token
 import cc.hyoban.moments.camera.TAG
 import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.HttpException
+import cc.hyoban.moments.data.media.MediaCache
 import cc.hyoban.moments.nas.NasProtocol.obj
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -321,31 +319,42 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
 
     private val thumbs = LruCache<String, Bitmap>(400)
 
-    /** [photo]'s thumbnail, [size] the stream's, small for the grid and big for the viewer; null when it couldn't be had. */
+    /** Thumbnails kept on disk, from one visit to the next. */
+    private val keptThumbs = MediaCache.nas(context, originals = false)
+
+    /**
+     * [photo]'s thumbnail, [size] the stream's, small for the grid and big for the viewer; null when
+     * it couldn't be had. Kept in memory, and on disk for the next visit.
+     */
     suspend fun thumbnail(photo: NasPhoto, size: Int = NasProtocol.SMALL): Bitmap? {
         val key = "${photo.key}@$size"
         thumbs.get(key)?.let { return it }
+        val kept = "${kept(photo)}@$size"
         return runCatching {
-            val request = stream(photo, size)
-            withContext(Dispatchers.IO) {
-                client.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) return@use null
-                    response.body?.bytes()?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
+            withContext(Dispatchers.IO) { keptThumbs.bitmap(kept) } ?: run {
+                val request = stream(photo, size)
+                withContext(Dispatchers.IO) {
+                    client.newCall(request).execute().use { response ->
+                        if (!response.isSuccessful) return@use null
+                        response.body?.bytes()?.let { bytes ->
+                            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.also { keptThumbs.put(kept, bytes) }
+                        }
+                    }
                 }
             }
         }.onFailure { Log.w(TAG, "nas: thumbnail not read", it) }.getOrNull()?.also { thumbs.put(key, it) }
     }
 
-    /** Originals fetched to be zoomed into, in the app's cache, kept for adding and gone with [forgetOriginals]. */
-    private val originals = File(context.cacheDir, "nas")
+    /** Originals fetched to be zoomed into, kept for adding and for the next visit. */
+    private val originals = MediaCache.nas(context, originals = true)
     private val fetching = mutableMapOf<String, Mutex>()
-    private val io = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private fun originalFile(photo: NasPhoto) = File(originals, "${photo.id}-${photo.uploaded}")
+    /** [photo] on another visit too: changed on the NAS, it is uploaded again. */
+    private fun kept(photo: NasPhoto) = "${photo.id}-${photo.uploaded}"
 
     /** [photo]'s original if it is already down in the cache, whole. */
     fun cached(photo: NasPhoto): File? =
-        originalFile(photo).takeIf { it.isFile && (photo.size <= 0 || it.length() == photo.size) }
+        originals.file(kept(photo))?.takeIf { photo.size <= 0 || it.length() == photo.size }
 
     /**
      * [photo]'s original in the cache, fetched the first time, for the viewer to read in tiles
@@ -358,30 +367,21 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
             cached(photo) ?: try {
                 val request = stream(photo, NasProtocol.ORIGINAL)
                 withContext(Dispatchers.IO) {
-                    originals.mkdirs()
-                    val file = originalFile(photo)
-                    val part = File(originals, file.name + ".part")
-                    try {
-                        client.newCall(request).execute().use { response ->
-                            if (!response.isSuccessful) throw HttpException(response.code, "original answered ${response.code}")
-                            val body = response.body ?: throw IOException("original without a body")
-                            val job = currentCoroutineContext()
-                            part.outputStream().buffered(1 shl 20).use { out ->
-                                body.byteStream().use { input ->
-                                    val buffer = ByteArray(1 shl 16)
-                                    while (true) {
-                                        if (!job.isActive) throw kotlinx.coroutines.CancellationException()
-                                        val n = input.read(buffer)
-                                        if (n < 0) break
-                                        out.write(buffer, 0, n)
-                                    }
+                    val job = currentCoroutineContext()
+                    client.newCall(request).execute().use { response ->
+                        if (!response.isSuccessful) throw HttpException(response.code, "original answered ${response.code}")
+                        val body = response.body ?: throw IOException("original without a body")
+                        originals.put(kept(photo)) { out ->
+                            body.byteStream().use { input ->
+                                val buffer = ByteArray(1 shl 16)
+                                while (true) {
+                                    if (!job.isActive) throw kotlinx.coroutines.CancellationException()
+                                    val n = input.read(buffer)
+                                    if (n < 0) break
+                                    out.write(buffer, 0, n)
                                 }
                             }
                         }
-                        if (!part.renameTo(file)) throw IOException("original not kept")
-                        file
-                    } finally {
-                        part.delete()
                     }
                 }
             } catch (e: Exception) {
@@ -390,11 +390,6 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
                 null
             }
         }
-    }
-
-    /** Empties the cache of originals: when 选照片 opens, for what an earlier visit left, and when it closes. */
-    fun forgetOriginals() {
-        io.launch { originals.listFiles()?.forEach { it.delete() } }
     }
 
     /** The start of [photo]'s original, enough for its EXIF. */
@@ -500,7 +495,13 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
     /** Deletes [photos] on the NAS, a hundred at a time as its web app does; how many it couldn't. */
     suspend fun delete(photos: List<NasPhoto>): Int =
         photos.chunked(100).sumOf { batch -> NasProtocol.deleteMissed(call("v5/photo/picture/file/remove", deleteBody(batch))) }
-            .also { thumbs.evictAll() }
+            .also {
+                thumbs.evictAll()
+                photos.forEach { photo ->
+                    originals.remove(kept(photo))
+                    listOf(NasProtocol.SMALL, NasProtocol.BIG).forEach { keptThumbs.remove("${kept(photo)}@$it") }
+                }
+            }
 
     companion object {
         const val PAGE = 200

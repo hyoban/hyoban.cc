@@ -151,8 +151,8 @@ internal interface Pick {
     /** A note for the info panel where [details] say too little. */
     fun infoNote(details: PhotoDetails?): StringResource? = null
 
-    /** Once the viewer rests on it. */
-    fun settled() {}
+    /** Once the viewer rests on it, [next] the one a swipe on turns to, to fetch ahead. */
+    fun settled(next: Pick?) {}
 
     /**
      * It full size in the viewer, [active] while it is the one shown: a video then plays over its

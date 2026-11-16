@@ -130,7 +130,7 @@ internal fun Viewer(
             // Once it rests there a moment, so the row of small ones dragged past it asks nothing of it.
             if (!pager.isScrollInProgress) {
                 delay(300)
-                current?.settled()
+                current?.settled(shown.getOrNull(pager.currentPage + 1))
             }
         }
         val layout: @Composable (@Composable (Modifier) -> Unit, @Composable (Modifier) -> Unit) -> Unit = { photo, panel ->

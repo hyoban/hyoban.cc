@@ -243,9 +243,15 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
     override fun infoNote(details: PhotoDetails?) =
         Res.string.picker_info_camera_note.takeIf { details?.make == null && details?.focal == null }
 
-    /** Its original, once the viewer is still on it, so swiping past doesn't queue downloads. */
-    override fun settled() {
-        if (photo.photo && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.transfer?.loadOriginal(photo)
+    /**
+     * Its original, once the viewer is still on it, so swiping past doesn't queue downloads; then
+     * the next one's.
+     */
+    override fun settled(next: Pick?) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val transfer = source.transfer ?: return
+        if (photo.photo) transfer.loadOriginal(photo)
+        (next as? CameraPick)?.let { transfer.prefetch(it.photo, after = photo) }
     }
 
     /** Its thumbnail enlarged until its original is down in the cache, then the original in tiles. */

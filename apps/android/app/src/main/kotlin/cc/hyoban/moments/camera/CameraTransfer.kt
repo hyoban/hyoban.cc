@@ -20,6 +20,7 @@ import android.os.SystemClock
 import android.provider.MediaStore
 import android.util.Log
 import android.util.LruCache
+import cc.hyoban.moments.data.media.MediaCache
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.CancellationException
 import androidx.compose.runtime.getValue
@@ -27,6 +28,8 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -56,6 +59,8 @@ data class CameraPhoto(internal val content: Ptp.Content, internal val file: Ptp
     val key get() = "${content.slot}/${content.id}/${file.id}"
     val name get() = file.name
     val size get() = file.size
+    /** It on another visit too, for what is kept on disk of it, as the card's IDs may not be. */
+    val kept get() = "$name:$size"
     /** When it was taken, by the camera's clock. */
     val captured get() = content.captured
     val photo get() = file.photo
@@ -93,16 +98,18 @@ class CameraTransfer(private val context: Context) {
     private val thumbs = LruCache<String, Bitmap>(240)
     /** Thumbnails being fetched, so the grid and the viewer asking for one share the request. Touched on the main thread alone. */
     private val fetching = mutableMapOf<String, CompletableDeferred<Bitmap?>>()
-    /** Originals downloaded to be looked at, in the app's cache, kept for adding and gone on [close]. */
-    private val originals = File(context.cacheDir, "camera")
+    /** Thumbnails kept on disk, from one visit to the next. */
+    private val keptThumbs = MediaCache.camera(context, originals = false)
+    /** Originals downloaded to be looked at, kept for adding and for the next visit. */
+    private val originals = MediaCache.camera(context, originals = true)
     /** What goes on while the page is open whichever photo is shown: originals fetched, the list read again. */
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var relisting: Job? = null
 
     suspend fun connect() {
         val paired = CameraStore.load(context) ?: return fail(Res.string.camera_failed)
-        // What an earlier visit left behind, if the app went before it could clear it.
-        withContext(Dispatchers.IO) { originals.listFiles()?.forEach { it.delete() } }
+        // Where the originals were kept before they were kept from one visit to the next.
+        withContext(Dispatchers.IO) { File(context.cacheDir, "camera").deleteRecursively() }
         try {
             val (ssid, password) = wifiDetails(paired)
             _state.value = State.Connecting(Step.JOINING)
@@ -225,9 +232,9 @@ class CameraTransfer(private val context: Context) {
         val result = CompletableDeferred<Bitmap?>()
         fetching[photo.key] = result
         try {
-            val bytes = camera.withLock {
+            val bytes = withContext(Dispatchers.IO) { keptThumbs.file(photo.kept)?.readBytes() } ?: camera.withLock {
                 val session = session ?: return@withLock null
-                withContext(Dispatchers.IO) { runCatching { session.thumb(photo.content, photo.file) }.getOrNull() }
+                withContext(Dispatchers.IO) { runCatching { session.thumb(photo.content, photo.file) }.getOrNull()?.also { keptThumbs.put(photo.kept, it) } }
             }
             val bitmap = bytes?.let { withContext(Dispatchers.Default) { BitmapFactory.decodeByteArray(it, 0, it.size)?.let(::withoutBars) } }
             bitmap?.let { thumbs.put(photo.key, it) }
@@ -253,7 +260,7 @@ class CameraTransfer(private val context: Context) {
     /** Whether [photo] is still on the card (not deleted meanwhile). */
     private fun onCard(photo: CameraPhoto) = (_state.value as? State.Ready)?.photos?.any { it.key == photo.key } == true
 
-    private fun cached(photo: CameraPhoto) = File(originals, photo.name).takeIf { it.length() == photo.size }
+    private fun cached(photo: CameraPhoto) = originals.file(photo.kept)?.takeIf { it.length() == photo.size }
 
     /** A photo's original on its way to the cache: how much of it is down, since when, and the file once it all is. */
     class Original(val size: Long) {
@@ -274,8 +281,8 @@ class CameraTransfer(private val context: Context) {
 
     /**
      * Fetches the whole of [photo] into the app's cache, to look at full size, unless it is there
-     * or on its way: it goes on while the viewer moves past it, and stays until [close]. Asked
-     * again after it failed, it tries again.
+     * or on its way: it goes on while the viewer moves past it, and stays for the next visit too.
+     * Asked again after it failed, it tries again.
      */
     fun loadOriginal(photo: CameraPhoto) {
         val known = loading[photo.key]
@@ -290,16 +297,12 @@ class CameraTransfer(private val context: Context) {
                     if (!onCard(photo)) return@withLock null
                     val session = session ?: return@withLock null
                     cached(photo) ?: run {
-                        originals.mkdirs()
-                        val part = File(originals, photo.name + ".part")
                         val job = currentCoroutineContext()
                         try {
-                            part.outputStream().buffered(1 shl 20).use { out ->
+                            originals.put(photo.kept) { out ->
                                 session.download(photo.content, photo.file, out, { original.done = it }) { !job.isActive }
                             }
-                            File(originals, photo.name).also { part.renameTo(it) }
                         } catch (e: Exception) {
-                            part.delete()
                             if (e is CancellationException) throw e
                             Log.w(TAG, "camera: original not read", e)
                             null
@@ -308,6 +311,21 @@ class CameraTransfer(private val context: Context) {
                 }
             }
             if (file != null) { original.done = photo.size; original.file = file } else original.failed = true
+        }
+    }
+
+    private var prefetching: Job? = null
+
+    /**
+     * Fetches [next]'s original once [after]'s, the one shown, is down, so turning to it finds it
+     * there; only the latest asked for waits, so moving on doesn't line them up.
+     */
+    fun prefetch(next: CameraPhoto, after: CameraPhoto) {
+        prefetching?.cancel()
+        if (!next.photo) return
+        prefetching = scope.launch {
+            snapshotFlow { loading[after.key]?.let { it.file != null || it.failed } ?: true }.first { it }
+            loadOriginal(next)
         }
     }
 
@@ -380,7 +398,7 @@ class CameraTransfer(private val context: Context) {
             val (deleted, left) = ready.photos.partition { it.content.id == photo.content.id && it.content.slot == photo.content.slot }
             // Its copies here go too: the original looked at, and what was fetched of it.
             deleted.forEach { thumbs.remove(it.key); loading.remove(it.key) }
-            withContext(Dispatchers.IO) { deleted.forEach { File(originals, it.name).delete() } }
+            withContext(Dispatchers.IO) { deleted.forEach { originals.remove(it.kept); keptThumbs.remove(it.kept) } }
             _state.value = State.Ready(left)
         }
         return true
@@ -393,10 +411,7 @@ class CameraTransfer(private val context: Context) {
         session = null
         callback?.let { runCatching { connectivity.unregisterNetworkCallback(it) } }
         callback = null
-        Thread {
-            s?.close()
-            originals.listFiles()?.forEach { it.delete() }
-        }.start()
+        Thread { s?.close() }.start()
     }
 
     private companion object {
