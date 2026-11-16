@@ -46,7 +46,7 @@ app can keep the same tables D1 does.
 
 | Path                                         | Does                                                                                                                |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `PUT /v2/entries/:uid/media/:mediaUid/:part` | keeps an original, `image` or `video`, until its entry publishes                                                    |
+| `PUT /v2/entries/:uid/media/:mediaUid/:part` | keeps an original, `image` or `video`, until its entry publishes; 422 for an image that says where it was taken     |
 | `HEAD` on the same path                      | 200 with the original's MD5 as its `ETag` once uploaded, else 404                                                   |
 | `POST /v2/changes`                           | applies `{ places, entries, deleted, collections, deletedCollections }` as one write; an imported charge is refused |
 | `POST /v2/build`                             | calls the site's deploy hook and posts to the channel; `{ started }`                                                |
@@ -68,7 +68,10 @@ each place is known by, the records as published, the uids deleted and the revis
 - **Publishing.** A draft takes a `published` block with the time, and its originals move to
   `moments/<uid>/<media uid>.<ext>` (`getMediaKey`). The `published` blocks are the server's
   and never change. Media are kept as uploaded (`original: true`), and the site has
-  Cloudflare resize them ([docs/assets.md](../../docs/assets.md)). The rules live in
+  Cloudflare resize them ([docs/assets.md](../../docs/assets.md)). An original is public at
+  its key, so it must not say where it was taken: an image whose EXIF or XMP has a GPS
+  position is turned down (`@hyoban/data-spec/location`); a video is streamed through
+  unread, and the app takes its location out before sending it. The rules live in
   `@hyoban/data-spec/publish`.
 - **Privacy.** Of a plugin that keeps to the phone (a bill), a private part is dropped even
   when sent, and a public one is kept by its public fields alone (`getUploadEntry`).

@@ -123,6 +123,9 @@ async function transcodeVideo(inputPath, outputPath) {
       '0:v:0',
       '-map',
       '0:a?',
+      // None of the source's metadata, where it was taken among it.
+      '-map_metadata',
+      '-1',
       '-vf',
       'scale=min(1920\\,iw):min(1920\\,ih):force_original_aspect_ratio=decrease:force_divisible_by=2',
       '-c:v',

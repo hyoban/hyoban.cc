@@ -48,7 +48,11 @@ videos with a poster, uploads and verifies them, and records each media item's R
 MIME type, ETag, dimensions and variants in its `published` block.
 
 Moments the Android app publishes keep their media as uploaded (`original: true`, no
-variants or poster). The site asks Cloudflare Images for resized photos
+variants or poster), but for where they were taken: the app blanks the GPS of a photo's EXIF and
+XMP and a video's location boxes before it uploads, in place so nothing else changes
+(`@hyoban/data-spec/location`, and `Location.kt` in the app's shared code), and the API turns
+down an image that still has one. The create-moment skill's sharp and ffmpeg keep none of the
+source's metadata. The site asks Cloudflare Images for resized photos
 (`/cdn-cgi/image/width=…,format=auto,onerror=redirect/<key>`) and Media Transformations
 for a video's first frame as its poster (`/cdn-cgi/media/mode=frame,time=0s,width=…,format=jpg/<key>`),
 which needs the video's width and height on its media item and a source under 100 MB,

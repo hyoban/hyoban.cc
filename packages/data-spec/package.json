@@ -8,6 +8,7 @@
     ".": "./src/index.ts",
     "./division": "./src/division.ts",
     "./entry": "./src/entry.ts",
+    "./location": "./src/location.ts",
     "./publish": "./src/publish.ts",
     "./tables": "./src/tables.ts",
     "./package.json": "./package.json"

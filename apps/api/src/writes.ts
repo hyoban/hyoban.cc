@@ -12,6 +12,7 @@ import { type LimitFunction } from 'p-limit'
 import { getUploadKey, type Bucket, type UploadPart } from './bucket.ts'
 import { revisionQuery, toRevision, type Database, type Statement } from './database.ts'
 import { HttpError, validate } from './http.ts'
+import { hasLocation } from '@hyoban/data-spec/location'
 import { getExtension } from '@hyoban/data-spec/publish'
 import { BUMP_REVISION, placeRow, upsertSql, type Row, type Table } from './rows.ts'
 
@@ -169,8 +170,17 @@ export async function uploadMedia(
     throw new HttpError(409, 'That media item is already published.')
   }
 
+  // An image that still says where it was taken is turned down: the client takes it out
+  // first (@hyoban/data-spec/location), as the phone does. A video goes straight through,
+  // too big to hold while it is read; the phone takes its location out all the same.
+  const body = part === 'image' ? new Uint8Array(await request.arrayBuffer()) : request.body
+
+  if (body instanceof Uint8Array && hasLocation(body)) {
+    throw new HttpError(422, 'The image says where it was taken: take its location out first.')
+  }
+
   const key = getUploadKey(momentUid, mediaUid, part)
-  const stored = await context.bucket.put(key, request.body, { httpMetadata: { contentType } })
+  const stored = await context.bucket.put(key, body, { httpMetadata: { contentType } })
 
   if (!stored) {
     throw new HttpError(500, 'The upload was not stored.')

@@ -9,6 +9,7 @@ import cc.hyoban.moments.data.api.NoTokenException
 import cc.hyoban.moments.data.api.UploadPart
 import cc.hyoban.moments.data.copy.CopyStore
 import cc.hyoban.moments.data.copy.CopyTables
+import cc.hyoban.moments.data.media.Location
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
@@ -745,53 +746,63 @@ class MomentsRepository(
         }
         val total = originals.size + 1
         withContext(io) {
-            val files = originals.map { (uid, media, part) ->
+            val sources = originals.map { (uid, media, part) ->
                 val uri = if (part == UploadPart.VIDEO) media.local?.videoUri else media.local?.uri
                 val file = uri?.let { runCatching { File(URI(it)) }.getOrNull() }?.takeIf(File::isFile)
                     ?: error("The ${part.path} of ${media.uid} isn't on the phone")
                 Triple(uid to part, media, file)
             }
-            val size = files.sumOf { (_, _, file) -> file.length() }
-            var done = 0
-            var sent = 0L
-            val progress = Any()
-            // Said as each stretch of bytes goes, so a big photo shows it is on its way.
-            fun report(steps: Int = 0, bytes: Long = 0) = synchronized(progress) {
-                done += steps
-                sent = minOf(size, sent + bytes)
-                onProgress(PublishProgress(done, total, sent, size))
-            }
-            report()
-            val uploading = Semaphore(UPLOADS_AT_ONCE)
-            coroutineScope {
-                files.map { (key, media, file) ->
-                    val (uid, part) = key
-                    async {
-                        var counted = 0L
-                        uploading.withPermit {
-                            // A link that drops now and then, as a proxy's does, gets a few tries
-                            // before the whole publish gives up; what the API answers doesn't.
-                            for (attempt in 1..UPLOAD_TRIES) {
-                                try {
-                                    if (writer.uploaded(uid, media.uid, part) != md5(file)) {
-                                        writer.upload(uid, media.uid, part, file, contentTypeOf(file)) { bytes ->
-                                            counted += bytes
-                                            report(bytes = bytes)
+            // What goes is a copy without where it was taken (Location), gone once it is sent;
+            // the phone's own keeps it, for the photo's details.
+            val files = mutableListOf<Triple<Pair<String, UploadPart>, MomentMedia, File>>()
+            try {
+                for ((key, media, file) in sources) {
+                    files += Triple(key, media, Location.stripped(file, video = key.second == UploadPart.VIDEO))
+                }
+                val size = files.sumOf { (_, _, file) -> file.length() }
+                var done = 0
+                var sent = 0L
+                val progress = Any()
+                // Said as each stretch of bytes goes, so a big photo shows it is on its way.
+                fun report(steps: Int = 0, bytes: Long = 0) = synchronized(progress) {
+                    done += steps
+                    sent = minOf(size, sent + bytes)
+                    onProgress(PublishProgress(done, total, sent, size))
+                }
+                report()
+                val uploading = Semaphore(UPLOADS_AT_ONCE)
+                coroutineScope {
+                    files.map { (key, media, file) ->
+                        val (uid, part) = key
+                        async {
+                            var counted = 0L
+                            uploading.withPermit {
+                                // A link that drops now and then, as a proxy's does, gets a few tries
+                                // before the whole publish gives up; what the API answers doesn't.
+                                for (attempt in 1..UPLOAD_TRIES) {
+                                    try {
+                                        if (writer.uploaded(uid, media.uid, part) != md5(file)) {
+                                            writer.upload(uid, media.uid, part, file, contentTypeOf(file)) { bytes ->
+                                                counted += bytes
+                                                report(bytes = bytes)
+                                            }
                                         }
+                                        break
+                                    } catch (error: IOException) {
+                                        if (error is HttpException || error is NoTokenException || attempt == UPLOAD_TRIES) throw error
+                                        report(bytes = -counted)
+                                        counted = 0
+                                        delay(RETRY_WAIT_MS shl (attempt - 1))
                                     }
-                                    break
-                                } catch (error: IOException) {
-                                    if (error is HttpException || error is NoTokenException || attempt == UPLOAD_TRIES) throw error
-                                    report(bytes = -counted)
-                                    counted = 0
-                                    delay(RETRY_WAIT_MS shl (attempt - 1))
                                 }
                             }
+                            // One the API had already, or a retry that sent it again, counts as all of it once.
+                            report(steps = 1, bytes = file.length() - counted)
                         }
-                        // One the API had already, or a retry that sent it again, counts as all of it once.
-                        report(steps = 1, bytes = file.length() - counted)
-                    }
-                }.awaitAll()
+                    }.awaitAll()
+                }
+            } finally {
+                files.forEachIndexed { index, (_, _, file) -> if (file != sources[index].third) file.delete() }
             }
         }
         // Once the change set is on its way it goes through and the phone notes it: a cancel

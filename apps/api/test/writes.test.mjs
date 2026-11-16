@@ -3,6 +3,8 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { test } from 'vite-plus/test'
 
+import { stripLocation } from '@hyoban/data-spec/location'
+
 import { handle } from '../src/index.ts'
 import {
   call,
@@ -547,6 +549,47 @@ test('a Moment sent as it is stored writes nothing and builds nothing', async ()
   assert.ok(!('revision' in again.body), 'and takes no revision')
   assert.equal((await get(env, '/v2/rows?limit=1')).body.revision, before)
   assert.equal(pending.length, 0)
+})
+
+/** A JPEG whose EXIF has a GPS IFD with a made-up latitude, built by hand. */
+function photoAt() {
+  const tiff = new DataView(new ArrayBuffer(68))
+  tiff.setUint32(0, 0x4d4d002a) // MM, 42
+  tiff.setUint32(4, 8) // IFD0
+  tiff.setUint16(8, 1)
+  tiff.setUint16(10, 0x8825) // the GPS IFD, a LONG
+  tiff.setUint16(12, 4)
+  tiff.setUint32(14, 1)
+  tiff.setUint32(18, 26)
+  tiff.setUint16(26, 1)
+  tiff.setUint16(28, 2) // GPSLatitude, three RATIONALs
+  tiff.setUint16(30, 5)
+  tiff.setUint32(32, 3)
+  tiff.setUint32(36, 44)
+  for (const [index, value] of [12, 1, 34, 1, 56, 1].entries())
+    tiff.setUint32(44 + index * 4, value)
+  const exif = new Uint8Array([
+    ...new TextEncoder().encode('Exif\0\0'),
+    ...new Uint8Array(tiff.buffer),
+  ])
+
+  return new Uint8Array([0xff, 0xd8, 0xff, 0xe1, 0, exif.length + 2, ...exif, 0xff, 0xd9])
+}
+
+test('an image that says where it was taken is turned down, and kept nowhere', async () => {
+  const { bucket, env } = setUpWithData()
+  const [item] = dockMoment.media
+  const response = await upload(env, dockMoment.uid, item.uid, 'image', photoAt(), 'image/jpeg')
+
+  assert.equal(response.status, 422)
+  assert.equal(await bucket.head(`uploads/${dockMoment.uid}/${item.uid}/image`), null)
+
+  const stripped = photoAt()
+  stripLocation(stripped)
+  assert.equal(
+    (await upload(env, dockMoment.uid, item.uid, 'image', stripped, 'image/jpeg')).status,
+    201,
+  )
 })
 
 test('HEAD on an original says whether it is uploaded, and its MD5', async () => {

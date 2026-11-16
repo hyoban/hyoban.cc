@@ -30,6 +30,12 @@ even when starting from the repository root.
 - Preview new or changed site media from a local server; upload it to R2 only once
   the user has approved it there, since objects are immutable. Never request its R2
   URL before uploading: the image origin caches a 404 for a month.
+- Every published original is public at its key, so none may say where it was taken:
+  the app blanks the location of what it uploads (`@hyoban/data-spec/location` and the
+  shared `Location.kt`, kept the same), the API refuses an image that still has one, and
+  scripts strip media metadata. The one exception to immutable objects is blanking a
+  location in place, with the record's `published` ETag updated and its URLs purged
+  from the image origin's 30-day cache.
 - Keep what is seen on the user's devices while debugging (their bills, shops, accounts,
   card digits, order numbers, times) out of code, comments, tests and docs; fixtures take a
   page's structure with made-up values.

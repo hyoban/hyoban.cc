@@ -274,7 +274,9 @@ or place, told against the site's copy of a bill on its own, the site's struck t
 off (made private or deleted here, struck through); a group of more than three folds, and opened
 falls under its days. A bill there opens its page. 全部发布到网站 runs as WorkManager work in a foreground
 service with a progress notification, waiting out a dropped link: it uploads the new
-originals a few at a time, then sends everything else as one `POST /v2/changes`, which the
+originals a few at a time, each a copy without where it was taken (`data/media/Location`: the
+GPS of a photo's EXIF and XMP and a video's location boxes blanked in place, the phone's own
+file untouched), then sends everything else as one `POST /v2/changes`, which the
 API takes whole or not at all. What is published leaves the phone's store for the site's. A bill
 is noted as published as the API kept it, from its answer: one it kept less of than was sent (an
 API older than the app dropping a field it doesn't know) stays to be published.
@@ -719,7 +721,7 @@ its full-frame equivalent), aperture, shutter, ISO and exposure compensation; wh
 place picker names a point, on a small map; and the file's name, format, size and album. What the
 photo doesn't say is left out. The gallery's are read from the file, a camera's from its original
 once it is down, the NAS's from the start of its original, and a published one's from the first 256 KB of its original (`Range`), which keeps
-its EXIF; a swipe down puts it away.
+its EXIF but not where it was taken; a swipe down puts it away.
 
 ## Elsewhere
 
