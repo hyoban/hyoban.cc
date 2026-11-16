@@ -678,7 +678,7 @@ their circles, what is chosen keeping its border and number. While the grid scro
 at its right: dragged, it takes the grid through what it holds, a bubble beside it saying the
 month, and reaches only what has been read, so the NAS's reads on at the end.
 A tap opens one full size on black, swiped through, zoomed as the photo viewer zooms, chosen and
-added from there; a photo of the gallery's or the camera's is read from its original in tiles as it
+added from there; a photo of the gallery's, the camera's or the NAS's is read from its original in tiles as it
 zooms, so it stays sharp. Under it, upright, the photos before and after are small in a row, the one shown
 in the middle and those chosen dotted: a tap turns to one, and dragging the row turns the viewer
 along. A video of the gallery's or the NAS's (MP4 or QuickTime) plays where it is, silent until
@@ -709,6 +709,9 @@ the end, and its albums (`album/list`, `album/picture/list`) follow in the title
 been read. Its `create_time_utc` is the clock's reading written as if UTC, so it is read as the
 phone's time. Thumbnails are the stream's (`picture/stream`, `size_type` 1 in the grid, 3 in the
 viewer, 0 the original); a photo's info reads its EXIF from the first 256 KB of the original.
+Zoomed into, a photo's original comes down to the app's cache, the big thumbnail standing in
+meanwhile, and is then read in tiles as it zooms; it is kept for 加入, which copies it rather than
+fetching it again, and the cache is emptied when 选照片 opens and closes.
 With all the NAS's photos listed, a button in the bar switches between the grid and a map
 (`ui/picker/PlacesMap.kt`): the photo app's own list of where its photos were taken
 (`ai/map/gps/list`, five thousand at a time, read whole the first time the map shows; WGS‑84, as the

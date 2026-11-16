@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -60,6 +61,10 @@ import java.time.ZoneId
 internal fun rememberNas(nas: Nas, deletion: Deletion): NasSource {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    DisposableEffect(nas) {
+        nas.forgetOriginals()
+        onDispose { nas.forgetOriginals() }
+    }
     return remember { NasSource(nas, context, scope, deletion) }
 }
 
@@ -229,8 +234,8 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource)
     }
 
     /**
-     * Its big thumbnail over its small one; the original comes down only when it is added. A
-     * video plays from the NAS over it, as much of it as is watched.
+     * Its big thumbnail over its small one; the original comes down once it is zoomed into, or
+     * when it is added. A video plays from the NAS over it, as much of it as is watched.
      */
     @Composable
     override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit) {
@@ -244,9 +249,21 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource)
             val shown = large ?: small
             val shape = shown?.let { it.width.toFloat() / it.height }
                 ?: if (photo.width != null && photo.height != null && photo.height > 0) photo.width.toFloat() / photo.height else 1f
-            ZoomablePhoto(shape, onZoom) {
-                shown?.let { Image(it.asImageBitmap(), contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
-                stream?.let { (url, headers) -> VideoPlayback(url, active, video, Modifier.fillMaxSize(), headers = headers, window = false) }
+            if (photo.video) {
+                ZoomablePhoto(shape, onZoom) {
+                    shown?.let { Image(it.asImageBitmap(), contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
+                    stream?.let { (url, headers) -> VideoPlayback(url, active, video, Modifier.fillMaxSize(), headers = headers, window = false) }
+                }
+            } else if (shown != null) {
+                // Zoomed in, its original comes down, then is read in tiles as it zooms.
+                var deep by remember(key) { mutableStateOf(false) }
+                val original by produceState(source.nas.cached(photo), key, deep) {
+                    if (deep && value == null) value = source.nas.fetchOriginal(photo)
+                }
+                ZoomableOriginal(original ?: shown, shown, shape, photo.name, onZoom = { zoomed ->
+                    if (zoomed) deep = true
+                    onZoom(zoomed)
+                })
             }
             if (shown == null) Spinner(color = MediaOverlay.content)
             if (stream != null) VideoWaiting(video) else if (photo.video && !plays) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))
