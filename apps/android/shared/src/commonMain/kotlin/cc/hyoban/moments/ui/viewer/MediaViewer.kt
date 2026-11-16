@@ -480,8 +480,8 @@ private fun ZoomableStill(
 }
 
 /** As far as a photo zooms, and how far a double tap takes it. */
-private const val MAX_ZOOM = 6f
-private const val DOUBLE_TAP_ZOOM = 2.5f
+const val MAX_ZOOM = 6f
+const val DOUBLE_TAP_ZOOM = 2.5f
 
 /**
  * A photo of [shape] (width over height) that zooms as the viewer's do: two fingers or a

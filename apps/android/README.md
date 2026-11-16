@@ -647,7 +647,8 @@ UbiquitousBear/shutter-bridge's measurements on an a7C II for the Wi‑Fi one.
   enlarged, with how much of the original is down and how fast, until the original, fetched
   for the page it settles on and going on when swiped past, is in the app's cache (emptied
   when 选照片 opens and closes); one down shows at once when come back to. It zooms as the
-  photo viewer does (`ZoomablePhoto`: two fingers or a double tap). The ring in the corner, or
+  photo viewer does (two fingers or a double tap), the original read in tiles as it zooms
+  (`ZoomableOriginal`, telephoto's subsampling), so its detail holds up. The ring in the corner, or
   选中 there, chooses it. JPEG and HEIF can be chosen, RAW only looked at. The camera's Wi‑Fi
   band is the camera's to choose: on 2.4 GHz the a7C II gave about 3 MB/s, on 5 GHz several
   times that. The viewer's 删除 deletes a photo from the camera's card, after asking, in the
@@ -677,7 +678,8 @@ their circles, what is chosen keeping its border and number. While the grid scro
 at its right: dragged, it takes the grid through what it holds, a bubble beside it saying the
 month, and reaches only what has been read, so the NAS's reads on at the end.
 A tap opens one full size on black, swiped through, zoomed as the photo viewer zooms, chosen and
-added from there. Under it, upright, the photos before and after are small in a row, the one shown
+added from there; a photo of the gallery's or the camera's is read from its original in tiles as it
+zooms, so it stays sharp. Under it, upright, the photos before and after are small in a row, the one shown
 in the middle and those chosen dotted: a tap turns to one, and dragging the row turns the viewer
 along. A video of the gallery's or the NAS's (MP4 or QuickTime) plays where it is, silent until
 asked, with the photo viewer's controls, the NAS's read from its stream as far as it is watched and

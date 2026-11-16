@@ -154,6 +154,8 @@ dependencies {
     implementation(libs.media3.ui.compose)
     implementation(libs.media3.session)
     implementation(libs.telephoto.zoomable)
+    // A picked photo's original read in tiles as it is zoomed, through Coil.
+    implementation(libs.telephoto.zoomable.image.coil3)
     implementation(libs.capsule)
     implementation(libs.haze)
     implementation(libs.haze.blur)

@@ -23,7 +23,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -58,7 +57,6 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.viewer.PhotoDetails
 import cc.hyoban.moments.ui.viewer.ZoomablePhoto
-import coil3.compose.AsyncImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.ZoneId
@@ -250,7 +248,7 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
         if (photo.photo && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.transfer?.loadOriginal(photo)
     }
 
-    /** Its thumbnail enlarged until its original is down in the cache. */
+    /** Its thumbnail enlarged until its original is down in the cache, then the original in tiles. */
     @Composable
     override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -259,12 +257,12 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
             val thumb by rememberThumb(this@CameraPick)
             val original = transfer.originalOf(photo)
             val file = original?.file
-            var shape by remember(key) { mutableFloatStateOf(0f) }
-            ZoomablePhoto(shape.takeIf { it > 0f } ?: thumb?.let { it.width.toFloat() / it.height } ?: 1.5f, onZoom) {
-                thumb?.let { Image(it.asImageBitmap(), contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
-                file?.let {
-                    AsyncImage(it, contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize(),
-                        onSuccess = { loaded -> loaded.painter.intrinsicSize.let { size -> if (size.height > 0f) shape = size.width / size.height } })
+            val shape = thumb?.let { it.width.toFloat() / it.height } ?: 1.5f
+            if (file != null) {
+                ZoomableOriginal(file, thumb, shape, photo.name, onZoom)
+            } else {
+                ZoomablePhoto(shape, onZoom) {
+                    thumb?.let { Image(it.asImageBitmap(), contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
                 }
             }
             if (photo.photo && file == null && original != null) Loading(original) { transfer.loadOriginal(photo) }

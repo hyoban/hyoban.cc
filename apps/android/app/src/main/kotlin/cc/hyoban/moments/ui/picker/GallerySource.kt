@@ -60,7 +60,6 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.viewer.PhotoDetails
 import cc.hyoban.moments.ui.viewer.ZoomablePhoto
-import coil3.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
@@ -237,14 +236,19 @@ internal data class GalleryPick(val item: LocalItem, override val source: Galler
             val small by rememberThumb(this@GalleryPick)
             val large by rememberThumb(this@GalleryPick, size = if (item.video) 1440 else 320)
             val shape = if (item.width != null && item.height != null && item.height > 0) item.width.toFloat() / item.height else null
-            ZoomablePhoto(
-                shape ?: small?.let { it.width.toFloat() / it.height } ?: 1f, onZoom,
-                onHold = if (clip != null) { held -> if (held) live.play(sound = true) else live.stop() } else null,
-            ) {
-                (if (item.video) large else small)?.let { Image(it.asImageBitmap(), contentDescription = item.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
-                if (!item.video) AsyncImage(item.uri, contentDescription = item.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
-                clip?.let { LiveMotion(item.uri.toString(), active, live, Modifier.fillMaxSize(), start = it) }
-                if (plays) VideoPlayback(item.uri.toString(), active, video, Modifier.fillMaxSize(), window = false)
+            val fitted = shape ?: small?.let { it.width.toFloat() / it.height } ?: 1f
+            if (item.video) {
+                ZoomablePhoto(fitted, onZoom) {
+                    large?.let { Image(it.asImageBitmap(), contentDescription = item.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
+                    if (plays) VideoPlayback(item.uri.toString(), active, video, Modifier.fillMaxSize(), window = false)
+                }
+            } else {
+                ZoomableOriginal(
+                    item.uri, small, fitted, item.name, onZoom,
+                    onHold = if (clip != null) { held -> if (held) live.play(sound = true) else live.stop() } else null,
+                ) {
+                    clip?.let { LiveMotion(item.uri.toString(), active, live, Modifier.fillMaxSize(), start = it) }
+                }
             }
             if (plays) VideoWaiting(video) else if (item.video) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))
         }
