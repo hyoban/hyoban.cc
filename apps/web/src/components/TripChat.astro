@@ -1,0 +1,68 @@
+---
+import ChatBillRow from '@/components/ChatBillRow.astro'
+import ChatTail from '@/components/ChatTail.astro'
+import MomentBubble from '@/components/MomentBubble.astro'
+import type { ChatDay } from '@/moments/trip-chat'
+
+interface Props {
+  days: ChatDay[]
+}
+
+const { days } = Astro.props
+---
+
+<!-- A trip's days as the app's trip has them, a conversation: the day's date in a capsule,
+     then its Moments and check-ins as bubbles from the right, and the bills between them
+     gathered in one outlined bubble from the left (styles/trip-chat.css). -->
+<div class="trip-chat">
+  {
+    days.map(day => (
+      <section class="chat-day" aria-label={day.label}>
+        <h2 class="chat-date"><span>{day.label}</span></h2>
+        {day.bubbles.map(bubble => bubble.kind === 'moment'
+          ? <MomentBubble moment={bubble.moment} bills={bubble.bills} joinedAbove={bubble.joinedAbove} joinedBelow={bubble.joinedBelow} />
+          : bubble.kind === 'checkin'
+            ? (
+                <article class:list={['chat-sent', { 'chat-sent--joined-above': bubble.joinedAbove }]}>
+                  <div class:list={['chat-bubble', 'chat-bubble--sent', { 'chat-bubble--fill': bubble.bills.length > 0, 'chat-bubble--joined-above': bubble.joinedAbove, 'chat-bubble--joined-below': bubble.joinedBelow }]}>
+                    <div class="chat-bubble__body">
+                      <div class="chat-bubble__content">
+                        <a
+                          class="chat-checkin"
+                          href={`/map/${bubble.checkin.dateKey.slice(0, 4)}/${bubble.checkin.dateKey.slice(5, 7)}/place/${bubble.checkin.locations[0].id}/`}
+                          data-trip-map-place-link={bubble.checkin.locations[0].id}
+                        >
+                          <span class="i-lucide-map-pin-check-inside" aria-hidden="true" />
+                          <span class="sr-only">签到</span>
+                          <span class="chat-checkin__venue">{bubble.checkin.venue}</span>
+                          {bubble.checkin.occurredLabel && <time class="chat-row__time" datetime={bubble.checkin.occurredAt}>{bubble.checkin.occurredLabel}</time>}
+                        </a>
+                        {
+                          bubble.bills.length > 0 && (
+                            <div class="chat-bills">
+                              {bubble.bills.map(bill => <ChatBillRow bill={bill} timeAtEnd hideTime />)}
+                            </div>
+                          )
+                        }
+                      </div>
+                    </div>
+                    {!bubble.joinedBelow && <ChatTail sent />}
+                  </div>
+                </article>
+              )
+            : (
+                <div class="chat-received">
+                  <div class:list={['chat-bubble', 'chat-bubble--received', { 'chat-bubble--fill': bubble.bills.length > 1 }]}>
+                    <div class="chat-bubble__body">
+                      <div class="chat-bubble__content">
+                        {bubble.bills.map(bill => <ChatBillRow bill={bill} />)}
+                      </div>
+                    </div>
+                    <ChatTail sent={false} />
+                  </div>
+                </div>
+              ))}
+      </section>
+    ))
+  }
+</div>

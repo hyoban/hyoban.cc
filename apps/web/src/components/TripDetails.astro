@@ -1,16 +1,17 @@
 ---
-import { compareMoments, isInTrip } from '@hyoban/trip-map'
-import BillEntry from '@/components/BillEntry.astro'
-import MomentEntry from '@/components/MomentEntry.astro'
+import { isInTrip } from '@hyoban/trip-map'
+import TripChat from '@/components/TripChat.astro'
 import TripCoverCollage from '@/components/TripCoverCollage.astro'
 import { formatRate, formatYuan } from '@/data/vehicle-costs'
-import { getBills, getMomentTripCosts, getMomentTripOdometer, type Moment, type MomentTrip } from '@/moments'
+import { getBills, getCheckins, getMomentTripCosts, getMomentTripOdometer, type Moment, type MomentTrip } from '@/moments'
 import { formatBillAmount, getSpending } from '@/moments/bills'
+import { getTripChat } from '@/moments/trip-chat'
 import { getTripCollage } from '@/moments/trip-images'
 
 // A trip's sidebar beside the map: its photos and totals, the button that plays it, and
-// its days' Moments in order, each stop playing the trip from its own card, with the
-// public bills paid in its span among them. The map fetches it as a fragment (see
+// its days as the app's trip has them, a conversation of its Moments, public check-ins
+// and the public bills paid in its span (TripChat), each stop playing the trip from its
+// own bubble. The map fetches it as a fragment (see
 // pages/trip/[id]/moments.astro); a trip's page renders it in place.
 
 interface Props {
@@ -20,10 +21,9 @@ interface Props {
 }
 
 const { moments, trip } = Astro.props
-const tripMoments = moments.filter(moment => isInTrip(trip, moment.occurredAt))
 // A trip's bills are the public ones paid in its span, as it holds every entry there.
 const tripBills = getBills().filter(bill => isInTrip(trip, bill.occurredAt))
-const records = [...tripMoments, ...tripBills].sort(compareMoments)
+const days = getTripChat(trip, moments, getCheckins(), tripBills)
 const [spent, ...otherSpent] = getSpending(tripBills)
 // The trip at a glance, figures with a word under each: how long and where, how
 // far the car went and how often it charged, and what it cost on the road, from the car's
@@ -69,11 +69,7 @@ const figures = [
     回放旅程
   </a>
 </div>
-<div class="trip-details__moments">
-  {records.map(record => 'kind' in record
-    ? <BillEntry bill={record} />
-    : <MomentEntry date="day" moment={record} tripLink="play" />)}
-</div>
+<TripChat days={days} />
 
 <style>
   .trip-details {
@@ -159,10 +155,5 @@ const figures = [
     & span {
       font-size: 0.8125rem;
     }
-  }
-
-  .trip-details__moments {
-    min-width: 0;
-    margin-top: 0.5rem;
   }
 </style>

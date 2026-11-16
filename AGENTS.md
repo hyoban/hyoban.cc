@@ -148,6 +148,9 @@ even when starting from the repository root.
   both together.
   The app's trip playback follows `packages/trip-map/src/player`, including a route
   that keeps moving during playback.
+- A trip reads as one conversation on both: the site's trip sidebar (`TripChat.astro`) draws
+  the app's chat timeline (date capsules, Moments and check-ins as bubbles from the right with
+  their bills at their foot, the other bills in a bubble from the left); change both together.
 
 ## Website work
 

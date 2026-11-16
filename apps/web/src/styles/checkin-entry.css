@@ -36,6 +36,6 @@
   color: var(--color-tx-3);
 }
 
-:is(.moment-entry, .checkin-entry, .bill-entry) + :is(.moment-entry, .checkin-entry, .bill-entry) {
+:is(.moment-entry, .checkin-entry) + :is(.moment-entry, .checkin-entry) {
   border-top: 1px solid var(--color-border);
 }

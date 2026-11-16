@@ -1,0 +1,26 @@
+---
+interface Props {
+  /** From the right, on the fill; else from the left, outlined. */
+  sent: boolean
+}
+
+const { sent } = Astro.props
+---
+
+<!-- The tail a bubble's last of a run curls out of its foot, as the app's BubbleShape draws
+     it: 8 wide and 16 high, a pixel over the bubble's edge so no seam shows. From the left
+     it covers the bubble's outline where the two meet and draws its own along the curve. -->
+{
+  sent
+    ? (
+        <svg class="chat-tail chat-tail--sent" viewBox="0 0 9 16" aria-hidden="true">
+          <path d="M0 0H1C1 9 3.5 14.5 9 16H0Z" />
+        </svg>
+      )
+    : (
+        <svg class="chat-tail chat-tail--received" viewBox="0 0 9 16" aria-hidden="true">
+          <path class="chat-tail__fill" d="M8.5 0C8.5 9 6 14.5 0.5 15.5H9V0Z" />
+          <path class="chat-tail__line" d="M8.5 0C8.5 9 6 14.5 0.5 15.5H9" />
+        </svg>
+      )
+}

@@ -1,0 +1,110 @@
+---
+import ChatBillRow from '@/components/ChatBillRow.astro'
+import ChatTail from '@/components/ChatTail.astro'
+import MomentGallery from '@/components/MomentGallery.astro'
+import MomentText from '@/components/MomentText.astro'
+import { getMomentPagePath, type Moment, type PublicBill } from '@/moments'
+import { formatBillAmount } from '@/moments/bills'
+import { getMomentTrips } from '@/moments/trip-data'
+
+interface Props {
+  moment: Moment
+  /** The bills paid at its very time, at its foot. */
+  bills: PublicBill[]
+  /** Whether the bubble above or below it is from the right too, the run drawn together. */
+  joinedAbove: boolean
+  joinedBelow: boolean
+}
+
+const { bills, joinedAbove, joinedBelow, moment } = Astro.props
+const trip = (await getMomentTrips()).get(moment.id)
+const mapMonthPath = `/map/${moment.dateKey.slice(0, 4)}/${moment.dateKey.slice(5, 7)}/place/`
+const verdictLabels = { good: '好吃', ok: '还行', bad: '踩雷' } as const
+const worthLabels = { good: '值', ok: '还行', bad: '不值' } as const
+// What it cost leads the bills at its foot, as the app's bubble has it, when it says how
+// much: what was eaten or what it went on (else 美食 or 花费), how it was and for how many.
+const { cost, food } = moment
+const costLine = food?.bill?.amount !== undefined
+  ? {
+      icon: 'i-lucide-utensils',
+      title: [food.dishes.join('、') || '美食', food.verdict && verdictLabels[food.verdict], food.bill.people && food.bill.people > 1 && `${food.bill.people} 人`],
+      amount: formatBillAmount(food.bill.amount, food.bill.currency ?? 'CNY'),
+    }
+  : cost?.amount !== undefined
+    ? {
+        icon: 'i-lucide-receipt',
+        title: [cost.items.join('、') || '花费', cost.verdict && worthLabels[cost.verdict], cost.people && cost.people > 1 && `${cost.people} 人`],
+        amount: formatBillAmount(cost.amount, cost.currency ?? 'CNY'),
+      }
+    : undefined
+const hasMedia = moment.media.length > 0
+const hasFoot = bills.length > 0 || costLine !== undefined
+const hasText = moment.text.trim() !== ''
+// Where and when follow the words' last line, as a message's time does; the words keep
+// that much room at their end (as a string the stylesheet sets there unseen), so the foot
+// only takes a line of its own when it doesn't fit beside them.
+const footText = [...moment.locations.map(location => location.name), moment.occurredLabel].filter(Boolean).join(' ')
+const footSpace = `"${footText.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`
+---
+
+<article
+  class:list={['chat-sent', { 'chat-sent--joined-above': joinedAbove }]}
+  data-trip-map-stop-entry={trip?.anchor}
+>
+  <!-- What the app does on a long press, here beside the bubble: play the trip from this
+       stop, and share the Moment. -->
+  <div class="chat-actions">
+    {
+      trip && (
+        <a class="chat-action" href={`/trip/${trip.id}/play/${trip.anchor}/`} data-trip-map-stop-play={trip.id} data-trip-map-stop={trip.anchor} aria-label="从这里回放" title="从这里回放">
+          <span class="i-lucide-play" aria-hidden="true" />
+        </a>
+      )
+    }
+    <a class="chat-action" href={getMomentPagePath(moment)} aria-label="分享这条 Moment" title="分享" data-moment-share>
+      <span class="i-lucide-share" aria-hidden="true" data-moment-share-icon />
+    </a>
+  </div>
+  <div
+    class:list={['chat-bubble', 'chat-bubble--sent', { 'chat-bubble--fill': hasMedia || hasFoot, 'chat-bubble--joined-above': joinedAbove, 'chat-bubble--joined-below': joinedBelow }]}
+  >
+    <div class="chat-bubble__body">
+      {hasMedia && <MomentGallery media={moment.media} />}
+      <div class="chat-bubble__content">
+        <div class:list={['chat-moment__words', { 'chat-moment__words--empty': !hasText }]} style={`--chat-foot: ${footSpace}`}>
+          {hasText && <MomentText text={moment.text} />}
+          <div class="chat-moment__foot">
+            {
+              moment.locations.map(location => (
+                <a href={`${mapMonthPath}${location.id}/`} data-trip-map-place-link={location.id}>{location.name}</a>
+              ))
+            }
+            {moment.occurredLabel && <time datetime={moment.occurredAt}>{moment.occurredLabel}</time>}
+          </div>
+        </div>
+        {
+          hasFoot && (
+            <div class="chat-bills">
+              {
+                costLine && (
+                  <div class="chat-row">
+                    <span class={costLine.icon} aria-hidden="true" />
+                    <span class="chat-row__title">{costLine.title.filter(Boolean).join(' ')}</span>
+                    <span class="chat-row__amount">{costLine.amount}</span>
+                  </div>
+                )
+              }
+              {/* Paid at the Moment's very time, which its foot already says. */}
+              {bills.map(bill => <ChatBillRow bill={bill} timeAtEnd hideTime />)}
+            </div>
+          )
+        }
+      </div>
+    </div>
+    {!joinedBelow && <ChatTail sent />}
+  </div>
+</article>
+
+<script>
+  import '@/moment-entry-client'
+</script>

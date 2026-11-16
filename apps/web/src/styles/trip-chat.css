@@ -1,0 +1,369 @@
+/* A trip's days as a conversation (TripChat.astro, MomentBubble.astro), as the app's trip
+   draws them (MomentFeed with chat, its Chat.kt): the date in a capsule, Moments and
+   check-ins as bubbles on the fill from the right, the bills between them in an outlined
+   bubble from the left. The sidebar comes in a partial page, which carries no styles of
+   its own, so the map page imports these. */
+
+.trip-chat {
+  /* The app's fill, the date capsule's and a Moment bubble's: the site's hover grey. */
+  --chat-fill: var(--color-hover);
+  --chat-radius-large: 18px;
+  --chat-radius-small: 12px;
+
+  min-width: 0;
+  margin-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+/* The day's date at the middle, a day's gap above it. */
+.chat-date {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1rem;
+
+  & span {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    background: var(--chat-fill);
+    color: var(--color-tx-2);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Bubbles a little apart from the next from the other side, barely apart within a run. */
+:is(.chat-sent, .chat-received) + :is(.chat-sent, .chat-received) {
+  margin-top: 0.75rem;
+}
+
+.chat-sent--joined-above:is(.chat-sent + .chat-sent) {
+  margin-top: 0.25rem;
+}
+
+.chat-sent {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  scroll-margin-top: 1rem;
+}
+
+.chat-received {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Most of the column and never wider than 420, with the tail's strip of 8 beside it;
+   photos or bills fill that, words alone wrap it to them. */
+.chat-bubble {
+  position: relative;
+  flex: 0 1 auto;
+  width: fit-content;
+  max-width: calc(min(88%, 26.25rem));
+  min-width: 0;
+
+  &.chat-bubble--fill {
+    width: calc(min(88%, 26.25rem));
+  }
+
+  &.chat-bubble--sent {
+    margin-right: 8px;
+  }
+
+  &.chat-bubble--received {
+    max-width: calc(min(86%, 26.25rem));
+    margin-left: 8px;
+
+    &.chat-bubble--fill {
+      width: calc(min(86%, 26.25rem));
+    }
+  }
+}
+
+.chat-bubble__body {
+  overflow: hidden;
+  border-radius: var(--chat-radius-large);
+
+  .chat-bubble--sent > & {
+    background: var(--chat-fill);
+  }
+
+  .chat-bubble--received > & {
+    border: 1px solid var(--color-border);
+    border-bottom-left-radius: 0;
+  }
+
+  /* Within a run from the right, the corners where it meets its neighbours are small; the
+     last of it has the tail instead. */
+  .chat-bubble--joined-above > & {
+    border-top-right-radius: var(--chat-radius-small);
+  }
+
+  .chat-bubble--joined-below > & {
+    border-bottom-right-radius: var(--chat-radius-small);
+  }
+
+  .chat-bubble--sent:not(.chat-bubble--joined-below) > & {
+    border-bottom-right-radius: 0;
+  }
+
+  /* The photos across its top, edge to edge, the bubble's corners theirs. */
+  & .moment-gallery {
+    gap: 2px;
+    margin-top: 0;
+  }
+
+  & .moment-gallery__item {
+    border-radius: 0;
+
+    &:focus-visible {
+      outline-offset: -3px;
+    }
+  }
+}
+
+.chat-bubble__content {
+  padding: 0.5rem 0.75rem;
+
+  .chat-bubble--received & {
+    padding-block: 0.25rem;
+  }
+}
+
+.chat-tail {
+  position: absolute;
+  bottom: 0;
+  width: 9px;
+  height: 16px;
+  overflow: visible;
+}
+
+.chat-tail--sent {
+  left: calc(100% - 1px);
+  fill: var(--chat-fill);
+}
+
+.chat-tail--received {
+  right: calc(100% - 1px);
+
+  & .chat-tail__fill {
+    fill: var(--drawer-background, var(--color-bg));
+  }
+
+  & .chat-tail__line {
+    fill: none;
+    stroke: var(--color-border);
+    stroke-width: 1;
+  }
+}
+
+/* The words, and where and when after their last line, faint; the words keep the foot's
+   room at their end unseen, so it sits beside them when it fits and under them else. */
+.chat-moment__words {
+  position: relative;
+  overflow-wrap: anywhere;
+
+  & .moment-text {
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+    text-wrap: pretty;
+    white-space: pre-line;
+
+    & + .moment-text {
+      margin-top: 0.5rem;
+    }
+
+    &:has(+ .chat-moment__foot)::after {
+      content: var(--chat-foot);
+      display: inline-block;
+      overflow: hidden;
+      max-width: 100%;
+      margin-left: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      line-height: 1rem;
+      visibility: hidden;
+      white-space: nowrap;
+    }
+  }
+
+  & .moment-video {
+    margin-block: 0.25rem;
+    border-radius: 0.375rem;
+  }
+}
+
+.chat-moment__foot {
+  position: absolute;
+  right: 0;
+  bottom: 0.1875rem;
+  display: flex;
+  gap: 0.25rem;
+  max-width: 100%;
+  color: var(--color-tx-2);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  white-space: nowrap;
+
+  .chat-moment__words--empty & {
+    position: static;
+    justify-content: flex-end;
+  }
+
+  & a {
+    overflow: hidden;
+    color: inherit;
+    text-decoration: none;
+    text-overflow: ellipsis;
+
+    @media (hover: hover) {
+      &:hover {
+        color: var(--color-tx);
+        text-decoration: underline;
+      }
+    }
+  }
+
+  & time {
+    flex-shrink: 0;
+  }
+}
+
+/* What a Moment or a check-in cost, under a hairline at its foot. */
+.chat-bills {
+  margin-top: 0.5rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+/* A line of a bubble: when, its icon, what it is and its amount at the end. */
+.chat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+
+  & > [class^='i-lucide-'] {
+    flex-shrink: 0;
+    color: var(--color-tx-2);
+    font-size: 1rem;
+  }
+}
+
+/* As wide as 00:00, so the icons keep in line down the bubble. */
+.chat-row__time {
+  flex-shrink: 0;
+  width: 5ch;
+  color: var(--color-tx-2);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-align: right;
+
+  .chat-bubble--received & {
+    color: var(--color-tx-3);
+  }
+}
+
+.chat-row__title {
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-row__note {
+  margin-left: 0.5em;
+  color: var(--color-tx-2);
+  font-size: 0.75rem;
+
+  .chat-bubble--received & {
+    color: var(--color-tx-3);
+  }
+}
+
+.chat-row__amount {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.chat-row__paid {
+  color: var(--color-tx-2);
+}
+
+/* A check-in: its pin, its venue on one line and when, the whole a link to its place. */
+.chat-checkin {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.5rem;
+  color: var(--color-tx);
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  text-decoration: none;
+
+  & > [class^='i-lucide-'] {
+    flex-shrink: 0;
+    color: var(--color-tx-2);
+    font-size: 1rem;
+  }
+
+  @media (hover: hover) {
+    &:hover .chat-checkin__venue {
+      text-decoration: underline;
+    }
+  }
+}
+
+.chat-checkin__venue {
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Playing the trip from a stop and sharing its Moment, quiet beside the bubble. */
+.chat-actions {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 0.25rem;
+}
+
+.chat-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  color: var(--color-tx-3);
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition:
+    background-color 140ms,
+    color 140ms;
+
+  @media (hover: hover) {
+    &:hover {
+      background: var(--chat-fill);
+      color: var(--color-tx);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-tx);
+    outline-offset: 2px;
+  }
+
+  & .i-lucide-play {
+    font-size: 0.75rem;
+  }
+}

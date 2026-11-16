@@ -1,0 +1,34 @@
+---
+import type { PublicBill } from '@/moments'
+import { formatBillAmount } from '@/moments/bills'
+
+interface Props {
+  bill: PublicBill
+  /** At the foot of a bubble from the right the time ends the line, as its Moment's does; else it leads it. */
+  timeAtEnd?: boolean
+  /** Leaves the time out, the bubble's own, its amount then at the edge. */
+  hideTime?: boolean
+}
+
+const { bill, hideTime = false, timeAtEnd = false } = Astro.props
+// The category's own name, its parent left to the category itself: `餐饮 › 晚餐` reads 晚餐.
+const title = bill.category?.split(' › ').at(-1) ?? (bill.kind === 'income' ? '收入' : '支出')
+// An expense its refunds brought some of back costs what is left, what was paid struck through before it.
+const net = bill.refunded ? Math.round((bill.amount - bill.refunded) * 100) / 100 : undefined
+---
+
+<!-- A public bill as a line of a bubble: when, its icon, what for, with its note faint
+     after, and what it cost (after its refunds, what was paid struck through before it). -->
+<div class="chat-row">
+  {!timeAtEnd && !hideTime && <time class="chat-row__time" datetime={bill.occurredAt}>{bill.occurredLabel}</time>}
+  <span class="i-lucide-receipt" aria-hidden="true" />
+  <span class="sr-only">{bill.kind === 'income' ? '收入' : '支出'}</span>
+  <span class="chat-row__title">
+    {title}
+    {bill.note && <span class="chat-row__note">{bill.note}</span>}
+  </span>
+  <span class="chat-row__amount" data-kind={bill.kind}>{bill.kind === 'income' ? '+' : ''}{net === undefined
+    ? formatBillAmount(bill.amount, bill.currency)
+    : <><s class="chat-row__paid"><span class="sr-only">原价</span>{formatBillAmount(bill.amount, bill.currency)}</s> <span class="sr-only">退款后</span>{formatBillAmount(net, bill.currency)}</>}</span>
+  {timeAtEnd && !hideTime && <time class="chat-row__time" datetime={bill.occurredAt}>{bill.occurredLabel}</time>}
+</div>
