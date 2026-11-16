@@ -101,6 +101,31 @@ class DailyRecordingPolicyTest {
         assertEquals(DailyRecordingPolicy.Phase.ACTIVE, p.phase)
     }
 
+    @Test fun aStaysProbesAndUnconfirmedWakesStaySettled() {
+        val p = DailyRecordingPolicy(0)
+        assertFalse(p.settled)
+        for (time in 0L..180_000L step 15_000L) p.fix(point(), time)
+        assertTrue(p.settled)
+        p.tick(300_000)
+        assertEquals(DailyRecordingPolicy.Phase.PROBE, p.phase)
+        for (time in 301_000L..346_000L step 15_000L) p.fix(point(), time)
+        assertEquals(DailyRecordingPolicy.Phase.REST, p.phase)
+        assertTrue(p.settled)
+        p.motion(400_000)
+        p.tick(520_000)
+        assertEquals(DailyRecordingPolicy.RestReason.NO_FIX, p.restReason)
+        assertTrue(p.settled)
+    }
+
+    @Test fun aFixThatMovesEndsTheStay() {
+        val p = restingPolicy()
+        p.motion(200_000)
+        p.fix(point(), 201_000)
+        assertTrue(p.settled)
+        p.fix(point(100.0), 206_000)
+        assertFalse(p.settled)
+    }
+
     @Test fun freshPassiveDisplacementCanWakeWithoutTheMotionSensor() {
         val p = restingPolicy()
         assertFalse(p.passiveFix(point(10.0), 190_000))

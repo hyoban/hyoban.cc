@@ -233,7 +233,7 @@ class RecordingService : Service() {
                 "system_timeout_ms" to if (acquiring) DailyRecordingPolicy.FIX_TIMEOUT else null)
             if (newSegment) {
                 lastFix = SystemClock.elapsedRealtime()
-                updateStatus(Res.string.footprints_waiting)
+                showActive(Res.string.footprints_waiting)
             }
         } catch (e: SecurityException) { startFailed(e) }
     }
@@ -299,7 +299,7 @@ class RecordingService : Service() {
             if (decisions.all { it == FixDecision.NOT_RECORDING }) return@trySend
             diagnostic("location_delivery", "samples" to samples.size, "oldest_age_ms" to
                 (SystemClock.elapsedRealtimeNanos() - samples.first().first.elapsedRealtimeNanos) / 1_000_000)
-            updateStatus(Res.string.footprints_recording)
+            showActive(Res.string.footprints_recording)
             if (acquiring && daily?.phase == DailyRecordingPolicy.Phase.ACTIVE) {
                 // Acquisition has no batching. Switch after a usable fix without creating a track gap.
                 stopUpdates()
@@ -598,6 +598,13 @@ class RecordingService : Service() {
         diagnostic("service_failure", "reason" to message.key, *environment())
         _status.value = message
         stopSelf()
+    }
+
+    /** Searching and recording show only once a fix has moved since the latest rest, so a stay's
+     *  probes and false wakes leave the notification resting instead of flickering its live update. */
+    private fun showActive(message: StringResource) {
+        if (daily?.settled == true) return
+        updateStatus(message)
     }
 
     private fun updateStatus(message: StringResource) {

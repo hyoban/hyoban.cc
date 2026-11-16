@@ -577,7 +577,9 @@ behaves.
   offered the place); written in, it is a Moment there. A stay kept already opens its check-in.
 - **Notification.** Its icon shows the state (recording, waiting for a fix, location off).
   On Android 16 and later it asks to be a Live Update; on ColorOS that also needs
-  流体云显示实时活动, linked from 足迹记录 → 状态栏显示.
+  流体云显示实时活动, linked from 足迹记录 → 状态栏显示. Once daily recording rests it stays
+  省电等待, without the Live Update, through the stay's probes and wakes that find no fix, until a
+  fix shows it moved: a stay doesn't make it come and go every few minutes.
 - **Background allowances.** 足迹记录's 需要 lists what is missing (notifications, Live
   Updates, unrestricted battery, background location, physical activity), and the
   footprints' last onboarding step shows the same; battery opens the system's own dialog.

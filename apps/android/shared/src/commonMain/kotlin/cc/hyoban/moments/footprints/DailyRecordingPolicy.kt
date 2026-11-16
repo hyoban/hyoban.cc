@@ -27,6 +27,9 @@ class DailyRecordingPolicy(now: Long) {
     /** Activity recognition's latest word: moving until it reports entering STILL. */
     var activityMoving = false
         private set
+    /** No fix has moved since the latest rest: its probes and unconfirmed wakes keep the rest's look. */
+    var settled = false
+        private set
 
     // Missing fixes are not evidence of being stationary. Only fix() can confirm a stop.
     val nextCheck: Long
@@ -38,6 +41,7 @@ class DailyRecordingPolicy(now: Long) {
         misses = 0
         val moved = moving || movedFromAnchor(point)
         if (moved) {
+            settled = false
             anchor = point
             lastMovement = now
             stationarySamples = 0
@@ -137,6 +141,7 @@ class DailyRecordingPolicy(now: Long) {
     private fun rest(now: Long, reason: RestReason) {
         phase = Phase.REST
         restReason = reason
+        settled = true
         // A rest the long wait forced must not keep requesting walking-rate fixes on the next probe.
         activityMoving = false
         misses = if (reason == RestReason.NO_FIX) min(misses + 1, 4) else 0
