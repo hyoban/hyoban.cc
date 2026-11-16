@@ -25,6 +25,30 @@ data class Outside(val bills: List<BillChange> = emptyList()) {
     val size get() = bills.size
 }
 
+/**
+ * What the site kept of [bills] after a publish: each bill as [kept] holds the part it went out in,
+ * by the uid of the entry that carried it ([sent], the part each entry was sent with), where the
+ * API kept less of it, as an API older than the app drops a field it doesn't know. Noted as
+ * published so, such a bill stays waiting to publish rather than being taken for the site's.
+ */
+fun Outside.asKept(sent: Map<String, JsonObject>, kept: Map<String, JsonObject>): Outside = Outside(
+    bills.map { change ->
+        val part = change.part ?: return@map change
+        val carrier = if (change.uid in sent) change.uid else change.txn.moment
+        val stored = carrier?.let(kept::get)
+        // Only the bill whose part its entry was sent with: a Moment carries one of its bills.
+        if (stored == null || sent[carrier] != part || samePart(stored, part)) change else change.copy(part = stored)
+    },
+)
+
+/** Whether two bill parts say the same, a figure the same whether written `88` or `88.0`. */
+fun samePart(a: JsonObject, b: JsonObject): Boolean = a.keys == b.keys && a.all { (key, value) ->
+    val other = b.getValue(key)
+    val x = (value as? kotlinx.serialization.json.JsonPrimitive)?.takeUnless { it.isString }?.content?.toDoubleOrNull()
+    val y = (other as? kotlinx.serialization.json.JsonPrimitive)?.takeUnless { it.isString }?.content?.toDoubleOrNull()
+    if (x != null && y != null) x == y else value == other
+}
+
 /** Where [Outside] comes from, and where what went is noted; the tests stand in with their own. */
 interface OutsideChanges {
     fun pending(): Outside

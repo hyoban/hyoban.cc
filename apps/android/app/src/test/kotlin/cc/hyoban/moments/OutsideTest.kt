@@ -7,6 +7,9 @@ import cc.hyoban.moments.data.store.pendingBills
 import cc.hyoban.moments.data.store.publicPart
 import cc.hyoban.moments.data.store.readoptions
 import cc.hyoban.moments.data.store.SiteBill
+import cc.hyoban.moments.data.store.Outside
+import cc.hyoban.moments.data.store.asKept
+import cc.hyoban.moments.data.store.samePart
 import cc.hyoban.moments.data.store.undo
 import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.ui.publish.after
@@ -184,4 +187,31 @@ class OutsideTest {
         assertEquals("private", back.txns.single().visibility)
         assertEquals("{}", back.txns.single().published)
     }
+
+    @Test
+    fun `a bill the site kept less of stays to publish`() {
+        val withRefund = Entries.billPart("expense", 12.5, "CNY", "餐饮 › 零食", "奶茶", refunded = 5.0)
+        val withoutRefund = Entries.billPart("expense", 12.5, "CNY", "餐饮 › 零食", "奶茶")
+        val sent = ledger(txn, public = true).pendingBills().single().copy(part = withRefund)
+        // An older API dropped the refund it didn't know: the site's part is noted, so it waits again.
+        val kept = Outside(listOf(sent)).asKept(mapOf(txn.id to withRefund), mapOf(txn.id to withoutRefund)).bills.single()
+        assertEquals(withoutRefund, kept.part)
+        val noted = txn.copy(published = kept.part.toString())
+        assertEquals(1, Ledger(books = listOf(book.copy(visibility = "public")), categories = listOf(food, snack), txns = listOf(noted, refundOf(txn, 500))).pendingBills().size)
+        // Kept whole, or the same figures written another way, it is the site's as sent.
+        assertEquals(withRefund, Outside(listOf(sent)).asKept(mapOf(txn.id to withRefund), mapOf(txn.id to withRefund)).bills.single().part)
+        val rewritten = kotlinx.serialization.json.JsonObject(withRefund + ("amount" to kotlinx.serialization.json.JsonPrimitive(12.50)))
+        assertTrue(samePart(withRefund, rewritten))
+        assertEquals(withRefund, Outside(listOf(sent)).asKept(mapOf(txn.id to withRefund), mapOf(txn.id to rewritten)).bills.single().part)
+    }
+
+    @Test
+    fun `a Moment's bill that wasn't the one it carried is left as it was`() {
+        val first = Entries.billPart("expense", 12.5, "CNY", null, null)
+        val second = Entries.billPart("expense", 3.0, "CNY", null, null)
+        val change = ledger(txn, public = true).pendingBills().single().let { it.copy(txn = it.txn.copy(moment = "M1"), part = second) }
+        assertEquals(second, Outside(listOf(change)).asKept(mapOf("M1" to first), mapOf("M1" to first)).bills.single().part)
+    }
+
+    private fun refundOf(expense: Txn, cents: Long) = expense.copy(id = "R", kind = TxnKind.REFUND, amount = cents, related = expense.id, published = null)
 }

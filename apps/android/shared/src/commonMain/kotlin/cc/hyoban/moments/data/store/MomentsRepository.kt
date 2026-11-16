@@ -797,7 +797,15 @@ class MomentsRepository(
                     ),
                 )
             }
-            outside?.published(extra)
+            // What the site kept of each bill, the part each was sent in by the entry carrying it: one it
+            // kept less of (an API older than the app drops what it doesn't know) stays to publish.
+            val sentBills = alone.mapNotNull { bill -> bill.part?.let { bill.uid to it } }.toMap() +
+                parts.mapValues { (_, part) -> part.getValue("bill") } +
+                checkinCarriers.mapNotNull { (uid, entry) -> ((entry["parts"] as? kotlinx.serialization.json.JsonObject)?.get("bill") as? kotlinx.serialization.json.JsonObject)?.let { uid to it } }
+            val kept = extra.asKept(sentBills, applied.bills)
+            val short = kept.bills.zip(extra.bills).count { (k, sent) -> k.part !== sent.part }
+            if (short > 0) cc.hyoban.moments.logWarning("Moments", "The site kept less of $short bill(s) than was sent; they stay to publish")
+            outside?.published(kept)
             lock.withLock {
                 withContext(io) {
                     // A trip changed again while this was sent stays to be published.

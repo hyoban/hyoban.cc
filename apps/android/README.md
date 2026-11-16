@@ -269,7 +269,9 @@ off (made private or deleted here, struck through); a group of more than three f
 falls under its days. A bill there opens its page. 全部发布到网站 runs as WorkManager work in a foreground
 service with a progress notification, waiting out a dropped link: it uploads the new
 originals a few at a time, then sends everything else as one `POST /v2/changes`, which the
-API takes whole or not at all. What is published leaves the phone's store for the site's.
+API takes whole or not at all. What is published leaves the phone's store for the site's. A bill
+is noted as published as the API kept it, from its answer: one it kept less of than was sent (an
+API older than the app dropping a field it doesn't know) stays to be published.
 取消发布, on the page or the notification, stops it while it uploads or waits: what was uploaded
 stays for the next try, and a change set already on its way still goes through and is noted.
 清除全部更改 takes back everything waiting, after asking: the Moments written on the phone are

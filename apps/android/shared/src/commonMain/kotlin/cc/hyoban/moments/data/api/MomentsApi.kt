@@ -14,6 +14,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.MediaType.Companion.toMediaType
@@ -74,6 +75,8 @@ data class AppliedChanges(
     val moments: List<MomentRecord>,
     val deleted: List<String>,
     val revision: Long? = null,
+    /** The bill part of each entry as the API kept it, by the entry's uid: a field it doesn't know it drops. */
+    val bills: Map<String, JsonObject> = emptyMap(),
 )
 
 /** An original of a media item: a photo, a live photo's still, or a video or a live photo's motion. */
@@ -177,7 +180,12 @@ class MomentsApi(
         )
         val text = write("POST", "/v2/changes", encode(EntryChangeSet.serializer(), second), publishing)
         val applied = decode(text, AppliedEntryChanges.serializer())
-        return AppliedChanges(applied.places, applied.entries.mapNotNull(Entries::toMoment), applied.deleted, applied.revision)
+        val bills = applied.entries.mapNotNull { entry ->
+            val uid = (entry["uid"] as? JsonPrimitive)?.content ?: return@mapNotNull null
+            val bill = (entry["parts"] as? JsonObject)?.get("bill") as? JsonObject ?: return@mapNotNull null
+            uid to bill
+        }.toMap()
+        return AppliedChanges(applied.places, applied.entries.mapNotNull(Entries::toMoment), applied.deleted, applied.revision, bills)
     }
 
     private suspend fun <T> get(path: String, serializer: KSerializer<T>): T =
