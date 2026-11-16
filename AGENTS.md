@@ -99,7 +99,11 @@ even when starting from the repository root.
   copy in canonical JSON that `vp run data:export` writes and git ignores, except
   `data/zeekr/` and `data/schema/`. The car's expenses and redacted Zeekr sources live only
   there in the repository. Tests read the made-up `packages/data-spec/test/fixtures/data/`,
-  never real records. The formatter leaves `data/` alone.
+  never real records. The formatter leaves `data/` alone. The repository is public: neither
+  the records (in any layout, the old `src/content/moments` included) nor the image bucket
+  go into it, and its history was rewritten on 2026-11-16 to take them out. A branch or
+  clone from before then still carries them; rebase it onto the new history before pushing
+  it, never push it as it is.
 - What leaves the phone keeps one shape on both sides: the app keeps a complete copy of D1's
   records in SQLite, every kind (entries, collections, places, the car's
   statistics and captures) in the same table, with the same columns and the same
