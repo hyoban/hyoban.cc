@@ -19,17 +19,22 @@
       "id": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8",
       "file": "sources/zeekr-api-2026-11-07-014244.json",
       "sha256": "32eaff32ef4c3852263dc9fbec9988125fa1ea66ffa649803f8c6639b9dfefe8"
+    },
+    {
+      "id": "3a0e2cbf0cb27d8a1532fdcfcc1a21542f1d27063284bae2f943b5f8e3ce9f8c",
+      "file": "sources/current-2026-11-20261116-104252.json",
+      "sha256": "3a0e2cbf0cb27d8a1532fdcfcc1a21542f1d27063284bae2f943b5f8e3ce9f8c"
     }
   ],
   "counts": {
-    "captures": 4,
-    "months": 15,
-    "days": 266,
-    "chargingSessions": 94,
+    "captures": 5,
+    "months": 16,
+    "days": 276,
+    "chargingSessions": 102,
     "monthlyAssistance": 4,
     "cumulativeAssistance": 3
   },
-  "checksPassed": 3557,
+  "checksPassed": 3623,
   "warnings": [
     {
       "scope": "zeekr-007gt/2025-08",
@@ -124,7 +129,8 @@
       "zeekr-007gt/2026-03",
       "zeekr-007gt/2026-04",
       "zeekr-007gt/2026-05",
-      "zeekr-007gt/2026-06"
+      "zeekr-007gt/2026-06",
+      "zeekr-007gt/2026-11"
     ]
   }
 }
