@@ -166,8 +166,8 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
 
     override fun viewerMotion(media: cc.hyoban.moments.data.spec.MomentMedia) = cc.hyoban.moments.ui.viewer.phoneViewerMotion(media)
 
-    override suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls) =
-        cc.hyoban.moments.data.media.Share.media(context, media, urls)
+    override suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls, text: String) =
+        cc.hyoban.moments.data.media.Share.media(context, media, urls, text)
 
     override val hasPhotoInfo: Boolean get() = true
 

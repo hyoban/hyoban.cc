@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import cc.hyoban.moments.data.spec.MomentCost
+import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ledger.currencySymbol
 import cc.hyoban.moments.data.spec.FoodVerdict
@@ -60,14 +61,16 @@ fun costLine(cost: MomentCost?): String? {
 }
 
 /**
- * What a share ends with: where, each one's share of what it cost and how it was (a meal's
- * taste, else whether it was worth it), each behind an emoji; null when it says nothing. A cost
- * without its people was one's.
+ * What a share ends with: when it was, where, each one's share of what it cost and how it was
+ * (a meal's taste, else whether it was worth it), each behind an emoji, as the Telegram channel
+ * posts it too. A cost without its people was one's.
  */
 @Composable
-fun costShareLine(cost: MomentCost?, place: String?): String? {
+fun shareLine(moment: MomentRecord, place: String?): String {
+    val cost = moment.cost
     val amount = cost?.amount
     return listOfNotNull(
+        "🕐 " + listOfNotNull(formatDate(moment.dateKey), formatTime(moment.occurredAt)).joinToString(" "),
         place?.takeIf { it.isNotBlank() }?.let { "📍 $it" },
         amount?.let { "💰 " + stringResource(Res.string.cost_each, costMoney((it / (cost.people ?: 1).coerceAtLeast(1)).roundToLong().toDouble(), cost.currency)) },
         FoodVerdict.of(cost?.verdict)?.let { verdict ->
@@ -78,8 +81,13 @@ fun costShareLine(cost: MomentCost?, place: String?): String? {
             }
             "$face " + stringResource(costVerdictLabel(cost!!, verdict))
         },
-    ).joinToString(" ").ifEmpty { null }
+    ).joinToString(" ")
 }
+
+/** A Moment's words as they go out: its own words exactly, then [shareLine]. */
+@Composable
+fun shareText(moment: MomentRecord, place: String?): String =
+    listOfNotNull(moment.text.takeIf { it.isNotBlank() }, shareLine(moment, place)).joinToString("\n\n")
 
 /** The module a cost goes with: 美食 for a meal, else 花费. */
 val MomentCost.module: Module get() = if (meal) Module.FOOD else Module.COST

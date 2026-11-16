@@ -340,8 +340,11 @@ A Moment's share sheet hands a copy of its words and a choice of photos to anoth
 which leaves the recipient and the final send to the user. It never posts. It lists only
 the apps on the phone; 准备图文 is always there. The sheet stays
 open under each share, so the next one starts from it. The copy
-ends with a line of its place, each one's share of what it cost and how it was (a meal's 好吃,
-还行 or 踩雷, else 值, 还行 or 不值), each behind an emoji, which can be edited away like the rest.
+ends with a line of when it was (🕐 11月16日 19:30, the year only in another year), its place,
+each one's share of what it cost and how it was (a meal's 好吃, 还行 or 踩雷, else 值, 还行 or
+不值), each behind an emoji, which can be edited away like the rest. The same line follows the
+words wherever a Moment goes out: a photo shared from the viewer carries them as its text, the
+Mac's 复制文字 copies them, and the Telegram channel posts them.
 
 | Destination    | How                                                                                     |
 | -------------- | --------------------------------------------------------------------------------------- |

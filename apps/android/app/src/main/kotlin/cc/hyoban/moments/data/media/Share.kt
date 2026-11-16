@@ -26,8 +26,9 @@ import java.util.UUID
  * sharing another item doesn't remove files a receiving app may still be reading.
  */
 object Share {
-    suspend fun media(context: Context, media: MomentMedia, urls: MediaUrls) {
-        val send = prepare(context, listOf(media), urls)
+    /** The one item, its Moment's [text] beside it for an app that takes words with a photo. */
+    suspend fun media(context: Context, media: MomentMedia, urls: MediaUrls, text: String) {
+        val send = prepare(context, listOf(media), urls).putExtra(Intent.EXTRA_TEXT, text)
         context.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 

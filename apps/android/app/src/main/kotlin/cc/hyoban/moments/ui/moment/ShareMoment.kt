@@ -68,7 +68,7 @@ import cc.hyoban.moments.data.media.ShareAlbum
 import cc.hyoban.moments.data.media.saveShareAlbum
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentRecord
-import cc.hyoban.moments.ui.format.costShareLine
+import cc.hyoban.moments.ui.format.shareText
 import cc.hyoban.moments.accessibility.AssistStatus
 import cc.hyoban.moments.accessibility.ShareAccessibilityService
 import cc.hyoban.moments.share.InstagramShareAdapter
@@ -180,11 +180,9 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
     val scope = rememberCoroutineScope()
     val photos = remember(moment.media) { moment.media.filter { it.type != MediaType.VIDEO } }
     var target by rememberSaveable(moment.uid, initialTarget) { mutableStateOf(initialTarget) }
-    // The copy ends with where it was, each one's share of what it cost and how it was.
-    val food = costShareLine(moment.cost, place)
-    var text by rememberSaveable(moment.uid, initialTarget) {
-        mutableStateOf(listOfNotNull(moment.text.takeIf { it.isNotBlank() }, food).joinToString("\n\n"))
-    }
+    // The copy ends with when and where it was, each one's share of what it cost and how it was.
+    val initialText = shareText(moment, place)
+    var text by rememberSaveable(moment.uid, initialTarget) { mutableStateOf(initialText) }
     // Above the platform's limit, ask for an explicit choice instead of dropping photos.
     var selected by rememberSaveable(moment.uid, initialTarget) {
         mutableStateOf(if (photos.size <= target.limit) photos.map { it.uid } else emptyList())

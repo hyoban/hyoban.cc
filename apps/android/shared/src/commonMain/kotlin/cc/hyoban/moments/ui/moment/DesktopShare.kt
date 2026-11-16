@@ -34,6 +34,8 @@ import cc.hyoban.moments.ui.design.Toolbar
 import cc.hyoban.moments.ui.design.VerticalDivider
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.format.shareLine
+import cc.hyoban.moments.ui.format.shareText
 import cc.hyoban.moments.ui.theme.tokens
 import org.jetbrains.compose.resources.stringResource
 
@@ -78,20 +80,20 @@ fun DesktopShareDialog(
                         MediaStill(first, urls, Modifier.fillMaxWidth().aspectRatio(1f).clip(AppTheme.shapes.medium))
                     }
                     if (moment.text.isNotBlank()) Text(moment.text, style = AppTheme.typography.body, maxLines = 8, overflow = TextOverflow.Ellipsis)
-                    place?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx2) }
+                    Text(shareLine(moment, place), style = AppTheme.typography.caption, color = tokens.tx2)
                 }
                 VerticalDivider()
                 Column(Modifier.weight(1f).padding(vertical = Space.s)) {
-                    if (moment.text.isNotBlank()) {
-                        ListItem(
-                            headlineContent = { Text(stringResource(Res.string.action_copy_text)) },
-                            leadingContent = { Icon(AppIcons.Copy, contentDescription = null) },
-                            modifier = Modifier.testTag("share_copy").clickableRow {
-                                device.copyText(moment.text)
-                                show(copied)
-                            },
-                        )
-                    }
+                    // The words as the phone shares them, ending with when, where and what it cost.
+                    val words = shareText(moment, place)
+                    ListItem(
+                        headlineContent = { Text(stringResource(Res.string.action_copy_text)) },
+                        leadingContent = { Icon(AppIcons.Copy, contentDescription = null) },
+                        modifier = Modifier.testTag("share_copy").clickableRow {
+                            device.copyText(words)
+                            show(copied)
+                        },
+                    )
                     if (savePhotos != null && photos.isNotEmpty()) {
                         ListItem(
                             headlineContent = { Text(stringResource(Res.string.desktop_save_photos)) },

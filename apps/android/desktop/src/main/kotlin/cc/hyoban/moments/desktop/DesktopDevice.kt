@@ -150,7 +150,7 @@ object DesktopDevice : Device {
     }
 
     // The one shown kept in a folder, as sharing a Moment keeps its photos.
-    override suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls) {
+    override suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls, text: String) {
         val source = media.published?.let { urls.image(it, 4096) } ?: media.local?.uri ?: return
         val folder = chooseFolder() ?: return
         withContext(Dispatchers.IO) { savePhotos(listOf(source), folder, media.takenAt?.take(10) ?: media.uid) }

@@ -111,8 +111,8 @@ interface Device {
     /** What moves of [media] in the viewer, a live photo's clip or a video; null for a still. */
     fun viewerMotion(media: cc.hyoban.moments.data.spec.MomentMedia): cc.hyoban.moments.ui.viewer.ViewerMotion?
 
-    /** Shares the one item [media] shown in the viewer, fetched first when it is the site's. */
-    suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls)
+    /** Shares the one item [media] shown in the viewer, fetched first when it is the site's, with its Moment's [text] where the device can send words with it. */
+    suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls, text: String)
 
     /** Whether the viewer offers what an item says of itself (its EXIF), [PhotoInfo] drawing it. */
     val hasPhotoInfo: Boolean get() = false

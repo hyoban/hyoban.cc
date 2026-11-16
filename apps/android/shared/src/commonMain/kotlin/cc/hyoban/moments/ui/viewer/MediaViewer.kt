@@ -96,6 +96,7 @@ import cc.hyoban.moments.ui.components.shapeOf
 import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
+import cc.hyoban.moments.ui.format.shareText
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
@@ -304,7 +305,7 @@ fun MediaViewer(
                             Icon(AppIcons.Info, contentDescription = stringResource(Res.string.photo_info), tint = MediaOverlay.content)
                         }
                     }
-                    ShareShown(container, shown)
+                    ShareShown(container, shown, shareText(moment, moment.places.firstOrNull()?.let { places[it]?.name }))
                 }
             }
         }
@@ -314,9 +315,9 @@ fun MediaViewer(
     }
 }
 
-/** The one shown, fetched first when it's the site's, the spinner in its place meanwhile. */
+/** The one shown with its Moment's words, fetched first when it's the site's, the spinner in its place meanwhile. */
 @Composable
-private fun ShareShown(container: AppContainer, shown: MomentMedia) {
+private fun ShareShown(container: AppContainer, shown: MomentMedia, text: String) {
     val device = LocalDevice.current
     val show = rememberShowMessage()
     val scope = rememberCoroutineScope()
@@ -327,7 +328,7 @@ private fun ShareShown(container: AppContainer, shown: MomentMedia) {
                 sharing = true
                 scope.launch {
                     try {
-                        device.shareMedia(shown, container.mediaUrls)
+                        device.shareMedia(shown, container.mediaUrls, text)
                     } catch (e: CancellationException) {
                         throw e
                     } catch (_: Exception) {

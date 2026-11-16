@@ -6,7 +6,7 @@ import { IMAGE_ORIGIN } from './site.ts'
 import { toEntry } from './writes.ts'
 
 // The Moments the site shows, posted to the Telegram channel as they publish: the words
-// with the place and a meal's share and verdict, under its photos and videos, with no
+// with when and where it was and a meal's share and verdict, under its photos and videos, with no
 // link. A Moment that changes edits its post, or posts again when its media
 // changed; one the site no longer shows has its post deleted. Only Moments published since
 // the channel was first synced are posted, so a restore of the backup never floods it. Runs
@@ -187,7 +187,7 @@ async function postChanges(context: ChannelContext) {
     const entry = row.deleted_at ? null : toEntry(row)
     const moment = entry && isMomentEntry(entry) ? entryToMoment(entry) : null
     const posted = postedBy.get(row.key)
-    const post = moment && isMomentShown(moment) ? toPost(moment, placeNames) : null
+    const post = moment && isMomentShown(moment) ? toPost(moment, placeNames, context.now) : null
 
     if (!posted) {
       // Never posted: posted now if it was published since the channel was first synced.
@@ -235,12 +235,12 @@ const VERDICTS = { good: '😋 好吃', ok: '😌 还行', bad: '😖 踩雷' } 
 const WORTH = { good: '👍 值', ok: '👌 还行', bad: '👎 不值' } as const
 
 /**
- * The words and media a Moment is posted with: its own words exactly, then a line of the
- * place, each one's share of what it cost, and how a meal was and whether the cost was worth it,
+ * The words and media a Moment is posted with: its own words exactly, then a line of when it
+ * was, the place, each one's share of what it cost, and how a meal was and whether the cost was worth it,
  * as the app shares it. A cost without its people was one's. A Moment with neither words, a line nor media has nothing
  * to post.
  */
-function toPost(moment: MomentRecord, placeNames: Map<string, string>): Post | null {
+function toPost(moment: MomentRecord, placeNames: Map<string, string>, now: string): Post | null {
   const place = moment.places[0] && placeNames.get(moment.places[0])
   // A meal's cost is its bill and its verdict how it tasted; any other cost says whether it was worth it.
   const meal = moment.food
@@ -249,6 +249,7 @@ function toPost(moment: MomentRecord, placeNames: Map<string, string>): Post | n
     spent?.amount !== undefined && Math.round(spent.amount / Math.max(spent.people ?? 1, 1))
   const symbol = spent?.currency && spent.currency !== 'CNY' ? `${spent.currency} ` : '¥'
   const line = [
+    `🕐 ${when(moment.occurredAt, now)}`,
     place && `📍 ${place}`,
     share !== false && share !== undefined && `💰 人均 ${symbol}${share}`,
     meal?.verdict && VERDICTS[meal.verdict],
@@ -260,6 +261,24 @@ function toPost(moment: MomentRecord, placeNames: Map<string, string>): Post | n
   const media = moment.media.flatMap((item) => toPostMedia(item))
 
   return text || media.length > 0 ? { text, media } : null
+}
+
+/**
+ * When a Moment was, at its own clock as the app shares it: `10月1日 17:40`, the year only in
+ * another year than now's there, and the day alone for one known only by its day.
+ */
+function when(occurredAt: string, now: string) {
+  const [, year, month, day, time, offset] =
+    /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}:\d{2})[^+Z-]*(Z|[+-]\d{2}:\d{2}))?/.exec(occurredAt) ?? []
+  // The year where it was; a day alone is weighed by UTC's.
+  const sign = offset?.startsWith('-') ? -1 : 1
+  const shift =
+    !offset || offset === 'Z'
+      ? 0
+      : sign * (Number(offset.slice(1, 3)) * 60 + Number(offset.slice(4)))
+  const thisYear = new Date(Date.parse(now) + shift * 60_000).getUTCFullYear()
+  const date = `${Number(month)}月${Number(day)}日`
+  return [Number(year) === thisYear ? date : `${year}年${date}`, time].filter(Boolean).join(' ')
 }
 
 function toPostMedia(media: MomentRecord['media'][number]): PostMedia[] {
