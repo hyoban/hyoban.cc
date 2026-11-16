@@ -134,8 +134,9 @@ fun MomentCard(
 
 /**
  * A Moment as the conversation has it: a bubble from the right on the pressed fill, its photos
- * across its top, its words (what was eaten left to its page), and after them, faint, where,
- * which trip and when, and whether it is private or not yet published.
+ * across its top, its words (how a meal was left to its page), and after them, faint, where,
+ * which trip and when, and whether it is private or not yet published; at its foot, what a meal
+ * cost and the bills linked to it.
  */
 @Composable
 private fun MomentBubble(
@@ -153,7 +154,9 @@ private fun MomentBubble(
     ledger: Ledger? = null,
     onBill: (String) -> Unit = {},
 ) {
-    val withBills = bills.isNotEmpty() && ledger != null
+    // A meal's cost leads its linked bills at its foot, while meals are on (记录项与公开).
+    val food = moment.food?.takeIf { it.bill != null && LocalSettings.current.isOn(Module.FOOD) }
+    val withBills = (bills.isNotEmpty() && ledger != null) || food != null
     val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
     var menu by remember { mutableStateOf<DpOffset?>(null) }
     val density = LocalDensity.current
@@ -199,7 +202,8 @@ private fun MomentBubble(
                         if (moment.published == null && LocalSettings.current.connected) Pill(stringResource(Res.string.label_on_phone), icon = AppIcons.Phone)
                     }
                 }
-                // What was eaten stays on the Moment's page: the conversation shows the words alone.
+                // How a meal was stays on the Moment's page: the conversation shows the words, and
+                // what was eaten and what it cost at the foot, among the bills.
                 if (moment.text.isNotBlank()) {
                     // As Telegram has it, where and when follow the last line of the words, on
                     // a line of their own only when they don't fit there.
@@ -209,8 +213,8 @@ private fun MomentBubble(
                 } else {
                     Box(Modifier.align(Alignment.End)) { foot() }
                 }
-                // Its linked bills at its foot, each opening its bill.
-                if (withBills) cc.hyoban.moments.ui.feed.BubbleBills(bills, ledger!!, onBill, Modifier.padding(top = Space.xs))
+                // What the meal cost and its linked bills at its foot, each bill opening its bill.
+                if (withBills) cc.hyoban.moments.ui.feed.BubbleBills(bills, ledger, onBill, Modifier.padding(top = Space.xs), time = time, food = food)
             }
             cc.hyoban.moments.ui.moment.MomentMenu(moment, urls, menu, onDismiss = { menu = null })
         }

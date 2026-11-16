@@ -79,6 +79,8 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   with its date in a capsule, Moments are bubbles from the right with their photos across
   the top, and so are check-ins, each a small bubble of its venue and time that opens its
   sheet; the bills linked to a Moment or a check-in are listed at the foot of its bubble,
+  a meal's Moment leading them with what was eaten and what it cost, as a line drawn the same,
+  and a bill at the bubble's own time showing no time of its own,
   and the day's other bills, charges and footprints come from the left, those between two
   Moments or check-ins in one records bubble that lists them all. The footprints are cut at every record with a time, a Moment, a check-in, a bill or
   a charge, each piece where the phone moved between two of them, with when it set off, how

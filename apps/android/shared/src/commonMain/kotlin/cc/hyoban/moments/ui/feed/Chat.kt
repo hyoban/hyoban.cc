@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.geometry.Size
+import cc.hyoban.moments.data.spec.MomentFood
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.things.Checkin
 import cc.hyoban.moments.ledger.Ledger
@@ -43,6 +44,7 @@ import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.Text
+import cc.hyoban.moments.ui.format.formatAmount
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.ledger.TIME
@@ -345,23 +347,44 @@ fun RecordsBubble(
 
 /**
  * The bills linked to a Moment or a check-in, at the foot of its bubble under a hairline: a line
- * each as a records bubble draws them, each opening its bill.
+ * each as a records bubble draws them, each opening its bill; a bill at the bubble's own [time]
+ * leaves the time out, its amount at the edge. A meal's Moment leads them with what the meal
+ * cost, [food], drawn the same, its amount at the edge, opening the Moment as the rest of its
+ * bubble does.
  */
 @Composable
-fun BubbleBills(txns: List<Txn>, ledger: Ledger, onBill: (String) -> Unit, modifier: Modifier = Modifier) {
+fun BubbleBills(txns: List<Txn>, ledger: Ledger?, onBill: (String) -> Unit, modifier: Modifier = Modifier, time: String? = null, food: MomentFood? = null) {
     val large = isLargeFont()
     Column(modifier.fillMaxWidth()) {
         cc.hyoban.moments.ui.design.HorizontalDivider(Modifier.padding(bottom = Space.xs))
-        txns.forEach { txn ->
+        food?.bill?.let { bill ->
+            RecordRow(
+                icon = { Icon(AppIcons.Food, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
+                title = listOfNotNull(
+                    food.dishes.takeIf { it.isNotEmpty() }?.joinToString(stringResource(Res.string.separator_list))
+                        ?: stringResource(Res.string.section_food),
+                    bill.people?.takeIf { it > 1 }?.let { pluralStringResource(Res.plurals.count_food_people, it, it) },
+                ).joinToString(" "),
+                time = null,
+                end = "¥" + formatAmount(bill.amount),
+                endColor = tokens.tx,
+                large = large,
+                timed = false,
+                tag = "food_bill",
+                timeAtEnd = true,
+            )
+        }
+        if (ledger != null) txns.forEach { txn ->
+            val at = txn.local.format(TIME)
             Box(Modifier.clickable { onBill(txn.id) }) {
                 RecordRow(
                     icon = { Icon(txnIcon(txn, ledger), contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
                     title = txnTitle(txn, ledger),
-                    time = txn.local.format(TIME),
+                    time = at,
                     end = signedMoney(txn.amount, txn.currency, txn.incoming),
                     endColor = amountColor(txn),
                     large = large,
-                    timed = true,
+                    timed = at != time,
                     tag = "bill_${txn.id}",
                     timeAtEnd = true,
                 )
@@ -459,7 +482,7 @@ fun CheckinBubble(
                 val meta = listOfNotNull(stringResource(Res.string.visibility_private).takeIf { checkin.private }, formatTime(checkin.at)).joinToString(" ")
                 if (meta.isNotEmpty()) Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 1)
             }
-            if (withBills) BubbleBills(bills, ledger!!, onBill, Modifier.padding(top = Space.s))
+            if (withBills) BubbleBills(bills, ledger, onBill, Modifier.padding(top = Space.s), time = formatTime(checkin.at))
         }
     }
 }
