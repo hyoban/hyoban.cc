@@ -34,14 +34,8 @@ test("a trip's old addresses lead to its address now, by id and by year, playing
     ]),
   )
   expect(lines).toEqual([
-    '/trip/2026-yunnan/ /trip/2026/yunnan-zhilv/ 301',
-    '/trip/2026-yunnan/play/ /trip/2026/yunnan-zhilv/play/ 301',
-    '/trip/2026-yunnan/play/* /trip/2026/yunnan-zhilv/play/:splat 301',
-    '/trip/2026/yunnan/ /trip/2026/yunnan-zhilv/ 301',
-    '/trip/2026/yunnan/play/ /trip/2026/yunnan-zhilv/play/ 301',
-    '/trip/2026/yunnan/play/* /trip/2026/yunnan-zhilv/play/:splat 301',
-    '/trip/01m7frqy5bngebpejg223z3zwk/ /trip/2026/xuzhou-zhoumo-xing/ 301',
-    '/trip/01m7frqy5bngebpejg223z3zwk/play/ /trip/2026/xuzhou-zhoumo-xing/play/ 301',
-    '/trip/01m7frqy5bngebpejg223z3zwk/play/* /trip/2026/xuzhou-zhoumo-xing/play/:splat 301',
+    '/trip/2026-yunnan/* /trip/2026-yunnan-zhilv/:splat 301',
+    '/trip/2026/yunnan/* /trip/2026-yunnan-zhilv/:splat 301',
+    '/trip/01m7frqy5bngebpejg223z3zwk/* /trip/2026-xuzhou-zhoumo-xing/:splat 301',
   ])
 })
