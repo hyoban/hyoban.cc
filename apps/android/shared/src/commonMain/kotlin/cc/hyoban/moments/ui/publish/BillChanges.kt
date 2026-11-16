@@ -55,12 +55,13 @@ val BillChange.group: BillGroup
         else -> BillGroup.CHANGED
     }
 
-/** A bill's public part as the site has it, or as it will: its kind, amount in cents, currency, category and note. */
-data class BillFace(val kind: String?, val cents: Long?, val currency: String?, val category: String?, val note: String?) {
+/** A bill's public part as the site has it, or as it will: its kind, amount and refunded in cents, currency, category and note. */
+data class BillFace(val kind: String?, val cents: Long?, val currency: String?, val category: String?, val note: String?, val refunded: Long = 0) {
     companion object {
         fun of(part: JsonObject?): BillFace? = part?.let {
             fun text(key: String) = (it[key] as? JsonPrimitive)?.content?.takeIf(String::isNotBlank)
-            BillFace(text("kind"), text("amount")?.toDoubleOrNull()?.let { amount -> (amount * 100).roundToLong() }, text("currency"), text("category"), text("note"))
+            fun cents(key: String) = text(key)?.toDoubleOrNull()?.let { amount -> (amount * 100).roundToLong() }
+            BillFace(text("kind"), cents("amount"), text("currency"), text("category"), text("note"), cents("refunded") ?: 0)
         }
 
         fun of(published: String?): BillFace? = published?.let { runCatching { of(Json.parseToJsonElement(it).jsonObject) }.getOrNull() }
@@ -203,7 +204,9 @@ private fun BillRow(change: BillChange, onRevert: (() -> Unit)?, onOpen: (() -> 
     }
     @Composable
     fun amount(face: BillFace?) = face?.cents?.let { cents ->
-        (if (face.kind == TxnKind.INCOME.value) "+" else "") + money(cents, face.currency ?: txn.currency)
+        val currency = face.currency ?: txn.currency
+        (if (face.kind == TxnKind.INCOME.value) "+" else "") + money(cents, currency) +
+            (if (face.refunded > 0) " · " + stringResource(Res.string.bill_refunded_amount, money(face.refunded, currency)) else "")
     }
     val nowAmount = amount(after) ?: ((if (txn.kind == TxnKind.INCOME) "+" else "") + money(txn.amount, txn.currency))
     val time = txn.local.format(DateTimeFormatter.ofPattern("HH:mm"))

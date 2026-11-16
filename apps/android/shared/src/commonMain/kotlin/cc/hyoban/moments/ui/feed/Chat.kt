@@ -52,8 +52,8 @@ import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.ledger.TIME
 import cc.hyoban.moments.ui.ledger.amountColor
+import cc.hyoban.moments.ui.ledger.amountWithRefund
 import cc.hyoban.moments.ui.ledger.incoming
-import cc.hyoban.moments.ui.ledger.signedMoney
 import cc.hyoban.moments.ui.ledger.txnIcon
 import cc.hyoban.moments.ui.ledger.txnTitle
 import cc.hyoban.moments.ui.theme.Radius
@@ -305,7 +305,7 @@ fun RecordsBubble(
                         icon = { Icon(txnIcon(line.txn, ledger), contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
                         title = txnTitle(line.txn, ledger),
                         time = line.txn.local.format(TIME),
-                        end = signedMoney(line.txn.amount, line.txn.currency, line.txn.incoming),
+                        end = amountWithRefund(line.txn, ledger),
                         endColor = amountColor(line.txn),
                         large = large,
                         timed = timed,
@@ -392,7 +392,7 @@ fun BubbleBills(
                     icon = { Icon(txnIcon(txn, ledger), contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
                     title = txnTitle(txn, ledger),
                     time = at,
-                    end = signedMoney(txn.amount, txn.currency, txn.incoming),
+                    end = amountWithRefund(txn, ledger),
                     endColor = amountColor(txn),
                     large = large,
                     timed = at != time,

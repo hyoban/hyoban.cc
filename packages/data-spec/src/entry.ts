@@ -114,7 +114,10 @@ export function foodToCost(food: z.output<typeof foodPartSchema>): CostPart {
   } as CostPart
 }
 
-/** A bill from the ledger. Only `kind`, `amount`, `currency`, `category` and `note` are ever public. */
+/**
+ * A bill from the ledger. Only `kind`, `amount`, `currency`, `category`, `note` and `refunded`
+ * are ever public.
+ */
 export const billPartSchema = z.looseObject({
   ...partBase,
   kind: z.enum(['expense', 'income', 'transfer']).default('expense'),
@@ -124,6 +127,11 @@ export const billPartSchema = z.looseObject({
   /** The category as shown, `餐饮 › 零食`. */
   category: z.string().optional(),
   note: z.string().optional(),
+  /**
+   * What of an expense its public refunds brought back, in the same unit; `amount` stays what was
+   * paid, and what it cost is `amount` less this, wherever it is counted.
+   */
+  refunded: price.optional(),
   /** The ledger's own ids, never published. */
   book: z.string().optional(),
   account: z.string().optional(),
@@ -381,7 +389,7 @@ export const plugins = {
     id: 'bill',
     version: 1,
     defaultVisibility: 'private',
-    publicFields: ['kind', 'amount', 'currency', 'category', 'note'],
+    publicFields: ['kind', 'amount', 'currency', 'category', 'note', 'refunded'],
     staysOnDevice: true,
   }),
   charge: definePlugin({

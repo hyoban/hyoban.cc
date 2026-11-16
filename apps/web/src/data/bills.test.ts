@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { expect, test } from 'vite-plus/test'
+import { getSpending } from '../moments/bills.ts'
 import { readBills } from './store.ts'
 
 const fixtures = fileURLToPath(
@@ -27,8 +28,27 @@ test('the site reads the public bills alone, down to their public fields', () =>
       amount: 20,
       currency: 'CNY',
       category: '交通 › 停车',
+      refunded: 5,
       uid: '01KNE2A9C0R4T6V8X0Z2B4D6F8',
       at: '2026-04-05T09:30:00+08:00',
     },
   ])
+})
+
+test('what the bills spent leaves out what their refunds brought back', () => {
+  const bill = {
+    currency: 'CNY',
+    dateKey: '2026-04-05',
+    id: 'a',
+    locations: [],
+    occurredAt: '2026-04-05',
+    uid: 'A',
+  }
+  expect(
+    getSpending([
+      { ...bill, amount: 20, kind: 'expense', refunded: 5 },
+      { ...bill, amount: 30, kind: 'expense', refunded: 30 },
+      { ...bill, amount: 9, kind: 'income' },
+    ]),
+  ).toEqual([{ amount: 15, count: 2, currency: 'CNY' }])
 })

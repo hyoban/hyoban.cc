@@ -38,6 +38,11 @@
   color: var(--color-tx-3);
 }
 
+.bill-entry__refunded {
+  margin-left: 0.5em;
+  color: var(--color-tx-3);
+}
+
 .bill-entry__amount {
   flex-shrink: 0;
   color: var(--color-tx);

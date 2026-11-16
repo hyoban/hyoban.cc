@@ -19,7 +19,10 @@ export function formatBillAmount(amount: number, currency: string) {
   return formatter.format(amount)
 }
 
-/** What the bills spent, expenses alone, in each currency they were paid in, the one paid most often first. */
+/**
+ * What the bills spent, expenses alone less what their refunds brought back, in each currency
+ * they were paid in, the one paid most often first.
+ */
 export function getSpending(bills: readonly PublicBill[]) {
   const totals = new Map<string, { amount: number; count: number }>()
 
@@ -29,7 +32,7 @@ export function getSpending(bills: readonly PublicBill[]) {
     }
 
     const total = totals.get(bill.currency) ?? { amount: 0, count: 0 }
-    total.amount += bill.amount
+    total.amount += bill.amount - (bill.refunded ?? 0)
     total.count += 1
     totals.set(bill.currency, total)
   }

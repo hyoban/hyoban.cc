@@ -446,7 +446,10 @@ Android's backup. Bills are private: 记录项与公开 (`moments://items`) make
 public from a day on, by each bill's own date (under the 记录项, while the ledger is on): switching
 a book on asks for the day, today unless another is picked, and 开始日期 under it changes it; a book
 made public before there was a day keeps all its bills public. A bill's 公开 chip says otherwise for one. A public bill publishes only its
-kind, amount, currency, category and note (`data/store/Outside.kt`). A published bill deleted here,
+kind, amount, currency, category and note (`data/store/Outside.kt`), and an expense what its
+refunds brought back of it, up to what it cost, as `refunded`: a refund isn't a bill of its own on
+the site, and goes with its expense unless its own 公开 chip says private. The app shows it so too: an expense's
+line keeps its amount in full and says 退款 ¥5 beside it, or under it where the line has a second. A published bill deleted here,
 by hand, with its book or by an import in place of the ledger, waits in the ledger's `gone` table
 until the next publish takes it off the site. As the app starts, a bill with nothing published
 that the site has under another id (one of the same kind, amount and currency within ten

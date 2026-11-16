@@ -8,7 +8,8 @@
       "kind": "expense",
       "amount": 20,
       "currency": "CNY",
-      "category": "交通 › 停车"
+      "category": "交通 › 停车",
+      "refunded": 5
     }
   },
   "createdAt": "2026-04-05T09:30:00+08:00",

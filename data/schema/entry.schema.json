@@ -893,6 +893,10 @@
             "note": {
               "type": "string"
             },
+            "refunded": {
+              "type": "number",
+              "minimum": 0
+            },
             "book": {
               "type": "string"
             },

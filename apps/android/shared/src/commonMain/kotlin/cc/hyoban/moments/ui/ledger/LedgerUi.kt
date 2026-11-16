@@ -109,6 +109,21 @@ fun money(cents: Long, currency: String): String =
 fun signedMoney(cents: Long, currency: String, incoming: Boolean): String =
     (if (incoming) "+" else "−") + money(cents, currency)
 
+/** What an expense's refunds brought back of it, up to what it cost; what beyond is earned. */
+fun Ledger.refunded(txn: Txn): Long =
+    if (txn.kind != TxnKind.EXPENSE) 0
+    else returns[txn.id].orEmpty().filter { it.kind == TxnKind.REFUND }.sumOf { it.amount }.coerceAtMost(txn.amount)
+
+/** 退款 ¥5: what an expense's refunds brought back, as said beside it; null for one with none. */
+@Composable
+fun refundedText(txn: Txn, ledger: Ledger): String? =
+    ledger.refunded(txn).takeIf { it > 0 }?.let { stringResource(Res.string.bill_refunded_amount, money(it, txn.currency)) }
+
+/** A bill's amount in a line with no room under it: its signed amount, and what its refunds brought back beside it. */
+@Composable
+fun amountWithRefund(txn: Txn, ledger: Ledger): String =
+    listOfNotNull(signedMoney(txn.amount, txn.currency, txn.incoming), refundedText(txn, ledger)).joinToString(" · ")
+
 /** Whether a bill brings money in, as its amount is signed. */
 val Txn.incoming: Boolean get() = kind == TxnKind.INCOME || kind == TxnKind.REFUND || kind == TxnKind.REIMBURSEMENT
 
@@ -369,7 +384,7 @@ fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false, withTime:
         txn.reimburse == Reimburse.DONE -> stringResource(Res.string.ledger_reimburse_done)
         txn.kind == TxnKind.REFUND -> stringResource(Res.string.ledger_kind_refund)
         txn.kind == TxnKind.REIMBURSEMENT -> stringResource(Res.string.ledger_kind_reimbursement)
-        ledger.returns[txn.id].orEmpty().any { it.kind == TxnKind.REFUND } -> stringResource(Res.string.ledger_refunded)
+        ledger.returns[txn.id].orEmpty().any { it.kind == TxnKind.REFUND } -> refundedText(txn, ledger) ?: stringResource(Res.string.ledger_refunded)
         else -> null
     }
     // The day first, so a long note doesn't cut it off; the time only where the row's end lacks it.

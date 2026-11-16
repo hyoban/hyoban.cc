@@ -186,6 +186,8 @@ export type PublicBill = {
   note?: string
   occurredAt: string
   occurredLabel?: string
+  /** What its public refunds brought back of an expense; it cost `amount` less this. */
+  refunded?: number
   uid: string
 }
 
@@ -209,6 +211,7 @@ export function getBills() {
       ...(bill.note ? { note: bill.note } : {}),
       occurredAt: bill.at,
       ...(bill.at.length > 10 ? { occurredLabel: bill.at.slice(11, 16) } : {}),
+      ...(bill.kind === 'expense' && bill.refunded ? { refunded: bill.refunded } : {}),
       uid: bill.uid,
     }))
     .sort(compareMoments)

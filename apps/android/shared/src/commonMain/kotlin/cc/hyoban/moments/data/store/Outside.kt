@@ -37,10 +37,19 @@ interface OutsideChanges {
 fun Ledger.isPublic(txn: Txn): Boolean =
     txn.visibility?.let { it == "public" } ?: (books.firstOrNull { it.id == txn.book }?.publicOn(txn.date) ?: false)
 
-/** What of a bill the site may have: an expense's or an income's amount, kind, category and note, when it is public. */
+/**
+ * What of a bill the site may have: an expense's or an income's amount, kind, category and note,
+ * when it is public, and what an expense's refunds brought back of it. A refund goes out only so, with
+ * its expense: public as that is, unless it says private itself.
+ */
 fun Ledger.publicPart(txn: Txn): JsonObject? {
     if (!isPublic(txn) || (txn.kind != TxnKind.EXPENSE && txn.kind != TxnKind.INCOME)) return null
-    return Entries.billPart(txn.kind.value, txn.amount / 100.0, txn.currency, categoryLabel(txn), txn.note)
+    val refunded = if (txn.kind != TxnKind.EXPENSE) 0 else returns[txn.id].orEmpty()
+        .filter { it.kind == TxnKind.REFUND && it.visibility != "private" }
+        .sumOf { it.amount }
+        // What comes back beyond what was spent is earned, as the books count it, and stays here.
+        .coerceAtMost(txn.amount)
+    return Entries.billPart(txn.kind.value, txn.amount / 100.0, txn.currency, categoryLabel(txn), txn.note, refunded / 100.0)
 }
 
 /** A bill's category as it is shown, its parent before it: `餐饮 › 零食`. */

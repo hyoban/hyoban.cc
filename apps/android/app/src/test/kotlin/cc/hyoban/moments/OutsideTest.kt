@@ -113,6 +113,21 @@ class OutsideTest {
     }
 
     @Test
+    fun `an expense publishes what its refunds brought back, up to what it cost, unless one is private`() {
+        val refund = { id: String, amount: Long -> Txn(id = id, book = "B", kind = TxnKind.REFUND, time = time + 1, offsetMinutes = 480, amount = amount, currency = "CNY", related = txn.id) }
+        fun part(vararg refunds: Txn) = ledger(txn, *refunds, public = true).publicPart(txn)!!
+        assertNull(part()["refunded"])
+        assertEquals("12.5", part(refund("R1", 1250))["amount"]!!.jsonPrimitive.content)
+        assertEquals("12.5", part(refund("R1", 1250))["refunded"]!!.jsonPrimitive.content)
+        assertEquals("5.0", part(refund("R1", 300), refund("R2", 200))["refunded"]!!.jsonPrimitive.content)
+        assertEquals("12.5", part(refund("R1", 2000))["refunded"]!!.jsonPrimitive.content)
+        assertNull(part(refund("R1", 300).copy(visibility = "private"))["refunded"])
+        assertNull(ledger(txn, refund("R1", 300), public = true).publicPart(refund("R1", 300)))
+        val published = txn.copy(published = part().toString())
+        assertEquals(1, ledger(published, refund("R1", 300), public = true).pendingBills().size)
+    }
+
+    @Test
     fun `a bill published as it is waits for nothing, one made private again is taken off`() {
         val part = ledger(txn, public = true).pendingBills().single().part.toString()
         val published = txn.copy(published = part)

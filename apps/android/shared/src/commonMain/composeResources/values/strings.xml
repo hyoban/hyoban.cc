@@ -863,6 +863,7 @@
     <string name="bills_more">还有 %1$d 笔</string>
     <string name="bills_less">收起</string>
     <string name="bills_day">%1$s · %2$d 笔</string>
+    <string name="bill_refunded_amount">退款 %1$s</string>
     <string name="bill_made_private">改为私有</string>
     <string name="bill_deleted_here">已在手机上删除</string>
     <string name="items_title">记录项与公开</string>

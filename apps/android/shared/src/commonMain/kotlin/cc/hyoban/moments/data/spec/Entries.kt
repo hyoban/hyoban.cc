@@ -174,9 +174,10 @@ object Entries {
 
     /**
      * A bill's part as it may leave the phone: what is public of it alone, the amount in the
-     * currency's unit, its kind, category and note; never its account, book or balance.
+     * currency's unit, its kind, category and note, and what its refunds brought back when they
+     * did; never its account, book or balance.
      */
-    fun billPart(kind: String, amount: Double, currency: String, category: String?, note: String?): JsonObject = buildJsonObject {
+    fun billPart(kind: String, amount: Double, currency: String, category: String?, note: String?, refunded: Double = 0.0): JsonObject = buildJsonObject {
         put("v", 1)
         put("visibility", Visibility.PUBLIC.value)
         put("kind", kind)
@@ -184,6 +185,7 @@ object Entries {
         put("currency", currency)
         category?.takeIf { it.isNotBlank() }?.let { put("category", it) }
         note?.takeIf { it.isNotBlank() }?.let { put("note", it) }
+        if (refunded > 0) put("refunded", refunded)
     }
 
     /**
