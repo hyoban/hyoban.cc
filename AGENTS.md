@@ -150,7 +150,9 @@ even when starting from the repository root.
   that keeps moving during playback.
 - A trip reads as one conversation on both: the site's trip sidebar (`TripChat.astro`) draws
   the app's chat timeline (date capsules, Moments and check-ins as bubbles from the right with
-  their bills at their foot, the other bills in a bubble from the left); change both together.
+  their bills and charges at their foot, the other bills and charges in a bubble from the left,
+  a charge and the bill paid at its very time one line, and a day the car moved ending with
+  用车); change both together, the calendar's day list keeping the same lines.
 
 ## Website work
 

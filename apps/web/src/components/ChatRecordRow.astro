@@ -1,0 +1,31 @@
+---
+interface Props {
+  icon: string
+  title: string
+  /** Said faint after the title. */
+  detail?: string | undefined
+  /** What it came to, at the end of the line. */
+  value: string
+  /** When it was, `HH:mm`, and its time in full; none keeps the column empty, as a day's driving does. */
+  time?: string | undefined
+  datetime?: string | undefined
+  timeAtEnd?: boolean
+  /** The detail on a line of its own under the title, as a day's driving has it, too long to share one. */
+  detailBelow?: boolean
+}
+
+const { datetime, detail, detailBelow = false, icon, time, timeAtEnd = false, title, value } = Astro.props
+---
+
+<!-- A line of a bubble that isn't a bill: a charge with no bill paid for it, or what the car
+     drove that day; laid out as a bill's line is (styles/trip-chat.css). -->
+<div class="chat-row">
+  {!timeAtEnd && <time class="chat-row__time" datetime={datetime}>{time}</time>}
+  <span class={icon} aria-hidden="true" />
+  <span class:list={['chat-row__title', { 'chat-row__title--stacked': detailBelow && detail }]}>
+    {title}
+    {detail && <span class="chat-row__note">{detail}</span>}
+  </span>
+  <span class="chat-row__amount">{value}</span>
+  {timeAtEnd && time && <time class="chat-row__time" datetime={datetime}>{time}</time>}
+</div>

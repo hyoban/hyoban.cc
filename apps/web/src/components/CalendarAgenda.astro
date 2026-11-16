@@ -1,10 +1,13 @@
 ---
 import CalendarAnniversaryStatus from '@/components/CalendarAnniversaryStatus.astro'
 import CalendarDayStatus from '@/components/CalendarDayStatus.astro'
+import ChatChargeRow from '@/components/ChatChargeRow.astro'
+import ChatRecordRow from '@/components/ChatRecordRow.astro'
 import MomentEntry from '@/components/MomentEntry.astro'
 import type { CalendarAnniversary } from '@/anniversaries'
 import type { ChinaCalendarDay } from '@/china-calendar'
-import type { Moment } from '@/moments'
+import type { CarDay, Moment } from '@/moments'
+import type { ChatCharge } from '@/moments/trip-chat'
 
 interface AgendaDay {
   anniversaries: CalendarAnniversary[]
@@ -12,6 +15,8 @@ interface AgendaDay {
   dateKey: string
   day: number
   moments: Moment[]
+  charges: ChatCharge[]
+  drive: CarDay | undefined
 }
 
 interface Props {
@@ -31,6 +36,23 @@ function getWeekday(dateKey: string) {
 
 function formatDate(dateKey: string) {
   return `${Number.parseInt(dateKey.slice(5, 7), 10)} 月 ${Number.parseInt(dateKey.slice(8, 10), 10)} 日 ${getWeekday(dateKey)}`
+}
+
+// A day's driving time and energy, as its line says them after 用车, as a trip's does.
+function driveDetail(day: CarDay) {
+  return [
+    day.durationSeconds !== undefined && formatDuration(day.durationSeconds),
+    day.energyWh !== undefined && `${(day.energyWh / 1000).toFixed(1)} kWh`,
+  ].filter(Boolean).join(' · ')
+}
+
+function formatDuration(seconds: number) {
+  const minutes = Math.round(seconds / 60)
+  return minutes >= 60 ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分钟` : `${minutes} 分钟`
+}
+
+function formatKm(meters: number) {
+  return `${(meters / 1000).toLocaleString('zh-CN', { maximumFractionDigits: meters < 10_000 ? 1 : 0 })} 公里`
 }
 
 function formatShortDate(dateKey: string) {
@@ -78,7 +100,13 @@ function formatShortDate(dateKey: string) {
                         </div>
                       )}
                       {day.moments.map(moment => <MomentEntry moment={moment} />)}
-                      {day.moments.length === 0 && (
+                      {(day.charges.length > 0 || day.drive) && (
+                        <div class="calendar-agenda__car">
+                          {day.charges.map(charge => <ChatChargeRow charge={charge} />)}
+                          {day.drive && <ChatRecordRow icon="i-lucide-car-front" title="用车" detailBelow detail={driveDetail(day.drive)} value={formatKm(day.drive.distanceMeters)} />}
+                        </div>
+                      )}
+                      {day.moments.length === 0 && day.anniversaries.length > 0 && (
                         <p class="calendar-agenda__note">
                           {day.anniversaries.map(anniversary => anniversary.description).join('、')}
                         </p>
@@ -107,6 +135,16 @@ function formatShortDate(dateKey: string) {
       flex-basis: 100%;
       order: 2;
       min-width: 0;
+    }
+  }
+
+  /* The car's day after its Moments, its charges and what it drove, as lines of a trip's
+     bubble (styles/trip-chat.css), quiet under a hairline. */
+  .calendar-agenda__car {
+    padding-block: 0.5rem;
+
+    .calendar-agenda__moments > * + & {
+      border-top: 1px solid var(--color-border);
     }
   }
 

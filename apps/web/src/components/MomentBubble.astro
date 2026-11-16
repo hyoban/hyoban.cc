@@ -1,22 +1,26 @@
 ---
 import ChatBillRow from '@/components/ChatBillRow.astro'
+import ChatChargeRow from '@/components/ChatChargeRow.astro'
 import ChatTail from '@/components/ChatTail.astro'
 import MomentGallery from '@/components/MomentGallery.astro'
 import MomentText from '@/components/MomentText.astro'
 import { getMomentPagePath, type Moment, type PublicBill } from '@/moments'
 import { formatBillAmount } from '@/moments/bills'
 import { getMomentTrips } from '@/moments/trip-data'
+import type { ChatCharge } from '@/moments/trip-chat'
 
 interface Props {
   moment: Moment
   /** The bills paid at its very time, at its foot. */
   bills: PublicBill[]
+  /** The charges at its very time, each with the bill paid for it, at its foot too. */
+  charges?: ChatCharge[]
   /** Whether the bubble above or below it is from the right too, the run drawn together. */
   joinedAbove: boolean
   joinedBelow: boolean
 }
 
-const { bills, joinedAbove, joinedBelow, moment } = Astro.props
+const { bills, charges = [], joinedAbove, joinedBelow, moment } = Astro.props
 const trip = (await getMomentTrips()).get(moment.id)
 const mapMonthPath = `/map/${moment.dateKey.slice(0, 4)}/${moment.dateKey.slice(5, 7)}/place/`
 const verdictLabels = { good: '好吃', ok: '还行', bad: '踩雷' } as const
@@ -38,7 +42,7 @@ const costLine = food?.bill?.amount !== undefined
       }
     : undefined
 const hasMedia = moment.media.length > 0
-const hasFoot = bills.length > 0 || costLine !== undefined
+const hasFoot = bills.length + charges.length > 0 || costLine !== undefined
 const hasText = moment.text.trim() !== ''
 // Where and when follow the words' last line, as a message's time does; the words keep
 // that much room at their end (as a string the stylesheet sets there unseen), so the foot
@@ -94,6 +98,7 @@ const footSpace = `"${footText.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"
                   </div>
                 )
               }
+              {charges.map(charge => <ChatChargeRow charge={charge} timeAtEnd hideTime={charge.charge.startedAt.slice(11, 16) === moment.occurredLabel} />)}
               {/* Paid at the Moment's very time, which its foot already says. */}
               {bills.map(bill => <ChatBillRow bill={bill} timeAtEnd hideTime />)}
             </div>

@@ -103,6 +103,10 @@ sealed interface RecordLine {
     data class Track(val day: String, val piece: TrackPiece) : RecordLine {
         override val key get() = "track-$day-${piece.start}"
     }
+
+    data class Drive(val drive: DriveDay) : RecordLine {
+        override val key get() = "drive-${drive.date}"
+    }
 }
 
 /**
@@ -135,6 +139,7 @@ fun chatItems(items: List<DayItem>, breakAt: Long? = null): List<ChatItem> {
                 out += ChatItem.CheckinStop(item.checkin)
             }
             is DayItem.Track -> add(RecordLine.Track(item.day, item.piece))
+            is DayItem.Drive -> add(RecordLine.Drive(item.drive))
         }
     }
     flush()
@@ -147,6 +152,7 @@ private fun RecordLine.at(): Long? = when (this) {
     is RecordLine.ChargeLine -> instantOf(charge.at)
     is RecordLine.ThingLine -> null
     is RecordLine.Track -> piece.start
+    is RecordLine.Drive -> null
 }
 
 /** When a bubble of the conversation was, in epoch milliseconds: a records bubble by its first line with a time. */
@@ -277,8 +283,9 @@ fun RecordsBubble(
     val openThing = LocalThingNav.current
     val open: (() -> Unit)? = when (val only = shown.singleOrNull()) {
         is RecordLine.Bill -> ({ onBill(only.txn.id) })
+        is RecordLine.ChargeLine -> only.charge.bill?.let { bill -> { onBill(bill.id) } } ?: onDay
         is RecordLine.ThingLine -> openThing?.let { { it(only.thing.uid) } }
-        is RecordLine.Track, is RecordLine.ChargeLine -> onDay
+        is RecordLine.Track, is RecordLine.Drive -> onDay
         null -> onDay
     }
     val large = isLargeFont()
@@ -297,8 +304,8 @@ fun RecordsBubble(
                 .padding(horizontal = Space.m, vertical = Space.xs)
                 .testTag("records_${lines.first().key}"),
         ) {
-            // Only a device or a subscription alone has no time, and no column for one.
-            val timed = shown.any { it !is RecordLine.ThingLine }
+            // Only a device, a subscription or a day's driving alone has no time, and no column for one.
+            val timed = shown.any { it !is RecordLine.ThingLine && it !is RecordLine.Drive }
             shown.forEach { line ->
                 when (line) {
                     is RecordLine.Bill -> RecordRow(
@@ -311,15 +318,20 @@ fun RecordsBubble(
                         timed = timed,
                         tag = "bill_${line.txn.id}",
                     )
-                    is RecordLine.ChargeLine -> RecordRow(
-                        icon = { Icon(AppIcons.Ev, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
-                        title = stringResource(Res.string.timeline_charge),
-                        time = line.charge.at.drop(11).take(5).ifEmpty { null },
-                        end = androidx.compose.ui.text.AnnotatedString(line.charge.kwh?.let { "%.1f kWh".format(it) } ?: line.charge.minutes?.let { pluralStringResource(Res.plurals.charge_minutes, it, it) }.orEmpty()),
+                    is RecordLine.ChargeLine -> ChargeRecordRow(line.charge, ledger, large, timed, timeAtEnd = false, noteColor = tokens.tx3)
+                    is RecordLine.Drive -> RecordRow(
+                        icon = { Icon(AppIcons.Car, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
+                        title = stringResource(Res.string.timeline_drive),
+                        note = driveNote(line.drive),
+                        noteColor = tokens.tx3,
+                        noteBelow = true,
+                        // Known by its day alone: the time's column stays, empty.
+                        time = null,
+                        end = androidx.compose.ui.text.AnnotatedString(stringResource(Res.string.distance_kilometres, decimals(line.drive.km, if (line.drive.km < 10) 1 else 0))),
                         endColor = tokens.tx,
                         large = large,
                         timed = timed,
-                        tag = "charge_${line.charge.uid}",
+                        tag = "drive_${line.drive.date}",
                     )
                     is RecordLine.ThingLine -> RecordRow(
                         icon = { Icon(if (line.thing.device) AppIcons.Laptop else AppIcons.Subscription, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
@@ -363,6 +375,8 @@ fun BubbleBills(
     modifier: Modifier = Modifier,
     time: String? = null,
     cost: MomentCost? = null,
+    /** The charges at its time, each one line with the bill paid for it. */
+    charges: List<Charge> = emptyList(),
 ) {
     val large = isLargeFont()
     Column(modifier.fillMaxWidth()) {
@@ -384,6 +398,10 @@ fun BubbleBills(
                 tag = "moment_cost",
                 timeAtEnd = true,
             )
+        }
+        charges.forEach { charge ->
+            val open = charge.bill?.let { bill -> Modifier.clickable { onBill(bill.id) } } ?: Modifier
+            Box(open) { ChargeRecordRow(charge, ledger, large, timed = charge.at.drop(11).take(5) != time, timeAtEnd = true, noteColor = tokens.tx2) }
         }
         if (ledger != null) txns.forEach { txn ->
             val at = txn.local.format(TIME)
@@ -410,6 +428,9 @@ private fun RecordRow(
     icon: @Composable () -> Unit,
     title: String,
     time: String?,
+    /** What follows the title, faint: a charge's energy beside its bill, a day's driving time and energy. */
+    note: String? = null,
+    noteColor: androidx.compose.ui.graphics.Color = tokens.tx3,
     end: androidx.compose.ui.text.AnnotatedString,
     endColor: androidx.compose.ui.graphics.Color,
     large: Boolean,
@@ -417,6 +438,8 @@ private fun RecordRow(
     tag: String,
     /** In a bubble from the right, the time ends the line, as a Moment's does, rather than leading it. */
     timeAtEnd: Boolean = false,
+    /** The note on a line of its own under the title, as a day's driving has it, too long to share one. */
+    noteBelow: Boolean = false,
 ) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 32.dp).padding(vertical = if (large) Space.xs else 0.dp).testTag(tag),
@@ -434,8 +457,23 @@ private fun RecordRow(
         }
         if (timed && !timeAtEnd) timeColumn()
         icon()
+        val caption = AppTheme.typography.caption
         val words: @Composable (Modifier) -> Unit = { m ->
-            Text(title, style = AppTheme.typography.body, maxLines = if (large) 2 else 1, overflow = TextOverflow.Ellipsis, modifier = m)
+            if (noteBelow && !note.isNullOrBlank()) {
+                Column(m.padding(vertical = Space.xs)) {
+                    Text(title, style = AppTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(note, style = caption, color = noteColor, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
+            } else {
+                val text = if (note.isNullOrBlank()) androidx.compose.ui.text.AnnotatedString(title) else androidx.compose.ui.text.buildAnnotatedString {
+                    append(title)
+                    append("  ")
+                    pushStyle(androidx.compose.ui.text.SpanStyle(color = noteColor, fontSize = caption.fontSize))
+                    append(note)
+                    pop()
+                }
+                Text(text, style = AppTheme.typography.body, maxLines = if (large) 2 else 1, overflow = TextOverflow.Ellipsis, modifier = m)
+            }
         }
         if (large) {
             Column(Modifier.weight(1f)) {
@@ -465,11 +503,12 @@ fun CheckinBubble(
     bills: List<Txn> = emptyList(),
     ledger: Ledger? = null,
     onBill: (String) -> Unit = {},
+    charges: List<Charge> = emptyList(),
 ) {
     val open = LocalCheckinNav.current
     val shape = androidx.compose.runtime.remember(joinedAbove, joinedBelow) { BubbleShape(sent = true, joinedAbove, joinedBelow) }
     val title = checkinTitle(checkin)
-    val withBills = bills.isNotEmpty() && ledger != null
+    val withBills = (bills.isNotEmpty() && ledger != null) || charges.isNotEmpty()
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
         // With its bills it is as wide as a records bubble, they at its foot.
         Column(
@@ -493,7 +532,39 @@ fun CheckinBubble(
                 val meta = listOfNotNull(stringResource(Res.string.visibility_private).takeIf { checkin.private }, formatTime(checkin.at)).joinToString(" ")
                 if (meta.isNotEmpty()) Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 1)
             }
-            if (withBills) BubbleBills(bills, ledger, onBill, Modifier.padding(top = Space.s), time = formatTime(checkin.at))
+            if (withBills) BubbleBills(bills, ledger, onBill, Modifier.padding(top = Space.s), time = formatTime(checkin.at), charges = charges)
         }
     }
 }
+
+/**
+ * A charge as one line of a bubble: with the bill paid for it, that bill's category, the energy
+ * faint after it and what it cost at the end; alone, 充电 and its energy at the end.
+ */
+@Composable
+private fun ChargeRecordRow(charge: Charge, ledger: Ledger?, large: Boolean, timed: Boolean, timeAtEnd: Boolean, noteColor: androidx.compose.ui.graphics.Color) {
+    val energy = charge.kwh?.let { "%.1f kWh".format(it) } ?: charge.minutes?.let { pluralStringResource(Res.plurals.charge_minutes, it, it) }.orEmpty()
+    val bill = charge.bill?.takeIf { ledger != null }
+    RecordRow(
+        icon = { Icon(AppIcons.Ev, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
+        title = if (bill != null) txnTitle(bill, ledger!!) else stringResource(Res.string.timeline_charge),
+        note = energy.takeIf { bill != null },
+        noteColor = noteColor,
+        time = charge.at.drop(11).take(5).ifEmpty { null },
+        end = if (bill != null) billAmount(bill, ledger!!) else androidx.compose.ui.text.AnnotatedString(energy),
+        endColor = if (bill != null) amountColor(bill) else tokens.tx,
+        large = large,
+        timed = timed,
+        tag = "charge_${charge.uid}",
+        timeAtEnd = timeAtEnd,
+    )
+}
+
+/** A day's driving time and energy, as its line says them after 用车. */
+@Composable
+fun driveNote(drive: DriveDay): String = listOfNotNull(
+    drive.minutes?.let { minutes ->
+        if (minutes >= 60) stringResource(Res.string.footprints_hours_minutes, minutes / 60, minutes % 60) else stringResource(Res.string.footprints_minutes, minutes)
+    },
+    drive.kwh?.let { "%.1f kWh".format(it) },
+).joinToString(" · ")

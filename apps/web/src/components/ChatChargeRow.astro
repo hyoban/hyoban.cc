@@ -1,0 +1,24 @@
+---
+import ChatBillRow from '@/components/ChatBillRow.astro'
+import ChatRecordRow from '@/components/ChatRecordRow.astro'
+import type { ChatCharge } from '@/moments/trip-chat'
+
+interface Props {
+  charge: ChatCharge
+  timeAtEnd?: boolean
+  /** Leaves the time out, the bubble's own. */
+  hideTime?: boolean
+}
+
+const { charge: { bill, charge }, hideTime = false, timeAtEnd = false } = Astro.props
+const energy = `${(charge.energyWh / 1000).toFixed(1)} kWh`
+const time = charge.startedAt.slice(11, 16)
+---
+
+<!-- A charge as one line: with the bill paid for it, that bill's line with the energy after
+     what it was for; alone, 充电 and its energy. -->
+{
+  bill
+    ? <ChatBillRow bill={bill} icon="i-lucide-zap" detail={energy} timeAtEnd={timeAtEnd} hideTime={hideTime} />
+    : <ChatRecordRow icon="i-lucide-zap" title="充电" value={energy} time={hideTime ? undefined : time} datetime={charge.startedAt} timeAtEnd={timeAtEnd} />
+}

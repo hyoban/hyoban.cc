@@ -177,7 +177,7 @@ fun MomentFeed(
     val timeline = remember(days, bills, read, oldestFirst, chat, chronological) { keptTimeline.get(days, bills, read, oldestFirst, chat, chronological) {
         val byDay = days.toMap()
         (byDay.keys + bills.loose.keys + bills.charges.keys + bills.things.keys + bills.checkins.keys).sortedDescending().let { if (chronological) it.reversed() else it }.map { day ->
-            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty(), bills.things[day].orEmpty(), bills.checkins[day].orEmpty(), oldestFirst = oldestFirst || chat, day = day, track = read[day])
+            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty(), bills.things[day].orEmpty(), bills.checkins[day].orEmpty(), oldestFirst = oldestFirst || chat, day = day, track = read[day], drive = bills.drives[day])
             Triple(day, byDay[day].orEmpty(), items)
         }
     } }
@@ -349,8 +349,13 @@ fun MomentFeed(
                                         bills = bills.linked[item.moment.uid].orEmpty(),
                                         ledger = bills.ledger,
                                         onBill = onBill,
+                                        charges = bills.linkedCharges[item.moment.uid].orEmpty(),
                                     )
-                                    is ChatItem.CheckinStop -> CheckinBubble(item.checkin, joinedAbove, joinedBelow, itemModifier, bills.linked[item.checkin.uid].orEmpty(), bills.ledger, onBill)
+                                    is ChatItem.CheckinStop -> CheckinBubble(
+                                        item.checkin, joinedAbove, joinedBelow, itemModifier,
+                                        bills.linked[item.checkin.uid].orEmpty(), bills.ledger, onBill,
+                                        charges = bills.linkedCharges[item.checkin.uid].orEmpty(),
+                                    )
                                     is ChatItem.Records -> RecordsBubble(
                                         item.lines, bills.ledger, onBill,
                                         onDay = onDay?.let { { it(day) } },
@@ -391,15 +396,22 @@ fun MomentFeed(
                             bottom = if (item.key == last) Space.s else 0.dp,
                         )
                         when (item) {
-                            is DayItem.Moment -> card(item.moment, itemModifier, false)
+                            is DayItem.Moment -> bills.linkedCharges[item.moment.uid]?.takeIf { it.isNotEmpty() }?.let { charges ->
+                                Column(itemModifier) {
+                                    card(item.moment, Modifier, false)
+                                    charges.forEach { ChargeRow(it, ledger = bills.ledger) }
+                                }
+                            } ?: card(item.moment, itemModifier, false)
                             is DayItem.Bills -> BillGroup(item.txns, bills.ledger, onBill, itemModifier)
-                            is DayItem.ChargeItem -> ChargeRow(item.charge, itemModifier)
+                            is DayItem.ChargeItem -> ChargeRow(item.charge, itemModifier, bills.ledger)
                             is DayItem.ThingItem -> ThingRow(item.thing, itemModifier)
                             is DayItem.CheckinItem -> Column(itemModifier) {
                                 CheckinRow(item.checkin)
+                                bills.linkedCharges[item.checkin.uid]?.forEach { ChargeRow(it, ledger = bills.ledger) }
                                 bills.linked[item.checkin.uid]?.takeIf { it.isNotEmpty() }?.let { BillGroup(it, bills.ledger, onBill) }
                             }
                             is DayItem.Track -> TrackRow(item.day, item.piece, onClick = { onDay?.invoke(item.day) }, itemModifier)
+                            is DayItem.Drive -> DriveRow(item.drive, itemModifier)
                         }
                     }
                 }

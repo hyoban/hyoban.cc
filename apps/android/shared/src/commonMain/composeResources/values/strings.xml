@@ -888,6 +888,7 @@
     <string name="charge_ac">交流充电</string>
     <string name="charge_dc">直流快充</string>
     <string name="timeline_charge">充电</string>
+    <string name="timeline_drive">用车</string>
     <string name="timeline_checkin">签到 %1$s</string>
     <string name="timeline_checkin_on">%1$s 签到</string>
     <plurals name="charge_minutes">

@@ -269,6 +269,38 @@ const vehicleCharges = getVehicleCharges(vehicleMonths)
 const vehicleSpan = getVehicleSpan(vehicleMonths, vehicleDays)
 const vehicleExpenses = readVehicleExpenses()
 
+/** A day the car moved, from its statistics: how far, how long it drove and the energy it used. */
+export type CarDay = {
+  date: string
+  distanceMeters: number
+  durationSeconds?: number
+  energyWh?: number
+}
+
+/** The days the car moved, oldest first; a day only parked, using energy standing, isn't one. */
+export function getCarDays(): CarDay[] {
+  return vehicleMonths
+    .flatMap((month) => month.days ?? [])
+    .flatMap(({ date, distanceMeters, durationSeconds, energyWh }) =>
+      distanceMeters === undefined || distanceMeters <= 0
+        ? []
+        : [
+            {
+              date,
+              distanceMeters,
+              ...(durationSeconds === undefined ? {} : { durationSeconds }),
+              ...(energyWh === undefined ? {} : { energyWh }),
+            },
+          ],
+    )
+    .sort((first, second) => first.date.localeCompare(second.date))
+}
+
+/** The car's charging sessions, oldest first. */
+export function getCarCharges() {
+  return vehicleCharges
+}
+
 /**
  * A trip's days as the car recorded them, when the car drove all of it (getTripOdometer):
  * its distance and hours then come from the odometer rather than the routes, which miss

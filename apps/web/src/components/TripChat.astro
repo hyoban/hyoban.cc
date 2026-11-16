@@ -1,7 +1,10 @@
 ---
 import ChatBillRow from '@/components/ChatBillRow.astro'
+import ChatChargeRow from '@/components/ChatChargeRow.astro'
+import ChatRecordRow from '@/components/ChatRecordRow.astro'
 import ChatTail from '@/components/ChatTail.astro'
 import MomentBubble from '@/components/MomentBubble.astro'
+import type { CarDay } from '@/moments'
 import type { ChatDay } from '@/moments/trip-chat'
 
 interface Props {
@@ -9,22 +12,33 @@ interface Props {
 }
 
 const { days } = Astro.props
+// A day's driving time and energy, as its line says them after 用车.
+const driveDetail = (day: CarDay) => [
+  day.durationSeconds !== undefined && formatDuration(day.durationSeconds),
+  day.energyWh !== undefined && `${(day.energyWh / 1000).toFixed(1)} kWh`,
+].filter(Boolean).join(' · ')
+const formatDuration = (seconds: number) => {
+  const minutes = Math.round(seconds / 60)
+  return minutes >= 60 ? `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分钟` : `${minutes} 分钟`
+}
+const formatKm = (meters: number) => `${(meters / 1000).toLocaleString('zh-CN', { maximumFractionDigits: meters < 10_000 ? 1 : 0 })} 公里`
 ---
 
 <!-- A trip's days as the app's trip has them, a conversation: the day's date in a capsule,
-     then its Moments and check-ins as bubbles from the right, and the bills between them
-     gathered in one outlined bubble from the left (styles/trip-chat.css). -->
+     then its Moments and check-ins as bubbles from the right, and the bills and charges between
+     them gathered in one outlined bubble from the left, the day ending with what the car drove
+     (styles/trip-chat.css). -->
 <div class="trip-chat">
   {
     days.map(day => (
       <section class="chat-day" aria-label={day.label}>
         <h2 class="chat-date"><span>{day.label}</span></h2>
         {day.bubbles.map(bubble => bubble.kind === 'moment'
-          ? <MomentBubble moment={bubble.moment} bills={bubble.bills} joinedAbove={bubble.joinedAbove} joinedBelow={bubble.joinedBelow} />
+          ? <MomentBubble moment={bubble.moment} bills={bubble.bills} charges={bubble.charges} joinedAbove={bubble.joinedAbove} joinedBelow={bubble.joinedBelow} />
           : bubble.kind === 'checkin'
             ? (
                 <article class:list={['chat-sent', { 'chat-sent--joined-above': bubble.joinedAbove }]}>
-                  <div class:list={['chat-bubble', 'chat-bubble--sent', { 'chat-bubble--fill': bubble.bills.length > 0, 'chat-bubble--joined-above': bubble.joinedAbove, 'chat-bubble--joined-below': bubble.joinedBelow }]}>
+                  <div class:list={['chat-bubble', 'chat-bubble--sent', { 'chat-bubble--fill': bubble.bills.length + bubble.charges.length > 0, 'chat-bubble--joined-above': bubble.joinedAbove, 'chat-bubble--joined-below': bubble.joinedBelow }]}>
                     <div class="chat-bubble__body">
                       <div class="chat-bubble__content">
                         <a
@@ -38,8 +52,9 @@ const { days } = Astro.props
                           {bubble.checkin.occurredLabel && <time class="chat-row__time" datetime={bubble.checkin.occurredAt}>{bubble.checkin.occurredLabel}</time>}
                         </a>
                         {
-                          bubble.bills.length > 0 && (
+                          bubble.bills.length + bubble.charges.length > 0 && (
                             <div class="chat-bills">
+                              {bubble.charges.map(charge => <ChatChargeRow charge={charge} timeAtEnd hideTime={charge.charge.startedAt.slice(11, 16) === bubble.checkin.occurredLabel} />)}
                               {bubble.bills.map(bill => <ChatBillRow bill={bill} timeAtEnd hideTime />)}
                             </div>
                           )
@@ -52,10 +67,14 @@ const { days } = Astro.props
               )
             : (
                 <div class="chat-received">
-                  <div class:list={['chat-bubble', 'chat-bubble--received', { 'chat-bubble--fill': bubble.bills.length > 1 }]}>
+                  <div class:list={['chat-bubble', 'chat-bubble--received', { 'chat-bubble--fill': bubble.lines.length > 1 }]}>
                     <div class="chat-bubble__body">
                       <div class="chat-bubble__content">
-                        {bubble.bills.map(bill => <ChatBillRow bill={bill} />)}
+                        {bubble.lines.map(line => line.kind === 'bill'
+                          ? <ChatBillRow bill={line.bill} />
+                          : line.kind === 'charge'
+                            ? <ChatChargeRow charge={line.charge} />
+                            : <ChatRecordRow icon="i-lucide-car-front" title="用车" detailBelow detail={driveDetail(line.day)} value={formatKm(line.day.distanceMeters)} />)}
                       </div>
                     </div>
                     <ChatTail sent={false} />

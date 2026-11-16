@@ -84,7 +84,12 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   how it was and what it came to, as a line drawn the same,
   and a bill at the bubble's own time showing no time of its own,
   and the day's other bills, charges and footprints come from the left, those between two
-  Moments or check-ins in one records bubble that lists them all. The footprints are cut at every record with a time, a Moment, a check-in, a bill or
+  Moments or check-ins in one records bubble that lists them all. A charge and the bill paid
+  for it at its very time are one line, the bill's category with the energy faint after it and
+  what it cost, going where that bill would (`placeCharges`); a charge with none goes to the
+  Moment or check-in at its own time like a bill, else among the records. A day the car moved
+  ends with 用车, from the car's statistics: its driving time and energy faint and the distance
+  at the end, after the day's last record. The trip's page does the same over its days. The footprints are cut at every record with a time, a Moment, a check-in, a bill or
   a charge, each piece where the phone moved between two of them, with when it set off, how
   far it went and its line; a piece that barely moved shows nothing. A banner marks where each trip begins, among its first day's bubbles at the time it set off when that is known, else above that day; or, for the trip under way, says
   进行中 and which day it is. Reading back to older days folds the tabs and the title away;

@@ -109,13 +109,14 @@
     border-bottom-right-radius: 0;
   }
 
-  /* The photos across its top, edge to edge, the bubble's corners theirs. */
-  & .moment-gallery {
+  /* The photos across its top, edge to edge, the bubble's corners theirs; over the gallery's
+     own margin and rounded photos, which come in a stylesheet of their own. */
+  .chat-bubble > & .moment-gallery {
     gap: 2px;
     margin-top: 0;
   }
 
-  & .moment-gallery__item {
+  .chat-bubble > & .moment-gallery__item {
     border-radius: 0;
 
     &:focus-visible {
@@ -267,6 +268,11 @@
   .chat-bubble--received & {
     color: var(--color-tx-3);
   }
+
+  /* No line of the bubble has a time, a day's driving alone: no column for one. */
+  .chat-bubble__content:not(:has(.chat-row__time:not(:empty))) & {
+    display: none;
+  }
 }
 
 .chat-row__title {
@@ -275,6 +281,19 @@
   min-width: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* A title with its detail under it, as a day's driving is: the detail too long to share its line. */
+.chat-row__title--stacked {
+  display: flex;
+  flex-direction: column;
+  padding-block: 0.25rem;
+  white-space: normal;
+
+  & .chat-row__note {
+    margin-left: 0;
+    line-height: 1rem;
+  }
 }
 
 .chat-row__note {

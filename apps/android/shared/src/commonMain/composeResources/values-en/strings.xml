@@ -926,6 +926,7 @@
     <string name="charge_ac">AC charge</string>
     <string name="charge_dc">DC fast charge</string>
     <string name="timeline_charge">Charge</string>
+    <string name="timeline_drive">Driving</string>
     <string name="timeline_checkin">Checked in at %1$s</string>
     <string name="timeline_checkin_on">Checked in %1$s</string>
     <plurals name="charge_minutes">

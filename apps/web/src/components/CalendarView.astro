@@ -1,5 +1,6 @@
 ---
 import '@hyoban/drawer/styles.css'
+import '@/styles/trip-chat.css'
 import CalendarBackLink from '@/components/CalendarBackLink.astro'
 import CalendarAnniversaryStatus from '@/components/CalendarAnniversaryStatus.astro'
 import CalendarDayStatus from '@/components/CalendarDayStatus.astro'
@@ -19,6 +20,9 @@ import { formatCalendarDay, getCalendarDayDescription, getCalendarText, getDayMo
 import {
   getActiveDateKeys,
   getArchiveMonthKeys,
+  getBills,
+  getCarCharges,
+  getCarDays,
   getCalendarDateKey,
   getMapYears,
   getMomentDateLabel,
@@ -30,9 +34,11 @@ import {
   getTrips,
   MOMENT_OG_IMAGES,
   truncateAtSentence,
+  type CarDay,
   type Moment,
   type ResolvedMomentMedia,
 } from '@/moments'
+import { pairCharges, type ChatCharge } from '@/moments/trip-chat'
 import { BLANK_IMAGE, CALENDAR_DESKTOP_MEDIA, SITE_TITLE } from '@/consts'
 import {
   getCalendarAnniversaries,
@@ -58,6 +64,9 @@ type CalendarDay = {
   mediaCount: number
   moments: Moment[]
   thumbnail: ResolvedMomentMedia | undefined
+  /** The car's charges that day, each with the public bill paid for it, and what it drove. */
+  charges: ChatCharge[]
+  drive: CarDay | undefined
 }
 
 const { canonicalPath, month, selectedDate, sharedMoment, year } = Astro.props
@@ -71,6 +80,13 @@ const nextMonth = currentMonthIndex >= 0 && currentMonthIndex < monthKeys.length
   ? monthKeys[currentMonthIndex + 1]
   : undefined
 const momentsByDate = Map.groupBy(moments, moment => moment.dateKey)
+// The car's month: its charges, each with the bill paid at its very time, and what it drove each day.
+const monthCharges = pairCharges(
+  getCarCharges().filter(charge => charge.startedAt.startsWith(monthKey)),
+  getBills().filter(bill => bill.dateKey.startsWith(monthKey)),
+)
+const chargesByDate = Map.groupBy(monthCharges, charge => charge.charge.startedAt.slice(0, 10))
+const drivesByDate = new Map(getCarDays().filter(day => day.date.startsWith(monthKey)).map(day => [day.date, day]))
 const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate()
 const firstWeekday = (new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7
 const calendarDays: Array<CalendarDay | undefined> = Array.from({ length: firstWeekday })
@@ -89,6 +105,8 @@ for (let day = 1; day <= daysInMonth; day += 1) {
     mediaCount: allMedia.length,
     moments: dayMoments,
     thumbnail,
+    charges: chargesByDate.get(dateKey) ?? [],
+    drive: drivesByDate.get(dateKey),
   })
 }
 
@@ -103,7 +121,7 @@ const desktopCalendarDays = calendarDays.length === 42
     ]
   : calendarDays
 const activeCalendarDays = calendarDays.filter(
-  (day): day is CalendarDay => Boolean(day && (day.moments.length || day.anniversaries.length)),
+  (day): day is CalendarDay => Boolean(day && (day.moments.length || day.anniversaries.length || day.charges.length || day.drive)),
 )
 const today = getCalendarDateKey(new Date())
 const selectedMoments = selectedDate ? momentsByDate.get(selectedDate) ?? [] : []

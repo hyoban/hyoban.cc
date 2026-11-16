@@ -90,8 +90,10 @@ fun MomentCard(
     /** As a bubble, whether the one above or below it is a Moment too, a run of them drawn together. */
     joinedAbove: Boolean = false,
     joinedBelow: Boolean = false,
+    /** As a bubble, the charges at its time, at its foot with its bills. */
+    charges: List<cc.hyoban.moments.ui.feed.Charge> = emptyList(),
 ) {
-    if (bubble) return MomentBubble(moment, places, trip, urls, onOpen, modifier, selected, hidePlace, joinedAbove, joinedBelow, bills, ledger, onBill)
+    if (bubble) return MomentBubble(moment, places, trip, urls, onOpen, modifier, selected, hidePlace, joinedAbove, joinedBelow, bills, ledger, onBill, charges)
     // The card grows into the Moment's page when opened; shown in the detail pane beside the
     // list, it is [selected], outlined in the accent, the one colour for state.
     val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
@@ -153,12 +155,13 @@ private fun MomentBubble(
     bills: List<Txn> = emptyList(),
     ledger: Ledger? = null,
     onBill: (String) -> Unit = {},
+    charges: List<cc.hyoban.moments.ui.feed.Charge> = emptyList(),
 ) {
     // What it cost, with its amount, leads its linked bills at its foot, while its module is on
     // (记录项与公开).
     val settings = LocalSettings.current
     val cost = moment.cost?.takeIf { it.amount != null && settings.isOn(it.module) }
-    val withBills = (bills.isNotEmpty() && ledger != null) || cost != null
+    val withBills = (bills.isNotEmpty() && ledger != null) || cost != null || charges.isNotEmpty()
     val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
     var menu by remember { mutableStateOf<DpOffset?>(null) }
     val density = LocalDensity.current
@@ -216,7 +219,7 @@ private fun MomentBubble(
                     Box(Modifier.align(Alignment.End)) { foot() }
                 }
                 // What the meal cost and its linked bills at its foot, each bill opening its bill.
-                if (withBills) cc.hyoban.moments.ui.feed.BubbleBills(bills, ledger, onBill, Modifier.padding(top = Space.xs), time = time, cost = cost)
+                if (withBills) cc.hyoban.moments.ui.feed.BubbleBills(bills, ledger, onBill, Modifier.padding(top = Space.xs), time = time, cost = cost, charges = charges)
             }
             cc.hyoban.moments.ui.moment.MomentMenu(moment, urls, menu, onDismiss = { menu = null })
         }

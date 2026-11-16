@@ -106,7 +106,10 @@ fun TripScreen(
     val demo = LocalSettings.current.demo
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val moments = remember(trip, all) { momentsOf(trip, all, trips) }
-    val tripRecords = remember(allCheckins, trip, checkinsOn, demo, ledger, ledgerOn, moments) {
+    // The car's charges in its time and what it drove each of its days, as the timeline has them.
+    val records by container.repository.records.collectAsStateWithLifecycle()
+    val carOn = LocalSettings.current.isOn(Module.CAR)
+    val tripRecords = remember(allCheckins, trip, checkinsOn, demo, ledger, ledgerOn, moments, records, carOn) {
         val checkins = if (!checkinsOn) emptyMap() else allCheckins.byDay.filterKeys { it in trip.start..trip.end }
             .mapValues { (_, day) -> day.filter { cc.hyoban.moments.data.trips.isInTrip(trip, it.at) && !(demo && it.private) } }
             .filterValues { it.isNotEmpty() }
@@ -117,7 +120,16 @@ fun TripScreen(
         }
         val uids = moments.mapTo(HashSet()) { it.uid } + checkins.values.flatten().map { it.uid }
         val links = cc.hyoban.moments.ledger.AutoLinks(moments, checkins.values.flatten())
-        val (withMoment, without) = bills.partition { links.of(it) in uids }
+        val inTripDay = { day: String -> day in trip.start..trip.end }
+        val charges = if (!carOn) emptyList() else cc.hyoban.moments.ui.feed.chargesOf(records.entries.values, inTripDay)
+            .filter { cc.hyoban.moments.data.trips.isInTrip(trip, it.at) }
+        val drives = if (!carOn) emptyMap() else cc.hyoban.moments.ui.feed.drivesOf(records.vehicleMonths.values, inTripDay)
+        // A charge and the bill paid for it at its very time are one line, where that bill would go.
+        val (looseCharges, linkedCharges, paid) = cc.hyoban.moments.ui.feed.placeCharges(
+            charges, bills, { txn -> links.of(txn)?.takeIf { it in uids } },
+            cc.hyoban.moments.ui.feed.momentTimes(moments, checkins.values.flatten()),
+        )
+        val (withMoment, without) = bills.filterNot { it.id in paid }.partition { links.of(it) in uids }
         cc.hyoban.moments.ui.feed.TimelineBills(
             ledger,
             linked = withMoment.groupBy { links.of(it)!! }.mapValues { (_, txns) -> txns.sortedBy { it.time } },
@@ -125,6 +137,9 @@ fun TripScreen(
             spent = bills.groupBy { it.dateKey }.mapValues { (_, txns) -> cc.hyoban.moments.ledger.spendingOf(ledger, txns, currency).expense },
             currency = currency,
             checkins = checkins,
+            charges = looseCharges,
+            linkedCharges = linkedCharges,
+            drives = drives,
         )
     }
     val stops = remember(trip, all, places) { stopsOf(trip, all, trips, places) }

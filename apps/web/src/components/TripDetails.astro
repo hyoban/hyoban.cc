@@ -3,7 +3,7 @@ import { isInTrip } from '@hyoban/trip-map'
 import TripChat from '@/components/TripChat.astro'
 import TripCoverCollage from '@/components/TripCoverCollage.astro'
 import { formatRate, formatYuan } from '@/data/vehicle-costs'
-import { getBills, getCheckins, getMomentTripCosts, getMomentTripOdometer, type Moment, type MomentTrip } from '@/moments'
+import { getBills, getCarCharges, getCarDays, getCheckins, getMomentTripCosts, getMomentTripOdometer, type Moment, type MomentTrip } from '@/moments'
 import { formatBillAmount, getSpending } from '@/moments/bills'
 import { getTripChat } from '@/moments/trip-chat'
 import { getTripCollage } from '@/moments/trip-images'
@@ -23,7 +23,7 @@ interface Props {
 const { moments, trip } = Astro.props
 // A trip's bills are the public ones paid in its span, as it holds every entry there.
 const tripBills = getBills().filter(bill => isInTrip(trip, bill.occurredAt))
-const days = getTripChat(trip, moments, getCheckins(), tripBills)
+const days = getTripChat(trip, moments, getCheckins(), tripBills, getCarCharges(), getCarDays())
 const [spent, ...otherSpent] = getSpending(tripBills)
 // The trip at a glance, figures with a word under each: how long and where, how
 // far the car went and how often it charged, and what it cost on the road, from the car's

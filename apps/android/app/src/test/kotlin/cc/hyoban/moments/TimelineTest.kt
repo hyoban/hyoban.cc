@@ -9,6 +9,12 @@ import cc.hyoban.moments.footprints.TrackPoint
 import cc.hyoban.moments.ui.feed.DayItem
 import cc.hyoban.moments.ui.feed.DayTrack
 import cc.hyoban.moments.ui.feed.dayItems
+import cc.hyoban.moments.ui.feed.DriveDay
+import cc.hyoban.moments.ui.feed.chatItems
+import cc.hyoban.moments.ui.feed.ChatItem
+import cc.hyoban.moments.ui.feed.RecordLine
+import cc.hyoban.moments.ui.feed.drivesOf
+import cc.hyoban.moments.ui.feed.placeCharges
 import kotlin.test.Test
 import kotlin.math.roundToInt
 import kotlin.test.assertEquals
@@ -101,5 +107,40 @@ class TimelineTest {
     private fun moment(uid: String, time: String): MomentRecord {
         val at = "2026-01-02T$time+08:00"
         return MomentRecord(uid, at, emptyList(), "", createdAt = at, updatedAt = at)
+    }
+
+    @Test
+    fun `a charge is one line with the bill paid at its time, where that bill goes`() {
+        val at = { time: String -> java.time.OffsetDateTime.parse("2026-11-14T$time+08:00").toInstant().toEpochMilli() }
+        val fast = Charge("fast", "2026-11-14T10:48+08:00", true, 42.5, 17)
+        val slow = Charge("slow", "2026-11-14T22:00+08:00", false, 69.6, 600)
+        val alone = Charge("alone", "2026-11-14T13:03+08:00", true, 7.5, 15)
+        val paidFast = Txn("bill", "book", TxnKind.EXPENSE, at("10:48:00"), 480, 5310, "CNY")
+        val paidAlone = Txn("bill2", "book", TxnKind.EXPENSE, at("13:03:00"), 480, 560, "CNY")
+        val coffee = Txn("coffee", "book", TxnKind.EXPENSE, at("15:00:00"), 480, 3000, "CNY")
+        // The check-in at the charger is at the same minute; the overnight charge at home has nothing.
+        val (loose, linked, paid) = placeCharges(listOf(slow, alone, fast), listOf(paidFast, paidAlone, coffee), { null }, mapOf(at("10:48:00") to "station"))
+        assertEquals(setOf("bill", "bill2"), paid)
+        assertEquals(listOf(fast.copy(bill = paidFast)), linked["station"])
+        assertEquals(listOf(alone.copy(bill = paidAlone), slow), loose["2026-11-14"])
+        // A bill linked to a Moment by hand takes its charge along.
+        val (_, byLink, _) = placeCharges(listOf(alone), listOf(paidAlone), { if (it.id == "bill2") "moment" else null }, emptyMap())
+        assertEquals("moment", byLink.keys.single())
+    }
+
+    @Test
+    fun `a day the car moved ends with what it drove, among the day's records`() {
+        val month = kotlinx.serialization.json.Json.parseToJsonElement(
+            """{"month":"2026-11","days":[{"date":"2026-11-10","distanceMeters":0,"durationSeconds":0,"energyWh":2000},{"date":"2026-11-14","distanceMeters":381000,"durationSeconds":19500,"energyWh":74500}]}""",
+        ) as kotlinx.serialization.json.JsonObject
+        val drives = drivesOf(listOf(month)) { true }
+        assertEquals(listOf("2026-11-14"), drives.keys.toList(), "a day only parked has no line")
+        val drive = drives.getValue("2026-11-14")
+        assertEquals(DriveDay("2026-11-14", 381.0, 325, 74.5), drive)
+        val items = dayItems(listOf(moment("lunch", "12:00:00")), emptyList(), oldestFirst = true, day = "2026-11-14", drive = drive)
+        assertIs<DayItem.Drive>(items.last())
+        val chats = chatItems(items)
+        assertIs<ChatItem.Moment>(chats.first())
+        assertEquals(RecordLine.Drive(drive), (chats.last() as ChatItem.Records).lines.single())
     }
 }
