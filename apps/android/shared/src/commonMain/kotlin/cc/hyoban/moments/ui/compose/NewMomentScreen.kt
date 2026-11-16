@@ -131,7 +131,7 @@ import cc.hyoban.moments.data.local.newPlaceId
 import cc.hyoban.moments.data.local.parseStamp
 import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.local.stamp
-import cc.hyoban.moments.data.spec.FoodBill
+import cc.hyoban.moments.data.spec.MomentCost
 import cc.hyoban.moments.data.spec.FoodVerdict
 import androidx.compose.foundation.layout.FlowRow
 import cc.hyoban.moments.ui.design.FilterChip
@@ -140,7 +140,6 @@ import androidx.compose.ui.semantics.contentDescription
 import cc.hyoban.moments.data.spec.LocalMedia
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
-import cc.hyoban.moments.data.spec.MomentFood
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.PlaceKind
@@ -165,6 +164,9 @@ import cc.hyoban.moments.ui.format.formatAmount
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.format.verdictLabel
+import cc.hyoban.moments.ui.format.worthLabel
+import cc.hyoban.moments.ledger.COMMON_CURRENCIES
+import cc.hyoban.moments.ledger.currencySymbol
 import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.MediaOverlay
@@ -241,15 +243,18 @@ fun NewMomentScreen(
     // The motion photos added as photos alone, their clips left out, and those already asked about.
     var stills by remember { mutableStateOf(emptySet<PhotoRef>()) }
     var askedMotion by remember { mutableStateOf(emptySet<PhotoRef>()) }
-    // What was eaten, as typed: the dishes in one field, the bill's yuan and people in two.
-    val originalFood = original?.food
-    var dishes by rememberSaveable { mutableStateOf(originalFood?.dishes.orEmpty().joinToString("、")) }
-    var verdict by rememberSaveable { mutableStateOf(originalFood?.verdict) }
-    var amount by rememberSaveable { mutableStateOf(originalFood?.bill?.amount?.let(::formatAmount).orEmpty()) }
-    var people by rememberSaveable { mutableStateOf(originalFood?.bill?.people?.toString().orEmpty()) }
-    /** Whether 美食 was added from the 加一项 row: open for a Moment that has a meal. */
-    var withFood by rememberSaveable { mutableStateOf(originalFood != null) }
-    val food = foodOf(dishes, verdict, amount, people, originalFood)
+    // What it cost, as typed: a meal or anything else, what it went on (a meal's dishes), how it
+    // was, the amount in its currency and how many.
+    val originalCost = original?.cost
+    var meal by rememberSaveable { mutableStateOf(originalCost?.meal ?: false) }
+    var costItems by rememberSaveable { mutableStateOf(originalCost?.items.orEmpty().joinToString("、")) }
+    var verdict by rememberSaveable { mutableStateOf(originalCost?.verdict) }
+    var amount by rememberSaveable { mutableStateOf(originalCost?.amount?.let(::formatAmount).orEmpty()) }
+    var currency by rememberSaveable { mutableStateOf(originalCost?.currency ?: "CNY") }
+    var people by rememberSaveable { mutableStateOf(originalCost?.people?.toString().orEmpty()) }
+    /** Whether 美食 or 花费 was added from the 加一项 row: open for a Moment that has a cost. */
+    var withCost by rememberSaveable { mutableStateOf(originalCost != null) }
+    val cost = costOf(meal, costItems, verdict, amount, currency, people, originalCost)
     /** Private: kept on the phone and in the API for its owner, never on the site. */
     var private by rememberSaveable { mutableStateOf(original?.hidden ?: false) }
     val openedAt = remember { OffsetDateTime.now() }
@@ -341,11 +346,11 @@ fun NewMomentScreen(
     val written = text.isNotBlank() || photos.isNotEmpty()
     // Nothing written, nothing eaten, but somewhere: a check-in there, while check-ins are on.
     val checkinsOn = LocalSettings.current.isOn(Module.CHECKIN)
-    val asCheckin = withMoment && checkinsOn && !written && food == null && place != PlaceChoice.None
+    val asCheckin = withMoment && checkinsOn && !written && cost == null && place != PlaceChoice.None
     val billWritten = withBill && (bill.amount.isNotBlank() || bill.note.isNotBlank())
     // The bill's time is the Moment's, while there is one.
     val billAt = if (withMoment) time else OffsetDateTime.parse(bill.time)
-    // A meal's amount and category go to its bill, until the bill's own are chosen.
+    // The cost's amount and a meal's category go to its bill, until the bill's own are chosen.
     var mirroredAmount by rememberSaveable { mutableStateOf("") }
     LaunchedEffect(amount) {
         if (bill.amount == mirroredAmount) {
@@ -353,17 +358,17 @@ fun NewMomentScreen(
             mirroredAmount = bill.amount
         }
     }
-    LaunchedEffect(food != null, withBill, ledger) {
-        if (food != null && withBill && bill.kind == TxnKind.EXPENSE && bill.category == null) bill.category = mealCategory(ledger)
+    LaunchedEffect(cost?.meal, withBill, ledger) {
+        if (cost?.meal == true && withBill && bill.kind == TxnKind.EXPENSE && bill.category == null) bill.category = mealCategory(ledger)
     }
     // A known place's kind is the place's to change, not the Moment's.
     val newKind = (chosenPlace as? PlaceChoice.Known)?.kind
     val momentChanged = original == null ||
         text != original.text || photos != originalMedia.keys.toList() || utility.intersect(photos.toSet()) != originalUtility ||
-        chosenTime != originalTime || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || food != originalFood ||
+        chosenTime != originalTime || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || cost != originalCost ||
         private != original.hidden
     // What leaving would lose: anything written, or, for a Moment being changed, any change.
-    val changed = if (original == null) (withMoment && (written || food != null)) || billWritten else momentChanged || newKind != null
+    val changed = if (original == null) (withMoment && (written || cost != null)) || billWritten else momentChanged || newKind != null
     val leave = { if (changed) confirmingDiscard = true else onBack() }
     BackHandler(enabled = changed && !saving) { confirmingDiscard = true }
 
@@ -387,7 +392,7 @@ fun NewMomentScreen(
             try {
                 withContext(NonCancellable) {
                     val moment = if (withMoment) {
-                        val (moment, newPlace) = buildMoment(container, text, photos, utility, stills, infos, time, place, food, private, original, originalMedia, stayUid)
+                        val (moment, newPlace) = buildMoment(container, text, photos, utility, stills, infos, time, place, cost, private, original, originalMedia, stayUid)
                         // Kept as what it now is, a Moment or a check-in, named after its place when that moved.
                         if (original == null || momentChanged) {
                             val venue = when (place) {
@@ -569,30 +574,41 @@ fun NewMomentScreen(
                 // its icon; only those of modules that are on (记录项与公开), a meal already written
                 // staying as it is while meals are off.
                 val foodOn = LocalSettings.current.isOn(Module.FOOD)
+                val costOn = LocalSettings.current.isOn(Module.COST)
                 val billOn = LocalSettings.current.isOn(Module.LEDGER) && container.ledger.writable
-                if (foodOn || billOn) {
+                if (foodOn || costOn || billOn) {
                     PageCaption(stringResource(Res.string.section_add_item))
                     FlowRow(
                         Modifier.fillMaxWidth().padding(horizontal = Space.gutter),
                         horizontalArrangement = Arrangement.spacedBy(Space.s),
                         verticalArrangement = Arrangement.spacedBy(Space.s),
                     ) {
-                        if (foodOn) AddChip(withFood, AppIcons.Food, stringResource(Res.string.section_food), "add_food") {
-                            withFood = !withFood
-                            if (!withFood) {
-                                dishes = ""; verdict = null; amount = ""; people = ""
+                        // A meal and any other cost are one cost, so choosing one takes the other's place
+                        // with what was typed; choosing the chosen one again takes it away.
+                        val pick = { asMeal: Boolean ->
+                            if (withCost && meal == asMeal) {
+                                withCost = false
+                                costItems = ""; verdict = null; amount = ""; people = ""
+                            } else {
+                                withCost = true
+                                meal = asMeal
                             }
                         }
+                        if (foodOn) AddChip(withCost && meal, AppIcons.Food, stringResource(Res.string.section_food), "add_food") { pick(true) }
+                        if (costOn) AddChip(withCost && !meal, AppIcons.Cash, stringResource(Res.string.section_cost), "add_cost") { pick(false) }
                         if (billOn) AddChip(withBill, AppIcons.Receipt, stringResource(Res.string.section_bill), "add_bill") { withBill = !withBill }
                     }
                 }
-                if (withFood && foodOn) FoodGroup(
-                    dishes = dishes,
-                    onDishes = { dishes = it },
+                if (withCost && (if (meal) foodOn else costOn)) CostGroup(
+                    meal = meal,
+                    items = costItems,
+                    onItems = { costItems = it },
                     verdict = verdict,
                     onVerdict = { verdict = it },
                     amount = amount,
                     onAmount = { amount = it },
+                    currency = currency,
+                    onCurrency = { currency = it },
                     people = people,
                     onPeople = { people = it },
                 )
@@ -967,57 +983,67 @@ private fun Visibility(private: Boolean, onPrivate: (Boolean) -> Unit) {
 }
 
 /**
- * What was eaten, rows on the page: the dishes, how they were, one of three in a segmented control
- * that a second tap clears, and what the meal cost and how many it fed, with each one's share.
+ * What it cost, rows on the page: what it went on, or for a [meal] what was eaten; how it was
+ * (how a meal tasted, else whether it was worth it), one of three that a second tap clears; and
+ * the amount in its currency, chosen at its symbol, and how many it was for, with each one's share.
  */
 @Composable
-private fun FoodGroup(
-    dishes: String,
-    onDishes: (String) -> Unit,
+private fun CostGroup(
+    meal: Boolean,
+    items: String,
+    onItems: (String) -> Unit,
     verdict: String?,
     onVerdict: (String?) -> Unit,
     amount: String,
     onAmount: (String) -> Unit,
+    currency: String,
+    onCurrency: (String) -> Unit,
     people: String,
     onPeople: (String) -> Unit,
 ) {
-    PageCaption(stringResource(Res.string.section_food))
+    PageCaption(stringResource(if (meal) Res.string.section_food else Res.string.section_cost))
     PageRows { _ ->
         ListItem(
-            leadingContent = { Icon(AppIcons.Food, contentDescription = null) },
+            leadingContent = { Icon(if (meal) AppIcons.Food else AppIcons.Cash, contentDescription = null) },
             headlineContent = {
-                RowField(dishes, onDishes, stringResource(Res.string.hint_food_dishes), AppTheme.typography.body, KeyboardOptions(imeAction = ImeAction.Next), Modifier.fillMaxWidth().testTag("food_dishes"))
+                RowField(
+                    items,
+                    onItems,
+                    stringResource(if (meal) Res.string.hint_food_dishes else Res.string.hint_cost_items),
+                    AppTheme.typography.body,
+                    KeyboardOptions(imeAction = ImeAction.Next),
+                    Modifier.fillMaxWidth().testTag("cost_items"),
+                )
             },
         )
-        ListItem(
-            leadingContent = { Icon(AppIcons.FaceGood, contentDescription = null) },
-            headlineContent = {
-                // One verdict or none: a second tap on the chosen one takes it back.
-                MultiChoiceSegmentedButtonRow(Modifier.fillMaxWidth().height(ChipDefaults.Height)) {
-                    FoodVerdict.entries.forEach { choice ->
-                        SegmentedButton(
-                            checked = choice.value == verdict,
-                            onCheckedChange = { onVerdict(if (it) choice.value else null) },
-                            modifier = Modifier.testTag("food_${choice.value}"),
-                        ) { Text(stringResource(verdictLabel(choice)), maxLines = 1) }
-                    }
-                }
-            },
-        )
+        VerdictRow(verdict, onVerdict, "cost", if (meal) ::verdictLabel else ::worthLabel)
         // Each one's share once both are known, after how many.
-        val share = amount.toDoubleOrNull()?.let { yuan -> people.toIntOrNull()?.takeIf { it > 1 }?.let { yuan / it } }
+        val share = amount.toDoubleOrNull()?.let { total -> people.toIntOrNull()?.takeIf { it > 1 }?.let { total / it } }
+        var currencies by remember { mutableStateOf(false) }
+        val symbol = currencySymbol(currency).trim()
         ListItem(
             leadingContent = { Icon(AppIcons.Receipt, contentDescription = null) },
             headlineContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("¥", style = AppTheme.typography.body)
+                    Box {
+                        Text(
+                            symbol,
+                            style = AppTheme.typography.body,
+                            modifier = Modifier.clickable { currencies = true }.testTag("cost_currency"),
+                        )
+                        DropdownMenu(currencies, onDismissRequest = { currencies = false }) {
+                            COMMON_CURRENCIES.forEach { code ->
+                                DropdownMenuItem(text = { Text("$code  ${currencySymbol(code).trim()}") }, onClick = { onCurrency(code); currencies = false })
+                            }
+                        }
+                    }
                     RowField(
                         amount,
                         { typed -> onAmount(typed.filter { it.isDigit() || it == '.' }) },
                         stringResource(Res.string.label_food_amount),
                         AppTheme.typography.body,
                         KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
-                        Modifier.weight(1f).testTag("food_amount"),
+                        Modifier.weight(1f).padding(start = Space.xs).testTag("cost_amount"),
                     )
                 }
             },
@@ -1029,15 +1055,34 @@ private fun FoodGroup(
                         stringResource(Res.string.label_food_people),
                         LocalTextStyle.current.copy(fontFamily = AppTheme.typography.body.fontFamily),
                         KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                        Modifier.testTag("food_people"),
+                        Modifier.testTag("cost_people"),
                         fit = true,
                     )
                     if (people.isNotEmpty()) Text(" " + stringResource(Res.string.unit_food_people))
-                    if (share != null) Text(" " + stringResource(Res.string.food_share, formatAmount(share)))
+                    if (share != null) Text(" " + stringResource(Res.string.cost_share, symbol + formatAmount(share)))
                 }
             },
         )
     }
+}
+
+/** How it was, one of three in a segmented control that a second tap on the chosen one clears. */
+@Composable
+private fun VerdictRow(verdict: String?, onVerdict: (String?) -> Unit, tag: String, label: (FoodVerdict) -> StringResource) {
+    ListItem(
+        leadingContent = { Icon(AppIcons.FaceGood, contentDescription = null) },
+        headlineContent = {
+            MultiChoiceSegmentedButtonRow(Modifier.fillMaxWidth().height(ChipDefaults.Height)) {
+                FoodVerdict.entries.forEach { choice ->
+                    SegmentedButton(
+                        checked = choice.value == verdict,
+                        onCheckedChange = { onVerdict(if (it) choice.value else null) },
+                        modifier = Modifier.testTag("${tag}_${choice.value}"),
+                    ) { Text(stringResource(label(choice)), maxLines = 1) }
+                }
+            }
+        },
+    )
 }
 
 /**
@@ -1067,17 +1112,20 @@ private fun RowField(value: String, onValueChange: (String) -> Unit, hint: Strin
 }
 
 /**
- * The food as typed, kept with whatever else [original] said: the dishes split at commas,
- * enumeration commas and new lines, a bill only with its yuan, and nothing when nothing is said.
+ * The cost as typed, kept with whatever else [original] said: a [meal] or not; what it went on
+ * split at commas, enumeration commas and new lines; the amount only when it reads as one, with
+ * how many it was for and its currency, yuan written as none; and nothing when nothing is said.
  */
-fun foodOf(dishes: String, verdict: String?, amount: String, people: String, original: MomentFood?): MomentFood? {
-    val names = dishes.split(DISH_SEPARATORS).map { it.trim() }.filter { it.isNotEmpty() }
-    val bill = amount.toDoubleOrNull()?.takeIf { it >= 0 }?.let { yuan ->
-        val fed = people.toIntOrNull()?.takeIf { it > 0 }
-        original?.bill?.copy(amount = yuan, people = fed) ?: FoodBill(yuan, fed)
-    }
-    if (names.isEmpty() && verdict == null && bill == null) return null
-    return original?.copy(dishes = names, verdict = verdict, bill = bill) ?: MomentFood(names, verdict, bill)
+fun costOf(meal: Boolean, items: String, verdict: String?, amount: String, currency: String, people: String, original: MomentCost?): MomentCost? {
+    val names = items.split(DISH_SEPARATORS).map { it.trim() }.filter { it.isNotEmpty() }
+    val total = amount.toDoubleOrNull()?.takeIf { it >= 0 }
+    if (names.isEmpty() && verdict == null && total == null) return null
+    // How many it was for, and its currency, only beside an amount.
+    val fed = people.toIntOrNull()?.takeIf { it > 0 && total != null }
+    val code = currency.takeIf { total != null && (it != "CNY" || original?.currency != null) }
+    val kind = if (meal) MomentCost.FOOD else null
+    return original?.copy(amount = total, items = names, verdict = verdict, currency = code, people = fed, kind = kind)
+        ?: MomentCost(total, names, verdict, code, fed, kind)
 }
 
 private val DISH_SEPARATORS = Regex("[,，、;；\\n]")
@@ -1118,7 +1166,7 @@ private suspend fun buildMoment(
     infos: Map<PhotoRef, PhotoInfo>,
     time: OffsetDateTime,
     place: PlaceChoice,
-    food: MomentFood?,
+    cost: MomentCost?,
     private: Boolean,
     original: MomentRecord? = null,
     originalMedia: Map<PhotoRef, MomentMedia> = emptyMap(),
@@ -1166,14 +1214,14 @@ private suspend fun buildMoment(
         is PlaceChoice.New -> listOfNotNull(newPlace?.first)
         PlaceChoice.None -> emptyList()
     }
-    val moment = original?.copy(occurredAt = stamp(time), places = placeIds, text = text.trim(), media = media, food = food, hidden = private, updatedAt = now)
+    val moment = original?.copy(occurredAt = stamp(time), places = placeIds, text = text.trim(), media = media, cost = cost, hidden = private, updatedAt = now)
         ?: MomentRecord(
             uid = uid ?: Ulid.next(),
             occurredAt = stamp(time),
             places = placeIds,
             text = text.trim(),
             media = media,
-            food = food,
+            cost = cost,
             hidden = private,
             createdAt = now,
             updatedAt = now,

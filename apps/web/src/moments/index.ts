@@ -12,6 +12,7 @@ import { getAssetUrl, getFrameSources, getResizedSources } from '@/asset-url'
 import { locations, type LocationId } from '@/data/locations'
 import {
   isMomentShown,
+  type MomentCost,
   type MomentFood,
   type MomentMedia,
   type PublishedImage,
@@ -64,6 +65,8 @@ export type ResolvedMomentMedia = {
 )
 
 export type Moment = {
+  /** What it cost, when the record says. */
+  cost?: MomentCost
   dateKey: string
   /** What was eaten, when the record says. */
   food?: MomentFood
@@ -457,6 +460,7 @@ function resolveMoment(entry: MomentEntry): Moment | undefined {
   const dateKey = record.occurredAt.slice(0, 10)
   const moment: Moment = {
     dateKey,
+    ...(record.cost ? { cost: record.cost } : {}),
     ...(record.food ? { food: record.food } : {}),
     id: record.uid.toLowerCase(),
     locations: record.places.map((id) => {

@@ -11,6 +11,7 @@ public enum Module: String, CaseIterable, Sendable {
     case things = "things"
     case car = "car"
     case food = "food"
+    case cost = "cost"
     case checkin = "checkin"
     case occasions = "occasions"
 
@@ -22,6 +23,7 @@ public enum Module: String, CaseIterable, Sendable {
         case .things: ["device", "subscription"]
         case .car: ["charge"]
         case .food: ["food"]
+        case .cost: ["cost"]
         case .checkin: ["checkin"]
         case .occasions: ["occasion"]
         }
@@ -35,6 +37,7 @@ public enum Module: String, CaseIterable, Sendable {
         case .things: []
         case .car: ["vehicle_months", "vehicle_assisted", "vehicle_captures"]
         case .food: []
+        case .cost: []
         case .checkin: []
         case .occasions: []
         }

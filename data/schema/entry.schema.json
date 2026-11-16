@@ -801,6 +801,60 @@
           ],
           "additionalProperties": {}
         },
+        "cost": {
+          "type": "object",
+          "properties": {
+            "v": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "visibility": {
+              "type": "string",
+              "enum": [
+                "public",
+                "private"
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "items": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "verdict": {
+              "type": "string",
+              "enum": [
+                "good",
+                "ok",
+                "bad"
+              ]
+            },
+            "amount": {
+              "type": "number",
+              "minimum": 0
+            },
+            "currency": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$"
+            },
+            "people": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "v"
+          ],
+          "additionalProperties": {}
+        },
         "bill": {
           "type": "object",
           "properties": {

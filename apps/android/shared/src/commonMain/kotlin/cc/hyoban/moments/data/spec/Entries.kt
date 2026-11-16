@@ -31,7 +31,7 @@ enum class Visibility(val value: String) {
 object Entries {
     // The `topic` the spec no longer has is among the keys, so a record that still carries one drops it.
     private val momentKeys = setOf(
-        "uid", "occurredAt", "places", "text", "hidden", "topic", "media", "food", "trip", "order",
+        "uid", "occurredAt", "places", "text", "hidden", "topic", "media", "food", "cost", "trip", "order",
         "published", "createdAt", "updatedAt", PART_VISIBILITY, OTHER_PARTS,
     )
 
@@ -49,7 +49,7 @@ object Entries {
     const val OTHER_PARTS = "otherParts"
 
     /** The parts a Moment has fields of its own for, and the bill the ledger sends with it. */
-    private val momentParts = setOf("text", "media", "food", "bill")
+    private val momentParts = setOf("text", "media", "food", "cost", "bill")
 
     // `point`, `end` and `links` stay on the Moment as fields it doesn't know, and go back the same.
     private val entryKeys = setOf(
@@ -58,13 +58,16 @@ object Entries {
     )
 
     /**
-     * A Moment as an entry, as the spec's `momentToEntry`: its words, photos and meal as parts,
-     * a meal's bill its cost and people, and private when hidden; [parts] are added beside them
+     * A Moment as an entry, as the spec's `momentToEntry`: its words, photos and cost (a meal
+     * among them, of the kind food) as parts, and private when hidden; [parts] are added beside them
      * (a public bill of the meal). Fields the Moment kept that the spec doesn't know stay.
      */
     fun fromMoment(moment: MomentRecord, parts: Map<String, JsonObject> = emptyMap()): JsonObject {
         val record = Spec.json.encodeToJsonElement(MomentRecord.serializer(), moment).jsonObject
-        val own = (record[PART_VISIBILITY] as? JsonObject).orEmpty()
+        val said = (record[PART_VISIBILITY] as? JsonObject).orEmpty()
+        // A meal kept the old way was seen by whoever saw the meal, as its cost now is.
+        val fromMeal = record["cost"] == null && record["food"] is JsonObject
+        val own = if (fromMeal && "food" in said && "cost" !in said) JsonObject(said - "food" + ("cost" to said.getValue("food"))) else said
         val entry = buildJsonObject {
             record.filterKeys { it !in momentKeys }.forEach { (key, value) -> put(key, value) }
             put("uid", moment.uid)
@@ -81,16 +84,9 @@ object Entries {
                         put("items", record.getValue("media"))
                     })
                 }
-                record["food"]?.jsonObject?.let { food ->
-                    put("food", buildJsonObject {
-                        put("v", 1)
-                        food.filterKeys { it != "bill" }.forEach { (key, value) -> put(key, value) }
-                        food["bill"]?.jsonObject?.let { bill ->
-                            bill["amount"]?.let { put("cost", it) }
-                            bill["people"]?.let { put("people", it) }
-                        }
-                    })
-                }
+                // A meal is a cost of the kind food, as one kept the old way becomes.
+                val cost = record["cost"]?.jsonObject ?: (record["food"] as? JsonObject)?.let(::mealAsCost)
+                cost?.let { put("cost", JsonObject(mapOf("v" to JsonPrimitive(1)) + it)) }
                 (record[OTHER_PARTS] as? JsonObject)?.forEach { (plugin, part) -> put(plugin, part) }
                 parts.forEach { (plugin, part) -> put(plugin, part) }
             })
@@ -109,17 +105,23 @@ object Entries {
 
     /**
      * An entry as a Moment, as the spec's `entryToMoment`, or null for one with no words (a
-     * bill alone, a mark): its words, photos and meal, hidden when private by its own say.
+     * bill alone, a mark): its words, photos and cost, a meal kept the old way read as the cost
+     * it now is; hidden when private by its own say.
      */
     fun toMoment(entry: JsonObject): MomentRecord? {
         val parts = entry["parts"]?.jsonObject ?: return null
         val text = parts["text"]?.jsonObject ?: return null
         // A part private by its own say stays with the phone's Moment, noted as such.
-        val food = parts["food"]?.jsonObject
         val media = parts["media"]?.jsonObject
-        val own = listOf("text", "media", "food").mapNotNull { plugin ->
-            (parts[plugin] as? JsonObject)?.get("visibility")?.let { plugin to it }
-        }.toMap()
+        // What it cost: its own part, else a meal kept the old way, as the cost it now is, seen
+        // by whoever saw the meal.
+        val part = parts["cost"]?.jsonObject ?: parts["food"]?.jsonObject?.let(::foodToCost)
+        val cost = part?.filterKeys { it !in setOf("v", "visibility") }
+        val own = listOfNotNull(
+            parts["text"]?.jsonObject?.get("visibility")?.let { "text" to it },
+            media?.get("visibility")?.let { "media" to it },
+            part?.get("visibility")?.let { "cost" to it },
+        ).toMap()
         val record = buildJsonObject {
             entry.filterKeys { it !in entryKeys }.forEach { (key, value) -> put(key, value) }
             put("uid", entry.string("uid"))
@@ -129,17 +131,7 @@ object Entries {
             // "visibility" on parts is noted below rather than lost.
             put("hidden", entry.visibility() == Visibility.PRIVATE)
             put("media", JsonArray(media?.get("items")?.jsonArray?.map { item -> JsonObject(item.jsonObject - "point") }.orEmpty()))
-            if (food != null) {
-                put("food", buildJsonObject {
-                    food.filterKeys { it !in setOf("v", "visibility", "cost", "people") }.forEach { (key, value) -> put(key, value) }
-                    food["cost"]?.let { cost ->
-                        put("bill", buildJsonObject {
-                            put("amount", cost)
-                            food["people"]?.let { put("people", it) }
-                        })
-                    }
-                })
-            }
+            cost?.let { put("cost", JsonObject(it)) }
             entry["order"]?.let { put("order", it) }
             entry["published"]?.let { put("published", it) }
             put("createdAt", entry.string("createdAt"))
@@ -148,6 +140,26 @@ object Entries {
             parts.filterKeys { it !in momentParts }.takeIf { it.isNotEmpty() }?.let { put(OTHER_PARTS, JsonObject(it)) }
         }
         return Spec.json.decodeFromJsonElement(MomentRecord.serializer(), record)
+    }
+
+    /**
+     * A meal kept as a `food` part, as the cost it now is, as the spec's `foodToCost`: its
+     * dishes as what it went on, its verdict, cost and people, and who saw it.
+     */
+    fun foodToCost(food: JsonObject): JsonObject = buildJsonObject {
+        put("v", 1)
+        put("kind", MomentCost.FOOD)
+        put("items", food["dishes"] ?: JsonArray(emptyList()))
+        food.filterKeys { it !in setOf("v", "dishes", "cost") }.forEach { (key, value) -> put(key, value) }
+        food["cost"]?.let { put("amount", it) }
+    }
+
+    /** A meal in the first shape (dishes, verdict and its bill) as the cost it now is. */
+    private fun mealAsCost(food: JsonObject): JsonObject = buildJsonObject {
+        put("kind", MomentCost.FOOD)
+        put("items", food["dishes"] ?: JsonArray(emptyList()))
+        food.filterKeys { it !in setOf("dishes", "bill") }.forEach { (key, value) -> put(key, value) }
+        (food["bill"] as? JsonObject)?.forEach { (key, value) -> put(key, value) }
     }
 
     /** A bill on its own as an entry: the ledger's, at its time, with nothing but its public part. */

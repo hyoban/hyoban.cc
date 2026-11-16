@@ -89,7 +89,7 @@ test('a public bill comes back by its public fields, and a private one alone nev
     place: 'nanjing',
     parts: {
       text: { v: 1, text: '吃了一碗面' },
-      food: { v: 1, dishes: ['面'], cost: 18 },
+      cost: { v: 1, kind: 'food', items: ['面'], amount: 18 },
       bill: {
         v: 1,
         visibility: 'public',
@@ -127,11 +127,11 @@ test('a public bill comes back by its public fields, and a private one alone nev
     kind: 'expense',
   })
 
-  // As a Moment, the meal's bill is its cost.
+  // As a Moment, the meal's cost is its bill.
   const moment = (await getMoment(env, meal.uid)).body
 
   assert.equal(moment.text, '吃了一碗面')
-  assert.deepEqual(moment.food.bill, { amount: 18 })
+  assert.deepEqual(moment.food, { dishes: ['面'], bill: { amount: 18 } })
   assert.deepEqual((await get(env, `/v2/entries/${alone.uid}`)).body.parts, {})
 })
 

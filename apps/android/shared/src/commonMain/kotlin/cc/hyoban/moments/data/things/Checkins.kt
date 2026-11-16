@@ -89,7 +89,7 @@ fun checkinAsMoment(entry: JsonObject): MomentRecord? {
 fun editedEntry(moment: MomentRecord, venue: String?, placeChanged: Boolean): JsonObject {
     val entry = Entries.fromMoment(moment)
     val parts = entry["parts"] as? JsonObject ?: JsonObject(emptyMap())
-    val written = moment.text.isNotBlank() || moment.media.isNotEmpty() || moment.food != null
+    val written = moment.text.isNotBlank() || moment.media.isNotEmpty() || moment.cost != null
     val had = parts["checkin"] as? JsonObject
     val checkin = when {
         moment.places.isEmpty() || venue.isNullOrBlank() && had == null -> null

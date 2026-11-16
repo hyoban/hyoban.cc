@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { getMediaDirectory, momentMediaSchema } from './media.ts'
 import {
   count,
+  currency,
   dateKey,
   foodVerdictSchema,
   id,
@@ -27,8 +28,23 @@ export const momentFoodSchema = z.looseObject({
   /** The dishes and drinks as the words name them, like 沙茶面 or 卡旺卡. */
   dishes: z.array(z.string().min(1)).default([]),
   verdict: foodVerdictSchema.optional(),
-  /** What the meal cost all told, and how many it fed. */
-  bill: z.looseObject({ amount: price, people: count.optional() }).optional(),
+  /** What the meal cost all told, in its currency (yuan without one), and how many it fed. */
+  bill: z
+    .looseObject({ amount: price, people: count.optional(), currency: currency.optional() })
+    .optional(),
+})
+
+/**
+ * What a Moment that isn't a meal cost: what it went on, whether it was worth it, the amount all
+ * told, in its currency (yuan without one), and how many it was for. A meal's is its `food`.
+ */
+export const momentCostSchema = z.looseObject({
+  /** What it went on, like 门票 or 打车. */
+  items: z.array(z.string().min(1)).default([]),
+  verdict: foodVerdictSchema.optional(),
+  amount: price.optional(),
+  currency: currency.optional(),
+  people: count.optional(),
 })
 
 export const momentRecordSchema = z
@@ -49,6 +65,7 @@ export const momentRecordSchema = z
       .refine((media) => unique(media.map((item) => item.uid)), 'Duplicate media uid.')
       .default([]),
     food: momentFoodSchema.optional(),
+    cost: momentCostSchema.optional(),
     /** The trip it belongs to; without one, the trip whose dates include it. */
     trip: id.optional(),
     /**
@@ -148,6 +165,7 @@ export type MomentRecord = z.output<typeof momentRecordSchema>
 export type MomentRecordInput = z.input<typeof momentRecordSchema>
 export type MomentMedia = MomentRecord['media'][number]
 export type MomentFood = z.output<typeof momentFoodSchema>
+export type MomentCost = z.output<typeof momentCostSchema>
 export type TripRecord = z.output<typeof tripRecordSchema>
 export type TripRecordInput = z.input<typeof tripRecordSchema>
 export type Device = z.output<typeof deviceSchema>

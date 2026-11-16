@@ -7,6 +7,7 @@ import {
   collectionToTrip,
   entrySchema,
   entryToMoment,
+  foodToCost,
   getDeviceIssues,
   getEntryAudience,
   getPartAudience,
@@ -99,7 +100,7 @@ test('a migration names things the same each time', () => {
   assert.notEqual(getStableUlid(at, 'x'), getStableUlid(at, 'y'))
 })
 
-test('a hidden Moment is private, a meal keeps its cost', () => {
+test('a hidden Moment is private, a meal is a cost of the kind food', () => {
   const moment = momentRecordSchema.parse({
     ...base,
     occurredAt: at,
@@ -109,14 +110,56 @@ test('a hidden Moment is private, a meal keeps its cost', () => {
   })
   const entry = momentToEntry(moment)
   assert.equal(getEntryAudience(entry), 'private')
-  assert.deepEqual(entry.parts.food, {
+  assert.equal(entry.parts.food, undefined)
+  assert.deepEqual(entry.parts.cost, {
     v: 1,
-    dishes: ['沙茶面'],
+    kind: 'food',
+    items: ['沙茶面'],
     verdict: 'good',
-    cost: 32,
+    amount: 32,
     people: 2,
   })
+  assert.deepEqual(entryToMoment(entry).food, moment.food)
   assert.equal(getEntryAudience({}), 'public')
+})
+
+test("a cost that isn't a meal is the Moment's own, and a meal kept the old way reads as a cost", () => {
+  const moment = momentRecordSchema.parse({
+    ...base,
+    occurredAt: at,
+    text: '进了博物馆',
+    cost: { items: ['门票'], verdict: 'good', amount: 60, currency: 'HKD', people: 2 },
+  })
+  const entry = momentToEntry(moment)
+  assert.deepEqual(entry.parts.cost, {
+    v: 1,
+    items: ['门票'],
+    verdict: 'good',
+    amount: 60,
+    currency: 'HKD',
+    people: 2,
+  })
+  assert.deepEqual(entryToMoment(entry).cost, moment.cost)
+  assert.equal(entryToMoment(entry).food, undefined)
+
+  const old = { v: 1, dishes: ['面'], verdict: 'ok', cost: 9, people: 1 }
+  assert.deepEqual(foodToCost(old), {
+    v: 1,
+    kind: 'food',
+    items: ['面'],
+    verdict: 'ok',
+    amount: 9,
+    people: 1,
+  })
+  const older = entryToMoment({ ...entry, parts: { text: { v: 1, text: '面' }, food: old } })
+  assert.deepEqual(older.food, { dishes: ['面'], verdict: 'ok', bill: { amount: 9, people: 1 } })
+  assert.equal(older.cost, undefined)
+
+  const hidden = entryToMoment({
+    ...entry,
+    parts: { ...entry.parts, cost: { ...entry.parts.cost, visibility: 'private' } },
+  })
+  assert.equal(hidden.cost, undefined)
 })
 
 test('a part follows its own say, then its container, then its plugin', () => {
@@ -226,7 +269,7 @@ test('a private bill stays on the phone, a public one goes', () => {
         account: 'wechat',
         book: 'daily',
       },
-      food: { v: 1, dishes: ['面'], cost: 9 },
+      cost: { v: 1, kind: 'food', items: ['面'], amount: 9 },
     },
   })
   assert.deepEqual(getUploadEntry(whole).parts.bill, {
@@ -236,7 +279,7 @@ test('a private bill stays on the phone, a public one goes', () => {
     amount: 9,
     currency: 'CNY',
   })
-  assert.deepEqual(getUploadEntry(whole).parts.food, whole.parts.food)
+  assert.deepEqual(getUploadEntry(whole).parts.cost, whole.parts.cost)
 })
 
 test('a collection holds its span, its includes and not its excludes', () => {

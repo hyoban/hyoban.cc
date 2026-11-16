@@ -232,21 +232,27 @@ async function postChanges(context: ChannelContext) {
 }
 
 const VERDICTS = { good: '😋 好吃', ok: '🙂 一般', bad: '😖 踩雷' } as const
+const WORTH = { good: '👍 值', ok: '🙂 一般', bad: '👎 不值' } as const
 
 /**
  * The words and media a Moment is posted with: its own words exactly, then a line of the
- * place and, for a meal, each one's share and its verdict, as the app shares it. A bill
- * without its people fed one. A Moment with neither words, a line nor media has nothing
+ * place, each one's share of what it cost, and how a meal was and whether the cost was worth it,
+ * as the app shares it. A cost without its people was one's. A Moment with neither words, a line nor media has nothing
  * to post.
  */
 function toPost(moment: MomentRecord, placeNames: Map<string, string>): Post | null {
   const place = moment.places[0] && placeNames.get(moment.places[0])
-  const bill = moment.food?.bill
-  const verdict = moment.food?.verdict
+  // A meal's cost is its bill and its verdict how it tasted; any other cost says whether it was worth it.
+  const meal = moment.food
+  const spent = meal?.bill ?? moment.cost
+  const share =
+    spent?.amount !== undefined && Math.round(spent.amount / Math.max(spent.people ?? 1, 1))
+  const symbol = spent?.currency && spent.currency !== 'CNY' ? `${spent.currency} ` : '¥'
   const line = [
     place && `📍 ${place}`,
-    bill && `💰 人均 ¥${Math.round(bill.amount / Math.max(bill.people ?? 1, 1))}`,
-    verdict && VERDICTS[verdict],
+    share !== false && share !== undefined && `💰 人均 ${symbol}${share}`,
+    meal?.verdict && VERDICTS[meal.verdict],
+    moment.cost?.verdict && WORTH[moment.cost.verdict],
   ]
     .filter(Boolean)
     .join(' ')

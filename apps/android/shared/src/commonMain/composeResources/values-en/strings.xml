@@ -298,6 +298,13 @@
     <string name="food_good">Good</string>
     <string name="food_ok">OK</string>
     <string name="food_bad">Bad</string>
+    <string name="section_cost">Spending</string>
+    <string name="hint_cost_items">What it was for</string>
+    <string name="cost_good">Worth it</string>
+    <string name="cost_ok">OK</string>
+    <string name="cost_bad">Not worth it</string>
+    <string name="cost_share">%1$s each</string>
+    <string name="cost_each">%1$s each</string>
     <string name="label_food_amount">Cost</string>
     <string name="label_food_people">People</string>
     <string name="unit_food_people">people</string>
@@ -788,7 +795,7 @@
     <string name="ledger_trip_days_spent">All books those days %1$s</string>
     <string name="ledger_some_unconverted">Some not converted</string>
     <string name="ledger_from_moment">Add bill of %1$s</string>
-    <string name="ledger_from_moment_note">The meal's bill written in this Moment</string>
+    <string name="ledger_from_moment_note">The cost written in this Moment</string>
     <string name="ledger_books">Books</string>
     <string name="ledger_add_book">New book</string>
     <string name="ledger_book_name">Book name</string>

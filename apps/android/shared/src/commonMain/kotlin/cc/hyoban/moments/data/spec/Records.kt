@@ -265,30 +265,33 @@ enum class FoodVerdict(val value: String) {
     }
 }
 
-/** What a meal cost all told, in yuan, and how many it fed. */
+/**
+ * What a Moment cost of its own, so a private bill still leaves it public: a meal ([kind]
+ * [MomentCost.FOOD]) or anything else; what it went on, as a meal names its dishes; how it was;
+ * the amount all told in [currency] (yuan without one), when it is known, and how many it was for.
+ */
 @OptIn(ExperimentalSerializationApi::class)
-@Serializable(with = FoodBill.Serializer::class)
+@Serializable(with = MomentCost.Serializer::class)
 @KeepGeneratedSerializer
-data class FoodBill(
-    val amount: Double,
-    val people: Int? = null,
-    @Transient val extra: JsonObject = NoExtra,
-) {
-    object Serializer : PassthroughSerializer<FoodBill>(generatedSerializer(), { v, e -> v.copy(extra = e) }, { it.extra })
-}
-
-/** What was eaten or drunk in a Moment: the dishes as the words name them, how it was, what it cost. */
-@OptIn(ExperimentalSerializationApi::class)
-@Serializable(with = MomentFood.Serializer::class)
-@KeepGeneratedSerializer
-data class MomentFood(
-    val dishes: List<String> = emptyList(),
-    /** A [FoodVerdict]'s value, kept as text so one a newer spec adds still reads. */
+data class MomentCost(
+    val amount: Double? = null,
+    val items: List<String> = emptyList(),
+    /** A [FoodVerdict]'s value, said as how it tasted for a meal, else whether it was worth it. */
     val verdict: String? = null,
-    val bill: FoodBill? = null,
+    val currency: String? = null,
+    val people: Int? = null,
+    /** [FOOD] for a meal; null for anything else. */
+    val kind: String? = null,
     @Transient val extra: JsonObject = NoExtra,
 ) {
-    object Serializer : PassthroughSerializer<MomentFood>(generatedSerializer(), { v, e -> v.copy(extra = e) }, { it.extra })
+    /** Whether it is a meal. */
+    val meal: Boolean get() = kind == FOOD
+
+    object Serializer : PassthroughSerializer<MomentCost>(generatedSerializer(), { v, e -> v.copy(extra = e) }, { it.extra })
+
+    companion object {
+        const val FOOD = "food"
+    }
 }
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -314,8 +317,8 @@ data class MomentRecord(
     val text: String,
     val hidden: Boolean = false,
     val media: List<MomentMedia> = emptyList(),
-    /** What was eaten or drunk. */
-    val food: MomentFood? = null,
+    /** What it cost: a meal, or anything else. */
+    val cost: MomentCost? = null,
     val trip: String? = null,
     /** Where it sits among its day's Moments when their times don't say, lower first. */
     val order: Int? = null,

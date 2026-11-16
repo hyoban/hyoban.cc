@@ -114,7 +114,8 @@ import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.compose.label
-import cc.hyoban.moments.ui.format.foodLine
+import cc.hyoban.moments.ui.format.costLine
+import cc.hyoban.moments.ui.format.costTitle
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.settings.Caption
@@ -781,12 +782,12 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
         val names = { ids: List<String> -> ids.joinToString(separator) { places[it]?.name ?: it }.ifEmpty { none } }
         Field(Res.string.change_place) { FromTo(names(before.places), names(after.places), AppIcons.Pin) }
     }
-    if (before.food != after.food) {
+    if (before.cost != after.cost) {
         any = true
         val none = stringResource(Res.string.food_none)
-        Field(Res.string.change_food) {
-            val after = foodLine(after.food)
-            if (after == null) FromTo(foodLine(before.food), none, AppIcons.Food) else FromTo(foodLine(before.food), after, AppIcons.Food)
+        val cost = after.cost ?: before.cost!!
+        Field(costTitle(cost)) {
+            FromTo(costLine(before.cost), costLine(after.cost) ?: none, if (cost.meal) AppIcons.Food else AppIcons.Cash)
         }
     }
     // Public or private, a change of its own: one made private leaves the site.

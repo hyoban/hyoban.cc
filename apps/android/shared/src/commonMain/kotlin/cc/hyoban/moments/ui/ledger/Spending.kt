@@ -76,7 +76,8 @@ fun momentBillRows(
             }
         }
     }
-    val bill = moment.food?.bill ?: return emptyList()
+    val cost = moment.cost?.takeIf { it.amount != null } ?: return emptyList()
+    val amount = cost.amount ?: return emptyList()
     return listOf { shapes ->
         SegmentedListItem(
             onClick = { onNewBill(moment.uid) },
@@ -86,6 +87,6 @@ fun momentBillRows(
             trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
             supportingContent = { Text(stringResource(Res.string.ledger_from_moment_note)) },
             modifier = Modifier.testTag("moment_new_bill"),
-        ) { Text(stringResource(Res.string.ledger_from_moment, money(Math.round(bill.amount * 100), "CNY"))) }
+        ) { Text(stringResource(Res.string.ledger_from_moment, money(Math.round(amount * 100), cost.currency ?: "CNY"))) }
     }
 }

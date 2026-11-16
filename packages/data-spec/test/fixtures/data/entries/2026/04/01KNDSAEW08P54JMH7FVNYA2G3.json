@@ -6,6 +6,15 @@
     "text": {
       "v": 1,
       "text": "开回来了，一路顺利。"
+    },
+    "cost": {
+      "v": 1,
+      "items": [
+        "停车费"
+      ],
+      "verdict": "good",
+      "amount": 40,
+      "people": 2
     }
   },
   "published": {

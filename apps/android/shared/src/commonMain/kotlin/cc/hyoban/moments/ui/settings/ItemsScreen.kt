@@ -155,6 +155,7 @@ fun moduleTitle(module: Module): StringResource = when (module) {
     Module.THINGS -> Res.string.me_things
     Module.CAR -> Res.string.car_title
     Module.FOOD -> Res.string.section_food
+    Module.COST -> Res.string.section_cost
     Module.CHECKIN -> Res.string.module_checkin
     Module.OCCASIONS -> Res.string.occasions_title
 }
@@ -166,6 +167,7 @@ fun moduleIcon(module: Module): ImageVector = when (module) {
     Module.THINGS -> AppIcons.Package
     Module.CAR -> AppIcons.Car
     Module.FOOD -> AppIcons.Food
+    Module.COST -> AppIcons.Cash
     Module.CHECKIN -> AppIcons.Pin
     Module.OCCASIONS -> AppIcons.Calendar
 }

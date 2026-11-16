@@ -276,6 +276,13 @@
     <string name="food_good">好吃</string>
     <string name="food_ok">一般</string>
     <string name="food_bad">踩雷</string>
+    <string name="section_cost">花费</string>
+    <string name="hint_cost_items">花在哪了</string>
+    <string name="cost_good">值</string>
+    <string name="cost_ok">一般</string>
+    <string name="cost_bad">不值</string>
+    <string name="cost_share">每人 %1$s</string>
+    <string name="cost_each">人均 %1$s</string>
     <string name="label_food_amount">花费</string>
     <string name="label_food_people">人数</string>
     <string name="unit_food_people">人</string>
@@ -760,7 +767,7 @@
     <string name="ledger_trip_days_spent">这几天所有账本共 %1$s</string>
     <string name="ledger_some_unconverted">部分未换算</string>
     <string name="ledger_from_moment">记一笔 %1$s</string>
-    <string name="ledger_from_moment_note">按这个时刻写的餐费记到账本</string>
+    <string name="ledger_from_moment_note">按这个时刻写的花费记到账本</string>
     <string name="ledger_books">账本</string>
     <string name="ledger_add_book">新建账本</string>
     <string name="ledger_book_name">账本名称</string>

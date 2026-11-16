@@ -79,7 +79,8 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   with its date in a capsule, Moments are bubbles from the right with their photos across
   the top, and so are check-ins, each a small bubble of its venue and time that opens its
   sheet; the bills linked to a Moment or a check-in are listed at the foot of its bubble,
-  a meal's Moment leading them with what was eaten and what it cost, as a line drawn the same,
+  a Moment's own cost leading them when it has an amount, a meal's dishes or what it went on,
+  how it was and what it came to, as a line drawn the same,
   and a bill at the bubble's own time showing no time of its own,
   and the day's other bills, charges and footprints come from the left, those between two
   Moments or check-ins in one records bubble that lists them all. The footprints are cut at every record with a time, a Moment, a check-in, a bill or
@@ -116,7 +117,7 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
 - **记录项与公开** (`moments://items`) opens on the 记录项, the modules the spec defines
   (`data/spec/Modules.kt`, generated from `modules` in `@hyoban/data-spec/entry` by
   `vp run data:tables`): 足迹, 账本, 东西
-  (设备 and 订阅), 车, 美食 and 签到, each a switch, all on until turned off. One turned off is
+  (设备 and 订阅), 车, 美食, 花费 and 签到, each a switch, all on until turned off. One turned off is
   put away everywhere: its rows on 我, its pages, its records on the timeline, a day, a trip,
   a Moment, the search's kinds and the map, its chip under 加一项, its sources under 导入, the
   side key's payment action and the widgets' counts (导入 lists the sources left, and goes
@@ -192,13 +193,16 @@ what to try next.
 ## Writing a Moment
 
 记录, or `moments://new`, opens a page of its own, or a dialog on a wide window. A Moment
-has its words, up to nine photos and videos, a time and a place, and under 加一项 a meal
-(美食: the dishes, 好吃, 一般 or 踩雷, the cost and how many it fed) and a bill (账单). It
+has its words, up to nine photos and videos, a time and a place, and under 加一项 what it cost
+and a bill (账单). What it cost is a meal (美食: the dishes, 好吃, 一般 or 踩雷) or anything
+else (花费: what it went on, 值, 一般 or 不值), either with the amount in its currency and how
+many it was for; the two chips are one cost, so choosing one takes the other's place with what
+was typed. A meal shows while 美食 is on, any other cost while 花费 is. It
 is 公开 or 私有; a private one is published for its owner but never shown on the site.
 The home screen widgets are the owner's own and show private Moments and trips too,
 except in 演示模式.
 
-The same page writes a check-in: with no words, photos or meal but a place, it is saved as a
+The same page writes a check-in: with no words, photos or cost but a place, it is saved as a
 check-in there (the page says 新签到), named after the place, `source.app` `phone`, public unless
 made private, while 签到 is on in 记录项与公开. A check-in tapped, on the timeline, a day, a place or
 in the search, opens here (编辑签到) as a Moment with nothing but its place, to change its time,
@@ -335,9 +339,9 @@ it in the editor (Writing a Moment), the site's map dotting it while public. All
 A Moment's share sheet hands a copy of its words and a choice of photos to another app,
 which leaves the recipient and the final send to the user. It never posts. It lists only
 the apps on the phone; 准备图文 is always there. The sheet stays
-open under each share, so the next one starts from it. A meal's copy
-ends with a line of its place, each one's share of the bill and its verdict (好吃, 一般 or
-踩雷), each behind an emoji, which can be edited away like the rest.
+open under each share, so the next one starts from it. The copy
+ends with a line of its place, each one's share of what it cost and how it was (a meal's 好吃,
+一般 or 踩雷, else 值, 一般 or 不值), each behind an emoji, which can be edited away like the rest.
 
 | Destination    | How                                                                                     |
 | -------------- | --------------------------------------------------------------------------------------- |
@@ -400,8 +404,8 @@ becoming the bill's. The bill's own place is chosen in that picker too,
 opening on its place, else that point, else where the phone is. An account's 校准余额 sets its balance by moving its
 opening balance.
 
-The ledger meets the Moments: a Moment's page lists its bills, a meal with no bill offers
-记一笔, a trip's and a day's page show what was spent, a trip's page lists its bills among its Moments and
+The ledger meets the Moments: a Moment's page lists its bills, a Moment with an amount and no bill offers
+记一笔 of it, a trip's and a day's page show what was spent, a trip's page lists its bills among its Moments and
 check-ins by time (one linked to a Moment or a check-in under it), a place's page, opening on its map, lists its bills by their days
 among its Moments and check-ins with what was spent there beside its counts. A bill not linked by
 hand is taken, as it is shown, to be the Moment's or the check-in's at its very time (a Moment

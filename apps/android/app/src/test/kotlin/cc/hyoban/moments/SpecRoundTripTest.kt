@@ -53,14 +53,14 @@ class SpecRoundTripTest {
 
     @Test
     fun `a Moment becomes the entry the spec makes of it`() {
-        // As packages/data-spec's momentToEntry: words, photos and meal as parts, hidden as private.
+        // As packages/data-spec's momentToEntry: words, photos and cost (a meal of the kind food) as parts, hidden as private.
         val moment = Spec.json.decodeFromString(
             MomentRecord.serializer(),
-            """{"uid":"01M3VDBHC042D43KWZWE67YP1T","occurredAt":"2026-10-01T12:00:00+08:00","places":["nanjing"],"text":"面","hidden":true,"food":{"dishes":["面"],"verdict":"good","bill":{"amount":32,"people":2}},"createdAt":"2026-10-01T17:41:00+08:00","updatedAt":"2026-10-01T17:41:00+08:00"}""",
+            """{"uid":"01M3VDBHC042D43KWZWE67YP1T","occurredAt":"2026-10-01T12:00:00+08:00","places":["nanjing"],"text":"面","hidden":true,"cost":{"kind":"food","items":["面"],"verdict":"good","amount":32,"currency":"CNY","people":2},"createdAt":"2026-10-01T17:41:00+08:00","updatedAt":"2026-10-01T17:41:00+08:00"}""",
         )
         val entry = Entries.fromMoment(moment, mapOf("bill" to Entries.billPart("expense", 32.0, "CNY", "餐饮", null)))
         val expected = Spec.json.parseToJsonElement(
-            """{"uid":"01M3VDBHC042D43KWZWE67YP1T","at":"2026-10-01T12:00:00+08:00","place":"nanjing","parts":{"text":{"v":1,"text":"面"},"food":{"v":1,"dishes":["面"],"verdict":"good","cost":32,"people":2},"bill":{"v":1,"visibility":"public","kind":"expense","amount":32.0,"currency":"CNY","category":"餐饮"}},"visibility":"private","createdAt":"2026-10-01T17:41:00+08:00","updatedAt":"2026-10-01T17:41:00+08:00"}""",
+            """{"uid":"01M3VDBHC042D43KWZWE67YP1T","at":"2026-10-01T12:00:00+08:00","place":"nanjing","parts":{"text":{"v":1,"text":"面"},"cost":{"v":1,"kind":"food","items":["面"],"verdict":"good","amount":32,"currency":"CNY","people":2},"bill":{"v":1,"visibility":"public","kind":"expense","amount":32.0,"currency":"CNY","category":"餐饮"}},"visibility":"private","createdAt":"2026-10-01T17:41:00+08:00","updatedAt":"2026-10-01T17:41:00+08:00"}""",
         )
         assertEquivalent(expected, entry, "entry")
         assertEquals(moment, Entries.toMoment(entry))
@@ -70,13 +70,26 @@ class SpecRoundTripTest {
     fun `a part private by its own say goes onto the entry's part and comes back`() {
         val moment = Spec.json.decodeFromString(
             MomentRecord.serializer(),
-            """{"uid":"01M3VDBHC042D43KWZWE67YP1T","occurredAt":"2026-10-01","text":"面","food":{"dishes":["面"]},"partVisibility":{"food":"private"},"createdAt":"2026-10-01T17:41:00+08:00","updatedAt":"2026-10-01T17:41:00+08:00"}""",
+            """{"uid":"01M3VDBHC042D43KWZWE67YP1T","occurredAt":"2026-10-01","text":"面","cost":{"kind":"food","items":["面"]},"partVisibility":{"cost":"private"},"createdAt":"2026-10-01T17:41:00+08:00","updatedAt":"2026-10-01T17:41:00+08:00"}""",
         )
         val entry = Entries.fromMoment(moment)
-        val food = (entry["parts"] as JsonObject)["food"] as JsonObject
-        assertEquals(JsonPrimitive("private"), food["visibility"])
+        val cost = (entry["parts"] as JsonObject)["cost"] as JsonObject
+        assertEquals(JsonPrimitive("private"), cost["visibility"])
         assertTrue(Entries.PART_VISIBILITY !in entry)
         assertEquals(moment, Entries.toMoment(entry))
+    }
+
+    @Test
+    fun `a private meal kept the old way stays private as a cost of the kind food`() {
+        val entry = Spec.json.parseToJsonElement(
+            """{"uid":"01M3VDBHC042D43KWZWE67YP1T","at":"2026-10-01","parts":{"text":{"v":1,"text":"面"},"food":{"v":1,"visibility":"private","dishes":["面"],"cost":18,"people":2}},"createdAt":"2026-10-01T17:41:00+08:00","updatedAt":"2026-10-01T17:41:00+08:00"}""",
+        ) as JsonObject
+        val parts = Entries.fromMoment(Entries.toMoment(entry)!!)["parts"] as JsonObject
+        val cost = parts["cost"] as JsonObject
+        assertEquals(JsonPrimitive("private"), cost["visibility"])
+        assertEquals(18.0, (cost["amount"] as JsonPrimitive).content.toDouble())
+        assertEquals(JsonPrimitive("food"), cost["kind"])
+        assertTrue("food" !in parts)
     }
 
     @Test

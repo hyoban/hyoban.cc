@@ -104,6 +104,16 @@ test("a meal's post adds each one's share and its verdict to the place", async (
   assert.equal(calls[0].params.caption, `在码头等船。\n\n📍 ${nanjing} 💰 人均 ¥35 😋 好吃`)
 })
 
+test("a cost's post adds each one's share and whether it was worth it", async () => {
+  const { env, calls, sync } = setUpChannel()
+
+  await sync()
+  await publish(env, { cost: { items: ['门票'], verdict: 'bad', amount: 120, people: 2 } })
+
+  assert.deepEqual(await sync(), { posted: 1, edited: 0, deleted: 0 })
+  assert.equal(calls[0].params.caption, `在码头等船。\n\n📍 ${nanjing} 💰 人均 ¥60 👎 不值`)
+})
+
 test('changed words edit the caption; a Moment the site no longer shows is deleted', async () => {
   const { env, calls, sync } = setUpChannel()
 

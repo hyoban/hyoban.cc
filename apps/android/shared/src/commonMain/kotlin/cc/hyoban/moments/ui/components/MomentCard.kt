@@ -51,7 +51,8 @@ import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
-import cc.hyoban.moments.ui.format.foodLine
+import cc.hyoban.moments.ui.format.costLine
+import cc.hyoban.moments.ui.format.module
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.theme.Corners
@@ -118,13 +119,12 @@ fun MomentCard(
             if (moment.text.isNotBlank()) {
                 Text(moment.text, style = AppTheme.typography.bodyReading, maxLines = 8, overflow = TextOverflow.Ellipsis)
             }
-            // What was eaten, under the words as the site has it: one line of secondary text,
-            // while meals are on (记录项与公开).
-            if (LocalSettings.current.isOn(Module.FOOD)) foodLine(moment.food)?.let { line ->
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                    Icon(AppIcons.Food, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
-                    Text(line, style = AppTheme.typography.body, color = tokens.tx2, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
+            // What it cost, a meal's dishes or what it went on, how it was and what it came to,
+            // under the words as the site has it: a line of secondary text, while its module is
+            // on (记录项与公开: 美食 for a meal, else 花费).
+            val settings = LocalSettings.current
+            moment.cost?.takeIf { settings.isOn(it.module) }?.let { cost ->
+                costLine(cost)?.let { line -> QuietLine(if (cost.meal) AppIcons.Food else AppIcons.Cash, line) }
             }
         }
         if (bills.isNotEmpty() && ledger != null) LinkedBills(bills, ledger, onBill)
@@ -135,7 +135,7 @@ fun MomentCard(
 /**
  * A Moment as the conversation has it: a bubble from the right on the pressed fill, its photos
  * across its top, its words (how a meal was left to its page), and after them, faint, where,
- * which trip and when, and whether it is private or not yet published; at its foot, what a meal
+ * which trip and when, and whether it is private or not yet published; at its foot, what it
  * cost and the bills linked to it.
  */
 @Composable
@@ -154,9 +154,11 @@ private fun MomentBubble(
     ledger: Ledger? = null,
     onBill: (String) -> Unit = {},
 ) {
-    // A meal's cost leads its linked bills at its foot, while meals are on (记录项与公开).
-    val food = moment.food?.takeIf { it.bill != null && LocalSettings.current.isOn(Module.FOOD) }
-    val withBills = (bills.isNotEmpty() && ledger != null) || food != null
+    // What it cost, with its amount, leads its linked bills at its foot, while its module is on
+    // (记录项与公开).
+    val settings = LocalSettings.current
+    val cost = moment.cost?.takeIf { it.amount != null && settings.isOn(it.module) }
+    val withBills = (bills.isNotEmpty() && ledger != null) || cost != null
     val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
     var menu by remember { mutableStateOf<DpOffset?>(null) }
     val density = LocalDensity.current
@@ -203,7 +205,7 @@ private fun MomentBubble(
                     }
                 }
                 // How a meal was stays on the Moment's page: the conversation shows the words, and
-                // what was eaten and what it cost at the foot, among the bills.
+                // what it cost at the foot, among the bills.
                 if (moment.text.isNotBlank()) {
                     // As Telegram has it, where and when follow the last line of the words, on
                     // a line of their own only when they don't fit there.
@@ -214,7 +216,7 @@ private fun MomentBubble(
                     Box(Modifier.align(Alignment.End)) { foot() }
                 }
                 // What the meal cost and its linked bills at its foot, each bill opening its bill.
-                if (withBills) cc.hyoban.moments.ui.feed.BubbleBills(bills, ledger, onBill, Modifier.padding(top = Space.xs), time = time, food = food)
+                if (withBills) cc.hyoban.moments.ui.feed.BubbleBills(bills, ledger, onBill, Modifier.padding(top = Space.xs), time = time, cost = cost)
             }
             cc.hyoban.moments.ui.moment.MomentMenu(moment, urls, menu, onDismiss = { menu = null })
         }
@@ -340,4 +342,13 @@ fun RisingSheet(modifier: Modifier = Modifier, content: @Composable () -> Unit) 
         modifier = modifier.fillMaxWidth().sheetSurface(AppColors.page, AppTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)),
         content = content,
     )
+}
+
+/** A line of secondary text under a Moment's words, behind its icon. */
+@Composable
+private fun QuietLine(icon: androidx.compose.ui.graphics.vector.ImageVector, line: String) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+        Icon(icon, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
+        Text(line, style = AppTheme.typography.body, color = tokens.tx2, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
 }

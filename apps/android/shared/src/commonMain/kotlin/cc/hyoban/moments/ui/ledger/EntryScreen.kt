@@ -406,10 +406,10 @@ fun rememberBillDraft(ledger: Ledger, original: Txn?, related: Txn?, moment: Mom
             kind = kind,
             transfer = original?.transfer ?: TransferType.TRANSFER,
             book = original?.book ?: related?.book ?: args.category?.let { ledger.categoriesById[it]?.book },
-            amount = fieldOf(original?.amount ?: left?.coerceAtLeast(0) ?: args.amount ?: moment?.food?.bill?.amount?.let { Math.round(it * 100) }),
-            currency = original?.currency ?: related?.currency,
+            amount = fieldOf(original?.amount ?: left?.coerceAtLeast(0) ?: args.amount ?: moment?.cost?.amount?.let { Math.round(it * 100) }),
+            currency = original?.currency ?: related?.currency ?: moment?.cost?.currency,
             // A meal's bill starts in the book's most used food category.
-            category = original?.category ?: related?.category ?: args.category?.takeIf { it in ledger.categoriesById } ?: if (moment?.food != null) mealCategory(ledger) else null,
+            category = original?.category ?: related?.category ?: args.category?.takeIf { it in ledger.categoriesById } ?: if (moment?.cost?.meal == true) mealCategory(ledger) else null,
             account = original?.account ?: args.account?.takeIf { it in ledger.accountsById } ?: related?.account ?: lastAccount,
             splitting = original?.splits?.isNotEmpty() == true,
             splits = original?.splits?.joinToString("\n") { "${it.account}\t${fieldOf(it.amount)}" }.orEmpty(),

@@ -45,14 +45,15 @@
         }
       ]
     },
-    "food": {
+    "cost": {
       "v": 1,
-      "dishes": [
+      "kind": "food",
+      "items": [
         "葱油拌面"
       ],
       "verdict": "good",
-      "cost": 26,
-      "people": 1
+      "people": 1,
+      "amount": 26
     }
   },
   "published": {

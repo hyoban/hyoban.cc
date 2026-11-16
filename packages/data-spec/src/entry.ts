@@ -69,7 +69,10 @@ export const mediaPartSchema = z.looseObject({
     ),
 })
 
-/** A meal: its own cost and people, so a private bill still leaves what the meal cost public. */
+/**
+ * A meal as it was kept before it became a `cost` of the kind `food`: read as that cost until
+ * `vp run data:costs` moves it (`foodToCost`).
+ */
 export const foodPartSchema = z.looseObject({
   ...partBase,
   dishes: z.array(z.string().min(1)).default([]),
@@ -77,6 +80,39 @@ export const foodPartSchema = z.looseObject({
   cost: price.optional(),
   people: count.optional(),
 })
+
+/**
+ * What a Moment cost, of its own, so a private bill still leaves it public: a meal (`kind`
+ * `food`) or anything else; what it went on, as a meal names its dishes; how it was; the amount
+ * all told, when it is known, and how many it was for.
+ */
+export const costPartSchema = z.looseObject({
+  ...partBase,
+  /** `food` for a meal; none for anything else. */
+  kind: z.string().min(1).optional(),
+  /** What it went on, like 门票 or 打车, or for a meal the dishes and drinks, like 沙茶面. */
+  items: z.array(z.string().min(1)).default([]),
+  /** How it was: for a meal 好吃, 一般 or 踩雷, else 值, 一般 or 不值. */
+  verdict: foodVerdictSchema.optional(),
+  /** In the currency's unit, as `12.5`. */
+  amount: price.optional(),
+  currency: currency.optional(),
+  people: count.optional(),
+})
+
+export type CostPart = z.output<typeof costPartSchema>
+
+/** A meal kept as a `food` part, as the cost it now is: its dishes, verdict, cost and people, and who saw it. */
+export function foodToCost(food: z.output<typeof foodPartSchema>): CostPart {
+  const { v: _v, dishes, cost, ...rest } = food
+  return {
+    v: 1,
+    kind: 'food',
+    items: dishes,
+    ...rest,
+    ...(cost === undefined ? {} : { amount: cost }),
+  } as CostPart
+}
 
 /** A bill from the ledger. Only `kind`, `amount`, `currency`, `category` and `note` are ever public. */
 export const billPartSchema = z.looseObject({
@@ -209,6 +245,7 @@ export const entryPartsSchema = z.looseObject({
   text: textPartSchema.optional(),
   media: mediaPartSchema.optional(),
   food: foodPartSchema.optional(),
+  cost: costPartSchema.optional(),
   bill: billPartSchema.optional(),
   charge: chargePartSchema.optional(),
   device: devicePartSchema.optional(),
@@ -335,6 +372,11 @@ export const plugins = {
     version: 1,
     defaultVisibility: 'inherit',
   }),
+  cost: definePlugin({
+    id: 'cost',
+    version: 1,
+    defaultVisibility: 'inherit',
+  }),
   bill: definePlugin({
     id: 'bill',
     version: 1,
@@ -409,6 +451,7 @@ export const modules = [
     tables: ['vehicle_months', 'vehicle_assisted', 'vehicle_captures'],
   },
   { id: 'food', plugins: ['food'], tables: [] },
+  { id: 'cost', plugins: ['cost'], tables: [] },
   { id: 'checkin', plugins: ['checkin'], tables: [] },
   { id: 'occasions', plugins: ['occasion'], tables: [] },
 ] as const satisfies readonly Module[]
@@ -594,6 +637,7 @@ const MOMENT_KEYS = new Set([
   'topic',
   'media',
   'food',
+  'cost',
   'trip',
   'order',
   'published',
@@ -610,14 +654,20 @@ export function momentToEntry(moment: MomentRecord): Entry {
     parts.media = { v: 1, items: moment.media }
   }
 
+  // A meal is a cost of the kind food; any other cost is the Moment's own.
   if (moment.food) {
-    const { bill, ...food } = moment.food
-    parts.food = {
+    const { dishes, bill, ...food } = moment.food
+    parts.cost = {
       v: 1,
       ...food,
-      ...(bill ? { cost: bill.amount } : {}),
-      ...(bill?.people ? { people: bill.people } : {}),
+      kind: 'food',
+      items: dishes,
+      ...(bill
+        ? Object.fromEntries(Object.entries(bill).filter(([, value]) => value !== undefined))
+        : {}),
     }
+  } else if (moment.cost) {
+    parts.cost = { v: 1, ...moment.cost }
   }
 
   return {
@@ -651,14 +701,18 @@ const ENTRY_KEYS = new Set([
 ])
 
 /**
- * An entry as a Moment, for what still reads the first shape: its words, photos and meal;
+ * An entry as a Moment, for what still reads the first shape: its words, photos, and a meal or a cost;
  * other parts, and those private by their own say, are left out. Hidden when private by its own say.
  */
 export function entryToMoment(entry: Entry, trip?: string): MomentRecord {
   const rest = Object.fromEntries(Object.entries(entry).filter(([key]) => !ENTRY_KEYS.has(key)))
-  // A part made private by its own say isn't the first shape's to show.
-  const food = entry.parts.food?.visibility === 'private' ? undefined : entry.parts.food
+  // A part made private by its own say isn't the first shape's to show. A meal kept the old
+  // way is read as the cost it now is.
   const media = entry.parts.media?.visibility === 'private' ? undefined : entry.parts.media
+  const part = entry.parts.cost ?? (entry.parts.food && foodToCost(entry.parts.food))
+  const shown = part?.visibility === 'private' ? undefined : part
+  const { v: _v, visibility: _visibility, kind, ...cost } = shown ?? ({} as CostPart)
+  const { items, amount, people, currency: costCurrency, ...meal } = cost
 
   return {
     ...rest,
@@ -668,20 +722,26 @@ export function entryToMoment(entry: Entry, trip?: string): MomentRecord {
     text: entry.parts.text?.text ?? '',
     hidden: entry.visibility === 'private',
     media: (media?.items ?? []).map(({ point: _point, ...item }) => item) as MomentRecord['media'],
-    ...(food
+    // In the first shape a meal is its `food`, what it cost its bill; any other cost is `cost`.
+    ...(shown && kind === 'food'
       ? {
           food: {
-            ...Object.fromEntries(
-              Object.entries(food).filter(
-                ([key]) => !['v', 'visibility', 'cost', 'people'].includes(key),
-              ),
-            ),
-            dishes: food.dishes,
-            ...(food.cost === undefined
+            ...meal,
+            dishes: items ?? [],
+            ...(amount === undefined
               ? {}
-              : { bill: { amount: food.cost, ...(food.people ? { people: food.people } : {}) } }),
+              : {
+                  bill: {
+                    amount,
+                    ...(people ? { people } : {}),
+                    ...(costCurrency ? { currency: costCurrency } : {}),
+                  },
+                }),
           } as MomentRecord['food'],
         }
+      : {}),
+    ...(shown && kind !== 'food'
+      ? { cost: { ...cost, ...(kind ? { kind } : {}) } as MomentRecord['cost'] }
       : {}),
     ...(trip ? { trip } : {}),
     ...(entry.order ? { order: entry.order } : {}),

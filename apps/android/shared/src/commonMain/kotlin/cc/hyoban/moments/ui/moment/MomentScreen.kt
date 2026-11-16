@@ -101,7 +101,10 @@ import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.ui.format.verdictLabel
-import cc.hyoban.moments.ui.format.billLine
+import cc.hyoban.moments.ui.format.costAmountLine
+import cc.hyoban.moments.ui.format.costTitle
+import cc.hyoban.moments.ui.format.costVerdictLabel
+import cc.hyoban.moments.ui.format.module
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.data.trips.tripOf
@@ -368,7 +371,6 @@ private fun MomentDetails(
     val sameDay = remember(moments, moment.dateKey) { moments.count { it.dateKey == moment.dateKey } }
     // Its parts of modules turned off (记录项与公开) go unshown, kept as they are.
     val settings = LocalSettings.current
-    val foodOn = settings.isOn(Module.FOOD)
     val ledgerOn = settings.isOn(Module.LEDGER)
     val carOn = settings.isOn(Module.CAR)
     Column(Modifier.padding(top = Space.xl, bottom = Space.xl)) {
@@ -409,23 +411,23 @@ private fun MomentDetails(
                     ) { Text(place?.name ?: id, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
-            // What was eaten: the dishes, how it went, what the meal cost and each one's share.
-            // Not a link, so a row that doesn't answer a tap.
-            moment.food?.takeIf { foodOn }?.let { food ->
-                val verdict = FoodVerdict.of(food.verdict)
+            // What it cost: a meal's dishes or what it went on, how it was, the amount, how many
+            // and each one's share. Not a link, so a row that doesn't answer a tap.
+            moment.cost?.takeIf { settings.isOn(it.module) }?.let { cost ->
+                val verdict = FoodVerdict.of(cost.verdict)
                 add {
                     ListItem(
                         headlineContent = {
                             Text(
-                                food.dishes.joinToString(stringResource(Res.string.separator_list)).ifEmpty { stringResource(Res.string.section_food) },
+                                cost.items.joinToString(stringResource(Res.string.separator_list)).ifEmpty { stringResource(costTitle(cost)) },
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                             )
                         },
-                        supportingContent = listOfNotNull(verdict?.let { stringResource(verdictLabel(it)) }, food.bill?.let { billLine(it) })
+                        supportingContent = listOfNotNull(verdict?.let { stringResource(costVerdictLabel(cost, it)) }, costAmountLine(cost))
                             .joinToString(" ").takeIf { it.isNotEmpty() }?.let { { Text(it) } },
-                        leadingContent = { Icon(AppIcons.Food, contentDescription = null) },
-                        modifier = Modifier.testTag("food"),
+                        leadingContent = { Icon(if (cost.meal) AppIcons.Food else AppIcons.Cash, contentDescription = null) },
+                        modifier = Modifier.testTag("cost"),
                     )
                 }
             }
@@ -475,7 +477,7 @@ private fun MomentDetails(
                 val published = listOfNotNull(
                     stringResource(Res.string.part_text).takeIf { moment.text.isNotBlank() },
                     stringResource(Res.string.part_photos).takeIf { moment.media.isNotEmpty() },
-                    stringResource(Res.string.section_food).takeIf { moment.food != null && foodOn },
+                    moment.cost?.takeIf { settings.isOn(it.module) }?.let { stringResource(costTitle(it)) },
                     stringResource(Res.string.part_bill).takeIf { billPublic && ledgerOn },
                     stringResource(Res.string.part_charge).takeIf { parts?.containsKey("charge") == true && carOn },
                 )
@@ -495,7 +497,7 @@ private fun MomentDetails(
             val own = moment.extra[cc.hyoban.moments.data.spec.Entries.PART_VISIBILITY] as? kotlinx.serialization.json.JsonObject
             if (onPartPrivate != null && !moment.hidden) {
                 listOfNotNull(
-                    ("food" to Res.string.section_food).takeIf { moment.food != null && foodOn },
+                    moment.cost?.takeIf { settings.isOn(it.module) }?.let { "cost" to costTitle(it) },
                     ("media" to Res.string.part_photos).takeIf { moment.media.isNotEmpty() },
                 ).forEach { (plugin, label) ->
                     val private = (own?.get(plugin) as? kotlinx.serialization.json.JsonPrimitive)?.content == "private"

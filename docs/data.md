@@ -22,8 +22,13 @@ data/
 ```
 
 - An **entry** (`packages/data-spec/src/entry.ts`) is a moment and an optional point, with
-  its words, photos, meal, bill, charge, device, subscription, check-in or occasion as
-  parts by plugin. A device is on the day it was bought, what it sold for written on it once sold; a
+  its words, photos, cost, bill, charge, device, subscription, check-in or occasion as
+  parts by plugin. A cost is what a Moment cost of its own, public with the Moment however
+  private its bill: a meal (`kind` `food`) or anything else, what it went on (a meal's dishes),
+  how it was (好吃, 一般 or 踩雷 for a meal, else 值, 一般 or 不值), the amount when known, its
+  currency and how many it was for. A meal was a `food` part before (its dishes, verdict, cost
+  and people), read as its cost until `vp run data:costs` moves it. The first shape still
+  reads a meal as its `food`, what it cost its `bill`, and any other cost as `cost`. A device is on the day it was bought, what it sold for written on it once sold; a
   subscription on the day it was last paid, or for software bought once the day it was first
   written down. The use page lists both from these entries. A check-in is brought in from
   Swarm, its `source` that app's ids, or made on the phone from a stay of the footprints
@@ -53,7 +58,7 @@ data/
 - Each record is public or private: its own `visibility`, else its container's, else its
   plugin's default (a bill is private), else public.
 - The plugins are grouped into **modules** (`modules` in `entry.ts`: footprints, ledger,
-  things, car, food, check-ins, occasions), each owning its plugins' parts and the tables past the
+  things, car, food, cost, check-ins, occasions), each owning its plugins' parts and the tables past the
   entries that are its. They are what the app lets the owner turn on or off as one; the data
   is the same either way.
 - Units are those `packages/data-spec/src/primitives.ts` gives: metres, watt-hours, seconds,

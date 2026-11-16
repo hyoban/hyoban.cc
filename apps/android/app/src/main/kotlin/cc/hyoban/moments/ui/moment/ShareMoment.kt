@@ -68,7 +68,7 @@ import cc.hyoban.moments.data.media.ShareAlbum
 import cc.hyoban.moments.data.media.saveShareAlbum
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentRecord
-import cc.hyoban.moments.ui.format.foodShareLine
+import cc.hyoban.moments.ui.format.costShareLine
 import cc.hyoban.moments.accessibility.AssistStatus
 import cc.hyoban.moments.accessibility.ShareAccessibilityService
 import cc.hyoban.moments.share.InstagramShareAdapter
@@ -180,8 +180,8 @@ fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarge
     val scope = rememberCoroutineScope()
     val photos = remember(moment.media) { moment.media.filter { it.type != MediaType.VIDEO } }
     var target by rememberSaveable(moment.uid, initialTarget) { mutableStateOf(initialTarget) }
-    // A meal's copy ends with where it was, each one's share and how it went.
-    val food = foodShareLine(moment.food, place)
+    // The copy ends with where it was, each one's share of what it cost and how it was.
+    val food = costShareLine(moment.cost, place)
     var text by rememberSaveable(moment.uid, initialTarget) {
         mutableStateOf(listOfNotNull(moment.text.takeIf { it.isNotBlank() }, food).joinToString("\n\n"))
     }
