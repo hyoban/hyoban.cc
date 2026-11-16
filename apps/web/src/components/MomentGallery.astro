@@ -7,9 +7,17 @@ interface Props {
   media: ResolvedMomentMedia[]
   /** The viewport where this gallery opens the page; its images load first there and not at all elsewhere. */
   priorityMedia?: string | undefined
+  /**
+   * How many to lay out, as a bubble lays out three: the rest stay for the lightbox, hidden,
+   * and the last one shown says how many more there are.
+   */
+  shown?: number | undefined
 }
 
-const { media, priorityMedia } = Astro.props
+const { media, priorityMedia, shown } = Astro.props
+const more = shown !== undefined && media.length > shown ? `+${media.length - shown}` : undefined
+const hidden = (index: number) => shown !== undefined && index >= shown
+const moreAt = (index: number) => (more && index === shown! - 1 ? more : undefined)
 const isSingle = media.length === 1
 const imageSizes = isSingle
   ? '(max-width: 640px) calc(100vw - 2rem), 960px'
@@ -22,7 +30,8 @@ const imageSizes = isSingle
       ? (
           <button
             type="button"
-            class="moment-gallery__item moment-gallery__image"
+            class:list={['moment-gallery__item', 'moment-gallery__image', { 'moment-gallery__item--hidden': hidden(index) }]}
+            data-more={moreAt(index)}
             data-lightbox-item
             data-lightbox-src={item.src.src}
             data-lightbox-alt={item.alt}
@@ -52,7 +61,7 @@ const imageSizes = isSingle
           </button>
         )
       : (
-          <div class="moment-gallery__item moment-gallery__video">
+          <div class:list={['moment-gallery__item', 'moment-gallery__video', { 'moment-gallery__item--hidden': hidden(index) }]} data-more={moreAt(index)}>
             <video
               controls
               preload={item.poster ? 'none' : 'metadata'}
@@ -109,6 +118,10 @@ const imageSizes = isSingle
         object-fit: contain;
       }
     }
+  }
+
+  .moment-gallery__item--hidden {
+    display: none;
   }
 
   .moment-gallery__image {

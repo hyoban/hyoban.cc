@@ -56,7 +56,8 @@ const footSpace = `"${footText.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"
   data-trip-map-stop-entry={trip?.anchor}
 >
   <!-- What the app does on a long press, here beside the bubble: play the trip from this
-       stop, and share the Moment. -->
+       stop, and share the Moment, whose script the map page brings (CalendarMap.astro), as a
+       script here would sit between the bubbles and part them. -->
   <div class="chat-actions">
     {
       trip && (
@@ -73,7 +74,7 @@ const footSpace = `"${footText.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"
     class:list={['chat-bubble', 'chat-bubble--sent', { 'chat-bubble--fill': hasMedia || hasFoot, 'chat-bubble--joined-above': joinedAbove, 'chat-bubble--joined-below': joinedBelow }]}
   >
     <div class="chat-bubble__body">
-      {hasMedia && <MomentGallery media={moment.media} />}
+      {hasMedia && <MomentGallery media={moment.media} shown={3} />}
       <div class="chat-bubble__content">
         <div class:list={['chat-moment__words', { 'chat-moment__words--empty': !hasText }]} style={`--chat-foot: ${footSpace}`}>
           {hasText && <MomentText text={moment.text} />}
@@ -109,7 +110,3 @@ const footSpace = `"${footText.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"
     {!joinedBelow && <ChatTail sent />}
   </div>
 </article>
-
-<script>
-  import '@/moment-entry-client'
-</script>

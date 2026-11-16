@@ -109,19 +109,63 @@
     border-bottom-right-radius: 0;
   }
 
-  /* The photos across its top, edge to edge, the bubble's corners theirs; over the gallery's
-     own margin and rounded photos, which come in a stylesheet of their own. */
+  /* The photos across its top, edge to edge, the bubble's corners theirs, laid out as the app's
+     MomentPhotos: one 4:3; two side by side, 3:4 each; three, one large on the left and two on
+     its right, 3:2 in all; more, the third saying how many more under a scrim. Over the gallery's
+     own margin, shapes and rounded photos, which come in a stylesheet of their own. */
   .chat-bubble > & .moment-gallery {
-    gap: 2px;
+    gap: 3px;
     margin-top: 0;
   }
 
   .chat-bubble > & .moment-gallery__item {
+    position: relative;
     border-radius: 0;
 
     &:focus-visible {
       outline-offset: -3px;
     }
+
+    & :is(img, video) {
+      height: 100%;
+      max-height: none;
+      object-fit: cover;
+    }
+  }
+
+  .chat-bubble > & .moment-gallery--1 .moment-gallery__item {
+    aspect-ratio: 4 / 3;
+    max-height: none;
+  }
+
+  .chat-bubble > & .moment-gallery--2 .moment-gallery__item {
+    aspect-ratio: 3 / 4;
+  }
+
+  .chat-bubble > & :is(.moment-gallery--3, .moment-gallery--4) {
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    aspect-ratio: 3 / 2;
+
+    & .moment-gallery__item {
+      aspect-ratio: auto;
+      min-height: 0;
+    }
+
+    & > :first-child {
+      grid-row: span 2;
+    }
+  }
+
+  .chat-bubble > & .moment-gallery__item[data-more]::after {
+    content: attr(data-more);
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgb(0 0 0 / 0.45);
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 600;
   }
 }
 
