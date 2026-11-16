@@ -29,7 +29,7 @@ import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ledger.placeOfTxn
 import cc.hyoban.moments.ledger.spendingOf
-import cc.hyoban.moments.ledger.tripOfTxn
+import cc.hyoban.moments.ledger.txnsOfTrip
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.theme.Space
@@ -39,11 +39,13 @@ fun filterBills(ledger: Ledger, filter: LedgerFilter, query: String, moments: Ma
     val words = query.trim().lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
     val categories = filter.category?.let { id -> setOf(id) + ledger.categories.filter { it.parent == id }.map { it.id } }
         ?: filter.categoryName?.let { name -> ledger.categories.filter { ledger.topCategoryName(it.id) == name }.map { it.id }.toSet() }
+    // A trip's are its public expenses and incomes, each refund in its expense, as its page counts them.
+    val ofTrip = filter.trip?.let { id -> trips.firstOrNull { it.id == id }?.let { trip -> txnsOfTrip(ledger, trip).mapTo(HashSet()) { it.id } }.orEmpty() }
     return ledger.txns.filter { txn ->
         (filter.book == null || txn.book == filter.book) &&
             (filter.account == null || txn.payers.any { it.account == filter.account } || txn.toAccount == filter.account) &&
             (categories == null || txn.category in categories) &&
-            (filter.trip == null || (txn.kind != TxnKind.TRANSFER && tripOfTxn(txn, trips) == filter.trip)) &&
+            (ofTrip == null || txn.id in ofTrip) &&
             (filter.place == null || (txn.kind != TxnKind.TRANSFER && placeOfTxn(txn, moments) == filter.place)) &&
             (filter.day == null || txn.dateKey == filter.day) &&
             filter.period.let { it == null || txn.dateKey.startsWith(it) } &&
@@ -79,7 +81,7 @@ fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerN
         ?: stringResource(Res.string.action_search)
 
     SubPage(title, nav.back, subtitle = pluralStringResource(Res.plurals.ledger_count_bills, bills.size, bills.size)) {
-        BillList(ledger, bills, currency, nav, header = {
+        BillList(ledger, bills, currency, nav, refundsWithExpense = filter.trip != null, header = {
             Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s)) {
                 if (filter.search) {
                     OutlinedTextField(

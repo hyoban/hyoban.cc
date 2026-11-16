@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ledger
 
+import cc.hyoban.moments.data.store.isPublic
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.things.Checkin
@@ -41,9 +42,12 @@ fun txnsOfMoment(ledger: Ledger, moment: MomentRecord): List<Txn> {
     return ledger.txns.filter { it.moment == moment.uid || (it.moment == null && time != null && it.time == time) }
 }
 
-/** The bills on a trip: those paid in its span. */
+/**
+ * The bills on a trip, as the site has them: the public expenses and incomes paid in its span.
+ * A refund isn't one of its own: it goes with its expense, in what that cost.
+ */
 fun txnsOfTrip(ledger: Ledger, trip: TripRecord): List<Txn> =
-    ledger.txns.filter { it.kind != TxnKind.TRANSFER && isInTrip(trip, it.at) }
+    ledger.txns.filter { (it.kind == TxnKind.EXPENSE || it.kind == TxnKind.INCOME) && isInTrip(trip, it.at) && ledger.isPublic(it) }
 
 /** The bills at a place, as [placeOfTxn] has them. */
 fun txnsOfPlace(ledger: Ledger, place: String, moments: Map<String, MomentRecord>): List<Txn> =

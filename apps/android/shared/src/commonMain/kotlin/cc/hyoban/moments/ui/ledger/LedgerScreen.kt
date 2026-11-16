@@ -75,6 +75,7 @@ import cc.hyoban.moments.ledger.AccountKind
 import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.ledger.netAssetsByMonth
 import cc.hyoban.moments.ledger.Txn
+import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ledger.assetsOf
 import cc.hyoban.moments.ledger.summarize
 import cc.hyoban.moments.ui.LocalBottomClearance
@@ -310,10 +311,22 @@ private sealed interface BillLine {
     }
 }
 
-/** [bills] newest first, under their months and days, each with what it spent and earned in [currency]. */
-private fun linesOf(ledger: Ledger, bills: List<Txn>, currency: String): List<BillLine> {
+/**
+ * [bills] newest first, under their months and days, each with what it spent and earned in
+ * [currency]. With [refundsWithExpense], a list that leaves refunds out (a trip's) counts each
+ * refund of a bill in it on that bill's day, as what the bill cost after it.
+ */
+private fun linesOf(ledger: Ledger, bills: List<Txn>, currency: String, refundsWithExpense: Boolean = false): List<BillLine> {
     val ids = bills.map { it.id }.toSet()
-    val sums = summarize(ledger.entries.filter { it.txn.id in ids }, ledger.rates, currency, null, null)
+    val entries = ledger.entries.mapNotNull { entry ->
+        val expense = entry.txn.related?.takeIf { refundsWithExpense && entry.txn.kind == TxnKind.REFUND && entry.txn.id !in ids }?.let(ledger.txnsById::get)
+        when {
+            entry.txn.id in ids -> entry
+            expense != null && expense.id in ids -> entry.copy(txn = expense)
+            else -> null
+        }
+    }
+    val sums = summarize(entries, ledger.rates, currency, null, null)
     val out = mutableListOf<BillLine>()
     var month: String? = null
     var day: String? = null
@@ -348,8 +361,10 @@ fun BillList(
     nav: LedgerNav,
     state: LazyListState = rememberLazyListState(),
     header: (@Composable () -> Unit)? = null,
+    /** Count each refund with its bill in the list, the refunds themselves not in it. */
+    refundsWithExpense: Boolean = false,
 ) {
-    val lines = remember(ledger, bills, currency) { linesOf(ledger, bills, currency) }
+    val lines = remember(ledger, bills, currency, refundsWithExpense) { linesOf(ledger, bills, currency, refundsWithExpense) }
     // Bills of more than one book say which each is in.
     val showBook = remember(bills) { bills.distinctBy { it.book }.size > 1 }
     PageWidth(maxColumns = 1) { columns ->

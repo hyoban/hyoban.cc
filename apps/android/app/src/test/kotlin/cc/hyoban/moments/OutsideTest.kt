@@ -139,6 +139,19 @@ class OutsideTest {
     }
 
     @Test
+    fun `a trip's bills are its public expenses and incomes, a refund counted with its expense`() {
+        val day = txn.date.toString()
+        val trip = cc.hyoban.moments.data.spec.TripRecord("T", "T", day, day, createdAt = day, updatedAt = day)
+        val refund = Txn(id = "R1", book = "B", kind = TxnKind.REFUND, time = time + 60_000, offsetMinutes = 480, amount = 500, currency = "CNY", related = txn.id)
+        val hidden = txn.copy(id = "P1", time = time + 120_000, visibility = "private")
+        val books = ledger(txn, refund, hidden, public = true)
+        val bills = cc.hyoban.moments.ledger.txnsOfTrip(books, trip)
+        assertEquals(listOf(txn.id), bills.map { it.id })
+        assertEquals(750L, cc.hyoban.moments.ledger.spendingOf(books, bills, "CNY").expense)
+        assertTrue(cc.hyoban.moments.ledger.txnsOfTrip(ledger(txn, refund), trip).isEmpty())
+    }
+
+    @Test
     fun `a bill published as it is waits for nothing, one made private again is taken off`() {
         val part = ledger(txn, public = true).pendingBills().single().part.toString()
         val published = txn.copy(published = part)

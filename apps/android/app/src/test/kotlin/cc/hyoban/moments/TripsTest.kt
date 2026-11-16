@@ -116,14 +116,15 @@ class TripsTest {
         fun bill(id: String, at: String, kind: TxnKind = TxnKind.EXPENSE) =
             Txn(id, "b", kind, OffsetDateTime.parse(at).toInstant().toEpochMilli(), 8 * 60, 100, "CNY")
         val before = bill("before", "2026-04-02T07:00:00+08:00")
-        val during = bill("during", "2026-04-03T12:00:00+08:00")
+        val during = bill("during", "2026-04-03T12:00:00+08:00").copy(visibility = "public")
+        val hidden = bill("hidden", "2026-04-03T13:00:00+08:00")
         val moved = bill("moved", "2026-04-04T12:00:00+08:00", TxnKind.TRANSFER)
         val after = bill("after", "2026-04-08T09:00:00+08:00")
 
         assertEquals("2026-04-03T12:00:00+08:00", during.at)
         assertNull(tripOfTxn(before, listOf(trip)))
         assertEquals("t", tripOfTxn(during, listOf(trip)))
-        assertEquals(listOf("during"), txnsOfTrip(Ledger(txns = listOf(before, during, moved, after)), trip).map { it.id })
+        assertEquals(listOf("during"), txnsOfTrip(Ledger(txns = listOf(before, during, hidden, moved, after)), trip).map { it.id })
     }
 
     private fun moment(uid: String, occurredAt: String, place: String? = null, trip: String? = null) =
