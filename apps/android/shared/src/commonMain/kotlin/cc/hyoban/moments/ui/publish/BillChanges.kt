@@ -88,6 +88,8 @@ fun LazyListScope.billSection(
     onFold: (BillGroup) -> Unit,
     onRevert: ((BillChange) -> Unit)?,
     onOpen: (String) -> Unit,
+    /** A place's name by its id, for a bill moved to another place. */
+    placeName: (String) -> String? = { null },
 ) {
     if (bills.isEmpty()) return
     item(key = "bills-caption") {
@@ -137,7 +139,7 @@ fun LazyListScope.billSection(
                 is BillChange -> item(key = "bill-${row.uid}") {
                     val revert = onRevert?.takeIf { row.undo() != null }?.let { { it(row) } }
                     Box(Modifier.animateItem().padding(horizontal = Space.gutter).groupedRow(index, rows.size)) {
-                        SwipeToRevert(revert) { BillRow(row, revert, onOpen.takeUnless { row.deleted }?.let { { it(row.txn.id) } }) }
+                        SwipeToRevert(revert) { BillRow(row, revert, onOpen.takeUnless { row.deleted }?.let { { it(row.txn.id) } }, placeName) }
                     }
                 }
                 else -> item(key = "bills-$group-fold") {
@@ -185,11 +187,11 @@ private fun BillGroupCaption(group: BillGroup, all: List<BillChange>) {
 
 /**
  * One bill: its category and amount, under them its time and note. A changed one marks what
- * changed where it shows, what went struck through and what comes marked; one going off is
- * struck through, saying why in the danger colour.
+ * changed where it shows, what went struck through and what comes marked, its time and place
+ * too when it moved; one going off is struck through, saying why in the danger colour.
  */
 @Composable
-private fun BillRow(change: BillChange, onRevert: (() -> Unit)?, onOpen: (() -> Unit)?) {
+private fun BillRow(change: BillChange, onRevert: (() -> Unit)?, onOpen: (() -> Unit)?, placeName: (String) -> String?) {
     val txn = change.txn
     val group = change.group
     val before = if (group == BillGroup.CHANGED) change.before else null
@@ -211,6 +213,14 @@ private fun BillRow(change: BillChange, onRevert: (() -> Unit)?, onOpen: (() -> 
     val nowAmount = amount(after) ?: ((if (txn.kind == TxnKind.INCOME) "+" else "") + money(txn.amount, txn.currency))
     val time = txn.local.format(DateTimeFormatter.ofPattern("HH:mm"))
     val clock = "${formatDate(txn.dateKey)} $time"
+    // Moved since the site had it: when and where it was there, struck through before when and where it is.
+    val site = change.site
+    val siteClock = site?.let { runCatching { java.time.OffsetDateTime.parse(it.at) }.getOrNull() }
+        ?.let { "${formatDate(it.toLocalDate().toString())} ${it.format(DateTimeFormatter.ofPattern("HH:mm"))}" }
+    val clockLine = if (site != null && siteClock != null) marked(siteClock, clock) else AnnotatedString(clock)
+    val placeLine = site?.takeIf { it.place != txn.place }?.let {
+        marked(it.place?.let(placeName) ?: it.place, txn.place?.let(placeName) ?: txn.place)
+    }
     Row(
         Modifier.fillMaxWidth().then(if (onOpen != null) Modifier.clickable(onClick = onOpen) else Modifier)
             .padding(start = Space.l, top = Space.m, bottom = Space.m, end = if (onRevert != null) Space.xs else Space.l)
@@ -245,7 +255,11 @@ private fun BillRow(change: BillChange, onRevert: (() -> Unit)?, onOpen: (() -> 
                             append(clock)
                         }
                         else -> {
-                            append(clock)
+                            append(clockLine)
+                            if (placeLine != null && placeLine.isNotEmpty()) {
+                                append("  ")
+                                append(placeLine)
+                            }
                             if (note != null && note.isNotEmpty()) {
                                 append("  ")
                                 append(note)

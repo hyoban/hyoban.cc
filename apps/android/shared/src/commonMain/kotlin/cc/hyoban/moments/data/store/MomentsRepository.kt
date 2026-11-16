@@ -235,6 +235,18 @@ class MomentsRepository(
         }
     }
 
+    /**
+     * When and where the site has each bill on its own, by uid, as the copy holds it: what a bill
+     * here is told against for a time or place changed since it was published.
+     */
+    private fun siteSpots(): Map<String, SiteSpot> = copyEntries.values.mapNotNull { entry ->
+        val parts = entry["parts"] as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+        if (parts["bill"] == null || momentOf(entry) != null || checkinOf(entry) != null) return@mapNotNull null
+        val uid = (entry["uid"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
+        val at = (entry["at"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
+        uid to SiteSpot(at, (entry["place"] as? kotlinx.serialization.json.JsonPrimitive)?.content)
+    }.toMap()
+
     /** The copy's entries, read once, so a sync parses only the rows it brought. */
     private var copyEntries: Map<String, kotlinx.serialization.json.JsonObject> = emptyMap()
 
@@ -689,7 +701,7 @@ class MomentsRepository(
         // The Moments go as Moments, for their photos and their bills; the rest as the entries they are.
         val written = lock.withLock { changes.values.mapNotNull(::momentOf) }.sortedWith(oldestFirst)
         val things = changes - written.map { it.uid }.toSet()
-        val extra = outside?.pending() ?: Outside()
+        val extra = outside?.pending(siteSpots()) ?: Outside()
         val trips = lock.withLock { changedTrips }
         if (changes.isEmpty() && deletions.isEmpty() && edits.isEmpty() && extra.size == 0 && trips.isEmpty()) return
         // A bill of a Moment goes as a part of it, the Moment sent again with it (or without it,
@@ -814,7 +826,9 @@ class MomentsRepository(
                     // The site has the entries as sent, and the Moments as it answered them, until the copy
                     // has them from the rows. The trips sent are the site's, so one made on the phone stays
                     // in sight until the copy has it.
-                    val sent = sentThings + applied.moments.associate { it.uid to Entries.fromMoment(it) }
+                    // The bills alone too, so one moved isn't taken for moved still until the copy has it.
+                    val sent = sentThings + applied.moments.associate { it.uid to Entries.fromMoment(it) } +
+                        alone.filter { it.part != null }.associate { it.uid to it.entry() }
                     val gone = deletions.toSet()
                     copyEntries = copyEntries - gone + sent
                     val records = _records.value
@@ -912,7 +926,7 @@ class MomentsRepository(
             changed.map { Change(all[it.uid], it) },
             removed.mapNotNull { all[it] }.sortedWith(oldestFirst),
             changedPlaces.mapNotNull { (id, place) -> apiPlaces[id]?.let { PlaceChange(id, it, place) } }.sortedBy { it.after.name },
-            outside?.pending() ?: Outside(),
+            outside?.pending(siteSpots()) ?: Outside(),
             changedTrips.map { (id, collection) -> TripChange(id, apiTrips.firstOrNull { it.id == id }, collection) },
             (changes - phone.keys).map { (uid, entry) -> EntryChange(_records.value.entries[uid], entry) } +
                 removed.filter { it !in all }.mapNotNull { uid -> _records.value.entries[uid]?.let { EntryChange(it, null) } },
@@ -1097,7 +1111,7 @@ class MomentsRepository(
 
     /** Notes again what waits beside the Moments, the ledger or the footprints having changed. */
     fun noteOutside() {
-        _pending.value = _pending.value.copy(outside = outside?.pending() ?: Outside())
+        _pending.value = _pending.value.copy(outside = outside?.pending(siteSpots()) ?: Outside())
     }
 
     /** The type the API takes a photo as, from the extension it was copied in with. */

@@ -7,6 +7,7 @@ import cc.hyoban.moments.data.store.pendingBills
 import cc.hyoban.moments.data.store.publicPart
 import cc.hyoban.moments.data.store.readoptions
 import cc.hyoban.moments.data.store.SiteBill
+import cc.hyoban.moments.data.store.SiteSpot
 import cc.hyoban.moments.data.store.Outside
 import cc.hyoban.moments.data.store.asKept
 import cc.hyoban.moments.data.store.samePart
@@ -214,4 +215,23 @@ class OutsideTest {
     }
 
     private fun refundOf(expense: Txn, cents: Long) = expense.copy(id = "R", kind = TxnKind.REFUND, amount = cents, related = expense.id, published = null)
+
+    @Test
+    fun `a published bill moved to another time or place waits to publish again`() {
+        val part = ledger(txn, public = true).publicPart(txn)!!
+        val published = txn.copy(published = part.toString())
+        val at = java.time.Instant.ofEpochMilli(txn.time).atOffset(java.time.ZoneOffset.ofHours(8)).toString()
+        val earlier = java.time.Instant.ofEpochMilli(txn.time - 120_000).atOffset(java.time.ZoneOffset.ofHours(8)).toString()
+        val public = { bill: Txn -> ledger(bill, public = true) }
+        // Where the site has it as it is here, nothing waits.
+        assertTrue(public(published).pendingBills(mapOf(txn.id to SiteSpot(at, null))).isEmpty())
+        // Two minutes later here than there, it waits, the site's time beside it.
+        val moved = public(published).pendingBills(mapOf(txn.id to SiteSpot(earlier, null))).single()
+        assertEquals(cc.hyoban.moments.ui.publish.BillGroup.CHANGED, moved.group)
+        assertEquals(earlier, moved.site?.at)
+        // So does one at a place the site doesn't have.
+        assertEquals(1, public(published.copy(place = "p-shop")).pendingBills(mapOf(txn.id to SiteSpot(at, null))).size)
+        // A bill a Moment carries is at the Moment's time and place, not its own.
+        assertTrue(public(published.copy(moment = "M1")).pendingBills(mapOf(txn.id to SiteSpot(earlier, null))).isEmpty())
+    }
 }

@@ -346,6 +346,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                     onFold = { group -> openBills = if (group in openBills) openBills - group else openBills + group },
                     onRevert = container::revertBill.takeUnless { busy },
                     onOpen = onBill,
+                    placeName = { id -> places[id]?.name },
                 )
                 section(Res.string.section_removed, pending.removed, key = { it.uid }) { moment ->
                     val revert = { container.revert(moment.uid) }.takeUnless { busy }

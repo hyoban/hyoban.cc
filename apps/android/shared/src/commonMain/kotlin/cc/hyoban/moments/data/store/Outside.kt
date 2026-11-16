@@ -15,7 +15,14 @@ import java.time.format.DateTimeFormatter
 // changed and a bill made private again is taken off. The footprints never leave the phone.
 
 /** A bill whose public part isn't what the site has: [part] to send, or null to take it off. */
-data class BillChange(val txn: Txn, val part: JsonObject?, val label: String, val deleted: Boolean = false) {
+data class BillChange(
+    val txn: Txn,
+    val part: JsonObject?,
+    val label: String,
+    val deleted: Boolean = false,
+    /** Where and when the site has it, when the bill here has moved from there: another time or place. */
+    val site: SiteSpot? = null,
+) {
     /** Its entry's uid: the bill's own, a ULID. */
     val uid: String get() = txn.id
 }
@@ -49,9 +56,13 @@ fun samePart(a: JsonObject, b: JsonObject): Boolean = a.keys == b.keys && a.all 
     if (x != null && y != null) x == y else value == other
 }
 
+/** When and where the site has a bill on its own: its entry's time and place. */
+data class SiteSpot(val at: String, val place: String?)
+
 /** Where [Outside] comes from, and where what went is noted; the tests stand in with their own. */
 interface OutsideChanges {
-    fun pending(): Outside
+    /** What waits to publish, a bill's time and place told against [site], what the site has of each bill alone by uid. */
+    fun pending(site: Map<String, SiteSpot> = emptyMap()): Outside
 
     /** After a publish went through: [sent] is the site's now. */
     suspend fun published(sent: Outside)
@@ -81,11 +92,22 @@ fun Ledger.categoryLabel(txn: Txn): String? = categoriesById[txn.category]?.let 
     listOfNotNull(category.parent?.let { categoriesById[it]?.name }, category.name).joinToString(" › ")
 }
 
-/** Every bill whose public part isn't what was last published, and every one deleted that the site still has. */
-fun Ledger.pendingBills(): List<BillChange> = txns.mapNotNull { txn ->
+/**
+ * Every bill whose public part isn't what was last published, or that the site has on its own
+ * ([site], by uid) at another time or place than it is here; and every one deleted that the site
+ * still has. A bill a Moment or a check-in carries is at that record's time and place.
+ */
+fun Ledger.pendingBills(site: Map<String, SiteSpot> = emptyMap()): List<BillChange> = txns.mapNotNull { txn ->
     val part = publicPart(txn)
-    if (part?.toString() == txn.published) null else BillChange(txn, part, categoryLabel(txn).orEmpty())
+    val spot = site[txn.id]?.takeIf { part != null && txn.published != null && txn.moment == null && it.movedFrom(txn) }
+    if (part?.toString() == txn.published && spot == null) null else BillChange(txn, part, categoryLabel(txn).orEmpty(), site = spot)
 } + gone.map { txn -> BillChange(txn, null, categoryLabel(txn) ?: txn.note, deleted = true) }
+
+/** Whether the bill here is at another time or place than the site has it. */
+private fun SiteSpot.movedFrom(txn: Txn): Boolean {
+    val at = runCatching { java.time.OffsetDateTime.parse(at).toInstant().toEpochMilli() }.getOrNull() ?: return false
+    return at != txn.time || place != txn.place
+}
 
 /**
  * The visibility that takes this change back, saying again what the site has: private for a

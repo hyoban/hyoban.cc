@@ -84,6 +84,6 @@ class DesktopContainer(private val root: File) : AppContainer(
 }
 
 private object NothingOutside : OutsideChanges {
-    override fun pending() = Outside()
+    override fun pending(site: Map<String, cc.hyoban.moments.data.store.SiteSpot>) = Outside()
     override suspend fun published(sent: Outside) {}
 }

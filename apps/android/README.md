@@ -269,7 +269,8 @@ check-ins, occasions and things wait on the phone, past a restart. 发布更改,
 at the top of 我, lists them, shows what changed, each field of a changed Moment, place,
 check-in, occasion, device or subscription struck through beside what it is now, and takes a
 change back. Bills are a part of their own (`ui/publish/BillChanges.kt`), in three groups by
-what the site gets: new, changed (its category, amount or note marked where it shows) and taken
+what the site gets: new, changed (its category, amount or note marked where it shows, or its time
+or place, told against the site's copy of a bill on its own, the site's struck through) and taken
 off (made private or deleted here, struck through); a group of more than three folds, and opened
 falls under its days. A bill there opens its page. 全部发布到网站 runs as WorkManager work in a foreground
 service with a progress notification, waiting out a dropped link: it uploads the new

@@ -787,7 +787,7 @@ class MomentsRepositoryTest {
         val txn = cc.hyoban.moments.ledger.Txn("BILL", "book", cc.hyoban.moments.ledger.TxnKind.EXPENSE, 1_790_000_000_000L, 480, 3200, "CNY", moment = "STOP")
         var waiting = cc.hyoban.moments.data.store.Outside(listOf(cc.hyoban.moments.data.store.BillChange(txn, part, "餐饮")))
         val outside = object : cc.hyoban.moments.data.store.OutsideChanges {
-            override fun pending() = waiting
+            override fun pending(site: Map<String, cc.hyoban.moments.data.store.SiteSpot>) = waiting
             override suspend fun published(sent: cc.hyoban.moments.data.store.Outside) { waiting = cc.hyoban.moments.data.store.Outside() }
         }
         val repository = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = writer, outside = outside)
