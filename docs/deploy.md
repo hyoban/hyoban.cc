@@ -65,10 +65,9 @@ dashboard; they stream with `npx wrangler tail hyoban-cc-api`.
 
 ## GitHub Actions
 
-| Workflow        | When                        | Does                                                                                                                        |
-| --------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `verify.yml`    | push to `main`, PRs, weekly | `pnpm test`, `pnpm check`, Moment audits, `pnpm build`; the Android app's unit tests and debug build; HereKit's Swift tests |
-| `r2-backup.yml` | push to `main`, by hand     | a snapshot of the R2 bucket, in Git LFS on the `r2-backup` branch                                                           |
+| Workflow     | When                        | Does                                                                                                                        |
+| ------------ | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `verify.yml` | push to `main`, PRs, weekly | `pnpm test`, `pnpm check`, Moment audits, `pnpm build`; the Android app's unit tests and debug build; HereKit's Swift tests |
 
 `verify.yml` exports the API into `data/` to audit every Moment, builds the site from the
 API, its share cards kept between runs in the Actions cache as Workers Builds keeps them,
@@ -76,16 +75,16 @@ and on its weekly run also checks every referenced R2 object (`moments:audit --r
 records aren't backed up to GitHub. The workflows run Node 24; the repository pins no Node
 version, so Workers Builds uses its own default.
 
-`r2-backup.yml` checks out the existing `r2-backup` branch and commits to it, so that
-branch has to exist, and the snapshot counts against the repository's Git LFS storage.
+The repository is public, so nothing of the records or the bucket goes into it: no
+snapshot of R2 is kept in git or Git LFS.
 
 Repository secrets: `MOMENTS_API_TOKEN` (one of the API's `API_TOKENS`) for the export
-and the build in `verify.yml`, and `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` for the R2 backup.
+and the build in `verify.yml`.
 
 ## Recovering from a bad write
 
-D1's 30 days of Time Travel and the R2 snapshot on the `r2-backup` branch are the way
-back; the records have no copy in git. A `data/` exported earlier can be restored over the
+D1's 30 days of Time Travel is the way back; the records and the bucket have no copy in
+git. A `data/` exported earlier can be restored over the
 deployed database with `vp run data:import --remote` ([data.md](data.md)).
 
 A restore with Time Travel puts back `meta`'s `database` too, and the app's copy, ahead of
@@ -114,7 +113,7 @@ hook, which exists only once the site's build does.
    `MOMENTS_API_TOKEN` set to one of the API's tokens and the Mapbox variables, add
    the custom domain `hyoban.cc`, and enable Images transformations on its zone.
 7. Create the site build's deploy hook and set it as the API's `DEPLOY_HOOK_URL`.
-8. In GitHub, set the repository secrets above and create the `r2-backup` branch.
+8. In GitHub, set the repository secret above.
 
 ## The Android app
 
