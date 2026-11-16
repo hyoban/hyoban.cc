@@ -106,6 +106,7 @@ import org.maplibre.compose.expressions.dsl.zoom
 import org.maplibre.compose.expressions.value.LineCap
 import org.maplibre.compose.expressions.value.LineJoin
 import org.maplibre.compose.expressions.value.SymbolAnchor
+import androidx.compose.ui.graphics.lerp as colorLerp
 import org.maplibre.compose.interaction.ClickResult
 import org.maplibre.compose.interaction.MapInteractions
 import org.maplibre.compose.layers.Anchor
@@ -168,10 +169,16 @@ enum class AtlasFootprintMode { WALK, CYCLE, DRIVE }
 
 data class AtlasFootprintLine(val mode: AtlasFootprintMode, val points: List<TrackPoint>)
 
+/**
+ * The footprints the atlas draws: each line shaded by its time from pale to the ink, so a way
+ * gone back along shows which pass came later. While [focus] is set, the lines outside that span
+ * step back, a part chosen in the panel standing out of its day.
+ */
 data class AtlasFootprints(
     val lines: List<AtlasFootprintLine> = emptyList(),
     val ends: List<TrackPoint> = emptyList(),
     val stays: List<TrackPoint> = emptyList(),
+    val focus: LongRange? = null,
 ) {
     val points get() = lines.flatMap(AtlasFootprintLine::points) + stays
 }
@@ -220,11 +227,17 @@ private const val ClusterMinPoints = 8
 private const val ClusterOpenMaxZoom = 11.0
 private const val ClusterOpenPadding = 80
 private const val NearbyZoom = 10.0
-// Routes in their year's colour, as bold as the site and MapKit draw them.
+// Routes in their year's colour, as the site draws them: one width, lifted or not and at every
+// zoom; a lifted route stands out by the others stepping back.
 private const val RouteOpacity = 0.85f
 private const val RouteDimmedOpacity = 0.2f
-private const val RouteWidth = 2.5
-private const val RouteLiftedWidth = 4.0
+private val RouteWidth = 2.5.dp
+// Each stretch of footprints from its start, this far from the ink towards the page, to the ink
+// at its end; outside a focused part they step back to this opacity.
+private const val FootprintPale = 0.75f
+private const val FootprintUnfocused = 0.2f
+// About this many pieces a day, each shaded by its middle's time.
+private const val FootprintPieces = 240
 // An open place's pin lifts off it with a little overshoot, and comes down quicker.
 private const val LiftMillis = 220
 private const val DropMillis = 120
@@ -310,16 +323,32 @@ private fun stayData(stays: List<TrackPoint>) = GeoJsonData.Features(
     FeatureCollection(stays.map { pointFeature(positionOf(it.latitude, it.longitude), buildJsonObject { put("start", it.time.toString()) }) }),
 )
 
-private fun lineFeatures(lines: List<List<TrackPoint>>) = GeoJsonData.Features(
-    FeatureCollection(
-        lines.filter { it.size >= 2 }.map { line ->
+/**
+ * The footprints' lines in short pieces, in time order so a later pass is drawn over an earlier
+ * one, each with its middle's second from [from] (`s`) and where that falls in its own stretch
+ * (`t`, 0 to 1), so every stretch reads pale to dark the way it went, however long the day.
+ */
+internal fun footprintFeatures(lines: List<List<TrackPoint>>, from: Long, to: Long): GeoJsonData.Features {
+    val drawn = lines.filter { it.size >= 2 }
+    val total = drawn.sumOf { it.size - 1 }
+    val step = (total / FootprintPieces).coerceAtLeast(1)
+    val features = drawn.flatMap { line ->
+        val lineFrom = line.first().time
+        val span = (line.last().time - lineFrom).coerceAtLeast(1)
+        (0 until line.lastIndex step step).map { start ->
+            val piece = line.subList(start, minOf(start + step, line.lastIndex) + 1)
+            val middle = (piece.first().time + piece.last().time) / 2
             Feature(
-                LineString(line.map { positionOf(it.latitude, it.longitude) }),
-                null,
+                LineString(piece.map { positionOf(it.latitude, it.longitude) }),
+                buildJsonObject {
+                    put("s", ((middle - from) / 1000).toInt())
+                    put("t", ((middle - lineFrom).toDouble() / span).coerceIn(0.0, 1.0))
+                },
             )
-        },
-    ),
-)
+        }
+    }.sortedBy { (it.properties?.get("s") as? JsonPrimitive)?.intOrNull ?: 0 }
+    return GeoJsonData.Features(FeatureCollection(features))
+}
 
 private fun routeData(routes: List<MapRoute>) = GeoJsonData.Features(
     FeatureCollection(
@@ -470,6 +499,12 @@ fun SharedAtlasMap(
      * to every year puts it back where it was, unless it was moved since.
      */
     year: Int? = null,
+    /** Whether every trip's route is drawn; off, only the lifted one is. */
+    showRoutes: Boolean = true,
+    /** The only places on the map, a lifted trip's own; null for every place. */
+    onlyPlaces: Set<String>? = null,
+    /** The footprints are being looked at: the routes and the places step back behind them. */
+    recede: Boolean = false,
 ) {
     val reduced = LocalReducedMotion.current
     val dark = LocalDarkTheme.current
@@ -530,7 +565,11 @@ fun SharedAtlasMap(
     val ring = tokens.bg
     val unknown = tokens.borderStrong
     val me = tokens.accent
-    val shownPlaces = remember(places, year) { if (year == null) places else places.filter { year in it.years } }
+    val shownPlaces = remember(places, year, onlyPlaces) {
+        places.filter { (year == null || year in it.years) && (onlyPlaces == null || it.id in onlyPlaces) }
+    }
+    // The prepared data is every place's, of no year.
+    val whole = year == null && onlyPlaces == null
     val dimGeoJson = remember(places, year) {
         GeoJsonData.Features(
             FeatureCollection(
@@ -542,18 +581,27 @@ fun SharedAtlasMap(
             ),
         )
     }
-    val placeGeoJson = remember(shownPlaces, colors, prepared, year) {
-        prepared?.places?.takeIf { year == null } ?: placeData(shownPlaces, colors)
+    val placeGeoJson = remember(shownPlaces, colors, prepared, whole) {
+        prepared?.places?.takeIf { whole } ?: placeData(shownPlaces, colors)
     }
     val stackPrefix = stackImagePrefix(
-        remember(shownPlaces, colors, prepared, year) { prepared?.stackKey?.takeIf { year == null } ?: stackKey(shownPlaces, colors) },
+        remember(shownPlaces, colors, prepared, whole) { prepared?.stackKey?.takeIf { whole } ?: stackKey(shownPlaces, colors) },
     )
-    val yearPositions = remember(shownPlaces) { shownPlaces.map { positionOf(it.place.latitude, it.place.longitude) } }
+    // The year's places to frame, whatever trip is lifted.
+    val yearPositions = remember(places, year) {
+        (if (year == null) places else places.filter { year in it.years }).map { positionOf(it.place.latitude, it.place.longitude) }
+    }
     val routeYearTest = year?.let { feature["year"].asNumber() lte const(it) and (feature["endYear"].asNumber() gte const(it)) }
     val routeGeoJson = remember(routes, prepared) { prepared?.routes ?: routeData(routes) }
-    val driveGeoJson = remember(footprints) { lineFeatures(footprints.lines.filter { it.mode == AtlasFootprintMode.DRIVE }.map { it.points }) }
-    val cycleGeoJson = remember(footprints) { lineFeatures(footprints.lines.filter { it.mode == AtlasFootprintMode.CYCLE }.map { it.points }) }
-    val walkGeoJson = remember(footprints) { lineFeatures(footprints.lines.filter { it.mode == AtlasFootprintMode.WALK }.map { it.points }) }
+    val footprintSpan = remember(footprints.lines) {
+        val times = footprints.lines.flatMap { line -> listOfNotNull(line.points.firstOrNull()?.time, line.points.lastOrNull()?.time) }
+        (times.minOrNull() ?: 0L) to (times.maxOrNull() ?: 0L)
+    }
+    fun footprintsOf(mode: AtlasFootprintMode) =
+        footprintFeatures(footprints.lines.filter { it.mode == mode }.map { it.points }, footprintSpan.first, footprintSpan.second)
+    val driveGeoJson = remember(footprints.lines) { footprintsOf(AtlasFootprintMode.DRIVE) }
+    val cycleGeoJson = remember(footprints.lines) { footprintsOf(AtlasFootprintMode.CYCLE) }
+    val walkGeoJson = remember(footprints.lines) { footprintsOf(AtlasFootprintMode.WALK) }
     val endGeoJson = remember(footprints) { pointsData(footprints.ends) }
     val stayGeoJson = remember(footprints) { stayData(footprints.stays) }
     val allPositions = remember(places, footprints, prepared) {
@@ -588,25 +636,16 @@ fun SharedAtlasMap(
     val openTest = feature["id"] eq const(openPin ?: "")
     val balloonTest = feature["balloon"] eq const(true)
     val liftedTest = feature["trip"] eq const(highlighted ?: "")
-    val placeAlpha = if (highlighted == null) 1f else PlacesDimmedOpacity
+    // A lifted trip's own places stay whole beside it, the rest gone; otherwise they step back.
+    val placeAlpha = if ((highlighted == null || onlyPlaces != null) && !recede) 1f else PlacesDimmedOpacity
     val placeOpacity = const(placeAlpha)
-    val routeOpacity = if (highlighted == null) {
-        const(RouteOpacity)
-    } else {
-        switch(condition(liftedTest, const(1f)), fallback = const(RouteDimmedOpacity))
+    val routeOpacity = when {
+        highlighted != null -> switch(condition(liftedTest, const(1f)), fallback = const(RouteDimmedOpacity))
+        recede -> const(RouteDimmedOpacity)
+        else -> const(RouteOpacity)
     }
-    fun routeWidthAt(scale: Double) = if (highlighted == null) {
-        const((RouteWidth * scale).dp)
-    } else {
-        switch(condition(liftedTest, const((RouteLiftedWidth * scale).dp)), fallback = const((RouteWidth * scale).dp))
-    }
-    val scaledRouteWidth = interpolate(
-        linear(),
-        zoom(),
-        4 to routeWidthAt(1.0),
-        10 to routeWidthAt(1.4),
-        14 to routeWidthAt(2.0),
-    )
+    // Only the lifted route while the routes are hidden.
+    val routesShownTest = if (showRoutes) null else liftedTest
     val yearColor = remember(colors, unknown) {
         switch(
             input = feature["firstYear"],
@@ -820,15 +859,17 @@ fun SharedAtlasMap(
                     layer.pattern?.let { paint("fill-pattern", it) }
                 }
             }
+            fun routeFilter(straight: Boolean) = (if (straight) feature["straight"].asBoolean() else !feature["straight"].asBoolean())
+                .let { if (routeYearTest == null) it else it and routeYearTest }
+                .let { if (routesShownTest == null) it else it and routesShownTest }
             LineLayer(
                 id = "shared-routes",
                 source = routeSource,
-                filter = (!feature["straight"].asBoolean()).let { if (routeYearTest == null) it else it and routeYearTest },
+                filter = routeFilter(straight = false),
                 color = routeColor,
                 opacity = routeOpacity,
                 opacityTransition = quickTransition,
-                width = scaledRouteWidth,
-                widthTransition = quickTransition,
+                width = const(RouteWidth),
                 cap = const(LineCap.Round),
                 join = const(LineJoin.Round),
                 onClick = routeClick,
@@ -837,21 +878,31 @@ fun SharedAtlasMap(
             LineLayer(
                 id = "shared-routes-dashed",
                 source = routeSource,
-                filter = feature["straight"].asBoolean().let { if (routeYearTest == null) it else it and routeYearTest },
+                filter = routeFilter(straight = true),
                 color = routeColor,
                 opacity = routeOpacity,
                 opacityTransition = quickTransition,
-                width = scaledRouteWidth,
-                widthTransition = quickTransition,
+                width = const(RouteWidth),
                 // Dotted, round dots apart, as MapKit draws a flight or a ferry.
                 cap = const(LineCap.Round),
                 dasharray = const(listOf(0, 2)),
                 onClick = routeClick,
                 hitPadding = 22.dp,
             )
-            LineLayer("shared-footprint-drives", drives, color = const(ink), width = const(3.dp), cap = const(LineCap.Round), join = const(LineJoin.Round), onClick = footprintClick, hitPadding = 22.dp)
-            LineLayer("shared-footprint-cycles", cycles, color = const(ink), width = const(2.dp), cap = const(LineCap.Round), join = const(LineJoin.Round), onClick = footprintClick, hitPadding = 22.dp)
-            LineLayer("shared-footprint-walks", walks, color = const(ink), width = const(3.dp), cap = const(LineCap.Round), join = const(LineJoin.Round), dasharray = const(listOf(0, 2)), onClick = footprintClick, hitPadding = 22.dp)
+            // Footprints, each stretch shaded pale to the ink the way it went, a focused part standing out.
+            val footprintColor = interpolate(linear(), feature["t"].asNumber(), 0 to const(colorLerp(ink, ring, FootprintPale)), 1 to const(ink))
+            val focus = footprints.focus
+            val footprintOpacity = if (focus == null) const(1f) else switch(
+                condition(
+                    feature["s"].asNumber() gte const(((focus.first - footprintSpan.first) / 1000).toInt()) and
+                        (feature["s"].asNumber() lte const(((focus.last - footprintSpan.first) / 1000).toInt())),
+                    const(1f),
+                ),
+                fallback = const(FootprintUnfocused),
+            )
+            LineLayer("shared-footprint-drives", drives, color = footprintColor, opacity = footprintOpacity, width = const(2.dp), cap = const(LineCap.Round), join = const(LineJoin.Round), onClick = footprintClick, hitPadding = 22.dp)
+            LineLayer("shared-footprint-cycles", cycles, color = footprintColor, opacity = footprintOpacity, width = const(1.5.dp), cap = const(LineCap.Round), join = const(LineJoin.Round), onClick = footprintClick, hitPadding = 22.dp)
+            LineLayer("shared-footprint-walks", walks, color = footprintColor, opacity = footprintOpacity, width = const(2.5.dp), cap = const(LineCap.Round), join = const(LineJoin.Round), dasharray = const(listOf(0, 2)), onClick = footprintClick, hitPadding = 22.dp)
             CircleLayer("shared-footprint-ends", ends, radius = const(4.dp), color = const(ink), strokeWidth = const(1.5.dp), strokeColor = const(ring), onClick = footprintClick, hitPadding = 22.dp)
             CircleLayer("shared-footprint-stays", stays, radius = const(5.dp), color = const(ring), strokeWidth = const(2.5.dp), strokeColor = const(ink), onClick = stayClick, hitPadding = 22.dp)
         }

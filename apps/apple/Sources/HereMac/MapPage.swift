@@ -172,12 +172,12 @@ struct MapPage: View {
             ForEach(trips) { trip in
                 let color = atlas.color(trip.trip.year)
                 let faded = highlighted != nil && highlighted != trip.id
-                let width: CGFloat = highlighted == trip.id ? 6 : 3
+                // One width, chosen or not: the chosen route stands out by the others fading.
                 ForEach(Array(trip.segments.enumerated()), id: \.offset) { _, segment in
                     MapPolyline(coordinates: segment.line)
                         .stroke(
                             color.opacity(faded ? 0.22 : 0.9),
-                            style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round, dash: segment.straight ? [2, 7] : [])
+                            style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round, dash: segment.straight ? [2, 7] : [])
                         )
                 }
             }

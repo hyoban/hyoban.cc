@@ -127,6 +127,7 @@ dragging. `trip-map-toolbar__actions` on the toolbar's buttons moves them aside 
    crowd their pins pile up there, the busiest on top, as MapKit's do; only a thick crowd
    gathers into a stack, with its Moments counted, that opens as the map comes closer.
    Give a trip summary a `color` and its route is drawn in it, else in the text colour.
+   The settings sidebar's `routes` switch leaves only the route picked or pointed at.
 
    ```ts
    const data = shapeTripData(trip, {

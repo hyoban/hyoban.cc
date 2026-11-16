@@ -34,12 +34,13 @@ const ALL_SIDES = {
   top: REVEAL_PADDING,
 }
 const FRAME_DURATION = 800
-// Drawn in its year's colour, as bold as MapKit draws the Mac app's routes.
+// Drawn in its year's colour at one width: a lifted route stands out by the others stepping
+// back, never by growing thicker.
 const BASE = { opacity: 0.85, width: 2.5 }
 const DIMMED = { opacity: 0.2, width: 2.5 }
-const LIFTED = { opacity: 1, width: 4 }
+const LIFTED = { opacity: 1, width: 2.5 }
 // The width the trip player draws its route at, so the two meet without a jump.
-const PLAYING = { opacity: 1, width: 3 }
+const PLAYING = { opacity: 1, width: 2.5 }
 const HOVER = 160
 const LEAVE = 280
 const LINGER = { delay: 480, duration: 640 }
@@ -81,6 +82,8 @@ export function createTripOverview({
   let pickedRead = false
   // The year or month picked: only the trips under way then are on the map.
   let period: Period | undefined
+  // Whether every route is drawn, or only the one lifted.
+  let routesShown = true
   // The popup's trip and whether it says to click again, to fill it only on a change.
   let popupKey: string | undefined
   let watched: MapboxMap | undefined
@@ -121,7 +124,7 @@ export function createTripOverview({
       return { opacity: 0, width: PLAYING.width }
     }
 
-    if (!isShown(id)) {
+    if (!isShown(id) || (!routesShown && id !== highlightedId)) {
       return { opacity: 0, width: BASE.width }
     }
 
@@ -236,7 +239,10 @@ export function createTripOverview({
       return undefined
     }
 
-    const layers = layerIds.filter((id) => map.getLayer(id) && isShown(tripIdsByLayer.get(id)!))
+    const layers = layerIds.filter((id) => {
+      const tripId = tripIdsByLayer.get(id)!
+      return map.getLayer(id) && isShown(tripId) && (routesShown || tripId === pickedId)
+    })
     const radius = isTouch() ? HIT_RADIUS.touch : HIT_RADIUS.mouse
     const box: [mapboxgl.PointLike, mapboxgl.PointLike] = [
       [point.x - radius, point.y - radius],
@@ -522,6 +528,13 @@ export function createTripOverview({
       if (read !== pickedRead) {
         pickedRead = read
         highlight(undefined)
+        paintAll(HOVER)
+      }
+    },
+    /** Draws every trip's route, or only the one picked or pointed at. */
+    setRoutesShown(shown: boolean) {
+      if (shown !== routesShown) {
+        routesShown = shown
         paintAll(HOVER)
       }
     },

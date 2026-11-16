@@ -394,6 +394,16 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
           </div>
         </fieldset>
         <fieldset>
+          <legend>旅程</legend>
+          <label class="trip-map-settings__switch">
+            <span>
+              旅程路线
+              <small>关闭后只显示选中的旅程</small>
+            </span>
+            <input type="checkbox" role="switch" name="routes" />
+          </label>
+        </fieldset>
+        <fieldset>
           <legend>迷雾</legend>
           <!-- On, a light fog over the map, thinner over a city the more Moments it holds. -->
           <label class="trip-map-settings__switch">

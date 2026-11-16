@@ -93,6 +93,15 @@ class Settings(private val prefs: Prefs, secrets: File) {
         prefs.edit { putBoolean("map_fog", on) }
     }
 
+    /** Whether every trip's route is on the map, or only the one lifted. */
+    var mapRoutes: Boolean by mutableStateOf(prefs.getBoolean("map_routes", true))
+        private set
+
+    fun changeMapRoutes(on: Boolean) {
+        mapRoutes = on
+        prefs.edit { putBoolean("map_routes", on) }
+    }
+
     /** How close 选照片's grid is: 0 the largest photos, 2 the smallest, by month. */
     var pickerDensity: Int by mutableStateOf(prefs.getInt("picker_density", 1).coerceIn(0, 2))
         private set

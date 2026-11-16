@@ -106,10 +106,12 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   a year tapped there narrows the map to it, as the site's does: only the places with records
   then keep their pins, the rest stepping back to gray dots, only the trips under way then keep
   their routes and stay in the list, and the map frames them; tapped again, or its close,
-  every year comes back and the map returns to where it was unless it was moved since;
-  the footprints and the phone's place are buttons down the side. A place tapped fills the
+  every year comes back and the map returns to where it was unless it was moved since; the
+  legend's 旅程 is the routes' switch, off leaving only a lifted route (as the site's 地图设置
+  does); the footprints and the phone's place are buttons down the side. A place tapped fills the
   sheet with its Moments and the way there; a route tapped floats its trip's card, which
-  opens the trip or plays it back. 迷雾地图 lays a fog over it, as the site's map does, thinner
+  opens the trip or plays it back, and leaves only the trip's own places on the map (those of its
+  Moments, and of its check-ins while they're on), as the site's trip sidebar does. 迷雾地图 lays a fog over it, as the site's map does, thinner
   over a city the more Moments it has, from the site's
   `apps/web/src/data/boundaries/cities.json` shipped as an asset.
 - **我** is one screen: the changes waiting to be published, then three rows, 账本 (with this
@@ -512,7 +514,8 @@ reported instead. The settings and the original action stay out of Android's bac
 
 The footprints are GPS tracks kept on the phone alone, in
 `noBackupFilesDir/footprints.sqlite` (`footprints/FootprintStore`), outside sync and backup.
-地图 → 足迹 opens a panel to record, pick a day or trip, export GPX and delete — while recording,
+地图 → 足迹 opens a panel to record, pick a day (今天, 昨天, or any from 选日期's month, the days
+with footprints dotted) or trip, export GPX and delete — while recording,
 anything but today and the running trip (importing is in 我 → 导入); 足迹记录
 (`moments://footprint-settings`), from 我 or the panel's settings button, sets how recording
 behaves.
@@ -554,9 +557,12 @@ behaves.
   between them, each told walking, cycling or driving by the kept activities where there are
   any, else by its speeds, and never against them (a walk can't go at a drive's pace); slow
   traffic and a car park's crawl stay part of the drive. The map draws a drive solid, a ride
-  thinner, a walk dotted and a stay as a ring; 足迹 → 行程分段 lists them with distance, average
+  thinner, a walk dotted and a stay as a ring, each stretch shaded from pale to the ink the way
+  it went, so a way gone back along shows which pass was which; while the panel is open, and
+  after it frames the footprints until a place, a route or the map is tapped, the trips' routes
+  and places step back behind them; 足迹 → 行程分段 lists them with distance, average
   and top speed, names a stay after one of the phone's own places within 300 m (no request
-  leaves for it), and frames one on the map when tapped; a stay's + opens the same picker on
+  leaves for it), and frames one on the map when tapped, the rest of the day stepping back; a stay's + opens the same picker on
   its middle at once, named after what is around it as a dragged pin is, to keep it as a place of the phone's, or with 保存为签到
   as a public check-in there too (`source.app` `phone`), from the stay's start to its end,
   its uid made from the start so keeping it again changes it; a check-in whose time meets the

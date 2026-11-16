@@ -28,6 +28,8 @@ export type MapSettings = {
   projection: MapProjection
   /** The roads' names and numbers. */
   roads: boolean
+  /** Every trip's route on the map; off, only the one picked or pointed at. */
+  routes: boolean
   style: MapStyleId
   /** Leaning back the closer the map is, in Standard. */
   tilt: boolean
@@ -44,6 +46,7 @@ export const DEFAULT_MAP_SETTINGS: MapSettings = {
   pois: false,
   projection: 'globe',
   roads: true,
+  routes: true,
   style: 'standard',
   tilt: true,
   transit: false,
@@ -67,7 +70,7 @@ export function getLightAtHour(hour: number): MapLightPreset {
   return LIGHT_HOURS.findLast(([start]) => hour >= start)?.[1] ?? LIGHT_HOURS.at(-1)![1]
 }
 
-const SWITCHES = ['buildings', 'landmarks', 'pois', 'roads', 'tilt', 'transit'] as const
+const SWITCHES = ['buildings', 'landmarks', 'pois', 'roads', 'routes', 'tilt', 'transit'] as const
 
 const isOneOf = <T extends string>(values: readonly T[], value: unknown): value is T =>
   values.includes(value as T)

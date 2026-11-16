@@ -111,6 +111,8 @@
     <string name="map_km">%1$s km</string>
     <string name="footprints_map_recording">Footprints, recording</string>
     <string name="legend_trips">Trips</string>
+    <string name="map_routes_hide">Hide trip routes</string>
+    <string name="map_routes_show">Show trip routes</string>
     <string name="map_year_pick">Show only %1$d</string>
     <string name="map_year_all">Show every year</string>
     <string name="trip_day">Day %1$d</string>
@@ -549,6 +551,9 @@
     <string name="footprints_background_options">Background recording</string>
     <plurals name="footprints_points"><item quantity="one">%1$d point</item><item quantity="other">%1$d points</item></plurals>
     <string name="footprints_frame">Fit track</string>
+    <string name="footprints_today">Today</string>
+    <string name="footprints_yesterday">Yesterday</string>
+    <string name="footprints_pick_day">Pick a day</string>
     <string name="footprints_show">Show footprints on the map</string>
     <string name="footprint_settings_title">Footprint recording</string>
     <string name="footprints_section_recording">Recording</string>

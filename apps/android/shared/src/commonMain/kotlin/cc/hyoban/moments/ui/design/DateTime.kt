@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -78,9 +79,12 @@ fun DateTimeDialog(day: LocalDate, hour: Int, minute: Int, onDismiss: () -> Unit
     )
 }
 
-/** Picking a day alone, as [DateTimeDialog] does without the time, under a [title]. */
+/**
+ * Picking a day alone, as [DateTimeDialog] does without the time, under a [title]; the days in
+ * [marked] carry a dot under their number, as the days something was kept on.
+ */
 @Composable
-fun DateDialog(day: LocalDate, title: String, onDismiss: () -> Unit, onPick: (LocalDate) -> Unit) {
+fun DateDialog(day: LocalDate, title: String, onDismiss: () -> Unit, marked: Set<LocalDate> = emptySet(), onPick: (LocalDate) -> Unit) {
     var chosen by rememberSaveable { mutableLongStateOf(day.toEpochDay()) }
     var month by rememberSaveable { mutableStateOf(YearMonth.from(day).toString()) }
     AlertDialog(
@@ -92,7 +96,7 @@ fun DateDialog(day: LocalDate, title: String, onDismiss: () -> Unit, onPick: (Lo
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
         title = { Text(title) },
-        text = { MonthGrid(YearMonth.parse(month), LocalDate.ofEpochDay(chosen), onMonth = { month = it.toString() }, onDay = { chosen = it.toEpochDay() }) },
+        text = { MonthGrid(YearMonth.parse(month), LocalDate.ofEpochDay(chosen), onMonth = { month = it.toString() }, onDay = { chosen = it.toEpochDay() }, marked = marked) },
     )
 }
 
@@ -110,9 +114,9 @@ private fun TimePart(value: String, onChange: (String) -> Unit, tag: String) {
     )
 }
 
-/** A month's days under its name and the weekdays, Monday first, [chosen] in the ink. */
+/** A month's days under its name and the weekdays, Monday first, [chosen] in the ink, [marked] dotted. */
 @Composable
-private fun MonthGrid(month: YearMonth, chosen: LocalDate, onMonth: (YearMonth) -> Unit, onDay: (LocalDate) -> Unit) {
+private fun MonthGrid(month: YearMonth, chosen: LocalDate, onMonth: (YearMonth) -> Unit, onDay: (LocalDate) -> Unit, marked: Set<LocalDate> = emptySet()) {
     val locale = cc.hyoban.moments.ui.components.currentLocale()
     val today = remember { LocalDate.now() }
     val title = month.format(DateTimeFormatter.ofPattern(if (locale.language == "zh") "yyyy年M月" else "MMMM yyyy", locale))
@@ -162,6 +166,10 @@ private fun MonthGrid(month: YearMonth, chosen: LocalDate, onMonth: (YearMonth) 
                                         date == today -> tokens.accent
                                         else -> tokens.tx
                                     },
+                                )
+                                if (date in marked) Box(
+                                    Modifier.align(Alignment.BottomCenter).padding(bottom = 5.dp).size(4.dp)
+                                        .background(if (on) tokens.bg else tokens.tx2, CircleShape),
                                 )
                             }
                         }

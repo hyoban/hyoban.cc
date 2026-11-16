@@ -285,6 +285,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
     signal,
     trips,
   })
+  tripOverview.setRoutesShown(style.getSettings().routes)
   const markers = createPlaceMarkers({
     getAnimationDuration: camera.getAnimationDuration,
     getClearPadding: () => sides.getClearPadding(),
@@ -475,6 +476,7 @@ export function createTripMap(options: TripMapOptions): TripMap {
   function applySettings(next: MapSettings) {
     style.setSettings(next)
     camera.pitchedByHand = false
+    tripOverview.setRoutesShown(next.routes)
 
     if (!map || !mapLoaded) {
       return

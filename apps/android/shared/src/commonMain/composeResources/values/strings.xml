@@ -107,6 +107,8 @@
     <string name="map_km">%1$s 公里</string>
     <string name="footprints_map_recording">足迹，正在记录</string>
     <string name="legend_trips">旅程</string>
+    <string name="map_routes_hide">隐藏旅程路线</string>
+    <string name="map_routes_show">显示旅程路线</string>
     <string name="map_year_pick">只看 %1$d 年</string>
     <string name="map_year_all">显示所有年份</string>
     <string name="trip_day">第 %1$d 天</string>
@@ -524,6 +526,9 @@
     <string name="footprints_background_options">后台记录</string>
     <plurals name="footprints_points"><item quantity="other">%1$d 个点</item></plurals>
     <string name="footprints_frame">显示完整轨迹</string>
+    <string name="footprints_today">今天</string>
+    <string name="footprints_yesterday">昨天</string>
+    <string name="footprints_pick_day">选日期</string>
     <string name="footprints_show">在地图显示足迹</string>
     <string name="footprint_settings_title">足迹记录</string>
     <string name="footprints_section_recording">记录</string>

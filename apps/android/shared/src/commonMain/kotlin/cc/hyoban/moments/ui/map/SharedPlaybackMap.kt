@@ -281,7 +281,7 @@ fun SharedPlaybackMap(
                 id = "shared-playback-drawn",
                 source = drawn,
                 color = const(ink),
-                width = const(3.dp),
+                width = const(2.5.dp),
                 cap = const(LineCap.Round),
                 join = const(LineJoin.Round),
             )
@@ -289,7 +289,7 @@ fun SharedPlaybackMap(
                 id = "shared-playback-active",
                 source = active,
                 color = const(ink),
-                width = const(3.dp),
+                width = const(2.5.dp),
                 cap = const(LineCap.Round),
                 join = const(LineJoin.Round),
             )

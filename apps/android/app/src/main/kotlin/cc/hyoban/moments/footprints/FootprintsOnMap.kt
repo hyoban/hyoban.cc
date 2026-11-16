@@ -81,6 +81,12 @@ data class FootprintsMapState(
     val recording: Boolean = false,
     /** A stay on the map tapped, by its start. */
     val openStay: (Long) -> Unit = {},
+    /** The span of the part chosen in the panel, which stands out of the rest of its day. */
+    val focus: LongRange? = null,
+    /** The footprints are being looked at, from their panel: the rest of the map steps back. */
+    val looking: Boolean = false,
+    /** Done looking at them, the map's own things tapped again. */
+    val stopLooking: () -> Unit = {},
 )
 
 @Composable
@@ -98,6 +104,10 @@ fun FootprintsOnMap(
     var showTracks by rememberSaveable { mutableStateOf(true) }
     var frameRequested by rememberSaveable { mutableStateOf(false) }
     var frame by remember { mutableStateOf(emptyList<TrackPoint>()) }
+    // The part chosen, by its start and end; and whether the map is still on the footprints after
+    // the panel framed them, until the map's own places or trips are tapped.
+    var focus by remember { mutableStateOf<LongRange?>(null) }
+    var framed by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val store = container.footprints
@@ -106,6 +116,7 @@ fun FootprintsOnMap(
     var day by rememberSaveable { mutableStateOf(LocalDate.now().toString()) }
     var session by rememberSaveable { mutableStateOf<String?>(null) }
     val selection = TrackSelection(day = day.takeIf { session == null }, session = session)
+    LaunchedEffect(day, session) { focus = null }
     var view by remember { mutableStateOf(TrackView()) }
     var loaded by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
@@ -115,6 +126,7 @@ fun FootprintsOnMap(
     var exportSession by rememberSaveable { mutableStateOf<String?>(null) }
     var exportRaw by rememberSaveable { mutableStateOf(false) }
     var pendingAction by rememberSaveable { mutableStateOf<String?>(null) }
+    var pickingDay by rememberSaveable { mutableStateOf(false) }
 
     fun work(block: suspend () -> Unit) {
         scope.launch {
@@ -247,6 +259,9 @@ fun FootprintsOnMap(
         onFramed = { frameRequested = false },
         open = { expanded = true },
         recording = state.recording,
+        focus = focus.takeIf { showTracks },
+        looking = showTracks && view.points.isNotEmpty() && (expanded || framed),
+        stopLooking = { framed = false; focus = null },
         // A stay tapped is written at, a Moment or its check-in; one kept already opens that check-in.
         openStay = { start ->
             val stay = view.parts.firstOrNull { it is TrackStay && it.start == start } as? TrackStay
@@ -319,7 +334,7 @@ fun FootprintsOnMap(
                         { shapes ->
                             // What is chosen, and a tap shows the whole of it on the map.
                             SegmentedListItem(
-                                onClick = { showTracks = true; frame = emptyList(); frameRequested = true; expanded = false },
+                                onClick = { showTracks = true; frame = emptyList(); focus = null; framed = true; frameRequested = true; expanded = false },
                                 shapes = shapes,
                                 enabled = view.points.isNotEmpty(),
                                 colors = segmentColors(),
@@ -386,14 +401,27 @@ fun FootprintsOnMap(
                         },
                     ),
                     header = {
-                        // Days, then trips, as filter chips: one of them chosen at a time.
+                        // Today, yesterday and the day chosen, then any other day from a month's
+                        // calendar, the days with footprints dotted; then trips. One chosen at a time.
                         Column(Modifier.padding(bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                            val today = LocalDate.now()
+                            val near = listOf(today.toString(), today.minusDays(1).toString())
                             LazyRow(contentPadding = PaddingValues(horizontal = Space.gutter), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                                items((listOf(LocalDate.now().toString(), day) + view.history.days).distinct().sortedDescending()) { date ->
-                                    FilterChip(selected = session == null && day == date, onClick = { day = date; session = null }, label = { Text(date) },
+                                items((near + day).distinct()) { date ->
+                                    val label = when (date) {
+                                        near[0] -> stringResource(Res.string.footprints_today)
+                                        near[1] -> stringResource(Res.string.footprints_yesterday)
+                                        else -> date
+                                    }
+                                    FilterChip(selected = session == null && day == date, onClick = { day = date; session = null }, label = { Text(label) },
                                         leadingIcon = if (session == null && day == date) {
                                             { Icon(AppIcons.Check, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) }
                                         } else null)
+                                }
+                                item {
+                                    AssistChip(onClick = { pickingDay = true }, label = { Text(stringResource(Res.string.footprints_pick_day)) },
+                                        leadingIcon = { Icon(AppIcons.Calendar, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
+                                        modifier = Modifier.testTag("footprints_pick_day"))
                                 }
                             }
                             if (view.history.sessions.isNotEmpty()) LazyRow(contentPadding = PaddingValues(horizontal = Space.gutter), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
@@ -434,7 +462,7 @@ fun FootprintsOnMap(
                                     }).joinToString("\n"))
                             }
                             SegmentedListItem(
-                                onClick = { showTracks = true; frame = part.points; frameRequested = true; expanded = false },
+                                onClick = { showTracks = true; frame = part.points; focus = part.start..part.end; framed = true; frameRequested = true; expanded = false },
                                 shapes = shapes,
                                 colors = segmentColors(),
                                 leadingContent = { Icon(icon, contentDescription = null) },
@@ -457,6 +485,12 @@ fun FootprintsOnMap(
                     },
                 )
             }
+        }
+    }
+    if (pickingDay) {
+        val marked = remember(view.history.days) { view.history.days.mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }.toSet() }
+        DateDialog(LocalDate.parse(day), stringResource(Res.string.footprints_pick_day), onDismiss = { pickingDay = false }, marked = marked) {
+            day = it.toString(); session = null; pickingDay = false
         }
     }
     deleting?.let { target ->

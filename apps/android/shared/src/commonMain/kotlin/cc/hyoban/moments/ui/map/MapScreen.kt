@@ -1,5 +1,8 @@
 package cc.hyoban.moments.ui.map
 
+import cc.hyoban.moments.data.trips.momentsOf
+import cc.hyoban.moments.data.trips.isInTrip
+
 import androidx.compose.ui.text.withStyle
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module
@@ -178,6 +181,10 @@ data class AtlasFootprintsOnMap(
     val recording: Boolean,
     /** A stay on the map tapped, by its start. */
     val openStay: (Long) -> Unit = {},
+    /** The footprints are being looked at, the routes and places stepping back behind them. */
+    val looking: Boolean = false,
+    /** Done looking at them: a place, a route or the map itself tapped. */
+    val stopLooking: () -> Unit = {},
 )
 
 private val NoFootprints = AtlasFootprints()
@@ -319,6 +326,16 @@ private fun MapContent(
     // A trip shown from its page is lifted from the map's first frame, its card already up for
     // the page to shrink into, as going back from the trip into its card does.
     val lifted = (focus as? MapFocus.Trip)?.id ?: highlighted
+    // A trip lifted keeps only its own places beside its route, as the site's does: those of its
+    // Moments, and of its check-ins while they're on.
+    val tripPlaces = remember(lifted, trips, moments, checkins, checkinsOn) {
+        trips.firstOrNull { it.id == lifted }?.let { trip ->
+            val fromMoments = momentsOf(trip, moments, trips).flatMap { it.places }
+            val fromCheckins = if (checkinsOn) checkins.byDay.filterKeys { it in trip.start..trip.end }.values.flatten()
+                .filter { isInTrip(trip, it.at) }.mapNotNull { it.place } else emptyList()
+            (fromMoments + fromCheckins).toSet()
+        }
+    }
     BackHandler(enabled = active && lifted != null) { highlighted = null }
     LaunchedEffect(focus) {
         when (focus) {
@@ -390,10 +407,10 @@ private fun MapContent(
             mapRoutes,
             selected,
             lifted,
-            onPlace = { selected = it },
-            onRoute = { highlighted = it },
-            // A tap on nothing closes the place panel.
-            onEmptyTap = { selected = null },
+            onPlace = { selected = it; footprints?.stopLooking?.invoke() },
+            onRoute = { highlighted = it; footprints?.stopLooking?.invoke() },
+            // A tap on nothing closes the place panel, and lets the footprints go back among the rest.
+            onEmptyTap = { selected = null; footprints?.stopLooking?.invoke() },
             onTrip = onTrip,
             prepared = mapData,
             mediaUrls = container.mediaUrls,
@@ -414,6 +431,9 @@ private fun MapContent(
             fog = shownFog,
             fogSweep = fogSweep,
             fogRegions = fogRegions.orEmpty(),
+            showRoutes = settings.mapRoutes,
+            onlyPlaces = tripPlaces,
+            recede = footprintsOn && footprints?.looking == true && lifted == null && selected == null,
             onLocated = { found ->
                 locating = false
                 if (!found) show(textOf(Res.string.error_location))
@@ -438,13 +458,13 @@ private fun MapContent(
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                 if (wide) {
-                    Box(Modifier.weight(1f)) { if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty(), year) { pickedYear = it } }
+                    Box(Modifier.weight(1f)) { if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty(), year, routesShown = settings.mapRoutes, onRoutes = { settings.changeMapRoutes(!settings.mapRoutes) }) { pickedYear = it } }
                 } else {
                     SearchPill(onSearch, Modifier.weight(1f), floating = true)
                 }
                 FogButton(settings.mapFog, toggleFog)
             }
-            if (!wide && colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty(), year) { pickedYear = it }
+            if (!wide && colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty(), year, routesShown = settings.mapRoutes, onRoutes = { settings.changeMapRoutes(!settings.mapRoutes) }) { pickedYear = it }
             AnimatedVisibility(
                 shownFog != null,
                 enter = expandVertically(AppTheme.motionScheme.fastSpatialSpec()) + fadeIn(AppTheme.motionScheme.fastEffectsSpec()),
@@ -1085,7 +1105,7 @@ private fun FloatingPill(content: @Composable () -> Unit) {
  * fading out.
  */
 @Composable
-private fun Legend(colors: Map<Int, Color>, trips: Boolean, picked: Int?, onPick: (Int?) -> Unit) {
+private fun Legend(colors: Map<Int, Color>, trips: Boolean, picked: Int?, routesShown: Boolean, onRoutes: () -> Unit, onPick: (Int?) -> Unit) {
     FloatingPill {
         val scroll = rememberScrollState()
         val surface = SurfaceLevel.Floating.fill()
@@ -1127,7 +1147,17 @@ private fun Legend(colors: Map<Int, Color>, trips: Boolean, picked: Int?, onPick
                 }
                 if (trips) {
                     VerticalDivider(Modifier.height(14.dp), color = dividerColor())
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+                    // The routes' key is their switch: off, only a lifted route is drawn.
+                    val label = stringResource(if (routesShown) Res.string.map_routes_hide else Res.string.map_routes_show)
+                    Row(
+                        Modifier.fillMaxHeight()
+                            .graphicsLayer { alpha = if (routesShown) 1f else 0.4f }
+                            .clickable(role = Role.Switch, onClickLabel = label, onClick = onRoutes)
+                            .semantics { selected = routesShown }
+                            .testTag("legend_routes"),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Space.xs),
+                    ) {
                         Box(Modifier.width(14.dp).height(3.dp).background(tokens.tx.copy(alpha = ROUTE_OPACITY), CircleShape))
                         Text(stringResource(Res.string.legend_trips), style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, softWrap = false)
                     }

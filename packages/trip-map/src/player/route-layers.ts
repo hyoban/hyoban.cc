@@ -88,7 +88,7 @@ export function createRouteLayers(
     const solidLine = {
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       // Unlit, the same colour by day and by night.
-      paint: { 'line-color': ink, 'line-emissive-strength': 1, 'line-width': 3 },
+      paint: { 'line-color': ink, 'line-emissive-strength': 1, 'line-width': 2.5 },
       type: 'line',
     } as const
 

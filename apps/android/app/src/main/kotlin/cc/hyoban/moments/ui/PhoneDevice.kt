@@ -112,7 +112,10 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
                 stays = state.drawing.stays,
             )
         }
-        content(cc.hyoban.moments.ui.map.AtlasFootprintsOnMap(drawing, state.frame, state.frameRequested, state.onFramed, state.open, state.recording, state.openStay))
+        content(cc.hyoban.moments.ui.map.AtlasFootprintsOnMap(
+            drawing.copy(focus = state.focus), state.frame, state.frameRequested, state.onFramed, state.open, state.recording, state.openStay,
+            looking = state.looking, stopLooking = state.stopLooking,
+        ))
     }
 
     override fun canLocate(): Boolean = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
