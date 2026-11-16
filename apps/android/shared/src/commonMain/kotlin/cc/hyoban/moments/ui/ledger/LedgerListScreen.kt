@@ -30,6 +30,7 @@ import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ledger.placeOfTxn
 import cc.hyoban.moments.ledger.spendingOf
 import cc.hyoban.moments.ledger.txnsOfTrip
+import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.theme.Space
@@ -74,6 +75,13 @@ fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerN
     val bills = remember(ledger, filter, query, byUid, trips) { filterBills(ledger, filter, query, byUid, trips) }
     val currency = filter.book?.let { id -> ledger.books.firstOrNull { it.id == id }?.currency } ?: ledger.book?.currency ?: "CNY"
     val sums = remember(ledger, bills, currency) { spendingOf(ledger, bills, currency) }
+    // A trip's Moments with a cost, among its bills by their time, and what they came to apart from them.
+    val costs = remember(moments, trips, filter) {
+        filter.trip?.let { id -> trips.firstOrNull { it.id == id } }?.let { trip ->
+            moments.filter { it.cost?.amount != null && cc.hyoban.moments.data.trips.isInTrip(trip, it.occurredAt) }
+        }.orEmpty()
+    }
+    val costsSpent = remember(costs, ledger, currency) { costsSpent(costs, ledger, currency) }
     val title = filter.title
         ?: filter.trip?.let { id -> trips.firstOrNull { it.id == id }?.title }
         ?: filter.place?.let { places[it]?.name }
@@ -81,7 +89,7 @@ fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerN
         ?: stringResource(Res.string.action_search)
 
     SubPage(title, nav.back, subtitle = pluralStringResource(Res.plurals.ledger_count_bills, bills.size, bills.size)) {
-        BillList(ledger, bills, currency, nav, refundsWithExpense = filter.trip != null, header = {
+        BillList(ledger, bills, currency, nav, refundsWithExpense = filter.trip != null, costs = costs, header = {
             Column(Modifier.padding(horizontal = Space.gutter, vertical = Space.s)) {
                 if (filter.search) {
                     OutlinedTextField(
@@ -101,6 +109,15 @@ fun LedgerListScreen(container: AppContainer, filter: LedgerFilter, nav: LedgerN
                     style = AppTheme.typography.body.strong,
                     modifier = Modifier.padding(start = Space.l, top = Space.s),
                 )
+                // The Moments' costs, each one's own share, kept apart from the bills.
+                if (costs.isNotEmpty()) {
+                    Text(
+                        stringResource(Res.string.ledger_costs_short, money(costsSpent, currency)),
+                        style = AppTheme.typography.body,
+                        color = tokens.tx2,
+                        modifier = Modifier.padding(start = Space.l),
+                    )
+                }
             }
         })
     }

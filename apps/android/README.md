@@ -410,7 +410,10 @@ The ledger meets the Moments: a Moment's page lists its bills, a Moment with an 
 check-ins by time (one linked to a Moment or a check-in under it), a place's page, opening on its map, lists its bills by their days
 among its Moments and check-ins with what was spent there beside its counts. A bill not linked by
 hand is taken, as it is shown, to be the Moment's or the check-in's at its very time (a Moment
-first), never kept on the bill. A trip's bills are those paid in its span, as the site counts its public ones; a bill names no trip.
+first), never kept on the bill. A trip's bills are its public expenses and incomes paid in its span, as the site counts them, each
+refund with its expense; a bill names no trip. Its list of bills also shows each of its Moments' costs
+by its time, opening the Moment, and what they came to apart, each one's own share where a cost was for
+several.
 
 记账, under 我 (`moments://ledger-settings`), manages the books, the exchange rates, 自动记账 and
 the data. A book opens as a sheet with its name, currency and categories (chips, each opening

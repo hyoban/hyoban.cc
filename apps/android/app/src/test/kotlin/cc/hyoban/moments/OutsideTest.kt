@@ -152,6 +152,16 @@ class OutsideTest {
     }
 
     @Test
+    fun `what a trip's Moments cost is each one's own share`() {
+        fun moment(uid: String, cost: cc.hyoban.moments.data.spec.MomentCost?) =
+            cc.hyoban.moments.data.spec.MomentRecord(uid, "2026-11-14T12:00:00+08:00", emptyList(), "", cost = cost, createdAt = "2026-11-14", updatedAt = "2026-11-14")
+        val meal = moment("A", cc.hyoban.moments.data.spec.MomentCost(amount = 120.0, people = 3, kind = "food"))
+        val ticket = moment("B", cc.hyoban.moments.data.spec.MomentCost(amount = 45.5))
+        val none = moment("C", null)
+        assertEquals(8550L, cc.hyoban.moments.ui.ledger.costsSpent(listOf(meal, ticket, none), ledger(), "CNY"))
+    }
+
+    @Test
     fun `a bill published as it is waits for nothing, one made private again is taken off`() {
         val part = ledger(txn, public = true).pendingBills().single().part.toString()
         val published = txn.copy(published = part)

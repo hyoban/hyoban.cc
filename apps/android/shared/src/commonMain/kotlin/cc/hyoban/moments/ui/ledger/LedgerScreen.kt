@@ -309,6 +309,11 @@ private sealed interface BillLine {
     data class Bill(val txn: Txn) : BillLine {
         override val key get() = txn.id
     }
+
+    /** A Moment's cost, by its time among the bills; the day's sums leave it out. */
+    data class Cost(val moment: cc.hyoban.moments.data.spec.MomentRecord) : BillLine {
+        override val key get() = "c${moment.uid}"
+    }
 }
 
 /**
@@ -316,7 +321,13 @@ private sealed interface BillLine {
  * [currency]. With [refundsWithExpense], a list that leaves refunds out (a trip's) counts each
  * refund of a bill in it on that bill's day, as what the bill cost after it.
  */
-private fun linesOf(ledger: Ledger, bills: List<Txn>, currency: String, refundsWithExpense: Boolean = false): List<BillLine> {
+private fun linesOf(
+    ledger: Ledger,
+    bills: List<Txn>,
+    currency: String,
+    refundsWithExpense: Boolean = false,
+    costs: List<cc.hyoban.moments.data.spec.MomentRecord> = emptyList(),
+): List<BillLine> {
     val ids = bills.map { it.id }.toSet()
     val entries = ledger.entries.mapNotNull { entry ->
         val expense = entry.txn.related?.takeIf { refundsWithExpense && entry.txn.kind == TxnKind.REFUND && entry.txn.id !in ids }?.let(ledger.txnsById::get)
@@ -330,8 +341,10 @@ private fun linesOf(ledger: Ledger, bills: List<Txn>, currency: String, refundsW
     val out = mutableListOf<BillLine>()
     var month: String? = null
     var day: String? = null
-    for (txn in bills) {
-        val key = txn.dateKey
+    // The costs among the bills by their local time, newest first; one with a day alone ends its day.
+    val timed: List<Pair<String, Any>> = (bills.map { it.at to it } + costs.map { it.occurredAt to it }).sortedByDescending { it.first }
+    for ((at, item) in timed) {
+        val key = at.take(10)
         if (key.take(7) != month) {
             month = key.take(7)
             val days = { map: Map<java.time.LocalDate, Long> -> map.filterKeys { it.toString().startsWith(month!!) }.values.sum() }
@@ -339,10 +352,10 @@ private fun linesOf(ledger: Ledger, bills: List<Txn>, currency: String, refundsW
         }
         if (key != day) {
             day = key
-            val date = txn.date
+            val date = java.time.LocalDate.parse(key)
             out += BillLine.Day(key, sums.expenseByDay[date] ?: 0, sums.incomeByDay[date] ?: 0)
         }
-        out += BillLine.Bill(txn)
+        out += if (item is Txn) BillLine.Bill(item) else BillLine.Cost(item as cc.hyoban.moments.data.spec.MomentRecord)
     }
     return out
 }
@@ -363,8 +376,10 @@ fun BillList(
     header: (@Composable () -> Unit)? = null,
     /** Count each refund with its bill in the list, the refunds themselves not in it. */
     refundsWithExpense: Boolean = false,
+    /** Moments whose costs go among the bills by their time, opening the Moment. */
+    costs: List<cc.hyoban.moments.data.spec.MomentRecord> = emptyList(),
 ) {
-    val lines = remember(ledger, bills, currency, refundsWithExpense) { linesOf(ledger, bills, currency, refundsWithExpense) }
+    val lines = remember(ledger, bills, currency, refundsWithExpense, costs) { linesOf(ledger, bills, currency, refundsWithExpense, costs) }
     // Bills of more than one book say which each is in.
     val showBook = remember(bills) { bills.distinctBy { it.book }.size > 1 }
     PageWidth(maxColumns = 1) { columns ->
@@ -390,10 +405,61 @@ fun BillList(
                     // A row pads itself 16dp each side; the rest of the margin goes outside it, so its
                     // icon and amount sit on the margin, the header's figures above the icon.
                     is BillLine.Bill -> TxnRow(line.txn, ledger, onClick = { nav.bill(line.txn.id) }, modifier = Modifier.padding(horizontal = Space.gutter - 16.dp), showBook = showBook)
+                    is BillLine.Cost -> CostRow(line.moment, onClick = { nav.moment(line.moment.uid) }, modifier = Modifier.padding(horizontal = Space.gutter - 16.dp))
                 }
             }
         }
     }
+}
+
+/**
+ * A Moment's cost among bills, drawn as a bill is: a meal's or a cost's icon, what it went on,
+ * how it was and how many it was for, and at the end what it came to and when.
+ */
+@Composable
+private fun CostRow(moment: cc.hyoban.moments.data.spec.MomentRecord, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val cost = moment.cost ?: return
+    val amount = cost.amount ?: return
+    cc.hyoban.moments.ui.design.ListItem(
+        headlineContent = {
+            Text(
+                cost.items.takeIf { it.isNotEmpty() }?.joinToString(stringResource(Res.string.separator_list))
+                    ?: stringResource(cc.hyoban.moments.ui.format.costTitle(cost)),
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+        },
+        supportingContent = {
+            Text(
+                listOfNotNull(
+                    cc.hyoban.moments.data.spec.FoodVerdict.of(cost.verdict)?.let { stringResource(cc.hyoban.moments.ui.format.costVerdictLabel(cost, it)) },
+                    cost.people?.takeIf { it > 1 }?.let { org.jetbrains.compose.resources.pluralStringResource(Res.plurals.count_food_people, it, it) },
+                    cost.people?.takeIf { it > 1 }?.let { stringResource(Res.string.cost_share, cc.hyoban.moments.ui.format.costMoney(amount / it, cost.currency)) },
+                ).joinToString(" "),
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+        },
+        leadingContent = { LeadingIcon(if (cost.meal) AppIcons.Food else AppIcons.Cash) },
+        trailingContent = {
+            Column(horizontalAlignment = Alignment.End) {
+                Text(cc.hyoban.moments.ui.format.costMoney(amount, cost.currency), style = AppTheme.typography.body.strong)
+                moment.occurredAt.takeIf { it.length > 10 }?.let {
+                    Text(it.substring(11, 16), style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1)
+                }
+            }
+        },
+        colors = cc.hyoban.moments.ui.design.ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
+        modifier = modifier.clickableRow(onClick).testTag("cost_${moment.uid}"),
+    )
+}
+
+/** What [moments]' costs came to in [currency], each one's own share where it was for several. */
+fun costsSpent(moments: List<cc.hyoban.moments.data.spec.MomentRecord>, ledger: Ledger, currency: String): Long = moments.sumOf { moment ->
+    val cost = moment.cost ?: return@sumOf 0L
+    val share = (cost.amount ?: return@sumOf 0L) / maxOf(cost.people ?: 1, 1)
+    val cents = kotlin.math.round(share * 100).toLong()
+    ledger.rates.convert(cents, cost.currency ?: "CNY", currency, java.time.LocalDate.parse(moment.occurredAt.take(10))) ?: cents
 }
 
 @Composable
