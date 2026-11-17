@@ -29,16 +29,13 @@ Android app ──POST /v2/changes──▶ API Worker (D1 + R2) ──deploy ho
                                      data/ (local copy, out of git)
 ```
 
-- The **API** (`apps/api`) keeps the Moments, places, trips and the trips' routes in a
-  D1 database, and the photos and videos in the `blog-images` R2 bucket, served from
-  `https://image.hyoban.cc`.
-- Every request to the API needs a token. The **Android app** writes to it as one change
-  set (`POST /v2/changes`) and reads it with its token.
-- The **site** is static. Its build reads the API's export with `MOMENTS_API_TOKEN`, and
-  fails without it.
-- **`data/`** holds the car's records in git; the rest of it is a local copy of the API's
-  that `vp run data:export` writes for the scripts, which git leaves out. Edit records
-  through the API, or push what you wrote with `vp run data:push` (docs/data.md).
+- The **API** (`apps/api`) keeps the records (entries and collections), places, routes and
+  the car's statistics in D1, and the photos and videos in the `blog-images` R2 bucket,
+  served from `https://image.hyoban.cc`. Every request needs a token.
+- The **site** is static. Its build reads the API's export with `MOMENTS_API_TOKEN`; in CI
+  it fails without one, and a local build without one shows made-up records.
+- **`data/`** holds the car's records in git; the rest of it is a local copy of the API's,
+  out of git ([docs/data.md](docs/data.md)).
 
 ## Forking
 
@@ -73,14 +70,12 @@ The scripts that upload to R2 use Wrangler's login, or `CLOUDFLARE_API_TOKEN`;
 To run the API locally, see [apps/api](apps/api/README.md); for the app,
 [apps/android](apps/android/README.md), built with its own `./gradlew`; for the native Mac
 app and the Apple apps' shared package, [apps/apple](apps/apple/README.md), built with
-`scripts/mac-app.sh` and checked with `swift test`.
+`apps/apple/scripts/mac-app.sh` and checked with `swift test`.
 
 ## Deployment
 
-Everything runs on Cloudflare and deploys from `main`: Workers Builds builds the site on
-every push and whenever the API takes a write it shows, and deploys the API when its
-inputs change; GitHub Actions back up the data and the R2 bucket. The settings, secrets
-and recovery steps are in [docs/deploy.md](docs/deploy.md).
+Workers Builds deploys the site and the API from `main`; GitHub Actions verify every push
+and release the Android and Mac apps from tags. See [docs/deploy.md](docs/deploy.md).
 
 ## Thanks
 

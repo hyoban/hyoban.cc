@@ -13,11 +13,11 @@ network. Uploading its media to the configured R2 bucket is part of preparing
 the local Moment.
 
 1. Run `vp run data:export` so `data/` has what the API has; it needs
-   `MOMENTS_API_TOKEN` in `.env`, and stops if `data/` has uncommitted changes
-   (ask the user about those). Then inspect `packages/data-spec`,
+   `MOMENTS_API_TOKEN` in `.env`, and stops if `data/` has records written since the
+   last export or push (ask the user about those). Then inspect `packages/data-spec`,
    `data/places.json`, and a recent entry under `data/entries`.
 2. Preserve the user's text exactly, including errors, punctuation, paragraphs, and line breaks.
-3. Use one `occurredAt` value for when the Moment happened. Use an ISO timestamp
+3. Use one `--occurred-at` value (the entry's `at`) for when the Moment happened. Use an ISO timestamp
    with an explicit offset when the time is known, otherwise use `YYYY-MM-DD`.
    Never add publication or source fields. If the text names a specific place,
    use that place instead of its city; reuse or add it in `data/places.json`
@@ -44,7 +44,7 @@ the record it wrote.
 6. Set `parts.text.text` in the entry with `apply_patch`. Leave the other fields as the
    command wrote them; never edit `uid`, `published` or a media item's
    `published` by hand.
-7. Compare the saved text with the user's text, then run `vp test`, `vp check`, and `vp run build`.
+7. Compare the saved text with the user's text, then run `vp run data:check`.
 8. Push the record, with the places it names, into the API, and any trip you
    changed:
 
@@ -101,7 +101,7 @@ and regions keep an approximate centre.
   train, plane, or ferry leg, update that trip's `route.straightLegs` in
   `data/collections/<slug>.json`, or the leg turns into a drive; a new train endpoint
   also needs its `station` in `data/places.json`.
-- Changing an existing Moment's entry, even only its `place`, makes CI
-  require non-empty alt text on its visible media, so describe those images too.
+- After changing an existing Moment's entry, even only its `place`, the Moment audit
+  warns about empty alt text on its visible media, so describe those images too.
 
-Only perform Git operations when requested. Commit directly on `main`; do not create a branch.
+Only perform Git operations when requested.

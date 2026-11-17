@@ -76,8 +76,9 @@ and it warns of fields the spec doesn't name, which the loose schemas let throug
 
 The site is built from the API, with `MOMENTS_API_TOKEN` in the environment or `.env`:
 `apps/web/src/data/api-data.ts` fetches `/v2/export` once, writes it under
-`apps/web/.artifacts/api-data/` in this layout, and points the store there. Without a
-token, or with one that fails to fetch, the build fails; `HYOBAN_DATA_ROOT` set to a
+`apps/web/.artifacts/api-data/` in this layout, and points the store there. With a token
+that fails to fetch the build fails; without one it fails in CI and locally reads the
+made-up fixtures. `HYOBAN_DATA_ROOT` set to a
 directory in this layout builds from that instead, as the tests do with the fixture. The
 scripts read `data/`.
 
@@ -93,7 +94,7 @@ vp run data:push data/entries/2026/10/<uid>.json      # then the records written
 ```
 
 `data:push` merges: it writes the entries and collections it is given, every place they
-name and any `--place <id>`, and removes nothing, so what the app published meanwhile
+name, any `--place <id>` and any car statistics files given, and removes nothing, so what the app published meanwhile
 stays. It writes the deployed database, then has the API fetch the new legs' routes and
 start a site build (`POST /v2/build`), since a write past the Worker starts none.
 `--local` writes the database `wrangler dev` uses, `--dry-run` only the SQL.

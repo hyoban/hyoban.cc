@@ -2,7 +2,8 @@
 
 Images and videos are stored in the Cloudflare R2 bucket configured in `site.config.json`'s
 `assets` and served from its origin, `https://image.hyoban.cc`. Objects are
-immutable: a changed file is uploaded under a new key, never over an old one.
+immutable: a changed file is uploaded under a new key, never over an old one. The one
+exception is blanking a location in place (see AGENTS.md).
 
 | Prefix                                                           | For                                         |
 | ---------------------------------------------------------------- | ------------------------------------------- |

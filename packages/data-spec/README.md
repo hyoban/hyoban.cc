@@ -6,8 +6,9 @@ routes (`src/index.ts`), media (`src/media.ts`), the first shape's Moments, trip
 devices (`src/legacy.ts`), and the Zeekr vehicle records (`src/vehicle.ts`; see
 `data/zeekr/README.md`). `src/primitives.ts` holds the ids, times and amounts they share,
 and the units every record keeps to. A device and a subscription are
-entries with their plugins' parts. `src/publish.ts` holds the rules for place
-ids and media keys. `vp run data:schema` at the root writes them out as JSON Schema under
+entries with their plugins' parts. `src/publish.ts` holds the media types the API
+takes, `src/location.ts` the check that an image says nowhere and `src/division.ts` the
+lookup of a place's province, city and district. `vp run data:schema` at the root writes them out as JSON Schema under
 `data/schema`. `src/tables.ts` is the tables D1 and the app's copy keep the records in, a
 key, a revision, when deleted and the record's JSON, with the other columns SQLite works
 out from the record; `vp run data:tables` writes them out as `apps/api/schema.sql` and the

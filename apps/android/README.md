@@ -2,7 +2,7 @@
 
 The app that keeps the site's Moments, places and trips on the phone, lets new ones be
 written there, and adds what stays the phone's own: a ledger and GPS footprints. Its look
-is the app's design system (the 「Here App 设计系统」 artifact, mirrored in `ui/theme`).
+is the app's design system (the 「Here App 设计系统」 artifact, carried out in `ui/design` and `ui/theme`).
 
 ## Reading
 
@@ -115,9 +115,9 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   Moments, and of its check-ins while they're on), as the site's trip sidebar does. 迷雾地图 lays a fog over it, as the site's map does, thinner
   over a city the more Moments it has, from the site's
   `apps/web/src/data/boundaries/cities.json` shipped as an asset.
-- **我** is one screen: the changes waiting to be published, then three rows, 账本 (with this
-  month's spending under its name), 足迹 and 东西, and one group of 设置: 记录项与公开, 家,
-  同步与来源, 导入, 相机 and 侧键, each a page with what it is set to under its name. There is no
+- **我** is one screen: the changes waiting to be published, then four rows, 账本 (with this
+  month's spending under its name), 足迹, 东西 and 纪念日, and one group of 设置: 记录项与公开, 家,
+  同步与来源, 导入, 相机 and 侧键 (and 清理分享相册 while a share album is left), each a page with what it is set to under its name. There is no
   settings page over them, and under 我 there is one level of pages: what goes deeper, such as
   a book, the exchange rates or a side key gesture's action, opens over its page as a sheet or
   a dialog. The ledger's own settings (记账) open from the ledger's top bar and the footprints'
@@ -126,7 +126,7 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
 - **记录项与公开** (`moments://items`) opens on the 记录项, the modules the spec defines
   (`data/spec/Modules.kt`, generated from `modules` in `@hyoban/data-spec/entry` by
   `vp run data:tables`): 足迹, 账本, 东西
-  (设备 and 订阅), 车, 美食, 花费 and 签到, each a switch, all on until turned off. One turned off is
+  (设备 and 订阅), 车, 美食, 花费, 签到 and 纪念日, each a switch, all on until turned off. One turned off is
   put away everywhere: its rows on 我, its pages, its records on the timeline, a day, a trip,
   a Moment, the search's kinds and the map, its chip under 加一项, its sources under 导入, the
   side key's payment action and the widgets' counts (导入 lists the sources left, and goes
@@ -208,8 +208,6 @@ else (花费: what it went on, 值, 还行 or 不值), either with the amount in
 many it was for; the two chips are one cost, so choosing one takes the other's place with what
 was typed. A meal shows while 美食 is on, any other cost while 花费 is. It
 is 公开 or 私有; a private one is published for its owner but never shown on the site.
-The home screen widgets are the owner's own and show private Moments and trips too,
-except in 演示模式.
 
 The same page writes a check-in: with no words, photos or cost but a place, it is saved as a
 check-in there (the page says 新签到), named after the place, `source.app` `phone`, public unless
@@ -259,8 +257,7 @@ is its place's name once the place is another, and the check-in goes with the pl
   point and kind of, looking its division up again and routing its trips again when it moved.
 
 New Moments and places live under the app's `local/` directory, every record written or changed
-there kept as the entry it will be published as (`changed-entries.json`; an app from before kept
-Moments as files of their own, taken in as entries when it starts), the places with ids of their
+there kept as the entry it will be published as (`changed-entries.json`), the places with ids of their
 own (`p-<ulid>`), marked 未发布 until published. A place keeps its id
 when it is published, so whatever names it (Moments, check-ins, bills) stays at it.
 
@@ -278,7 +275,7 @@ change back. Bills are a part of their own (`ui/publish/BillChanges.kt`), in thr
 what the site gets: new, changed (its category, amount or note marked where it shows, or its time
 or place, told against the site's copy of a bill on its own, the site's struck through) and taken
 off (made private or deleted here, struck through); a group of more than three folds, and opened
-falls under its days. A bill there opens its page. 全部发布到网站 runs as WorkManager work in a foreground
+falls under its days. A bill there opens its page. 全部发布 runs as WorkManager work in a foreground
 service with a progress notification, waiting out a dropped link: it uploads the new
 originals a few at a time, each a copy without where it was taken (`data/media/Location`: the
 GPS of a photo's EXIF and XMP and a video's location boxes blanked in place, the phone's own
@@ -346,8 +343,7 @@ one beside the English it exports, at its most accurate check-in's point, with t
 `source`; a venue imported before keeps the place it has, the site's once published. The map
 counts a place's check-ins with its Moments, and its sheet and page list them. Their
 uids are made from the time and Swarm's id, so importing the same export again adds only what
-is new and copies no photo twice. Tapping a check-in, in the timeline, a day or a place, opens
-it in the editor (Writing a Moment), the site's map dotting it while public. All of it waits with the other unpublished changes for
+is new and copies no photo twice. All of it waits with the other unpublished changes for
 发布更改. Check a change to the importer against a real export with
 `SWARM_EXPORT=<zip> ./gradlew :app:testDebugUnitTest --tests '*SwarmTest*'`, and never commit it.
 
@@ -405,7 +401,7 @@ in their own currencies. Its page (`moments://ledger`, from 我) has three tabs:
 The book's name switches books or shows 全部账本, which the app opens on each time it
 starts. The eye at the top of 我, and beside the ledger's month, turns on 演示模式 for showing
 the app to others: every amount is hidden, an account goes by its kind alone (no name, no
-bank's mark), and private Moments and trips are left out everywhere, the widgets included.
+bank's mark), and private Moments, check-ins and trips are left out everywhere, the widgets included.
 
 A bill is an expense, an income or a transfer (also a repayment or a loan), or a refund or
 reimbursement written from its expense, which counts with that expense in what a trip, a place or
@@ -437,7 +433,7 @@ refund with its expense; a bill names no trip. Its list of bills also shows each
 by its time, opening the Moment, and what they came to apart, each one's own share where a cost was for
 several.
 
-记账, under 我 (`moments://ledger-settings`), manages the books, the exchange rates, 自动记账 and
+记账, from the ledger's top bar (`moments://ledger-settings`), manages the books, the exchange rates, 自动记账 and
 the data. A book opens as a sheet with its name, currency and categories (chips, each opening
 a dialog to rename, add a second level, merge or delete it), archiving and deleting it; the
 rates open as a sheet too, with the European Central Bank's brought up to date from its head.
@@ -523,7 +519,7 @@ The footprints are GPS tracks kept on the phone alone, in
 地图 → 足迹 opens a panel to record, pick a day (今天, 昨天, or any from 选日期's month, the days
 with footprints dotted) or trip, export GPX and delete — while recording,
 anything but today and the running trip (importing is in 我 → 导入); 足迹记录
-(`moments://footprint-settings`), from 我 or the panel's settings button, sets how recording
+(`moments://footprint-settings`), from the panel's settings button, sets how recording
 behaves.
 
 - **Recording.** 日常自动记录 runs until turned off; 单次行程 marks a trip over the same
@@ -601,10 +597,8 @@ behaves.
   of 8 MiB, about two days, with each request, fix, filter decision and state change, never
   a coordinate, network name or token. 足迹记录 → 诊断 → 导出诊断日志 exports them with a replay of the
   latest day through the current filter.
-- **Never published.** The footprints never leave the phone but in the owner's WebDAV backup:
-  nothing of them goes out with 全部发布到网站, and the site routes a trip along the roads
-  between its stops (Valhalla, OpenRailRouting) instead; the app draws a trip along its
-  footprints where it has them.
+- **Never published.** The footprints leave the phone only in the owner's WebDAV backup; the
+  app draws a trip along its footprints where it has them.
 
 ### Connection automation
 
@@ -757,7 +751,7 @@ its EXIF but not where it was taken; a swipe down puts it away.
 ## Elsewhere
 
 - **Widgets.** 那年今天 (a Moment from this day in an earlier year) and 旅程 (the trip under
-  way, else the last or next), in ColorOS's card sizes, drawn from the copy after each sync
+  way, else the last or next), in ColorOS's card sizes, the owner's own and so showing private Moments and trips too, drawn from the copy after each sync
   and every three hours. 热力图 is a square a day, as many weeks as fit, a year by months at
   four by four and a row of days as a strip, of the public Moments, the spending (shades only,
   never an amount) or how far the footprints went; it is chosen as the widget is added and
@@ -770,12 +764,8 @@ its EXIF but not where it was taken; a swipe down puts it away.
   after each sync and kept. The AMap and Tencent keys have no default and stay on the phone,
   out of the backup.
 - **Maps.** OpenFreeMap's vector tiles drawn by MapLibre, needing no key. The light and dark
-  style documents are packaged with the app after choosing Chinese labels and quieting minor
-  roads, so opening a map does not fetch and then rewrite its base style before labels appear;
-  `node scripts/update-map-styles.mjs` refreshes both packaged documents from OpenFreeMap. On
-  Android, Chinese, Japanese and Korean ideographs come from the system sans font instead of
-  remote glyph ranges, leaving the map cache for tiles and making labels available with them. The
-  map draws on demand at the display's refresh rate, including 90 and 120 Hz screens.
+  style documents, with Chinese labels and minor roads quieted, are packaged with the app;
+  `node scripts/update-map-styles.mjs` refreshes both from OpenFreeMap.
 - **Name and icon.** Here, in English whatever the phone speaks: a white cat with a grey cap
   peeking in from the lower left on blue, an adaptive icon with a monochrome layer.
 
@@ -830,8 +820,8 @@ nothing writes a bill or records a footprint here. `HERE_OPEN` opens it on a pag
 or `moment:<uid>`, `photo:<uid>`, `edit:<uid>`, `trip:<id>`, `play:<id>`, `tripedit:<id>`,
 `day:<date>`, `place:<id>`.
 
-The unit tests round-trip every record under the repository's `data/` through the app's
-models, so the app and the site can't drift apart unnoticed, and check the media URLs,
+The unit tests round-trip the made-up records in `packages/data-spec/test/fixtures/data/`
+through the app's models, so the app and the site can't drift apart unnoticed, and check the media URLs,
 trip membership and the sync against a stand-in API.
 
 `RecordingRecoveryTest` under `src/androidTest` checks the recorder's recovery and pause
@@ -883,15 +873,14 @@ time, open it with right-click › Open (or `xattr -dr com.apple.quarantine /App
 
 ## On the phone, from adb
 
-Every page has a link, `moments://moments`, `map`, `trips`, `settings` (我), `sync`,
-`import`, `items`, `ledger-settings`, `footprint-settings`, `side-key`, `new`,
-`moment/{uid}`, `trip/{id}`, `play/{id}`, `day/{YYYY-MM-DD}` and `place/{id}`, which `adb
-shell am start -d` opens. Opening the app, a link's page comes over the tab it is under (a
+Every page has a `moments://` link (`routeOf` in `ui/MomentsApp.kt` lists them: `moments`,
+`map`, `settings` for 我, `ledger`, `moment/{uid}`, `trip/{id}`, `day/{YYYY-MM-DD}`,
+`place/{id}`, …), which `adb shell am start -d` opens. Opening the app, a link's page comes over the tab it is under (a
 trip or a place over 地图, a setting, the ledger or the changes over 我, the rest over 时间线), so
 back, the top bar's or the system's, leads to that tab and the tabs go on from there; opened
 while the app is on screen, it goes over the page shown. A page a widget opens stands alone
 over the app, and back closes it onto the app as it was. Buttons, tabs and cards carry test
-tags that `uiautomator dump` reports as resource ids (`tab_map`, `settings`, `back`,
+tags that `uiautomator dump` reports as resource ids (`tab_moments`, `tab_map`, `tab_me`, `back`,
 `moment_{uid}`, `media_{uid}_{index}`, `trip_{id}`, `day_{date}`, …), and `scripts/ui.py`
 uses both:
 
@@ -918,11 +907,16 @@ as Compose resources); `:desktop` is the Mac's window and its device.
 - `data/store`: what the screens are given from the copy, and the phone's own notes.
 - `data/local`: the Moments written on the phone, their time and place.
 - `data/media`: photo, poster and video URLs, picked as the site picks them.
+- `data/swarm`, `data/things`, `data/occasions`: Swarm's import, the devices and subscriptions,
+  and the occasions.
 - `data/trips`: which trip a Moment is on, its days and stops, and its playback.
 - `publish`: the publishing work.
 - `ledger`, `footprints`, `share`, `accessibility`: the ledger, the footprints, sharing
   and the assistant.
 - `widget`: the home screen widgets (Glance).
+- `backup`: the WebDAV backup, and on the Mac the reading of it.
+- `update`: checking this repository's releases and installing them.
+- `sidekey`: 侧键, the side key's gestures.
 - `camera`: the paired camera, its location over Bluetooth and its photos over PTP/IP.
 - `nas`: the UGREEN NAS whose photo app 选照片 reads, found through UGREENlink and signed in to as its web app does.
 - `ui`: the Compose screens; `ui/design` and `ui/theme` the design system.

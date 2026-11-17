@@ -28,15 +28,8 @@ Compose Desktop Mac app in `apps/android` stays as it is beside this one.
 | `Data/`                      | the records (`Entry`, `Place`, `Trip`…, each keeping its whole JSON), the API, the copy of D1's rows (`CopyStore`), `HereStore` that reads it for the pages, and media URLs as the site picks them |
 
 Everything under `Generated/` is written from the repository's shared sources and never edited by
-hand. From the repository root:
-
-```sh
-vp run design:tokens                          # Tokens.swift, beside Android's Tokens.kt
-python3 packages/design-tokens/icons/swift.py # AppIcons.swift, from icons.py
-vp run data:tables                            # CopyTables.swift and Modules.swift, from @hyoban/data-spec
-```
-
-`vp test` checks that the tokens, tables and modules are current; CI also regenerates the icons
+hand: see [design-tokens](../../packages/design-tokens/README.md) and
+[data-spec](../../packages/data-spec/README.md) for the commands. `vp test` checks that the tokens, tables and modules are current; CI also regenerates the icons
 and fails on a difference.
 
 ## The Mac app

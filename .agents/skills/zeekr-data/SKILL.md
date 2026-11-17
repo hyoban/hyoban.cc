@@ -45,8 +45,9 @@ vp run zeekr:entries --write
 ```
 
 `zeekr:entries` turns each charging session into an entry with a `charge` part under
-`data/entries` (no place, its uid made from when it started), adding only the new ones;
-send them with `vp run data:push <the new files>` after `vp run data:export`.
+`data/entries` (no place, its uid made from when it started), adding the new ones and
+bringing changed ones up to date. Run `vp run data:export` before converting, then push
+every file it wrote with `vp run data:push`.
 
 This retains daily statistics and exact charging times, as authorized by the owner,
 and removes identities, location, account images, report links and vehicle state.

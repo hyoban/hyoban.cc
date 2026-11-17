@@ -1,7 +1,7 @@
 # @hyoban/api
 
-A Cloudflare Worker that serves the Moments, places and trips from D1 and their media from
-R2, for the site's build and the Android app, which writes through it one change set at a
+A Cloudflare Worker that serves the entries, collections, places, trips' routes and the car's
+statistics from D1 and their media from R2, for the site's build and the Android app, which writes through it one change set at a
 time. Records come back as stored, in the shapes `@hyoban/data-spec` defines. Deployment,
 secrets and bindings are in [docs/deploy.md](../../docs/deploy.md).
 
@@ -71,14 +71,15 @@ each place is known by, the records as published, the uids deleted and the revis
   Cloudflare resize them ([docs/assets.md](../../docs/assets.md)). An original is public at
   its key, so it must not say where it was taken: an image whose EXIF or XMP has a GPS
   position is turned down (`@hyoban/data-spec/location`); a video is streamed through
-  unread, and the app takes its location out before sending it. The rules live in
-  `@hyoban/data-spec/publish`.
+  unread, and the app takes its location out before sending it. The media types it takes are
+  `@hyoban/data-spec/publish`'s.
 - **Privacy.** Of a plugin that keeps to the phone (a bill), a private part is dropped even
   when sent, and a public one is kept by its public fields alone (`getUploadEntry`).
 - **After a write the site shows**, the trips' routes are brought up to date when what they
   are built from changed, then `DEPLOY_HOOK_URL` is called so the site builds again.
 
-Records written outside the API go in with `vp run data:push` ([docs/data.md](../../docs/data.md)).
+Records written outside the API go in with `vp run data:push` ([docs/data.md](../../docs/data.md)),
+which then calls `POST /v2/build`: the site builds again and new Moments post to the channel.
 
 ## Routes
 
@@ -136,9 +137,15 @@ answers nothing without it. `data:import` needs an exported `data/` (see docs/da
 
 - `migrations/`: the D1 schema. Each table keeps the record as written in a `record`
   column, so fields the spec doesn't know yet survive, plus the columns it is looked up by.
-- `src/index.ts` routes requests; `src/database.ts` holds the reads and `src/writes.ts`
-  the writes, against the few D1 and R2 calls they need (`Database`, `Bucket`), which the
-  tests fill in with an in-memory `node:sqlite` and a map.
+- `src/index.ts` routes requests, `src/auth.ts` checks their token and `src/http.ts` shapes
+  the responses.
+- `src/database.ts` is the few D1 calls the rest needs (`Database`) and the places' reads;
+  `src/bucket.ts` the R2 ones (`Bucket`). The tests fill them in with an in-memory
+  `node:sqlite` and a map.
+- `src/entries.ts` reads the entries and collections, writes `/v2/export` and applies a
+  change set; `src/writes.ts` uploads and publishes media, names places and commits.
+- `src/copy.ts` serves `/v2/rows`, `src/routes.ts` the trips' routes and `src/site.ts` the
+  site's deploy hook.
 - `src/telegram.ts` posts to the channel, against a `Telegram` the tests fake.
 - `src/rows.ts` turns a record into a row, for the writes and the import.
 - `src/import.ts` builds the SQL `vp run data:import` runs: new and changed records

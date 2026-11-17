@@ -4,7 +4,7 @@ Vehicle statistics captured from the owner's Zeekr app. The months, assisted-dri
 observations and captures are kept in the API's D1 too, and `vp run data:export` writes them
 back here; the expenses, sources and validation stay only in the repository. Git keeps this
 directory, unlike the rest of `data/`. Only an import
-changes any of it, the app included. Schemas live in `packages/data-spec/src/vehicle.ts`.
+changes the statistics, the app included; the expenses are edited by hand. Schemas live in `packages/data-spec/src/vehicle.ts`.
 
 ## Public and private data
 

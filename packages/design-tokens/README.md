@@ -1,7 +1,7 @@
 # @hyoban/design-tokens
 
 The design system's values for every platform the app is built on: colours in light and dark,
-the 4dp steps and the gaps, corners, shadows, opacities, the 13 text styles (`tokens.json`)
+the 4dp steps and the gaps, corners, shadows, opacities, the six text styles (`tokens.json`)
 and the springs (`motion.json`, which `tokens.json`'s format can't hold). `icons/icons.py`
 draws the app's icon set on a 24 grid.
 

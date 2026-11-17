@@ -13,7 +13,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   Multiplatform, for Android and the desktop's JVM) what both run. The Mac app is to do what
   the phone's does, so code moves from `:app` into `:shared` a part at a time, keeping its
   package and leaving the phone's behaviour as it was; each step builds and tests `:app`.
-  The native SwiftUI Mac app in `apps/apple` is only a full-window map drawn on its own boards (M), and shares no code with this project; `:desktop` stays as it is and keeps following the desktop boards (D).
+  `:desktop` keeps following the desktop boards (D); the SwiftUI Mac app in `apps/apple` shares no
+  code with it.
 - Shared code may use the JDK and JVM libraries (OkHttp, `java.time`): both targets are JVMs.
   What it may not touch is Android's own: `android.*`, `R`, `Context`, `BuildConfig`, and
   the Android-only libraries (Media3, Glance, WorkManager, Capsule). Maps use MapLibre
@@ -46,7 +47,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   D17–D20 and T17–T20 draw; a page gates each write on `writable`.
 - Share code first: the Mac's version of anything goes into `:shared`, a page's desktop layout
   as a branch on `LocalDesktop` in the shared page or a shared component (`ui/design/Desktop.kt`:
-  `Toolbar`, `DesktopDialog`, `DesktopButton`), and what only differs by device as a `Device`
+  `Toolbar`, `DesktopDialog`), and what only differs by device as a `Device`
   member. `:desktop` keeps only the windows (`Main.kt`), the container and `DesktopDevice`.
 - The Mac's shell (`:desktop`'s `Main.kt`) follows the design system's Sidebar card: no title
   bar of its own (the content runs up under a transparent one, the window's buttons over the
@@ -55,7 +56,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   `SubPage` and `TabPage` draw the design's 52 toolbar there in place of the floating circles; the
   editors open as `DesktopDialog`s over the page they came from, a bill or a place in the inspector
   beside its page, and a bottom sheet as the inspector down the window's end; 设置 is a window of
-  its own (`SettingsPanes`, which the Pad's settings can take too); 初次打开 a small window. Esc
+  its own (`SettingsPanes`); 初次打开 a small window. Esc
   and ⌘[ go to the pages' own `BackHandler`s first (`DesktopBack`), so a draft is asked about
   before it goes; a page takes the window's keys with `OnDesktopKey`.
 - A declaration `:app` uses from `:shared` is public, and its tests stay in `:app` until they
@@ -72,9 +73,12 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   The user tests it: don't launch, open, tap or publish on the phone yourself. Say what to
   try and what to look for, and read logcat (its crash buffer, `Moments:W`) when asked.
   Build only what the step needs, not the CI set each time.
-- Only when the user asks for a test on the phone run one, and only the steps named: never
-  tap blind, chain nothing after a step that may have failed, screenshot before each tap
-  by position and tap only what it shows, and stop and say so when anything unexpected starts.
+- Only when the user asks for a test on the phone run one, and only the steps named, with
+  `scripts/ui.py open|dump|tap|back`, the `moments://` links and screenshots: never tap
+  blind, chain nothing after a step that may have failed, screenshot before each tap by
+  position and tap only what it shows, and stop and say so when anything unexpected starts.
+  When a change touches colour, layout or motion, ask the user to check dark mode, landscape
+  or dropped frames.
 - Install only the debug build, never the release, unless the user asks for the release, not
   even before pushing. Then: `./gradlew :app:assembleRelease`
   (half a minute, R8's), then `adb install-multiple -r app/build/outputs/apk/release/app-release.apk
@@ -85,13 +89,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   with the same key, the release key in `local.properties` or else the debug key, so either
   installs over the other and the app's data stays. The emulator only ever gets the debug
   build, so `run-as` can read its files.
-- Releases go to GitHub by pushing an `android-v<x.y.z>` tag, or `mac-v<x.y.z>` for the Mac
-  (README, Releasing), and only when the user asks for one. The Mac's DMG is unsigned for now;
-  check a packaging change by opening the packaged release (`./gradlew :desktop:packageReleaseDmg`,
-  ProGuard's), not only `:desktop:run`, each page by `HERE_OPEN` with its standard error read, maps
-  included, as what is left out of it shows only there. A library reached by reflection, JNI or
-  ServiceLoader that is added to the Mac is kept whole in `desktop/rules.pro`. The release key and its passwords are the user's: never create,
-  read, print or commit them, nor set the repository's secrets.
+- Release (README, Releasing) only when the user asks. Check a Mac packaging change in the
+  packaged release (`./gradlew :desktop:packageReleaseDmg`), each page by `HERE_OPEN` with its
+  standard error read, not only `:desktop:run`; a library reached by reflection, JNI or
+  ServiceLoader is kept whole in `desktop/rules.pro`. The release key and its passwords are the
+  user's: never create, read, print or commit them, nor set the repository's secrets.
 - Testing never costs the app's data: the ledger and footprints live in `noBackupFilesDir`
   and have no other copy. Ask before anything that would lose or reset it, and say what
   would go: `adb uninstall`, `pm clear`, a reinstall after `INSTALL_FAILED_UPDATE_INCOMPATIBLE`
@@ -108,15 +110,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Publishing, once the user has said yes to it, is tried with a test Moment written on the phone (text "test", 不加地点 so
   no place of the user's reaches the site), published, then deleted and the deletion
   published. A new Moment has no place unless a photo gives one; only its place picker,
-  opened with none, locates the phone. Close the keyboard before tapping the place row,
-  or the tap types into the text.
+  opened with none, locates the phone. The page opens with the keyboard up and `ui.py dump`
+  still lists what is under it: close the keyboard before tapping the place row, or the tap
+  types into the text.
 - A `DropdownMenu` or dialog is a window of its own, where `ui.py` can't see test tags:
   tap its items by their words.
-- The new Moment page opens with the keyboard up, and `ui.py dump` still lists what is
-  under it, so a tap there types instead: close the keyboard first.
-- A test the user asks for uses `scripts/ui.py open|dump|tap|back`, the `moments://` links
-  and screenshots. When a change touches colour, layout or motion, ask the user to check
-  dark mode, landscape or dropped frames.
 - A publish that fails says why only in a toast that soon goes; the exception is in
   `adb logcat -s Moments:W`, and the API's side in `npx wrangler tail hyoban-cc-api`
   (read-only) from `apps/api`. The phone's traffic goes through FlClash, whose link
@@ -131,37 +129,21 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   idle and within this task's scope), then verify that the processes exited.
   Do not close the user's IDE, stop unrelated processes or interrupt another build.
 
-- 相机 is for the owner's Sony a7C II alone; don't widen it to other bodies without asking.
-  Its protocol code is written from documented facts (README, Camera), never copied from a
-  GPL project such as alpha-gps; permissive ones may be read for reference. Test the camera
-  only when the owner asks, and only the steps named: pairing, the location lock and the
-  camera's Wi‑Fi act on a real camera.
-
-- Programmable actions stay configurable: adding an action must not assign or replace the
-  user’s gesture bindings. 侧键 is for the owner's one phone model (`SideKeys.supported`,
-  README); don't show it on others or widen the match without asking.
-
 ## Design
 
 - The app follows its own design system, the 「Here App 设计系统」 artifact, not Material 3:
   the site's restraint on a phone. The design is platform-neutral, one design for the iOS,
   Android and web versions to come: keep Android-only conventions out of it (name things by
   what they are, not by Compose or Material), and record only where Android implements it.
-  Desktops (Compose Desktop's Mac app, the web on a computer) keep its look but take a desktop's structure, a sidebar,
-  toolbars, hover, context menus and shortcuts, as the page canvas's desktop boards (D, beside each
-  page) and the design system's Desktop cards draw them. Tablets (iPad, Android tablets) stay touch,
-  sized by the window, not the device: wider than 1024 a touch sidebar and list beside detail, 600–1023
-  the sidebar as a rail and one pane, narrower the phone's layout; a side panel or a centred sheet in
-  place of a bottom sheet, as the canvas's Pad boards (TV portrait, T landscape) and the design
-  system's Pad cards draw them. Each canvas row reads phone portrait, phone landscape (H), Pad
-  portrait, Pad landscape, desktop (D).
+  Desktops keep its look with a desktop's structure, and tablets stay touch, as the page
+  canvas's D and Pad boards and the design system's Desktop and Pad cards draw them.
   Its tokens come from `packages/design-tokens`, the one
   source for every platform: `vp run design:tokens` at the root generates `ui/theme/Tokens.kt`
   (colours, spacing, corners, shadows, opacities, type, springs), which is never edited by
   hand; change `tokens.json` there, regenerate, and publish it to the artifact. Text takes
   the design's six styles by their names (`titlePage`, `title`, `bodyReading`, `body`,
   `label`, `caption`), all in the system sans with tabular figures; a heading is a style
-  `.strong` (600), never a size larger; the timeline and a trip are a conversation (`MomentFeed(chat = true)`: `DateCapsule`, Moments as `MomentCard(bubble = true)` and check-ins as `CheckinBubble` from the right, each with its linked bills at its foot (`BubbleBills`, a Moment's own cost leading them), the records between them in `RecordsBubble`), and a ledger's day opens with its header row (`DayHeader`). The app
+  `.strong` (600), never a size larger; the timeline and a trip are `MomentFeed(chat = true)`, and a ledger's day opens with its header row (`DayHeader`). The app
   has no Material dependency (`androidx.compose.material3`, `glance-material3`): its
   components are its own, in `ui/design`, on Compose foundation. Don't add Material
   components or icon packs back.
@@ -189,7 +171,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Colours are `tokens.*` by the design's names alone; there is no layer of roles over them.
   Layers: the hairline is `cardBorder` and `dividerColor`, the one shadow `ShadowElevation` drawn by
   `softShadow`, a surface's level `SurfaceLevel`.
-- Keep only what is used: two buttons (`Button` for the page's one main action, `TextButton`
+- Keep only what is used: two text buttons (`Button` for the page's one main action, `TextButton`
   for everything else), one chip look (`FilterChip` to choose, `AssistChip` to act, drawn the
   same), and no icon that nothing draws.
 - The scroll edges (what passes under the status bar, the top bar's circles and the tab bar) are
@@ -238,8 +220,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   until its render loop presents the first frame, so Android's surface traversal and style loading
   overlap. Its EGL and native frame loop runs on its own Android looper, not the UI thread. Never
   draw a placeholder into that `Surface`, which prevents EGL from attaching to it.
-- Keep the phone's main atlas `MapState` alive at the app/device scope across tab changes, as the
-  classic retained `MapView` was: returning to the map must not reload its style, labels, tiles or
+- Keep the phone's main atlas `MapState` alive at the app/device scope across tab changes:
+  returning to the map must not reload its style, labels, tiles or
   markers. After its first visit, also keep its presentation composed behind navigation: cover it
   and disable its interaction on another tab instead of destroying and rebuilding its Android
   `Surface`. Preload the FFI native library off main, but do not prewarm its runtime during
@@ -255,10 +237,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   settings: `-Oz`, full LTO, lld and `--icf=all`; its Rust image decoder uses `opt-level = "s"`
   and aborting panics. Measure changes as stripped, APK-compressed arm64 libraries, and recheck
   first-map time on the release build before trading these settings for speed.
-- Distribute the MapLibre Compose and Native FFI forks as pinned GitHub Release archives of
-  static Maven repositories. `scripts/prepare-maplibre-maven.sh` verifies their fixed SHA-256
-  hashes before a build uses them; each release includes Android plus KMP/JVM and macOS arm64
-  Metal artifacts so `:desktop` can be connected without republishing the forks.
+- The MapLibre forks come only as the pinned, hash-checked releases (README, Building).
 - Follow what the app should be rather than the web version, except where the shared guide
   asks it to match.
 
@@ -288,7 +267,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   carries no API address or media origin (the API names its own), and nothing asks the network for records until
   both an API and its token are set in 同步与来源. Don't add a default API back. Until then the
   app is the phone's own: nothing says 未发布 or points to publishing.
-- Nothing reaches the site until 全部发布到网站, after the changes waiting have been
+- Nothing reaches the site until 全部发布 on 发布更改, after the changes waiting have been
   reviewed: one change set, like a commit, sent as entries to `POST /v2/changes`. Don't add
   writes that bypass it.
 - The phone keeps every record it writes or changes as the entry it will be published as
@@ -296,7 +275,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   from one, so a record changes shape by being saved as it now is. Don't bring back a store of
   Moments of their own beside the entries.
 - The ledger and the footprints follow the shared guide's privacy rules and publish only
-  through 全部发布到网站 (`data/store/Outside.kt`). Their only other requests are exchange
+  through 全部发布 (`data/store/Outside.kt`). Their only other requests are exchange
   rates, when asked, Photon naming a bill's footprint point (`footprints/BillPlaces`), the point
   alone, the place picker naming a stay being kept as a place, and the WebDAV backup the owner sets up (`backup/`). Private and unpublished are two things, said 私有 and 未发布, never 仅本机.
 - The ledger replaces iCost, so what iCost's backup and export hold must keep importing:
@@ -310,11 +289,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Verify ledger initialization with an isolated database, including entry before loading
   and concurrent first entries. Opening a test form must not add books to the user's ledger.
 - Sharing hands off to the other app and leaves posting to the user. Never post, pick a
-  recipient or drive another app automatically. The one exception is the opt-in share
-  assistant (Telegram, Threads, Instagram): an accessibility service that only fills the composer
-  and stops before sending. The same service, while 自动记账 is on, only reads WeChat Pay's and
-  Alipay's payment pages for a payment to offer as a bill: it never taps, types or keeps the
-  page; `adb logcat -s AutoBill:I` says whether a page read was offered or already in the
+  recipient or drive another app automatically; the share assistant only fills the composer
+  and stops before sending, and 自动记账 only reads the payment page, never tapping, typing or
+  keeping it; `adb logcat -s AutoBill:I` says whether a page read was offered or already in the
   ledger. Its amounts are what the page reads out (Alipay's bill: 支出12.5元 for -12.50), not what it
   draws, so take fixtures from `uiautomator dump`. While debugging it, read its state with
   `adb shell dumpsys activity service cc.hyoban.moments/.share.TelegramShareService`,
@@ -323,31 +300,27 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   Instagram's caption is missing from `uiautomator dump` but reaches the service; its
   view ids are full names (`com.instagram.android:id/…`), and an empty caption reads out
   its hint as its text.
-- The home screen widgets are the owner's own: they show private Moments and trips too,
-  passing over only photos kept off covers. 演示模式 (`Settings.demo`, which took the place of
-  hiding amounts) hides amounts, account names and private Moments, check-ins and trips
-  everywhere, the widgets included; screens read `container.shownMoments`, `shownCheckins` and
+- 演示模式 (`Settings.demo`) hides what is private everywhere, the widgets included: screens read `container.shownMoments`, `shownCheckins` and
   `shownTrips`, not the repository's, so a new screen keeps to it.
 - Trip discovery marks a trip out by check-ins at the saved places chosen as home (家), leaving
   and coming back, never by guessing where home is; a check-in at home is public or private as
   that check-in says, like any other. It uses general distance and time thresholds, never
   exceptions for a particular export, city or date. Cover its rules with made-up records;
   private exports are local regression checks, not fixtures.
-- The paired camera is spoken to only over Bluetooth and its own Wi‑Fi (`camera/`): the
-  location goes to the camera alone and its photos come straight to the gallery.
-- The owner's UGREEN NAS (`nas/`), once set up in 同步与来源, is asked only from 选照片: UGREENlink
-  for where it is, by its ID alone, and the NAS itself for its photo app's photos. Its API is the
-  one its web app uses, undocumented (README, 选照片); read changes to it off the NAS's own web
+- 相机 is for the owner's Sony a7C II alone; don't widen it to other bodies without asking.
+  Its protocol code is written from documented facts (README, Camera), never copied from a
+  GPL project such as alpha-gps; permissive ones may be read for reference. Test the camera
+  only when the owner asks, and only the steps named: pairing, the location lock and the
+  camera's Wi‑Fi act on a real camera.
+- Programmable actions stay configurable: adding an action must not assign or replace the
+  user’s gesture bindings. 侧键 is for the owner's one phone model (`SideKeys.supported`,
+  README); don't show it on others or widen the match without asking.
+- The NAS's photo API is undocumented (README, 选照片): read changes to it off the NAS's own web
   bundle (`/photo/assets/`) or its traffic, and test deletes only when the owner asks.
 - Beyond the services named here, the app's one request of its own is for updates: the feed of this
   repository's GitHub releases (not GitHub's API, whose limit without a token a shared proxy uses up) and the APK it installs (`update/`), with nothing of the phone's.
-- No keys in the build: OpenFreeMap tiles drawn by MapLibre, Photon for place names, Valhalla
-  and OpenRailRouting for the routes of trips the API hasn't routed, the trip's stops alone.
-  A service that needs a key takes the owner's own, typed into 同步与来源 and kept beside the
-  API token, asked from the phone: in China the place picker's names and search come from
-  AMap or Tencent with the owner's key; with both, the one the owner chose first and the
-  other when it can't answer, Photon still answering without either, outside China, or once the keys'
-  calls for the day are used up.
+- No keys in the build (README, Elsewhere): a service that needs a key takes the owner's own,
+  typed into 同步与来源 and kept beside the API token.
   APK size matters, so the release is arm64 only; weigh what a new dependency costs.
 - Pin a newer library version only for a reason, and say why in the comment in
   `gradle/libs.versions.toml`.

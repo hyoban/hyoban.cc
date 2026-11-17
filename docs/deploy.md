@@ -15,15 +15,14 @@ serving `./dist`), deployed by **Workers Builds**:
   `VITE_MAPBOX_TOKEN`, and `MAPBOX_STATIC_TOKEN`, a token without URL
   restrictions that draws the map pages' placeholders (without it they're left out);
   Workers Builds sets `CI`, which turns on the Moments' share cards;
-- share cards are cached between builds under `apps/web/node_modules/.astro/share-cards`,
-  which Cloudflare's build cache keeps, and redrawn only when what they show or
+- share cards are cached between builds under `apps/web/node_modules/.astro/share-cards`
+  (and their assets under `share-assets`), which Cloudflare's build cache keeps, and redrawn only when what they show or
   `apps/web/src/og-image.ts` changes.
 
 It builds on every push to `main`, and again whenever the API takes a write the site
 shows: the API calls the build's **deploy hook**, kept in the API's `DEPLOY_HOOK_URL`
-secret. In CI, without a token, or with one that can't fetch the export, the build fails:
-the repository keeps no copy of the records. A local build without a token shows the
-tests' made-up records instead.
+secret. Without a token that can fetch the export, the build fails
+([data.md](data.md#building-from-the-api)).
 
 Each build also reads `/media/music/` from the NetEase Cloud Music playlist named
 in `site.config.json` (`music`), from its public API with no login, and keeps the last copy
@@ -48,11 +47,11 @@ Builds:
   app already installed on the phone;
 - secrets, set with `wrangler secret put <name> --config apps/api/wrangler.jsonc`:
 
-  | Secret               | What                                                     |
-  | -------------------- | -------------------------------------------------------- |
-  | `API_TOKENS`         | comma-separated bearer tokens for writes, drafts, export |
-  | `DEPLOY_HOOK_URL`    | the site's deploy hook, called after a write it shows    |
-  | `TELEGRAM_BOT_TOKEN` | the bot that posts new Moments to the Telegram channel   |
+  | Secret               | What                                                   |
+  | -------------------- | ------------------------------------------------------ |
+  | `API_TOKENS`         | comma-separated bearer tokens; every request needs one |
+  | `DEPLOY_HOOK_URL`    | the site's deploy hook, called after a write it shows  |
+  | `TELEGRAM_BOT_TOKEN` | the bot that posts new Moments to the Telegram channel |
 
 - bindings in `apps/api/wrangler.jsonc`: D1 `DB` (`hyoban-cc`, APAC) and R2 `BUCKET`
   (`blog-images`), and a cron trigger every 15 minutes;
@@ -65,26 +64,25 @@ dashboard; they stream with `npx wrangler tail hyoban-cc-api`.
 
 ## GitHub Actions
 
-| Workflow     | When                        | Does                                                                                                                        |
-| ------------ | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `verify.yml` | push to `main`, PRs, weekly | `pnpm test`, `pnpm check`, Moment audits, `pnpm build`; the Android app's unit tests and debug build; HereKit's Swift tests |
+| Workflow              | When                        | Does                                                                                                                                                |
+| --------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `verify.yml`          | push to `main`, PRs, weekly | `pnpm test`, `pnpm check`, Moment audits, `pnpm build`; the Android app's unit tests, debug build and `:desktop` classes; HereKit's tests and icons |
+| `android-release.yml` | tag `android-v*`            | the signed APK in a GitHub release, which the app updates itself from                                                                               |
+| `mac-release.yml`     | tag `mac-v*`                | the Mac app's DMG in a GitHub release                                                                                                               |
 
 `verify.yml` exports the API into `data/` to audit every Moment, builds the site from the
 API, its share cards kept between runs in the Actions cache as Workers Builds keeps them,
-and on its weekly run also checks every referenced R2 object (`moments:audit --remote`). The
-records aren't backed up to GitHub. The workflows run Node 24; the repository pins no Node
-version, so Workers Builds uses its own default.
-
-The repository is public, so nothing of the records or the bucket goes into it: no
-snapshot of R2 is kept in git or Git LFS.
+and on its weekly run also checks every referenced R2 object (`moments:audit --remote`).
+The workflows run Node 24; the repository pins no Node version, so Workers Builds uses its
+own default.
 
 Repository secrets: `MOMENTS_API_TOKEN` (one of the API's `API_TOKENS`) for the export
-and the build in `verify.yml`.
+and the build in `verify.yml`, and the `ANDROID_RELEASE_*` signing secrets for
+`android-release.yml` ([the app's README](../apps/android/README.md#releasing)).
 
 ## Recovering from a bad write
 
-D1's 30 days of Time Travel is the way back; the records and the bucket have no copy in
-git. A `data/` exported earlier can be restored over the
+D1's 30 days of Time Travel is the way back. A `data/` exported earlier can be restored over the
 deployed database with `vp run data:import --remote` ([data.md](data.md)).
 
 A restore with Time Travel puts back `meta`'s `database` too, and the app's copy, ahead of
@@ -113,10 +111,10 @@ hook, which exists only once the site's build does.
    `MOMENTS_API_TOKEN` set to one of the API's tokens and the Mapbox variables, add
    the custom domain `hyoban.cc`, and enable Images transformations on its zone.
 7. Create the site build's deploy hook and set it as the API's `DEPLOY_HOOK_URL`.
-8. In GitHub, set the repository secret above.
+8. In GitHub, set the repository secrets above.
 
-## The Android app
+## The apps
 
-Not deployed anywhere: build the release APK with `./gradlew :app:assembleRelease` in
-`apps/android` and install it on the phone with `adb install -r`
-([its README](../apps/android/README.md)). Its API token is set on its settings page.
+Released by pushing an `android-v<x.y.z>` or `mac-v<x.y.z>` tag
+([the app's README](../apps/android/README.md#releasing)). The API and its token are set in
+the app under 我 → 同步与来源.

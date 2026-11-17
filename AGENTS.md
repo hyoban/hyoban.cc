@@ -62,19 +62,19 @@ even when starting from the repository root.
 
 ## Workspace
 
-| Area                | Source and reference                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Website             | Astro and plain CSS in `apps/web` (`@hyoban/web`); [its DESIGN.md](apps/web/DESIGN.md) defines its visual language.                                                                                                                                                                                                                                                                                                                                   |
-| Map and trip player | `packages/trip-map` (`@hyoban/trip-map`); its [README](packages/trip-map/README.md) describes the markup and data contract.                                                                                                                                                                                                                                                                                                                           |
-| Drawers             | `packages/drawer` (`@hyoban/drawer`), a plain DOM port of Base UI's Drawer with shadcn/ui CSS; used by the calendar and bundled into trip-map.                                                                                                                                                                                                                                                                                                        |
-| Design tokens       | `packages/design-tokens`: the design system's tokens, springs and icon source for every platform; `vp run design:tokens` generates Kotlin's `Tokens.kt` and Apple's `Tokens.swift`.                                                                                                                                                                                                                                                                   |
-| Shared data model   | Plain Zod schemas in `packages/data-spec`, used by the site, scripts and API; `vp run data:schema` generates `data/schema`.                                                                                                                                                                                                                                                                                                                           |
-| API                 | Cloudflare Worker with D1 and R2 in `apps/api`; see its [README](apps/api/README.md) for endpoints and local setup.                                                                                                                                                                                                                                                                                                                                   |
-| Android and Mac     | Kotlin, Compose and Gradle in `apps/android`: the phone's `:app`, the Mac's `:desktop` (Compose Desktop) and the `:shared` code both run; read its [AGENTS.md](apps/android/AGENTS.md) and [README](apps/android/README.md).                                                                                                                                                                                                                          |
-| Apple               | SwiftUI in `apps/apple`: the native Mac app (`HereMac`: a read-only try of MapKit on the API's real records, one full-window map used as Apple's Maps is, in Apple's native design, drawn on the Mac boards, M; nothing else goes in it) and `HereKit`, the generated tokens, icons and tables and the records every Apple app shares; iPhone and iPad come next. See its [README](apps/apple/README.md). The Compose Desktop Mac app stays as it is. |
-| Data and media      | `data/`, `scripts/`, [docs/data.md](docs/data.md) and [docs/assets.md](docs/assets.md).                                                                                                                                                                                                                                                                                                                                                               |
-| Site identity       | `site.config.json`; [FORKING.md](FORKING.md) says what a fork changes.                                                                                                                                                                                                                                                                                                                                                                                |
-| Deployment          | Cloudflare Workers Builds and GitHub Actions; [docs/deploy.md](docs/deploy.md).                                                                                                                                                                                                                                                                                                                                                                       |
+| Area                | Source and reference                                                                                                                                                                                                                                                         |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Website             | Astro and plain CSS in `apps/web` (`@hyoban/web`); [its DESIGN.md](apps/web/DESIGN.md) defines its visual language.                                                                                                                                                          |
+| Map and trip player | `packages/trip-map` (`@hyoban/trip-map`); its [README](packages/trip-map/README.md) describes the markup and data contract.                                                                                                                                                  |
+| Drawers             | `packages/drawer` (`@hyoban/drawer`), a plain DOM port of Base UI's Drawer with shadcn/ui CSS; used by the calendar and bundled into trip-map.                                                                                                                               |
+| Design tokens       | `packages/design-tokens`: the design system's tokens, springs and icon source for every platform; `vp run design:tokens` generates Kotlin's `Tokens.kt` and Apple's `Tokens.swift`.                                                                                          |
+| Shared data model   | Plain Zod schemas in `packages/data-spec`, used by the site, scripts and API; `vp run data:schema` generates `data/schema`.                                                                                                                                                  |
+| API                 | Cloudflare Worker with D1 and R2 in `apps/api`; see its [README](apps/api/README.md) for endpoints and local setup.                                                                                                                                                          |
+| Android and Mac     | Kotlin, Compose and Gradle in `apps/android`: the phone's `:app`, the Mac's `:desktop` (Compose Desktop) and the `:shared` code both run; read its [AGENTS.md](apps/android/AGENTS.md) and [README](apps/android/README.md).                                                 |
+| Apple               | SwiftUI in `apps/apple`: `HereMac`, a read-only native Mac app that is one full-window MapKit map in Apple's native design and nothing else, and `HereKit`, what every Apple app shares; see its [README](apps/apple/README.md). The Compose Desktop Mac app stays as it is. |
+| Data and media      | `data/`, `scripts/`, [docs/data.md](docs/data.md) and [docs/assets.md](docs/assets.md).                                                                                                                                                                                      |
+| Site identity       | `site.config.json`; [FORKING.md](FORKING.md) says what a fork changes.                                                                                                                                                                                                       |
+| Deployment          | Cloudflare Workers Builds and GitHub Actions; [docs/deploy.md](docs/deploy.md).                                                                                                                                                                                              |
 
 ## Data shared by Web and App
 
@@ -82,47 +82,35 @@ even when starting from the repository root.
   record a moment and an optional point with parts by plugin, a trip a collection, each
   thing public or private by its own say, its container's, its plugin's (a bill's is
   private), else its entry's; an entry is public unless it says otherwise. The plugins are
-  grouped into modules (`modules` there: footprints, ledger, things, car, food, cost, check-ins, occasions),
-  what the app lets the owner turn on or off as one in 记录项与公开; `vp run data:tables`
-  generates Android's `data/spec/Modules.kt` and Apple's `Modules.swift` from them. A module off hides its rows, pages
+  grouped into modules, what the owner turns on or off in 记录项与公开. A module off hides its rows, pages
   and records and stops its background work, and its data stays: gate a new screen, part or
   service by its module (`Settings.isOn`), and a new page of a module in `moduleOf`, which
   keeps a link to it from opening it while the module is off.
-  The API serves them as entries and collections, `/v2` alone, and D1 keeps them only so.
   Every API request needs a token and sees everything; the site trims what it shows to what
   is public. `vp run data:migrate` moves `data/` between the layouts (dry run by default,
   `--rollback` back); `vp run data:import` writes either layout to D1 as entries and
   collections. Ask before either touches live data.
-- D1 holds entries, places, collections, routes and the car's statistics. A
-  device or a subscription is an entry with its plugin's part, not a record of its own.
-  Git keeps no copy of them and nothing backs them up to GitHub: `data/` is a local working
-  copy in canonical JSON that `vp run data:export` writes and git ignores, except
-  `data/zeekr/` and `data/schema/`. The car's expenses and redacted Zeekr sources live only
-  there in the repository. Tests read the made-up `packages/data-spec/test/fixtures/data/`,
+- Git keeps no copy of the records and nothing backs them up to GitHub: `data/` is a local
+  working copy that `vp run data:export` writes and git ignores, except `data/zeekr/` and
+  `data/schema/`. Tests read the made-up `packages/data-spec/test/fixtures/data/`,
   never real records. The formatter leaves `data/` alone. The repository is public: neither
   the records (in any layout, the old `src/content/moments` included) nor the image bucket
   go into it, and its history was rewritten on 2026-11-16 to take them out. A branch or
   clone from before then still carries them; rebase it onto the new history before pushing
   it, never push it as it is.
 - What leaves the phone keeps one shape on both sides: the app keeps a complete copy of D1's
-  records in SQLite, every kind (entries, collections, places, the car's
-  statistics and captures) in the same table, with the same columns and the same
-  record JSON, defined once in `@hyoban/data-spec/tables` and generated for each by
-  `vp run data:tables`, so changing one changes both. The copy only follows `GET /v2/rows`;
-  the phone's edits still go through `POST /v2/changes`. What the server keeps or works out for itself (caches,
-  leases, the channel's posts, the trips' routes, which the app reads as `GET /v2/routes`) is
-  not copied; a sync skips a table the copy doesn't keep and rebuilds only the rows it brought. Only what stays on the phone (the ledger, the footprints, the app's
-  unpublished changes and settings) takes a shape of its own.
+  records in SQLite, in the same tables, columns and record JSON, defined once in
+  `@hyoban/data-spec/tables`, so changing one changes both. The copy only follows
+  `GET /v2/rows`; the phone's edits go through `POST /v2/changes`. What the server works out
+  for itself (caches, leases, the channel's posts, the trips' routes) is not copied. Only what
+  stays on the phone (the ledger, the footprints, the app's unpublished changes and settings)
+  takes a shape of its own.
 - Android keeps edits locally until the user reviews and publishes one change set
   through `POST /v2/changes`. Upload originals first; do not bypass this publishing
   boundary with individual writes. The API fetches missing trip routes after writes.
-- Scripts that write records first export the latest data, then push the
-  changed records with `vp run data:push`. `vp run data:import` restores an entire
-  exported copy; it is not the normal editing workflow. See `docs/data.md` for side effects.
-- The site build reads only the API export, with `MOMENTS_API_TOKEN`; when the export fails,
-  or in CI without a token, the build fails. A local build without one reads the made-up
-  fixtures, so a fork runs before it has an API.
-- Who the site belongs to and where it lives (domain, author, links, anniversaries, image
+- Scripts that write records first export, then push what they changed with
+  `vp run data:push`; `vp run data:import` is for restoring, not editing ([docs/data.md](docs/data.md)).
+- Who the site belongs to and where it lives (domain, author, links, image
   origin, API URL, GitHub repository, Android application id) lives only in
   `site.config.json`, read by the site, scripts, API and Android build; keep new personal
   values there rather than in code, keep the site working without a car's records, and
@@ -161,11 +149,9 @@ even when starting from the repository root.
   year, month or trip and kept beside a lifted trip alike, the two read together by time.
   The app's trip playback follows `packages/trip-map/src/player`, including a route
   that keeps moving during playback.
-- A trip reads as one conversation on both: the site's trip sidebar (`TripChat.astro`) draws
-  the app's chat timeline (date capsules, Moments and check-ins as bubbles from the right with
-  their bills and charges at their foot, the other bills and charges in a bubble from the left,
-  a charge and the bill paid at its very time one line, and a day the car moved ending with
-  用车); change both together, the calendar's day list keeping the same lines.
+- A trip reads as one conversation on both: the site's trip sidebar (`TripChat.astro`, see
+  [DESIGN.md](apps/web/DESIGN.md)) draws the app's chat timeline; change both together, the
+  calendar's day list keeping the same lines.
 
 ## Website work
 

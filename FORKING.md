@@ -1,6 +1,6 @@
 # Making it your own
 
-The repository is one person's site, API and Android app, but nothing in the code is tied to
+The repository is one person's site, API and apps, but nothing in the code is tied to
 that person: who the site belongs to and where it lives is in one file,
 [`site.config.json`](site.config.json), and the rest of what is personal is content to
 replace. A fork changes that file, swaps the content, and deploys to its own Cloudflare
@@ -28,7 +28,7 @@ missing token still fails the build.
 | `site.author`             | the name on posts and share pictures                                                              |
 | `site.description`        | the home page's and feed's description                                                            |
 | `site.telegram`           | the Telegram channel posts name in their `telegram:channel` meta, or `""` for none                |
-| `site.links`              | the footer's links: `href`, `label` and a UnoCSS icon class                                       |
+| `site.links`              | the footer's links: `href`, `label` and an icon class from `apps/web/src/styles/icons.css`        |
 | `music.neteasePlaylistId` | the NetEase Cloud Music playlist `/media/music/` lists, or `null` for no music                    |
 | `assets`                  | the Cloudflare account id, the R2 bucket and the origin that serves it ([assets](docs/assets.md)) |
 | `api.url`                 | the API the site and scripts read, unless `MOMENTS_API_URL` names another                         |
