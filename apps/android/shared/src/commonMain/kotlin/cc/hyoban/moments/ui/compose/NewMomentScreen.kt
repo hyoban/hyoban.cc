@@ -267,6 +267,20 @@ fun NewMomentScreen(
     var maskStyle by remember { mutableStateOf<String?>(null) }
     var styleChosen by remember { mutableStateOf(false) }
     val styleFor: (List<Mask>) -> String? = { beside -> if (styleChosen) maskStyle else Sticker.random(beside.mapNotNull { it.sticker }) }
+    // The photos new here whose faces have been looked for: each is covered as it comes in, the
+    // switch only turning it off, and saving waits for those still being looked at.
+    var scannedFaces by remember { mutableStateOf(emptySet<PhotoRef>()) }
+    val coverFaces: suspend (List<PhotoRef>) -> Unit = { refs ->
+        for (ref in refs) {
+            if (ref in scannedFaces) continue
+            val found = Faces.find(ref).orEmpty()
+            if (ref in scannedFaces) continue
+            scannedFaces = scannedFaces + ref
+            if (found.isNotEmpty() && ref !in masks) {
+                masks = masks + (ref to found.fold(emptyList()) { beside, face -> beside + face.copy(sticker = styleFor(beside)) })
+            }
+        }
+    }
     val showMessage = rememberShowMessage()
     var askedMotion by remember { mutableStateOf(emptySet<PhotoRef>()) }
     // What it cost, as typed: a meal or anything else, what it went on (a meal's dishes), how it
@@ -322,6 +336,10 @@ fun NewMomentScreen(
             saveError = refused.map { it.second }.distinct().joinToString("\n") { textOf(refusalText(it)) }
         }
     }
+    // New photos, read, each has its faces covered.
+    val unscannedFaces = if (!Faces.available) emptyList() else
+        photos.filter { it !in originalMedia && it !in scannedFaces && infos[it]?.let { info -> !info.video } == true }
+    LaunchedEffect(unscannedFaces) { coverFaces(unscannedFaces) }
     // Motion photos just added, to be asked whether they go in as photos.
     val unaskedMotion = photos.filter { infos[it]?.motion == true && it !in askedMotion }
     val motionPhotos = photos.filter { infos[it]?.motion == true }.toSet()
@@ -422,6 +440,8 @@ fun NewMomentScreen(
         scope.launch {
             try {
                 withContext(NonCancellable) {
+                    // No new photo goes in before its faces have been looked for.
+                    if (withMoment) coverFaces(unscannedFaces)
                     val moment = if (withMoment) {
                         val (moment, newPlace) = buildMoment(container, text, photos, utility, stills, masks, infos, time, place, cost, private, original, originalMedia, stayUid)
                         // Kept as what it now is, a Moment or a check-in, named after its place when that moved.

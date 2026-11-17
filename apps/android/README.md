@@ -221,8 +221,10 @@ is its place's name once the place is another, and the check-in goes with the pl
   Held and dragged in the row, they change places, the first being the cover; a tap opens them in
   the viewer, the same one a Moment's media and 选照片 open (`ui/viewer/ViewerFrame.kt`), where the
   bar takes one out, keeps it off covers (不用作封面) or has a motion photo go in as its still alone
-  (只用静态画面). 人脸打码 there, on a photo newly picked, has ML Kit (through Google Play
-  services, on the phone alone) find the faces in it and lays a patch over each, drawn as saving will write it: a mosaic, or
+  (只用静态画面). 人脸打码 is on by default for a photo newly picked: as each comes in, ML Kit (through Google Play
+  services, on the phone alone) finds the faces in it and lays a patch over each, and saving waits for
+  any still being looked at, so no face goes in uncovered by being quick; a photo with none found
+  stays as it is, and the switch in the viewer turns it off, or on again to look once more. Each patch is drawn as saving will write it: a mosaic, or
   one of the design system's stickers (猫, 狗, 熊, 兔, 笑脸, 花) a little larger than the patch. A tap
   on a patch chooses it, and the bar turns into its styles and 去掉这一块; a tap elsewhere lets go,
   or lays another patch, as large as the patch nearest it (a fifth of the photo with none). Until a style is chosen there each patch takes a sticker at random,
