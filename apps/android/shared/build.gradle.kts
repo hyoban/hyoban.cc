@@ -56,6 +56,7 @@ kotlin {
             implementation(libs.exifinterface)
             implementation(libs.capsule)
             implementation(libs.mlkit.faces)
+            implementation(libs.mlkit.text.chinese)
         }
     }
 }

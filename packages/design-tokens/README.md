@@ -10,7 +10,8 @@ These files are the one source. `vp run design:tokens` at the root writes the An
 `ui/design/AppIcons.kt`. For the Apple apps the same command writes `apps/apple`'s
 `HereKit/Generated/Tokens.swift`, and `python3 packages/design-tokens/icons/swift.py` its
 `AppIcons.swift` (`icons/svg.py` holds what both icon generators share). `stickers/stickers.py`
-draws 人脸打码's stickers in the icons' hand, in colour, and `python3 packages/design-tokens/stickers/kotlin.py`
+draws 打码's stickers in the icons' hand, in colour (a face's on the 24 grid, a license plate's long
+animals on a 48 by 18 one, each with the box it covers), and `python3 packages/design-tokens/stickers/kotlin.py`
 writes the Android app's `ui/design/Stickers.kt` from it. A web build will get a
 generator of its own beside them. Never edit the generated files by hand.
 

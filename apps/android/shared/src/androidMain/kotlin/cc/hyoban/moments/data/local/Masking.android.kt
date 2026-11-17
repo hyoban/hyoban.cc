@@ -16,6 +16,10 @@ import cc.hyoban.moments.logWarning
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.TextRecognizer
+import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
+import com.google.android.gms.tasks.Task
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -25,35 +29,107 @@ import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-actual object Faces {
+actual object Masking {
     actual val available: Boolean = true
 
-    actual suspend fun find(ref: PhotoRef): List<Mask>? = withContext(Dispatchers.IO) {
+    actual suspend fun find(ref: PhotoRef): FoundPatches? = withContext(Dispatchers.IO) {
         try {
             val bitmap = small(ref)
+            val image = InputImage.fromBitmap(bitmap, 0)
+            val width = bitmap.width.toFloat()
+            val height = bitmap.height.toFloat()
             val detector = FaceDetection.getClient(
                 FaceDetectorOptions.Builder()
                     .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
                     .setMinFaceSize(MIN_FACE)
                     .build(),
             )
-            try {
-                val boxes = suspendCancellableCoroutine<List<Rect>?> { done ->
-                    detector.process(InputImage.fromBitmap(bitmap, 0))
-                        .addOnSuccessListener { faces -> done.resume(faces.map { it.boundingBox }) }
-                        .addOnFailureListener { error ->
-                            logWarning(TAG, "Faces not found in $ref", error)
-                            done.resume(null)
-                        }
-                } ?: return@withContext null
-                boxes.map { widened(it, bitmap.width.toFloat(), bitmap.height.toFloat()) }
+            val faces = try {
+                detector.process(image).result("Faces not found in $ref")?.map { widened(it.boundingBox, width, height) }
             } finally {
                 detector.close()
             }
+            val reader = TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
+            val plates = try {
+                // A plate near takes in more than a tile, one far off too few pixels for its
+                // characters to be read in the small photo: it is read whole, then in tiles of
+                // the photo at its full size.
+                val whole = platesIn(reader, image, ref)?.map { plate(it, width, height) }
+                val tiled = whole?.let { platesInTiles(reader, ref) }
+                whole?.let { distinctPatches(it + tiled.orEmpty()) }
+            } finally {
+                reader.close()
+            }
+            if (faces == null && plates == null) null else FoundPatches(faces.orEmpty(), plates.orEmpty())
         } catch (e: Exception) {
-            logWarning(TAG, "Couldn't read $ref for faces", e)
+            logWarning(TAG, "Couldn't read $ref for faces and plates", e)
             null
         }
+    }
+
+    /** The boxes, in [image]'s pixels, of the plates [reader] reads in it; null when it can't read it. */
+    private suspend fun platesIn(reader: TextRecognizer, image: InputImage, ref: PhotoRef): List<Rect>? =
+        reader.process(image).result("Text not read in $ref")?.textBlocks?.flatMap { it.lines }?.mapNotNull { line ->
+            plateBox(line.elements.map { it.text to it.boundingBox })
+        }
+
+    /**
+     * The plates in the photo at [ref] read at up to [TILED_SIZE] on its longer side, in tiles
+     * [TILE] across overlapping by [TILE_OVERLAP], so that a plate is whole in one of them; none
+     * when the photo is no larger than the small one already read.
+     */
+    private suspend fun platesInTiles(reader: TextRecognizer, ref: PhotoRef): List<Mask> {
+        val large = decode(ImageDecoder.createSource(AndroidApp.context.contentResolver, ref), TILED_SIZE, mutable = false)
+        try {
+            if (max(large.width, large.height) <= FIND_SIZE) return emptyList()
+            val found = mutableListOf<Mask>()
+            for (top in tileStarts(large.height)) for (left in tileStarts(large.width)) {
+                val tile = Bitmap.createBitmap(large, left, top, minOf(TILE, large.width - left), minOf(TILE, large.height - top))
+                try {
+                    platesIn(reader, InputImage.fromBitmap(tile, 0), ref)?.forEach { box ->
+                        box.offset(left, top)
+                        found += plate(box, large.width.toFloat(), large.height.toFloat())
+                    }
+                } finally {
+                    if (tile !== large) tile.recycle()
+                }
+            }
+            return found
+        } finally {
+            large.recycle()
+        }
+    }
+
+    /** Where the tiles along a side [length] long start, the last ending at its end. */
+    private fun tileStarts(length: Int): List<Int> {
+        if (length <= TILE) return listOf(0)
+        val step = TILE - TILE_OVERLAP
+        return (0 until length - TILE step step) + (length - TILE)
+    }
+
+    /** What this task gives, or null, logging [failed] with why, when it fails. */
+    private suspend fun <T> Task<T>.result(failed: String): T? = suspendCancellableCoroutine { done ->
+        addOnSuccessListener { done.resume(it) }
+        addOnFailureListener { error ->
+            logWarning(TAG, failed, error)
+            done.resume(null)
+        }
+    }
+
+    /**
+     * The box round the words of a line, [words] each with its box, that read as a plate: those
+     * the plate's characters fall in, or null when the line has none or a word of it has no box.
+     */
+    private fun plateBox(words: List<Pair<String, Rect?>>): Rect? {
+        val range = plateIn(words.joinToString("") { it.first }) ?: return null
+        var start = 0
+        val box = Rect()
+        for ((word, rect) in words) {
+            val end = start + word.length
+            if (end > range.first && start <= range.last) box.union(rect ?: return null)
+            start = end
+        }
+        return box.takeUnless { it.isEmpty }
     }
 
     actual suspend fun preview(ref: PhotoRef, masks: List<Mask>): Map<Mask, ImageBitmap>? = withContext(Dispatchers.IO) {
@@ -67,8 +143,8 @@ actual object Faces {
     }
 
     /**
-     * The photo at [ref] upright and at most [FIND_SIZE] on its longer side, for finding faces
-     * and drawing the patches' preview; the last one is kept, as the viewer asks for the same
+     * The photo at [ref] upright and at most [FIND_SIZE] on its longer side, for finding faces and
+     * plates and drawing the patches' preview; the last one is kept, as the viewer asks for the same
      * photo each time a patch is laid or taken away.
      */
     private fun small(ref: PhotoRef): Bitmap = synchronized(this) {
@@ -101,7 +177,7 @@ actual object Faces {
             if (rect.width() < 2 || rect.height() < 2) continue
             val sticker = Sticker.of(mask.sticker)
             if (sticker != null) {
-                drawSticker(canvas, sticker, rect, Mask.STICKER_SCALE)
+                drawSticker(canvas, sticker, rect)
                 continue
             }
             val blocks = mosaic(bitmap, rect)
@@ -150,17 +226,17 @@ actual object Faces {
         return blocks
     }
 
-    /** [sticker] centred on [rect], [scale] times its longer side across, as the viewer draws it. */
-    private fun drawSticker(canvas: Canvas, sticker: Sticker, rect: Rect, scale: Float) {
-        val side = max(rect.width(), rect.height()) * scale
+    /** [sticker] over [rect], its cover box taking it in, as the viewer draws it. */
+    private fun drawSticker(canvas: Canvas, sticker: Sticker, rect: Rect) {
+        val scale = sticker.scaleOver(rect.width().toFloat(), rect.height().toFloat())
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
         }
         canvas.save()
-        canvas.translate(rect.exactCenterX() - side / 2, rect.exactCenterY() - side / 2)
-        canvas.scale(side / Sticker.GRID, side / Sticker.GRID)
-        canvas.translate(-Sticker.GRID_ORIGIN, -Sticker.GRID_ORIGIN)
+        canvas.translate(rect.exactCenterX(), rect.exactCenterY())
+        canvas.scale(scale, scale)
+        canvas.translate(-(sticker.coverLeft + sticker.coverWidth / 2), -(sticker.coverTop + sticker.coverHeight / 2))
         for (layer in sticker.layers) {
             val path = PathParser.createPathFromPathData(layer.path)
             layer.fill?.let {
@@ -204,10 +280,36 @@ actual object Faces {
         )
     }
 
+    /**
+     * The words of a plate run from one edge of its characters to the other: widened a sixth each
+     * side and a third above and below, for the plate's frame, as fractions of the photo.
+     */
+    private fun plate(box: Rect, width: Float, height: Float): Mask {
+        val w = box.width().toFloat()
+        val h = box.height().toFloat()
+        return Mask(
+            ((box.left - w / 6) / width).coerceIn(0f, 1f),
+            ((box.top - h / 3) / height).coerceIn(0f, 1f),
+            ((box.right + w / 6) / width).coerceIn(0f, 1f),
+            ((box.bottom + h / 3) / height).coerceIn(0f, 1f),
+            plate = true,
+        )
+    }
+
     private const val TAG = "Moments"
 
-    /** The size faces are looked for at: enough for one a fiftieth of the photo across. */
+    /** The size faces and plates are looked for at: enough for a face a fiftieth of the photo across. */
     private const val FIND_SIZE = 1600
+
+    /**
+     * The size plates are read at in tiles: a plate a car's length off in a 12 MP photo has
+     * characters some 20 pixels high, enough to read, where the small photo leaves it a third of that.
+     */
+    private const val TILED_SIZE = 4096
+
+    /** A tile's side, near what the text recognizer reads best, and how much tiles overlap: wider than a far plate. */
+    private const val TILE = 1536
+    private const val TILE_OVERLAP = 256
 
     /** The smallest face looked for, against the photo's width. */
     private const val MIN_FACE = 0.02f

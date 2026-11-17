@@ -124,7 +124,7 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.local.Around
 import cc.hyoban.moments.data.things.checkinAsMoment
 import cc.hyoban.moments.data.things.editedEntry
-import cc.hyoban.moments.data.local.Faces
+import cc.hyoban.moments.data.local.Masking
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.Mask
 import cc.hyoban.moments.data.local.sha256Of
@@ -253,7 +253,7 @@ fun NewMomentScreen(
     val infos = remember { mutableStateMapOf<PhotoRef, PhotoInfo>() }
     // The motion photos added as photos alone, their clips left out, and those already asked about.
     var stills by remember { mutableStateOf(emptySet<PhotoRef>()) }
-    // The photos 人脸打码 is on for, each with its patches: a photo saved with them has them still,
+    // The photos 打码 is on for, each with its patches: a photo saved with them has them still,
     // kept beside the app's copy as it was picked.
     val originalMasks = remember(originalMedia) {
         originalMedia.mapNotNull { (ref, media) -> media.local?.masks?.takeIf { it.isNotEmpty() }?.let { ref to it } }.toMap()
@@ -261,24 +261,25 @@ fun NewMomentScreen(
     var masks by remember { mutableStateOf(originalMasks) }
     // Where the patches are drawn from: a photo saved with them, the copy as it was picked.
     val unmaskedOf: (PhotoRef) -> PhotoRef = { ref -> originalMedia[ref]?.local?.unmasked?.toPhotoRef() ?: ref }
-    // The patch chosen in the viewer, for the bar to change its style, and the style new ones take
-    // once one has been chosen there (none being the mosaic); until then each takes a sticker at random.
+    // The patch chosen in the viewer, for the bar to change its style, and the style new ones take,
+    // a face's and a plate's each, once one of that kind has been chosen there (none being the
+    // mosaic); until then each takes a sticker of its kind at random.
     var chosenMask by remember { mutableStateOf<Pair<PhotoRef, Mask>?>(null) }
-    var maskStyle by remember { mutableStateOf<String?>(null) }
-    var styleChosen by remember { mutableStateOf(false) }
-    val styleFor: (List<Mask>) -> String? = { beside -> if (styleChosen) maskStyle else Sticker.random(beside.mapNotNull { it.sticker }) }
-    // The photos new here whose faces have been looked for: each is covered as it comes in, the
-    // switch only turning it off, and saving waits for those still being looked at.
-    var scannedFaces by remember { mutableStateOf(emptySet<PhotoRef>()) }
-    val coverFaces: suspend (List<PhotoRef>) -> Unit = { refs ->
+    // A face's (false) and a plate's (true) style once chosen.
+    var maskStyles by remember { mutableStateOf(emptyMap<Boolean, String?>()) }
+    val styleFor: (List<Mask>, Boolean) -> String? = { beside, plate ->
+        if (plate in maskStyles) maskStyles[plate] else Sticker.random(beside.mapNotNull { it.sticker }, plate)
+    }
+    // The photos new here whose faces and plates have been looked for: each is covered as it comes
+    // in, the switch only turning it off, and saving waits for those still being looked at.
+    var scanned by remember { mutableStateOf(emptySet<PhotoRef>()) }
+    val coverFound: suspend (List<PhotoRef>) -> Unit = { refs ->
         for (ref in refs) {
-            if (ref in scannedFaces) continue
-            val found = Faces.find(ref).orEmpty()
-            if (ref in scannedFaces) continue
-            scannedFaces = scannedFaces + ref
-            if (found.isNotEmpty() && ref !in masks) {
-                masks = masks + (ref to found.fold(emptyList()) { beside, face -> beside + face.copy(sticker = styleFor(beside)) })
-            }
+            if (ref in scanned) continue
+            val found = Masking.find(ref)
+            if (ref in scanned) continue
+            scanned = scanned + ref
+            if (found != null && !found.isEmpty && ref !in masks) masks = masks + (ref to found.patches(emptyList(), styleFor))
         }
     }
     val showMessage = rememberShowMessage()
@@ -336,10 +337,10 @@ fun NewMomentScreen(
             saveError = refused.map { it.second }.distinct().joinToString("\n") { textOf(refusalText(it)) }
         }
     }
-    // New photos, read, each has its faces covered.
-    val unscannedFaces = if (!Faces.available) emptyList() else
-        photos.filter { it !in originalMedia && it !in scannedFaces && infos[it]?.let { info -> !info.video } == true }
-    LaunchedEffect(unscannedFaces) { coverFaces(unscannedFaces) }
+    // New photos, read, each has its faces and plates covered.
+    val unscanned = if (!Masking.available) emptyList() else
+        photos.filter { it !in originalMedia && it !in scanned && infos[it]?.let { info -> !info.video } == true }
+    LaunchedEffect(unscanned) { coverFound(unscanned) }
     // Motion photos just added, to be asked whether they go in as photos.
     val unaskedMotion = photos.filter { infos[it]?.motion == true && it !in askedMotion }
     val motionPhotos = photos.filter { infos[it]?.motion == true }.toSet()
@@ -440,8 +441,8 @@ fun NewMomentScreen(
         scope.launch {
             try {
                 withContext(NonCancellable) {
-                    // No new photo goes in before its faces have been looked for.
-                    if (withMoment) coverFaces(unscannedFaces)
+                    // No new photo goes in before its faces and plates have been looked for.
+                    if (withMoment) coverFound(unscanned)
                     val moment = if (withMoment) {
                         val (moment, newPlace) = buildMoment(container, text, photos, utility, stills, masks, infos, time, place, cost, private, original, originalMedia, stayUid)
                         // Kept as what it now is, a Moment or a check-in, named after its place when that moved.
@@ -773,14 +774,13 @@ fun NewMomentScreen(
                             val restyled = chosen.copy(sticker = style)
                             masks = masks + (ref to masks[ref].orEmpty().map { if (it == chosen) restyled else it })
                             chosenMask = ref to restyled
-                            maskStyle = style
-                            styleChosen = true
+                            maskStyles = maskStyles + (chosen.plate to style)
                         }
                         Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
                             StyleChoice(chosen.sticker == null, stringResource(Res.string.style_mosaic), "style_mosaic", { restyle(null) }) {
                                 Icon(AppIcons.Mosaic, contentDescription = null, tint = MediaOverlay.content)
                             }
-                            for (sticker in Sticker.entries) {
+                            for (sticker in Sticker.forPlate(chosen.plate)) {
                                 StickerChoice(sticker, chosen.sticker == sticker.key) { restyle(sticker.key) }
                             }
                         }
@@ -795,14 +795,14 @@ fun NewMomentScreen(
                         }
                         return@MomentMediaViewer
                     }
-                    // A photo pixelated goes in as a still: its clip would show the faces.
+                    // A photo pixelated goes in as a still: its clip would show what is covered.
                     if (ref in motionPhotos && ref !in masks) BarToggle(ref in stills, AppIcons.LiveOff, stringResource(Res.string.action_photo_still), "viewer_still") {
                         stills = if (ref in stills) stills - ref else stills + ref
                     }
                     // On a photo new here, or one saved here and not yet published: a published one is the site's as it is.
                     val maskable = originalMedia[ref]?.let { it.published == null && it.local?.copied == true } ?: true
-                    if (Faces.available && maskable && ref !in videoPhotos) {
-                        BarToggle(ref in masks, AppIcons.Mosaic, stringResource(Res.string.action_photo_faces), "viewer_faces") {
+                    if (Masking.available && maskable && ref !in videoPhotos) {
+                        BarToggle(ref in masks, AppIcons.Mosaic, stringResource(Res.string.action_photo_mask), "viewer_faces") {
                             if (ref in masks) {
                                 masks = masks - ref
                                 if (chosenMask?.first == ref) chosenMask = null
@@ -810,14 +810,13 @@ fun NewMomentScreen(
                             }
                             masks = masks + (ref to emptyList())
                             scope.launch {
-                                val found = Faces.find(unmaskedOf(ref))
-                                // Turned off meanwhile, it stays off; patches laid meanwhile stay beside the faces.
+                                val found = Masking.find(unmaskedOf(ref))
+                                // Turned off meanwhile, it stays off; patches laid meanwhile stay beside those found.
                                 val laid = masks[ref] ?: return@launch
-                                val styled = found.orEmpty().fold(laid) { beside, face -> beside + face.copy(sticker = styleFor(beside)) }
-                                masks = masks + (ref to styled.drop(laid.size) + laid)
+                                masks = masks + (ref to found?.patches(laid, styleFor).orEmpty() + laid)
                                 when {
-                                    found == null -> showMessage(textOf(Res.string.message_faces_unavailable))
-                                    found.isEmpty() && laid.isEmpty() -> showMessage(textOf(Res.string.message_no_faces))
+                                    found == null -> showMessage(textOf(Res.string.message_masking_unavailable))
+                                    found.isEmpty && laid.isEmpty() -> showMessage(textOf(Res.string.message_nothing_to_mask))
                                 }
                             }
                         }
@@ -937,6 +936,10 @@ private fun StickerChoice(sticker: Sticker, on: Boolean, onChoose: () -> Unit) {
             Sticker.RABBIT -> Res.string.sticker_rabbit
             Sticker.SMILE -> Res.string.sticker_smile
             Sticker.FLOWER -> Res.string.sticker_flower
+            Sticker.LYING_CAT -> Res.string.sticker_lying_cat
+            Sticker.DACHSHUND -> Res.string.sticker_dachshund
+            Sticker.CATERPILLAR -> Res.string.sticker_caterpillar
+            Sticker.FISH -> Res.string.sticker_fish
         },
     )
     StyleChoice(on, label, "style_${sticker.key}", onChoose) { StickerImage(sticker, 30.dp) }
@@ -1390,7 +1393,7 @@ private suspend fun buildMoment(
             val local = media.local
             val patches = masks[uri].orEmpty()
             if (media.published != null || local == null || !local.copied || patches == local.masks.orEmpty()) return@map media.copy(utility = kept)
-            // 人脸打码 changed on a photo saved here: drawn again from the copy as it was picked.
+            // 打码 changed on a photo saved here: drawn again from the copy as it was picked.
             val source = File(URI(local.unmasked ?: local.uri))
             val drawnBefore = local.unmasked?.let { File(URI(local.uri)) }
             if (patches.isEmpty()) {
@@ -1403,9 +1406,9 @@ private suspend fun buildMoment(
                     local = local.copy(uri = source.toPhotoRef().toString(), sha256 = sha256Of(source), unmasked = null, masks = null),
                 )
             }
-            // Its clip would show the faces: a photo with patches is a still.
+            // Its clip would show what is covered: a photo with patches is a still.
             local.videoUri?.let { File(URI(it)).delete() }
-            val drawn = Faces.pixelate(source, File(directory, "${media.uid}-${Ulid.next()}.jpg"), patches)
+            val drawn = Masking.pixelate(source, File(directory, "${media.uid}-${Ulid.next()}.jpg"), patches)
             drawnBefore?.delete()
             val size = Photos.read(drawn.file.toPhotoRef())
             return@map media.copy(
@@ -1433,8 +1436,8 @@ private suspend fun buildMoment(
                 photo.video?.delete()
                 photo.copy(video = null)
             }
-        // 人脸打码: the patches drawn into a copy of their own, the copy as picked kept beside it to change them again.
-        val drawn = if (patches.isEmpty()) null else Faces.pixelate(copied.file, File(directory, "$uid-${Ulid.next()}.jpg"), patches)
+        // 打码: the patches drawn into a copy of their own, the copy as picked kept beside it to change them again.
+        val drawn = if (patches.isEmpty()) null else Masking.pixelate(copied.file, File(directory, "$uid-${Ulid.next()}.jpg"), patches)
         // A pixelated copy is upright and may be smaller than what was picked.
         val size = drawn?.let { Photos.read(it.file.toPhotoRef()) } ?: info
         MomentMedia(

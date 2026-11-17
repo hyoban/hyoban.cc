@@ -45,7 +45,7 @@ const localMediaSchema = z.looseObject({
     .optional(),
   copied: z.boolean().default(false),
   /**
-   * 人脸打码: the app's own copy as picked; `masks` are drawn from it into `uri`, which is what is
+   * 打码: the app's own copy as picked; `masks` are drawn from it into `uri`, which is what is
    * shown and published. Kept to change the patches again until the photo is published.
    */
   unmasked: z.string().min(1).optional(),
@@ -58,6 +58,8 @@ const localMediaSchema = z.looseObject({
         bottom: z.number().min(0).max(1),
         /** The design system's sticker over the patch; none is a mosaic. */
         sticker: z.string().min(1).optional(),
+        /** Over a license plate, taking a plate's stickers; else over a face. */
+        plate: z.boolean().optional(),
       }),
     )
     .optional(),

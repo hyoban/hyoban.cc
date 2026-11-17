@@ -2,8 +2,10 @@
 # Exposes the shell user service used to read the physical side key, without root.
 shizuku = "13.1.5"
 playLocation = "21.4.0"
-# Faces found on the phone for 人脸打码, the model kept by Google Play services rather than the APK.
+# Faces, and the text license plates are read from, found on the phone for 打码, the models kept
+# by Google Play services rather than the APK.
 mlkitFaces = "17.1.0"
+mlkitTextChinese = "16.0.2"
 agp = "9.5.0"
 # Newer than the Kotlin the Android Gradle plugin bundles, so the root build file pins it;
 # the compiler plugins and kotlin-test must match it.
@@ -55,6 +57,7 @@ shizuku-api = { group = "dev.rikka.shizuku", name = "api", version.ref = "shizuk
 shizuku-provider = { group = "dev.rikka.shizuku", name = "provider", version.ref = "shizuku" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playLocation" }
 mlkit-faces = { group = "com.google.android.gms", name = "play-services-mlkit-face-detection", version.ref = "mlkitFaces" }
+mlkit-text-chinese = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition-chinese", version.ref = "mlkitTextChinese" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }

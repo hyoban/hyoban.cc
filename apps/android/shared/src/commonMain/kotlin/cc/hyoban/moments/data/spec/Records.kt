@@ -202,7 +202,7 @@ data class LocalMedia(
     /** True when `uri` points at the app's own copy rather than the gallery. */
     val copied: Boolean = false,
     /**
-     * 人脸打码: the app's own copy as it was picked, [masks] drawn from it into `uri`, which is
+     * 打码: the app's own copy as it was picked, [masks] drawn from it into `uri`, which is
      * what is shown, shared and published; both kept to change the patches again until it is
      * published, when this copy goes with the rest.
      */

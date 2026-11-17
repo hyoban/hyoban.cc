@@ -278,9 +278,9 @@
     <string name="action_remove_video">移除视频</string>
     <string name="action_photo_utility">不用作封面</string>
     <string name="action_photo_still">只用静态画面</string>
-    <string name="action_photo_faces">人脸打码</string>
-    <string name="message_no_faces">没找到人脸，点照片加一块</string>
-    <string name="message_faces_unavailable">现在认不了人脸，点照片加一块</string>
+    <string name="action_photo_mask">打码</string>
+    <string name="message_nothing_to_mask">没找到人脸或车牌，点照片加一块</string>
+    <string name="message_masking_unavailable">现在认不了人脸和车牌，点照片加一块</string>
     <string name="label_mask">打码处，点按选中</string>
     <string name="action_remove_mask">去掉这一块</string>
     <string name="style_mosaic">马赛克</string>
@@ -290,6 +290,10 @@
     <string name="sticker_rabbit">兔</string>
     <string name="sticker_smile">笑脸</string>
     <string name="sticker_flower">花</string>
+    <string name="sticker_lying_cat">趴着的猫</string>
+    <string name="sticker_dachshund">腊肠狗</string>
+    <string name="sticker_caterpillar">毛毛虫</string>
+    <string name="sticker_fish">鱼</string>
     <string name="action_move_earlier">往前移</string>
     <string name="action_move_later">往后移</string>
     <string name="section_food">美食</string>

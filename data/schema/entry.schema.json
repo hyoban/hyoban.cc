@@ -214,6 +214,9 @@
                                 "sticker": {
                                   "type": "string",
                                   "minLength": 1
+                                },
+                                "plate": {
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -446,6 +449,9 @@
                                 "sticker": {
                                   "type": "string",
                                   "minLength": 1
+                                },
+                                "plate": {
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -712,6 +718,9 @@
                                 "sticker": {
                                   "type": "string",
                                   "minLength": 1
+                                },
+                                "plate": {
+                                  "type": "boolean"
                                 }
                               },
                               "required": [

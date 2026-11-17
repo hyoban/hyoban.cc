@@ -317,9 +317,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   README); don't show it on others or widen the match without asking.
 - The NAS's photo API is undocumented (README, 选照片): read changes to it off the NAS's own web
   bundle (`/photo/assets/`) or its traffic, and test deletes only when the owner asks.
-- 人脸打码 finds faces with ML Kit through Google Play services, the owner's choice: Play services
-  fetches its model and ML Kit reports its own usage to Google, the one Google request the app
-  makes beyond location; the photos never leave the phone for it. Ask before using ML Kit for anything else.
+- 打码 finds faces, and license plates by reading a photo's text (Chinese text recognition), with ML
+  Kit through Google Play services, the owner's choice: Play services fetches its models and ML Kit
+  reports its own usage to Google, the one Google request the app makes beyond location; the photos
+  never leave the phone for it. Ask before using ML Kit for anything else.
 - Beyond the services named here, the app's one request of its own is for updates: the feed of this
   repository's GitHub releases (not GitHub's API, whose limit without a token a shared proxy uses up) and the APK it installs (`update/`), with nothing of the phone's.
 - No keys in the build (README, Elsewhere): a service that needs a key takes the owner's own,

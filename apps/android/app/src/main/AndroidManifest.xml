@@ -229,8 +229,8 @@
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
-        <!-- Play services fetches the face model with the app, rather than at the first 人脸打码. -->
-        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="face" />
+        <!-- Play services fetches the face and Chinese text models with the app, rather than at the first 打码. -->
+        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="face,ocr_chinese" />
     </application>
 
 </manifest>

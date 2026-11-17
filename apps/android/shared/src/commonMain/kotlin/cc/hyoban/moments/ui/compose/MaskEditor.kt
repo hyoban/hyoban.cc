@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -41,7 +40,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.data.local.Faces
+import cc.hyoban.moments.data.local.Masking
 import cc.hyoban.moments.data.local.Mask
 import cc.hyoban.moments.data.local.PhotoRef
 import cc.hyoban.moments.res.*
@@ -51,7 +50,7 @@ import cc.hyoban.moments.ui.theme.MediaOverlay
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * 人脸打码's patches over [photo], picked for a Moment, laid on it in the viewer at its size, each
+ * 打码's patches over [photo], picked for a Moment, laid on it in the viewer at its size, each
  * as saving will write it: the mosaic, ringed in white (dark until it is drawn), or its sticker.
  * A tap on a patch chooses it, [selected], for the bar to change its style or take it away; a
  * tap elsewhere lets go of the one chosen, or with none chosen lays a new one there, in the style
@@ -62,7 +61,7 @@ fun MaskEditor(
     photo: PhotoRef,
     masks: List<Mask>,
     selected: Mask?,
-    style: (List<Mask>) -> String?,
+    style: (beside: List<Mask>, plate: Boolean) -> String?,
     onSelect: (Mask?) -> Unit,
     onChange: (List<Mask>) -> Unit,
 ) {
@@ -71,7 +70,7 @@ fun MaskEditor(
     var tiles by remember(photo) { mutableStateOf(emptyMap<Mask, ImageBitmap>()) }
     LaunchedEffect(photo, masks) {
         val missing = masks.filter { it.sticker == null && it !in tiles }
-        val drawn = if (missing.isEmpty()) emptyMap() else Faces.preview(photo, missing).orEmpty()
+        val drawn = if (missing.isEmpty()) emptyMap() else Masking.preview(photo, missing).orEmpty()
         tiles = tiles.filterKeys { it in masks } + drawn
     }
     val label = stringResource(Res.string.label_mask)
@@ -93,7 +92,8 @@ fun MaskEditor(
                     }
                     chosen != null -> select(null)
                     else -> {
-                        val laid = Mask.around(x, y, size.width.toFloat() / size.height, current).copy(sticker = newStyle(current))
+                        val around = Mask.around(x, y, size.width.toFloat() / size.height, current)
+                        val laid = around.copy(sticker = newStyle(current, around.plate))
                         change(current + laid)
                         haptics.toggle(true)
                     }
@@ -122,8 +122,7 @@ fun MaskEditor(
                 val sticker = Sticker.of(mask.sticker)
                 if (sticker != null) {
                     // Larger than the patch, as saving draws it, so it reaches past the box.
-                    val side = (if (width > height) width else height) * Mask.STICKER_SCALE
-                    StickerImage(sticker, side, Modifier.requiredSize(side))
+                    StickerOver(sticker, Modifier.fillMaxSize())
                     if (on) Box(Modifier.fillMaxSize().border(3.dp, MediaOverlay.content, PATCH))
                 } else {
                     Box(Modifier.fillMaxSize().background(MediaOverlay.control, PATCH))
@@ -137,18 +136,35 @@ fun MaskEditor(
     }
 }
 
-/** [sticker] drawn [size] across, as the design system's Stickers card draws it. */
+/** [sticker] whole, as large as fits [size] and centred in it, as the design system's Stickers card draws it. */
 @Composable
 fun StickerImage(sticker: Sticker, size: Dp, modifier: Modifier = Modifier.size(size)) {
-    val paths = remember(sticker) { sticker.layers.map { PathParser().parsePathString(it.path).toPath() } }
-    Canvas(modifier) { drawSticker(sticker, paths) }
+    val paths = rememberStickerPaths(sticker)
+    Canvas(modifier) {
+        // The die-cut edge reaches a unit past the grid on each side.
+        val unit = minOf(this.size.width / (sticker.width + 2), this.size.height / (sticker.height + 2))
+        drawSticker(sticker, paths, unit, sticker.width / 2, sticker.height / 2)
+    }
 }
 
-private fun DrawScope.drawSticker(sticker: Sticker, paths: List<Path>) {
-    val unit = size.minDimension / Sticker.GRID
-    translate((size.width - size.minDimension) / 2, (size.height - size.minDimension) / 2) {
+/** [sticker] over the patch it fills, its cover box taking the patch in, as saving draws it: it reaches past the patch. */
+@Composable
+private fun StickerOver(sticker: Sticker, modifier: Modifier) {
+    val paths = rememberStickerPaths(sticker)
+    Canvas(modifier) {
+        drawSticker(sticker, paths, sticker.scaleOver(size.width, size.height), sticker.coverLeft + sticker.coverWidth / 2, sticker.coverTop + sticker.coverHeight / 2)
+    }
+}
+
+@Composable
+private fun rememberStickerPaths(sticker: Sticker): List<Path> =
+    remember(sticker) { sticker.layers.map { PathParser().parsePathString(it.path).toPath() } }
+
+/** [sticker] drawn [unit] to a grid unit, the point ([x], [y]) of its grid at the centre. */
+private fun DrawScope.drawSticker(sticker: Sticker, paths: List<Path>, unit: Float, x: Float, y: Float) {
+    translate(size.width / 2, size.height / 2) {
         scale(unit, unit, pivot = androidx.compose.ui.geometry.Offset.Zero) {
-            translate(-Sticker.GRID_ORIGIN, -Sticker.GRID_ORIGIN) {
+            translate(-x, -y) {
                 sticker.layers.forEachIndexed { index, layer ->
                     layer.fill?.let { drawPath(paths[index], Color(it)) }
                     layer.stroke?.let { drawPath(paths[index], Color(it), style = Stroke(layer.width, cap = StrokeCap.Round, join = StrokeJoin.Round)) }

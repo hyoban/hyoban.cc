@@ -221,14 +221,21 @@ is its place's name once the place is another, and the check-in goes with the pl
   Held and dragged in the row, they change places, the first being the cover; a tap opens them in
   the viewer, the same one a Moment's media and 选照片 open (`ui/viewer/ViewerFrame.kt`), where the
   bar takes one out, keeps it off covers (不用作封面) or has a motion photo go in as its still alone
-  (只用静态画面). 人脸打码 is on by default for a photo newly picked: as each comes in, ML Kit (through Google Play
-  services, on the phone alone) finds the faces in it and lays a patch over each, and saving waits for
-  any still being looked at, so no face goes in uncovered by being quick; a photo with none found
-  stays as it is, and the switch in the viewer turns it off, or on again to look once more. Each patch is drawn as saving will write it: a mosaic, or
-  one of the design system's stickers (猫, 狗, 熊, 兔, 笑脸, 花) a little larger than the patch. A tap
+  (只用静态画面). 打码 is on by default for a photo newly picked: as each comes in, ML Kit (through Google Play
+  services, on the phone alone) finds the faces in it, and reads its text for anything written as a
+  Chinese license plate (粤B·12345; without the province only when the dot is read), and lays a patch
+  over each, and saving waits for any still being looked at, so nothing goes in uncovered by being
+  quick; a photo with nothing found stays as it is, and the switch in the viewer turns it off, or on
+  again to look once more. Plates are read in the photo whole, then in tiles of it at up to 4096
+  pixels, so one a car's length off is still read; one too blurred or slanted to read is missed, and a
+  tap covers it. Each patch is drawn as saving will write it: a mosaic, or one of the design
+  system's stickers, a face's (猫, 狗, 熊, 兔, 笑脸, 花) or a plate's long animals (趴着的猫, 腊肠狗,
+  毛毛虫, 鱼), drawn so its solid part takes in the whole patch. A tap
   on a patch chooses it, and the bar turns into its styles and 去掉这一块; a tap elsewhere lets go,
-  or lays another patch, as large as the patch nearest it (a fifth of the photo with none). Until a style is chosen there each patch takes a sticker at random,
-  none twice on a photo while any is left; once one is, new patches take it. The photo row marks the photo with the mosaic
+  or lays another patch, as large as the patch nearest it and of its kind, face or plate (a face's,
+  a fifth of the photo, with none). Until a style is chosen there each patch takes a sticker of its
+  kind at random, none twice on a photo while any is left; once one is for a face or a plate, new
+  patches of that kind take it. The photo row marks the photo with the mosaic
   icon. Which sticker goes where is the owner's choice: nothing is guessed from the face. Saving writes a copy of
   the app's own as an upright JPEG with the patches drawn in, no HDR gain map and no motion clip,
   and that is what the app shows, shares and publishes; the photo in the gallery is untouched. The
