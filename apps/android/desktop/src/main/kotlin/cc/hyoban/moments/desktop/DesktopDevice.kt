@@ -106,11 +106,11 @@ object DesktopDevice : Device {
     }
 
     @Composable
-    override fun ShareMoment(moment: MomentRecord, urls: MediaUrls, place: String?, onDismiss: () -> Unit) {
+    override fun ShareMoment(moment: MomentRecord, urls: MediaUrls, place: String?, trip: String?, onDismiss: () -> Unit) {
         val scope = rememberCoroutineScope()
         val show = cc.hyoban.moments.ui.rememberShowMessage()
         cc.hyoban.moments.ui.moment.DesktopShareDialog(
-            moment, urls, place, onDismiss,
+            moment, urls, place, trip, onDismiss,
             savePhotos = { photos ->
                 scope.launch {
                     val folder = chooseFolder() ?: return@launch

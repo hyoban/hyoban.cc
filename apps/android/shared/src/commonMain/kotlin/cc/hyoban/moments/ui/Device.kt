@@ -105,8 +105,8 @@ interface Device {
     /** Says [text] for a moment, over whatever is shown. */
     fun toast(text: String)
 
-    /** Choosing where a Moment is shared to, then sharing it there, [place] its place's name. */
-    @Composable fun ShareMoment(moment: MomentRecord, urls: MediaUrls, place: String?, onDismiss: () -> Unit)
+    /** Choosing where a Moment is shared to, then sharing it there, [place] its place's name and [trip] its trip's title. */
+    @Composable fun ShareMoment(moment: MomentRecord, urls: MediaUrls, place: String?, trip: String?, onDismiss: () -> Unit)
 
     /** What moves of [media] in the viewer, a live photo's clip or a video; null for a still. */
     fun viewerMotion(media: cc.hyoban.moments.data.spec.MomentMedia): cc.hyoban.moments.ui.viewer.ViewerMotion?

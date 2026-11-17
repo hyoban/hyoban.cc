@@ -97,6 +97,7 @@ import cc.hyoban.moments.ui.components.shapeOf
 import cc.hyoban.moments.ui.components.sideInsetsPadding
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
+import cc.hyoban.moments.data.trips.tripOf
 import cc.hyoban.moments.ui.format.shareText
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.theme.MediaOverlay
@@ -131,7 +132,9 @@ fun MediaViewer(
 ) {
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
+    val trips by container.shownTrips.collectAsStateWithLifecycle()
     val moment = remember(moments, uid) { moments.firstOrNull { it.uid == uid } } ?: return
+    val trip = remember(moment, trips) { tripOf(moment, trips) }
     val media = moment.media
     if (media.isEmpty()) return
     MomentMediaViewer(
@@ -154,7 +157,7 @@ fun MediaViewer(
                     .padding(horizontal = Space.s).testTag("info_day"),
             )
         },
-        actions = { shown -> ShareShown(container, shown, shareText(moment, moment.places.firstOrNull()?.let { places[it]?.name })) },
+        actions = { shown -> ShareShown(container, shown, shareText(moment, moment.places.firstOrNull()?.let { places[it]?.name }, trip?.title)) },
     )
 }
 

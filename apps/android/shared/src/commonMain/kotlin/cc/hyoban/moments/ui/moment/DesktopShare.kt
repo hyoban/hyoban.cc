@@ -51,6 +51,7 @@ fun DesktopShareDialog(
     moment: MomentRecord,
     urls: MediaUrls,
     place: String?,
+    trip: String?,
     onDismiss: () -> Unit,
     savePhotos: ((List<String>) -> Unit)?,
     more: (() -> Unit)? = null,
@@ -80,12 +81,12 @@ fun DesktopShareDialog(
                         MediaStill(first, urls, Modifier.fillMaxWidth().aspectRatio(1f).clip(AppTheme.shapes.medium))
                     }
                     if (moment.text.isNotBlank()) Text(moment.text, style = AppTheme.typography.body, maxLines = 8, overflow = TextOverflow.Ellipsis)
-                    Text(shareLine(moment, place), style = AppTheme.typography.caption, color = tokens.tx2)
+                    Text(shareLine(moment, place, trip), style = AppTheme.typography.caption, color = tokens.tx2)
                 }
                 VerticalDivider()
                 Column(Modifier.weight(1f).padding(vertical = Space.s)) {
                     // The words as the phone shares them, ending with when, where and what it cost.
-                    val words = shareText(moment, place)
+                    val words = shareText(moment, place, trip)
                     ListItem(
                         headlineContent = { Text(stringResource(Res.string.action_copy_text)) },
                         leadingContent = { Icon(AppIcons.Copy, contentDescription = null) },

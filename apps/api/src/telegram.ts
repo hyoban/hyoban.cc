@@ -1,5 +1,10 @@
 import { isMomentShown, type MomentRecord } from '@hyoban/data-spec'
-import { entryToMoment, isMomentEntry } from '@hyoban/data-spec/entry'
+import {
+  collectionSchema,
+  entryToMoment,
+  isInCollection,
+  isMomentEntry,
+} from '@hyoban/data-spec/entry'
 import type { Bucket } from './bucket.ts'
 import { readAll, revisionQuery, toRevision, type Database } from './database.ts'
 import { IMAGE_ORIGIN } from './site.ts'
@@ -156,7 +161,7 @@ async function postChanges(context: ChannelContext) {
   const done = toRevision(doneRows)
   // The Moments that changed, and anything posted that changed into what isn't one, its words
   // gone, so its post goes too.
-  const [changed, posts, places] = await readAll(db, [
+  const [changed, posts, places, collections] = await readAll(db, [
     db
       .prepare(
         `SELECT key, deleted_at, record FROM entries
@@ -172,6 +177,7 @@ async function postChanges(context: ChannelContext) {
       )
       .bind(done, revision),
     db.prepare(`SELECT key AS id, json_extract(record, '$.name') AS name FROM places`),
+    db.prepare(`SELECT record FROM collections WHERE deleted_at IS NULL ORDER BY start_day, key`),
   ])
   const postedBy = new Map(
     (posts as { uid: string; post: string }[]).map((row) => [
@@ -182,13 +188,21 @@ async function postChanges(context: ChannelContext) {
   const placeNames = new Map(
     (places as { id: string; name: string }[]).map((row) => [row.id, row.name]),
   )
+  // The trips a post may name: only those not private by their own say.
+  const trips = (collections as { record: string }[])
+    .map((row) => collectionSchema.parse(JSON.parse(row.record)))
+    .filter((trip) => trip.visibility !== 'private')
   const result = { posted: 0, edited: 0, deleted: 0 }
 
   for (const row of changed as ChangedRow[]) {
     const entry = row.deleted_at ? null : toEntry(row)
     const moment = entry && isMomentEntry(entry) ? entryToMoment(entry) : null
     const posted = postedBy.get(row.key)
-    const post = moment && isMomentShown(moment) ? toPost(moment, placeNames, context.now) : null
+    const trip = entry
+      ? trips.find((collection) => isInCollection(collection, entry))?.title
+      : undefined
+    const post =
+      moment && isMomentShown(moment) ? toPost(moment, placeNames, trip, context.now) : null
 
     if (!posted) {
       // Never posted: posted now if it was published since the channel was first synced.
@@ -237,11 +251,16 @@ const WORTH = { good: '👍 值', ok: '👌 还行', bad: '👎 不值' } as con
 
 /**
  * The words and media a Moment is posted with: its own words exactly, then a line of when it
- * was, the place, each one's share of what it cost, and how a meal was and whether the cost was worth it,
+ * was, the place, the public trip it was on, each one's share of what it cost, and how a meal was and whether the cost was worth it,
  * as the app shares it. A cost without its people was one's. A Moment with neither words, a line nor media has nothing
  * to post.
  */
-function toPost(moment: MomentRecord, placeNames: Map<string, string>, now: string): Post | null {
+function toPost(
+  moment: MomentRecord,
+  placeNames: Map<string, string>,
+  trip: string | undefined,
+  now: string,
+): Post | null {
   const place = moment.places[0] && placeNames.get(moment.places[0])
   // A meal's cost is its bill and its verdict how it tasted; any other cost says whether it was worth it.
   const meal = moment.food
@@ -252,6 +271,7 @@ function toPost(moment: MomentRecord, placeNames: Map<string, string>, now: stri
   const line = [
     `🕐 ${when(moment.occurredAt, now)}`,
     place && `📍 ${place}`,
+    trip && `🧳 ${trip}`,
     share !== false && share !== undefined && `💰 人均 ${symbol}${share}`,
     meal?.verdict && VERDICTS[meal.verdict],
     moment.cost?.verdict && WORTH[moment.cost.verdict],

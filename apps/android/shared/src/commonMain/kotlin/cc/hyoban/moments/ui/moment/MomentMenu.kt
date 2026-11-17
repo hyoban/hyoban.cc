@@ -114,6 +114,7 @@ fun MomentMenu(moment: MomentRecord, urls: MediaUrls, at: DpOffset?, onDismiss: 
     }
     if (sharing) {
         val place = remember(actions, moment) { moment.places.firstOrNull()?.let { id -> actions?.places()?.get(id)?.name } }
-        device.ShareMoment(moment, urls, place, onDismiss = { sharing = false })
+        val trip = remember(actions, moment) { actions?.tripOf(moment)?.title }
+        device.ShareMoment(moment, urls, place, trip, onDismiss = { sharing = false })
     }
 }

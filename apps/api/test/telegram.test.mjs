@@ -12,6 +12,8 @@ const dockMoment = JSON.parse(readFileSync(new URL('fixtures/dock-moment.json', 
 const photo = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4])
 const owner = { auth: token }
 const nanjing = snapshot.places.nanjing.name
+/** The fixture's trip the dock's Moment falls in. */
+const trip = snapshot.trips.find((record) => record.id === '2026-national-day-road-trip').title
 /** When the dock's Moment was, as its post says it: the year only once it is another year. */
 const at = `🕐 ${new Date().getUTCFullYear() === 2026 ? '' : '2026年'}10月1日 17:40`
 
@@ -71,7 +73,7 @@ async function publish(env, changes = {}) {
   assert.equal(status, 200)
 }
 
-test('a Moment published is posted once, its words under its photo with the place and no link', async () => {
+test('a Moment published is posted once, its words under its photo with the place and trip and no link', async () => {
   const { env, calls, sync } = setUpChannel()
 
   assert.deepEqual(
@@ -86,12 +88,23 @@ test('a Moment published is posted once, its words under its photo with the plac
   assert.equal(calls.length, 1)
   assert.equal(calls[0].method, 'sendPhoto')
   assert.equal(calls[0].params.chat_id, '@channel')
-  assert.equal(calls[0].params.caption, `在码头等船。\n\n${at} 📍 ${nanjing}`)
+  assert.equal(calls[0].params.caption, `在码头等船。\n\n${at} 📍 ${nanjing} 🧳 ${trip}`)
   assert.equal(
     calls[0].params.photo,
     'https://image.hyoban.cc/cdn-cgi/image/width=2560,format=jpeg/moments/01m3vdbhc042d43kwzwe67yp1t/01m3vdbhc1hw3w1z58armsh236.jpg',
   )
   assert.deepEqual(await sync(), { posted: 0, edited: 0, deleted: 0 }, 'and not again')
+})
+
+test('a private trip is left out of the post', async () => {
+  const { env, calls, sqlite, sync } = setUpChannel()
+
+  sqlite.exec(`UPDATE collections SET record = json_set(record, '$.visibility', 'private')`)
+  await sync()
+  await publish(env)
+
+  assert.deepEqual(await sync(), { posted: 1, edited: 0, deleted: 0 })
+  assert.equal(calls[0].params.caption, `在码头等船。\n\n${at} 📍 ${nanjing}`)
 })
 
 test("a meal's post adds each one's share and its verdict to the place", async () => {
@@ -103,7 +116,10 @@ test("a meal's post adds each one's share and its verdict to the place", async (
   })
 
   assert.deepEqual(await sync(), { posted: 1, edited: 0, deleted: 0 })
-  assert.equal(calls[0].params.caption, `在码头等船。\n\n${at} 📍 ${nanjing} 💰 人均 ¥35 😋 好吃`)
+  assert.equal(
+    calls[0].params.caption,
+    `在码头等船。\n\n${at} 📍 ${nanjing} 🧳 ${trip} 💰 人均 ¥35 😋 好吃`,
+  )
 })
 
 test("a cost's post adds each one's share and whether it was worth it", async () => {
@@ -113,7 +129,10 @@ test("a cost's post adds each one's share and whether it was worth it", async ()
   await publish(env, { cost: { items: ['门票'], verdict: 'bad', amount: 120, people: 2 } })
 
   assert.deepEqual(await sync(), { posted: 1, edited: 0, deleted: 0 })
-  assert.equal(calls[0].params.caption, `在码头等船。\n\n${at} 📍 ${nanjing} 💰 人均 ¥60 👎 不值`)
+  assert.equal(
+    calls[0].params.caption,
+    `在码头等船。\n\n${at} 📍 ${nanjing} 🧳 ${trip} 💰 人均 ¥60 👎 不值`,
+  )
 })
 
 test('changed words edit the caption; a Moment the site no longer shows is deleted', async () => {
@@ -126,7 +145,11 @@ test('changed words edit the caption; a Moment the site no longer shows is delet
   assert.deepEqual(await sync(), { posted: 0, edited: 1, deleted: 0 })
   assert.deepEqual(calls.at(-1), {
     method: 'editMessageCaption',
-    params: { chat_id: '@channel', message_id: 100, caption: `船来了。\n\n${at} 📍 ${nanjing}` },
+    params: {
+      chat_id: '@channel',
+      message_id: 100,
+      caption: `船来了。\n\n${at} 📍 ${nanjing} 🧳 ${trip}`,
+    },
   })
 
   await publish(env, { text: '船来了。', hidden: true, updatedAt: '2026-10-01T18:10:00+08:00' })
@@ -157,7 +180,7 @@ test('a photo swapped for another is replaced in its message, its caption kept w
   assert.deepEqual(JSON.parse(calls[1].params.media), {
     type: 'photo',
     media: `https://image.hyoban.cc/cdn-cgi/image/width=2560,format=jpeg/moments/01m3vdbhc042d43kwzwe67yp1t/01m3vdbhc1hw3w1z58armsh237.jpg`,
-    caption: `船来了。\n\n${at} 📍 ${nanjing}`,
+    caption: `船来了。\n\n${at} 📍 ${nanjing} 🧳 ${trip}`,
   })
   assert.deepEqual(await sync(), { posted: 0, edited: 0, deleted: 0 }, 'and kept as it is now')
 })
@@ -193,7 +216,7 @@ test('words too long for a caption follow the photos as a message of their own',
     ['sendPhoto', 'sendMessage'],
   )
   assert.equal(calls[0].params.caption, undefined)
-  assert.equal(calls[1].params.text, `${text}\n\n${at} 📍 ${nanjing}`)
+  assert.equal(calls[1].params.text, `${text}\n\n${at} 📍 ${nanjing} 🧳 ${trip}`)
 })
 
 test('a Moment published before the channel was first synced is never posted', async () => {

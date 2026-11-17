@@ -175,13 +175,13 @@ private val ROW_PADDING = 16.dp
 /** A separate copy for another platform; the original Moment stays as written. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarget, onDismiss: () -> Unit, place: String? = null) {
+fun ShareMoment(moment: MomentRecord, urls: MediaUrls, initialTarget: ShareTarget, onDismiss: () -> Unit, place: String? = null, trip: String? = null) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val photos = remember(moment.media) { moment.media.filter { it.type != MediaType.VIDEO } }
     var target by rememberSaveable(moment.uid, initialTarget) { mutableStateOf(initialTarget) }
-    // The copy ends with when and where it was, each one's share of what it cost and how it was.
-    val initialText = shareText(moment, place)
+    // The copy ends with when and where it was, its trip, each one's share of what it cost and how it was.
+    val initialText = shareText(moment, place, trip)
     var text by rememberSaveable(moment.uid, initialTarget) { mutableStateOf(initialText) }
     // Above the platform's limit, ask for an explicit choice instead of dropping photos.
     var selected by rememberSaveable(moment.uid, initialTarget) {

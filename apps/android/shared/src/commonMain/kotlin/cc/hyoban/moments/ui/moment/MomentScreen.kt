@@ -166,7 +166,7 @@ fun MomentScreen(
     val urls = container.mediaUrls
     var sharing by remember(uid) { mutableStateOf(false) }
     val device = cc.hyoban.moments.ui.LocalDevice.current
-    if (sharing) device.ShareMoment(moment, urls, moment.places.firstOrNull()?.let { id -> places[id]?.name }, onDismiss = { sharing = false })
+    if (sharing) device.ShareMoment(moment, urls, moment.places.firstOrNull()?.let { id -> places[id]?.name }, trip?.title, onDismiss = { sharing = false })
 
     // The photos swiped above and the strip under them are one place in the Moment's media.
     val pager = rememberPagerState { moment.media.size }

@@ -135,10 +135,10 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
 
     // The sheet of where to share stays under the page it opens, as it did when the Moment's page held both.
     @Composable
-    override fun ShareMoment(moment: MomentRecord, urls: MediaUrls, place: String?, onDismiss: () -> Unit) {
+    override fun ShareMoment(moment: MomentRecord, urls: MediaUrls, place: String?, trip: String?, onDismiss: () -> Unit) {
         var target by remember(moment.uid) { mutableStateOf<ShareTarget?>(null) }
         ShareMenu(onSelect = { target = it }, onDismiss = onDismiss)
-        target?.let { cc.hyoban.moments.ui.moment.ShareMoment(moment, urls, it, onDismiss = { target = null }, place = place) }
+        target?.let { cc.hyoban.moments.ui.moment.ShareMoment(moment, urls, it, onDismiss = { target = null }, place = place, trip = trip) }
     }
 
     @Composable

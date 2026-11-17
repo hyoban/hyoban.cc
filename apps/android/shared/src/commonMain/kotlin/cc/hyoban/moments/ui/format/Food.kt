@@ -61,17 +61,19 @@ fun costLine(cost: MomentCost?): String? {
 }
 
 /**
- * What a share ends with: when it was, where, each one's share of what it cost and how it was
- * (a meal's taste, else whether it was worth it), each behind an emoji, as the Telegram channel
- * posts it too. A cost without its people was one's.
+ * What a share ends with: when it was, where, the trip it was on, each one's share of what it
+ * cost and how it was (a meal's taste, else whether it was worth it), each behind an emoji, as
+ * the Telegram channel posts it too, naming the trip only when it isn't private. A cost without
+ * its people was one's.
  */
 @Composable
-fun shareLine(moment: MomentRecord, place: String?): String {
+fun shareLine(moment: MomentRecord, place: String?, trip: String? = null): String {
     val cost = moment.cost
     val amount = cost?.amount
     return listOfNotNull(
         "🕐 " + listOfNotNull(formatDate(moment.dateKey), formatTime(moment.occurredAt)).joinToString(" "),
         place?.takeIf { it.isNotBlank() }?.let { "📍 $it" },
+        trip?.takeIf { it.isNotBlank() }?.let { "🧳 $it" },
         amount?.let { "💰 " + stringResource(Res.string.cost_each, costMoney((it / (cost.people ?: 1).coerceAtLeast(1)).roundToLong().toDouble(), cost.currency)) },
         FoodVerdict.of(cost?.verdict)?.let { verdict ->
             val face = when (verdict) {
@@ -86,8 +88,8 @@ fun shareLine(moment: MomentRecord, place: String?): String {
 
 /** A Moment's words as they go out: its own words exactly, then [shareLine]. */
 @Composable
-fun shareText(moment: MomentRecord, place: String?): String =
-    listOfNotNull(moment.text.takeIf { it.isNotBlank() }, shareLine(moment, place)).joinToString("\n\n")
+fun shareText(moment: MomentRecord, place: String?, trip: String? = null): String =
+    listOfNotNull(moment.text.takeIf { it.isNotBlank() }, shareLine(moment, place, trip)).joinToString("\n\n")
 
 /** The module a cost goes with: 美食 for a meal, else 花费. */
 val MomentCost.module: Module get() = if (meal) Module.FOOD else Module.COST
