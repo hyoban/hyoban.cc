@@ -7,9 +7,10 @@ import { toEntry } from './writes.ts'
 
 // The Moments the site shows, posted to the Telegram channel as they publish: the words
 // with when and where it was and a meal's share and verdict, under its photos and videos, with no
-// link. A Moment that changes edits its post, or posts again when its media
-// changed; one the site no longer shows has its post deleted. Only Moments published since
-// the channel was first synced are posted, so a restore of the backup never floods it. Runs
+// link. A Moment that changes edits its post, replacing what media changed in place, or
+// posts again when its media changed in number; one the site no longer shows has its post
+// deleted. Only Moments published since the channel was first synced are posted, so a
+// restore of the backup never floods it. Runs
 // after a write the site shows, after `POST /v2/build` and on the Worker's schedule, which
 // picks up whatever an earlier run left.
 
@@ -212,9 +213,9 @@ async function postChanges(context: ChannelContext) {
       continue
     }
 
-    if (sameMedia(post, posted) && fitsAsBefore(post, posted)) {
-      await editText(context, posted, post.text)
-      await keep(db, row.key, { ...posted, text: post.text })
+    if (post.media.length === posted.media.length && fitsAsBefore(post, posted)) {
+      await editInPlace(context, posted, post)
+      await keep(db, row.key, { ...posted, ...post })
     } else {
       await removeMessages(context, posted.messages)
       await keep(db, row.key, await send(context, post))
@@ -374,28 +375,36 @@ async function send(context: ChannelContext, post: Post): Promise<Posted> {
   }
 }
 
+/** A photo or video as Telegram's InputMedia, a video's file attached to the form. */
+async function toInputMedia(
+  context: ChannelContext,
+  form: FormData,
+  item: PostMedia,
+  index: number,
+) {
+  if (item.type === 'photo') {
+    return { type: 'photo', media: item.url }
+  }
+
+  const object = await context.bucket.get(item.key)
+
+  if (!object) {
+    throw new Error(`The video ${item.key} isn't in the bucket.`)
+  }
+
+  const name = `file${index}`
+  const type = object.httpMetadata?.contentType ?? 'video/mp4'
+
+  form.append(name, new File([await new Response(object.body).blob()], name, { type }))
+
+  return { type: 'video', media: `attach://${name}`, supports_streaming: true }
+}
+
 /** One album, or a photo or video on its own, which Telegram won't take as an album. */
 async function sendAlbum(context: ChannelContext, album: PostMedia[], caption: string) {
   const form = new FormData()
   const media = await Promise.all(
-    album.map(async (item, index) => {
-      if (item.type === 'photo') {
-        return { type: 'photo', media: item.url }
-      }
-
-      const object = await context.bucket.get(item.key)
-
-      if (!object) {
-        throw new Error(`The video ${item.key} isn't in the bucket.`)
-      }
-
-      const name = `file${index}`
-      const type = object.httpMetadata?.contentType ?? 'video/mp4'
-
-      form.append(name, new File([await new Response(object.body).blob()], name, { type }))
-
-      return { type: 'video', media: `attach://${name}`, supports_streaming: true }
-    }),
+    album.map((item, index) => toInputMedia(context, form, item, index)),
   )
 
   form.append('chat_id', context.chat)
@@ -427,9 +436,50 @@ async function sendAlbum(context: ChannelContext, album: PostMedia[], caption: s
   return messages.map((message) => message.message_id)
 }
 
-async function editText(context: ChannelContext, posted: Posted, text: string) {
+/**
+ * Edits a post whose media keep their number: each photo or video that changed is replaced
+ * in its own message, which keeps its place in the album, and then the words. Telegram can't
+ * add to an album or take from it, so a post whose media change in number is posted again.
+ */
+async function editInPlace(context: ChannelContext, posted: Posted, post: Post) {
+  let captioned = false
+
+  for (const [index, item] of post.media.entries()) {
+    if (JSON.stringify(item) === JSON.stringify(posted.media[index])) {
+      continue
+    }
+
+    const messageId = posted.messages[index] as number
+    // Replacing a photo drops its caption unless the new one carries it.
+    const caption = posted.caption && messageId === posted.textMessage
+    const form = new FormData()
+    const media = await toInputMedia(context, form, item, 0)
+
+    form.append('chat_id', context.chat)
+    form.append('message_id', String(messageId))
+    form.append('media', JSON.stringify(caption ? { ...media, caption: post.text } : media))
+    await ignoreNotModified(context.telegram.call('editMessageMedia', form))
+    captioned ||= caption
+  }
+
+  if (!captioned && post.text !== posted.text) {
+    await editText(context, posted, post.text)
+  }
+}
+
+async function ignoreNotModified(call: Promise<unknown>) {
   try {
-    await context.telegram.call(
+    await call
+  } catch (caught) {
+    if (!(caught instanceof TelegramError && /not modified/.test(caught.message))) {
+      throw caught
+    }
+  }
+}
+
+async function editText(context: ChannelContext, posted: Posted, text: string) {
+  await ignoreNotModified(
+    context.telegram.call(
       posted.caption ? 'editMessageCaption' : 'editMessageText',
       posted.caption
         ? { chat_id: context.chat, message_id: posted.textMessage, caption: text }
@@ -439,12 +489,8 @@ async function editText(context: ChannelContext, posted: Posted, text: string) {
             text,
             link_preview_options: { is_disabled: true },
           },
-    )
-  } catch (caught) {
-    if (!(caught instanceof TelegramError && /not modified/.test(caught.message))) {
-      throw caught
-    }
-  }
+    ),
+  )
 }
 
 /**

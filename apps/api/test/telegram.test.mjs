@@ -138,6 +138,30 @@ test('changed words edit the caption; a Moment the site no longer shows is delet
   })
 })
 
+test('a photo swapped for another is replaced in its message, its caption kept with it', async () => {
+  const { env, calls, sync } = setUpChannel()
+  const swapped = { ...dockMoment.media[0], uid: '01M3VDBHC1HW3W1Z58ARMSH237' }
+
+  await publish(env)
+  await sync()
+  await publish(env, {
+    text: '船来了。',
+    media: [swapped],
+    updatedAt: '2026-10-01T18:00:00+08:00',
+  })
+
+  assert.deepEqual(await sync(), { posted: 0, edited: 1, deleted: 0 })
+  assert.equal(calls.length, 2, 'one call, no repost')
+  assert.equal(calls[1].method, 'editMessageMedia')
+  assert.equal(calls[1].params.message_id, '100')
+  assert.deepEqual(JSON.parse(calls[1].params.media), {
+    type: 'photo',
+    media: `https://image.hyoban.cc/cdn-cgi/image/width=2560,format=jpeg/moments/01m3vdbhc042d43kwzwe67yp1t/01m3vdbhc1hw3w1z58armsh237.jpg`,
+    caption: `船来了。\n\n${at} 📍 ${nanjing}`,
+  })
+  assert.deepEqual(await sync(), { posted: 0, edited: 0, deleted: 0 }, 'and kept as it is now')
+})
+
 test('a Moment posted that loses its words has its post deleted', async () => {
   const { env, sqlite, calls, sync } = setUpChannel()
 
