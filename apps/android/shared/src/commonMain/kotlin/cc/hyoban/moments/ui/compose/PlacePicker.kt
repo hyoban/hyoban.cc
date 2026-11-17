@@ -184,6 +184,8 @@ fun PlacePicker(
     alternative: Pair<String, (PlaceChoice) -> Unit>? = null,
     /** Where a place kept already is to be: none is no answer then. */
     editing: Boolean = false,
+    /** Back to the place worked out elsewhere (用照片的地点): its words, and what it does. */
+    reset: Pair<String, () -> Unit>? = null,
     onPick: (PlaceChoice) -> Unit,
 ) {
     val device = cc.hyoban.moments.ui.LocalDevice.current
@@ -349,6 +351,7 @@ fun PlacePicker(
             },
             onNone = { onPick(PlaceChoice.None) }.takeUnless { editing },
             alternative = alternative?.let { (label, act) -> label to { act(pick) } },
+            reset = reset,
             onConfirm = { onPick(pick) },
             modifier = cardModifier,
         )
@@ -519,6 +522,7 @@ private fun PlaceCard(
     onName: (String) -> Unit,
     onNone: (() -> Unit)?,
     alternative: Pair<String, () -> Unit>?,
+    reset: Pair<String, () -> Unit>?,
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -670,6 +674,10 @@ private fun PlaceCard(
                 TextButton(onClick = alternative.second, enabled = chosen, modifier = Modifier.testTag("place_alternative")) { Text(alternative.first) }
             } else if (onNone != null) {
                 TextButton(onClick = onNone, modifier = Modifier.testTag("place_none")) { Text(stringResource(Res.string.place_none)) }
+            }
+            if (reset != null) {
+                if (alternative != null || onNone != null) Spacer(Modifier.width(Space.s))
+                TextButton(onClick = reset.second, modifier = Modifier.testTag("place_reset")) { Text(reset.first) }
             }
             Spacer(Modifier.weight(1f))
             Button(

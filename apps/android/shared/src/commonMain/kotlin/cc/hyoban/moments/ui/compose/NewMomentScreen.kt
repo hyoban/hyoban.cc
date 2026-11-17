@@ -303,12 +303,13 @@ fun NewMomentScreen(
     val stayFix = remember(stay) { stay?.let { Fix(it.latitude, it.longitude) } }
     val stayTime = remember(stay) { stay?.let { OffsetDateTime.ofInstant(Instant.ofEpochMilli(it.start), java.time.ZoneId.systemDefault()) } }
     // At a stay, the phone's own place there, as the footprints' list names it.
-    var chosenPlace by remember {
-        mutableStateOf(originalPlace ?: stayFix?.let { at ->
+    val stayPlace = remember(stay) {
+        stayFix?.let { at ->
             cc.hyoban.moments.data.local.nearestPlaces(places, at, limit = 1).firstOrNull()
                 ?.takeIf { (_, metres) -> metres <= cc.hyoban.moments.data.local.SAME_PLACE_METRES }?.let { (id, _) -> PlaceChoice.Known(id) }
-        })
+        }
     }
+    var chosenPlace by remember { mutableStateOf(originalPlace) }
     var geocoded by remember { mutableStateOf<Pair<Fix, Around>?>(null) }
     var saving by remember { mutableStateOf(false) }
     var editingTime by remember { mutableStateOf(false) }
@@ -348,17 +349,21 @@ fun NewMomentScreen(
     // The photo open in the viewer, by where it is in the row.
     var viewing by rememberSaveable { mutableStateOf<Int?>(null) }
 
-    // When: the earliest photo's time, else, when none says, the earliest a photo's file was
-    // made, else when the page was opened.
-    val photoTime = (photos.mapNotNull { infos[it]?.takenAt }.ifEmpty { photos.mapNotNull { infos[it]?.savedAt } })
-        .minByOrNull { it.toInstant() }
-    val time = chosenTime ?: photoTime ?: stayTime ?: openedAt
+    // When: as chosen or saved, else as worked out from the photos (those saved with it too), the
+    // stay or now; a saved one whose photos say nothing keeps its saved time.
+    val inferred = inferredTime(
+        taken = photos.mapNotNull { infos[it]?.takenAt ?: originalMedia[it]?.takenAt?.let(::parseStamp) },
+        saved = photos.mapNotNull { infos[it]?.savedAt },
+        stay = stayTime,
+        now = openedAt,
+        editing = original != null,
+    )
+    val time = chosenTime ?: inferred?.first ?: originalTime ?: openedAt
     val timeSource = when {
         original != null && chosenTime == originalTime -> Res.string.source_saved
         chosenTime != null -> Res.string.source_chosen
-        photoTime != null -> Res.string.source_photo
-        stayTime != null -> Res.string.source_stay
-        else -> Res.string.source_now
+        inferred != null -> inferred.second.label
+        else -> Res.string.source_saved
     }
 
     // Where: just where the first photo that says was taken, as a new place named after what
@@ -370,7 +375,9 @@ fun NewMomentScreen(
     }
     val around = geocoded?.takeIf { it.first == fix }?.second
     val suggestedName = fix?.let { at -> around?.name ?: coordinatesName(at) }
-    val place: PlaceChoice = chosenPlace ?: if (fix != null && suggestedName != null) PlaceChoice.New(suggestedName, fix, around?.kind) else PlaceChoice.None
+    val inferredPlace = inferredPlace(stayPlace, photoFix, stayFix, suggestedName, around?.kind)
+    // A saved one whose new photos say nothing keeps its saved place.
+    val place: PlaceChoice = chosenPlace ?: inferredPlace?.first ?: originalPlace ?: PlaceChoice.None
 
     // Photos shared in from the gallery, now or while this page is open, join the Moment's.
     val sharedPhotos by container.sharedPhotos.collectAsStateWithLifecycle()
@@ -603,7 +610,8 @@ fun NewMomentScreen(
                                     when {
                                         original != null && chosenPlace == originalPlace -> Res.string.source_saved
                                         chosenPlace != null -> Res.string.source_chosen
-                                        photoFix != null -> Res.string.source_photo
+                                        inferredPlace != null -> inferredPlace.second.label
+                                        original != null -> Res.string.source_saved
                                         else -> Res.string.place_unchosen
                                     },
                                 )).joinToString(" "),
@@ -720,7 +728,14 @@ fun NewMomentScreen(
         }
 
         if (editingTime) {
-            TimeDialog(time, onDismiss = { editingTime = false }) {
+            // Back to the time worked out, once another is chosen or saved.
+            val reset = inferred?.takeIf { (at, _) -> !sameMinute(at, time) }?.let { (_, source) ->
+                stringResource(source.reset) to {
+                    chosenTime = null
+                    editingTime = false
+                }
+            }
+            TimeDialog(time, onDismiss = { editingTime = false }, reset = reset) {
                 chosenTime = it
                 editingTime = false
             }
@@ -732,7 +747,14 @@ fun NewMomentScreen(
             enter = slideInVertically(motion.defaultSpatialSpec()) { it / 4 } + fadeIn(motion.defaultEffectsSpec()),
             exit = slideOutVertically(motion.defaultSpatialSpec()) { it / 4 } + fadeOut(motion.defaultEffectsSpec()),
         ) {
-            PlacePicker(current = place, fix = fix, places = places, search = container.placeSearch, onDismiss = { editingPlace = false }) {
+            // Back to the place the photos or the stay give, once another is chosen or saved.
+            val reset = inferredPlace?.takeIf { (inferred, _) -> inferred != place }?.let { (_, source) ->
+                stringResource(source.reset) to {
+                    chosenPlace = null
+                    editingPlace = false
+                }
+            }
+            PlacePicker(current = place, fix = fix, places = places, search = container.placeSearch, onDismiss = { editingPlace = false }, reset = reset) {
                 chosenPlace = it
                 editingPlace = false
             }
@@ -1357,10 +1379,53 @@ private fun AddTile(icon: ImageVector, label: String, onClick: () -> Unit, modif
 
 /** The day and the time of day on it, in one dialog, keeping the offset [time] has. */
 @Composable
-fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, onPick: (OffsetDateTime) -> Unit) =
-    DateTimeDialog(time.toLocalDate(), time.hour, time.minute, onDismiss) { day, hour, minute ->
+fun TimeDialog(time: OffsetDateTime, onDismiss: () -> Unit, reset: Pair<String, () -> Unit>? = null, onPick: (OffsetDateTime) -> Unit) =
+    DateTimeDialog(time.toLocalDate(), time.hour, time.minute, onDismiss, reset) { day, hour, minute ->
         onPick(OffsetDateTime.of(day, java.time.LocalTime.of(hour, minute), time.offset))
     }
+
+/** Where the editor's own time for a Moment came from: its helper row's words, and its way back to it. */
+enum class TimeSource(val label: StringResource, val reset: StringResource) {
+    PHOTO(Res.string.source_photo, Res.string.time_use_photo),
+    STAY(Res.string.source_stay, Res.string.time_use_stay),
+    NOW(Res.string.source_now, Res.string.time_use_now),
+}
+
+/**
+ * The time the editor works out for a Moment by itself: the earliest photo's, else, when none
+ * says, the earliest a photo's file was made ([saved]), else a new one's [stay] or [now]. One being
+ * [editing] has only its photos' to go by, and none when they say nothing.
+ */
+fun inferredTime(
+    taken: List<OffsetDateTime>,
+    saved: List<OffsetDateTime>,
+    stay: OffsetDateTime?,
+    now: OffsetDateTime,
+    editing: Boolean,
+): Pair<OffsetDateTime, TimeSource>? =
+    taken.ifEmpty { saved }.minByOrNull { it.toInstant() }?.let { it to TimeSource.PHOTO }
+        ?: if (editing) null else stay?.let { it to TimeSource.STAY } ?: (now to TimeSource.NOW)
+
+/** Where the editor's own place for a Moment came from: its helper row's words, and its way back to it. */
+enum class PlaceOrigin(val label: StringResource, val reset: StringResource) {
+    PHOTO(Res.string.source_photo, Res.string.place_use_photo),
+    STAY(Res.string.source_stay, Res.string.place_use_stay),
+}
+
+/**
+ * The place the editor works out for a Moment by itself: at a stay, the phone's own place there
+ * ([atStay]); else a new place where the first photo that says was taken, or else the stay is,
+ * named [name] after what is around it once that is known. None without either.
+ */
+fun inferredPlace(atStay: PlaceChoice.Known?, photoFix: Fix?, stayFix: Fix?, name: String?, kind: PlaceKind?): Pair<PlaceChoice, PlaceOrigin>? {
+    if (atStay != null) return atStay to PlaceOrigin.STAY
+    val fix = photoFix ?: stayFix ?: return null
+    return PlaceChoice.New(name ?: return null, fix, kind) to if (photoFix != null) PlaceOrigin.PHOTO else PlaceOrigin.STAY
+}
+
+/** Whether two times are the same to the minute, as the time dialog picks them. */
+fun sameMinute(a: OffsetDateTime, b: OffsetDateTime): Boolean =
+    a.toInstant().truncatedTo(java.time.temporal.ChronoUnit.MINUTES) == b.toInstant().truncatedTo(java.time.temporal.ChronoUnit.MINUTES)
 
 /**
  * The Moment as a record, its photos and videos copied into the app's store first so it

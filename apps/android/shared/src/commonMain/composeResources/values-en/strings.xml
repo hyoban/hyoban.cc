@@ -340,6 +340,11 @@
     <string name="source_stay">From a stay</string>
     <string name="source_now">Now</string>
     <string name="source_chosen">Chosen</string>
+    <string name="time_use_photo">Use photo time</string>
+    <string name="time_use_stay">Use stay time</string>
+    <string name="time_use_now">Use current time</string>
+    <string name="place_use_photo">Use photo place</string>
+    <string name="place_use_stay">Use stay place</string>
     <string name="place_unchosen">Tap to choose a place</string>
     <string name="place_none">No place</string>
     <string name="place_name">Place name</string>

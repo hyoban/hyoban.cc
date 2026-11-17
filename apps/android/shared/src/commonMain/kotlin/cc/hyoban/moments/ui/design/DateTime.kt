@@ -47,10 +47,18 @@ import java.util.Locale
 /**
  * Picking a day and the time on it in one dialog: a month of days, stepped through by its
  * arrows, the day chosen in the ink and today's number in the accent; under it the hour and
- * minute, typed. The design's own, in place of Material's date picker and clock dial.
+ * minute, typed. The design's own, in place of Material's date picker and clock dial. Given a
+ * [reset], a button at the start of its buttons goes back to a time worked out elsewhere (用照片的时间).
  */
 @Composable
-fun DateTimeDialog(day: LocalDate, hour: Int, minute: Int, onDismiss: () -> Unit, onPick: (LocalDate, Int, Int) -> Unit) {
+fun DateTimeDialog(
+    day: LocalDate,
+    hour: Int,
+    minute: Int,
+    onDismiss: () -> Unit,
+    reset: Pair<String, () -> Unit>? = null,
+    onPick: (LocalDate, Int, Int) -> Unit,
+) {
     var chosen by rememberSaveable { mutableLongStateOf(day.toEpochDay()) }
     var month by rememberSaveable { mutableStateOf(YearMonth.from(day).toString()) }
     var hours by rememberSaveable { mutableStateOf("%02d".format(hour)) }
@@ -65,6 +73,7 @@ fun DateTimeDialog(day: LocalDate, hour: Int, minute: Int, onDismiss: () -> Unit
             }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
+        startButton = reset?.let { (label, act) -> { TextButton(onClick = act, modifier = Modifier.testTag("time_reset")) { Text(label) } } },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 MonthGrid(YearMonth.parse(month), LocalDate.ofEpochDay(chosen), onMonth = { month = it.toString() }, onDay = { chosen = it.toEpochDay() })

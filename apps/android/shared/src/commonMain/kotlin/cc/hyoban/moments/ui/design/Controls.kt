@@ -388,6 +388,8 @@ fun AlertDialog(
     title: (@Composable () -> Unit)? = null,
     text: (@Composable () -> Unit)? = null,
     properties: DialogProperties = DialogProperties(),
+    /** A button on its own at the start of the row, going back to a default (用照片的时间). */
+    startButton: (@Composable () -> Unit)? = null,
 ) {
     val noSystemBars = cc.hyoban.moments.ui.components.hidesSystemBars()
     Dialog(onDismissRequest, properties) {
@@ -411,9 +413,17 @@ fun AlertDialog(
                         ProvideTextStyle(AppTheme.typography.body) { Box(Modifier.weight(1f, fill = false).padding(bottom = 16.dp)) { text() } }
                     }
                 }
-                FlowRow(Modifier.align(Alignment.End), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                    dismissButton?.invoke()
-                    confirmButton()
+                val buttons: @Composable () -> Unit = {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                        dismissButton?.invoke()
+                        confirmButton()
+                    }
+                }
+                if (startButton == null) Box(Modifier.align(Alignment.End)) { buttons() }
+                else Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    startButton()
+                    Spacer(Modifier.weight(1f))
+                    buttons()
                 }
             }
         }

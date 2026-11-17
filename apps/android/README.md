@@ -246,9 +246,13 @@ is its place's name once the place is another, and the check-in goes with the pl
   MP4, MOV or WebM, is refused, since the Worker and the site's poster can't take it. A
   photo marked 不用作封面 never becomes a cover, widget or share card.
 - **Time.** The earliest photo's EXIF time and offset, else a video's creation time, else
-  the files' dates, else now.
+  the files' dates, else now. Once a time is chosen by hand, or a saved Moment opens at its saved
+  time, the time dialog's 用照片的时间 goes back to that worked-out time (用停留的时间 or
+  用现在的时间 for a new Moment without photos; a saved one whose photos give no time has none).
 - **Place.** Where the first photo was taken, else none until one is chosen: the page itself
-  never locates the phone. A photo's place is the known place within 2 km, else a new place
+  never locates the phone. Once another is chosen, or a saved Moment opens at its saved place, the
+  place picker's 用照片的地点 (用停留的地点 at a stay) goes back to it; the photos a Moment was saved
+  with aren't read for a place again, so only photos added to it give one. A photo's place is the known place within 2 km, else a new place
   named after what is nearest: in China, with the owner's AMap or Tencent key (高德地图 Key,
   腾讯地图 Key, under 同步与来源; with both, the one chosen under 国内地点来源 first and the other when it
   can't answer), the shops, sights and buildings that service knows, asked from the phone
