@@ -378,7 +378,9 @@ Mac's 复制文字 copies them, and the Telegram channel posts them.
 
 These entries depend on each app's version; when one fails, 准备图文 is offered with the
 edited text and selection kept. Each share has its own cache directory, cleaned up after
-a week, and the read grants given to the receiving apps are revoked with it.
+a week, and the read grants given to the receiving apps are revoked with it. The
+`Here Share-…` albums stay until 清理分享相册 on 我, shown while any is left, hands all their
+photos to the system's delete prompt at once: they are copies of the Moment's own.
 
 The opt-in 分享与记账助手（试用） is an accessibility service
 (`accessibility/ShareAccessibilityService`) that, for Telegram, Threads and Instagram only,

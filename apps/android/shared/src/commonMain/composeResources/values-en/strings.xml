@@ -75,6 +75,16 @@
         <item quantity="one">%1$d photo saved to “%2$s.” The album is kept.</item>
         <item quantity="other">%1$d photos saved to “%2$s,” numbered in their original order. The album is kept.</item>
     </plurals>
+    <string name="share_albums_clean">Clean up share albums</string>
+    <plurals name="share_albums">
+        <item quantity="one">%1$d album</item>
+        <item quantity="other">%1$d albums</item>
+    </plurals>
+    <plurals name="share_albums_photos">
+        <item quantity="one">%1$s, %2$d photo</item>
+        <item quantity="other">%1$s, %2$d photos</item>
+    </plurals>
+    <string name="share_albums_clean_failed">Couldn’t delete the share albums</string>
     <string name="share_text_copied">Text copied</string>
     <string name="share_manual_steps">Open the other app to select the photos, paste the text, and post</string>
     <string name="share_done">Done</string>

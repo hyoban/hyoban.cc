@@ -62,6 +62,19 @@ import kotlinx.coroutines.withContext
 import cc.hyoban.moments.camera.CameraStore
 import cc.hyoban.moments.camera.CameraLink
 import androidx.compose.ui.platform.LocalContext
+import android.provider.MediaStore
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import cc.hyoban.moments.data.media.ShareAlbums
+import cc.hyoban.moments.data.media.shareAlbums
+import kotlinx.coroutines.launch
 
 /** Where a row of 我 leads: each a page of its own, the last one down. */
 class MeRoutes(
@@ -190,6 +203,7 @@ fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
                 supporting = stringResource(sideKey.phase.label),
                 onClick = routes.sideKey,
             )
+            ShareAlbumsRow(shapes)
         }
         Credits()
     }
@@ -249,16 +263,45 @@ private fun PublishCard(count: Int, onChanges: () -> Unit) {
 
 /** A row of 我 opening a page: its icon on the gutter, its name, what it is set to under it, an arrow. */
 @Composable
-private fun MeRow(icon: ImageVector, title: String, tag: String, shapes: ListItemShapes, supporting: String? = null, onClick: () -> Unit) {
+private fun MeRow(icon: ImageVector, title: String, tag: String, shapes: ListItemShapes, supporting: String? = null, opens: Boolean = true, onClick: () -> Unit) {
     SegmentedListItem(
         onClick = onClick,
         shapes = shapes,
         colors = segmentColors(),
         leadingContent = { Icon(icon, contentDescription = null) },
         supportingContent = supporting?.takeIf { it.isNotEmpty() }?.let { { Text(it) } },
-        trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx3) },
+        trailingContent = if (opens) ({ Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx3) }) else null,
         modifier = Modifier.testTag(tag),
     ) { Text(title) }
+}
+
+/**
+ * 清理分享相册, while 准备图文 has left any Here Share album: the photos in them are copies, so one
+ * tap hands them all to the system's delete prompt, which asks itself.
+ */
+@Composable
+private fun ShareAlbumsRow(shapes: ListItemShapes) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var albums by remember { mutableStateOf<ShareAlbums?>(null) }
+    val refresh: () -> Unit = { scope.launch { albums = runCatching { shareAlbums(context) }.getOrNull() } }
+    // Back from 准备图文 or the gallery, the albums may have changed.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { refresh() }
+    val delete = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { refresh() }
+    val shown = albums?.takeIf { it.uris.isNotEmpty() } ?: return
+    MeRow(
+        AppIcons.Photos, stringResource(Res.string.share_albums_clean), "settings_share_albums", shapes,
+        supporting = pluralStringResource(
+            Res.plurals.share_albums_photos, shown.uris.size,
+            pluralStringResource(Res.plurals.share_albums, shown.albums, shown.albums), shown.uris.size,
+        ),
+        opens = false,
+    ) {
+        runCatching {
+            val request = MediaStore.createDeleteRequest(context.contentResolver, shown.uris)
+            delete.launch(IntentSenderRequest.Builder(request.intentSender).build())
+        }.onFailure { Toast.makeText(context, textOf(Res.string.share_albums_clean_failed), Toast.LENGTH_SHORT).show() }
+    }
 }
 
 /** What 家 says on 我: the places chosen as home, by name, else that none is. */

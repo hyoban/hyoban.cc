@@ -71,6 +71,14 @@
     <plurals name="share_album_saved">
         <item quantity="other">%1$d 张照片已保存到相册「%2$s」，按原顺序编号。相册会保留。</item>
     </plurals>
+    <string name="share_albums_clean">清理分享相册</string>
+    <plurals name="share_albums">
+        <item quantity="other">%1$d 个相册</item>
+    </plurals>
+    <plurals name="share_albums_photos">
+        <item quantity="other">%1$s，共 %2$d 张照片</item>
+    </plurals>
+    <string name="share_albums_clean_failed">无法删除分享相册</string>
     <string name="share_text_copied">已复制文字</string>
     <string name="share_manual_steps">现在可以打开目标 App，手动选照片、粘贴文字并发布</string>
     <string name="share_done">完成</string>
