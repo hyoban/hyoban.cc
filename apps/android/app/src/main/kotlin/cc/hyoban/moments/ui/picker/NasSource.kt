@@ -243,7 +243,7 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource)
      * when it is added. A video plays from the NAS over it, as much of it as is watched.
      */
     @Composable
-    override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit) {
+    override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {
         val plays = photo.video && photo.mime in PLAYED
         val stream by produceState<Pair<String, Map<String, String>>?>(null, key, active) {
             if (active && plays) value = runCatching { source.nas.original(photo) }.getOrNull()
@@ -255,7 +255,7 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource)
             val shape = shown?.let { it.width.toFloat() / it.height }
                 ?: if (photo.width != null && photo.height != null && photo.height > 0) photo.width.toFloat() / photo.height else 1f
             if (photo.video) {
-                ZoomablePhoto(shape, onZoom) {
+                ZoomablePhoto(shape, onZoom, onTap = onTap) {
                     shown?.let { Image(it.asImageBitmap(), contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
                     stream?.let { (url, headers) -> VideoPlayback(url, active, video, Modifier.fillMaxSize(), headers = headers, window = false) }
                 }
@@ -268,7 +268,7 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource)
                 ZoomableOriginal(original ?: shown, shown, shape, photo.name, onZoom = { zoomed ->
                     if (zoomed) deep = true
                     onZoom(zoomed)
-                })
+                }, onTap = onTap)
             }
             if (shown == null) Spinner(color = MediaOverlay.content)
             if (stream != null) VideoWaiting(video) else if (photo.video && !plays) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))

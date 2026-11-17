@@ -220,7 +220,10 @@ its check-in, as Swarm's with words are; a Moment cleared of them again is a che
 is its place's name once the place is another, and the check-in goes with the place when none is left.
 
 - **Media.** Picked in 选照片 (below), or shared in from the gallery (Here (写一个时刻)).
-  They are copied in whole; a motion
+  Held and dragged in the row, they change places, the first being the cover; a tap opens them in
+  the viewer, the same one a Moment's media and 选照片 open (`ui/viewer/ViewerFrame.kt`), where the
+  bar takes one out, keeps it off covers (不用作封面) or has a motion photo go in as its still alone
+  (只用静态画面). They are copied in whole; a motion
   photo is split into a live photo's still and video. A video over 100 MB, or other than
   MP4, MOV or WebM, is refused, since the Worker and the site's poster can't take it. A
   photo marked 不用作封面 never becomes a cover, widget or share card.
@@ -683,7 +686,7 @@ and takes the next count, one step at most, when they lift, the photo under them
 their circles, what is chosen keeping its border and number. While the grid scrolls a handle shows
 at its right: dragged, it takes the grid through what it holds, a bubble beside it saying the
 month, and reaches only what has been read, so the NAS's reads on at the end.
-A tap opens one full size on black, swiped through, zoomed as the photo viewer zooms, chosen and
+A tap opens one in the app's one viewer, on black, swiped through and zoomed as a Moment's are, chosen and
 added from there; a photo of the gallery's, the camera's or the NAS's is read from its original in tiles as it
 zooms, so it stays sharp. Under it, upright, the photos before and after are small in a row, the one shown
 in the middle and those chosen dotted: a tap turns to one, and dragging the row turns the viewer

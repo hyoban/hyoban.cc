@@ -43,6 +43,7 @@ fun ZoomableOriginal(
     contentDescription: String?,
     onZoom: (Boolean) -> Unit,
     onHold: ((Boolean) -> Unit)? = null,
+    onTap: (() -> Unit)? = null,
     overlay: @Composable () -> Unit = {},
 ) {
     val zoom = rememberZoomableState(ZoomSpec(maxZoomFactor = MAX_ZOOM))
@@ -76,6 +77,7 @@ fun ZoomableOriginal(
             contentDescription = contentDescription,
             modifier = Modifier.fillMaxSize(),
             state = image,
+            onClick = onTap?.let { tap -> { tap() } },
             onLongClick = if (onHold != null) {
                 {
                     if (!zoomed) {

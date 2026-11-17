@@ -224,7 +224,7 @@ internal data class GalleryPick(val item: LocalItem, override val source: Galler
      * photo plays its clip once and again with its sound while held, both read from the media store.
      */
     @Composable
-    override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit) {
+    override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {
         val context = LocalContext.current
         // Only what the players read: MP4 and its kin.
         val plays = item.video && item.mime in PLAYED
@@ -238,7 +238,7 @@ internal data class GalleryPick(val item: LocalItem, override val source: Galler
             val shape = if (item.width != null && item.height != null && item.height > 0) item.width.toFloat() / item.height else null
             val fitted = shape ?: small?.let { it.width.toFloat() / it.height } ?: 1f
             if (item.video) {
-                ZoomablePhoto(fitted, onZoom) {
+                ZoomablePhoto(fitted, onZoom, onTap = onTap) {
                     large?.let { Image(it.asImageBitmap(), contentDescription = item.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
                     if (plays) VideoPlayback(item.uri.toString(), active, video, Modifier.fillMaxSize(), window = false)
                 }
@@ -246,6 +246,7 @@ internal data class GalleryPick(val item: LocalItem, override val source: Galler
                 ZoomableOriginal(
                     item.uri, small, fitted, item.name, onZoom,
                     onHold = if (clip != null) { held -> if (held) live.play(sound = true) else live.stop() } else null,
+                    onTap = onTap,
                 ) {
                     clip?.let { LiveMotion(item.uri.toString(), active, live, Modifier.fillMaxSize(), start = it) }
                 }

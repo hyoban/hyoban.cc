@@ -82,13 +82,13 @@ import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.viewer.PhotoInfoPanel
+import cc.hyoban.moments.ui.viewer.ViewerFrame
+import androidx.compose.ui.text.style.TextOverflow
 
 /**
- * The photos full size, black as the photo viewer (03): swiped through, chosen and added from
- * here too, each page as its source draws it. Under the photo, upright, the photos before and
- * after it small in a row (Filmstrip), the one shown in the middle, and a video's controls over
- * them. Swiped up, the photo makes room for its info (PhotoInfo); swiped down, the info goes, else
- * the viewer.
+ * 选照片's photos in the viewer ([ViewerFrame]), each page as its source draws it: chosen, added
+ * and deleted from here too, those chosen dotted in the filmstrip. Its own dialog's status bar
+ * keeps light icons over the black while it is open.
  */
 @Composable
 internal fun Viewer(
@@ -105,8 +105,6 @@ internal fun Viewer(
     onClose: () -> Unit,
 ) {
     val pager = rememberPagerState(initialPage = start) { shown.size }
-    var info by remember { mutableStateOf(false) }
-    BackHandler { if (info) info = false else onClose() }
     // Light icons over the black while it is open, on the dialog's own window the picker is in.
     val view = LocalView.current
     DisposableEffect(view) {
@@ -115,105 +113,45 @@ internal fun Viewer(
         controller?.isAppearanceLightStatusBars = false
         onDispose { if (before != null) controller.isAppearanceLightStatusBars = before }
     }
-    val sideways = isPhoneLandscape()
-    val opened by animateFloatAsState(if (info) 1f else 0f, AppTheme.motionScheme.defaultSpatialSpec(), label = "info")
-    var drag by remember { mutableFloatStateOf(0f) }
     val current = shown.getOrNull(pager.currentPage)
     val details = current?.rememberDetails()
     // Each page's video, held here so the controls under the pages work the one shown.
     val videos = remember { mutableMapOf<String, VideoState>() }
-
-    Box(Modifier.fillMaxSize().background(Color.Black).testTag("picker_viewer")) {
-        // Zoomed in, a swipe moves the photo rather than turning the page.
-        var zoomed by remember { mutableStateOf(false) }
-        LaunchedEffect(current?.key, pager.isScrollInProgress) {
-            // Once it rests there a moment, so the row of small ones dragged past it asks nothing of it.
-            if (!pager.isScrollInProgress) {
-                delay(300)
-                current?.settled(shown.getOrNull(pager.currentPage + 1))
-            }
+    LaunchedEffect(current?.key, pager.isScrollInProgress) {
+        // Once it rests there a moment, so the row of small ones dragged past it asks nothing of it.
+        if (!pager.isScrollInProgress) {
+            delay(300)
+            current?.settled(shown.getOrNull(pager.currentPage + 1))
         }
-        val layout: @Composable (@Composable (Modifier) -> Unit, @Composable (Modifier) -> Unit) -> Unit = { photo, panel ->
-            if (sideways) Row(Modifier.fillMaxSize()) {
-                photo(Modifier.weight(1f).fillMaxHeight())
-                if (opened > 0f) panel(Modifier.width(360.dp * opened).fillMaxHeight())
-            } else Column(Modifier.fillMaxSize()) {
-                photo(Modifier.fillMaxWidth().weight(1f))
-                if (opened > 0f) panel(Modifier.fillMaxWidth().weight(0.0001f + 1.4f * opened))
-            }
-        }
-        layout({ modifier ->
-            HorizontalPager(
-                pager,
-                modifier.statusBarsPadding().draggable(
-                    orientation = Orientation.Vertical,
-                    enabled = !zoomed,
-                    state = rememberDraggableState { drag += it },
-                    onDragStopped = { velocity ->
-                        val up = drag < -80f || velocity < -1500f
-                        val down = drag > 80f || velocity > 1500f
-                        drag = 0f
-                        when {
-                            up -> info = true
-                            down && info -> info = false
-                            down -> onClose()
-                        }
-                    },
-                ),
-                beyondViewportPageCount = 0, userScrollEnabled = !zoomed, key = { shown[it].key },
-            ) { page ->
-                val settled = pager.currentPage == page
-                shown[page].Page(settled, videos.getOrPut(shown[page].key) { VideoState() }) { if (settled) zoomed = it }
-            }
-        }) { modifier -> PhotoInfoPanel(container, details, modifier, note = current?.infoNote(details)?.let { stringResource(it) }) }
-
-        Row(
-            Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = Space.xs),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onClose, modifier = Modifier.testTag("picker_viewer_close")) {
-                Icon(AppIcons.Close, contentDescription = stringResource(Res.string.action_close), tint = MediaOverlay.content)
-            }
-            Text("${pager.currentPage + 1} / ${shown.size}", style = AppTheme.typography.body, color = MediaOverlay.content,
-                modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-            IconButton(onClick = { current?.let(onDelete) }, enabled = enabled && current != null, modifier = Modifier.testTag("picker_viewer_delete")) {
+    }
+    ViewerFrame(
+        pager = pager,
+        key = { shown[it].key },
+        onClose = onClose,
+        modifier = Modifier.testTag("picker_viewer"),
+        thumb = { index ->
+            val thumb by rememberThumb(shown[index])
+            thumb?.let { Image(it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
+        },
+        thumbLabel = { shown[it].description() },
+        marked = { shown[it].key in order },
+        info = { modifier -> PhotoInfoPanel(container, details, modifier, note = current?.infoNote(details)?.let { stringResource(it) }) },
+        top = { at ->
+            IconButton(onClick = { current?.let(onDelete) }, enabled = enabled && current != null, modifier = Modifier.align(at).testTag("picker_viewer_delete")) {
                 Icon(AppIcons.Trash, contentDescription = stringResource(current?.source?.deleteWords ?: Res.string.camera_delete), tint = MediaOverlay.content)
             }
-        }
-        if (busy) Column(
-            Modifier.fillMaxSize().background(MediaOverlay.bar),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Space.s, Alignment.CenterVertically),
-        ) {
-            Spinner(color = MediaOverlay.content)
-            Text(stringResource(Res.string.camera_deleting), style = AppTheme.typography.caption, color = MediaOverlay.content)
-        }
-        if (current != null && !info) Column(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().padding(horizontal = Space.gutter, vertical = Space.m),
-            verticalArrangement = Arrangement.spacedBy(Space.xs),
-        ) {
-            VideoControls(videos.getOrPut(current.key) { VideoState() })
-            val gutter = Space.gutter
-            if (!sideways && shown.size > 1) ViewerStrip(
-                shown, pager, order,
-                // From edge to edge, past the bar's own margins.
-                Modifier.layout { measurable, constraints ->
-                    val wider = gutter.roundToPx() * 2
-                    val placeable = measurable.measure(constraints.copy(minWidth = constraints.maxWidth + wider, maxWidth = constraints.maxWidth + wider))
-                    layout(constraints.maxWidth, placeable.height) { placeable.place(-wider / 2, 0) }
-                },
+        },
+        controls = { if (current != null) VideoControls(videos.getOrPut(current.key) { VideoState() }, Modifier.padding(horizontal = Space.xs)) },
+        caption = {
+            val at = details?.takenAt
+            Text(
+                listOfNotNull(at?.let { "${formatDay(it.toLocalDate().toString())} ${"%02d:%02d".format(it.hour, it.minute)}" }, current?.place()).joinToString(" · "),
+                style = AppTheme.typography.caption, color = MediaOverlay.contentVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f).padding(horizontal = Space.s),
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                val at = details?.takenAt
-                Text(
-                    listOfNotNull(at?.let { "${formatDay(it.toLocalDate().toString())} ${"%02d:%02d".format(it.hour, it.minute)}" }, current.place()).joinToString(" · "),
-                    style = AppTheme.typography.caption, color = MediaOverlay.content, modifier = Modifier.weight(1f),
-                )
-                IconButton(onClick = { info = true }, modifier = Modifier.testTag("picker_viewer_info")) {
-                    Icon(AppIcons.Info, contentDescription = stringResource(Res.string.photo_info), tint = MediaOverlay.content)
-                }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        },
+        footer = {
+            if (current != null) Row(Modifier.padding(start = Space.gutter, end = Space.gutter, bottom = Space.s), verticalAlignment = Alignment.CenterVertically) {
                 val index = order[current.key] ?: -1
                 if (current.choosable) Row(
                     Modifier.weight(1f).height(48.dp)
@@ -228,74 +166,18 @@ internal fun Viewer(
                 } else Text(stringResource(Res.string.camera_raw_kept), style = AppTheme.typography.body, color = MediaOverlay.content, modifier = Modifier.weight(1f))
                 addButton()
             }
-        }
-    }
-}
-
-/**
- * The photos before and after the one shown, small in a row with it in the middle (Filmstrip):
- * those chosen have a dot, a tap turns the viewer to one, and dragging the row turns it along.
- */
-@Composable
-private fun ViewerStrip(shown: List<Pick>, pager: PagerState, order: Map<String, Int>, modifier: Modifier = Modifier) {
-    val scope = rememberCoroutineScope()
-    val strip = rememberLazyListState(pager.currentPage)
-    // Whether the row is moved by hand, the viewer following it, or follows the viewer.
-    var byHand by remember { mutableStateOf(false) }
-    val held by strip.interactionSource.collectIsDraggedAsState()
-    LaunchedEffect(held) { if (held) byHand = true }
-    LaunchedEffect(strip, pager) {
-        launch {
-            snapshotFlow { strip.isScrollInProgress }.collect { moving ->
-                if (!moving && byHand) {
-                    byHand = false
-                    strip.animateScrollToItem(pager.currentPage)
-                }
+        },
+        overlay = {
+            if (busy) Column(
+                Modifier.fillMaxSize().background(MediaOverlay.bar),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Space.s, Alignment.CenterVertically),
+            ) {
+                Spinner(color = MediaOverlay.content)
+                Text(stringResource(Res.string.camera_deleting), style = AppTheme.typography.caption, color = MediaOverlay.content)
             }
-        }
-        launch {
-            snapshotFlow {
-                val info = strip.layoutInfo
-                val middle = (info.viewportStartOffset + info.viewportEndOffset) / 2
-                info.visibleItemsInfo.minByOrNull { abs(it.offset + it.size / 2 - middle) }?.index
-            }.collect { if (byHand && it != null && it != pager.currentPage) pager.scrollToPage(it) }
-        }
-        snapshotFlow { pager.currentPage }.collect { if (!byHand) strip.animateScrollToItem(it) }
-    }
-    BoxWithConstraints(modifier.fillMaxWidth()) {
-        LazyRow(
-            Modifier.fillMaxWidth().testTag("picker_viewer_strip"),
-            state = strip,
-            // Room at each end for the first and the last to reach the middle.
-            contentPadding = PaddingValues(horizontal = ((maxWidth - 44.dp) / 2).coerceAtLeast(0.dp)),
-            horizontalArrangement = Arrangement.spacedBy(Space.xs),
-        ) {
-            items(shown.size, key = { shown[it].key }) { index ->
-                val pick = shown[index]
-                val selected = index == pager.currentPage
-                val thumb by rememberThumb(pick)
-                val label = pick.description()
-                val corner by animateDpAsState(if (selected) Radius.large else Radius.medium, AppTheme.motionScheme.fastSpatialSpec(), label = "thumb shape")
-                val dim by animateFloatAsState(if (selected) 0f else MediaOverlay.CONTROL_ALPHA, AppTheme.motionScheme.fastEffectsSpec(), label = "thumb dim")
-                Box(
-                    Modifier.size(44.dp).clip(ContinuousRoundedRectangle(corner))
-                        .clickable {
-                            // One nearby is turned to; one far off is gone to at once.
-                            scope.launch { if (abs(index - pager.currentPage) <= 3) pager.animateScrollToPage(index) else pager.scrollToPage(index) }
-                        }
-                        .semantics {
-                            contentDescription = label
-                            this.selected = selected
-                        },
-                ) {
-                    thumb?.let { Image(it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
-                    Box(Modifier.matchParentSize().graphicsLayer { alpha = dim }.background(Color.Black))
-                    if (pick.key in order) Box(
-                        Modifier.align(Alignment.TopEnd).padding(4.dp).size(8.dp)
-                            .background(tokens.accent, CircleShape).border(1.5.dp, MediaOverlay.content, CircleShape),
-                    )
-                }
-            }
-        }
+        },
+    ) { page, onZoom, onTap ->
+        shown[page].Page(pager.currentPage == page, videos.getOrPut(shown[page].key) { VideoState() }, onZoom, onTap)
     }
 }

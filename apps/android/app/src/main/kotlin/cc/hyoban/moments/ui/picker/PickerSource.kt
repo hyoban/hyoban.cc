@@ -156,9 +156,9 @@ internal interface Pick {
 
     /**
      * It full size in the viewer, [active] while it is the one shown: a video then plays over its
-     * still through [video], which the viewer's controls work.
+     * still through [video], which the viewer's controls work; [onTap] hides the viewer's bars.
      */
-    @Composable fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit)
+    @Composable fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit, onTap: () -> Unit)
 }
 
 /**

@@ -256,7 +256,7 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
 
     /** Its thumbnail enlarged until its original is down in the cache, then the original in tiles. */
     @Composable
-    override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit) {
+    override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             val transfer = source.transfer
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || transfer == null) return@Box
@@ -265,9 +265,9 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
             val file = original?.file
             val shape = thumb?.let { it.width.toFloat() / it.height } ?: 1.5f
             if (file != null) {
-                ZoomableOriginal(file, thumb, shape, photo.name, onZoom)
+                ZoomableOriginal(file, thumb, shape, photo.name, onZoom, onTap = onTap)
             } else {
-                ZoomablePhoto(shape, onZoom) {
+                ZoomablePhoto(shape, onZoom, onTap = onTap) {
                     thumb?.let { Image(it.asImageBitmap(), contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
                 }
             }

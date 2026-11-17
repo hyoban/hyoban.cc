@@ -138,6 +138,9 @@ import cc.hyoban.moments.ui.design.FilterChip
 import cc.hyoban.moments.ui.design.FilterChipDefaults
 import androidx.compose.ui.semantics.contentDescription
 import cc.hyoban.moments.data.spec.LocalMedia
+import cc.hyoban.moments.ui.viewer.MomentMediaViewer
+import cc.hyoban.moments.ui.components.Tooltip
+import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
@@ -298,6 +301,10 @@ fun NewMomentScreen(
     }
     // Motion photos just added, to be asked whether they go in as photos.
     val unaskedMotion = photos.filter { infos[it]?.motion == true && it !in askedMotion }
+    val motionPhotos = photos.filter { infos[it]?.motion == true }.toSet()
+    val videoPhotos = photos.filter { infos[it]?.video == true || originalMedia[it]?.type == MediaType.VIDEO }.toSet()
+    // The photo open in the viewer, by where it is in the row.
+    var viewing by rememberSaveable { mutableStateOf<Int?>(null) }
 
     // When: the earliest photo's time, else, when none says, the earliest a photo's file was
     // made, else when the page was opened.
@@ -515,11 +522,10 @@ fun NewMomentScreen(
                     onAdd = addPhotos,
                     onOpenCamera = openCamera.takeIf { device.hasCamera },
                     utility = utility,
-                    onToggleUtility = { uri -> utility = if (uri in utility) utility - uri else utility + uri },
-                    motion = photos.filter { infos[it]?.motion == true }.toSet(),
-                    videos = photos.filter { infos[it]?.video == true || originalMedia[it]?.type == MediaType.VIDEO }.toSet(),
+                    motion = motionPhotos,
+                    videos = videoPhotos,
                     stills = stills,
-                    onToggleStill = { uri -> stills = if (uri in stills) stills - uri else stills + uri },
+                    onOpen = { viewing = it },
                     onRemove = { removed -> photos = photos - removed },
                     onMove = { from, to -> photos = photos.toMutableList().apply { add(to, removeAt(from)) } },
                     modifier = Modifier.padding(top = Space.xs),
@@ -685,6 +691,53 @@ fun NewMomentScreen(
                 editingPlace = false
             }
         }
+        // The photos picked in the viewer, fading over the page as a Moment's do, each drawn as the
+        // Moment will show it; kept off covers, gone in as a photo alone or taken out from its bars.
+        AnimatedVisibility(
+            viewing != null && photos.isNotEmpty(),
+            enter = fadeIn(motion.defaultEffectsSpec()),
+            exit = fadeOut(motion.defaultEffectsSpec()),
+        ) {
+            val start = remember { (viewing ?: 0).coerceIn(0, photos.lastIndex.coerceAtLeast(0)) }
+            val media = photos.map { ref -> draftMedia(ref, originalMedia[ref], infos[ref], ref in videoPhotos, ref in utility) }
+            val refs = media.indices.associateBy { media[it].uid }.mapValues { photos[it.value] }
+            MomentMediaViewer(
+                container,
+                media,
+                start,
+                onBack = { viewing = null },
+                caption = { shown ->
+                    val at = refs[shown.uid]?.let { infos[it]?.takenAt }
+                    Text(
+                        at?.let { listOfNotNull(formatDay(stamp(it)), formatTime(stamp(it))).joinToString(" ") }.orEmpty(),
+                        style = AppTheme.typography.caption,
+                        color = MediaOverlay.contentVariant,
+                        maxLines = 1,
+                        modifier = Modifier.weight(1f).padding(horizontal = Space.s),
+                    )
+                },
+                actions = { shown ->
+                    val ref = refs[shown.uid] ?: return@MomentMediaViewer
+                    if (ref in motionPhotos) BarToggle(ref in stills, AppIcons.LiveOff, stringResource(Res.string.action_photo_still), "viewer_still") {
+                        stills = if (ref in stills) stills - ref else stills + ref
+                    }
+                    BarToggle(ref in utility, AppIcons.PhotoOff, stringResource(Res.string.action_photo_utility), "viewer_utility") {
+                        utility = if (ref in utility) utility - ref else utility + ref
+                    }
+                },
+                top = { shown ->
+                    val ref = refs[shown.uid] ?: return@MomentMediaViewer
+                    val label = stringResource(if (ref in videoPhotos) Res.string.action_remove_video else Res.string.action_remove_photo)
+                    IconButton(
+                        onClick = {
+                            photos = photos - ref
+                            if (photos.isEmpty()) viewing = null
+                        },
+                        modifier = Modifier.testTag("viewer_remove"),
+                    ) { Icon(AppIcons.Trash, contentDescription = label, tint = MediaOverlay.content) }
+                },
+            )
+        }
     }
     saveError?.let { message ->
         AlertDialog(
@@ -729,6 +782,38 @@ fun NewMomentScreen(
     }
 }
 
+/**
+ * [ref] as the viewer draws it before it is saved: as it was where it is [original], else the
+ * picked file itself, a video played from it and a motion photo shown as its still.
+ */
+private fun draftMedia(ref: PhotoRef, original: MomentMedia?, info: PhotoInfo?, video: Boolean, utility: Boolean): MomentMedia =
+    original?.copy(utility = utility.takeIf { it }) ?: MomentMedia(
+        uid = "draft:$ref",
+        type = if (video) MediaType.VIDEO else MediaType.IMAGE,
+        width = info?.width,
+        height = info?.height,
+        utility = utility.takeIf { it },
+        local = LocalMedia(uri = ref.toString(), videoUri = ref.toString().takeIf { video }),
+    )
+
+/** One of the viewer's switches for the photo shown: on, it stands filled. */
+@Composable
+private fun BarToggle(on: Boolean, icon: ImageVector, label: String, tag: String, onToggle: () -> Unit) {
+    Tooltip(label) {
+        IconButton(
+            onClick = onToggle,
+            modifier = Modifier.semantics { toggleableState = ToggleableState(on) }.testTag(tag),
+        ) {
+            Box(
+                Modifier.size(36.dp).background(if (on) MediaOverlay.content else Color.Transparent, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, contentDescription = label, tint = if (on) Color.Black else MediaOverlay.content)
+            }
+        }
+    }
+}
+
 /** How wide the words stand at the start on a phone on its side, the rest of the Moment beside them. */
 private val WORDS_COLUMN = 360.dp
 
@@ -736,7 +821,8 @@ private val WORDS_COLUMN = 360.dp
 /**
  * The photos picked, in a row, each with a button to take it out, a motion photo marked
  * as live unless it goes in as a photo, and tiles to pick more (the gallery and the paired
- * camera, in 选照片) or open the camera app to take one.
+ * camera, in 选照片) or open the camera app to take one. A tap opens one in the viewer, where
+ * it is kept off covers or goes in as a photo alone.
  * The first is the Moment's cover, so they are put in order as Material 3 has content
  * reordered: held and then dragged, the one held lifted under the finger and the others
  * stepping aside; a screen reader moves one earlier or later instead.
@@ -747,11 +833,10 @@ private fun PhotoStrip(
     onAdd: () -> Unit,
     onOpenCamera: (() -> Unit)?,
     utility: Set<PhotoRef>,
-    onToggleUtility: (PhotoRef) -> Unit,
     motion: Set<PhotoRef>,
     videos: Set<PhotoRef>,
     stills: Set<PhotoRef>,
-    onToggleStill: (PhotoRef) -> Unit,
+    onOpen: (Int) -> Unit,
     onRemove: (PhotoRef) -> Unit,
     onMove: (Int, Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -796,9 +881,7 @@ private fun PhotoStrip(
     val photoShape = AppTheme.shapes.medium
     val earlier = stringResource(Res.string.action_move_earlier)
     val later = stringResource(Res.string.action_move_later)
-    val options = stringResource(Res.string.action_photo_options)
-    // The photo whose menu is open, from a tap on it.
-    var menuFor by remember { mutableStateOf<PhotoRef?>(null) }
+    val open = stringResource(Res.string.action_view)
     LazyRow(
         modifier.fillMaxWidth(),
         state = list,
@@ -822,6 +905,11 @@ private fun PhotoStrip(
             }
             Box(
                 placement.size(PHOTO_SIZE).clip(photoShape)
+                    // A tap opens it in the viewer. Outside the drag below, so the drag sees each
+                    // move first and, consuming them, keeps a hold-and-drag from ending as a tap;
+                    // a long press is left to it (a tap detector's own long press would consume
+                    // the moves and call the drag off).
+                    .pointerInput(uri) { detectTapGestures(onTap = { onOpen(index) }) }
                     .pointerInput(uri) {
                         detectDragGesturesAfterLongPress(
                             onDragStart = {
@@ -839,10 +927,8 @@ private fun PhotoStrip(
                             onDragCancel = letGo,
                         )
                     }
-                    // A tap opens its menu; a long press is left to the drag above.
-                    .pointerInput(uri) { detectTapGestures(onLongPress = {}, onTap = { menuFor = uri }) }
                     .semantics {
-                        onClick(options) { menuFor = uri; true }
+                        onClick(open) { onOpen(index); true }
                         customActions = listOfNotNull(
                             CustomAccessibilityAction(earlier) { onMove(index, index - 1); true }.takeIf { index > 0 },
                             CustomAccessibilityAction(later) { onMove(index, index + 1); true }.takeIf { index < photos.lastIndex },
@@ -868,38 +954,6 @@ private fun PhotoStrip(
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(AppIcons.PhotoOff, contentDescription = stringResource(Res.string.label_photo_utility), tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
-                    }
-                }
-                DropdownMenu(menuFor == uri, onDismissRequest = { menuFor = null }) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.action_photo_utility)) },
-                        leadingIcon = { Icon(AppIcons.PhotoOff, contentDescription = null) },
-                        trailingIcon = if (uri in utility) {
-                            { Icon(AppIcons.Check, contentDescription = null) }
-                        } else {
-                            null
-                        },
-                        onClick = {
-                            menuFor = null
-                            onToggleUtility(uri)
-                        },
-                        modifier = Modifier.semantics { toggleableState = ToggleableState(uri in utility) }.testTag("photo_utility_$index"),
-                    )
-                    if (uri in motion) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(Res.string.action_photo_still)) },
-                            leadingIcon = { Icon(AppIcons.LiveOff, contentDescription = null) },
-                            trailingIcon = if (uri in stills) {
-                                { Icon(AppIcons.Check, contentDescription = null) }
-                            } else {
-                                null
-                            },
-                            onClick = {
-                                menuFor = null
-                                onToggleStill(uri)
-                            },
-                            modifier = Modifier.semantics { toggleableState = ToggleableState(uri in stills) }.testTag("photo_still_$index"),
-                        )
                     }
                 }
                 // A small dot to see, in a corner of the 48dp Material 3 has anything tapped take.

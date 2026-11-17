@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
 import cc.hyoban.moments.ui.design.TextButton
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -116,12 +117,9 @@ import me.saket.telephoto.zoomable.rememberZoomableState
 import me.saket.telephoto.zoomable.zoomable
 
 /**
- * A Moment's media full screen on black. Swipe sideways between them, up or down to close;
- * tap to hide everything but the photo; pinch or double-tap to zoom. Over it a bar with
- * close, which of how many and a live photo's motion, and under it a video's controls,
- * when and where, which opens the day, and sharing. What else there is about it is on the
- * Moment's page under the viewer. With a keyboard, as Material 3 has one work alongside
- * touch: the arrows go from one to the next, Space plays and pauses, and Escape closes.
+ * A Moment's media in the viewer ([ViewerFrame]): pinch or double-tap to zoom, a live photo's
+ * motion in the bar over it and a video's controls under it, with when and where, which opens
+ * the day, and sharing. What else there is about it is on the Moment's page under the viewer.
  */
 @Composable
 fun MediaViewer(
@@ -136,182 +134,93 @@ fun MediaViewer(
     val moment = remember(moments, uid) { moments.firstOrNull { it.uid == uid } } ?: return
     val media = moment.media
     if (media.isEmpty()) return
+    MomentMediaViewer(
+        container,
+        media,
+        index,
+        onBack,
+        caption = {
+            // When and where, tapped for the rest of its day.
+            val words = listOf(listOfNotNull(formatDay(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" ")) + moment.places.map { places[it]?.name ?: it }
+            Text(
+                words.joinToString(" "),
+                style = AppTheme.typography.caption,
+                color = MediaOverlay.contentVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f).clip(AppTheme.shapes.medium)
+                    .clickable(onClickLabel = stringResource(Res.string.label_whole_day)) { onDay(moment.dateKey) }
+                    .heightIn(min = 48.dp).wrapContentHeight(Alignment.CenterVertically)
+                    .padding(horizontal = Space.s).testTag("info_day"),
+            )
+        },
+        actions = { shown -> ShareShown(container, shown, shareText(moment, moment.places.firstOrNull()?.let { places[it]?.name })) },
+    )
+}
 
+/**
+ * [media] in the viewer ([ViewerFrame]), from [index]: a Moment's, or those picked for one being
+ * written, each drawn as the Moment will show it, zoomed in for a wider file, a live photo's clip
+ * played from the bar or held down and a video with its controls. [caption] and [actions] fill the
+ * bar under it, [top] the bar over it beside a live photo's button, for the one shown.
+ */
+@Composable
+fun MomentMediaViewer(
+    container: AppContainer,
+    media: List<MomentMedia>,
+    index: Int,
+    onBack: () -> Unit,
+    caption: @Composable RowScope.(MomentMedia) -> Unit,
+    actions: @Composable RowScope.(MomentMedia) -> Unit = {},
+    top: @Composable RowScope.(MomentMedia) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
+    if (media.isEmpty()) return
     val pager = rememberPagerState(initialPage = index.coerceIn(0, media.lastIndex)) { media.size }
-    var zoomed by remember { mutableStateOf(false) }
-    var chrome by rememberSaveable { mutableStateOf(true) }
-    // The shown one's info under it (PhotoInfo), swiped up or opened from the bar.
-    var info by rememberSaveable { mutableStateOf(false) }
-    // How far the photo has been dragged up or down, read only where it is drawn, so a drag
-    // moves pixels rather than rebuilding the screen every frame.
-    var drag by remember { mutableFloatStateOf(0f) }
-    val dragging by remember { derivedStateOf { drag != 0f } }
-    val density = LocalDensity.current
-    val closeAt = with(density) { 120.dp.toPx() }
-    val haptics = rememberHaptics()
-    // In a window of its own only the video shows: no bars, no controls.
-    val inPip = LocalInPictureInPicture.current
-    ViewerSystemBars(hidden = !chrome || inPip)
     // Each one's motion and video, held here so the bars over the pages work the one shown.
     val device = LocalDevice.current
-    val motions = remember(media) { media.associate { it.uid to device.viewerMotion(it) } }
+    val motions = remember(media.map { it.uid }) { media.associate { it.uid to device.viewerMotion(it) } }
     val shown = media[pager.currentPage.coerceIn(0, media.lastIndex)]
-
     // Space pressed, for the page shown to play or pause what it holds.
     val playKeys = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
-    val keyScope = rememberCoroutineScope()
-    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    val keys = remember { FocusRequester() }
-    LaunchedEffect(Unit) { keys.requestFocus() }
-
-    BoxWithConstraints(
-        Modifier.fillMaxSize()
-            .onKeyEvent { event ->
-                if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
-                when (event.key) {
-                    Key.DirectionLeft, Key.DirectionRight -> {
-                        if (zoomed) return@onKeyEvent false
-                        val next = (event.key == Key.DirectionRight) != rtl
-                        val page = (pager.currentPage + if (next) 1 else -1).coerceIn(0, media.lastIndex)
-                        keyScope.launch { pager.animateScrollToPage(page) }
-                        true
-                    }
-                    Key.Spacebar -> playKeys.tryEmit(Unit)
-                    Key.Escape -> {
-                        onBack()
-                        true
-                    }
-                    else -> false
-                }
-            }
-            .focusRequester(keys)
-            .focusable(),
-    ) {
-        val fadeOver = constraints.maxHeight / 3f
-        // How far a drag has gone toward closing: the photo shrinks a little and the black
-        // thins out to the page under the viewer.
-        fun progress() = (abs(drag) / fadeOver).coerceIn(0f, 1f)
-        // The system's back gesture previews closing as a drag down does, the photo following
-        // the finger; let go, the photo closes from there, and called off it settles.
-        val back = rememberPredictiveBack(enabled = !info) { onBack() }
-        LaunchedEffect(back) {
-            androidx.compose.runtime.snapshotFlow { back.progress }.collect { drag = it * fadeOver }
-        }
-
-        BackHandler(enabled = info) { info = false }
-        val opened by animateFloatAsState(if (info) 1f else 0f, AppTheme.motionScheme.defaultSpatialSpec(), label = "info")
-        val panelHeight = maxHeight * 0.55f
-        val backdrop = Color.Black
-        Box(Modifier.fillMaxSize().drawBehind { drawRect(backdrop.copy(alpha = 1f - progress())) })
-        HorizontalPager(
-            pager,
-            Modifier.fillMaxSize().padding(bottom = panelHeight * opened)
-                // The drag moves and shrinks the photo in layout, not just in drawing, so
-                // where it is when let go is where its flight back into its tile starts.
-                .layout { measurable, constraints ->
-                    val scale = 1f - 0.2f * progress()
-                    val width = (constraints.maxWidth * scale).roundToInt()
-                    val height = (constraints.maxHeight * scale).roundToInt()
-                    val placeable = measurable.measure(Constraints.fixed(width, height))
-                    layout(constraints.maxWidth, constraints.maxHeight) {
-                        placeable.place((constraints.maxWidth - width) / 2, (constraints.maxHeight - height) / 2 + drag.roundToInt())
-                    }
-                }
-                .draggable(
-                    orientation = Orientation.Vertical,
-                    enabled = !zoomed,
-                    state = rememberDraggableState { delta ->
-                        haptics.across(abs(drag), abs(drag + delta), closeAt)
-                        drag += delta
-                    },
-                    onDragStopped = { velocity ->
-                        // Up opens the info, down puts it away; down again, or with no info, closes.
-                        val up = drag < 0f && (-drag > closeAt / 2 || velocity < -1500f)
-                        when {
-                            up || (info && drag > 0f) -> {
-                                info = up
-                                animate(drag, 0f, initialVelocity = velocity) { value, _ -> drag = value }
-                            }
-                            drag > 0f && (drag > closeAt || velocity > 2000f) -> onBack()
-                            else -> animate(drag, 0f, initialVelocity = velocity) { value, _ -> drag = value }
-                        }
-                    },
-                ),
-            userScrollEnabled = !zoomed,
-            key = { media[it].uid },
-        ) { page ->
-            ViewerPage(
-                media = media[page],
-                urls = container.mediaUrls,
-                active = pager.currentPage == page,
-                motion = motions.getValue(media[page].uid),
-                onZoom = { zoomed = it },
-                onTap = { chrome = !chrome },
-                playKeys = playKeys,
-            )
-        }
-
-        val motion = AppTheme.motionScheme
-        val bars = chrome && !dragging && !inPip
-        AnimatedVisibility(bars, enter = fadeIn(motion.fastEffectsSpec()), exit = fadeOut(motion.fastEffectsSpec())) {
-            // Close at the start, which of how many in the middle, and a live photo's motion at the end.
-            Box(Modifier.fillMaxWidth().background(MediaOverlay.bar).statusBarsPadding().sideInsetsPadding().padding(Space.xs)) {
-                // On a desktop, clear of the window's own buttons at its top left (D03): close at the end.
-                val desktop = cc.hyoban.moments.ui.design.LocalDesktop.current
-                Tooltip(stringResource(Res.string.action_close), below = true, modifier = Modifier.align(if (desktop) Alignment.CenterEnd else Alignment.CenterStart)) {
-                    IconButton(onClick = onBack, modifier = Modifier.testTag("back")) {
-                        Icon(AppIcons.Close, contentDescription = stringResource(Res.string.action_close), tint = MediaOverlay.content)
-                    }
-                }
-                if (media.size > 1) {
-                    Text(
-                        "${pager.currentPage + 1} / ${media.size}",
-                        color = MediaOverlay.content,
-                        style = AppTheme.typography.body,
-                        modifier = Modifier.align(Alignment.Center),
-                    )
-                }
+    ViewerFrame(
+        pager = pager,
+        key = { media[it].uid },
+        onClose = onBack,
+        modifier = modifier,
+        thumb = { MediaStill(media[it], container.mediaUrls, Modifier.fillMaxSize()) },
+        thumbLabel = { media[it].alt.ifEmpty { null } },
+        info = if (device.hasPhotoInfo) {
+            { panel -> device.PhotoInfo(container, shown, panel) }
+        } else {
+            null
+        },
+        onSpace = { playKeys.tryEmit(Unit) },
+        top = { at ->
+            Row(Modifier.align(at), verticalAlignment = Alignment.CenterVertically) {
+                top(shown)
                 if (shown.type == MediaType.LIVE_PHOTO && container.mediaUrls.motion(shown) != null) {
-                    motions.getValue(shown.uid)?.LiveButton(Modifier.align(if (desktop) Alignment.Center else Alignment.CenterEnd))
+                    motions[shown.uid]?.LiveButton(Modifier)
                 }
             }
-        }
-        AnimatedVisibility(
-            bars,
-            enter = fadeIn(motion.fastEffectsSpec()),
-            exit = fadeOut(motion.fastEffectsSpec()),
-            modifier = Modifier.align(Alignment.BottomCenter),
-        ) {
-            Column(Modifier.fillMaxWidth().background(MediaOverlay.bar).navigationBarsPadding().sideInsetsPadding()) {
-                if (shown.type == MediaType.VIDEO && container.mediaUrls.motion(shown) != null) {
-                    motions.getValue(shown.uid)?.Controls(Modifier.padding(horizontal = Space.xs))
-                }
-                Row(Modifier.padding(start = Space.gutter - Space.s, end = Space.xs, bottom = Space.xs), verticalAlignment = Alignment.CenterVertically) {
-                    // When and where, tapped for the rest of its day.
-                    val words = listOf(listOfNotNull(formatDay(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" ")) + moment.places.map { places[it]?.name ?: it }
-                    Text(
-                        words.joinToString(" "),
-                        style = AppTheme.typography.caption,
-                        color = MediaOverlay.contentVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f).clip(AppTheme.shapes.medium)
-                            .clickable(onClickLabel = stringResource(Res.string.label_whole_day)) { onDay(moment.dateKey) }
-                            .heightIn(min = 48.dp).wrapContentHeight(Alignment.CenterVertically)
-                            .padding(horizontal = Space.s).testTag("info_day"),
-                    )
-                    if (device.hasPhotoInfo) Tooltip(stringResource(Res.string.photo_info)) {
-                        IconButton(onClick = { info = true }, modifier = Modifier.testTag("photo_info_open")) {
-                            Icon(AppIcons.Info, contentDescription = stringResource(Res.string.photo_info), tint = MediaOverlay.content)
-                        }
-                    }
-                    ShareShown(container, shown, shareText(moment, moment.places.firstOrNull()?.let { places[it]?.name }))
-                }
+        },
+        controls = {
+            if (shown.type == MediaType.VIDEO && container.mediaUrls.motion(shown) != null) {
+                motions[shown.uid]?.Controls(Modifier.padding(horizontal = Space.xs))
             }
-        }
-        if (opened > 0f) {
-            device.PhotoInfo(container, shown, Modifier.align(Alignment.BottomCenter).height(panelHeight).graphicsLayer { translationY = size.height * (1f - opened) })
-        }
+        },
+        caption = { caption(shown) },
+        actions = { actions(shown) },
+    ) { page, onZoom, onTap ->
+        ViewerPage(
+            media = media[page],
+            urls = container.mediaUrls,
+            active = pager.currentPage == page,
+            motion = motions[media[page].uid],
+            onZoom = onZoom,
+            onTap = onTap,
+            playKeys = playKeys,
+        )
     }
 }
 
@@ -487,7 +396,7 @@ const val DOUBLE_TAP_ZOOM = 2.5f
  * A photo of [shape] (width over height) that zooms as the viewer's do: two fingers or a
  * double tap, up to the same limit, panning once zoomed and stopping at the photo's edges.
  * [onZoom] says whether it is zoomed in, for a pager to stop turning meanwhile; [onHold] whether
- * it is held down, at full size, until the finger lifts.
+ * it is held down, at full size, until the finger lifts; [onTap] a tap, for the viewer to hide its bars.
  */
 @Composable
 fun ZoomablePhoto(
@@ -495,6 +404,7 @@ fun ZoomablePhoto(
     onZoom: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     onHold: ((Boolean) -> Unit)? = null,
+    onTap: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     val zoom = rememberZoomableState(ZoomSpec(maxZoomFactor = MAX_ZOOM))
@@ -517,6 +427,7 @@ fun ZoomablePhoto(
             }
             .zoomable(
                 zoom,
+                onClick = onTap?.let { tap -> { tap() } },
                 onLongClick = if (onHold != null) {
                     {
                         if (!zoomed) {

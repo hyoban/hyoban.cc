@@ -290,7 +290,6 @@
     <string name="action_open_camera">Open camera</string>
     <string name="action_remove_photo">Remove photo</string>
     <string name="action_remove_video">Remove video</string>
-    <string name="action_photo_options">Photo options</string>
     <string name="action_photo_utility">Don't use as a cover</string>
     <string name="action_photo_still">Use the still only</string>
     <string name="action_move_earlier">Move earlier</string>

@@ -268,7 +268,6 @@
     <string name="action_open_camera">打开相机</string>
     <string name="action_remove_photo">移除照片</string>
     <string name="action_remove_video">移除视频</string>
-    <string name="action_photo_options">照片选项</string>
     <string name="action_photo_utility">不用作封面</string>
     <string name="action_photo_still">只用静态画面</string>
     <string name="action_move_earlier">往前移</string>
