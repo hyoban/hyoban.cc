@@ -221,7 +221,18 @@ is its place's name once the place is another, and the check-in goes with the pl
   Held and dragged in the row, they change places, the first being the cover; a tap opens them in
   the viewer, the same one a Moment's media and 选照片 open (`ui/viewer/ViewerFrame.kt`), where the
   bar takes one out, keeps it off covers (不用作封面) or has a motion photo go in as its still alone
-  (只用静态画面). They are copied in whole; a motion
+  (只用静态画面). 人脸打码 there, on a photo newly picked, has ML Kit (through Google Play
+  services, on the phone alone) find the faces in it and lays a patch over each, drawn as saving will write it: a mosaic, or
+  one of the design system's stickers (猫, 狗, 熊, 兔, 笑脸, 花) a little larger than the patch. A tap
+  on a patch chooses it, and the bar turns into its styles and 去掉这一块; a tap elsewhere lets go,
+  or lays another patch, as large as the patch nearest it (a fifth of the photo with none). Until a style is chosen there each patch takes a sticker at random,
+  none twice on a photo while any is left; once one is, new patches take it. The photo row marks the photo with the mosaic
+  icon. Which sticker goes where is the owner's choice: nothing is guessed from the face. Saving writes a copy of
+  the app's own as an upright JPEG with the patches drawn in, no HDR gain map and no motion clip,
+  and that is what the app shows, shares and publishes; the photo in the gallery is untouched. The
+  copy as picked and the patches stay beside it until the Moment is published, so opening it again
+  shows the patches to change, and saving draws them again from that copy; publishing lets it go,
+  and a published photo's patches stay as they are. They are copied in whole; a motion
   photo is split into a live photo's still and video. A video over 100 MB, or other than
   MP4, MOV or WebM, is refused, since the Worker and the site's poster can't take it. A
   photo marked 不用作封面 never becomes a cover, widget or share card.

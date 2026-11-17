@@ -651,7 +651,7 @@ class MomentsRepository(
 
     /** The app's own copies of [media], gone from its store. */
     private fun deleteCopies(local: DataStore, media: List<MomentMedia>) {
-        media.flatMap { it.local?.takeIf { copy -> copy.copied }?.let { copy -> listOfNotNull(copy.uri, copy.videoUri) }.orEmpty() }
+        media.flatMap { it.local?.takeIf { copy -> copy.copied }?.let { copy -> listOfNotNull(copy.uri, copy.videoUri, copy.unmasked) }.orEmpty() }
             .mapNotNull { runCatching { File(URI(it)) }.getOrNull() }
             .filter { it.startsWith(local.root) }
             .forEach { it.delete() }

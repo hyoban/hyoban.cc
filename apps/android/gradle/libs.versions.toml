@@ -2,6 +2,8 @@
 # Exposes the shell user service used to read the physical side key, without root.
 shizuku = "13.1.5"
 playLocation = "21.4.0"
+# Faces found on the phone for 人脸打码, the model kept by Google Play services rather than the APK.
+mlkitFaces = "17.1.0"
 agp = "9.5.0"
 # Newer than the Kotlin the Android Gradle plugin bundles, so the root build file pins it;
 # the compiler plugins and kotlin-test must match it.
@@ -52,6 +54,7 @@ icu4j = { group = "com.ibm.icu", name = "icu4j", version = "76.1" }
 shizuku-api = { group = "dev.rikka.shizuku", name = "api", version.ref = "shizuku" }
 shizuku-provider = { group = "dev.rikka.shizuku", name = "provider", version.ref = "shizuku" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playLocation" }
+mlkit-faces = { group = "com.google.android.gms", name = "play-services-mlkit-face-detection", version.ref = "mlkitFaces" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }

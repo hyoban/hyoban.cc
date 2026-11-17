@@ -55,6 +55,7 @@ kotlin {
             implementation(libs.androidx.core.ktx)
             implementation(libs.exifinterface)
             implementation(libs.capsule)
+            implementation(libs.mlkit.faces)
         }
     }
 }

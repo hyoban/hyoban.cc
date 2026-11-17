@@ -162,7 +162,8 @@ fun MediaViewer(
  * [media] in the viewer ([ViewerFrame]), from [index]: a Moment's, or those picked for one being
  * written, each drawn as the Moment will show it, zoomed in for a wider file, a live photo's clip
  * played from the bar or held down and a video with its controls. [caption] and [actions] fill the
- * bar under it, [top] the bar over it beside a live photo's button, for the one shown.
+ * bar under it, [top] the bar over it beside a live photo's button, for the one shown; [over]
+ * lies on each photo, at its size, zooming and panning with it.
  */
 @Composable
 fun MomentMediaViewer(
@@ -173,6 +174,7 @@ fun MomentMediaViewer(
     caption: @Composable RowScope.(MomentMedia) -> Unit,
     actions: @Composable RowScope.(MomentMedia) -> Unit = {},
     top: @Composable RowScope.(MomentMedia) -> Unit = {},
+    over: @Composable (MomentMedia) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     if (media.isEmpty()) return
@@ -220,6 +222,7 @@ fun MomentMediaViewer(
             onZoom = onZoom,
             onTap = onTap,
             playKeys = playKeys,
+            over = { over(media[page]) },
         )
     }
 }
@@ -270,6 +273,7 @@ private fun ViewerPage(
     onZoom: (Boolean) -> Unit,
     onTap: () -> Unit,
     playKeys: SharedFlow<Unit>,
+    over: @Composable () -> Unit,
 ) {
     val url = urls.motion(media)?.takeIf { motion != null }
     // Space, while this page is the one shown: a video plays or pauses, a live photo plays or stops.
@@ -287,6 +291,7 @@ private fun ViewerPage(
             onHold = motion?.hold?.takeIf { url != null && media.type == MediaType.LIVE_PHOTO },
         ) {
             if (url != null) motion?.Over(url, active, Modifier.fillMaxSize())
+            over()
         }
         if (url != null) motion?.Waiting()
     }

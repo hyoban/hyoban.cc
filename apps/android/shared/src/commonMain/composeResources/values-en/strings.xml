@@ -302,6 +302,18 @@
     <string name="action_remove_video">Remove video</string>
     <string name="action_photo_utility">Don't use as a cover</string>
     <string name="action_photo_still">Use the still only</string>
+    <string name="action_photo_faces">Pixelate faces</string>
+    <string name="message_no_faces">No faces found. Tap the photo to add a patch</string>
+    <string name="message_faces_unavailable">Face finding is unavailable now. Tap the photo to add a patch</string>
+    <string name="label_mask">Covered patch, tap to choose</string>
+    <string name="action_remove_mask">Remove this patch</string>
+    <string name="style_mosaic">Mosaic</string>
+    <string name="sticker_cat">Cat</string>
+    <string name="sticker_dog">Dog</string>
+    <string name="sticker_bear">Bear</string>
+    <string name="sticker_rabbit">Rabbit</string>
+    <string name="sticker_smile">Smiley</string>
+    <string name="sticker_flower">Flower</string>
     <string name="action_move_earlier">Move earlier</string>
     <string name="action_move_later">Move later</string>
     <string name="section_food">Food</string>
@@ -476,6 +488,7 @@
     <string name="change_link">Link</string>
     <string name="label_photo_added">Photo added</string>
     <string name="label_photo_utility">Not used as a cover</string>
+    <string name="label_photo_masked">Faces pixelated</string>
     <string name="label_photo_removed">Photo removed</string>
     <string name="label_no_words">No text</string>
     <string name="action_show_token">Show token</string>

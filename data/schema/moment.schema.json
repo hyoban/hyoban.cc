@@ -76,6 +76,48 @@
                   "copied": {
                     "default": false,
                     "type": "boolean"
+                  },
+                  "unmasked": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "masks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "left": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "top": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "right": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "bottom": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "sticker": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "left",
+                        "top",
+                        "right",
+                        "bottom"
+                      ]
+                    }
                   }
                 },
                 "required": [
@@ -232,6 +274,48 @@
                   "copied": {
                     "default": false,
                     "type": "boolean"
+                  },
+                  "unmasked": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "masks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "left": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "top": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "right": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "bottom": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "sticker": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "left",
+                        "top",
+                        "right",
+                        "bottom"
+                      ]
+                    }
                   }
                 },
                 "required": [
@@ -422,6 +506,48 @@
                   "copied": {
                     "default": false,
                     "type": "boolean"
+                  },
+                  "unmasked": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "masks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "left": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "top": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "right": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "bottom": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "sticker": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "left",
+                        "top",
+                        "right",
+                        "bottom"
+                      ]
+                    }
                   }
                 },
                 "required": [

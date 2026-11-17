@@ -10,6 +10,7 @@ import cc.hyoban.moments.ui.components.BackHandler
 import cc.hyoban.moments.res.*
 import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.LocalSettings
+import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.design.rememberHaptics
 import cc.hyoban.moments.ui.theme.dividerColor
@@ -72,6 +73,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
+import cc.hyoban.moments.ui.design.Sticker
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -109,6 +112,7 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.input.ImeAction
@@ -120,7 +124,10 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.local.Around
 import cc.hyoban.moments.data.things.checkinAsMoment
 import cc.hyoban.moments.data.things.editedEntry
+import cc.hyoban.moments.data.local.Faces
 import cc.hyoban.moments.data.local.Fix
+import cc.hyoban.moments.data.local.Mask
+import cc.hyoban.moments.data.local.sha256Of
 import cc.hyoban.moments.data.local.PhotoInfo
 import cc.hyoban.moments.data.local.Photos
 import cc.hyoban.moments.data.local.Refusal
@@ -180,6 +187,7 @@ import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.theme.LocalSurfaceLevel
 import coil3.compose.AsyncImage
 import java.io.File
+import java.net.URI
 import java.time.Instant
 import cc.hyoban.moments.data.spec.Entries
 import java.time.OffsetDateTime
@@ -245,6 +253,21 @@ fun NewMomentScreen(
     val infos = remember { mutableStateMapOf<PhotoRef, PhotoInfo>() }
     // The motion photos added as photos alone, their clips left out, and those already asked about.
     var stills by remember { mutableStateOf(emptySet<PhotoRef>()) }
+    // The photos 人脸打码 is on for, each with its patches: a photo saved with them has them still,
+    // kept beside the app's copy as it was picked.
+    val originalMasks = remember(originalMedia) {
+        originalMedia.mapNotNull { (ref, media) -> media.local?.masks?.takeIf { it.isNotEmpty() }?.let { ref to it } }.toMap()
+    }
+    var masks by remember { mutableStateOf(originalMasks) }
+    // Where the patches are drawn from: a photo saved with them, the copy as it was picked.
+    val unmaskedOf: (PhotoRef) -> PhotoRef = { ref -> originalMedia[ref]?.local?.unmasked?.toPhotoRef() ?: ref }
+    // The patch chosen in the viewer, for the bar to change its style, and the style new ones take
+    // once one has been chosen there (none being the mosaic); until then each takes a sticker at random.
+    var chosenMask by remember { mutableStateOf<Pair<PhotoRef, Mask>?>(null) }
+    var maskStyle by remember { mutableStateOf<String?>(null) }
+    var styleChosen by remember { mutableStateOf(false) }
+    val styleFor: (List<Mask>) -> String? = { beside -> if (styleChosen) maskStyle else Sticker.random(beside.mapNotNull { it.sticker }) }
+    val showMessage = rememberShowMessage()
     var askedMotion by remember { mutableStateOf(emptySet<PhotoRef>()) }
     // What it cost, as typed: a meal or anything else, what it went on (a meal's dishes), how it
     // was, the amount in its currency and how many.
@@ -372,6 +395,7 @@ fun NewMomentScreen(
     val newKind = (chosenPlace as? PlaceChoice.Known)?.kind
     val momentChanged = original == null ||
         text != original.text || photos != originalMedia.keys.toList() || utility.intersect(photos.toSet()) != originalUtility ||
+        masks.filter { (ref, laid) -> ref in photos && laid.isNotEmpty() } != originalMasks.filterKeys { it in photos } ||
         chosenTime != originalTime || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || cost != originalCost ||
         private != original.hidden
     // What leaving would lose: anything written, or, for a Moment being changed, any change.
@@ -399,7 +423,7 @@ fun NewMomentScreen(
             try {
                 withContext(NonCancellable) {
                     val moment = if (withMoment) {
-                        val (moment, newPlace) = buildMoment(container, text, photos, utility, stills, infos, time, place, cost, private, original, originalMedia, stayUid)
+                        val (moment, newPlace) = buildMoment(container, text, photos, utility, stills, masks, infos, time, place, cost, private, original, originalMedia, stayUid)
                         // Kept as what it now is, a Moment or a check-in, named after its place when that moved.
                         if (original == null || momentChanged) {
                             val venue = when (place) {
@@ -522,6 +546,7 @@ fun NewMomentScreen(
                     onAdd = addPhotos,
                     onOpenCamera = openCamera.takeIf { device.hasCamera },
                     utility = utility,
+                    masked = masks.filterValues { it.isNotEmpty() }.keys,
                     motion = motionPhotos,
                     videos = videoPhotos,
                     stills = stills,
@@ -700,6 +725,8 @@ fun NewMomentScreen(
         ) {
             val start = remember { (viewing ?: 0).coerceIn(0, photos.lastIndex.coerceAtLeast(0)) }
             val media = photos.map { ref -> draftMedia(ref, originalMedia[ref], infos[ref], ref in videoPhotos, ref in utility) }
+                // A photo saved with patches is shown as it was picked, the patches over it to change.
+                .map { media -> media.local?.unmasked?.let { media.copy(local = media.local.copy(uri = it)) } ?: media }
             val refs = media.indices.associateBy { media[it].uid }.mapValues { photos[it.value] }
             MomentMediaViewer(
                 container,
@@ -707,6 +734,7 @@ fun NewMomentScreen(
                 start,
                 onBack = { viewing = null },
                 caption = { shown ->
+                    if (chosenMask?.first == refs[shown.uid]) return@MomentMediaViewer
                     val at = refs[shown.uid]?.let { infos[it]?.takenAt }
                     Text(
                         at?.let { listOfNotNull(formatDay(stamp(it)), formatTime(stamp(it))).joinToString(" ") }.orEmpty(),
@@ -718,8 +746,61 @@ fun NewMomentScreen(
                 },
                 actions = { shown ->
                     val ref = refs[shown.uid] ?: return@MomentMediaViewer
-                    if (ref in motionPhotos) BarToggle(ref in stills, AppIcons.LiveOff, stringResource(Res.string.action_photo_still), "viewer_still") {
+                    // A patch chosen: the bar is its styles, the one it has marked, and taking it away.
+                    val chosen = chosenMask?.takeIf { it.first == ref }?.second
+                    if (chosen != null) {
+                        val restyle: (String?) -> Unit = { style ->
+                            val restyled = chosen.copy(sticker = style)
+                            masks = masks + (ref to masks[ref].orEmpty().map { if (it == chosen) restyled else it })
+                            chosenMask = ref to restyled
+                            maskStyle = style
+                            styleChosen = true
+                        }
+                        Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
+                            StyleChoice(chosen.sticker == null, stringResource(Res.string.style_mosaic), "style_mosaic", { restyle(null) }) {
+                                Icon(AppIcons.Mosaic, contentDescription = null, tint = MediaOverlay.content)
+                            }
+                            for (sticker in Sticker.entries) {
+                                StickerChoice(sticker, chosen.sticker == sticker.key) { restyle(sticker.key) }
+                            }
+                        }
+                        Tooltip(stringResource(Res.string.action_remove_mask)) {
+                            IconButton(
+                                onClick = {
+                                    masks = masks + (ref to masks[ref].orEmpty() - chosen)
+                                    chosenMask = null
+                                },
+                                modifier = Modifier.testTag("mask_remove"),
+                            ) { Icon(AppIcons.Trash, contentDescription = stringResource(Res.string.action_remove_mask), tint = MediaOverlay.content) }
+                        }
+                        return@MomentMediaViewer
+                    }
+                    // A photo pixelated goes in as a still: its clip would show the faces.
+                    if (ref in motionPhotos && ref !in masks) BarToggle(ref in stills, AppIcons.LiveOff, stringResource(Res.string.action_photo_still), "viewer_still") {
                         stills = if (ref in stills) stills - ref else stills + ref
+                    }
+                    // On a photo new here, or one saved here and not yet published: a published one is the site's as it is.
+                    val maskable = originalMedia[ref]?.let { it.published == null && it.local?.copied == true } ?: true
+                    if (Faces.available && maskable && ref !in videoPhotos) {
+                        BarToggle(ref in masks, AppIcons.Mosaic, stringResource(Res.string.action_photo_faces), "viewer_faces") {
+                            if (ref in masks) {
+                                masks = masks - ref
+                                if (chosenMask?.first == ref) chosenMask = null
+                                return@BarToggle
+                            }
+                            masks = masks + (ref to emptyList())
+                            scope.launch {
+                                val found = Faces.find(unmaskedOf(ref))
+                                // Turned off meanwhile, it stays off; patches laid meanwhile stay beside the faces.
+                                val laid = masks[ref] ?: return@launch
+                                val styled = found.orEmpty().fold(laid) { beside, face -> beside + face.copy(sticker = styleFor(beside)) }
+                                masks = masks + (ref to styled.drop(laid.size) + laid)
+                                when {
+                                    found == null -> showMessage(textOf(Res.string.message_faces_unavailable))
+                                    found.isEmpty() && laid.isEmpty() -> showMessage(textOf(Res.string.message_no_faces))
+                                }
+                            }
+                        }
                     }
                     BarToggle(ref in utility, AppIcons.PhotoOff, stringResource(Res.string.action_photo_utility), "viewer_utility") {
                         utility = if (ref in utility) utility - ref else utility + ref
@@ -735,6 +816,20 @@ fun NewMomentScreen(
                         },
                         modifier = Modifier.testTag("viewer_remove"),
                     ) { Icon(AppIcons.Trash, contentDescription = label, tint = MediaOverlay.content) }
+                },
+                over = { shown ->
+                    val ref = refs[shown.uid]
+                    val laid = ref?.let { masks[it] }
+                    if (ref != null && laid != null) {
+                        MaskEditor(
+                            unmaskedOf(ref),
+                            laid,
+                            selected = chosenMask?.takeIf { it.first == ref }?.second,
+                            style = styleFor,
+                            onSelect = { mask -> chosenMask = mask?.let { ref to it } },
+                            onChange = { masks = masks + (ref to it) },
+                        )
+                    }
                 },
             )
         }
@@ -796,6 +891,37 @@ private fun draftMedia(ref: PhotoRef, original: MomentMedia?, info: PhotoInfo?, 
         local = LocalMedia(uri = ref.toString(), videoUri = ref.toString().takeIf { video }),
     )
 
+/** One of a patch's styles in the viewer's bar, the one it has marked with a dot under it. */
+@Composable
+private fun StyleChoice(on: Boolean, label: String, tag: String, onChoose: () -> Unit, content: @Composable () -> Unit) {
+    Tooltip(label) {
+        IconButton(
+            onClick = onChoose,
+            modifier = Modifier.semantics { selected = on }.testTag(tag),
+        ) {
+            Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                content()
+                if (on) Box(Modifier.align(Alignment.BottomCenter).size(4.dp).background(MediaOverlay.content, CircleShape))
+            }
+        }
+    }
+}
+
+@Composable
+private fun StickerChoice(sticker: Sticker, on: Boolean, onChoose: () -> Unit) {
+    val label = stringResource(
+        when (sticker) {
+            Sticker.CAT -> Res.string.sticker_cat
+            Sticker.DOG -> Res.string.sticker_dog
+            Sticker.BEAR -> Res.string.sticker_bear
+            Sticker.RABBIT -> Res.string.sticker_rabbit
+            Sticker.SMILE -> Res.string.sticker_smile
+            Sticker.FLOWER -> Res.string.sticker_flower
+        },
+    )
+    StyleChoice(on, label, "style_${sticker.key}", onChoose) { StickerImage(sticker, 30.dp) }
+}
+
 /** One of the viewer's switches for the photo shown: on, it stands filled. */
 @Composable
 private fun BarToggle(on: Boolean, icon: ImageVector, label: String, tag: String, onToggle: () -> Unit) {
@@ -833,6 +959,7 @@ private fun PhotoStrip(
     onAdd: () -> Unit,
     onOpenCamera: (() -> Unit)?,
     utility: Set<PhotoRef>,
+    masked: Set<PhotoRef>,
     motion: Set<PhotoRef>,
     videos: Set<PhotoRef>,
     stills: Set<PhotoRef>,
@@ -939,7 +1066,7 @@ private fun PhotoStrip(
                 // The site's photos by their URL, the phone's by their Uri.
                 AsyncImage(model = cc.hyoban.moments.data.local.imageModel(uri), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 if (lift > 0f) Box(Modifier.fillMaxSize().background(tokens.tx.copy(alpha = DRAGGED_LAYER * lift)))
-                if (uri in motion && uri !in stills) LiveBadge(Modifier.align(Alignment.TopStart).padding(Space.s))
+                if (uri in motion && uri !in stills && uri !in masked) LiveBadge(Modifier.align(Alignment.TopStart).padding(Space.s))
                 if (uri in videos) {
                     Box(
                         Modifier.align(Alignment.TopStart).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
@@ -954,6 +1081,14 @@ private fun PhotoStrip(
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(AppIcons.PhotoOff, contentDescription = stringResource(Res.string.label_photo_utility), tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
+                    }
+                }
+                if (uri in masked) {
+                    Box(
+                        Modifier.align(Alignment.BottomEnd).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(AppIcons.Mosaic, contentDescription = stringResource(Res.string.label_photo_masked), tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
                     }
                 }
                 // A small dot to see, in a corner of the 48dp Material 3 has anything tapped take.
@@ -1217,6 +1352,7 @@ private suspend fun buildMoment(
     photos: List<PhotoRef>,
     utility: Set<PhotoRef>,
     stills: Set<PhotoRef>,
+    masks: Map<PhotoRef, List<Mask>>,
     infos: Map<PhotoRef, PhotoInfo>,
     time: OffsetDateTime,
     place: PlaceChoice,
@@ -1230,17 +1366,57 @@ private suspend fun buildMoment(
     val directory = File(container.localStore.root, "media")
     val media = photos.map { uri ->
         val kept = (uri in utility).takeIf { it }
-        originalMedia[uri]?.let { return@map it.copy(utility = kept) }
+        originalMedia[uri]?.let { media ->
+            val local = media.local
+            val patches = masks[uri].orEmpty()
+            if (media.published != null || local == null || !local.copied || patches == local.masks.orEmpty()) return@map media.copy(utility = kept)
+            // 人脸打码 changed on a photo saved here: drawn again from the copy as it was picked.
+            val source = File(URI(local.unmasked ?: local.uri))
+            val drawnBefore = local.unmasked?.let { File(URI(local.uri)) }
+            if (patches.isEmpty()) {
+                drawnBefore?.delete()
+                val size = Photos.read(source.toPhotoRef())
+                return@map media.copy(
+                    utility = kept,
+                    width = size.width,
+                    height = size.height,
+                    local = local.copy(uri = source.toPhotoRef().toString(), sha256 = sha256Of(source), unmasked = null, masks = null),
+                )
+            }
+            // Its clip would show the faces: a photo with patches is a still.
+            local.videoUri?.let { File(URI(it)).delete() }
+            val drawn = Faces.pixelate(source, File(directory, "${media.uid}-${Ulid.next()}.jpg"), patches)
+            drawnBefore?.delete()
+            val size = Photos.read(drawn.file.toPhotoRef())
+            return@map media.copy(
+                type = MediaType.IMAGE,
+                width = size.width,
+                height = size.height,
+                utility = kept,
+                local = local.copy(
+                    uri = drawn.file.toPhotoRef().toString(),
+                    videoUri = null,
+                    sha256 = drawn.sha256,
+                    unmasked = source.toPhotoRef().toString(),
+                    masks = patches,
+                ),
+            )
+        }
         val uid = Ulid.next()
         val info = infos[uri] ?: Photos.read(uri)
         // A motion photo is split either way, so a photo alone is its still without the clip
         // trailing after it; a video gets a frame of itself as its still.
+        val patches = masks[uri].orEmpty().takeIf { !info.video }.orEmpty()
         val copied = Photos.copy(uri, directory, uid, splitMotion = !info.video, poster = info.video)
             .let { photo ->
-                if (info.video || uri !in stills) return@let photo
+                if (info.video || (uri !in stills && patches.isEmpty())) return@let photo
                 photo.video?.delete()
                 photo.copy(video = null)
             }
+        // 人脸打码: the patches drawn into a copy of their own, the copy as picked kept beside it to change them again.
+        val drawn = if (patches.isEmpty()) null else Faces.pixelate(copied.file, File(directory, "$uid-${Ulid.next()}.jpg"), patches)
+        // A pixelated copy is upright and may be smaller than what was picked.
+        val size = drawn?.let { Photos.read(it.file.toPhotoRef()) } ?: info
         MomentMedia(
             uid = uid,
             type = when {
@@ -1248,15 +1424,17 @@ private suspend fun buildMoment(
                 copied.video != null -> MediaType.LIVE_PHOTO
                 else -> MediaType.IMAGE
             },
-            width = info.width,
-            height = info.height,
+            width = size.width,
+            height = size.height,
             takenAt = info.takenAt?.let(::stamp),
             utility = kept,
             local = LocalMedia(
-                uri = copied.file.toPhotoRef().toString(),
+                uri = (drawn ?: copied).file.toPhotoRef().toString(),
                 videoUri = copied.video?.let { it.toPhotoRef().toString() },
-                sha256 = copied.sha256,
+                sha256 = (drawn ?: copied).sha256,
                 copied = true,
+                unmasked = drawn?.let { copied.file.toPhotoRef().toString() },
+                masks = patches.takeIf { drawn != null },
             ),
         )
     }

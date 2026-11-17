@@ -44,6 +44,23 @@ const localMediaSchema = z.looseObject({
     .regex(/^[0-9a-f]{64}$/)
     .optional(),
   copied: z.boolean().default(false),
+  /**
+   * 人脸打码: the app's own copy as picked; `masks` are drawn from it into `uri`, which is what is
+   * shown and published. Kept to change the patches again until the photo is published.
+   */
+  unmasked: z.string().min(1).optional(),
+  masks: z
+    .array(
+      z.object({
+        left: z.number().min(0).max(1),
+        top: z.number().min(0).max(1),
+        right: z.number().min(0).max(1),
+        bottom: z.number().min(0).max(1),
+        /** The design system's sticker over the patch; none is a mosaic. */
+        sticker: z.string().min(1).optional(),
+      }),
+    )
+    .optional(),
 })
 
 const mediaBase = {
