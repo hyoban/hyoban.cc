@@ -521,6 +521,9 @@
     <string name="footprints_import_note">这里导出的轨迹或原始采样</string>
     <string name="footprints_import_done">导入 %1$d 个轨迹点，跳过与本机记录重叠的 %2$d 个、无法读取的 %3$d 个。</string>
     <string name="footprints_import_empty">文件里没有可读取的轨迹点。</string>
+    <string name="footprints_import_csv">导入一生足迹 CSV</string>
+    <string name="footprints_import_csv_note">一生足迹导出的 .csv，可一次选多个</string>
+    <string name="import_footprints_title">导入轨迹</string>
     <string name="footprints_export_raw">导出当前原始采样 GPX</string>
     <string name="footprints_quality_note">只连接可信的连续定位，信号差或漏记处会留空。轨迹末端需等待后续定位确认。</string>
     <string name="footprints_export_raw_note">包含未用于轨迹的定位及精度信息，便于重新分析；旧版本丢弃的采样无法恢复。</string>
@@ -1206,6 +1209,7 @@
     <string name="import_source_swarm">Swarm</string>
     <string name="import_source_icost">iCost</string>
     <string name="import_source_gpx">GPX 轨迹</string>
+    <string name="import_source_footprint_csv">一生足迹</string>
     <string name="import_none">记录项都关掉了，没有可导入的。在「记录项与公开」里打开签到、账本或足迹，再来导入。</string>
     <string name="swarm_import">从 Swarm 导入</string>
     <string name="swarm_import_note">Swarm 导出的 .zip</string>
@@ -1262,7 +1266,7 @@
     <string name="onboarding_site">连接我的网站</string>
     <string name="onboarding_site_note">读入网站上的时刻、地点和旅程</string>
     <string name="onboarding_import">从别的 App 导入</string>
-    <string name="onboarding_import_note">Swarm、iCost、GPX 轨迹</string>
+    <string name="onboarding_import_note">Swarm、iCost、GPX 轨迹、一生足迹</string>
     <string name="onboarding_blank">从空白开始</string>
     <string name="onboarding_blank_note">先在这台手机上记</string>
     <string name="onboarding_where_note">不连接网站时，记下的都只在这台手机上。</string>

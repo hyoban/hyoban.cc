@@ -10,7 +10,7 @@ import javax.xml.parsers.SAXParserFactory
 
 private const val FOOTPRINTS_NS = "https://hyoban.cc/ns/footprints/1"
 
-/** A GPX file without the app's accuracy is taken as an ordinary fix. */
+/** A file without the app's accuracy is taken as an ordinary fix. */
 private const val UNKNOWN_ACCURACY = 10.0
 
 /**
@@ -76,4 +76,38 @@ data class TrackImportResult(val added: Int, val overlapping: Int, val invalid: 
 fun importable(point: TrackPoint, now: Long): Boolean {
     val decision = evaluateRawFix(point, now)
     return decision == FixDecision.ACCEPT || decision == FixDecision.STALE
+}
+
+/**
+ * Reads a CSV that Footprint (一生足迹) exported, streaming: a header naming its columns, then one
+ * fix a row. `dataTime` (Unix seconds), `latitude` and `longitude` (WGS 84) place it; `accuracy`
+ * (metres), `speed` (metres a second, negative when unknown) and `altitude` (metres) come along
+ * where they hold a number, and every other column is left alone. A file is one segment, which
+ * the line still breaks at its gaps. A file without those three columns reads as empty, and a row
+ * that can't be read is left out.
+ */
+fun readFootprintCsv(input: InputStream): List<TrackPoint> {
+    val lines = input.bufferedReader().lineSequence().iterator()
+    if (!lines.hasNext()) return emptyList()
+    val header = lines.next().removePrefix("﻿").split(',').map { it.trim() }
+    fun column(name: String) = header.indexOf(name).takeIf { it >= 0 }
+    val time = column("dataTime") ?: return emptyList()
+    val latitude = column("latitude") ?: return emptyList()
+    val longitude = column("longitude") ?: return emptyList()
+    val accuracy = column("accuracy")
+    val speed = column("speed")
+    val altitude = column("altitude")
+    val segment = UUID.randomUUID().toString()
+    val points = mutableListOf<TrackPoint>()
+    for (line in lines) {
+        val cells = line.split(',')
+        fun number(index: Int?) = index?.let { cells.getOrNull(it)?.trim()?.toDoubleOrNull() }?.takeIf { it.isFinite() }
+        val seconds = number(time) ?: continue
+        points += TrackPoint(
+            Math.round(seconds * 1000), number(latitude) ?: continue, number(longitude) ?: continue,
+            number(accuracy)?.takeIf { it > 0 } ?: UNKNOWN_ACCURACY, number(altitude), segment,
+            number(speed)?.takeIf { it >= 0 },
+        )
+    }
+    return points.sortedBy { it.time }
 }

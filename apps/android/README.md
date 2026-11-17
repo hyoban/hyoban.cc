@@ -328,7 +328,7 @@ the system's settings.
 ## Importing
 
 导入, under 我 (`moments://import`), is where every file from another app comes in, grouped by
-where it goes: 时刻 (Swarm), 账本 (iCost) and 足迹 (GPX). A row opens the system's file picker
+where it goes: 时刻 (Swarm), 账本 (iCost) and 足迹 (GPX, 一生足迹). A row opens the system's file picker
 and what came in is said in a dialog; Swarm's progress shows on its row while it runs. An empty
 ledger keeps its own button for iCost, and an iCost file shared in still opens 记账.
 
@@ -551,6 +551,13 @@ behaves.
   segments and extras, each `trkseg` of a line becomes a segment. Where the phone already
   has samples within 45 seconds, its own are kept and the file's skipped, so importing a
   file twice adds nothing; a raw export before the line of the same day keeps the most.
+  导入一生足迹 CSV, beside it, reads the .csv files Footprint (一生足迹) exports, several years'
+  at once (`readFootprintCsv`), by their header: `dataTime` (Unix seconds), `latitude` and
+  `longitude` (WGS 84, as its points sit on the phone's places) place each sample, and
+  `accuracy`, `speed` (negative when unknown) and `altitude` come along; the other columns are
+  left. Each file is one segment, the same way kept where the phone has its own. Check a change
+  to it against a real export with `FOOTPRINT_CSV=<file> ./gradlew :app:testDebugUnitTest --tests
+  '*TrackImportTest*'`, and never commit it.
 - **What else is kept.** Beside each sample the store keeps what the fix and the receiver
   said: heading and its accuracy, vertical accuracy, altitude above sea level, the provider,
   and the satellites used and seen with their signal (matched by time, so batched fixes

@@ -548,6 +548,9 @@
     <string name="footprints_import_note">Tracks or raw samples this app exported</string>
     <string name="footprints_import_done">Imported %1$d points; skipped %2$d overlapping the phone's and %3$d unreadable.</string>
     <string name="footprints_import_empty">The file has no readable track points.</string>
+    <string name="footprints_import_csv">Import Footprint CSV</string>
+    <string name="footprints_import_csv_note">The .csv files Footprint (一生足迹) exports, several at once</string>
+    <string name="import_footprints_title">Import tracks</string>
     <string name="footprints_export_raw">Export current raw samples as GPX</string>
     <string name="footprints_quality_note">Only reliable, continuous fixes are connected. Poor signal or missing samples leave gaps; the endpoint waits for confirmation.</string>
     <string name="footprints_export_raw_note">Includes unused fixes and accuracy for reanalysis. Samples discarded by older versions cannot be recovered.</string>
@@ -1205,6 +1208,7 @@
     <string name="import_source_swarm">Swarm</string>
     <string name="import_source_icost">iCost</string>
     <string name="import_source_gpx">GPX tracks</string>
+    <string name="import_source_footprint_csv">Footprint</string>
     <string name="import_none">Every item is turned off, so there is nothing to import into. Turn on check-ins, the ledger or footprints under Items and visibility, then import.</string>
     <string name="swarm_import">Import from Swarm</string>
     <string name="swarm_import_note">The .zip Swarm exports</string>
@@ -1261,7 +1265,7 @@
     <string name="onboarding_site">Connect my site</string>
     <string name="onboarding_site_note">Read in the site’s Moments, places and trips</string>
     <string name="onboarding_import">Import from another app</string>
-    <string name="onboarding_import_note">Swarm, iCost, GPX tracks</string>
+    <string name="onboarding_import_note">Swarm, iCost, GPX tracks, Footprint</string>
     <string name="onboarding_blank">Start empty</string>
     <string name="onboarding_blank_note">Keep records on this phone first</string>
     <string name="onboarding_where_note">Without a site, everything you keep stays on this phone.</string>
