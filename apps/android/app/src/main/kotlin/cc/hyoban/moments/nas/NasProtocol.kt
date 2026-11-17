@@ -11,6 +11,7 @@ import java.security.KeyFactory
 import java.security.MessageDigest
 import java.security.PublicKey
 import java.security.spec.X509EncodedKeySpec
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.Base64
@@ -19,6 +20,9 @@ import javax.crypto.Cipher
 // What the UGREEN NAS's photo app (UGOS Pro's 相册) says and wants, apart from the network:
 // its addresses from UGREENlink, the sign-in's RSA, and its photos and albums. Its API is
 // the one its own web app uses, undocumented; README, 选照片 has what is known of it.
+
+/** A day of the NAS's timeline and how many photos and videos it holds, as the timeline groups them. */
+data class NasDay(val day: LocalDate, val count: Int)
 
 /** A photo or video in the NAS's photo app, as its lists give it. */
 data class NasPhoto(
@@ -131,6 +135,18 @@ object NasProtocol {
     /** The time a photo was taken: the NAS keeps the clock's reading as if it were UTC. */
     fun takenAt(seconds: Long?): LocalDateTime? =
         seconds?.takeIf { it > 0 }?.let { LocalDateTime.ofEpochSecond(it, 0, ZoneOffset.UTC) }
+
+    /**
+     * The timeline's days, newest first, with how many photos each holds, as its node list gives
+     * them (oldest first, by year, month and day); days that hold none or don't parse are left out.
+     */
+    fun days(data: JsonObject?): List<NasDay> = data?.array("list").orEmpty().mapNotNull { element ->
+        val item = element as? JsonObject ?: return@mapNotNull null
+        val count = item.int("total")?.takeIf { it > 0 } ?: return@mapNotNull null
+        val day = runCatching { LocalDate.of(item.int("year") ?: return@mapNotNull null, item.int("month") ?: return@mapNotNull null, item.int("day") ?: return@mapNotNull null) }
+            .getOrNull() ?: return@mapNotNull null
+        NasDay(day, count)
+    }.sortedByDescending { it.day }
 
     /** The photos a timeline or an album's list holds. */
     fun photos(data: JsonObject?, album: NasAlbum? = null): List<NasPhoto> =

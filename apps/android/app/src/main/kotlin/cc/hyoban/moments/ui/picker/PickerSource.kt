@@ -130,6 +130,9 @@ internal interface Pick {
     /** Whether it can be chosen: a camera's RAW is only looked at. */
     val choosable: Boolean get() = true
 
+    /** Whether it opens in the viewer: a photo not read yet doesn't. */
+    val openable: Boolean get() = true
+
     /** Its thumbnail at [size] pixels, if it is at hand already. */
     fun cachedThumb(size: Int): Bitmap? = null
 

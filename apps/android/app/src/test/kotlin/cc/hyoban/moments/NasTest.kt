@@ -1,6 +1,7 @@
 package cc.hyoban.moments
 
 import cc.hyoban.moments.nas.NasAlbum
+import cc.hyoban.moments.nas.NasDay
 import cc.hyoban.moments.nas.NasDeleteKind
 import cc.hyoban.moments.nas.NasProtocol
 import kotlinx.serialization.json.Json
@@ -12,6 +13,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.security.KeyPairGenerator
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.Base64
 import javax.crypto.Cipher
@@ -100,6 +102,16 @@ class NasTest {
         assertNull(video.taken)
         assertEquals("image/heic", heic.mime)
         assertEquals("nas/3", heic.key)
+    }
+
+    @Test
+    fun readsTheTimelinesDaysNewestFirst() {
+        val days = NasProtocol.days(json(
+            """{"list":[{"year":2024,"month":12,"day":31,"total":3},{"year":2025,"month":1,"day":2,"total":0},""" +
+                """{"year":2025,"month":2,"day":30,"total":1},{"year":"2025","month":"3","day":"1","total":"5"}]}""",
+        ))
+        assertEquals(listOf(NasDay(LocalDate.of(2025, 3, 1), 5), NasDay(LocalDate.of(2024, 12, 31), 3)), days)
+        assertEquals(emptyList<NasDay>(), NasProtocol.days(null))
     }
 
     @Test

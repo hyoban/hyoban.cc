@@ -1476,6 +1476,7 @@
     <string name="picker_empty">没有照片</string>
     <string name="picker_show_map">地图</string>
     <string name="picker_show_grid">照片格子</string>
+    <string name="picker_jump_to_date">跳到日期</string>
     <string name="picker_heap_description">%1$d 张照片</string>
     <string name="picker_map_empty">NAS 里没有带位置的照片</string>
     <string name="picker_video_description">视频 %1$s</string>

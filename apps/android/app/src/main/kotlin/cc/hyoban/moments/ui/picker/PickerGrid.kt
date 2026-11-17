@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculateZoom
@@ -84,7 +85,8 @@ private val Sideways = listOf(6, 8, 12)
  * The photos of what is listed by the day each was taken, newest first, each chosen by its circle
  * and opened by a tap. Two fingers pinched or spread change how many go across, [density] of
  * three steps; at the closest they are by the month and only looked through, without their
- * circles. A handle at the right (DateScrubber) goes through them by the month.
+ * circles. A handle at the right (DateScrubber) goes through them by the month, and [jump] takes
+ * it to a day picked from the calendar.
  */
 @Composable
 internal fun Grid(
@@ -100,6 +102,8 @@ internal fun Grid(
     onNearEnd: (() -> Unit)? = null,
     /** Whether it says so when there is nothing; not while what it shows is still being read. */
     empty: Boolean = true,
+    /** The day the calendar asked for, and where it opens; none where there is no calendar. */
+    jump: DateJump? = null,
     onOpen: (Pick) -> Unit,
 ) {
     val today = remember { LocalDate.now() }
@@ -119,6 +123,39 @@ internal fun Grid(
     LaunchedEffect(state) {
         snapshotFlow { state.layoutInfo.let { (it.visibleItemsInfo.lastOrNull()?.index ?: 0) to it.totalItemsCount } }
             .collect { (last, total) -> if (total > 0 && last >= total - 40) nearEnd?.invoke() }
+    }
+    // Where each group starts and the oldest day in it, for the calendar.
+    val days = remember(groups, lead) {
+        var at = lead
+        groups.map { (_, picks) -> (at to picks.lastOrNull()?.day).also { at += 1 + picks.size } }
+    }
+    if (jump != null) {
+        // The calendar opens on the day at the top of the grid.
+        LaunchedEffect(state, days) {
+            snapshotFlow { state.firstVisibleItemIndex }.collect { index ->
+                val at = days.binarySearch { it.first.compareTo(index) }.let { if (it >= 0) it else -it - 2 }
+                jump.showing = days.getOrNull(at.coerceAtLeast(0))?.second
+            }
+        }
+        // Scrolled by hand, it no longer follows a day still being read towards.
+        LaunchedEffect(state) {
+            state.interactionSource.interactions.collect { if (it is DragInteraction.Start) jump.target = null }
+        }
+        // The group of the day asked for, else the nearest before it. Newest first, so the first
+        // group reaching back to it; none yet in a source read a page at a time, so its end, where
+        // the grid reads on, until the day is read or there is nothing more.
+        val target = jump.target
+        LaunchedEffect(target, days) {
+            if (target == null) return@LaunchedEffect
+            val found = days.firstOrNull { (_, day) -> day != null && !day.isAfter(target) }
+            when {
+                found != null -> { state.scrollToItem(found.first); jump.target = null }
+                state.layoutInfo.totalItemsCount > 0 -> {
+                    state.scrollToItem(state.layoutInfo.totalItemsCount - 1)
+                    if (onNearEnd == null) jump.target = null
+                }
+            }
+        }
     }
     val haptics = rememberHaptics()
     val across = if (sideways) Sideways else Upright
@@ -236,7 +273,7 @@ internal fun Grid(
                         Modifier.animateItem(placementSpec = placement).aspectRatio(1f).background(tokens.fill)
                             .then(if (index >= 0) Modifier.border(3.dp, tokens.accent) else Modifier)
                             .semantics { contentDescription = label; selected = index >= 0 }
-                            .clickable(onClickLabel = stringResource(Res.string.camera_view)) { onOpen(pick) },
+                            .clickable(enabled = pick.openable, onClickLabel = stringResource(Res.string.camera_view)) { onOpen(pick) },
                     ) {
                         thumb?.let { Image(it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().alpha(if (setBack) 0.38f else 1f)) }
                         if (!byMonth) corner?.let {
@@ -261,6 +298,12 @@ internal fun Grid(
             months.getOrNull(at)?.second?.let { formatYearMonth(it) }
         }
     }
+}
+
+/** A day picked from the calendar for the grid to go to, and the day at its top, where the calendar opens. */
+internal class DateJump {
+    var target by mutableStateOf<LocalDate?>(null)
+    var showing by mutableStateOf<LocalDate?>(null)
 }
 
 /** A pinch of the grid as it goes: how far the fingers have taken it and where it is held. */

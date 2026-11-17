@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -30,6 +31,7 @@ import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Button
+import cc.hyoban.moments.ui.design.DateDialog
 import cc.hyoban.moments.ui.design.DropdownMenuItem
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
@@ -43,6 +45,7 @@ import cc.hyoban.moments.ui.theme.tokens
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 /**
  * 选照片 (39), over the Moment being written, in place of the system's picker: the phone's
@@ -90,6 +93,10 @@ fun PhotoPickerScreen(container: PhoneContainer, limit: Int, onClose: () -> Unit
     val places = listing.places
     val onMap = mapped && places != null
     val shown = if (onMap) places!!.picks() else listing.picks()
+    // The calendar over the grid: a day picked takes the grid there, and another source forgets it.
+    val jump = remember { DateJump() }
+    var picking by remember { mutableStateOf(false) }
+    LaunchedEffect(listing, onMap) { jump.target = null }
 
     // Adding: the gallery's as they are, the camera's and the NAS's downloaded first, in the order chosen.
     var adding by remember { mutableStateOf<Job?>(null) }
@@ -154,6 +161,9 @@ fun PhotoPickerScreen(container: PhoneContainer, limit: Int, onClose: () -> Unit
     SubPage(
         listing.title(), onClose, subtitle = subtitle, close = true, small = onMap, titleMenu = menu,
         actions = {
+            if (!onMap && shown.isNotEmpty()) IconButton(onClick = { picking = true }, modifier = Modifier.testTag("picker_jump")) {
+                Icon(AppIcons.Calendar, contentDescription = stringResource(Res.string.picker_jump_to_date))
+            }
             if (places != null) IconButton(onClick = { mapped = !mapped }, modifier = Modifier.testTag("picker_map_toggle")) {
                 Icon(if (onMap) AppIcons.Photos else AppIcons.Map, contentDescription = stringResource(if (onMap) Res.string.picker_show_grid else Res.string.picker_show_map))
             }
@@ -173,7 +183,7 @@ fun PhotoPickerScreen(container: PhoneContainer, limit: Int, onClose: () -> Unit
             Grid(
                 shown, order, full, enabled = idle, sideways = sideways,
                 density = container.settings.pickerDensity, onDensity = container.settings::changePickerDensity,
-                limited = limited, onToggle = toggle, onNearEnd = onNearEnd,
+                limited = limited, onToggle = toggle, onNearEnd = onNearEnd, jump = jump,
             ) { viewing = it.key }
         }
         Column(Modifier.align(Alignment.BottomEnd).fillMaxWidth()) {
@@ -191,17 +201,33 @@ fun PhotoPickerScreen(container: PhoneContainer, limit: Int, onClose: () -> Unit
         }
     }
 
-    viewing?.let { key -> shown.indexOfFirst { it.key == key } }?.takeIf { it >= 0 }?.let { start ->
+    // The viewer turns through what is read, not the NAS's tiles still waiting for theirs.
+    val viewable = remember(shown) { shown.filter { it.openable } }
+    viewing?.let { key -> viewable.indexOfFirst { it.key == key } }?.takeIf { it >= 0 }?.let { start ->
         Viewer(
-            container, shown, start, order, full, enabled = idle && !deletion.busy, busy = deletion.busy, onToggle = toggle,
+            container, viewable, start, order, full, enabled = idle && !deletion.busy, busy = deletion.busy, onToggle = toggle,
             addButton = { if (canAdd) addButton("picker_viewer_add") { viewing = null } },
             onDelete = { pick ->
-                val at = shown.indexOfFirst { it.key == pick.key }
-                afterDelete = (shown.getOrNull(at + 1) ?: shown.getOrNull(at - 1))?.key
+                val at = viewable.indexOfFirst { it.key == pick.key }
+                afterDelete = (viewable.getOrNull(at + 1) ?: viewable.getOrNull(at - 1))?.key
                 pick.source.delete(listOf(pick), fromViewer = true)
             },
             onClose = { viewing = null },
         )
+    }
+
+    if (picking) {
+        // The days with photos, as far as they are read, dotted.
+        val days = remember(shown) { shown.mapNotNullTo(HashSet()) { it.day } }
+        DateDialog(
+            jump.showing ?: shown.firstNotNullOfOrNull { it.day } ?: LocalDate.now(),
+            stringResource(Res.string.picker_jump_to_date),
+            onDismiss = { picking = false },
+            marked = days,
+        ) { day ->
+            picking = false
+            jump.target = day
+        }
     }
 
     fetched.forEach { it.Dialogs() }

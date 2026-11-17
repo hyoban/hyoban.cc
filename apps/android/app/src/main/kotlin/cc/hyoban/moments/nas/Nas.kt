@@ -29,6 +29,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.int
@@ -229,14 +230,28 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
             put("offset", offset)
             put("sort_order", 0)
             put("sort_by", 0)
-            putJsonObject("type_option") { put("all", 1); put("image", 0); put("video", 0); put("gif", 0); put("live", 0); put("raw", 0) }
-            // As the web app sends it by default: the owner's files and those shared, and no EXIF filters,
-            // each filter there and empty; the NAS answers 参数错误 to an empty advanced_option.
-            putJsonObject("range_option") { put("personal", 1); put("share", 1); put("share_manage", 0); put("share_download", 0); put("share_view_only", 0) }
-            putJsonObject("advanced_option") { listOf("aperture", "camera", "lens", "focal", "exposure", "iso").forEach { putJsonArray(it) {} } }
+            timelineFilters()
             put("total", 1)
         })
         return NasProtocol.photos(data) to (data?.get("total") as? JsonPrimitive)?.content?.toIntOrNull()
+    }
+
+    /**
+     * The timeline's days, newest first, with how many each holds, under the same filters as its
+     * list: what the web app lays its timeline out by before reading a photo, and reads from the
+     * offset of the day it is taken to.
+     */
+    suspend fun timelineDays(): List<NasDay> = NasProtocol.days(call("v5/photo/picture/timeline/node", buildJsonObject {
+        timelineFilters()
+        put("level", 0)
+    }))
+
+    private fun JsonObjectBuilder.timelineFilters() {
+        putJsonObject("type_option") { put("all", 1); put("image", 0); put("video", 0); put("gif", 0); put("live", 0); put("raw", 0) }
+        // As the web app sends it by default: the owner's files and those shared, and no EXIF filters,
+        // each filter there and empty; the NAS answers 参数错误 to an empty advanced_option.
+        putJsonObject("range_option") { put("personal", 1); put("share", 1); put("share_manage", 0); put("share_download", 0); put("share_view_only", 0) }
+        putJsonObject("advanced_option") { listOf("aperture", "camera", "lens", "focal", "exposure", "iso").forEach { putJsonArray(it) {} } }
     }
 
     /** The owner's albums: their own, those kept by a rule, and those shared with them. */

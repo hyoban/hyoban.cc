@@ -712,7 +712,10 @@ on its side), kept for next time: the grid only grows and shrinks with the finge
 and takes the next count, one step at most, when they lift, the photo under them held where it was unless the grid is at its top; at six they are by the month and only looked through, without
 their circles, what is chosen keeping its border and number. While the grid scrolls a handle shows
 at its right: dragged, it takes the grid through what it holds, a bubble beside it saying the
-month, and reaches only what has been read, so the NAS's reads on at the end.
+month, and reaches only what has been read, so a NAS album reads on at the end. The calendar in the
+bar (跳到日期) opens on the month at the top of the grid, the days with photos dotted; a day picked
+takes the grid to it, or to the nearest day before it, a NAS album reading on page by page until it
+is reached, unless the grid is scrolled by hand meanwhile.
 A tap opens one in the app's one viewer, on black, swiped through and zoomed as a Moment's are, chosen and
 added from there; a photo of the gallery's, the camera's or the NAS's is read from its original in tiles as it
 zooms, so it stays sharp. Under it, upright, the photos before and after are small in a row, the one shown
@@ -740,9 +743,13 @@ v1.5), and the session is the token, a second key to encrypt it with for every r
 (`x-ugreen-token`, its MD5 as `x-ugreen-security-key`, both in the cookie with `token_uid`) and the
 `static_token` the stream wants as `ugk`. Over HTTPS the requests are plain JSON; over plain HTTP
 the web app wraps them in AES-GCM, which the app doesn't speak. The photos are the photo app's
-timeline (`v5/photo/picture/timeline/list`), newest first, two hundred at a time as the grid nears
-the end, and its albums (`album/list`, `album/picture/list`) follow in the title's menu once it has
-been read. Its `create_time_utc` is the clock's reading written as if UTC, so it is read as the
+timeline (`v5/photo/picture/timeline/list`), newest first, two hundred at a time, and its albums (`album/list`, `album/picture/list`) follow in the title's menu once it has
+been read. The timeline is laid out whole first, as the web app lays it out, from its days and how
+many each holds (`timeline/node`, `level` 0, oldest first), a grey tile for each photo under its day,
+so the handle and the calendar reach every day at once; a tile that stays in view a moment reads its
+page of two hundred (`offset` its place), and only those pages are read, a fling past reading nothing.
+Photos are grouped under the day the timeline puts them. An album has no days to read, so it reads
+on as the grid nears its end. Its `create_time_utc` is the clock's reading written as if UTC, so it is read as the
 phone's time. Thumbnails are the stream's (`picture/stream`, `size_type` 1 in the grid, 3 in the
 viewer, 0 the original); a photo's info reads its EXIF from the first 256 KB of the original.
 Zoomed into, a photo's original comes down to the app's cache, the big thumbnail standing in
