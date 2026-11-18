@@ -575,11 +575,16 @@ class NasList(
         private set
     /** The pages being read, so each is asked for once at a time. */
     private val reading = mutableStateSetOf<Int>()
-    val loading get() = reading.isNotEmpty()
+    /**
+     * Whether its days are read and its slots laid out: until then where it starts isn't known, so
+     * nothing is read past what [start] reads, or a page from the top would land in its first slots.
+     */
+    private var laid by mutableStateOf(false)
+    val loading get() = reading.isNotEmpty() || started && !laid
     private val ended get() = total?.let { photos.size >= it && null !in photos } ?: false
 
     /** Whether it has something to show: photos or their slots, the end of none, or why not. */
-    val ready get() = started && (photos.isNotEmpty() || total != null || failure != null)
+    val ready get() = laid && (photos.isNotEmpty() || total != null || failure != null)
 
     /** Read a page after another, keeping what passes, rather than laid out by days. */
     private var sifted = album != null || keeps != null
@@ -611,18 +616,19 @@ class NasList(
             }
         }
         version++
+        laid = true
         if (sifted) sift() else read(0)
     }
 
     /** The page after the last photo read, unless all are. */
     suspend fun more() {
-        if (ended || failure != null) return
+        if (!laid || ended || failure != null) return
         if (sifted) sift() else read((photos.indexOfLast { it != null } + 1) / Nas.PAGE)
     }
 
     /** The page holding the photo at [index], unless it is read or being read. */
     suspend fun need(index: Int) {
-        if (!sifted && photos.getOrNull(index) == null) read(index / Nas.PAGE)
+        if (laid && !sifted && photos.getOrNull(index) == null) read(index / Nas.PAGE)
     }
 
     private suspend fun page(offset: Int, limit: Int) =
@@ -716,6 +722,7 @@ class NasList(
     fun retry() {
         failure = null
         started = false
+        laid = false
         days = emptyList()
         allDays = emptyList()
         photos.clear()

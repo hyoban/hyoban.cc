@@ -744,7 +744,7 @@ offers under what is already chosen (`v5/photo/picture/option`, as its web app's
 them), folded after six until 展开. The gallery's 实况 are its photos whose XMP in the media store
 says so, listed in one query once a kind is chosen; the gallery's EXIF isn't read for this. The NAS
 narrows by kind and EXIF itself (`type_option`, `advanced_option`), and its timeline is laid out
-from the days that leaves within the time chosen, read from where they start; what it can't narrow
+from the days that leaves within the time chosen, read from where they start once they are laid out; what it can't narrow
 by (a place, as its map knows them, a Moment, and an album's time) is read a page after another,
 keeping what passes, until a screenful more is kept.
 
