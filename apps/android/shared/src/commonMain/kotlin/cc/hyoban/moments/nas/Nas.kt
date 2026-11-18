@@ -511,12 +511,24 @@ class Nas(
         }.also { progress(photos.size, 0f) }
 
     /**
+     * Where a motion photo's clip starts in [photo]'s original, as the XMP at its start says; null for
+     * an iPhone's live photo, whose clip the NAS keeps beside it ([liveStream]), or for any other.
+     * Throws when the start of the original can't be read, so that isn't taken for an iPhone's.
+     */
+    suspend fun clipStart(photo: NasPhoto): Long? {
+        if (photo.size <= 0) return null
+        val head = head(photo) ?: throw IOException("the start of ${photo.name} not read")
+        return cc.hyoban.moments.data.local.MotionPhotos.clipStart(head, photo.size)
+    }
+
+    /**
      * The clip of the live photo kept at [ref] where the NAS keeps it beside the still (an
      * iPhone's MOV), read into the cache the first time; null for any other photo, a motion
      * photo's being inside its file, or when it couldn't be had.
      */
     suspend fun liveClip(ref: PhotoRef): File? {
         val photo = linkOf(ref)?.takeIf { ref.toString() in liveLinks() }?.let(::photo) ?: return null
+        // A motion photo's clip is inside the copy itself; only an iPhone's is fetched.
         val inside = withContext(Dispatchers.IO) {
             runCatching {
                 cc.hyoban.moments.data.local.Photos.open(ref)?.use { it.readNBytes(HEAD) }

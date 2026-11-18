@@ -351,18 +351,17 @@ data class NasPick(val photo: NasPhoto, override val source: NasSource, val list
     override fun rememberMotion(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? =
         produceState<cc.hyoban.moments.ui.viewer.MotionSource?>(null, key, active) {
             if (!active || !photo.live || value != null) return@produceState
-            val head = if (photo.size > 0) source.nas.head(photo) else null
-            val length = head?.let { cc.hyoban.moments.data.local.MotionPhotos.videoLength(String(it, Charsets.ISO_8859_1)) }
-            val start = length?.let { photo.size - it }?.takeIf { it > 0 }
-            value = if (start != null) {
-                val (url, headers) = runCatching { source.nas.original(photo) }.getOrNull() ?: return@produceState
-                cc.hyoban.moments.ui.viewer.MotionSource(url, start, headers)
-            } else {
-                // Not read at all ([head] failed) is tried again next time rather than taken for an iPhone's.
-                if (photo.size > 0 && head == null) return@produceState
-                val (url, headers) = runCatching { source.nas.liveStream(photo) }.getOrNull() ?: return@produceState
-                cc.hyoban.moments.ui.viewer.MotionSource(url, 0, headers)
+            // Not read at all is tried again next time rather than taken for an iPhone's.
+            val start = try {
+                source.nas.clipStart(photo)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                return@produceState
             }
+            val (url, headers) = runCatching { if (start != null) source.nas.original(photo) else source.nas.liveStream(photo) }
+                .getOrNull() ?: return@produceState
+            value = cc.hyoban.moments.ui.viewer.MotionSource(url, start ?: 0, headers)
         }.value
 
     /** The NAS keeps its own thumbnails, small for the grid and big for the viewer, and its client caches them. */

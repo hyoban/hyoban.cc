@@ -60,4 +60,14 @@ class MotionPhotosTest {
         assertFalse(MotionPhotos.split(wrong, File(directory, "wrong.mp4")))
         assertContentEquals(bytes, wrong.readBytes())
     }
+
+    @Test
+    fun `the start of a file alone says where its clip starts, as the NAS's is read`() {
+        val (file, still) = photo("""GCamera:MicroVideo="1" GCamera:MicroVideoOffset="${clip.size}"""", clip)
+        val head = file.readBytes().copyOf(still.size)
+
+        assertEquals(still.size.toLong(), MotionPhotos.clipStart(head, file.length()))
+        assertNull(MotionPhotos.clipStart(head, clip.size.toLong()))
+        assertNull(MotionPhotos.clipStart("<x:xmpmeta><rdf:Description/></x:xmpmeta>".toByteArray(), file.length()))
+    }
 }

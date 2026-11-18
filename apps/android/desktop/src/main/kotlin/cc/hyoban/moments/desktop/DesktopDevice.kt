@@ -123,8 +123,8 @@ object DesktopDevice : Device {
     }
 
     // A live photo shows its still; a video is handed to the Mac to play.
-    override fun viewerMotion(media: cc.hyoban.moments.data.spec.MomentMedia): cc.hyoban.moments.ui.viewer.ViewerMotion? =
-        if (media.type == cc.hyoban.moments.data.spec.MediaType.VIDEO) SystemVideo() else null
+    override fun viewerMotion(type: cc.hyoban.moments.data.spec.MediaType): cc.hyoban.moments.ui.viewer.ViewerMotion? =
+        if (type == cc.hyoban.moments.data.spec.MediaType.VIDEO) SystemVideo() else null
 
     /** A video played by whatever the Mac opens it with: its play badge over the poster opens it. */
     private class SystemVideo : cc.hyoban.moments.ui.viewer.ViewerMotion {

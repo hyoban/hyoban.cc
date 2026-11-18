@@ -18,10 +18,7 @@ object MotionPhotos {
     /** Where the clip starts in what [channel] reads, or null when it is a plain photo. */
     fun videoStart(channel: FileChannel): Long? {
         val size = channel.size()
-        val head = read(channel, 0, minOf(size, XMP_READ).toInt())
-        val length = videoLength(String(head, Charsets.ISO_8859_1)) ?: return null
-        val start = size - length
-        if (start <= 0) return null
+        val start = clipStart(read(channel, 0, minOf(size, XMP_READ).toInt()), size) ?: return null
         // The clip is an MP4 only if its first box is `ftyp`; anything else, the XMP is wrong.
         return start.takeIf { String(read(channel, start + 4, 4), Charsets.ISO_8859_1) == "ftyp" }
     }
@@ -31,6 +28,14 @@ object MotionPhotos {
         while (buffer.hasRemaining() && channel.read(buffer, at + buffer.position()) >= 0) Unit
         return buffer.array()
     }
+
+    /**
+     * Where the clip starts in a file of [size] bytes whose first bytes are [head], as its XMP says,
+     * without reading the clip itself; null for a plain photo. What reads the file whole
+     * ([videoStart]) also checks that an MP4 starts there.
+     */
+    fun clipStart(head: ByteArray, size: Long): Long? =
+        videoLength(String(head, Charsets.ISO_8859_1))?.let { size - it }?.takeIf { it > 0 }
 
     /** The clip's length in bytes as the XMP in [head] gives it. */
     fun videoLength(head: String): Long? {

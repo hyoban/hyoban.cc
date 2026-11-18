@@ -111,12 +111,11 @@ interface Device {
     /** Choosing where a Moment is shared to, then sharing it there, [place] its place's name and [trip] its trip's title. */
     @Composable fun ShareMoment(moment: MomentRecord, urls: MediaUrls, place: String?, trip: String?, onDismiss: () -> Unit)
 
-    /** What moves of [media] in the viewer, a live photo's clip or a video; null for a still. */
-    fun viewerMotion(media: cc.hyoban.moments.data.spec.MomentMedia): cc.hyoban.moments.ui.viewer.ViewerMotion?
-
-    /** A live photo's motion for a viewer that shows more than the Moments' (相册, 选照片), as [viewerMotion] gives one. */
-    fun liveMotion(): cc.hyoban.moments.ui.viewer.ViewerMotion? =
-        viewerMotion(cc.hyoban.moments.data.spec.MomentMedia(uid = "", type = cc.hyoban.moments.data.spec.MediaType.LIVE_PHOTO))
+    /**
+     * What moves of an item of [type] in a viewer, a live photo's clip or a video; null for a still.
+     * A Moment's viewer and 相册's both play live photos by it.
+     */
+    fun viewerMotion(type: cc.hyoban.moments.data.spec.MediaType): cc.hyoban.moments.ui.viewer.ViewerMotion?
 
     /** Shares the one item [media] shown in the viewer, fetched first when it is the site's, with its Moment's [text] where the device can send words with it. */
     suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls, text: String)

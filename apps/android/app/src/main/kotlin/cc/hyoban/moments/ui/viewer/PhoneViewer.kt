@@ -7,7 +7,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import cc.hyoban.moments.data.spec.MediaType
-import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.design.AppIcons
@@ -62,8 +61,8 @@ class PhoneVideoMotion : ViewerMotion {
     }
 }
 
-/** The phone's motion for [media]: its clip, its video, or none for a still. */
-fun phoneViewerMotion(media: MomentMedia): ViewerMotion? = when (media.type) {
+/** The phone's motion for an item of [type]: its clip, its video, or none for a still. */
+fun phoneViewerMotion(type: MediaType): ViewerMotion? = when (type) {
     MediaType.IMAGE -> null
     MediaType.LIVE_PHOTO -> PhoneLiveMotion()
     MediaType.VIDEO -> PhoneVideoMotion()

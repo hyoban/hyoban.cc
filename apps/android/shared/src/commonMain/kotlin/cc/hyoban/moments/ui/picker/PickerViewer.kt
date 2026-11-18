@@ -116,7 +116,7 @@ fun Viewer(
     val motions = remember { mutableMapOf<String, cc.hyoban.moments.ui.viewer.ViewerMotion?>() }
     val clips = remember { androidx.compose.runtime.mutableStateMapOf<String, cc.hyoban.moments.ui.viewer.MotionSource>() }
     val liveOf: (Pick) -> PageLive? = { pick ->
-        clips[pick.key]?.let { source -> motions.getOrPut(pick.key) { device.liveMotion() }?.let { PageLive(it, source) } }
+        clips[pick.key]?.let { source -> motions.getOrPut(pick.key) { device.viewerMotion(cc.hyoban.moments.data.spec.MediaType.LIVE_PHOTO) }?.let { PageLive(it, source) } }
     }
     LaunchedEffect(current?.key, pager.isScrollInProgress) {
         // Once it rests there a moment, so the row of small ones dragged past it asks nothing of it.

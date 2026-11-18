@@ -187,7 +187,7 @@ fun MomentMediaViewer(
     // Each one's motion and video, held here so the bars over the pages work the one shown.
     val device = LocalDevice.current
     // By what each is too: a photo just picked is read after it shows, and turns out a live photo then.
-    val motions = remember(media.map { it.uid to it.type }) { media.associate { it.uid to device.viewerMotion(it) } }
+    val motions = remember(media.map { it.uid to it.type }) { media.associate { it.uid to device.viewerMotion(it.type) } }
     val shown = media[pager.currentPage.coerceIn(0, media.lastIndex)]
     // Once it rests on one a moment, as 相册's viewer does: those either side read ahead, their stills
     // at the screen's width and their details, so turning to one shows it whole at once.

@@ -785,14 +785,12 @@ fun NewMomentScreen(
                 container,
                 media,
                 start,
-                // A motion photo picked and not yet saved plays its clip from its own file, where it starts.
+                // A motion photo picked and not yet saved plays its clip from its own file, where it
+                // starts; any other as a saved one does ([draftMedia]).
                 motionSource = { shown ->
                     val ref = refs[shown.uid]
-                    val info = ref?.takeIf { it !in originalMedia }?.let { infos[it] }
-                    val start = info?.motionStart
-                    val clip = info?.motionClip
-                    if (start != null && shown.type == MediaType.LIVE_PHOTO) cc.hyoban.moments.ui.viewer.MotionSource(ref.toString(), start)
-                    else if (clip != null && shown.type == MediaType.LIVE_PHOTO) cc.hyoban.moments.ui.viewer.MotionSource(clip.toPhotoRef().toString())
+                    val start = ref?.takeIf { it !in originalMedia && shown.type == MediaType.LIVE_PHOTO }?.let { infos[it]?.motionStart }
+                    if (start != null) cc.hyoban.moments.ui.viewer.MotionSource(ref.toString(), start)
                     else container.mediaUrls.motion(shown)?.let { cc.hyoban.moments.ui.viewer.MotionSource(it) }
                 },
                 onBack = { viewing = null },
@@ -976,8 +974,8 @@ fun NewMomentScreen(
 
 /**
  * [ref] as the viewer draws it before it is saved: as it was where it is [original], else the
- * picked file itself, a video played from it and a motion photo, while it goes in [live], as a
- * live photo whose clip plays from that file.
+ * picked file itself, a video played from it and, while it goes in [live], a live photo: a motion
+ * photo's clip played from that file, an iPhone's from the clip beside it, as a saved one keeps it.
  */
 private fun draftMedia(ref: PhotoRef, original: MomentMedia?, info: PhotoInfo?, video: Boolean, utility: Boolean, live: Boolean = false): MomentMedia =
     original?.copy(utility = utility.takeIf { it }) ?: MomentMedia(
@@ -990,7 +988,10 @@ private fun draftMedia(ref: PhotoRef, original: MomentMedia?, info: PhotoInfo?, 
         width = info?.width,
         height = info?.height,
         utility = utility.takeIf { it },
-        local = LocalMedia(uri = ref.toString(), videoUri = ref.toString().takeIf { video }),
+        local = LocalMedia(
+            uri = ref.toString(),
+            videoUri = if (video) ref.toString() else info?.motionClip?.takeIf { live }?.toPhotoRef()?.toString(),
+        ),
     )
 
 /**
