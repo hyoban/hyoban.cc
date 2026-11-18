@@ -1386,6 +1386,18 @@
     <string name="permission_install_path">Settings › Install unknown apps › Here › Allow</string>
     <!-- Camera (38) and From camera (39): the paired Sony a7C II. -->
     <string name="camera_title">Camera</string>
+    <string name="albums_title">Albums</string>
+    <string name="albums_note">Albums turned off don’t appear in Photos, Choose photos or the map’s photos. Their photos stay on the phone.</string>
+    <string name="albums_none">No albums to read yet.</string>
+    <string name="albums_all_shown">All shown</string>
+    <plurals name="albums_hidden">
+        <item quantity="one">%1$d hidden</item>
+        <item quantity="other">%1$d hidden</item>
+    </plurals>
+    <plurals name="albums_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
     <string name="camera_model">ILCE-7CM2</string>
     <string name="camera_note">Your location goes only to the camera; photos come straight to this phone over the camera's Wi‑Fi.</string>
     <string name="camera_none">No camera paired</string>

@@ -120,6 +120,31 @@ class Settings(private val prefs: Prefs, secrets: File) {
         prefs.edit { putInt("picker_density", pickerDensity) }
     }
 
+    /**
+     * The gallery's albums hidden from 相册, 选照片 and 地图's photos, by the gallery's id: those
+     * hidden here, and the app's own (its Here album and 准备图文's Here Share ones) unless
+     * shown in [shownAlbums].
+     */
+    var hiddenAlbums: Set<String> by mutableStateOf(prefs.getStringSet("hidden_albums", null).orEmpty().toSet())
+        private set
+
+    /** The app's own albums shown all the same, by the gallery's id. */
+    var shownAlbums: Set<String> by mutableStateOf(prefs.getStringSet("shown_albums", null).orEmpty().toSet())
+        private set
+
+    /** Whether the album [id] is hidden, [own] when it is the app's own. */
+    fun isAlbumHidden(id: String, own: Boolean): Boolean = if (own) id !in shownAlbums else id in hiddenAlbums
+
+    fun changeAlbumHidden(id: String, own: Boolean, hidden: Boolean) {
+        if (own) {
+            shownAlbums = if (hidden) shownAlbums - id else shownAlbums + id
+            prefs.edit { putStringSet("shown_albums", shownAlbums) }
+        } else {
+            hiddenAlbums = if (hidden) hiddenAlbums + id else hiddenAlbums - id
+            prefs.edit { putStringSet("hidden_albums", hiddenAlbums) }
+        }
+    }
+
     /** The map's 可能的旅程 dismissed, by their keys, so they don't come back. */
     var dismissedTrips: Set<String> by mutableStateOf(prefs.getStringSet("dismissed_trips", null).orEmpty().toSet())
         private set

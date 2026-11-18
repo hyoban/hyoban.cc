@@ -75,6 +75,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import cc.hyoban.moments.data.media.ShareAlbums
 import cc.hyoban.moments.data.media.shareAlbums
+import cc.hyoban.moments.ui.picker.GalleryAccess
+import cc.hyoban.moments.ui.picker.LocalMedia
 import kotlinx.coroutines.launch
 
 /** Where a row of 我 leads: each a page of its own, the last one down. */
@@ -91,6 +93,7 @@ class MeRoutes(
     val imports: () -> Unit,
     val sideKey: () -> Unit,
     val camera: () -> Unit,
+    val albums: () -> Unit,
 )
 
 /**
@@ -185,6 +188,12 @@ fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
                 AppIcons.FileOpen, stringResource(Res.string.import_title), "settings_import", shapes,
                 supporting = sources.joinToString(stringResource(Res.string.separator_list)),
                 onClick = routes.imports,
+            )
+            // While the gallery may be read.
+            if (remember { LocalMedia.access(context) } != GalleryAccess.NONE) MeRow(
+                AppIcons.Folder, stringResource(Res.string.albums_title), "settings_albums", shapes,
+                supporting = galleryAlbumsSummary(),
+                onClick = routes.albums,
             )
             // On the phones that can keep a camera's location going in the background.
             if (cameraSupported) MeRow(

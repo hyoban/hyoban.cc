@@ -43,7 +43,17 @@ data class LocalItem(
 }
 
 /** An album of the gallery: its photos' folder, as the gallery groups them. */
-data class LocalAlbum(val id: Long, val name: String, val count: Int)
+data class LocalAlbum(val id: Long, val name: String, val count: Int) {
+    /** Whether the app writes it itself: its Here album, or one of 准备图文's Here Share albums. */
+    val own get() = ownAlbum(name)
+}
+
+/** Whether the album named [name] is the app's own, the Here album or a Here Share one. */
+fun ownAlbum(name: String?): Boolean = name == "Here" || name?.startsWith("Here Share-") == true
+
+/** Whether [item] is in an album hidden in 相簿, which [settings] keeps. */
+fun hiddenAlbum(settings: cc.hyoban.moments.Settings, item: LocalItem): Boolean =
+    item.albumId != null && settings.isAlbumHidden(item.albumId.toString(), ownAlbum(item.album))
 
 /** How much of the gallery the app may see. */
 enum class GalleryAccess { ALL, CHOSEN, NONE }

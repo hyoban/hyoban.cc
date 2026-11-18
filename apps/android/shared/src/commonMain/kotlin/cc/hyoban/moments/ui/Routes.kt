@@ -70,6 +70,10 @@ object SideKeySettings
 @Serializable
 object CameraSettings
 
+/** 相簿: the gallery's albums, each shown or hidden from 相册, 选照片 and 地图's photos. */
+@Serializable
+object GalleryAlbums
+
 /** Who sees what by default: the Moments about tech and the books' new bills; the footprints stay on the phone. */
 @Serializable
 object Items

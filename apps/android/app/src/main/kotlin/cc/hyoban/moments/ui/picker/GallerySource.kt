@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.components.PermissionWords
 import cc.hyoban.moments.ui.components.rememberPermissionAsk
 import cc.hyoban.moments.ui.design.AppIcons
@@ -95,8 +97,11 @@ internal fun rememberGallery(deletion: Deletion, onFallback: () -> Unit): Galler
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { access.value = LocalMedia.access(context) }
     // 更改: the system's choice of photos again, on Android 14 and later, or all of them.
     val reselect = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { access.value = LocalMedia.access(context) }
-    val items = remember(access.value) { if (access.value == GalleryAccess.NONE) flowOf(emptyList()) else LocalMedia.items(context) }
+    val all = remember(access.value) { if (access.value == GalleryAccess.NONE) flowOf(emptyList()) else LocalMedia.items(context) }
         .collectAsStateWithLifecycle(emptyList())
+    // Without the albums hidden in 相簿, everywhere the gallery is shown.
+    val settings = LocalSettings.current
+    val items = remember(all) { derivedStateOf { all.value.filterNot { hiddenAlbum(settings, it) } } }
 
     // Moving to the bin: the system asks, so the app doesn't too.
     var trashed by remember { mutableStateOf<List<LocalItem>>(emptyList()) }

@@ -118,7 +118,7 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   `apps/web/src/data/boundaries/cities.json` shipped as an asset.
 - **我** is one screen: the changes waiting to be published, then four rows, 账本 (with this
   month's spending under its name), 足迹, 东西 and 纪念日, and one group of 设置: 记录项与公开, 家,
-  同步与来源, 导入, 相机 and 侧键 (and 清理分享相册 while a share album is left), each a page with what it is set to under its name. There is no
+  同步与来源, 导入, 相簿 (once the gallery may be read), 相机 and 侧键 (and 清理分享相册 while a share album is left), each a page with what it is set to under its name. There is no
   settings page over them, and under 我 there is one level of pages: what goes deeper, such as
   a book, the exchange rates or a side key gesture's action, opens over its page as a sheet or
   a dialog. The ledger's own settings (记账) open from the ledger's top bar and the footprints'
@@ -723,6 +723,11 @@ motion photo itself, where its clip starts after its still (the NAS's read by ra
 original kept on the device), a published one's from its clip, and in the editor one picked and not
 yet saved from its own file, unless it goes in as a photo alone or 打码'd. Every viewer, resting on one
 a moment, reads those either side ahead: their stills and their info.
+
+**相簿**, under 我, lists the gallery's albums, the largest first, each with a switch: one turned
+off leaves 相册, 选照片 and 地图's photos wholly, the title's menu too, its photos still on the phone.
+The app's own albums, Here and 准备图文's Here Share ones, start off; the others start on. What is
+hidden is kept by the gallery's id for each album, on the phone alone.
 
 已发布, in 相册's title after the gallery's albums (and in 选照片 not at all), is every photo and video
 of the Moments, the private ones too and in 演示模式 only what is shown, newest Moment first under its

@@ -686,6 +686,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                             imports = { navController.navigate(Imports) },
                                             sideKey = { navController.navigate(SideKeySettings) },
                                             camera = { navController.navigate(CameraSettings) },
+                                            albums = { navController.navigate(GalleryAlbums) },
                                             things = { navController.navigate(Things()) },
                                             occasions = { navController.navigate(Occasions()) },
                                         ),
@@ -705,6 +706,9 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                 }
                                 screen<Items> {
                                     cc.hyoban.moments.ui.settings.ItemsScreen(container, onBack = back)
+                                }
+                                screen<GalleryAlbums> {
+                                    cc.hyoban.moments.ui.settings.GalleryAlbumsScreen(onBack = back)
                                 }
                                 screen<Homes> {
                                     cc.hyoban.moments.ui.settings.HomesScreen(container, onBack = back)
@@ -1065,7 +1069,7 @@ fun pagesOf(route: Any): List<Any> {
 private fun tabOf(route: Any): Any = when (route) {
     Feed, Atlas, Album, Preferences -> route
     is Trip, is TripEdit, is TripPlay, is PlaceMoments -> Atlas
-    SyncSettings, Imports, FootprintSettings, SideKeySettings, CameraSettings, Items, Homes, Changes, is Things, is Occasions,
+    SyncSettings, Imports, FootprintSettings, SideKeySettings, CameraSettings, GalleryAlbums, Items, Homes, Changes, is Things, is Occasions,
     is LedgerHome, is LedgerEntry, is LedgerBill, is LedgerAccount, is LedgerAccountEdit, is LedgerSettings, is LedgerList,
     -> Preferences
     else -> Feed
@@ -1122,6 +1126,7 @@ fun routeOf(link: Uri): Any? {
         "homes" -> Homes
         "side-key" -> SideKeySettings
         "camera" -> CameraSettings
+        "albums" -> GalleryAlbums
         "devices", "subscriptions", "car" -> Things(link.host)
         "occasions" -> Occasions(id)
         "new" -> NewMoment()

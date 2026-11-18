@@ -1387,6 +1387,16 @@
     <string name="permission_install_path">系统设置 › 安装未知应用 › Here › 允许</string>
     <!-- 相机 (38) and the camera in 选照片 (39): the paired Sony a7C II. -->
     <string name="camera_title">相机</string>
+    <string name="albums_title">相簿</string>
+    <string name="albums_note">关掉的相簿不会出现在相册、选照片和地图的照片里，照片仍留在手机上。</string>
+    <string name="albums_none">还没有可以读的相簿。</string>
+    <string name="albums_all_shown">全部显示</string>
+    <plurals name="albums_hidden">
+        <item quantity="other">隐藏 %1$d 个</item>
+    </plurals>
+    <plurals name="albums_count">
+        <item quantity="other">%1$d 项</item>
+    </plurals>
     <string name="camera_model">ILCE-7CM2</string>
     <string name="camera_note">位置只发给相机；照片从相机的 Wi‑Fi 直接下载到这台手机。</string>
     <string name="camera_none">还没有配对相机</string>
