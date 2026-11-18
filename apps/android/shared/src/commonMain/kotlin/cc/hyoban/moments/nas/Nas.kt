@@ -308,7 +308,7 @@ class Nas(
             addAll(page)
             if (page.size < SPOTS) break
         }
-    }
+    }.also { keepSpots(it) }
 
     /** A page of the photos with these [ids], a heap of the map's, as the NAS orders them. */
     suspend fun spotPhotos(ids: List<Long>, offset: Int, limit: Int = PAGE): List<NasPhoto> =
@@ -350,6 +350,9 @@ class Nas(
 
     /** Thumbnails kept on disk, from one visit to the next. */
     private val keptThumbs = MediaCache.nas(cacheDir, originals = false)
+
+    /** The rest read off it that is worth keeping ([MediaCache.nasData]). */
+    private val keptData = MediaCache.nasData(cacheDir)
 
     /**
      * [photo]'s thumbnail, [size] the stream's, small for the grid and big for the viewer; null when
@@ -423,7 +426,15 @@ class Nas(
     }
 
     /** The start of [photo]'s original, enough for its EXIF. */
-    suspend fun head(photo: NasPhoto): ByteArray? = runCatching {
+    suspend fun head(photo: NasPhoto): ByteArray? {
+        val key = "head:${kept(photo)}"
+        withContext(Dispatchers.IO) {
+            keptData.bytes(key) ?: cached(photo)?.let { file -> file.inputStream().use { it.readNBytes(HEAD) } }
+        }?.let { return it }
+        return readHead(photo)?.also { bytes -> withContext(Dispatchers.IO) { keptData.put(key, bytes) } }
+    }
+
+    private suspend fun readHead(photo: NasPhoto): ByteArray? = runCatching {
         val request = stream(photo, NasProtocol.ORIGINAL).newBuilder().header("Range", "bytes=0-${HEAD - 1}").build()
         withContext(Dispatchers.IO) {
             client.newCall(request).execute().use { response ->
@@ -477,6 +488,48 @@ class Nas(
                 }).also { remember(it, photo) }
             }
         }.also { progress(photos.size, 0f) }
+
+    // What matching reads, kept ----------------------------------------------------------------
+
+    /** How [photo] looks ([NasMatch.dHash] of its small thumbnail), kept once worked out; null if its thumbnail couldn't be had. */
+    suspend fun look(photo: NasPhoto): Long? = remembered("look:${kept(photo)}") {
+        thumbnail(photo, NasProtocol.SMALL)?.let(NasMatch::dHash)
+    }
+
+    /** A hash kept under [key], else [make]'s, kept for next time when there is one. */
+    suspend fun remembered(key: String, make: suspend () -> Long?): Long? {
+        withContext(Dispatchers.IO) { keptData.bytes(key) }?.takeIf { it.size == 8 }?.let { return java.nio.ByteBuffer.wrap(it).long }
+        return make()?.also { hash -> withContext(Dispatchers.IO) { keptData.put(key, java.nio.ByteBuffer.allocate(8).putLong(hash).array()) } }
+    }
+
+    /**
+     * The photos of [day] in the timeline, which starts at [start] in it: kept while the day holds
+     * as many as it did, read again once it holds more or fewer.
+     */
+    suspend fun dayPhotos(day: NasDay, start: Int): List<NasPhoto> {
+        val key = "day:${day.day}:${day.count}"
+        withContext(Dispatchers.IO) { keptData.bytes(key) }
+            ?.let { bytes -> runCatching { NasProtocol.photosFrom(bytes.decodeToString()) }.getOrNull() }
+            ?.let { return it }
+        val photos = buildList {
+            while (size < day.count) {
+                val (page, _) = timeline(start + size, minOf(PAGE, day.count - size))
+                if (page.isEmpty()) break
+                addAll(page)
+            }
+        }
+        if (photos.size == day.count) withContext(Dispatchers.IO) { keptData.put(key, NasProtocol.photosText(photos).encodeToByteArray()) }
+        return photos
+    }
+
+    /** The map's places as read last time, shown while [spots] reads them again; null before the first. */
+    suspend fun keptSpots(): List<NasSpot>? = withContext(Dispatchers.IO) {
+        keptData.bytes(SPOTS_KEY)?.let { runCatching { NasProtocol.spotsFrom(it.decodeToString()) }.getOrNull() }
+    }
+
+    private suspend fun keepSpots(spots: List<NasSpot>) = withContext(Dispatchers.IO) {
+        keptData.put(SPOTS_KEY, NasProtocol.spotsText(spots).encodeToByteArray())
+    }
 
     // Which NAS photo each original kept on the device came from -----------------------------
 
@@ -532,6 +585,7 @@ class Nas(
         private const val HEAD = 256 * 1024
         private const val THUMBS = 400
         private const val LINKS = 500
+        private const val SPOTS_KEY = "spots"
         private const val TAG = "Moments"
     }
 }

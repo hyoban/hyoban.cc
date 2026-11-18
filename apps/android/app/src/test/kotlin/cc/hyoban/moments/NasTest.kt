@@ -124,4 +124,15 @@ class NasTest {
         assertEquals(0, NasProtocol.deleteMissed(JsonObject(emptyMap())))
         assertEquals("098f6bcd4621d373cade4e832627b4f6", NasProtocol.md5("test"))
     }
+
+    @Test
+    fun keepsADaysPhotosAndTheMapsPlacesAsTheyWereRead() {
+        val photos = listOf(
+            cc.hyoban.moments.nas.NasPhoto(1, "IMG_1.HEIC", 2048, 4000, 3000, video = false, live = true, duration = null, taken = LocalDateTime.of(2025, 3, 8, 14, 5, 9), uploaded = 7),
+            cc.hyoban.moments.nas.NasPhoto(2, "VID_2.MP4", 9, null, null, video = true, live = false, duration = "00:12", taken = null, uploaded = 8),
+        )
+        assertEquals(photos, NasProtocol.photosFrom(NasProtocol.photosText(photos)))
+        val spots = listOf(cc.hyoban.moments.nas.NasSpot(3, 31.2304, 121.4737, 9))
+        assertEquals(spots, NasProtocol.spotsFrom(NasProtocol.spotsText(spots)))
+    }
 }

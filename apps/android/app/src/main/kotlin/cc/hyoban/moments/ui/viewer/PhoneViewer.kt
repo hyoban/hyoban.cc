@@ -92,26 +92,18 @@ private fun ViewerLiveButton(state: LiveMotionState, modifier: Modifier = Modifi
     }
 }
 
-/** What [media] says of itself for the info panel: the record's own, then the EXIF of its file, or of the start of its original. */
+/**
+ * What [media] says of itself for the info panel: kept from before when it was read already
+ * ([cc.hyoban.moments.ui.viewer.MediaDetails]), else the record's own, then the EXIF of its file,
+ * of the NAS's original or of the start of the published one.
+ */
 @Composable
 private fun rememberMediaDetails(container: PhoneContainer, media: MomentMedia): PhotoDetails? {
     val context = LocalContext.current
-    return produceState<PhotoDetails?>(null, media.uid) {
-        val published = media.published
-        val base = PhotoDetails(
-            takenAt = media.takenAt?.let { runCatching { java.time.OffsetDateTime.parse(it) }.getOrNull() },
-            offset = media.takenAt?.takeIf { it.length > 19 }?.let { at -> Regex("([+-]\\d{2}:\\d{2}|Z)$").find(at)?.value?.let { if (it == "Z") "+00:00" else it } },
-            name = published?.key?.substringAfterLast('/') ?: media.local?.uri?.substringAfterLast('/'),
-            format = PhotoDetails.format(published?.contentType, published?.key),
-            width = media.width, height = media.height, bytes = published?.bytes,
-        )
-        value = base
-        if (media.type == MediaType.VIDEO) return@produceState
-        val local = media.local?.uri
-        value = when {
-            published == null && local != null -> PhotoDetails.readLocal(context, base, android.net.Uri.parse(local))
-            published?.original == true -> PhotoDetails.readRemote(base, container.mediaUrls.asset(published.key))
-            else -> base
-        }
+    val details = container.mediaDetails
+    return produceState(details.cached(media), media.uid) {
+        if (value != null) return@produceState
+        value = details.base(media)
+        value = details.read(media) { base, uri -> PhotoDetails.readLocal(context, base, android.net.Uri.parse(uri)) }
     }.value
 }

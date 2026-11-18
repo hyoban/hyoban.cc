@@ -43,6 +43,9 @@ class MediaCache private constructor(private val disk: DiskCache) {
         runCatching { put(key) { it.write(bytes) } }
     }
 
+    /** The bytes kept under [key], or null. */
+    fun bytes(key: String): ByteArray? = runCatching { file(key)?.readBytes() }.getOrNull()
+
     fun remove(key: String) {
         disk.remove(key)
     }
@@ -58,6 +61,13 @@ class MediaCache private constructor(private val disk: DiskCache) {
         fun nas(cacheDir: File, originals: Boolean) =
             of(cacheDir, if (originals) "nas-originals" else "nas-thumbnails", if (originals) ORIGINALS else THUMBNAILS)
 
+        /**
+         * What else is read off the NAS and doesn't change for a photo: the start of its original
+         * (its EXIF), how it looks for matching, a day's list as long as the day holds as many, and
+         * the map's places, shown while they are read again.
+         */
+        fun nasData(cacheDir: File) = of(cacheDir, "nas-data", DATA)
+
         private fun of(cacheDir: File, name: String, size: Long): MediaCache = synchronized(made) {
             made.getOrPut(name) {
                 val directory = File(cacheDir, name)
@@ -67,5 +77,6 @@ class MediaCache private constructor(private val disk: DiskCache) {
 
         private const val ORIGINALS = 1L shl 30
         private const val THUMBNAILS = 100L shl 20
+        private const val DATA = 64L shl 20
     }
 }

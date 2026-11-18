@@ -123,6 +123,9 @@ abstract class AppContainer(
     open fun openSource(source: String): java.io.InputStream =
         (if (source.startsWith("file:")) File(java.net.URI(source)) else File(source)).inputStream()
     val mediaUrls = MediaUrls { settings.assetOrigin.value }
+
+    /** What the Moments' photos say of themselves, read once for the viewers' info panels. */
+    val mediaDetails by lazy { cc.hyoban.moments.ui.viewer.MediaDetails(this) }
     /** The trips' routes along the roads, from the API. */
     val routes = TripRoutes({ settings.apiUrl.value }, File(files, "routes.json"), token = { settings.apiToken.value })
 

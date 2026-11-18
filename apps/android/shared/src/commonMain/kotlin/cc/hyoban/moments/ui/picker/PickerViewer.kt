@@ -105,7 +105,8 @@ fun Viewer(
     // Light icons over the black while it is open, on the dialog's own window the picker is in.
     DarkDialogStatusBar()
     val current = shown.getOrNull(pager.currentPage)
-    val details = current?.rememberDetails()
+    // Its own for each photo, so turning to one starts from what is known of it, never the last one's.
+    val details = current?.let { pick -> androidx.compose.runtime.key(pick.key) { pick.rememberDetails() } }
     // The videos, each its page's, played by the device; the controls under the pages work the one shown.
     val videos = LocalPickerVideos.current
     LaunchedEffect(current?.key, pager.isScrollInProgress) {

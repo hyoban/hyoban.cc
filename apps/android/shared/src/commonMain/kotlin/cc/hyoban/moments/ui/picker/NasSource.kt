@@ -351,14 +351,22 @@ class NasPlaces(private val source: NasSource, private val scope: CoroutineScope
 
     override suspend fun load() {
         if (read != null || failure != null || !nas.configured) return
+        // What was read last time shows at once; the NAS is asked again behind it.
+        nas.keptSpots()?.let { kept ->
+            known = kept.associateBy { it.id }
+            this.read = kept.map { Spot(it.id, it.latitude, it.longitude) }
+        }
         try {
             val read = nas.spots()
             known = read.associateBy { it.id }
-            this.read = read.map { Spot(it.id, it.latitude, it.longitude) }
+            val spots = read.map { Spot(it.id, it.latitude, it.longitude) }
+            // The same as kept, the heaps stay as they are.
+            if (spots != this.read) this.read = spots
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             logWarning("Moments", "nas: places not read", e)
-            failure = (e as? NasException)?.failure ?: if (e is java.io.IOException) NasFailure.UNREACHABLE else NasFailure.OTHER
+            // Away from the NAS, what was kept stays without a word.
+            if (this.read == null) failure = (e as? NasException)?.failure ?: if (e is java.io.IOException) NasFailure.UNREACHABLE else NasFailure.OTHER
         }
     }
 

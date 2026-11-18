@@ -1,6 +1,17 @@
 package cc.hyoban.moments.nas
 
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.put
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -165,6 +176,38 @@ object NasProtocol {
             duration = item.string("duration")?.takeIf { it.isNotEmpty() },
             taken = takenAt(item.long("create_time_utc")), uploaded = item.long("upload_time") ?: 0, album = album,
         )
+    }
+
+    // Kept on the device: the photos of a day and the map's places, written out as JSON of their own.
+
+    fun photosText(photos: List<NasPhoto>): String = JsonArray(photos.map { photo ->
+        buildJsonObject {
+            put("id", photo.id); put("name", photo.name); put("size", photo.size)
+            photo.width?.let { put("width", it) }; photo.height?.let { put("height", it) }
+            put("video", photo.video); put("live", photo.live)
+            photo.duration?.let { put("duration", it) }
+            photo.taken?.let { put("taken", it.toEpochSecond(ZoneOffset.UTC)) }
+            put("uploaded", photo.uploaded)
+        }
+    }).toString()
+
+    fun photosFrom(text: String): List<NasPhoto> = Json.parseToJsonElement(text).jsonArray.map { element ->
+        val item = element.jsonObject
+        NasPhoto(
+            id = item.long("id")!!, name = item.string("name")!!, size = item.long("size") ?: 0,
+            width = item.int("width"), height = item.int("height"),
+            video = item.prim("video")?.booleanOrNull ?: false, live = item.prim("live")?.booleanOrNull ?: false,
+            duration = item.string("duration"), taken = takenAt(item.long("taken")), uploaded = item.long("uploaded") ?: 0,
+        )
+    }
+
+    fun spotsText(spots: List<NasSpot>): String = JsonArray(spots.map { spot ->
+        buildJsonArray { add(spot.id); add(spot.latitude); add(spot.longitude); add(spot.uploaded) }
+    }).toString()
+
+    fun spotsFrom(text: String): List<NasSpot> = Json.parseToJsonElement(text).jsonArray.map { element ->
+        val (id, latitude, longitude, uploaded) = element.jsonArray.map { it.jsonPrimitive }
+        NasSpot(id.long, latitude.double, longitude.double, uploaded.long)
     }
 
     /** The places the map's list holds, those without a point left out; the NAS writes its coordinates as text. */

@@ -820,6 +820,11 @@ Zoomed into, a photo's original comes down to the app's cache, the big thumbnail
 meanwhile, and is then read in tiles as it zooms; 加入 copies it rather than fetching it again.
 Thumbnails and originals are kept on disk as the camera's are (`MediaCache`), by the photo's id
 and when it was uploaded, and the viewer fetches the next photo's big thumbnail ahead.
+The rest read off it that doesn't change for a photo is kept too (`MediaCache.nasData`): the start of an
+original, for its EXIF (or that of an original already down), and how a photo looks for 关联已发布的照片
+(a published still's by its object's ETag); a day's list of photos as long as the timeline says the day
+holds as many; and 地图's places, shown at once from last time while they are read again, and kept
+shown without a word when the NAS can't be reached.
 On 地图 (相册, above: 地图's photos) the NAS's photos stand where they were taken: the photo app's own
 list of where its photos were taken (`ai/map/gps/list`, five thousand at a time, read whole the first
 time they show; WGS‑84, as the EXIF has them), so no original is read for it, and a heap opened reads

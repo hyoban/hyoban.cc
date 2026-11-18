@@ -156,19 +156,13 @@ suspend fun Nas.matchMoments(
     // The timeline's days, newest first: where each starts in it, so only those days are read.
     progress(NasMatch.Stage.DAYS, 0, 0)
     var offset = 0
-    val starts = timelineDays().associate { day -> day.day to (offset to day.count).also { offset += day.count } }
+    val starts = timelineDays().associate { day -> day.day to (offset to day).also { offset += day.count } }
     val read = wanted.flatMapTo(mutableSetOf()) { NasMatch.days(it) }.filter { it in starts }.sortedDescending()
     val photosOf = mutableMapOf<LocalDate, List<NasPhoto>>()
     read.forEachIndexed { index, day ->
         progress(NasMatch.Stage.DAYS, index, read.size)
-        val (start, count) = starts.getValue(day)
-        photosOf[day] = buildList {
-            while (size < count) {
-                val (page, _) = timeline(start + size, minOf(Nas.PAGE, count - size))
-                if (page.isEmpty()) break
-                addAll(page)
-            }
-        }
+        val (start, listed) = starts.getValue(day)
+        photosOf[day] = dayPhotos(listed, start)
     }
 
     val gate = Semaphore(AT_ONCE)
@@ -176,7 +170,7 @@ suspend fun Nas.matchMoments(
     val looked = mutableMapOf<Long, Long?>()
     val looks: suspend (List<NasPhoto>) -> Map<Long, Long> = { photos ->
         val missing = photos.filter { it.id !in looked }.distinctBy { it.id }
-        missing.map { photo -> async { photo.id to gate.withPermit { thumbnail(photo, NasProtocol.SMALL)?.let(NasMatch::dHash) } } }
+        missing.map { photo -> async { photo.id to gate.withPermit { look(photo) } } }
             .awaitAll().forEach { (id, hash) -> looked[id] = hash }
         photos.mapNotNull { photo -> looked[photo.id]?.let { photo.id to it } }.toMap()
     }
@@ -189,7 +183,16 @@ suspend fun Nas.matchMoments(
     progress(NasMatch.Stage.PHOTOS, 0, looking.size)
     // A batch's own stills read together, then each decided in turn, as what one takes the next can't.
     looking.chunked(AT_ONCE * 2).forEach { batch ->
-        val own = batch.map { want -> async { gate.withPermit { still(want.media)?.let(NasMatch::dHash) } } }.awaitAll()
+        val own = batch.map { want ->
+            async {
+                gate.withPermit {
+                    // A published still doesn't change: how it looks is kept by its object's ETag.
+                    val etag = want.media.published?.etag
+                    if (etag == null) still(want.media)?.let(NasMatch::dHash)
+                    else remembered("own:$etag") { still(want.media)?.let(NasMatch::dHash) }
+                }
+            }
+        }.awaitAll()
         batch.zip(own).forEach { (want, mine) ->
             val photos = NasMatch.days(want).flatMap { photosOf[it].orEmpty() }
             NasMatch.match(want, photos, taken, mine, looks)?.let { photo ->

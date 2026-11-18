@@ -186,6 +186,12 @@ fun MomentMediaViewer(
     val device = LocalDevice.current
     val motions = remember(media.map { it.uid }) { media.associate { it.uid to device.viewerMotion(it) } }
     val shown = media[pager.currentPage.coerceIn(0, media.lastIndex)]
+    // The details of those either side read ahead, so turning to one shows them whole at once.
+    val detailsScope = rememberCoroutineScope()
+    LaunchedEffect(shown.uid) {
+        listOfNotNull(media.getOrNull(pager.currentPage + 1), media.getOrNull(pager.currentPage - 1))
+            .forEach { container.mediaDetails.ahead(detailsScope, it) }
+    }
     // Space pressed, for the page shown to play or pause what it holds.
     val playKeys = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
     ViewerFrame(
@@ -196,7 +202,8 @@ fun MomentMediaViewer(
         thumb = { MediaStill(media[it], container.mediaUrls, Modifier.fillMaxSize()) },
         thumbLabel = { media[it].alt.ifEmpty { null } },
         info = if (device.hasPhotoInfo) {
-            { panel -> device.PhotoInfo(container, shown, panel) }
+            // Its own for each photo, so turning to one starts from what is known of it, never the last one's.
+            { panel -> androidx.compose.runtime.key(shown.uid) { device.PhotoInfo(container, shown, panel) } }
         } else {
             null
         },
