@@ -1492,6 +1492,8 @@
     <string name="map_photos">照片</string>
     <string name="map_photos_here">这一处</string>
     <string name="album_published">已发布</string>
+    <string name="album_lesser">可换原图</string>
+    <string name="album_lesser_looking">正在检测第 %1$d / %2$d 张</string>
     <string name="album_open_moment">打开时刻</string>
     <string name="album_in_moment">已在时刻里</string>
     <string name="album_save_nas_original">存 NAS 原图</string>

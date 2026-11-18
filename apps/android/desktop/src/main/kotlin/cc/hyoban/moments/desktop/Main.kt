@@ -665,7 +665,7 @@ private fun Route(
         Search -> SearchScreen(container, onMoment = openMoment, onBack = back)
         TripsList -> Trips(container, openTrip)
         // 相册 (D40): the NAS's photos, written into a new Moment in its dialog.
-        Album -> cc.hyoban.moments.ui.picker.AlbumScreen(container, onNew = { shell.open(NewMoment()) }, onWrite = { shell.open(NewMoment()) }, onMoment = openMoment)
+        Album -> cc.hyoban.moments.ui.picker.AlbumScreen(container, onNew = { shell.open(NewMoment()) }, onWrite = { shell.open(NewMoment()) }, onMoment = openMoment, onEdit = { shell.open(EditMoment(it)) })
         is Things -> ThingsScreen(container, onBack = back, onDay = openDay, kind = ThingKind.of(route.kind), open = route.open)
         is Occasions -> OccasionsScreen(container, onBack = back, open = route.open)
         Changes -> ChangesScreen(container, onMoment = openMoment, onBack = back, onBill = { shell.open(LedgerBill(it)) })

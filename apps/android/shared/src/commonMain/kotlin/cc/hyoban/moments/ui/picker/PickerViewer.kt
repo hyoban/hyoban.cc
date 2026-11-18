@@ -98,6 +98,8 @@ fun Viewer(
     addButton: @Composable () -> Unit,
     /** What the foot holds in place of choosing and [addButton]: 相册's, looked through, for the photo shown. */
     lead: (@Composable RowScope.(Pick) -> Unit)? = null,
+    /** The icons for the one shown, beside its info as a Moment's viewer has them. */
+    actions: (@Composable RowScope.(Pick) -> Unit)? = null,
     onDelete: (Pick) -> Unit,
     onClose: () -> Unit,
 ) {
@@ -109,11 +111,19 @@ fun Viewer(
     val details = current?.let { pick -> androidx.compose.runtime.key(pick.key) { pick.rememberDetails() } }
     // The videos, each its page's, played by the device; the controls under the pages work the one shown.
     val videos = LocalPickerVideos.current
+    // The live photos, each its page's motion as a Moment's has, and where each one's clip is read once known.
+    val device = cc.hyoban.moments.ui.LocalDevice.current
+    val motions = remember { mutableMapOf<String, cc.hyoban.moments.ui.viewer.ViewerMotion?>() }
+    val clips = remember { androidx.compose.runtime.mutableStateMapOf<String, cc.hyoban.moments.ui.viewer.MotionSource>() }
+    val liveOf: (Pick) -> PageLive? = { pick ->
+        clips[pick.key]?.let { source -> motions.getOrPut(pick.key) { device.liveMotion() }?.let { PageLive(it, source) } }
+    }
     LaunchedEffect(current?.key, pager.isScrollInProgress) {
         // Once it rests there a moment, so the row of small ones dragged past it asks nothing of it.
         if (!pager.isScrollInProgress) {
-            delay(300)
-            current?.settled(shown.getOrNull(pager.currentPage + 1))
+            delay(cc.hyoban.moments.ui.viewer.AHEAD_AFTER)
+            // Those either side, as a Moment's viewer does.
+            listOfNotNull(shown.getOrNull(pager.currentPage + 1), shown.getOrNull(pager.currentPage - 1)).forEach { current?.settled(it) }
         }
     }
     ViewerFrame(
@@ -128,12 +138,17 @@ fun Viewer(
         thumbLabel = { shown[it].description() },
         marked = { shown[it].key in order },
         info = { modifier -> PhotoInfoPanel(container, details, modifier, note = current?.infoNote(details)?.let { stringResource(it) }) },
+        onSpace = { current?.let(liveOf)?.motion?.toggle() },
         top = { at ->
-            if (current?.deletable != false) IconButton(onClick = { current?.let(onDelete) }, enabled = enabled && current != null, modifier = Modifier.align(at).testTag("picker_viewer_delete")) {
-                Icon(AppIcons.Trash, contentDescription = stringResource(current?.source?.deleteWords ?: Res.string.camera_delete), tint = MediaOverlay.content)
+            androidx.compose.foundation.layout.Row(Modifier.align(at), verticalAlignment = Alignment.CenterVertically) {
+                if (current?.deletable != false) IconButton(onClick = { current?.let(onDelete) }, enabled = enabled && current != null, modifier = Modifier.testTag("picker_viewer_delete")) {
+                    Icon(AppIcons.Trash, contentDescription = stringResource(current?.source?.deleteWords ?: Res.string.camera_delete), tint = MediaOverlay.content)
+                }
+                current?.let(liveOf)?.motion?.LiveButton(Modifier)
             }
         },
         controls = { if (current != null) videos.Controls(current.key, Modifier.padding(horizontal = Space.xs)) },
+        actions = { if (current != null && actions != null) actions(current) },
         caption = {
             val at = details?.takenAt
             Text(
@@ -171,6 +186,12 @@ fun Viewer(
             }
         },
     ) { page, onZoom, onTap ->
-        shown[page].Page(pager.currentPage == page, onZoom, onTap)
+        val pick = shown[page]
+        val active = pager.currentPage == page
+        val clip = pick.rememberMotion(active)
+        LaunchedEffect(pick.key, clip) { if (clip != null) clips[pick.key] = clip }
+        androidx.compose.runtime.CompositionLocalProvider(LocalPageLive provides liveOf(pick)) {
+            pick.Page(active, onZoom, onTap)
+        }
     }
 }

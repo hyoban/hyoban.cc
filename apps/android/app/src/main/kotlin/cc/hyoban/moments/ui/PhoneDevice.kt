@@ -174,12 +174,6 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
     override suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls, text: String) =
         cc.hyoban.moments.data.media.Share.media(context, media, urls, text)
 
-    override val hasPhotoInfo: Boolean get() = true
-
-    @Composable
-    override fun PhotoInfo(container: AppContainer, media: cc.hyoban.moments.data.spec.MomentMedia, modifier: Modifier) =
-        cc.hyoban.moments.ui.viewer.PhonePhotoInfo(container as PhoneContainer, media, modifier)
-
     @Composable
     override fun EditPlace(container: AppContainer, id: String, onDismiss: () -> Unit) =
         cc.hyoban.moments.ui.compose.EditPlace(container, id, onDismiss)

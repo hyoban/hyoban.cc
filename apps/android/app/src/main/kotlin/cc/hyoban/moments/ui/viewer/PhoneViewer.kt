@@ -2,13 +2,10 @@ package cc.hyoban.moments.ui.viewer
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
-import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.res.*
@@ -28,7 +25,8 @@ class PhoneLiveMotion : ViewerMotion {
     private val state = LiveMotionState()
 
     @Composable
-    override fun Over(url: String, active: Boolean, modifier: Modifier) = LiveMotion(url, active, state, modifier)
+    override fun Over(source: MotionSource, active: Boolean, modifier: Modifier) =
+        LiveMotion(source.url, active, state, modifier, start = source.start, headers = source.headers)
 
     @Composable
     override fun LiveButton(modifier: Modifier) = ViewerLiveButton(state, modifier)
@@ -45,7 +43,7 @@ class PhoneVideoMotion : ViewerMotion {
     private val state = VideoState()
 
     @Composable
-    override fun Over(url: String, active: Boolean, modifier: Modifier) = VideoPlayback(url, active, state, modifier)
+    override fun Over(source: MotionSource, active: Boolean, modifier: Modifier) = VideoPlayback(source.url, active, state, modifier, headers = source.headers)
 
     @Composable
     override fun Waiting() = VideoWaiting(state)
@@ -71,12 +69,6 @@ fun phoneViewerMotion(media: MomentMedia): ViewerMotion? = when (media.type) {
     MediaType.VIDEO -> PhoneVideoMotion()
 }
 
-/** What [media] says of itself, in the panel under the viewer. */
-@Composable
-fun PhonePhotoInfo(container: PhoneContainer, media: MomentMedia, modifier: Modifier) {
-    PhotoInfoPanel(container, rememberMediaDetails(container, media), modifier)
-}
-
 /** A live photo's motion in the bar over it: a ring while it loads, then a tap plays it again or stops it. */
 @Composable
 private fun ViewerLiveButton(state: LiveMotionState, modifier: Modifier = Modifier) {
@@ -90,20 +82,4 @@ private fun ViewerLiveButton(state: LiveMotionState, modifier: Modifier = Modifi
             }
         }
     }
-}
-
-/**
- * What [media] says of itself for the info panel: kept from before when it was read already
- * ([cc.hyoban.moments.ui.viewer.MediaDetails]), else the record's own, then the EXIF of its file,
- * of the NAS's original or of the start of the published one.
- */
-@Composable
-private fun rememberMediaDetails(container: PhoneContainer, media: MomentMedia): PhotoDetails? {
-    val context = LocalContext.current
-    val details = container.mediaDetails
-    return produceState(details.cached(media), media.uid) {
-        if (value != null) return@produceState
-        value = details.base(media)
-        value = details.read(media) { base, uri -> PhotoDetails.readLocal(context, base, android.net.Uri.parse(uri)) }
-    }.value
 }

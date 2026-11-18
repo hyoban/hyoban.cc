@@ -179,18 +179,30 @@ fun MomentMediaViewer(
     top: @Composable RowScope.(MomentMedia) -> Unit = {},
     over: @Composable (MomentMedia) -> Unit = {},
     modifier: Modifier = Modifier,
+    /** Where each one's motion is read: what is published or saved, or a motion photo picked and not yet saved. */
+    motionSource: (MomentMedia) -> MotionSource? = { container.mediaUrls.motion(it)?.let(::MotionSource) },
 ) {
     if (media.isEmpty()) return
     val pager = rememberPagerState(initialPage = index.coerceIn(0, media.lastIndex)) { media.size }
     // Each one's motion and video, held here so the bars over the pages work the one shown.
     val device = LocalDevice.current
-    val motions = remember(media.map { it.uid }) { media.associate { it.uid to device.viewerMotion(it) } }
+    // By what each is too: a photo just picked is read after it shows, and turns out a live photo then.
+    val motions = remember(media.map { it.uid to it.type }) { media.associate { it.uid to device.viewerMotion(it) } }
     val shown = media[pager.currentPage.coerceIn(0, media.lastIndex)]
-    // The details of those either side read ahead, so turning to one shows them whole at once.
-    val detailsScope = rememberCoroutineScope()
-    LaunchedEffect(shown.uid) {
-        listOfNotNull(media.getOrNull(pager.currentPage + 1), media.getOrNull(pager.currentPage - 1))
-            .forEach { container.mediaDetails.ahead(detailsScope, it) }
+    // Once it rests on one a moment, as 相册's viewer does: those either side read ahead, their stills
+    // at the screen's width and their details, so turning to one shows it whole at once.
+    val aheadScope = rememberCoroutineScope()
+    val context = coil3.compose.LocalPlatformContext.current
+    val screen = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width
+    LaunchedEffect(shown.uid, pager.isScrollInProgress) {
+        if (pager.isScrollInProgress) return@LaunchedEffect
+        kotlinx.coroutines.delay(AHEAD_AFTER)
+        listOfNotNull(media.getOrNull(pager.currentPage + 1), media.getOrNull(pager.currentPage - 1)).forEach { next ->
+            container.mediaDetails.ahead(aheadScope, next)
+            container.mediaUrls.still(next, screen)?.let { url ->
+                coil3.SingletonImageLoader.get(context).enqueue(coil3.request.ImageRequest.Builder(context).data(url).build())
+            }
+        }
     }
     // Space pressed, for the page shown to play or pause what it holds.
     val playKeys = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
@@ -201,23 +213,19 @@ fun MomentMediaViewer(
         modifier = modifier,
         thumb = { MediaStill(media[it], container.mediaUrls, Modifier.fillMaxSize()) },
         thumbLabel = { media[it].alt.ifEmpty { null } },
-        info = if (device.hasPhotoInfo) {
-            // Its own for each photo, so turning to one starts from what is known of it, never the last one's.
-            { panel -> androidx.compose.runtime.key(shown.uid) { device.PhotoInfo(container, shown, panel) } }
-        } else {
-            null
-        },
+        // Its own for each photo, so turning to one starts from what is known of it, never the last one's.
+        info = { panel -> androidx.compose.runtime.key(shown.uid) { PhotoInfoPanel(container, container.mediaDetails.remember(shown), panel) } },
         onSpace = { playKeys.tryEmit(Unit) },
         top = { at ->
             Row(Modifier.align(at), verticalAlignment = Alignment.CenterVertically) {
                 top(shown)
-                if (shown.type == MediaType.LIVE_PHOTO && container.mediaUrls.motion(shown) != null) {
+                if (shown.type == MediaType.LIVE_PHOTO && motionSource(shown) != null) {
                     motions[shown.uid]?.LiveButton(Modifier)
                 }
             }
         },
         controls = {
-            if (shown.type == MediaType.VIDEO && container.mediaUrls.motion(shown) != null) {
+            if (shown.type == MediaType.VIDEO && motionSource(shown) != null) {
                 motions[shown.uid]?.Controls(Modifier.padding(horizontal = Space.xs))
             }
         },
@@ -229,6 +237,7 @@ fun MomentMediaViewer(
             urls = container.mediaUrls,
             active = pager.currentPage == page,
             motion = motions[media[page].uid],
+            source = motionSource(media[page]),
             onZoom = onZoom,
             onTap = onTap,
             playKeys = playKeys,
@@ -280,12 +289,13 @@ private fun ViewerPage(
     urls: MediaUrls,
     active: Boolean,
     motion: ViewerMotion?,
+    source: MotionSource?,
     onZoom: (Boolean) -> Unit,
     onTap: () -> Unit,
     playKeys: SharedFlow<Unit>,
     over: @Composable () -> Unit,
 ) {
-    val url = urls.motion(media)?.takeIf { motion != null }
+    val url = source?.takeIf { motion != null }
     // Space, while this page is the one shown: a video plays or pauses, a live photo plays or stops.
     LaunchedEffect(active, playKeys) {
         if (active && url != null) playKeys.collect { motion?.toggle() }
@@ -466,3 +476,6 @@ fun ZoomablePhoto(
         Box(Modifier.aspectRatio(shape)) { content() }
     }
 }
+
+/** How long a viewer rests on one before those either side are read ahead, so a run of swipes asks nothing of those swiped past. */
+const val AHEAD_AFTER = 300L

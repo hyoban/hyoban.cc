@@ -131,11 +131,11 @@ object DesktopDevice : Device {
         private var url: String? = null
 
         @Composable
-        override fun Over(url: String, active: Boolean, modifier: Modifier) {
-            if (active) this.url = url
+        override fun Over(source: cc.hyoban.moments.ui.viewer.MotionSource, active: Boolean, modifier: Modifier) {
+            if (active) this.url = source.url
             androidx.compose.foundation.layout.Box(modifier, contentAlignment = androidx.compose.ui.Alignment.Center) {
                 cc.hyoban.moments.ui.components.PlayBadge(
-                    androidx.compose.ui.Modifier.clickable(onClickLabel = null, role = androidx.compose.ui.semantics.Role.Button) { open(url) },
+                    androidx.compose.ui.Modifier.clickable(onClickLabel = null, role = androidx.compose.ui.semantics.Role.Button) { open(source.url) },
                 )
             }
         }

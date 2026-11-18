@@ -170,6 +170,12 @@ interface Pick {
     /** A note for the info panel where [details] say too little. */
     fun infoNote(details: PhotoDetails?): StringResource? = null
 
+    /**
+     * Where its live photo's clip is read, while its page is [active]; null for a still or a video,
+     * and until it is known. The viewer plays it as a Moment's ([LocalPageLive]).
+     */
+    @Composable fun rememberMotion(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? = null
+
     /** Once the viewer rests on it, [next] the one a swipe on turns to, to fetch ahead. */
     fun settled(next: Pick?) {}
 
@@ -229,6 +235,19 @@ object NoVideos : PickerVideos {
     @Composable override fun Waiting(key: String) {}
     @Composable override fun Controls(key: String, modifier: Modifier) {}
 }
+
+/**
+ * A page's live photo in the viewer: the device's [motion] for it and where its clip is read
+ * ([Pick.rememberMotion]). The page draws [Over] over its still and holds play it with sound,
+ * as a Moment's do; the viewer's bar has its button.
+ */
+class PageLive(val motion: cc.hyoban.moments.ui.viewer.ViewerMotion, val source: cc.hyoban.moments.ui.viewer.MotionSource) {
+    @Composable fun Over(active: Boolean) = motion.Over(source, active, Modifier.fillMaxSize())
+    val hold: ((Boolean) -> Unit)? get() = motion.hold
+}
+
+/** The live photo of the page being drawn, if it is one; null for any other. */
+val LocalPageLive = androidx.compose.runtime.compositionLocalOf<PageLive?> { null }
 
 /** The videos of the picker shown. */
 val LocalPickerVideos = staticCompositionLocalOf<PickerVideos> { NoVideos }

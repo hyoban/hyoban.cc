@@ -108,13 +108,15 @@ fun rememberCachedPlayer(
             url.startsWith("content:") -> DataSource.Factory { ContentDataSource(context.applicationContext) }
             else -> null
         }
-        val source: DataSource.Factory = when {
-            local != null -> if (start > 0) DataSource.Factory { OffsetDataSource(local.createDataSource(), start) } else local
+        val read: DataSource.Factory = when {
+            local != null -> local
             headers.isNotEmpty() -> OkHttpDataSource.Factory(Http.client).setDefaultRequestProperties(headers)
             else -> CacheDataSource.Factory()
                 .setCache(MotionCache.of(context))
                 .setUpstreamDataSourceFactory(OkHttpDataSource.Factory(Http.client))
         }
+        // A motion photo's clip, [start] bytes into the file it shares with its still: on the phone, or the NAS's read by range.
+        val source: DataSource.Factory = if (start > 0) DataSource.Factory { OffsetDataSource(read.createDataSource(), start) } else read
         val made = ExoPlayer.Builder(context, mp4Renderers(context), ProgressiveMediaSource.Factory(source, mp4Only()))
             // Headphones pulled out stop it, rather than letting it go on aloud.
             .setHandleAudioBecomingNoisy(true)

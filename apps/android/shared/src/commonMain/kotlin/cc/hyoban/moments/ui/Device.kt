@@ -114,14 +114,15 @@ interface Device {
     /** What moves of [media] in the viewer, a live photo's clip or a video; null for a still. */
     fun viewerMotion(media: cc.hyoban.moments.data.spec.MomentMedia): cc.hyoban.moments.ui.viewer.ViewerMotion?
 
+    /** A live photo's motion for a viewer that shows more than the Moments' (相册, 选照片), as [viewerMotion] gives one. */
+    fun liveMotion(): cc.hyoban.moments.ui.viewer.ViewerMotion? =
+        viewerMotion(cc.hyoban.moments.data.spec.MomentMedia(uid = "", type = cc.hyoban.moments.data.spec.MediaType.LIVE_PHOTO))
+
     /** Shares the one item [media] shown in the viewer, fetched first when it is the site's, with its Moment's [text] where the device can send words with it. */
     suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls, text: String)
 
-    /** Whether the viewer offers what an item says of itself (its EXIF), [PhotoInfo] drawing it. */
-    val hasPhotoInfo: Boolean get() = false
 
     /** What [media] says of itself, in the panel under the viewer. */
-    @Composable fun PhotoInfo(container: AppContainer, media: cc.hyoban.moments.data.spec.MomentMedia, modifier: Modifier) {}
 
     /** Bringing a ledger in from another app, for an empty one; null where the device keeps none to write. */
     @Composable fun rememberLedgerImport(container: AppContainer): LedgerImport? = null

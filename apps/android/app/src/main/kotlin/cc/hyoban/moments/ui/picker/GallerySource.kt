@@ -3,8 +3,6 @@ package cc.hyoban.moments.ui.picker
 import cc.hyoban.moments.data.local.videoStart
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.local.MotionPhotos
-import cc.hyoban.moments.ui.viewer.LiveMotion
-import cc.hyoban.moments.ui.viewer.LiveMotionState
 import cc.hyoban.moments.ui.viewer.VideoPlayback
 import cc.hyoban.moments.ui.viewer.VideoWaiting
 import android.Manifest
@@ -191,6 +189,17 @@ internal data class GalleryPick(val item: LocalItem, override val source: Galler
         runCatching { source.context.contentResolver.loadThumbnail(item.uri, Size(size, size), null).asImageBitmap() }.getOrNull()
     }?.also { localThumbs.put("$key@$size", it) }
 
+    /** A motion photo's clip, read from the media store where it starts after its still. */
+    @Composable
+    override fun rememberMotion(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? {
+        val context = LocalContext.current
+        return produceState<cc.hyoban.moments.ui.viewer.MotionSource?>(null, key, active) {
+            if (!active || item.video || value != null) return@produceState
+            value = withContext(Dispatchers.IO) { MotionPhotos.videoStart(context, item.uri) }
+                ?.let { cc.hyoban.moments.ui.viewer.MotionSource(item.uri.toString(), it) }
+        }.value
+    }
+
     @Composable
     override fun badge(): String? {
         if (item.video) return item.duration?.let(::clock)
@@ -230,10 +239,7 @@ internal data class GalleryPick(val item: LocalItem, override val source: Galler
         val video = (LocalPickerVideos.current as PhoneVideos).state(key)
         // Only what the players read: MP4 and its kin.
         val plays = item.video && item.mime in PLAYED
-        val live = remember(key) { LiveMotionState() }
-        val clip by produceState<Long?>(null, key, active) {
-            if (active && !item.video) value = withContext(Dispatchers.IO) { MotionPhotos.videoStart(context, item.uri) }
-        }
+        val live = LocalPageLive.current
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             val small by rememberThumb(this@GalleryPick)
             val large by rememberThumb(this@GalleryPick, size = if (item.video) 1440 else 320)
@@ -247,11 +253,9 @@ internal data class GalleryPick(val item: LocalItem, override val source: Galler
             } else {
                 ZoomableOriginal(
                     item.uri, small, fitted, item.name, onZoom,
-                    onHold = if (clip != null) { held -> if (held) live.play(sound = true) else live.stop() } else null,
+                    onHold = live?.hold,
                     onTap = onTap,
-                ) {
-                    clip?.let { LiveMotion(item.uri.toString(), active, live, Modifier.fillMaxSize(), start = it) }
-                }
+                ) { live?.Over(active) }
             }
             if (plays) VideoWaiting(video) else if (item.video) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))
         }

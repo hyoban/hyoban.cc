@@ -51,8 +51,8 @@ class LiveMotionState {
  * photo still in one file has its clip [start] bytes in.
  */
 @Composable
-fun LiveMotion(url: String, active: Boolean, state: LiveMotionState, modifier: Modifier = Modifier, start: Long = 0) {
-    val player = rememberCachedPlayer(url, active, start) { volume = 0f }
+fun LiveMotion(url: String, active: Boolean, state: LiveMotionState, modifier: Modifier = Modifier, start: Long = 0, headers: Map<String, String> = emptyMap()) {
+    val player = rememberCachedPlayer(url, active, start, headers) { volume = 0f }
     val reduced = LocalReducedMotion.current
 
     DisposableEffect(player) {

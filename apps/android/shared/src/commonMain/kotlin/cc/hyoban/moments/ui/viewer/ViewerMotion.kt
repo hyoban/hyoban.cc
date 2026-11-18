@@ -4,13 +4,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 /**
- * What moves of one item in the viewer, a live photo's clip or a video, played the device's
- * way: the phone with its own player, a computer handing a video to the system. The viewer
+ * Where an item's motion is read: its [url], [start] bytes in for a motion photo whose clip still
+ * follows its still in one file (the gallery's, the NAS's, one picked and not yet saved), asked for
+ * with [headers] (the NAS's cookie).
+ */
+data class MotionSource(val url: String, val start: Long = 0, val headers: Map<String, String> = emptyMap())
+
+/**
+ * What moves of one item in a viewer, a live photo's clip or a video, played the device's
+ * way: the phone with its own player, a computer handing a video to the system. A viewer
  * keeps one for each item and asks it for what it draws over the still and in the bars.
  */
 interface ViewerMotion {
-    /** What plays over the still from [url], while its page is [active]. */
-    @Composable fun Over(url: String, active: Boolean, modifier: Modifier)
+    /** What plays over the still from [source], while its page is [active]. */
+    @Composable fun Over(source: MotionSource, active: Boolean, modifier: Modifier)
 
     /** Over the page while a video waits to play. */
     @Composable fun Waiting() {}

@@ -93,6 +93,7 @@ class NasSource(
     /** Fetches [photo]'s big thumbnail ahead, for the viewer turning to it. */
     fun prefetch(photo: NasPhoto) {
         scope.launch { nas.thumbnail(photo, NasProtocol.BIG) }
+        if (!photo.video) scope.launch { nas.head(photo) }
     }
 
     /** Reads the first page of [album]'s photos, the timeline's without one, and the albums if they aren't yet. */
@@ -251,11 +252,27 @@ data class NasPick(val photo: NasPhoto, override val source: NasSource, val list
     override val day get() = listedDay ?: photo.taken?.toLocalDate()
     override val linkedMoment get() = source.linked[photo.id]
 
+    /**
+     * A motion photo's clip, read by range from its original on the NAS where the start of the
+     * original says it starts (kept on the device once read), once its page is first shown.
+     */
+    @Composable
+    override fun rememberMotion(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? =
+        produceState<cc.hyoban.moments.ui.viewer.MotionSource?>(null, key, active) {
+            if (!active || !photo.live || photo.size <= 0 || value != null) return@produceState
+            val head = source.nas.head(photo) ?: return@produceState
+            val length = cc.hyoban.moments.data.local.MotionPhotos.videoLength(String(head, Charsets.ISO_8859_1)) ?: return@produceState
+            val start = photo.size - length
+            if (start <= 0) return@produceState
+            val (url, headers) = runCatching { source.nas.original(photo) }.getOrNull() ?: return@produceState
+            value = cc.hyoban.moments.ui.viewer.MotionSource(url, start, headers)
+        }.value
+
     /** The NAS keeps its own thumbnails, small for the grid and big for the viewer, and its client caches them. */
     override suspend fun thumbnail(size: Int): ImageBitmap? =
         source.nas.thumbnail(photo, if (size > 320) NasProtocol.BIG else NasProtocol.SMALL)
 
-    /** The next one's big thumbnail, fetched ahead so turning to it shows it at once. */
+    /** The next one's big thumbnail and the start of its original (its EXIF, kept), fetched ahead so turning to it shows it at once. */
     override fun settled(next: Pick?) {
         (next as? NasPick)?.let { source.prefetch(it.photo) }
     }
@@ -318,10 +335,11 @@ data class NasPick(val photo: NasPhoto, override val source: NasSource, val list
                 val original by produceState(source.nas.cached(photo), key, deep) {
                     if (deep && value == null) value = source.nas.fetchOriginal(photo)
                 }
+                val live = LocalPageLive.current
                 ZoomableOriginal(original ?: shown, shown, shape, photo.name, onZoom = { zoomed ->
                     if (zoomed) deep = true
                     onZoom(zoomed)
-                }, onTap = onTap)
+                }, onHold = live?.hold, onTap = onTap) { live?.Over(active) }
             }
             if (shown == null) Spinner(color = MediaOverlay.content)
             if (stream != null) videos.Waiting(key) else if (photo.video && !plays) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))

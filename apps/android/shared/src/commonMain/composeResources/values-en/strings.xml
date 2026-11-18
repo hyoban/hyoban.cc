@@ -1491,6 +1491,8 @@
     <string name="map_photos">Photos</string>
     <string name="map_photos_here">This spot</string>
     <string name="album_published">Published</string>
+    <string name="album_lesser">Originals on the NAS</string>
+    <string name="album_lesser_looking">Checking %1$d of %2$d</string>
     <string name="album_open_moment">Open Moment</string>
     <string name="album_in_moment">In a Moment</string>
     <string name="album_save_nas_original">Save the NAS original</string>

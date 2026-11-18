@@ -34,11 +34,15 @@ data class PhotoInfo(
     val takenAt: OffsetDateTime?,
     val fix: Fix?,
     val savedAt: OffsetDateTime? = null,
-    val motion: Boolean = false,
+    /** Where a motion photo's clip starts in its file, for it to play before it is split; null for any other. */
+    val motionStart: Long? = null,
     val video: Boolean = false,
     val type: String? = null,
     val bytes: Long? = null,
-)
+) {
+    /** Whether it is a motion photo, with a clip after its still. */
+    val motion: Boolean get() = motionStart != null
+}
 
 /**
  * A photo copied into the app's own store, the SHA-256 of its bytes, and a motion photo's
@@ -81,4 +85,7 @@ expect object Photos {
      * `<name>-poster.jpg`, its still while it is on the device.
      */
     suspend fun copy(ref: PhotoRef, directory: File, name: String, splitMotion: Boolean = false, poster: Boolean = false): CopiedPhoto
+
+    /** The bytes at [ref], to read what it says of itself (its EXIF); null where it can't be opened. */
+    fun open(ref: PhotoRef): java.io.InputStream?
 }

@@ -32,6 +32,9 @@ actual object Photos {
     actual suspend fun copy(ref: PhotoRef, directory: File, name: String, splitMotion: Boolean, poster: Boolean): CopiedPhoto =
         copy(AndroidApp.context, ref, directory, name, splitMotion, poster)
 
+    actual fun open(ref: PhotoRef): java.io.InputStream? =
+        runCatching { AndroidApp.context.contentResolver.openInputStream(ref) }.getOrNull()
+
     /** The type of what [uri] holds, as its provider says, else as its name's extension does. */
     fun typeOf(context: Context, uri: Uri): String? =
         context.contentResolver.getType(uri)
@@ -63,7 +66,7 @@ actual object Photos {
             },
             fix = exif?.latLong?.let { (latitude, longitude) -> Fix(latitude, longitude) }?.takeIf { it.latitude != 0.0 || it.longitude != 0.0 },
             savedAt = runCatching { fileTime(context, uri) }.getOrNull(),
-            motion = MotionPhotos.isMotion(context, uri),
+            motionStart = MotionPhotos.videoStart(context, uri),
             type = type,
         )
     }

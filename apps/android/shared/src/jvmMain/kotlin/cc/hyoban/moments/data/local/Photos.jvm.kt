@@ -39,6 +39,8 @@ actual fun File.toPhotoRef(): PhotoRef = FileRef(toURI().toString())
  * itself; a video is told apart but not yet taken, as nothing here draws the frame it needs for its still.
  */
 actual object Photos {
+    actual fun open(ref: PhotoRef): java.io.InputStream? = runCatching { ref.file.inputStream() }.getOrNull()
+
     actual suspend fun read(ref: PhotoRef): PhotoInfo = withContext(Dispatchers.IO) {
         val file = ref.file
         val type = typeOf(file)
@@ -62,7 +64,7 @@ actual object Photos {
             fix = metadata?.getFirstDirectoryOfType(GpsDirectory::class.java)?.geoLocation
                 ?.takeIf { it.latitude != 0.0 || it.longitude != 0.0 }?.let { Fix(it.latitude, it.longitude) },
             savedAt = saved,
-            motion = runCatching { MotionPhotos.videoStart(file) != null }.getOrDefault(false),
+            motionStart = runCatching { MotionPhotos.videoStart(file) }.getOrNull(),
             type = type,
         )
     }

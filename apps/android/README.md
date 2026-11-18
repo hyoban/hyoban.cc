@@ -714,8 +714,15 @@ the gallery's Here album and lets the choice go, 删除 deletes those chosen fro
 选照片's does, and 写时刻, 记录's ink button grown to hold its words, opens a new Moment with them in the order chosen, set back past the nine a
 Moment holds, which the subtitle then says. The camera's and the NAS's are saved to the Here album
 first for all three, with how far it is and 停止 at the foot. Looked through, the viewer opens over the
-tabs and its foot has 分享, 存到相册 for the camera's and the NAS's, and 用这张写时刻 for the photo
-shown; choosing, it chooses as 选照片's does, with 写时刻.
+tabs and is a Moment's photo viewer's: 删除 and a live photo's button in the bar over it, the icons
+(分享, 存到相册 for the camera's and the NAS's) beside 信息 under it, and the one main action at its
+foot, 用这张写时刻 for the photo shown, or 打开时刻 for one in a Moment already; choosing, it chooses as
+选照片's does, with 写时刻. A live photo plays in every viewer as in a Moment's, once on arriving,
+again from its button or held down with its sound, and Space: the gallery's and the NAS's from the
+motion photo itself, where its clip starts after its still (the NAS's read by range, the start of its
+original kept on the device), a published one's from its clip, and in the editor one picked and not
+yet saved from its own file, unless it goes in as a photo alone or 打码'd. Every viewer, resting on one
+a moment, reads those either side ahead: their stills and their info.
 
 已发布, in 相册's title after the gallery's albums (and in 选照片 not at all), is every photo and video
 of the Moments, the private ones too and in 演示模式 only what is shown, newest Moment first under its
@@ -740,12 +747,18 @@ viewer keeps the NAS's original (存 NAS 原图) as the NAS's own are kept; the 
 Moment in the grid, its viewer opening that Moment, and it leaves 地图's photos, where the Moment's place
 stands for it already. The site never shows the link.
 In a published Moment's editor, the viewer puts a linked photo back as the NAS's original (换成 NAS 原图),
-offered only where the site's copy is less than it: one the site optimized rather than kept as uploaded,
-or one kept as uploaded whose long side is shorter than the NAS's original's, as its EXIF says. The original comes down as one picked from the NAS
-does and goes in where the old one was, a photo new here, its faces and plates covered as it comes in
-and uploaded as a new photo (a new uid, so a new key) when the change is published, keeping the old
+offered only where the site's copy is less than it: its long side shorter than the NAS's original's, as the
+original's EXIF says, whether the site kept it as uploaded or optimized it; where the EXIF says nothing, one
+the site optimized is taken to be less and one kept as uploaded not. The original comes down as one picked from the NAS
+does and goes in where the old one was, as the old one went: a live photo with its clip, neither asked
+about nor covered, as it was public so; a still as a still, its faces and plates covered as it comes in;
+uploaded as a new photo (a new uid, so a new key) when the change is published, keeping the old
 one's alt text and 留档; where it was taken moves the Moment nowhere. The old object stays in R2,
 as a photo taken out of a Moment does.
+可换原图, after 已发布 in 相册's title once the NAS is set up, looks at every published photo linked to
+the NAS that way, six at a time and saying how far it is (the originals' starts kept on the device, so
+looking again is quick), and lists those less than the NAS's original
+under their Moments' days; the viewer's 换成 NAS 原图 opens the Moment's editor to put one back.
 
 **地图's photos.** The map's 照片 switch, over 足迹 down its side and off at first, lays 相册's
 photos that know where they were taken over the map (`PhotoLayer`, `HeapsOver`): the gallery's, whose
@@ -842,13 +855,15 @@ what it would do (`file/remove_operability`): to its recycle bin, or for good wh
 and the dialog says which before `file/remove`. Through the relay an original comes at about
 2 MB/s, so a large video is better added at home.
 
-**Photo info.** In 选照片's viewer and the photo viewer, a swipe up, or 信息 in the bar, makes room
+**Photo info.** In every viewer, on the phone and the Mac alike, a swipe up, or 信息 in the bar, makes room
 under the photo for what it says of itself: when, with its offset; the body, lens, focal length (and
 its full-frame equivalent), aperture, shutter, ISO and exposure compensation; where, named as the
 place picker names a point, on a small map; and the file's name, format, size and album. What the
 photo doesn't say is left out. The gallery's are read from the file, a camera's from its original
-once it is down, the NAS's from the start of its original, and a published one's from the first 256 KB of its original (`Range`), which keeps
-its EXIF but not where it was taken; a swipe down puts it away.
+once it is down, the NAS's from the start of its original, a Moment's photo not yet published from its file,
+and a published one's from the NAS's original when it is linked, else the first 256 KB of its original
+(`Range`), which keeps its EXIF but not where it was taken; each is read once and kept while the app
+runs (`MediaDetails`). A swipe down puts it away.
 
 ## Elsewhere
 

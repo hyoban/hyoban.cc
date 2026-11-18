@@ -38,6 +38,9 @@ import coil3.size.Size
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withPermit
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.layout.padding
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.stringResource
 import java.time.LocalDate
@@ -63,11 +66,53 @@ class PublishedSource(val container: AppContainer, val context: PlatformContext,
     var moments by mutableStateOf<List<MomentRecord>>(emptyList())
 
     override val home = PublishedListing(this)
+    val lesserListing = LesserListing(this)
 
     @Composable
     override fun choices(): List<Choice> {
         val picks = home.picks()
-        return listOf(Choice(stringResource(Res.string.album_published), picks.size, AppIcons.Cloud, "picker_published", home))
+        val published = Choice(stringResource(Res.string.album_published), picks.size, AppIcons.Cloud, "picker_published", home)
+        if (!container.nas.configured) return listOf(published)
+        return listOf(published, Choice(stringResource(Res.string.album_lesser), lesser?.size, AppIcons.Nas, "picker_lesser", lesserListing))
+    }
+
+    // 可换原图: the published photos whose copy on the site is less than the NAS's original ------
+
+    /** The photos found less than the NAS's original, by their uid; null before they are first looked at. */
+    var lesser by mutableStateOf<Set<String>?>(null)
+        private set
+
+    /** How many photos linked to the NAS have been looked at, of how many, while they are. */
+    var looking by mutableStateOf<Pair<Int, Int>?>(null)
+        private set
+    private var lookingJob: kotlinx.coroutines.Job? = null
+
+    /**
+     * Looks at every published photo linked to the NAS ([lesserThanNas]), [AT_ONCE] at a time: one
+     * the site optimized is less at once; one kept as uploaded is read from the NAS's original's
+     * EXIF, which is kept on the device, so looking again asks the NAS for nothing new.
+     */
+    fun lookForLesser() {
+        if (lookingJob?.isActive == true) return
+        val linked = moments.flatMap { record -> record.media.filter { it.nas != null && it.published != null } }
+        lookingJob = scope.launch {
+            val found = mutableSetOf<String>()
+            var done = 0
+            looking = 0 to linked.size
+            val gate = kotlinx.coroutines.sync.Semaphore(AT_ONCE)
+            kotlinx.coroutines.coroutineScope {
+                linked.forEach { media ->
+                    launch {
+                        val less = gate.withPermit { container.lesserThanNas(media) }
+                        if (less) found += media.uid
+                        looking = ++done to linked.size
+                        lesser = found.toSet()
+                    }
+                }
+            }
+            lesser = found.toSet()
+            looking = null
+        }
     }
 
     override val fetches = false
@@ -149,6 +194,59 @@ class PublishedListing(override val source: PublishedSource) : Listing {
     override fun Body(shown: List<Pick>, grid: @Composable ((@Composable () -> Unit)?, (() -> Unit)?) -> Unit) = grid(null, null)
 }
 
+/** 可换原图 in 相册's title: the published photos whose copy on the site is less than the NAS's original, each to be put back from its Moment's editor. */
+class LesserListing(override val source: PublishedSource) : Listing {
+    @Composable
+    override fun title() = stringResource(Res.string.album_lesser)
+
+    @Composable
+    override fun picks(): List<Pick> {
+        val all = source.home.picks()
+        val lesser = source.lesser.orEmpty()
+        return remember(all, lesser) { all.filter { (it as PublishedPick).media.uid in lesser } }
+    }
+
+    override fun opened() = source.lookForLesser()
+
+    @Composable
+    override fun count(shown: List<Pick>) = shown.size
+
+    @Composable
+    override fun Body(shown: List<Pick>, grid: @Composable ((@Composable () -> Unit)?, (() -> Unit)?) -> Unit) {
+        LaunchedEffect(Unit) { source.lookForLesser() }
+        val looking = source.looking
+        grid(looking?.let { (done, total) ->
+            {
+                cc.hyoban.moments.ui.design.Text(
+                    stringResource(Res.string.album_lesser_looking, done, total),
+                    style = cc.hyoban.moments.ui.design.AppTheme.typography.caption,
+                    color = cc.hyoban.moments.ui.theme.tokens.tx2,
+                    modifier = Modifier.padding(horizontal = cc.hyoban.moments.ui.theme.Space.gutter, vertical = cc.hyoban.moments.ui.theme.Space.s),
+                )
+            }
+        }, null)
+    }
+}
+
+/**
+ * Whether [media]'s published copy is less than the NAS's original it is linked to: smaller, by its
+ * long side, than the NAS's original says it is (read from its start, kept on the device once read),
+ * whether the site kept it as uploaded or optimized it. Where the NAS's says nothing, one the site
+ * optimized is taken to be less and one kept as uploaded not.
+ */
+suspend fun AppContainer.lesserThanNas(media: MomentMedia): Boolean {
+    val published = media.published ?: return false
+    val link = media.nas?.takeIf { nas.configured } ?: return false
+    val unknown = published.original != true
+    if (media.type == MediaType.VIDEO) return unknown
+    val head = nas.head(nas.photo(link)) ?: return unknown
+    val read = PhotoDetails.read(PhotoDetails()) { head.inputStream() }
+    val longest = maxOf(read.width ?: 0, read.height ?: 0)
+    val shown = maxOf(published.width ?: media.width ?: 0, published.height ?: media.height ?: 0)
+    if (longest <= 0 || shown <= 0) return unknown
+    return longest > shown
+}
+
 /** A photo or video of [record]'s, under its Moment's [day]. */
 data class PublishedPick(val media: MomentMedia, val record: MomentRecord, override val day: LocalDate?, override val source: PublishedSource) : Pick {
     override val key get() = "published/${record.uid}/${media.uid}"
@@ -158,6 +256,11 @@ data class PublishedPick(val media: MomentMedia, val record: MomentRecord, overr
     override val nasLink get() = media.nas?.takeIf { source.container.nas.configured }
 
     override suspend fun thumbnail(size: Int): ImageBitmap? = source.still(media, size)
+
+    /** A live photo's clip, published beside its still. */
+    @Composable
+    override fun rememberMotion(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? =
+        if (media.type == MediaType.LIVE_PHOTO) source.container.mediaUrls.motion(media)?.let { cc.hyoban.moments.ui.viewer.MotionSource(it) } else null
     override fun cachedThumb(size: Int): ImageBitmap? = source.cachedStill(media, size)
 
     /** The next one's stills read ahead, so turning to it shows it at once. */
@@ -202,7 +305,8 @@ data class PublishedPick(val media: MomentMedia, val record: MomentRecord, overr
                 }
                 videos.Waiting(key)
             } else urls.still(media, FULL)?.let { full ->
-                ZoomableOriginal(full, small, shape, media.alt, onZoom, onTap = onTap)
+                val live = LocalPageLive.current
+                ZoomableOriginal(full, small, shape, media.alt, onZoom, onHold = live?.hold, onTap = onTap) { live?.Over(active) }
             }
         }
     }
@@ -212,6 +316,9 @@ data class PublishedPick(val media: MomentMedia, val record: MomentRecord, overr
 private const val SMALL = 320
 private const val LARGE = 1440
 private const val FULL = 2560
+
+/** How many NAS originals are read at once while looking for the lesser. */
+private const val AT_ONCE = 6
 
 /** How many small stills, and large, are kept at hand. */
 private const val STILLS = 300

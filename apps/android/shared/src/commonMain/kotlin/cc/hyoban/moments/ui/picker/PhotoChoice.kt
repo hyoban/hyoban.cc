@@ -254,6 +254,7 @@ fun PhotoChoice.ViewerOver(
     videos: PickerVideos,
     overTabs: Boolean,
     onMoment: ((String) -> Unit)? = null,
+    onEdit: ((String) -> Unit)? = null,
     addButton: @Composable () -> Unit = {},
 ) {
     val viewable = remember(shown) { shown.filter { it.openable } }
@@ -269,7 +270,9 @@ fun PhotoChoice.ViewerOver(
                         modifier = Modifier.testTag("album_viewer_write"),
                     ) { Text(stringResource(Res.string.album_write)) }
                 },
-                lead = if (onWrite != null && !choosing) ({ pick ->
+                // What is done with the one shown: the icons beside its info, as a Moment's viewer has
+                // them, and its one main action in the bar under them.
+                actions = if (onWrite != null && !choosing) ({ pick ->
                     val moment = pick.moment
                     if (moment != null) {
                         IconButton(onClick = { shareOwn(pick) }, modifier = Modifier.testTag("album_viewer_share")) {
@@ -278,11 +281,14 @@ fun PhotoChoice.ViewerOver(
                         if (pick.nasLink != null) IconButton(
                             onClick = { viewing = null; saveNasOriginal(pick) }, enabled = idle, modifier = Modifier.testTag("album_viewer_nas_original"),
                         ) {
-                            Icon(AppIcons.Nas, contentDescription = stringResource(Res.string.album_save_nas_original), tint = MediaOverlay.content)
+                            Icon(AppIcons.Download, contentDescription = stringResource(Res.string.album_save_nas_original), tint = MediaOverlay.content)
                         }
-                        Spacer(Modifier.weight(1f))
-                        if (onMoment != null) Button(onClick = { viewing = null; onMoment(moment) }, modifier = Modifier.testTag("album_viewer_moment")) {
-                            Text(stringResource(Res.string.album_open_moment))
+                        // Less on the site than the NAS's original: put back from its Moment's editor.
+                        val lesser = (pick as? PublishedPick)?.let { it.media.uid in it.source.lesser.orEmpty() } == true
+                        if (lesser && onEdit != null) IconButton(
+                            onClick = { viewing = null; onEdit(moment) }, modifier = Modifier.testTag("album_viewer_replace"),
+                        ) {
+                            Icon(AppIcons.Swap, contentDescription = stringResource(Res.string.action_replace_nas), tint = MediaOverlay.content)
                         }
                     } else {
                         // What comes down first shows how far it is on the page, so the viewer makes way.
@@ -294,12 +300,17 @@ fun PhotoChoice.ViewerOver(
                         if (pick.source.fetches) IconButton(onClick = { leaving(); save(listOf(pick)) }, enabled = idle, modifier = Modifier.testTag("album_viewer_save")) {
                             Icon(AppIcons.Download, contentDescription = stringResource(device.saveWords), tint = MediaOverlay.content)
                         }
-                        val linked = pick.linkedMoment
-                        if (linked != null && onMoment != null) IconButton(onClick = { viewing = null; onMoment(linked) }, modifier = Modifier.testTag("album_viewer_linked_moment")) {
-                            Icon(AppIcons.Cloud, contentDescription = stringResource(Res.string.album_open_moment), tint = MediaOverlay.content)
+                    }
+                }) else null,
+                lead = if (onWrite != null && !choosing) ({ pick ->
+                    val moment = pick.moment ?: pick.linkedMoment
+                    Spacer(Modifier.weight(1f))
+                    when {
+                        // A published one, or one of the NAS's in a Moment already: that Moment.
+                        moment != null -> if (onMoment != null) Button(onClick = { viewing = null; onMoment(moment) }, modifier = Modifier.testTag("album_viewer_moment")) {
+                            Text(stringResource(Res.string.album_open_moment))
                         }
-                        Spacer(Modifier.weight(1f))
-                        if (pick.choosable) Button(onClick = { viewing = null; write(listOf(pick)) }, enabled = idle, modifier = Modifier.testTag("album_viewer_write")) {
+                        pick.choosable -> Button(onClick = { viewing = null; write(listOf(pick)) }, enabled = idle, modifier = Modifier.testTag("album_viewer_write")) {
                             Text(stringResource(Res.string.album_write_one))
                         }
                     }

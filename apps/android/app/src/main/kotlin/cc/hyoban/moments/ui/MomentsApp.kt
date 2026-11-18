@@ -670,6 +670,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                         onNew = { openEditor(null, false) },
                                         onWrite = { navController.navigate(opened(NewMoment())) },
                                         onMoment = openMoment,
+                                        onEdit = { openEditor(it, false) },
                                     )
                                 }
                                 screen<Preferences> {

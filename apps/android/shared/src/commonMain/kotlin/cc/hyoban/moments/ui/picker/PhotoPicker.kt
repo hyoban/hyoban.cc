@@ -87,15 +87,15 @@ fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, 
  * its Moment with [onMoment].
  */
 @Composable
-fun AlbumScreen(container: AppContainer, onNew: () -> Unit, onWrite: () -> Unit, onMoment: (String) -> Unit) =
+fun AlbumScreen(container: AppContainer, onNew: () -> Unit, onWrite: () -> Unit, onMoment: (String) -> Unit, onEdit: (String) -> Unit = onMoment) =
     PhotoBrowser(
         container, Int.MAX_VALUE,
-        album = AlbumActions(onNew, onMoment) { uris -> container.offerPhotos(uris); onWrite() },
+        album = AlbumActions(onNew, onMoment, onEdit) { uris -> container.offerPhotos(uris); onWrite() },
         onClose = {}, onFallback = {}, onAdded = {},
     )
 
-/** What 相册 does that 选照片 doesn't: its tab's button, a published photo's Moment, and a new Moment with the photos given. */
-private class AlbumActions(val onNew: () -> Unit, val onMoment: (String) -> Unit, val onWrite: (List<PhotoRef>) -> Unit)
+/** What 相册 does that 选照片 doesn't: its tab's button, a published photo's Moment and its editor, and a new Moment with the photos given. */
+private class AlbumActions(val onNew: () -> Unit, val onMoment: (String) -> Unit, val onEdit: (String) -> Unit, val onWrite: (List<PhotoRef>) -> Unit)
 
 /**
  * The gallery, the paired camera, the published photos (相册's alone) and the NAS in one page, one
@@ -212,7 +212,7 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
         else SubPage(listing.title(), onClose, subtitle = subtitle, close = true, titleMenu = menu, actions = actions, content = content)
     }
 
-    choice.ViewerOver(container, shown, videos, overTabs = album != null, onMoment = album?.onMoment) {
+    choice.ViewerOver(container, shown, videos, overTabs = album != null, onMoment = album?.onMoment, onEdit = album?.onEdit) {
         if (canAdd) addButton("picker_viewer_add") { choice.viewing = null }
     }
 

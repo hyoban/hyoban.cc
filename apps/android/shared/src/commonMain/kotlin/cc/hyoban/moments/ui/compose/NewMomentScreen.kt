@@ -148,6 +148,7 @@ import cc.hyoban.moments.data.spec.LocalMedia
 import cc.hyoban.moments.ui.viewer.MomentMediaViewer
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.design.Spinner
+import cc.hyoban.moments.ui.picker.lesserThanNas
 import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
@@ -773,7 +774,7 @@ fun NewMomentScreen(
             exit = fadeOut(motion.defaultEffectsSpec()),
         ) {
             val start = remember { (viewing ?: 0).coerceIn(0, photos.lastIndex.coerceAtLeast(0)) }
-            val media = photos.map { ref -> draftMedia(ref, originalMedia[ref], infos[ref], ref in videoPhotos, ref in utility) }
+            val media = photos.map { ref -> draftMedia(ref, originalMedia[ref], infos[ref], ref in videoPhotos, ref in utility, live = ref !in stills && ref !in masks) }
                 // A photo saved with patches is shown as it was picked, the patches over it to change.
                 .map { media -> media.local?.unmasked?.let { media.copy(local = media.local.copy(uri = it)) } ?: media }
             val refs = media.indices.associateBy { media[it].uid }.mapValues { photos[it.value] }
@@ -781,6 +782,13 @@ fun NewMomentScreen(
                 container,
                 media,
                 start,
+                // A motion photo picked and not yet saved plays its clip from its own file, where it starts.
+                motionSource = { shown ->
+                    val ref = refs[shown.uid]
+                    val start = ref?.takeIf { it !in originalMedia }?.let { infos[it]?.motionStart }
+                    if (start != null && shown.type == MediaType.LIVE_PHOTO) cc.hyoban.moments.ui.viewer.MotionSource(ref.toString(), start)
+                    else container.mediaUrls.motion(shown)?.let { cc.hyoban.moments.ui.viewer.MotionSource(it) }
+                },
                 onBack = { viewing = null },
                 caption = { shown ->
                     if (chosenMask?.first == refs[shown.uid]) return@MomentMediaViewer
@@ -868,6 +876,12 @@ fun NewMomentScreen(
                                 scope.launch {
                                     try {
                                         val fresh = container.nas.download(listOf(container.nas.photo(link))) { _, _ -> }.single()
+                                        // It goes in as the old one went: a live photo with its clip, as it was
+                                        // public unpatched, so neither asked about nor covered; a still as a
+                                        // still, covered as it comes in, as the old one may have been.
+                                        askedMotion = askedMotion + fresh
+                                        if (old.type == MediaType.LIVE_PHOTO) scanned = scanned + fresh
+                                        else if (old.type == MediaType.IMAGE) stills = stills + fresh
                                         photos = photos.map { if (it == ref) fresh else it }
                                         if (ref in utility) utility = utility - ref + fresh
                                         replaced = replaced + (fresh to old)
@@ -882,7 +896,7 @@ fun NewMomentScreen(
                             modifier = Modifier.testTag("viewer_replace_nas"),
                         ) {
                             if (replacing == ref) Spinner(Modifier.size(20.dp), color = MediaOverlay.content)
-                            else Icon(AppIcons.Nas, contentDescription = stringResource(Res.string.action_replace_nas), tint = MediaOverlay.content)
+                            else Icon(AppIcons.Swap, contentDescription = stringResource(Res.string.action_replace_nas), tint = MediaOverlay.content)
                         }
                     }
                     val label = stringResource(if (ref in videoPhotos) Res.string.action_remove_video else Res.string.action_remove_photo)
@@ -956,12 +970,17 @@ fun NewMomentScreen(
 
 /**
  * [ref] as the viewer draws it before it is saved: as it was where it is [original], else the
- * picked file itself, a video played from it and a motion photo shown as its still.
+ * picked file itself, a video played from it and a motion photo, while it goes in [live], as a
+ * live photo whose clip plays from that file.
  */
-private fun draftMedia(ref: PhotoRef, original: MomentMedia?, info: PhotoInfo?, video: Boolean, utility: Boolean): MomentMedia =
+private fun draftMedia(ref: PhotoRef, original: MomentMedia?, info: PhotoInfo?, video: Boolean, utility: Boolean, live: Boolean = false): MomentMedia =
     original?.copy(utility = utility.takeIf { it }) ?: MomentMedia(
         uid = "draft:$ref",
-        type = if (video) MediaType.VIDEO else MediaType.IMAGE,
+        type = when {
+            video -> MediaType.VIDEO
+            live && info?.motion == true -> MediaType.LIVE_PHOTO
+            else -> MediaType.IMAGE
+        },
         width = info?.width,
         height = info?.height,
         utility = utility.takeIf { it },
@@ -969,22 +988,14 @@ private fun draftMedia(ref: PhotoRef, original: MomentMedia?, info: PhotoInfo?, 
     )
 
 /**
- * Whether [media]'s published copy is less than the NAS's original it is linked to: one the
- * site optimized (not kept as uploaded) is; one kept as uploaded is only if the NAS's is larger,
- * as its EXIF says, an upload smaller than what was taken. Unknown, kept as uploaded, it isn't.
+ * Whether [media]'s published copy is less than the NAS's original it is linked to
+ * ([cc.hyoban.moments.ui.picker.lesserThanNas]).
  */
 @Composable
 private fun rememberLesserThanNas(container: AppContainer, media: MomentMedia, link: cc.hyoban.moments.data.spec.NasLink): Boolean {
-    val published = media.published ?: return false
-    if (published.original != true) return true
+    // Hidden until the NAS's original says it is larger.
     return androidx.compose.runtime.produceState(false, media.uid, link) {
-        if (media.type == MediaType.VIDEO) return@produceState
-        val nas = container.nas
-        val head = nas.head(nas.photo(link)) ?: return@produceState
-        val read = cc.hyoban.moments.ui.viewer.PhotoDetails.read(cc.hyoban.moments.ui.viewer.PhotoDetails()) { head.inputStream() }
-        val longest = maxOf(read.width ?: 0, read.height ?: 0)
-        val shown = maxOf(published.width ?: media.width ?: 0, published.height ?: media.height ?: 0)
-        value = longest > 0 && shown > 0 && longest > shown
+        value = container.lesserThanNas(media)
     }.value
 }
 

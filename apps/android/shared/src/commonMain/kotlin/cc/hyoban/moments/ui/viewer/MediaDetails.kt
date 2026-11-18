@@ -1,6 +1,8 @@
 package cc.hyoban.moments.ui.viewer
 
 import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.data.local.Photos
+import cc.hyoban.moments.data.local.toPhotoRef
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import kotlinx.coroutines.CoroutineScope
@@ -37,15 +39,8 @@ class MediaDetails(private val container: AppContainer) {
         )
     }
 
-    /**
-     * [media]'s details whole, read once and kept. [local] reads a photo not published yet from its
-     * file on the device, where the device can.
-     */
-    suspend fun read(
-        media: MomentMedia,
-        occurredAt: String? = null,
-        local: (suspend (PhotoDetails, String) -> PhotoDetails)? = null,
-    ): PhotoDetails {
+    /** [media]'s details whole, read once and kept; one not published yet from its file on the device. */
+    suspend fun read(media: MomentMedia, occurredAt: String? = null): PhotoDetails {
         cached(media)?.let { return it }
         val base = base(media, occurredAt)
         if (media.type == MediaType.VIDEO) return base
@@ -55,7 +50,7 @@ class MediaDetails(private val container: AppContainer) {
         val head = link?.let { nas.head(nas.photo(it)) }
         val whole = when {
             head != null -> PhotoDetails.read(base.copy(name = link.name)) { head.inputStream() }
-            published == null -> media.local?.uri?.let { uri -> local?.invoke(base, uri) } ?: return base
+            published == null -> media.local?.uri?.let { uri -> PhotoDetails.read(base) { Photos.open(uri.toPhotoRef()) } } ?: return base
             published.original == true -> PhotoDetails.readRemote(base, container.mediaUrls.asset(published.key))
             else -> base
         }
@@ -63,12 +58,23 @@ class MediaDetails(private val container: AppContainer) {
         return whole
     }
 
-    /** Reads [media]'s details ahead in [scope], those not read yet and that have to be fetched. */
+    /** Reads [media]'s details ahead in [scope], those not read yet. */
     fun ahead(scope: CoroutineScope, media: MomentMedia, occurredAt: String? = null) {
         if (media.type == MediaType.VIDEO || cached(media) != null) return
-        if (media.published == null && media.nas == null) return
         scope.launch { read(media, occurredAt) }
     }
+
+    /**
+     * The info panel's details of [media] in a viewer: kept from before when read already, else the
+     * record's own, then the rest once read. Its own for each photo, as the viewer keys it.
+     */
+    @androidx.compose.runtime.Composable
+    fun remember(media: MomentMedia, occurredAt: String? = null): PhotoDetails? =
+        androidx.compose.runtime.produceState(cached(media), media.uid) {
+            if (value != null) return@produceState
+            value = base(media, occurredAt)
+            value = read(media, occurredAt)
+        }.value
 
     private companion object {
         const val KEPT = 300
