@@ -529,7 +529,9 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                         val atlasShown = current == Tab.MAP
                         // Made once: a new one each time the app is composed again would differ from
                         // the last, and the map, covered on another tab, would be composed again with it.
-                        val atlasHidden = remember { Modifier.clearAndSetSemantics {} }
+                        val atlasHidden = remember { Modifier.fillMaxSize().clearAndSetSemantics {} }
+                        // Read by the map only where it needs it: a tab change composes none of it again.
+                        val atlasActive by rememberUpdatedState(atlasShown)
                         if (atlasMounted) {
                             // What the tabs cover of it, as a tab's page in the NavHost below keeps, with a
                             // page over it too: the map is the map tab's page. With what it is given the
@@ -540,23 +542,25 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                 LocalBottomClearance provides tabClearance,
                                 LocalFabClearance provides tabFab,
                             ) {
-                                MapScreen(
-                                    container,
-                                    onMoment = openMoment,
-                                    onPlace = openPlace,
-                                    onTrip = openTrip,
-                                    onPlay = { navController.navigate(TripPlay(it)) },
-                                    onSearch = { navController.navigate(Search) },
-                                    focus = mapFocus,
-                                    onFocused = { mapFocus = null },
-                                    onFootprintSettings = { navController.navigate(FootprintSettings) },
-                                    onWriteAtStay = { navController.navigate(opened(NewMoment(stay = it.encoded))) },
-                                    onCheckin = checkinNav,
-                                    onNewTrip = { navController.navigate(TripEdit()) },
-                                    onSuggestedTrip = { navController.navigate(TripEdit(start = it.startAt, end = it.endAt, title = it.name, from = it.from, to = it.to)) },
-                                    modifier = if (atlasShown) Modifier else atlasHidden,
-                                    active = atlasShown,
-                                )
+                                // Hidden from assistive technology from outside, as the map is given the same either way.
+                                Box(if (atlasShown) Modifier.fillMaxSize() else atlasHidden) {
+                                    MapScreen(
+                                        container,
+                                        onMoment = openMoment,
+                                        onPlace = openPlace,
+                                        onTrip = openTrip,
+                                        onPlay = { navController.navigate(TripPlay(it)) },
+                                        onSearch = { navController.navigate(Search) },
+                                        focus = mapFocus,
+                                        onFocused = { mapFocus = null },
+                                        onFootprintSettings = { navController.navigate(FootprintSettings) },
+                                        onWriteAtStay = { navController.navigate(opened(NewMoment(stay = it.encoded))) },
+                                        onCheckin = checkinNav,
+                                        onNewTrip = { navController.navigate(TripEdit()) },
+                                        onSuggestedTrip = { navController.navigate(TripEdit(start = it.startAt, end = it.endAt, title = it.name, from = it.from, to = it.to)) },
+                                        active = { atlasActive },
+                                    )
+                                }
                             }
                         }
                         // A different top-level tab covers the retained Surface. Pushed pages from

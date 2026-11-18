@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -38,8 +39,12 @@ val LocalSharedTransitionScope = staticCompositionLocalOf<SharedTransitionScope?
  */
 val LocalCardOpening = staticCompositionLocalOf<State<String?>> { mutableStateOf(null) }
 
-/** The navigation transition of the screen a composable is on. */
-val LocalNavAnimatedScope = staticCompositionLocalOf<AnimatedVisibilityScope?> { null }
+/**
+ * The navigation transition of the screen a composable is on. Not static: the map, kept under
+ * the tabs, is given its tab's as the tab comes and goes, and only what reads it need be
+ * composed again then, not the whole map.
+ */
+val LocalNavAnimatedScope = compositionLocalOf<AnimatedVisibilityScope?> { null }
 
 /**
  * A Moment's card on a list and its page, as one surface: tapping the card grows it into

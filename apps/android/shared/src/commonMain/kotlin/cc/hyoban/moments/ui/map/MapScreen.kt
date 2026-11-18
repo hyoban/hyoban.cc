@@ -221,7 +221,8 @@ fun MapScreen(
     onNewTrip: () -> Unit = {},
     onSuggestedTrip: (TripSuggestion) -> Unit = {},
     modifier: Modifier = Modifier,
-    active: Boolean = true,
+    // Read only where it is needed, so the map covered by another tab is not composed again.
+    active: () -> Boolean = { true },
 ) {
     LocalDevice.current.FootprintsOnMap(container, onFootprintSettings, onWriteAtStay, onCheckin) { footprints ->
         MapContent(container, onMoment, onPlace, onTrip, onPlay, onSearch, focus, onFocused, footprints, onNewTrip, onSuggestedTrip, modifier, active)
@@ -242,7 +243,7 @@ private fun MapContent(
     onNewTrip: () -> Unit,
     onSuggestedTrip: (TripSuggestion) -> Unit,
     modifier: Modifier,
-    active: Boolean,
+    active: () -> Boolean,
 ) {
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
@@ -338,7 +339,7 @@ private fun MapContent(
             (fromMoments + fromCheckins).toSet()
         }
     }
-    BackHandler(enabled = active && lifted != null) { highlighted = null }
+    MapBack({ active() && lifted != null }) { highlighted = null }
     LaunchedEffect(focus) {
         when (focus) {
             // Shown from its page, a place or trip the year picked leaves off brings every year back.
@@ -870,6 +871,12 @@ private fun TripsSheet(
  * when it began, how many days and how many photos (or records, without any), then adding it as
  * it is and dismissing it.
  */
+/** Back lets a lifted route go, read on its own so the tab shown and hidden composes nothing else. */
+@Composable
+private fun MapBack(enabled: () -> Boolean, onBack: () -> Unit) {
+    BackHandler(enabled = enabled(), onBack = onBack)
+}
+
 @Composable
 private fun SuggestionRow(suggestion: TripSuggestion, coverSize: Int, onDismiss: () -> Unit, onAdd: () -> Unit, modifier: Modifier = Modifier) {
     val days = daysBetween(suggestion.start, suggestion.end)
