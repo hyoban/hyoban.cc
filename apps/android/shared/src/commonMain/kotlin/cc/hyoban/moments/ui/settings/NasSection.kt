@@ -23,7 +23,12 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.logWarning
 import cc.hyoban.moments.nas.Nas
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.AppIcons
@@ -42,7 +47,7 @@ import cc.hyoban.moments.ui.theme.tokens
 // address, and who signs in.
 
 @Composable
-fun NasSection(nas: Nas, onEdit: () -> Unit) {
+fun NasSection(nas: Nas, linking: NasLinking?, onEdit: () -> Unit) {
     val row: Segment = { shapes ->
         SegmentedListItem(
             onClick = onEdit,
@@ -58,7 +63,59 @@ fun NasSection(nas: Nas, onEdit: () -> Unit) {
             modifier = Modifier.testTag("nas_setting"),
         ) { Text(stringResource(Res.string.nas_photos)) }
     }
-    SegmentedGroup(stringResource(Res.string.section_nas), stringResource(Res.string.settings_nas_note), listOf(row))
+    // 关联已发布的照片: the Moments' photos written before they were linked, found on the NAS.
+    val link: Segment? = linking?.takeIf { nas.configured }?.let { linking ->
+        { shapes ->
+            SegmentedListItem(
+                onClick = linking::start,
+                enabled = !linking.running,
+                shapes = shapes,
+                colors = segmentColors(),
+                leadingContent = { Icon(AppIcons.Cloud, contentDescription = null) },
+                supportingContent = {
+                    val state = linking.state
+                    Text(
+                        when (state) {
+                            is NasLinking.State.Reading -> stringResource(Res.string.nas_match_reading, state.done, state.total)
+                            is NasLinking.State.Done -> stringResource(Res.string.nas_match_done, state.linked)
+                            NasLinking.State.Failed -> stringResource(Res.string.nas_match_failed)
+                            null -> stringResource(Res.string.nas_match_note)
+                        },
+                        maxLines = 2, overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                modifier = Modifier.testTag("nas_match"),
+            ) { Text(stringResource(Res.string.nas_match)) }
+        }
+    }
+    SegmentedGroup(stringResource(Res.string.section_nas), stringResource(Res.string.settings_nas_note), listOfNotNull(row, link))
+}
+
+/** 关联已发布的照片 under way, or how it went: the Moments' photos linked to the NAS's ([AppContainer.linkNas]). */
+class NasLinking(private val container: AppContainer, private val scope: CoroutineScope) {
+    sealed interface State {
+        data class Reading(val done: Int, val total: Int) : State
+        data class Done(val linked: Int) : State
+        data object Failed : State
+    }
+
+    var state by mutableStateOf<State?>(null)
+        private set
+    val running get() = state is State.Reading
+
+    fun start() {
+        if (running) return
+        state = State.Reading(0, 0)
+        scope.launch {
+            state = try {
+                State.Done(container.linkNas { done, total -> state = State.Reading(done, total) })
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                logWarning("Moments", "nas: photos not linked", e)
+                State.Failed
+            }
+        }
+    }
 }
 
 /**
@@ -137,9 +194,12 @@ fun NasDialog(nas: Nas, onDismiss: () -> Unit, onForget: () -> Unit, onSave: (St
 
 /** 同步与来源's NAS section with the dialog it opens: the phone's and the computer's alike. */
 @Composable
-fun NasSettings(nas: Nas) {
+fun NasSettings(container: AppContainer) {
+    val nas = container.nas
     var editing by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    NasSection(nas) { editing = true }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val linking = remember { NasLinking(container, scope) }
+    NasSection(nas, linking) { editing = true }
     if (editing) NasDialog(
         nas,
         onDismiss = { editing = false },

@@ -176,6 +176,13 @@ class PhotoChoice internal constructor(
 
     fun save(picks: List<Pick>) = run(picks.filter { it.source.fetches }, Res.string.album_saving) { if (picks.size > 1) stop() }
 
+    /** Keeps the NAS's original of a published photo linked to it, as the NAS's own are kept. */
+    fun saveNasOriginal(pick: Pick) {
+        val link = pick.nasLink ?: return
+        val nas = sources.filterIsInstance<NasSource>().firstOrNull() ?: return
+        save(listOf(NasPick(nas.nas.photo(link), nas)))
+    }
+
     /** Shares a published photo as the Moment's viewer does. */
     fun shareOwn(pick: Pick) {
         scope.launch { pick.shareOwn() }
@@ -268,6 +275,11 @@ fun PhotoChoice.ViewerOver(
                         IconButton(onClick = { shareOwn(pick) }, modifier = Modifier.testTag("album_viewer_share")) {
                             Icon(AppIcons.Share, contentDescription = stringResource(Res.string.action_share), tint = MediaOverlay.content)
                         }
+                        if (pick.nasLink != null) IconButton(
+                            onClick = { viewing = null; saveNasOriginal(pick) }, enabled = idle, modifier = Modifier.testTag("album_viewer_nas_original"),
+                        ) {
+                            Icon(AppIcons.Nas, contentDescription = stringResource(Res.string.album_save_nas_original), tint = MediaOverlay.content)
+                        }
                         Spacer(Modifier.weight(1f))
                         if (onMoment != null) Button(onClick = { viewing = null; onMoment(moment) }, modifier = Modifier.testTag("album_viewer_moment")) {
                             Text(stringResource(Res.string.album_open_moment))
@@ -281,6 +293,10 @@ fun PhotoChoice.ViewerOver(
                         }
                         if (pick.source.fetches) IconButton(onClick = { leaving(); save(listOf(pick)) }, enabled = idle, modifier = Modifier.testTag("album_viewer_save")) {
                             Icon(AppIcons.Download, contentDescription = stringResource(device.saveWords), tint = MediaOverlay.content)
+                        }
+                        val linked = pick.linkedMoment
+                        if (linked != null && onMoment != null) IconButton(onClick = { viewing = null; onMoment(linked) }, modifier = Modifier.testTag("album_viewer_linked_moment")) {
+                            Icon(AppIcons.Cloud, contentDescription = stringResource(Res.string.album_open_moment), tint = MediaOverlay.content)
                         }
                         Spacer(Modifier.weight(1f))
                         if (pick.choosable) Button(onClick = { viewing = null; write(listOf(pick)) }, enabled = idle, modifier = Modifier.testTag("album_viewer_write")) {

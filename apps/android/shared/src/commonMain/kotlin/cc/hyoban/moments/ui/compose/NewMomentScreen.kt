@@ -1516,6 +1516,7 @@ private suspend fun buildMoment(
             height = size.height,
             takenAt = info.takenAt?.let(::stamp),
             utility = kept,
+            nas = container.nas.linkOf(uri),
             local = LocalMedia(
                 uri = (drawn ?: copied).file.toPhotoRef().toString(),
                 videoUri = copied.video?.let { it.toPhotoRef().toString() },

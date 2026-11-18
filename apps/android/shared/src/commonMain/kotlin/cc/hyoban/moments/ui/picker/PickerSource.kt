@@ -140,6 +140,12 @@ interface Pick {
     /** The Moment it is of, a published photo's, opened from the viewer. */
     val moment: String? get() = null
 
+    /** The Moment it went into, for a NAS photo published as one's ([cc.hyoban.moments.data.spec.NasLink]): marked in the grid, opened from the viewer. */
+    val linkedMoment: String? get() = null
+
+    /** The same photo on the NAS, a published one's that is linked to it, its original kept from there. */
+    val nasLink: cc.hyoban.moments.data.spec.NasLink? get() = null
+
     /** Shares it as the Moment's viewer does, a published photo's own way; nothing for the rest. */
     suspend fun shareOwn() {}
 

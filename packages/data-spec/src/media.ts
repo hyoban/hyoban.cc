@@ -75,6 +75,20 @@ const mediaBase = {
    * shows in its own Moment but is never picked for a cover, a collage or a share card.
    */
   utility: z.boolean().optional(),
+  /**
+   * The same photo or video in the owner's NAS photo app, whose original keeps what the
+   * published one lost (its place, its full size, before 打码): its id there, when it was
+   * uploaded, which the NAS's stream asks for with it, and its file's name. Linked when it was picked from the NAS,
+   * or matched later by when it was taken and its size. Read by the app alone; the site never
+   * shows it.
+   */
+  nas: z
+    .looseObject({
+      id: z.number().int().positive(),
+      uploaded: z.number().int().nonnegative(),
+      name: z.string().min(1),
+    })
+    .optional(),
   local: localMediaSchema.optional(),
 }
 

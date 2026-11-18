@@ -13,7 +13,7 @@ fun PhoneStorageSettings(container: PhoneContainer) {
     var editingBackup by rememberSaveable { mutableStateOf(false) }
     var restoring by rememberSaveable { mutableStateOf(false) }
     BackupSection(container.backup, onEdit = { editingBackup = true }, onRestore = { restoring = true })
-    NasSettings(container.nas)
+    NasSettings(container)
 
     if (editingBackup) {
         val backup = container.backup

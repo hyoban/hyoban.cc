@@ -215,7 +215,7 @@ object DesktopDevice : Device {
     override fun StorageSettings(container: AppContainer) {
         cc.hyoban.moments.ui.settings.PhoneBackupSection((container as DesktopContainer).phoneBackup)
         // The NAS whose photos 相册 lists, set up here as on the phone.
-        cc.hyoban.moments.ui.settings.NasSettings(container.nas)
+        cc.hyoban.moments.ui.settings.NasSettings(container)
     }
 
     @Composable

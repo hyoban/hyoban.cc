@@ -448,6 +448,7 @@
     <string name="change_text">文字</string>
     <string name="change_photos">照片</string>
     <string name="change_cover">封面</string>
+    <string name="change_nas">NAS 原图</string>
     <string name="change_cover_off">不再用作封面</string>
     <string name="change_cover_on">重新用作封面</string>
     <string name="change_time">时间</string>
@@ -1492,6 +1493,8 @@
     <string name="map_photos_here">这一处</string>
     <string name="album_published">已发布</string>
     <string name="album_open_moment">打开时刻</string>
+    <string name="album_in_moment">已在时刻里</string>
+    <string name="album_save_nas_original">存 NAS 原图</string>
     <string name="album_no_nas">还没有接上 NAS</string>
     <string name="album_no_nas_note">在 同步与来源 里填好绿联 NAS 的 ID、用户名和密码。</string>
     <string name="album_save_pictures">存到「图片」</string>
@@ -1502,6 +1505,11 @@
     <string name="nas_link_note">在 NAS 的 控制面板 › 远程访问 里</string>
     <string name="action_stop_nas">不再连接</string>
     <string name="settings_nas_note">选照片里能看这台 NAS 相册里的照片，加入时把原图存到手机，也能删除。用 UGREENlink ID 时先问绿联它在哪：在家里直连，在外面走绿联的中转。密码只留在这台手机上。</string>
+    <string name="nas_match">关联已发布的照片</string>
+    <string name="nas_match_note">按拍摄时间和形状在 NAS 里找时刻的照片，关联后的改动在发布更改里审阅</string>
+    <string name="nas_match_reading">正在读 NAS 的第 %1$d / %2$d 天</string>
+    <string name="nas_match_done">关联了 %1$d 张，在发布更改里审阅</string>
+    <string name="nas_match_failed">没能读到 NAS，再试一次</string>
     <string name="nas_failed_not_found">UGREENlink 找不到这台 NAS</string>
     <string name="nas_failed_unreachable">连不上 NAS</string>
     <string name="nas_failed_sign_in">没登录上 NAS</string>

@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import cc.hyoban.moments.Prefs
 import cc.hyoban.moments.Setting
 import cc.hyoban.moments.data.local.PhotoRef
+import cc.hyoban.moments.data.spec.NasLink
 import cc.hyoban.moments.logWarning
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.decodeToImageBitmap
@@ -451,7 +452,7 @@ class Nas(
             progress(index, 0f)
             val request = stream(photo, NasProtocol.ORIGINAL)
             withContext(Dispatchers.IO) {
-                keep.existing(photo) ?: cached(photo)?.let { file ->
+                (keep.existing(photo) ?: cached(photo)?.let { file ->
                     // Already down to be zoomed into: copied, not fetched again.
                     keep.save(photo) { out -> file.inputStream().use { it.copyTo(out) } }.also { progress(index, 1f) }
                 } ?: keep.save(photo) { out ->
@@ -473,9 +474,36 @@ class Nas(
                             }
                         }
                     }
-                }
+                }).also { remember(it, photo) }
             }
         }.also { progress(photos.size, 0f) }
+
+    // Which NAS photo each original kept on the device came from -----------------------------
+
+    /**
+     * The NAS photo [ref] was kept from, for a Moment written with it to link it ([NasLink]);
+     * null for any other photo. Kept for the last [LINKS] originals kept, from one visit to the next.
+     */
+    fun linkOf(ref: PhotoRef): NasLink? = links()[ref.toString()]
+
+    private fun remember(ref: PhotoRef, photo: NasPhoto) = synchronized(this) {
+        val next = LinkedHashMap(links())
+        next.remove(ref.toString())
+        next[ref.toString()] = photo.link
+        while (next.size > LINKS) next.remove(next.keys.first())
+        prefs.edit { putString("links", Json.encodeToString(next.mapValues { (_, l) -> listOf(l.id.toString(), l.uploaded.toString(), l.name) })) }
+    }
+
+    private fun links(): Map<String, NasLink> = runCatching {
+        Json.decodeFromString<Map<String, List<String>>>(prefs.getString("links", null) ?: return emptyMap())
+            .mapValues { (_, v) -> NasLink(v[0].toLong(), v[1].toLong(), v[2]) }
+    }.getOrDefault(emptyMap())
+
+    /** The photo [link] names, enough for its stream: its thumbnails, its original and its EXIF. */
+    fun photo(link: NasLink) = NasPhoto(
+        link.id, link.name, 0, null, null, video = link.name.substringAfterLast('.', "").lowercase() in setOf("mp4", "mov"), live = false,
+        duration = null, taken = null, uploaded = link.uploaded,
+    )
 
     private fun deleteBody(photos: List<NasPhoto>) = buildJsonObject {
         putJsonArray("picture_ids") { photos.forEach { add(JsonPrimitive(it.id)) } }
@@ -503,6 +531,7 @@ class Nas(
         private const val SPOTS = 5000
         private const val HEAD = 256 * 1024
         private const val THUMBS = 400
+        private const val LINKS = 500
         private const val TAG = "Moments"
     }
 }

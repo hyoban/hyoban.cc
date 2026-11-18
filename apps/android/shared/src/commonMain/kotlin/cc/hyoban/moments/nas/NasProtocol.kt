@@ -43,6 +43,9 @@ data class NasPhoto(
     val album: NasAlbum? = null,
 ) {
     val key get() = "nas/$id"
+
+    /** What a Moment's photo kept from it keeps of it ([NasLink]). */
+    val link get() = cc.hyoban.moments.data.spec.NasLink(id, uploaded, name)
     val extension get() = name.substringAfterLast('.', "").lowercase()
     val mime: String get() = when (extension) {
         "jpg", "jpeg" -> "image/jpeg"

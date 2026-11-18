@@ -475,6 +475,7 @@
     <string name="change_text">text</string>
     <string name="change_photos">photos</string>
     <string name="change_cover">covers</string>
+    <string name="change_nas">NAS originals</string>
     <string name="change_cover_off">No longer used as covers</string>
     <string name="change_cover_on">Used as covers again</string>
     <string name="change_time">time</string>
@@ -1491,6 +1492,8 @@
     <string name="map_photos_here">This spot</string>
     <string name="album_published">Published</string>
     <string name="album_open_moment">Open Moment</string>
+    <string name="album_in_moment">In a Moment</string>
+    <string name="album_save_nas_original">Save the NAS original</string>
     <string name="album_no_nas">No NAS connected</string>
     <string name="album_no_nas_note">Fill in the UGREEN NAS's ID, user and password in Sync &amp; sources.</string>
     <string name="album_save_pictures">Save to Pictures</string>
@@ -1501,6 +1504,11 @@
     <string name="nas_link_note">In the NAS’s Control Panel › Remote Access</string>
     <string name="action_stop_nas">Disconnect</string>
     <string name="settings_nas_note">Choose Photos shows the photos in this NAS’s Photos app, saves an original to the phone when it’s added, and can delete. With a UGREENlink ID, UGREEN is asked where the NAS is: at home it’s reached directly, elsewhere through UGREEN’s relay. The password stays on this phone.</string>
+    <string name="nas_match">Link published photos</string>
+    <string name="nas_match_note">Finds the Moments’ photos on the NAS by when they were taken and their shape; review the changes in Publish changes</string>
+    <string name="nas_match_reading">Reading the NAS, day %1$d of %2$d</string>
+    <string name="nas_match_done">Linked %1$d; review them in Publish changes</string>
+    <string name="nas_match_failed">Couldn’t read the NAS; try again</string>
     <string name="nas_failed_not_found">UGREENlink doesn’t know this NAS</string>
     <string name="nas_failed_unreachable">Couldn’t reach the NAS</string>
     <string name="nas_failed_sign_in">Couldn’t sign in to the NAS</string>

@@ -111,7 +111,7 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
     // the gallery, then the NAS; the first listed first, and gone back to when another is given up on.
     var picked by remember { mutableStateOf<Listing?>(null) }
     val own = device.sources(choice.deletion, onFallback, onRefused = { picked = null })
-    val nas = rememberNas(container.nas, choice.deletion)
+    val nas = rememberNas(container, choice.deletion)
     val published = if (album != null) rememberPublished(container) else null
     val sources = when {
         own.isEmpty() -> listOfNotNull(nas, published)

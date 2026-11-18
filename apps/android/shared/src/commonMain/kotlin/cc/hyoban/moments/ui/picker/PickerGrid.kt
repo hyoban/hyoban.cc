@@ -62,7 +62,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.ui.components.LocalTopClearance
+import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
+import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.rememberHaptics
 import cc.hyoban.moments.ui.design.strong
@@ -310,6 +312,11 @@ fun Grid(
                         if (!byMonth) corner?.let {
                             Text(it, style = AppTheme.typography.caption.strong, color = MediaOverlay.content, modifier = Modifier.align(Alignment.BottomStart).padding(6.dp))
                         }
+                        // In a Moment already: published, or waiting to be.
+                        if (!byMonth && pick.linkedMoment != null) Icon(
+                            AppIcons.Cloud, contentDescription = stringResource(Res.string.album_in_moment), tint = MediaOverlay.content,
+                            modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp).size(16.dp),
+                        )
                         // The circle chooses it, its target the corner's 48dp; by the month there is
                         // no room for one, and what is chosen only keeps its number.
                         if (byMonth) {

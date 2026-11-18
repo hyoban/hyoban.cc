@@ -58,6 +58,31 @@
               "utility": {
                 "type": "boolean"
               },
+              "nas": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "uploaded": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "uploaded",
+                  "name"
+                ],
+                "additionalProperties": {}
+              },
               "local": {
                 "type": "object",
                 "properties": {
@@ -258,6 +283,31 @@
               },
               "utility": {
                 "type": "boolean"
+              },
+              "nas": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "uploaded": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "uploaded",
+                  "name"
+                ],
+                "additionalProperties": {}
               },
               "local": {
                 "type": "object",
@@ -493,6 +543,31 @@
               },
               "utility": {
                 "type": "boolean"
+              },
+              "nas": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "uploaded": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "uploaded",
+                  "name"
+                ],
+                "additionalProperties": {}
               },
               "local": {
                 "type": "object",

@@ -8,6 +8,7 @@ import cc.hyoban.moments.data.api.MomentsApi
 import cc.hyoban.moments.data.copy.CopyStore
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
+import cc.hyoban.moments.nas.matchMoments
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.store.BillChange
 import cc.hyoban.moments.data.store.DataStore
@@ -303,6 +304,25 @@ abstract class AppContainer(
     suspend fun updateLocal(moment: MomentRecord, place: Pair<String, Place>?) {
         repository.updateLocal(moment, place)
         recordsChanged()
+    }
+
+    /**
+     * Links the Moments' photos and videos written before they were linked as they were picked to
+     * the same ones on the NAS ([cc.hyoban.moments.nas.NasMatch]), each Moment so changed kept to
+     * be reviewed and published; [progress] is the NAS's days read, of how many. How many it linked.
+     */
+    suspend fun linkNas(progress: (Int, Int) -> Unit): Int {
+        val found = nas.matchMoments(repository.moments.value, progress)
+        var linked = 0
+        found.forEach { (uid, photos) ->
+            val moment = repository.moment(uid) ?: return@forEach
+            val media = moment.media.map { media -> photos[media.uid]?.takeIf { media.nas == null }?.let { media.copy(nas = it.link) } ?: media }
+            if (media == moment.media) return@forEach
+            repository.updateLocal(moment.copy(media = media), null)
+            linked += photos.size
+        }
+        if (linked > 0) recordsChanged()
+        return linked
     }
 
     /**

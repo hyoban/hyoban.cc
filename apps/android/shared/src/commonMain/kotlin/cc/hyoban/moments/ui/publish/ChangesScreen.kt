@@ -243,7 +243,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                             onOpen = { onMoment(change.after.uid) }.takeUnless { busy },
                             onRevert = revert,
                         ) {
-                            ChangedFields(change, places, urls)
+                            ChangedFields(change, places, urls, container.nas)
                         }
                     }
                 }
@@ -737,7 +737,7 @@ private fun MomentWhole(moment: MomentRecord, places: Map<String, Place>, urls: 
 
 /** What a change changed, each under its name; all of it as it is when the site no longer has the Moment. */
 @Composable
-private fun ChangedFields(change: Change, places: Map<String, Place>, urls: MediaUrls) {
+private fun ChangedFields(change: Change, places: Map<String, Place>, urls: MediaUrls, nas: cc.hyoban.moments.nas.Nas) {
     val after = change.after
     val before = change.before
     if (before == null) {
@@ -768,6 +768,17 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
             Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
                 if (marked.isNotEmpty()) CoverChange(AppIcons.PhotoOff, Res.string.change_cover_off, marked, urls)
                 if (unmarked.isNotEmpty()) CoverChange(AppIcons.Image, Res.string.change_cover_on, unmarked, urls)
+            }
+        }
+    }
+    // Photos linked to the NAS's, or no longer: each beside the NAS's own, to see it is the same one.
+    val linkedBefore = before.media.associate { it.uid to it.nas }
+    val relinked = after.media.filter { it.uid in linkedBefore && linkedBefore[it.uid] != it.nas }
+    if (relinked.isNotEmpty()) {
+        any = true
+        Field(Res.string.change_nas) {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                relinked.forEach { media -> NasPair(media, media.nas ?: linkedBefore[media.uid]!!, linked = media.nas != null, urls, nas) }
             }
         }
     }
@@ -802,6 +813,34 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
     }
     if (!any) {
         Text(stringResource(Res.string.note_change_nothing), style = AppTheme.typography.body, color = tokens.tx2)
+    }
+}
+
+/**
+ * A Moment's photo and the NAS's it is [linked] to, side by side; one no longer linked shows the
+ * NAS's faded, as a photo taken out does.
+ */
+@Composable
+private fun NasPair(media: MomentMedia, link: cc.hyoban.moments.data.spec.NasLink, linked: Boolean, urls: MediaUrls, nas: cc.hyoban.moments.nas.Nas) {
+    val thumb by androidx.compose.runtime.produceState<androidx.compose.ui.graphics.ImageBitmap?>(null, link) {
+        value = nas.thumbnail(nas.photo(link))
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.s),
+        modifier = Modifier.testTag("change_nas_${media.uid}"),
+    ) {
+        Thumbnail(media, urls, size = PHOTO_SIZE)
+        Icon(if (linked) AppIcons.Link else AppIcons.Minus, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(16.dp))
+        Box(
+            Modifier.size(PHOTO_SIZE.dp).alpha(if (linked) 1f else DISABLED_ALPHA)
+                .background(tokens.fill, AppTheme.shapes.medium).clip(AppTheme.shapes.medium),
+        ) {
+            thumb?.let {
+                androidx.compose.foundation.Image(it, contentDescription = null, contentScale = androidx.compose.ui.layout.ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            }
+        }
+        Text(link.name, style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 2, modifier = Modifier.weight(1f, fill = false))
     }
 }
 

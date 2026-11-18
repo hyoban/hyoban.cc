@@ -254,11 +254,30 @@ data class MomentMedia(
      * in its own Moment, never picked for a cover, a calendar day or a widget.
      */
     val utility: Boolean? = null,
+    /** The same photo in the NAS's photo app, its original whole; see [NasLink]. */
+    val nas: NasLink? = null,
     val local: LocalMedia? = null,
     val published: PublishedMedia? = null,
     @Transient val extra: JsonObject = NoExtra,
 ) {
     object Serializer : PassthroughSerializer<MomentMedia>(generatedSerializer(), { v, e -> v.copy(extra = e) }, { it.extra })
+}
+
+/**
+ * A Moment's photo as it is in the NAS's photo app: its [id] there, when it was [uploaded], which
+ * the NAS's stream wants with it, and its file's [name], which keeping its original needs. Linked as it is picked from the NAS, or matched later by
+ * when it was taken and its size; the published copy lost its place, and may be smaller or 打码'd.
+ */
+@OptIn(ExperimentalSerializationApi::class)
+@Serializable(with = NasLink.Serializer::class)
+@KeepGeneratedSerializer
+data class NasLink(
+    val id: Long,
+    val uploaded: Long,
+    val name: String,
+    @Transient val extra: JsonObject = NoExtra,
+) {
+    object Serializer : PassthroughSerializer<NasLink>(generatedSerializer(), { v, e -> v.copy(extra = e) }, { it.extra })
 }
 
 /** How something eaten turned out, as the spec names it. */

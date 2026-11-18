@@ -114,6 +114,7 @@ data class PublishedPick(val media: MomentMedia, val record: MomentRecord, overr
     override val choosable get() = false
     override val deletable get() = false
     override val moment get() = record.uid
+    override val nasLink get() = media.nas?.takeIf { source.container.nas.configured }
 
     override suspend fun thumbnail(size: Int): ImageBitmap? = source.still(media, size)
 
@@ -138,8 +139,15 @@ data class PublishedPick(val media: MomentMedia, val record: MomentRecord, overr
             width = media.width, height = media.height, bytes = published?.bytes,
         )
         value = base
-        // A published original keeps its EXIF, but never where it was taken.
-        if (media.type != MediaType.VIDEO && published?.original == true) value = PhotoDetails.readRemote(base, source.container.mediaUrls.asset(published.key))
+        // The NAS's original keeps all its EXIF, where it was taken too; a published original
+        // keeps its EXIF but never that.
+        val nas = source.container.nas
+        val head = nasLink?.takeIf { media.type != MediaType.VIDEO }?.let { nas.head(nas.photo(it)) }
+        value = when {
+            head != null -> PhotoDetails.read(base.copy(name = nasLink?.name ?: base.name)) { head.inputStream() }
+            media.type != MediaType.VIDEO && published?.original == true -> PhotoDetails.readRemote(base, source.container.mediaUrls.asset(published.key))
+            else -> base
+        }
     }.value
 
     /** Its still large over its small one; a video plays over it, a photo zooms in the whole. */

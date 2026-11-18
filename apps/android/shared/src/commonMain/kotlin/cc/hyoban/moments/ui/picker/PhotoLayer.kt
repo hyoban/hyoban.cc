@@ -91,7 +91,7 @@ fun rememberPhotoLayer(container: AppContainer, onWrite: () -> Unit): PhotoLayer
     val choice = rememberPhotoChoice(Int.MAX_VALUE, alwaysChoosing = false, onWrite = { refs -> container.offerPhotos(refs); onWrite() })
     val device = choice.device
     val own = device.places(choice.deletion)
-    val nas = rememberNas(container.nas, choice.deletion)
+    val nas = rememberNas(container, choice.deletion)
     val all = own + listOfNotNull(nas.places.takeIf { container.nas.configured })
     val places = remember(all) { MergedPlaces(all) }
     val videos = device.rememberVideos()

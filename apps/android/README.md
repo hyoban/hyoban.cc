@@ -722,12 +722,27 @@ of the Moments, the private ones too and in 演示模式 only what is shown, new
 day, each the site's own (or the phone's, not published yet). They are only looked at: the viewer
 shares one as a Moment's viewer does and 打开时刻 takes it to its Moment; none is chosen or deleted here.
 
+**Linked to the NAS.** A Moment's photo or video keeps which one of the NAS's it is (`nas` in the
+record: its id there, when it was uploaded and its file's name, which the NAS's stream wants): the
+published copy has lost where it was taken, and may be smaller or 打码'd, while the NAS keeps the
+original whole. One added from the NAS is linked as it is written (the NAS remembers which of its
+photos each original it kept came from, the last five hundred); for those written before, 关联已发布的照片
+under 同步与来源's NAS reads the NAS's timeline for only the days they were taken on and links each to
+the one taken at the same second on the clock, a photo for a photo and a video for a video, of the
+same shape upright or not (`NasMatch`); two alike are told apart only by being the same size, else
+left unlinked. Each Moment so changed waits in 发布更改 like any other edit, under NAS 原图 each photo
+beside the NAS's thumbnail and its file's name, to see they are the same. Linked, a published
+photo's info is read from the NAS's original, where it was taken too (only ever on the device), and its
+viewer keeps the NAS's original (存 NAS 原图) as the NAS's own are kept; the NAS's photo marks itself as in a
+Moment in the grid, its viewer opening that Moment, and it leaves 地图's photos, where the Moment's place
+stands for it already. The site never shows the link.
+
 **地图's photos.** The map's 照片 switch, over 足迹 down its side and off at first, lays 相册's
 photos that know where they were taken over the map (`PhotoLayer`, `HeapsOver`): the gallery's, whose
 places the media store doesn't keep, so each photo's EXIF is read once from its original in the
 background and kept on the phone (`GalleryLocations`, a file in `noBackupFilesDir`, read again only for
-a photo new or changed), and the NAS's (above). Published photos aren't among them: they are the
-map's places already. Photos within 64 points of each other on screen stand as one heap (`PhotoHeaps`:
+a photo new or changed), and the NAS's (above). Published photos aren't among them, nor the NAS's linked to
+one: they are the map's places already. Photos within 64 points of each other on screen stand as one heap (`PhotoHeaps`:
 a grid fixed to the world, then neighbours joined), one of them showing with how many, grouped again
 each half zoom; a year picked from the legend keeps that year's. A heap tapped brings its photos up
 from the foot as 相册's grid, the map staying above: looked at, and chosen (held, or 选择) to write,

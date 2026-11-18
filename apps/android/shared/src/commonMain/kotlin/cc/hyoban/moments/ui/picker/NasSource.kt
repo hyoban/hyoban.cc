@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -56,10 +58,18 @@ import java.time.ZoneId
 
 /** The NAS's photos, asked for only once they are listed, and its albums then, for the title's menu. */
 @Composable
-fun rememberNas(nas: Nas, deletion: Deletion): NasSource {
+fun rememberNas(container: cc.hyoban.moments.AppContainer, deletion: Deletion): NasSource {
     val device = cc.hyoban.moments.ui.LocalDevice.current
     val scope = rememberCoroutineScope()
-    return remember { NasSource(nas, device::toast, scope, deletion) }
+    val source = remember { NasSource(container.nas, device::toast, scope, deletion) }
+    val moments by container.shownMoments.collectAsStateWithLifecycle()
+    source.linked = remember(moments) { nasLinked(moments) }
+    return source
+}
+
+/** Each NAS photo a Moment's photo or video is linked to, by its id there, and that Moment's uid. */
+fun nasLinked(moments: List<cc.hyoban.moments.data.spec.MomentRecord>): Map<Long, String> = buildMap {
+    moments.forEach { record -> record.media.forEach { media -> media.nas?.let { put(it.id, record.uid) } } }
 }
 
 class NasSource(
@@ -69,6 +79,9 @@ class NasSource(
     private val scope: CoroutineScope,
     private val deletion: Deletion,
 ) : PhotoSource {
+    /** The NAS photos in a Moment, by their id, and that Moment's uid ([nasLinked]). */
+    var linked by mutableStateOf<Map<Long, String>>(emptyMap())
+
     private var albums by mutableStateOf<List<NasAlbum>>(emptyList())
     /** The one listing read, the timeline or an album: another starts again. */
     var list by mutableStateOf<NasList?>(null)
@@ -236,6 +249,7 @@ data class NasSlot(val list: NasList, val index: Int, override val day: LocalDat
 data class NasPick(val photo: NasPhoto, override val source: NasSource, val listedDay: LocalDate? = null) : Pick {
     override val key get() = photo.key
     override val day get() = listedDay ?: photo.taken?.toLocalDate()
+    override val linkedMoment get() = source.linked[photo.id]
 
     /** The NAS keeps its own thumbnails, small for the grid and big for the viewer, and its client caches them. */
     override suspend fun thumbnail(size: Int): ImageBitmap? =
@@ -324,18 +338,23 @@ class NasPlaces(private val source: NasSource, private val scope: CoroutineScope
     private var known by mutableStateOf<Map<Long, NasSpot>?>(null)
     private var failure by mutableStateOf<NasFailure?>(null)
 
-    override var spots by mutableStateOf<List<Spot>?>(null)
-        private set
+    private var read by mutableStateOf<List<Spot>?>(null)
+
+    /** Its places but those of photos in a Moment, which 地图 shows as that Moment's place already. */
+    override val spots: List<Spot>? by derivedStateOf {
+        val linked = source.linked
+        read?.let { all -> if (linked.isEmpty()) all else all.filter { it.id !in linked } }
+    }
 
     override val failed: (@Composable () -> Unit)?
         get() = failure?.let { why -> { Failed(AppIcons.Nas, nasReason(why), Res.string.nas_failed_note) { failure = null; scope.launch { load() } } } }
 
     override suspend fun load() {
-        if (spots != null || failure != null || !nas.configured) return
+        if (read != null || failure != null || !nas.configured) return
         try {
             val read = nas.spots()
             known = read.associateBy { it.id }
-            spots = read.map { Spot(it.id, it.latitude, it.longitude) }
+            this.read = read.map { Spot(it.id, it.latitude, it.longitude) }
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             logWarning("Moments", "nas: places not read", e)
@@ -385,7 +404,7 @@ class NasPlaces(private val source: NasSource, private val scope: CoroutineScope
 
     /** What was deleted leaves the map and the heap opened. */
     fun removed(ids: Set<Long>) {
-        spots = spots?.filter { it.id !in ids }
+        read = read?.filter { it.id !in ids }
         photos.removeAll { it.id in ids }
         opened = opened?.filter { it.id !in ids }?.takeIf { it.isNotEmpty() }
     }
