@@ -739,6 +739,12 @@ photo's info is read from the NAS's original, where it was taken too (only ever 
 viewer keeps the NAS's original (存 NAS 原图) as the NAS's own are kept; the NAS's photo marks itself as in a
 Moment in the grid, its viewer opening that Moment, and it leaves 地图's photos, where the Moment's place
 stands for it already. The site never shows the link.
+In a published Moment's editor, the viewer puts a linked photo back as the NAS's original (换成 NAS 原图),
+as for one the site has only a compressed copy of: the original comes down as one picked from the NAS
+does and goes in where the old one was, a photo new here, its faces and plates covered as it comes in
+and uploaded as a new photo (a new uid, so a new key) when the change is published, keeping the old
+one's alt text and 留档; where it was taken moves the Moment nowhere. The old object stays in R2,
+as a photo taken out of a Moment does.
 
 **地图's photos.** The map's 照片 switch, over 足迹 down its side and off at first, lays 相册's
 photos that know where they were taken over the map (`PhotoLayer`, `HeapsOver`): the gallery's, whose

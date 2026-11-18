@@ -1495,6 +1495,8 @@
     <string name="album_open_moment">打开时刻</string>
     <string name="album_in_moment">已在时刻里</string>
     <string name="album_save_nas_original">存 NAS 原图</string>
+    <string name="action_replace_nas">换成 NAS 原图</string>
+    <string name="message_replace_failed">没能从 NAS 取到原图</string>
     <string name="album_no_nas">还没有接上 NAS</string>
     <string name="album_no_nas_note">在 同步与来源 里填好绿联 NAS 的 ID、用户名和密码。</string>
     <string name="album_save_pictures">存到「图片」</string>

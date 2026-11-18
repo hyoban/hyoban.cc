@@ -1494,6 +1494,8 @@
     <string name="album_open_moment">Open Moment</string>
     <string name="album_in_moment">In a Moment</string>
     <string name="album_save_nas_original">Save the NAS original</string>
+    <string name="action_replace_nas">Use the NAS original</string>
+    <string name="message_replace_failed">Couldn’t get the original from the NAS</string>
     <string name="album_no_nas">No NAS connected</string>
     <string name="album_no_nas_note">Fill in the UGREEN NAS's ID, user and password in Sync &amp; sources.</string>
     <string name="album_save_pictures">Save to Pictures</string>

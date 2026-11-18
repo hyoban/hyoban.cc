@@ -147,6 +147,7 @@ import androidx.compose.ui.semantics.contentDescription
 import cc.hyoban.moments.data.spec.LocalMedia
 import cc.hyoban.moments.ui.viewer.MomentMediaViewer
 import cc.hyoban.moments.ui.components.Tooltip
+import cc.hyoban.moments.ui.design.Spinner
 import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
@@ -259,6 +260,10 @@ fun NewMomentScreen(
         originalMedia.mapNotNull { (ref, media) -> media.local?.masks?.takeIf { it.isNotEmpty() }?.let { ref to it } }.toMap()
     }
     var masks by remember { mutableStateOf(originalMasks) }
+    // 换成 NAS 原图: each photo put in for a published one, by the one it stands in for, whose alt
+    // text it keeps; and the one being fetched.
+    var replaced by remember { mutableStateOf(emptyMap<PhotoRef, MomentMedia>()) }
+    var replacing by remember { mutableStateOf<PhotoRef?>(null) }
     // Where the patches are drawn from: a photo saved with them, the copy as it was picked.
     val unmaskedOf: (PhotoRef) -> PhotoRef = { ref -> originalMedia[ref]?.local?.unmasked?.toPhotoRef() ?: ref }
     // The patch chosen in the viewer, for the bar to change its style, and the style new ones take,
@@ -368,7 +373,8 @@ fun NewMomentScreen(
 
     // Where: just where the first photo that says was taken, as a new place named after what
     // is around it, else none until one is chosen; the map finds the phone when asked.
-    val photoFix = photos.firstNotNullOfOrNull { infos[it]?.fix }
+    // A photo put in for a published one (换成 NAS 原图) is the same photo: it moves the Moment nowhere.
+    val photoFix = photos.filter { it !in replaced }.firstNotNullOfOrNull { infos[it]?.fix }
     val fix = photoFix ?: stayFix
     LaunchedEffect(fix) {
         if (fix != null && geocoded?.first != fix) geocoded = fix to container.placeSearch.around(fix)
@@ -451,7 +457,7 @@ fun NewMomentScreen(
                     // No new photo goes in before its faces and plates have been looked for.
                     if (withMoment) coverFound(unscanned)
                     val moment = if (withMoment) {
-                        val (moment, newPlace) = buildMoment(container, text, photos, utility, stills, masks, infos, time, place, cost, private, original, originalMedia, stayUid)
+                        val (moment, newPlace) = buildMoment(container, text, photos, utility, stills, masks, infos, time, place, cost, private, original, originalMedia, stayUid, replaced)
                         // Kept as what it now is, a Moment or a check-in, named after its place when that moved.
                         if (original == null || momentChanged) {
                             val venue = when (place) {
@@ -849,6 +855,34 @@ fun NewMomentScreen(
                 },
                 top = { shown ->
                     val ref = refs[shown.uid] ?: return@MomentMediaViewer
+                    // 换成 NAS 原图: a published photo linked to the NAS, put back as the NAS's original,
+                    // a photo new here: its faces and plates covered as it comes in, uploaded anew.
+                    val link = originalMedia[ref]?.takeIf { it.published != null }?.nas?.takeIf { container.nas.configured }
+                    if (link != null) Tooltip(stringResource(Res.string.action_replace_nas), below = true) {
+                        IconButton(
+                            onClick = {
+                                val old = originalMedia.getValue(ref)
+                                replacing = ref
+                                scope.launch {
+                                    try {
+                                        val fresh = container.nas.download(listOf(container.nas.photo(link))) { _, _ -> }.single()
+                                        photos = photos.map { if (it == ref) fresh else it }
+                                        if (ref in utility) utility = utility - ref + fresh
+                                        replaced = replaced + (fresh to old)
+                                    } catch (e: Exception) {
+                                        if (e is kotlinx.coroutines.CancellationException) throw e
+                                        cc.hyoban.moments.logWarning("Moments", "nas: original not put in", e)
+                                        showMessage(textOf(Res.string.message_replace_failed))
+                                    } finally { replacing = null }
+                                }
+                            },
+                            enabled = replacing == null,
+                            modifier = Modifier.testTag("viewer_replace_nas"),
+                        ) {
+                            if (replacing == ref) Spinner(Modifier.size(20.dp), color = MediaOverlay.content)
+                            else Icon(AppIcons.Nas, contentDescription = stringResource(Res.string.action_replace_nas), tint = MediaOverlay.content)
+                        }
+                    }
                     val label = stringResource(if (ref in videoPhotos) Res.string.action_remove_video else Res.string.action_remove_photo)
                     IconButton(
                         onClick = {
@@ -1449,6 +1483,7 @@ private suspend fun buildMoment(
     original: MomentRecord? = null,
     originalMedia: Map<PhotoRef, MomentMedia> = emptyMap(),
     uid: String? = null,
+    replaced: Map<PhotoRef, MomentMedia> = emptyMap(),
 ): Pair<MomentRecord, Pair<String, Place>?> {
     val now = recordTime()
     val directory = File(container.localStore.root, "media")
@@ -1507,6 +1542,8 @@ private suspend fun buildMoment(
         val size = drawn?.let { Photos.read(it.file.toPhotoRef()) } ?: info
         MomentMedia(
             uid = uid,
+            // In for a published one (换成 NAS 原图), it says what that one said.
+            alt = replaced[uri]?.alt.orEmpty(),
             type = when {
                 info.video -> MediaType.VIDEO
                 copied.video != null -> MediaType.LIVE_PHOTO
