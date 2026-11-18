@@ -60,7 +60,7 @@ what recording is missing in 需要 at its top. Notifications for publishing are
 
 ## Pages
 
-Three tabs float at the foot of the screen, with 记录 beside them; on a window 840dp wide or
+Four tabs float at the foot of the screen (时间线, 地图, 相册 and 我), with 记录 beside them; on a window 840dp wide or
 more, or a phone on its side, the same capsule stands on its end down the side, 记录 under it:
 on a phone on its side, down the side away from the camera, so it reads the same turned
 either way. On a phone on its side the status and navigation bars are put away (a swipe from
@@ -699,10 +699,27 @@ UbiquitousBear/shutter-bridge's measurements on an a7C II for the Wi‑Fi one.
   one already there kept, and join the Moment, its time and place from the photo as any
   other. Leaving the page leaves the camera's network.
 
+## 相册
+
+相册 (`moments://album`), the third tab, is 选照片 (below) looked through: the same sources in its
+title, the same grid, calendar, map and viewer, and the same page (`ui/picker/PhotoPicker.kt`), with
+the tab's 记录 beside the tabs. Its bar keeps to two circles under the title in the middle, so the
+NAS's map is switched to from the title's menu. Its photos have no circles until 选择 in the bar, or a photo held,
+starts choosing; held and dragged on, every photo from it to the finger is chosen with it, as the
+system's gallery does (in 选照片 too). Choosing, the circles show, 选择 turns into 不选了 (as does
+back), and the tabs give way to a bar of what to do with those chosen, as many as liked: 分享 hands
+them to the system's share sheet, 存到相册 (once the camera's or the NAS's are chosen) saves those to
+the gallery's Here album and lets the choice go, 删除 deletes those chosen from the source shown as
+选照片's does, and 写时刻, 记录's ink button grown to hold its words, opens a new Moment with them in the order chosen, set back past the nine a
+Moment holds, which the subtitle then says. The camera's and the NAS's are saved to the Here album
+first for all three, with how far it is and 停止 at the foot. Looked through, the viewer opens over the
+tabs and its foot has 分享, 存到相册 for the camera's and the NAS's, and 用这张写时刻 for the photo
+shown; choosing, it chooses as 选照片's does, with 写时刻.
+
 ## 选照片
 
-记录's photo row ends with two tiles: 加照片 opens 选照片 over the Moment, in place of the system's
-picker, and the other opens the phone's camera app. 选照片 reads the gallery itself (`ui/picker`):
+记录's photo row ends with two tiles: 加照片 opens 选照片, 相册 in its choosing look, over the Moment,
+in place of the system's picker, and the other opens the phone's camera app. 选照片 reads the gallery itself (`ui/picker`):
 the first time it asks for the photos and videos with the photos' places (`READ_MEDIA_IMAGES`,
 `READ_MEDIA_VIDEO`, `ACCESS_MEDIA_LOCATION`); declined, the system's documents picker opens instead.
 Given only some photos (Android 14 and later), a row at the top says how many and 更改 asks the
@@ -908,13 +925,13 @@ time, open it with right-click › Open (or `xattr -dr com.apple.quarantine /App
 ## On the phone, from adb
 
 Every page has a `moments://` link (`routeOf` in `ui/MomentsApp.kt` lists them: `moments`,
-`map`, `settings` for 我, `ledger`, `moment/{uid}`, `trip/{id}`, `day/{YYYY-MM-DD}`,
+`map`, `album`, `settings` for 我, `ledger`, `moment/{uid}`, `trip/{id}`, `day/{YYYY-MM-DD}`,
 `place/{id}`, …), which `adb shell am start -d` opens. Opening the app, a link's page comes over the tab it is under (a
 trip or a place over 地图, a setting, the ledger or the changes over 我, the rest over 时间线), so
 back, the top bar's or the system's, leads to that tab and the tabs go on from there; opened
 while the app is on screen, it goes over the page shown. A page a widget opens stands alone
 over the app, and back closes it onto the app as it was. Buttons, tabs and cards carry test
-tags that `uiautomator dump` reports as resource ids (`tab_moments`, `tab_map`, `tab_me`, `back`,
+tags that `uiautomator dump` reports as resource ids (`tab_moments`, `tab_map`, `tab_album`, `tab_me`, `back`,
 `moment_{uid}`, `media_{uid}_{index}`, `trip_{id}`, `day_{date}`, …), and `scripts/ui.py`
 uses both:
 

@@ -479,7 +479,7 @@ private const val VIEW_FADE_IN_MS = 210
  * beside the floating tabs it has their soft shadow, [inRail] none, level with the rail.
  */
 @Composable
-private fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false) {
+fun NewMomentButton(onClick: () -> Unit, inRail: Boolean = false) {
     val label = stringResource(Res.string.action_new_moment)
     Tooltip(label) {
         FloatingActionButton(

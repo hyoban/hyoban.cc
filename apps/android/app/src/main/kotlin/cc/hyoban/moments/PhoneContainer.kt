@@ -173,6 +173,11 @@ class PhoneContainer private constructor(
         _sharedPhotos.value = _sharedPhotos.value + copies
     }
 
+    /** Photos chosen in 相册 for a new Moment, which takes them as it takes those shared in; the gallery's own, not copies. */
+    fun offerPhotos(uris: List<Uri>) {
+        _sharedPhotos.value = _sharedPhotos.value + uris
+    }
+
     private val _sharedExport = MutableStateFlow<Uri?>(null)
 
     /** An iCost export shared into the app, as the app's own copy, until the ledger's import takes it. */

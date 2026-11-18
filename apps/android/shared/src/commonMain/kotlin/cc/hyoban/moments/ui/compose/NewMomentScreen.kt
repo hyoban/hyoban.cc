@@ -1571,7 +1571,8 @@ private fun refusalText(refusal: Refusal): StringResource = when (refusal) {
 
 /** The side padding of a row, outside the page's gutter so its icon and words line up with the words above. */
 private val ROW_PADDING = 16.dp
-private const val MAX_PHOTOS = 9
+/** How many photos and videos a Moment holds. */
+const val MAX_PHOTOS = 9
 private val CURSOR_ROOM = 2.dp
 /** How wide the site's photos are fetched for the strip: its tiles, at a phone's density. */
 private const val PHOTO_WIDTH = 480

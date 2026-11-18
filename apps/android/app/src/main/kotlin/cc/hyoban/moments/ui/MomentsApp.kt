@@ -228,7 +228,7 @@ private fun TabIcon(tab: Tab, selected: Boolean, pending: Int) {
 @Composable
 private fun TabBar(selected: Int, pending: Int, onTab: (Int) -> Unit, modifier: Modifier = Modifier) {
     FloatingBar(modifier.selectableGroup()) {
-        Tab.entries.forEachIndexed { index, tab -> TabItem(tab, index == selected, pending, Modifier.size(64.dp, 48.dp)) { onTab(index) } }
+        Tab.entries.forEachIndexed { index, tab -> TabItem(tab, index == selected, pending, Modifier.size(56.dp, 48.dp)) { onTab(index) } }
     }
 }
 
@@ -256,6 +256,7 @@ private val RAIL_WIDTH = 80.dp
 private enum class Tab(val route: Any, val type: KClass<*>, val label: StringResource, val icon: ImageVector, val selectedIcon: ImageVector) {
     MOMENTS(Feed, Feed::class, Res.string.tab_moments, AppIcons.Timeline, AppIcons.TimelineFill),
     MAP(Atlas, Atlas::class, Res.string.tab_map, AppIcons.Map, AppIcons.MapFill),
+    ALBUM(Album, Album::class, Res.string.tab_album, AppIcons.Photos, AppIcons.PhotosFill),
     ME(Preferences, Preferences::class, Res.string.tab_me, AppIcons.Me, AppIcons.MeFill),
 }
 
@@ -662,6 +663,13 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                         onMap = { showOnMap(MapFocus.Place(it)) },
                                     )
                                 }
+                                screen<Album> {
+                                    cc.hyoban.moments.ui.picker.AlbumScreen(
+                                        container,
+                                        onNew = { openEditor(null, false) },
+                                        onWrite = { navController.navigate(opened(NewMoment())) },
+                                    )
+                                }
                                 screen<Preferences> {
                                     MeScreen(
                                         container,
@@ -1052,7 +1060,7 @@ fun pagesOf(route: Any): List<Any> {
 
 /** The tab a page is reached from: the map's trips and places, 我's settings, the ledger and the changes, the Moments' the rest. */
 private fun tabOf(route: Any): Any = when (route) {
-    Feed, Atlas, Preferences -> route
+    Feed, Atlas, Album, Preferences -> route
     is Trip, is TripEdit, is TripPlay, is PlaceMoments -> Atlas
     SyncSettings, Imports, FootprintSettings, SideKeySettings, CameraSettings, Items, Homes, Changes, is Things, is Occasions,
     is LedgerHome, is LedgerEntry, is LedgerBill, is LedgerAccount, is LedgerAccountEdit, is LedgerSettings, is LedgerList,
@@ -1099,6 +1107,7 @@ fun routeOf(link: Uri): Any? {
     return when (link.host) {
         "moments" -> Feed
         "map" -> Atlas
+        "album" -> Album
         // The trips are listed in the map's sheet.
         "trips" -> Atlas
         "settings" -> Preferences

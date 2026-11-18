@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -101,6 +102,8 @@ internal fun Viewer(
     busy: Boolean,
     onToggle: (Pick) -> Unit,
     addButton: @Composable () -> Unit,
+    /** What the foot holds in place of choosing and [addButton]: 相册's, looked through, for the photo shown. */
+    lead: (@Composable RowScope.(Pick) -> Unit)? = null,
     onDelete: (Pick) -> Unit,
     onClose: () -> Unit,
 ) {
@@ -153,7 +156,8 @@ internal fun Viewer(
         footer = {
             if (current != null) Row(Modifier.padding(start = Space.gutter, end = Space.gutter, bottom = Space.s), verticalAlignment = Alignment.CenterVertically) {
                 val index = order[current.key] ?: -1
-                if (current.choosable) Row(
+                if (lead != null) lead(current)
+                else if (current.choosable) Row(
                     Modifier.weight(1f).height(48.dp)
                         .clickable(enabled = enabled && (index >= 0 || !full), role = Role.Checkbox) { onToggle(current) }
                         .semantics { selected = index >= 0 }
@@ -164,7 +168,7 @@ internal fun Viewer(
                     ChoiceMark(index, Modifier.size(26.dp))
                     Text(stringResource(if (index >= 0) Res.string.camera_chosen else Res.string.camera_choose), style = AppTheme.typography.body, color = MediaOverlay.content)
                 } else Text(stringResource(Res.string.camera_raw_kept), style = AppTheme.typography.body, color = MediaOverlay.content, modifier = Modifier.weight(1f))
-                addButton()
+                if (lead == null) addButton()
             }
         },
         overlay = {

@@ -104,10 +104,16 @@ internal fun Grid(
     empty: Boolean = true,
     /** The day the calendar asked for, and where it opens; none where there is no calendar. */
     jump: DateJump? = null,
+    /** Whether the photos have their circles: 相册 looked through has none until it is choosing. */
+    circles: Boolean = true,
+    /** A photo held, then the photos from it to the one under the finger as it drags on; none where holding does nothing. */
+    onHold: ((Pick) -> Unit)? = null,
+    onHoldOver: ((List<Pick>) -> Unit)? = null,
     onOpen: (Pick) -> Unit,
 ) {
     val today = remember { LocalDate.now() }
     val byMonth = density == 2
+    val byMonthNow = rememberUpdatedState(byMonth)
     val groups: List<Pair<Any?, List<Pick>>> = remember(shown, byMonth) {
         grouped(shown, byMonth)
     }
@@ -229,7 +235,32 @@ internal fun Grid(
     }
     // Kept across recompositions: a new gesture handler would cut short the pinch under way.
     val pinchModifier = remember { Modifier.pinchGesture({ onPinchStart(it) }, { onPinch(it) }, { onPinchEnd() }) }
-    Box(Modifier.fillMaxSize().then(pinchModifier)) {
+    // Held, a photo is chosen, and dragged on, every photo from it to the one under the finger,
+    // in the order the grid shows them, as the system's gallery does.
+    val flat by rememberUpdatedState(groups.flatMap { it.second })
+    val hold by rememberUpdatedState(onHold)
+    val holdOver by rememberUpdatedState(onHoldOver)
+    val pickAt: (Offset) -> Pick? = { at ->
+        state.layoutInfo.visibleItemsInfo.firstOrNull { item ->
+            at.x >= item.offset.x && at.x < item.offset.x + item.size.width && at.y >= item.offset.y && at.y < item.offset.y + item.size.height
+        }?.key?.let { key -> flat.firstOrNull { it.key == key } }
+    }
+    val holdModifier = remember {
+        var anchor = -1
+        Modifier.holdGesture(
+            onStart = { at ->
+                val pick = pickAt(at)?.takeIf { hold != null && byMonthNow.value.not() }
+                anchor = pick?.let { flat.indexOf(it) } ?: -1
+                if (pick != null) { haptics.lift(); hold?.invoke(pick) }
+                pick != null
+            },
+            onDrag = { at ->
+                val over = pickAt(at)?.let { flat.indexOf(it) }?.takeIf { it >= 0 }
+                if (over != null && anchor >= 0) holdOver?.invoke(flat.subList(minOf(anchor, over), maxOf(anchor, over) + 1))
+            },
+        )
+    }
+    Box(Modifier.fillMaxSize().then(pinchModifier).then(holdModifier)) {
         LazyVerticalGrid(
             GridCells.Fixed(across[density]),
             Modifier.fillMaxSize().graphicsLayer {
@@ -283,7 +314,7 @@ internal fun Grid(
                         // no room for one, and what is chosen only keeps its number.
                         if (byMonth) {
                             if (index >= 0) ChoiceMark(index, Modifier.align(Alignment.TopEnd).padding(4.dp).size(18.dp))
-                        } else if (pick.choosable) Box(
+                        } else if (pick.choosable && circles) Box(
                             Modifier.align(Alignment.TopEnd).size(48.dp)
                                 .clickable(enabled = enabled && !setBack, role = Role.Checkbox, onClickLabel = stringResource(Res.string.camera_choose)) { onToggle(pick) }
                                 .testTag("picker_choose_${pick.key}"),
@@ -318,6 +349,35 @@ private class Pinch {
     var raw = 1f
     var zone = 0
     var settle: Job? = null
+}
+
+/**
+ * One finger held still on the grid for a long press: [onStart] where, and if it takes it, the
+ * finger dragged on is [onDrag]ged, the grid not scrolling meanwhile and the tile under it not
+ * opening when it lifts. Seen before the grid and its tiles, which a finger that moves first keeps.
+ */
+private fun Modifier.holdGesture(onStart: (Offset) -> Boolean, onDrag: (Offset) -> Unit) = pointerInput(Unit) {
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        val let = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                val change = event.changes.firstOrNull { it.id == down.id }
+                if (change == null || !change.pressed || event.changes.size > 1 ||
+                    (change.position - down.position).getDistance() > viewConfiguration.touchSlop
+                ) break
+            }
+            true
+        }
+        if (let != null || !onStart(down.position)) return@awaitEachGesture
+        while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+            change.consume()
+            if (!change.pressed) break
+            onDrag(change.position)
+        }
+    }
 }
 
 /** The step a pinch to [raw] lets go at from [density]: a fifth closer or wider, one step at most. */

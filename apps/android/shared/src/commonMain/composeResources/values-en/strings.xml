@@ -1479,6 +1479,14 @@
     <string name="picker_heap_description">%1$d photos</string>
     <string name="picker_map_empty">No photos with a place on the NAS</string>
     <string name="picker_video_description">Video %1$s</string>
+    <string name="tab_album">Photos</string>
+    <string name="album_select">Select</string>
+    <string name="album_select_done">Done</string>
+    <string name="album_write">Write a Moment</string>
+    <string name="album_write_one">Write with this</string>
+    <string name="album_save">Save to gallery</string>
+    <string name="album_saving">Saving %1$d of %2$d to the gallery</string>
+    <string name="album_nine">A Moment holds nine</string>
     <string name="section_nas">UGREEN NAS</string>
     <string name="nas_photos">Photos</string>
     <string name="nas_as">%1$s · %2$s</string>

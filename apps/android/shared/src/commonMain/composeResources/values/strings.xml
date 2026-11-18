@@ -1480,6 +1480,14 @@
     <string name="picker_heap_description">%1$d 张照片</string>
     <string name="picker_map_empty">NAS 里没有带位置的照片</string>
     <string name="picker_video_description">视频 %1$s</string>
+    <string name="tab_album">相册</string>
+    <string name="album_select">选择</string>
+    <string name="album_select_done">不选了</string>
+    <string name="album_write">写时刻</string>
+    <string name="album_write_one">用这张写时刻</string>
+    <string name="album_save">存到相册</string>
+    <string name="album_saving">正在存到相册 %1$d / %2$d</string>
+    <string name="album_nine">一条时刻最多九张</string>
     <string name="section_nas">绿联 NAS</string>
     <string name="nas_photos">相册</string>
     <string name="nas_as">%1$s · %2$s</string>

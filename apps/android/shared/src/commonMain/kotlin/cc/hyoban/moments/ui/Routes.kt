@@ -10,6 +10,10 @@ object Feed
 @Serializable
 object Atlas
 
+/** 相册 (40): the gallery, the paired camera and the NAS, looked through, and what is chosen written, shared, saved or deleted. */
+@Serializable
+object Album
+
 
 @Serializable
 data class Moment(val uid: String)
