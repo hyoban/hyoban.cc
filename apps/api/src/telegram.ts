@@ -250,8 +250,8 @@ const VERDICTS = { good: '😋 好吃', ok: '😌 还行', bad: '😖 踩雷' } 
 const WORTH = { good: '👍 值', ok: '👌 还行', bad: '👎 不值' } as const
 
 /**
- * The words and media a Moment is posted with: its own words exactly, then a line of when it
- * was, the place, the public trip it was on, each one's share of what it cost, and how a meal was and whether the cost was worth it,
+ * The words and media a Moment is posted with: its own words exactly, then a line of the
+ * place, when it was, the public trip it was on, each one's share of what it cost, and how a meal was and whether the cost was worth it,
  * as the app shares it. A cost without its people was one's. A Moment with neither words, a line nor media has nothing
  * to post.
  */
@@ -269,8 +269,8 @@ function toPost(
     spent?.amount !== undefined && Math.round(spent.amount / Math.max(spent.people ?? 1, 1))
   const symbol = spent?.currency && spent.currency !== 'CNY' ? `${spent.currency} ` : '¥'
   const line = [
-    `🕐 ${when(moment.occurredAt, now)}`,
     place && `📍 ${place}`,
+    `🕐 ${when(moment.occurredAt, now)}`,
     trip && `🧳 ${trip}`,
     share !== false && share !== undefined && `💰 人均 ${symbol}${share}`,
     meal?.verdict && VERDICTS[meal.verdict],

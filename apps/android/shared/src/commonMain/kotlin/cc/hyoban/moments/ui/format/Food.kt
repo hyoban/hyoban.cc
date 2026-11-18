@@ -61,7 +61,7 @@ fun costLine(cost: MomentCost?): String? {
 }
 
 /**
- * What a share ends with: when it was, where, the trip it was on, each one's share of what it
+ * What a share ends with: where it was, when, the trip it was on, each one's share of what it
  * cost and how it was (a meal's taste, else whether it was worth it), each behind an emoji, as
  * the Telegram channel posts it too, naming the trip only when it isn't private. A cost without
  * its people was one's.
@@ -71,8 +71,8 @@ fun shareLine(moment: MomentRecord, place: String?, trip: String? = null): Strin
     val cost = moment.cost
     val amount = cost?.amount
     return listOfNotNull(
-        "🕐 " + listOfNotNull(formatDate(moment.dateKey), formatTime(moment.occurredAt)).joinToString(" "),
         place?.takeIf { it.isNotBlank() }?.let { "📍 $it" },
+        "🕐 " + listOfNotNull(formatDate(moment.dateKey), formatTime(moment.occurredAt)).joinToString(" "),
         trip?.takeIf { it.isNotBlank() }?.let { "🧳 $it" },
         amount?.let { "💰 " + stringResource(Res.string.cost_each, costMoney((it / (cost.people ?: 1).coerceAtLeast(1)).roundToLong().toDouble(), cost.currency)) },
         FoodVerdict.of(cost?.verdict)?.let { verdict ->

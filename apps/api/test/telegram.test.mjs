@@ -88,7 +88,7 @@ test('a Moment published is posted once, its words under its photo with the plac
   assert.equal(calls.length, 1)
   assert.equal(calls[0].method, 'sendPhoto')
   assert.equal(calls[0].params.chat_id, '@channel')
-  assert.equal(calls[0].params.caption, `在码头等船。\n\n${at} 📍 ${nanjing} 🧳 ${trip}`)
+  assert.equal(calls[0].params.caption, `在码头等船。\n\n📍 ${nanjing} ${at} 🧳 ${trip}`)
   assert.equal(
     calls[0].params.photo,
     'https://image.hyoban.cc/cdn-cgi/image/width=2560,format=jpeg/moments/01m3vdbhc042d43kwzwe67yp1t/01m3vdbhc1hw3w1z58armsh236.jpg',
@@ -104,7 +104,7 @@ test('a private trip is left out of the post', async () => {
   await publish(env)
 
   assert.deepEqual(await sync(), { posted: 1, edited: 0, deleted: 0 })
-  assert.equal(calls[0].params.caption, `在码头等船。\n\n${at} 📍 ${nanjing}`)
+  assert.equal(calls[0].params.caption, `在码头等船。\n\n📍 ${nanjing} ${at}`)
 })
 
 test("a meal's post adds each one's share and its verdict to the place", async () => {
@@ -118,7 +118,7 @@ test("a meal's post adds each one's share and its verdict to the place", async (
   assert.deepEqual(await sync(), { posted: 1, edited: 0, deleted: 0 })
   assert.equal(
     calls[0].params.caption,
-    `在码头等船。\n\n${at} 📍 ${nanjing} 🧳 ${trip} 💰 人均 ¥35 😋 好吃`,
+    `在码头等船。\n\n📍 ${nanjing} ${at} 🧳 ${trip} 💰 人均 ¥35 😋 好吃`,
   )
 })
 
@@ -131,7 +131,7 @@ test("a cost's post adds each one's share and whether it was worth it", async ()
   assert.deepEqual(await sync(), { posted: 1, edited: 0, deleted: 0 })
   assert.equal(
     calls[0].params.caption,
-    `在码头等船。\n\n${at} 📍 ${nanjing} 🧳 ${trip} 💰 人均 ¥60 👎 不值`,
+    `在码头等船。\n\n📍 ${nanjing} ${at} 🧳 ${trip} 💰 人均 ¥60 👎 不值`,
   )
 })
 
@@ -148,7 +148,7 @@ test('changed words edit the caption; a Moment the site no longer shows is delet
     params: {
       chat_id: '@channel',
       message_id: 100,
-      caption: `船来了。\n\n${at} 📍 ${nanjing} 🧳 ${trip}`,
+      caption: `船来了。\n\n📍 ${nanjing} ${at} 🧳 ${trip}`,
     },
   })
 
@@ -180,7 +180,7 @@ test('a photo swapped for another is replaced in its message, its caption kept w
   assert.deepEqual(JSON.parse(calls[1].params.media), {
     type: 'photo',
     media: `https://image.hyoban.cc/cdn-cgi/image/width=2560,format=jpeg/moments/01m3vdbhc042d43kwzwe67yp1t/01m3vdbhc1hw3w1z58armsh237.jpg`,
-    caption: `船来了。\n\n${at} 📍 ${nanjing} 🧳 ${trip}`,
+    caption: `船来了。\n\n📍 ${nanjing} ${at} 🧳 ${trip}`,
   })
   assert.deepEqual(await sync(), { posted: 0, edited: 0, deleted: 0 }, 'and kept as it is now')
 })
@@ -216,7 +216,7 @@ test('words too long for a caption follow the photos as a message of their own',
     ['sendPhoto', 'sendMessage'],
   )
   assert.equal(calls[0].params.caption, undefined)
-  assert.equal(calls[1].params.text, `${text}\n\n${at} 📍 ${nanjing} 🧳 ${trip}`)
+  assert.equal(calls[1].params.text, `${text}\n\n📍 ${nanjing} ${at} 🧳 ${trip}`)
 })
 
 test('a Moment published before the channel was first synced is never posted', async () => {
