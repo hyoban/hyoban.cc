@@ -12,6 +12,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -78,6 +79,18 @@ data class NasAlbum(val uuid: String, val name: String, val type: Int, val count
 
 /** What a delete on the NAS does: move them to its recycle bin, or delete them for good where there is none. */
 enum class NasDeleteKind { BIN, FOREVER }
+
+/** The kinds the NAS lists apart: stills (its images, GIFs and RAWs), videos and live photos. */
+enum class NasKind { IMAGE, VIDEO, LIVE }
+
+/**
+ * What the NAS narrows a list to itself: the [kinds] wanted, none for all, and its EXIF conditions,
+ * each of [NasProtocol.EXIF]'s fields its values chosen, each value the JSON its options gave it.
+ */
+data class NasQuery(val kinds: Set<NasKind> = emptySet(), val exif: Map<String, List<String>> = emptyMap())
+
+/** One value of an EXIF condition, as the NAS offers it: what is sent back for it ([value], JSON), and its [name]. */
+data class NasOption(val value: String, val name: String)
 
 object NasProtocol {
     /** Where UGREENlink says a NAS is, by its ID. */
@@ -230,6 +243,42 @@ object NasProtocol {
         }
 
     /** What the NAS said of a delete it was asked about. */
+    /** The EXIF conditions the NAS filters its timeline by, in the order its web app lists them. */
+    val EXIF = listOf("camera", "lens", "focal", "aperture", "exposure", "iso")
+
+    /** The kinds wanted, as a list's `type_option` says them; [raw] where the list takes RAWs apart, as the timeline does. */
+    fun typeOption(kinds: Set<NasKind>, raw: Boolean): JsonObject = buildJsonObject {
+        val all = kinds.isEmpty()
+        fun flag(kind: NasKind) = if (!all && kind in kinds) 1 else 0
+        put("all", if (all) 1 else 0)
+        put("image", flag(NasKind.IMAGE))
+        put("video", flag(NasKind.VIDEO))
+        put("gif", flag(NasKind.IMAGE))
+        put("live", flag(NasKind.LIVE))
+        if (raw) put("raw", flag(NasKind.IMAGE))
+    }
+
+    /** The EXIF conditions chosen, every field there and empty where none is chosen: the NAS answers 参数错误 to one missing. */
+    fun advancedOption(exif: Map<String, List<String>>): JsonObject = buildJsonObject {
+        EXIF.forEach { field ->
+            putJsonArray(field) { exif[field].orEmpty().forEach { add(runCatching { Json.parseToJsonElement(it) }.getOrElse { _ -> JsonPrimitive(it) }) } }
+        }
+    }
+
+    /** Each EXIF field's values among the photos the conditions already chosen leave, as `picture/option` answers: plain values, or an id and a name. */
+    fun options(data: JsonObject?): Map<String, List<NasOption>> = EXIF.associateWith { field ->
+        data?.array(field).orEmpty().mapNotNull { element ->
+            when (element) {
+                is JsonObject -> {
+                    val id = element["id"]?.takeUnless { it is JsonNull } ?: return@mapNotNull null
+                    NasOption(id.toString(), element.string("name") ?: (id as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null)
+                }
+                is JsonPrimitive -> element.takeUnless { it is JsonNull }?.let { NasOption(it.toString(), it.content) }
+                else -> null
+            }
+        }.filter { it.name.isNotBlank() }
+    }
+
     fun deleteKind(data: JsonObject?): NasDeleteKind = if (data?.int("result") == 2) NasDeleteKind.FOREVER else NasDeleteKind.BIN
 
     /** How many of a delete's photos the NAS couldn't delete. */

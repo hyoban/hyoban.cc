@@ -149,10 +149,26 @@ object LocalMedia {
             context.contentResolver.query(item.uri, arrayOf(MediaStore.MediaColumns.XMP), null, null, null)?.use { c ->
                 if (!c.moveToFirst() || c.isNull(0)) return@use false
                 val xmp = String(c.getBlob(0), Charsets.UTF_8)
-                "MotionPhoto=\"1\"" in xmp || "MicroVideo=\"1\"" in xmp || "<GCamera:MotionPhoto>1" in xmp
+                MOTION_MARKS.any { it in xmp }
             } ?: false
         }.getOrDefault(false)
     }
+
+    /**
+     * The gallery's motion photos, by id, as their XMP in the media store says ([isMotion]), in one
+     * query rather than one for each photo, for 相册's filter.
+     */
+    fun motionIds(context: Context): Set<Long> = runCatching {
+        val images = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        val xmp = "CAST(${MediaStore.MediaColumns.XMP} AS TEXT)"
+        val where = MOTION_MARKS.joinToString(" OR ") { "$xmp LIKE ?" }
+        context.contentResolver.query(images, arrayOf(MediaStore.MediaColumns._ID), where, MOTION_MARKS.map { "%$it%" }.toTypedArray(), null)?.use { c ->
+            buildSet { while (c.moveToNext()) add(c.getLong(0)) }
+        }.orEmpty()
+    }.onFailure { cc.hyoban.moments.logWarning("Moments", "gallery: motion photos not listed", it) }.getOrDefault(emptySet())
+
+    /** What a motion photo's XMP says of it, Google's and Samsung's and the older Camera's. */
+    private val MOTION_MARKS = listOf("MotionPhoto=\"1\"", "MicroVideo=\"1\"", "<GCamera:MotionPhoto>1")
 
     /**
      * [uri] for a Moment: the original, where the app may see where it was taken, so its EXIF keeps

@@ -729,6 +729,23 @@ off leaves 相册, 选照片 and 地图's photos wholly, the title's menu too, i
 The app's own albums, Here and 准备图文's Here Share ones, start off; the others start on. What is
 hidden is kept by the gallery's id for each album, on the phone alone.
 
+**过滤**, the button beside the subtitle's count (`ui/picker/PhotoFilter.kt`), narrows 相册 and 选照片
+alike, one filter for both kept on the phone (`Settings.photoFilter`) and there the next time. Lit,
+the count is what it leaves and the conditions chosen line up under it, each taken off with its X;
+none left says 没有符合过滤的照片 with 清除过滤. Its sheet, every change at once and 重置 at its top,
+lists only what the source shown can tell of its photos, and a condition it can't tell has no say
+there: 类型 (照片, 视频, 实况) and 时间 everywhere but the camera's card, which has only the time; 时间 as
+the search has it, a year and within it a month, or 自定义, a range of days from 从 to 到 in the
+calendar; 地点 and 时刻 (written into a Moment or not) for the NAS's, 地点 for 已发布 (its Moment's
+place); and for the NAS's timeline alone 设备, 镜头, 焦段, 光圈, 快门 and ISO, the values the NAS
+offers under what is already chosen (`v5/photo/picture/option`, as its web app's 高级筛选 reads
+them), folded after six until 展开. The gallery's 实况 are its photos whose XMP in the media store
+says so, listed in one query once a kind is chosen; the gallery's EXIF isn't read for this. The NAS
+narrows by kind and EXIF itself (`type_option`, `advanced_option`), and its timeline is laid out
+from the days that leaves within the time chosen, read from where they start; what it can't narrow
+by (a place, as its map knows them, a Moment, and an album's time) is read a page after another,
+keeping what passes, until a screenful more is kept.
+
 已发布, in 相册's title after the gallery's albums (and in 选照片 not at all), is every photo and video
 of the Moments, the private ones too and in 演示模式 only what is shown, newest Moment first under its
 day, each the site's own (or the phone's, not published yet). They are only looked at: the viewer

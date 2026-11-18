@@ -120,7 +120,13 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
     choice.sources = sources
     val listing = picked ?: sources.first().home
     val videos = device.rememberVideos()
-    val shown = listing.picks()
+    // The filter, one for 相册 and 选照片, kept on the phone; each listing narrowed by what it can tell.
+    val filter = remember(container.settings.photoFilter) { PhotoFilter.decode(container.settings.photoFilter) }
+    val setFilter: (PhotoFilter) -> Unit = { container.settings.changePhotoFilter(it.encode()) }
+    val facets = listing.facets
+    val filtered = remember(filter, facets) { filter.within(facets) }
+    var filtering by remember { mutableStateOf(false) }
+    val shown = listing.shown(filtered)
     // The calendar over the grid: a day picked takes the grid there, and another source forgets it.
     val jump = remember { DateJump() }
     var picking by remember { mutableStateOf(false) }
@@ -131,7 +137,8 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
     val idle = choice.idle
     val choosing = choice.choosing
     val sideways = isPhoneLandscape()
-    val count = listing.count(shown)
+    // Filtering, the count is always said, as its button stands beside it.
+    val count = listing.count(shown) ?: shown.size.takeIf { filtered.active }
     val subtitle = listOfNotNull(
         count?.let { stringResource(Res.string.camera_photo_count, it) },
         chosen.size.takeIf { it > 0 }?.let { stringResource(Res.string.picker_chosen_count, it) },
@@ -192,10 +199,18 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
     }
     val content: @Composable BoxScope.() -> Unit = {
         listing.Body(shown) { limited, onNearEnd ->
+            // The conditions chosen head the grid, under the gallery's limited access where it is.
+            val head: (@Composable () -> Unit)? = if (limited == null && !filtered.active) null else ({
+                Column {
+                    limited?.invoke()
+                    FilterConditions(filter, facets, setFilter)
+                }
+            })
             Grid(
                 shown, choice.order, choice.full, enabled = idle, sideways = sideways,
                 density = container.settings.pickerDensity, onDensity = container.settings::changePickerDensity,
-                limited = limited, onToggle = choice::toggle, onNearEnd = onNearEnd, jump = jump,
+                limited = head, onToggle = choice::toggle, onNearEnd = onNearEnd, jump = jump,
+                emptyContent = if (filtered.active) ({ FilterNone { setFilter(PhotoFilter.NONE) } }) else null,
                 circles = choosing, onHold = choice::hold, onHoldOver = choice::holdOver,
             ) { choice.viewing = it.key }
         }
@@ -207,10 +222,20 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
             }
         }
     }
+    // Beside the count, which it changes; the bar's circles keep to their two.
+    val filterButton: @Composable () -> Unit = { FilterButton(filtered.active) { filtering = true } }
     CompositionLocalProvider(LocalPickerVideos provides videos) {
-        if (album != null) TabPage(listing.title(), Album, subtitle = subtitle, actions = actions, titleMenu = menu, content = content)
-        else SubPage(listing.title(), onClose, subtitle = subtitle, close = true, titleMenu = menu, actions = actions, content = content)
+        if (album != null) TabPage(listing.title(), Album, subtitle = subtitle, actions = actions, titleMenu = menu, subtitleAction = filterButton, content = content)
+        else SubPage(listing.title(), onClose, subtitle = subtitle, close = true, titleMenu = menu, actions = actions, subtitleAction = filterButton, content = content)
     }
+
+    if (filtering) FilterSheet(
+        filter, facets,
+        days = listing.days(filtered),
+        exif = if (Facet.EXIF in facets) listing.exifOptions(filtered) else null,
+        onChange = setFilter,
+        onDismiss = { filtering = false },
+    )
 
     choice.ViewerOver(container, shown, videos, overTabs = album != null, onMoment = album?.onMoment, onEdit = album?.onEdit) {
         if (canAdd) addButton("picker_viewer_add") { choice.viewing = null }

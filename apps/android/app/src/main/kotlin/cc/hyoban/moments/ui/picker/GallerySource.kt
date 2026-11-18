@@ -133,6 +133,15 @@ internal class GallerySource(
 ) : PhotoSource {
     val items get() = itemsState.value
     val access get() = accessState.value
+
+    /** The motion photos among [items], by id, once a filter by kind has asked; null until then. */
+    var motion by mutableStateOf<Set<Long>?>(null)
+        private set
+
+    /** Lists the motion photos for the filter, again as the gallery changes. */
+    suspend fun readMotion() {
+        motion = withContext(Dispatchers.IO) { LocalMedia.motionIds(context) }
+    }
     val all = GalleryListing(this, null, null)
     override val home get() = all
 
@@ -173,6 +182,18 @@ internal data class GalleryListing(val gallery: GallerySource, val albumId: Long
         }
     }
 
+    override val facets get() = GALLERY_FACETS
+
+    /** On the device; a kind asked for first lists the motion photos, whose XMP says what they are. */
+    @Composable
+    override fun shown(filter: PhotoFilter): List<Pick> {
+        val items = gallery.items
+        if (filter.kinds.isNotEmpty()) LaunchedEffect(items) { gallery.readMotion() }
+        val all = picks()
+        val motion = gallery.motion
+        return remember(all, filter, motion) { if (filter.active) all.filter(filter::matches) else all }
+    }
+
     @Composable
     override fun count(shown: List<Pick>) = shown.size
 
@@ -181,12 +202,20 @@ internal data class GalleryListing(val gallery: GallerySource, val albumId: Long
         grid(if (gallery.access == GalleryAccess.CHOSEN) ({ Limited(gallery.items.size, gallery.reselect) }) else null, null)
 }
 
+/** The phone's gallery says what each photo is, and when it was taken; where, only once each is read, which it isn't for this. */
+private val GALLERY_FACETS = setOf(Facet.KIND, Facet.TIME)
+
 /** The gallery's thumbnails, by the media store's id, shared by the grid and the viewer. */
 private val localThumbs = LruCache<String, ImageBitmap>(300)
 
 internal data class GalleryPick(val item: LocalItem, override val source: GallerySource) : Pick {
     override val key get() = item.key
     override val day get() = item.day
+    override val kind get() = when {
+        item.video -> PhotoKind.VIDEO
+        source.motion?.contains(item.id) == true -> PhotoKind.LIVE
+        else -> PhotoKind.PHOTO
+    }
 
     override fun cachedThumb(size: Int): ImageBitmap? = localThumbs.get("$key@$size")
 

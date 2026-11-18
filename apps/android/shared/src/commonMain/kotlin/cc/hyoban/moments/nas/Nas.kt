@@ -235,13 +235,13 @@ class Nas(
     // The photos ------------------------------------------------------------------------
 
     /** A page of the photos and videos in the timeline, newest first, and how many there are. */
-    suspend fun timeline(offset: Int, limit: Int = PAGE): Pair<List<NasPhoto>, Int?> {
+    suspend fun timeline(offset: Int, limit: Int = PAGE, query: NasQuery = NasQuery()): Pair<List<NasPhoto>, Int?> {
         val data = call("v5/photo/picture/timeline/list", buildJsonObject {
             put("limit", limit)
             put("offset", offset)
             put("sort_order", 0)
             put("sort_by", 0)
-            timelineFilters()
+            timelineFilters(query)
             put("total", 1)
         })
         return NasProtocol.photos(data) to (data?.get("total") as? JsonPrimitive)?.content?.toIntOrNull()
@@ -252,18 +252,34 @@ class Nas(
      * list: what the web app lays its timeline out by before reading a photo, and reads from the
      * offset of the day it is taken to.
      */
-    suspend fun timelineDays(): List<NasDay> = NasProtocol.days(call("v5/photo/picture/timeline/node", buildJsonObject {
-        timelineFilters()
+    suspend fun timelineDays(query: NasQuery = NasQuery()): List<NasDay> = NasProtocol.days(call("v5/photo/picture/timeline/node", buildJsonObject {
+        timelineFilters(query)
         put("level", 0)
     }))
 
-    private fun JsonObjectBuilder.timelineFilters() {
-        putJsonObject("type_option") { put("all", 1); put("image", 0); put("video", 0); put("gif", 0); put("live", 0); put("raw", 0) }
-        // As the web app sends it by default: the owner's files and those shared, and no EXIF filters,
-        // each filter there and empty; the NAS answers 参数错误 to an empty advanced_option.
-        putJsonObject("range_option") { put("personal", 1); put("share", 1); put("share_manage", 0); put("share_download", 0); put("share_view_only", 0) }
-        putJsonObject("advanced_option") { listOf("aperture", "camera", "lens", "focal", "exposure", "iso").forEach { putJsonArray(it) {} } }
+    /**
+     * The kinds and EXIF conditions of [query], as the web app sends them, with the owner's files and
+     * those shared; every EXIF field there, empty where none is chosen.
+     */
+    private fun JsonObjectBuilder.timelineFilters(query: NasQuery) {
+        put("type_option", NasProtocol.typeOption(query.kinds, raw = true))
+        rangeOption()
+        put("advanced_option", NasProtocol.advancedOption(query.exif))
     }
+
+    private fun JsonObjectBuilder.rangeOption() =
+        putJsonObject("range_option") { put("personal", 1); put("share", 1); put("share_manage", 0); put("share_download", 0); put("share_view_only", 0) }
+
+    /**
+     * Each EXIF condition's values among the timeline's photos that [query]'s kinds and conditions
+     * leave, as the web app's 高级筛选 lists them: those already chosen keep their own field's others.
+     */
+    suspend fun options(query: NasQuery): Map<String, List<NasOption>> = NasProtocol.options(call("v5/photo/picture/option", buildJsonObject {
+        put("type_option", NasProtocol.typeOption(query.kinds, raw = true))
+        put("advanced_option", NasProtocol.advancedOption(query.exif))
+        put("is_collection", false)
+        rangeOption()
+    }))
 
     /** The owner's albums: their own, those kept by a rule, and those shared with them. */
     suspend fun albums(): List<NasAlbum> = NasProtocol.albums(call("v5/photo/album/list", buildJsonObject {
@@ -278,7 +294,7 @@ class Nas(
     }))
 
     /** A page of [album]'s photos and videos, newest first. */
-    suspend fun albumPhotos(album: NasAlbum, offset: Int, limit: Int = PAGE): Pair<List<NasPhoto>, Int?> {
+    suspend fun albumPhotos(album: NasAlbum, offset: Int, limit: Int = PAGE, kinds: Set<NasKind> = emptySet()): Pair<List<NasPhoto>, Int?> {
         val data = call("v5/photo/album/picture/list", buildJsonObject {
             put("album_uuid", album.uuid)
             put("album_type", album.type)
@@ -286,7 +302,7 @@ class Nas(
             put("offset", offset)
             put("sort_by", 0)
             put("sort_order", 0)
-            putJsonObject("type_option") { put("all", 1); put("image", 0); put("video", 0); put("gif", 0); put("live", 0) }
+            put("type_option", NasProtocol.typeOption(kinds, raw = false))
             putJsonObject("provider_option") { put("provider_mine", 1); put("provider_other", 1); put("provider_uids", JsonArray(emptyList())) }
             put("total", 1)
         })

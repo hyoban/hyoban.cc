@@ -65,6 +65,7 @@ object AppIcons {
     val Download: ImageVector by lazy { icon("download", false, listOf("M12 4L12 15", "M7.5 10.5 12 15l4.5-4.5", "M5 20L19 20")) }
     val Swap: ImageVector by lazy { icon("swap", false, listOf("M16 4l4 4-4 4", "M20 8L6 8", "M8 20l-4-4 4-4", "M4 16L18 16")) }
     val Sliders: ImageVector by lazy { icon("sliders", false, listOf("M4 7L20 7", "M4 17L20 17"), listOf("M6.8 7a2.2 2.2 0 1 0 4.4 0a2.2 2.2 0 1 0 -4.4 0z", "M12.8 17a2.2 2.2 0 1 0 4.4 0a2.2 2.2 0 1 0 -4.4 0z")) }
+    val Filter: ImageVector by lazy { icon("filter", false, listOf("M4 7L20 7", "M7 12L17 12", "M10 17L14 17")) }
     val Settings: ImageVector by lazy { icon("settings", false, listOf("M12 3.8c1 0 1.4 1.4 2.3 1.7s2.2-.5 2.9.2-.1 1.9.2 2.8 1.8 1.3 1.8 2.3-1.4 1.4-1.7 2.3.5 2.2-.2 2.9-1.9-.1-2.8.2-1.3 1.8-2.3 1.8-1.4-1.4-2.3-1.7-2.2.5-2.9-.2.1-1.9-.2-2.8S3.8 12 3.8 12s1.4-1.4 1.7-2.3-.5-2.2.2-2.9 1.9.1 2.8-.2S11 3.8 12 3.8z", "M9.4 12a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0z")) }
     val Eye: ImageVector by lazy { icon("eye", false, listOf("M2.8 12.2S6.2 6 12 6s9.2 6.2 9.2 6.2S17.8 18.2 12 18.2 2.8 12.2 2.8 12.2z", "M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0z"), listOf("M12 11a1 1 0 1 0 2 0a1 1 0 1 0 -2 0z")) }
     val EyeOff: ImageVector by lazy { icon("eye-off", false, listOf("M9.9 5.8A9 9 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.4 3.2M6.6 7.4A16.6 16.6 0 0 0 2.5 12S6 18.5 12 18.5a9 9 0 0 0 4.4-1.1", "M9.9 9.9a3 3 0 0 0 4.2 4.2", "M4 4L20 20")) }

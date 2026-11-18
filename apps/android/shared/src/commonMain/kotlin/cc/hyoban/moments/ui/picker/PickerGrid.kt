@@ -104,6 +104,8 @@ fun Grid(
     onNearEnd: (() -> Unit)? = null,
     /** Whether it says so when there is nothing; not while what it shows is still being read. */
     empty: Boolean = true,
+    /** What it says when there is nothing, in place of 没有照片: a filter's own words and way out. */
+    emptyContent: (@Composable () -> Unit)? = null,
     /** The day the calendar asked for, and where it opens; none where there is no calendar. */
     jump: DateJump? = null,
     /** Whether the photos have their circles: 相册 looked through has none until it is choosing. */
@@ -279,7 +281,8 @@ fun Grid(
         ) {
             if (limited != null) item(key = "limited", span = { GridItemSpan(maxLineSpan) }) { limited() }
             if (shown.isEmpty() && empty) item(key = "empty", span = { GridItemSpan(maxLineSpan) }) {
-                Text(stringResource(Res.string.picker_empty), style = AppTheme.typography.body, color = tokens.tx3, textAlign = TextAlign.Center,
+                if (emptyContent != null) emptyContent()
+                else Text(stringResource(Res.string.picker_empty), style = AppTheme.typography.body, color = tokens.tx3, textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(top = Space.xl * 3))
             }
             groups.forEach { (group, picks) ->

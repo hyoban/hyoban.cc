@@ -83,9 +83,22 @@ class NasSource(
     var linked by mutableStateOf<Map<Long, String>>(emptyMap())
 
     private var albums by mutableStateOf<List<NasAlbum>>(emptyList())
-    /** The one listing read, the timeline or an album: another starts again. */
+    /** The one listing read, the timeline or an album under a filter: another, or another filter, starts again. */
     var list by mutableStateOf<NasList?>(null)
         private set
+
+    /** The listing shown before [list], shown still until [list] has something to show. */
+    var previous by mutableStateOf<NasList?>(null)
+        private set
+
+    /**
+     * The timeline's days under each of the NAS's own conditions, while the page is open: another
+     * time chosen lays the timeline out from them at once, rather than asking again.
+     */
+    private val timelineDays = mutableMapOf<cc.hyoban.moments.nas.NasQuery, List<NasDay>>()
+
+    /** Each album's days seen so far, whatever the time chosen, for the filter's years: an album has no days to ask for. */
+    val albumDays = mutableMapOf<String, MutableSet<LocalDate>>()
     override val home = NasListing(this, null)
     /** Where the photos were taken, for the map of them all. */
     val places = NasPlaces(this, scope)
@@ -96,12 +109,36 @@ class NasSource(
         if (!photo.video) scope.launch { nas.head(photo) }
     }
 
-    /** Reads the first page of [album]'s photos, the timeline's without one, and the albums if they aren't yet. */
-    suspend fun show(album: NasAlbum?) {
+    /**
+     * Reads the first page of [album]'s photos under [filter], the timeline's without one, and the
+     * albums if they aren't yet. Asked whether they have a place, it reads where they were taken first.
+     */
+    suspend fun show(album: NasAlbum?, filter: PhotoFilter) {
         if (!nas.configured) return
-        val shown = list?.takeIf { it.album == album } ?: NasList(nas, album).also { list = it }
+        val shown = list?.takeIf { it.album == album && it.filter == filter } ?: run {
+            previous = list?.takeIf { it.ready }
+            if (filter.place != null) places.load()
+            val known = if (album == null) timelineDays[filter.nasQuery] else null
+            NasList(nas, album, filter, keeps(album, filter), known).also { list = it }
+        }
         if (!shown.started) shown.start()
+        if (album == null && shown.allDays.isNotEmpty()) timelineDays[filter.nasQuery] = shown.allDays
         if (albums.isEmpty()) albums = try { nas.albums() } catch (e: Exception) { if (e is CancellationException) throw e; emptyList() }
+    }
+
+    /**
+     * What [filter] asks of a photo that the NAS can't tell: whether it has a place (as the NAS's
+     * map knows) and is in a Moment; and, for an album, which has no days to start from, its time.
+     */
+    private fun keeps(album: NasAlbum?, filter: PhotoFilter): ((NasPhoto) -> Boolean)? {
+        val place = filter.place
+        val moment = filter.moment
+        if (place == null && moment == null && (album == null || filter.days == null)) return null
+        val placed = places.placed
+        return { photo ->
+            (place == null || placed == null || (photo.id in placed) == place) &&
+                (moment == null || (photo.id in linked) == moment)
+        }
     }
 
     fun more(list: NasList) {
@@ -186,33 +223,73 @@ class NasSource(
 data class NasListing(val nas: NasSource, val album: NasAlbum?) : Listing {
     override val source get() = nas
 
-    private val list get() = nas.list?.takeIf { it.album == album }
+    /** The listing read under [filter], once it is. */
+    private fun list(filter: PhotoFilter) = nas.list?.takeIf { it.album == album && it.filter == filter }
 
     // The NAS's map is of all its photos, not an album's.
     override val places get() = nas.places.takeIf { album == null }
+
+    // The NAS keeps its photos' EXIF for its timeline's conditions alone; an album's list takes only their kinds.
+    override val facets get() = if (album == null) TIMELINE_FACETS else ALBUM_FACETS
 
     @Composable
     override fun title() = album?.name ?: stringResource(Res.string.section_nas)
 
     @Composable
-    override fun picks(): List<Pick> =
-        list?.let { list ->
+    override fun picks(): List<Pick> = shown(PhotoFilter.NONE)
+
+    @Composable
+    override fun shown(filter: PhotoFilter): List<Pick> {
+        LaunchedEffect(album, filter) { nas.show(album, filter) }
+        // Another filter's photos stay until this one's are laid out, rather than the page emptying for a frame.
+        val list = list(filter)?.takeIf { it.ready } ?: nas.previous?.takeIf { it.album == album } ?: nas.list?.takeIf { it.album == album }
+        return list?.let { list ->
             // Every photo once read; until then a slot in its day, which reads its page once it is shown.
             remember(list, list.version) {
                 list.photos.mapIndexed { index, photo ->
                     val day = list.dayAt(index)
                     if (photo != null) NasPick(photo, nas, day) else NasSlot(list, index, day, nas, album)
-                }
+                }.also { picks -> album?.let { nas.albumDays.getOrPut(it.uuid) { mutableSetOf() } += picks.mapNotNull { it.day } } }
             }
         }.orEmpty()
+    }
+
+    /** The timeline's days under the NAS's own conditions; an album's as far as they are read. */
+    @Composable
+    override fun days(filter: PhotoFilter): List<LocalDate> {
+        val list = nas.list?.takeIf { it.album == album }
+        if (album == null) {
+            // The last laid out stay while another's are read, so the years don't go and come back.
+            val laid = list?.allDays?.takeIf { it.isNotEmpty() }
+            val days = remember(laid) { laid?.map { it.day } }
+            val last = remember { arrayOf<List<LocalDate>>(emptyList()) }
+            if (days != null) last[0] = days
+            return days ?: last[0]
+        }
+        val shown = shown(filter)
+        val seen = nas.albumDays.getOrPut(album.uuid) { mutableSetOf() }
+        return remember(shown, seen.size) { seen.sortedDescending() }
+    }
 
     @Composable
-    override fun count(shown: List<Pick>) = list?.total ?: shown.size.takeIf { it > 0 }
+    override fun exifOptions(filter: PhotoFilter): Map<String, List<cc.hyoban.moments.nas.NasOption>>? {
+        if (album != null) return null
+        val query = filter.nasQuery
+        return produceState<Map<String, List<cc.hyoban.moments.nas.NasOption>>?>(null, query) {
+            value = try { nas.nas.options(query) } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                logWarning("Moments", "nas: filter options not read", e)
+                null
+            }
+        }.value
+    }
+
+    @Composable
+    override fun count(shown: List<Pick>) = nas.list?.takeIf { it.album == album }?.total ?: shown.size.takeIf { it > 0 }
 
     @Composable
     override fun Body(shown: List<Pick>, grid: @Composable ((@Composable () -> Unit)?, (() -> Unit)?) -> Unit) {
-        LaunchedEffect(album) { nas.show(album) }
-        val list = list
+        val list = nas.list?.takeIf { it.album == album }
         val failure = list?.failure
         when {
             // Listed only where there is nothing else to list, a computer's, before the NAS is set up.
@@ -223,6 +300,12 @@ data class NasListing(val nas: NasSource, val album: NasAlbum?) : Listing {
         }
     }
 }
+
+/** The timeline: everything, the NAS narrowing its kinds and EXIF itself. */
+private val TIMELINE_FACETS = setOf(Facet.KIND, Facet.TIME, Facet.PLACE, Facet.MOMENT, Facet.EXIF)
+
+/** An album: all but EXIF, which its list doesn't take. */
+private val ALBUM_FACETS = setOf(Facet.KIND, Facet.TIME, Facet.PLACE, Facet.MOMENT)
 
 /**
  * A photo of the timeline's not read yet: a grey tile in its day, which reads its page once it has
@@ -251,6 +334,13 @@ data class NasPick(val photo: NasPhoto, override val source: NasSource, val list
     override val key get() = photo.key
     override val day get() = listedDay ?: photo.taken?.toLocalDate()
     override val linkedMoment get() = source.linked[photo.id]
+    override val kind get() = when {
+        photo.video -> PhotoKind.VIDEO
+        photo.live -> PhotoKind.LIVE
+        else -> PhotoKind.PHOTO
+    }
+    override val hasPlace get() = source.places.placed?.let { photo.id in it }
+    override val inMoment get() = photo.id in source.linked
 
     /**
      * A motion photo's clip, read by range from its original on the NAS where the start of the
@@ -354,6 +444,9 @@ data class NasPick(val photo: NasPhoto, override val source: NasSource, val list
 class NasPlaces(private val source: NasSource, private val scope: CoroutineScope) : Places {
     private val nas get() = source.nas
     private var known by mutableStateOf<Map<Long, NasSpot>?>(null)
+
+    /** The photos with a place, all of them, linked to a Moment too, by id; null until read. */
+    val placed: Set<Long>? get() = known?.keys
     private var failure by mutableStateOf<NasFailure?>(null)
 
     private var read by mutableStateOf<List<Spot>?>(null)
@@ -440,16 +533,32 @@ class NasPlaces(private val source: NasSource, private val scope: CoroutineScope
 private val PLAYED = setOf("video/mp4", "video/quicktime")
 
 /**
- * The NAS's photos for one listing, its timeline or one of its albums, by their place in it; null
- * where not read yet. The timeline is laid out whole from its days first, as the NAS's web app
- * does, so the grid holds every day at once and reads only the pages it comes to; an album reads
- * a page at a time as the grid nears the end of what is read. [failure] says why the first page
+ * The NAS's photos for one listing, its timeline or one of its albums, under [filter], by their
+ * place in it; null where not read yet. The NAS narrows them to the filter's kinds and EXIF
+ * conditions itself. The timeline is laid out whole from its days first, as the NAS's web app does,
+ * so the grid holds every day at once and reads only the pages it comes to; a time chosen keeps
+ * only its days, read from where they start. What the NAS can't narrow by ([keeps]: a place, a
+ * Moment, and an album's time) is read a page after another from the start, as an album is, keeping
+ * what passes, as the grid nears the end of what is kept. [failure] says why the first page
  * couldn't be read.
  */
-class NasList(private val nas: Nas, val album: NasAlbum?) {
+class NasList(
+    private val nas: Nas,
+    val album: NasAlbum?,
+    val filter: PhotoFilter,
+    /** What the NAS can't tell of a photo that the filter asks; null when it asks nothing more. */
+    private val keeps: ((NasPhoto) -> Boolean)?,
+    /** The timeline's days under the same conditions, read already for another time, so they aren't asked for again. */
+    private val known: List<NasDay>? = null,
+) {
+    private val query = filter.nasQuery
+    private val range = filter.days
     val photos: SnapshotStateList<NasPhoto?> = mutableStateListOf()
-    /** The timeline's days, newest first, with how many each holds; empty for an album or before they're read. */
+    /** The timeline's days the filter keeps, newest first, with how many each holds; empty for an album, one read a page after another, or before they're read. */
     var days by mutableStateOf<List<NasDay>>(emptyList())
+        private set
+    /** All the timeline's days under the NAS's own conditions, whatever the time chosen, for the filter's years and months. */
+    var allDays by mutableStateOf<List<NasDay>>(emptyList())
         private set
     var total by mutableStateOf<Int?>(null)
     var failure by mutableStateOf<NasFailure?>(null)
@@ -462,42 +571,68 @@ class NasList(private val nas: Nas, val album: NasAlbum?) {
     val loading get() = reading.isNotEmpty()
     private val ended get() = total?.let { photos.size >= it && null !in photos } ?: false
 
+    /** Whether it has something to show: photos or their slots, the end of none, or why not. */
+    val ready get() = started && (photos.isNotEmpty() || total != null || failure != null)
+
+    /** Read a page after another, keeping what passes, rather than laid out by days. */
+    private var sifted = album != null || keeps != null
+    /** Where the listing starts in the NAS's own, the newer days a time leaves out before it. */
+    private var base = 0
+    /** How far into the NAS's own a sifted listing has read, past [base]. */
+    private var cursor = 0
+    /** How many of the NAS's own the listing spans, where its days say. */
+    private var span: Int? = null
+
     /** The timeline's days, then its first page; an album's first page. */
     suspend fun start() {
         if (started) return
         started = true
-        if (album == null) days = try { nas.timelineDays() } catch (e: Exception) {
+        if (album == null) allDays = known ?: try { nas.timelineDays(query) } catch (e: Exception) {
             if (e is CancellationException) throw e
             // Without them it reads on a page at a time, as an album does.
             logWarning("Moments", "nas: timeline days not read", e)
+            sifted = true
             emptyList()
         }
-        val laid = days.sumOf { it.count }
-        if (laid > 0) photos.addAll(arrayOfNulls<NasPhoto>(laid))
+        if (allDays.isNotEmpty()) {
+            val kept = range?.let { r -> allDays.filter { it.day in r } } ?: allDays
+            base = range?.let { r -> allDays.takeWhile { it.day > r.endInclusive }.sumOf { it.count } } ?: 0
+            span = kept.sumOf { it.count }
+            if (!sifted) {
+                days = kept
+                photos.addAll(arrayOfNulls<NasPhoto>(span ?: 0))
+            }
+        }
         version++
-        read(0)
+        if (sifted) sift() else read(0)
     }
 
     /** The page after the last photo read, unless all are. */
     suspend fun more() {
         if (ended || failure != null) return
-        read((photos.indexOfLast { it != null } + 1) / Nas.PAGE)
+        if (sifted) sift() else read((photos.indexOfLast { it != null } + 1) / Nas.PAGE)
     }
 
     /** The page holding the photo at [index], unless it is read or being read. */
     suspend fun need(index: Int) {
-        if (photos.getOrNull(index) == null) read(index / Nas.PAGE)
+        if (!sifted && photos.getOrNull(index) == null) read(index / Nas.PAGE)
     }
+
+    private suspend fun page(offset: Int, limit: Int) =
+        if (album == null) nas.timeline(offset, limit, query) else nas.albumPhotos(album, offset, limit, query.kinds)
 
     private suspend fun read(page: Int) {
         if (page in reading) return
         val offset = page * Nas.PAGE
         reading += page
         try {
-            val (got, count) = if (album == null) nas.timeline(offset) else nas.albumPhotos(album, offset)
+            val limit = span?.let { minOf(Nas.PAGE, it - offset) } ?: Nas.PAGE
+            if (limit <= 0) return
+            val (got, count) = page(base + offset, limit)
             got.forEachIndexed { i, photo -> if (offset + i < photos.size) photos[offset + i] = photo else photos += photo }
             version++
             total = when {
+                span != null -> span!!.coerceAtLeast(photos.size)
                 count != null -> count.coerceAtLeast(photos.size)
                 got.size < Nas.PAGE -> photos.size
                 else -> null
@@ -508,6 +643,38 @@ class NasList(private val nas: Nas, val album: NasAlbum?) {
             // Only a listing with nothing read says so; a page further on is asked for again when it is come to.
             if (photos.none { it != null }) failure = (e as? NasException)?.failure ?: if (e is java.io.IOException) NasFailure.UNREACHABLE else NasFailure.OTHER
         } finally { reading -= page }
+    }
+
+    /**
+     * Reads on a page after another from where it stopped, keeping what the filter lets through,
+     * until it has kept a screenful more or there is no more: the NAS's own end, the end of the
+     * time's days, or, for an album newest first, a photo from before the time chosen.
+     */
+    private suspend fun sift() {
+        if (SIFTING in reading) return
+        reading += SIFTING
+        try {
+            var kept = 0
+            while (kept < SIFT_KEEP && total == null) {
+                val limit = span?.let { minOf(Nas.PAGE, it - cursor) } ?: Nas.PAGE
+                if (limit <= 0) { total = photos.size; break }
+                val (got, _) = page(base + cursor, limit)
+                cursor += got.size
+                var past = false
+                got.forEach { photo ->
+                    val day = photo.taken?.toLocalDate()
+                    val inTime = range == null || span != null || (day != null && day in range)
+                    if (range != null && span == null && day != null && day < range.start) past = true
+                    if (inTime && keeps?.invoke(photo) != false) { photos += photo; kept++ }
+                }
+                version++
+                if (got.size < limit || past) total = photos.size
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            logWarning("Moments", "nas: photos not read", e)
+            if (photos.isEmpty()) failure = (e as? NasException)?.failure ?: if (e is java.io.IOException) NasFailure.UNREACHABLE else NasFailure.OTHER
+        } finally { reading -= SIFTING }
     }
 
     /** The day the timeline puts the photo at [index] under, where its days are read. */
@@ -534,14 +701,30 @@ class NasList(private val nas: Nas, val album: NasAlbum?) {
         gone.asReversed().forEach { photos.removeAt(it) }
         version++
         total = total?.minus(gone.size)
+        span = span?.minus(gone.size)
+        // Read already, they stood before where a sifted listing reads on.
+        if (sifted) cursor -= gone.size
     }
 
     fun retry() {
         failure = null
         started = false
         days = emptyList()
+        allDays = emptyList()
         photos.clear()
+        base = 0
+        cursor = 0
+        span = null
+        total = null
+        sifted = album != null || keeps != null
         version++
+    }
+
+    private companion object {
+        /** The page number a sifting read goes under in [reading]. */
+        const val SIFTING = -1
+        /** How many a sifting read keeps before it stops: a screenful and more. */
+        const val SIFT_KEEP = 60
     }
 }
 

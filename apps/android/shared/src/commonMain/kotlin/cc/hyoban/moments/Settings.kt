@@ -120,6 +120,15 @@ class Settings(private val prefs: Prefs, secrets: File) {
         prefs.edit { putInt("picker_density", pickerDensity) }
     }
 
+    /** 相册's and 选照片's filter, kept on the phone as the picker writes it (`ui/picker/PhotoFilter`); empty for none. */
+    var photoFilter: String by mutableStateOf(prefs.getString("photo_filter", null).orEmpty())
+        private set
+
+    fun changePhotoFilter(filter: String) {
+        photoFilter = filter
+        prefs.edit { putString("photo_filter", filter) }
+    }
+
     /**
      * The gallery's albums hidden from 相册, 选照片 and 地图's photos, by the gallery's id: those
      * hidden here, and the app's own (its Here album and 准备图文's Here Share ones) unless

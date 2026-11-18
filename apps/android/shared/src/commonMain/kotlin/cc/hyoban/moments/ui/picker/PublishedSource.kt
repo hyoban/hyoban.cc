@@ -173,6 +173,8 @@ class PublishedSource(val container: AppContainer, val context: PlatformContext,
 }
 
 class PublishedListing(override val source: PublishedSource) : Listing {
+    override val facets get() = PUBLISHED_FACETS
+
     @Composable
     override fun title() = stringResource(Res.string.album_published)
 
@@ -196,6 +198,8 @@ class PublishedListing(override val source: PublishedSource) : Listing {
 
 /** 可换原图 in 相册's title: the published photos whose copy on the site is less than the NAS's original, each to be put back from its Moment's editor. */
 class LesserListing(override val source: PublishedSource) : Listing {
+    override val facets get() = PUBLISHED_FACETS
+
     @Composable
     override fun title() = stringResource(Res.string.album_lesser)
 
@@ -254,6 +258,13 @@ data class PublishedPick(val media: MomentMedia, val record: MomentRecord, overr
     override val deletable get() = false
     override val moment get() = record.uid
     override val nasLink get() = media.nas?.takeIf { source.container.nas.configured }
+    override val kind get() = when (media.type) {
+        MediaType.VIDEO -> PhotoKind.VIDEO
+        MediaType.LIVE_PHOTO -> PhotoKind.LIVE
+        MediaType.IMAGE -> PhotoKind.PHOTO
+    }
+    // Where its Moment was: a published photo has lost its own.
+    override val hasPlace get() = record.places.isNotEmpty()
 
     override suspend fun thumbnail(size: Int): ImageBitmap? = source.still(media, size)
 
@@ -323,3 +334,6 @@ private const val AT_ONCE = 6
 /** How many small stills, and large, are kept at hand. */
 private const val STILLS = 300
 private const val LARGE_STILLS = 4
+
+/** A published photo says what it is, and its Moment where it was. */
+private val PUBLISHED_FACETS = setOf(Facet.KIND, Facet.TIME, Facet.PLACE)

@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,6 +78,27 @@ interface Listing {
 
     /** Its photos, newest first, as far as they are read. */
     @Composable fun picks(): List<Pick>
+
+    /** What the filter can narrow it by: any time, unless its photos say more of themselves. */
+    val facets: Set<Facet> get() = setOf(Facet.TIME)
+
+    /**
+     * Its photos that [filter] (already [PhotoFilter.within] its [facets]) lets through, as far as they
+     * are read: [picks] filtered on the device, unless its source filters them itself.
+     */
+    @Composable fun shown(filter: PhotoFilter): List<Pick> {
+        val all = picks()
+        return remember(all, filter) { if (filter.active) all.filter(filter::matches) else all }
+    }
+
+    /** The days it has photos on, whatever the time chosen, for the filter's years and months. */
+    @Composable fun days(filter: PhotoFilter): List<LocalDate> {
+        val all = picks()
+        return remember(all) { all.mapNotNullTo(LinkedHashSet()) { it.day }.toList() }
+    }
+
+    /** The NAS's EXIF conditions' values among what [filter] leaves, where its source has them; null where not, or while they are read. */
+    @Composable fun exifOptions(filter: PhotoFilter): Map<String, List<cc.hyoban.moments.nas.NasOption>>? = null
 
     /** How many it holds, where that is known. */
     @Composable fun count(shown: List<Pick>): Int?
@@ -142,6 +164,15 @@ interface Pick {
 
     /** The Moment it went into, for a NAS photo published as one's ([cc.hyoban.moments.data.spec.NasLink]): marked in the grid, opened from the viewer. */
     val linkedMoment: String? get() = null
+
+    /** What it is, for the filter: a still, a video or a live photo; null where that isn't known. */
+    val kind: PhotoKind? get() = null
+
+    /** Whether it says where it was taken, for the filter; null where that isn't known. */
+    val hasPlace: Boolean? get() = null
+
+    /** Whether it went into a Moment, for the filter; null where that isn't known. */
+    val inMoment: Boolean? get() = null
 
     /** The same photo on the NAS, a published one's that is linked to it, its original kept from there. */
     val nasLink: cc.hyoban.moments.data.spec.NasLink? get() = null
