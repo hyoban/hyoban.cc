@@ -402,8 +402,10 @@ Mac's 复制文字 copies them, and the Telegram channel posts them, naming the 
 | 准备图文       | the photos saved to a `Pictures/Here Share-…` album and the text copied                |
 
 These entries depend on each app's version; when one fails, 准备图文 is offered with the
-edited text and selection kept. Each share has its own cache directory, cleaned up after
-a week, and the read grants given to the receiving apps are revoked with it. The
+edited text and selection kept. Photos go out without where they were taken: the phone's
+own copy while it is there, else the published original, downloaded a few at a time and kept
+for a week so sharing it again needs no download. Each share has its own cache directory,
+cleaned up after a week, and the read grants given to the receiving apps are revoked with it. The
 `Here Share-…` albums stay until 清理分享相册 on 我, shown while any is left, hands all their
 photos to the system's delete prompt at once: they are copies of the Moment's own.
 

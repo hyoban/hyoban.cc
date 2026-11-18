@@ -9,10 +9,14 @@ import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import cc.hyoban.moments.data.Http
+import cc.hyoban.moments.data.spec.LocalMedia
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import okhttp3.Request
 import java.io.File
@@ -21,8 +25,9 @@ import java.util.UUID
 
 /**
  * Hands a photo or video to the share sheet: a photo, or a live photo's still, at its largest,
- * a video whole. A published one is downloaded, one on the phone copied, into the cache's
- * shared/, which the app's FileProvider serves. Each handoff has its own directory, so
+ * a video whole, without where it was taken. The phone's own copy is used while it is there,
+ * else the published original is downloaded, into the cache's shared/, which the app's
+ * FileProvider serves. Each handoff has its own directory, so
  * sharing another item doesn't remove files a receiving app may still be reading.
  */
 object Share {
@@ -201,31 +206,71 @@ object Share {
                 }
                 old.deleteRecursively()
             }
+            val originals = File(context.cacheDir, ORIGINALS).apply { mkdirs() }
+            originals.listFiles()?.filter { it.lastModified() < cutoff }?.forEach { it.delete() }
             val directory = File(root, UUID.randomUUID().toString()).apply { mkdirs() }
             try {
+                // Each item is read or downloaded on its own, a few at a time, rather than one after another.
+                val gate = Semaphore(PARALLEL)
                 media.mapIndexed { index, item ->
-                    ensureActive()
-                    fetch(context, item, urls, directory, index)
-                }
+                    async { gate.withPermit { fetch(context, item, urls, directory, originals, index) } }
+                }.awaitAll()
             } catch (e: Exception) {
                 directory.deleteRecursively()
                 throw e
             }
         }
 
-    private fun fetch(context: Context, media: MomentMedia, urls: MediaUrls, directory: File, index: Int): Pair<File, String> {
+    /**
+     * The item as it may leave the phone. The phone's own copy is read when it is still there,
+     * without where it was taken, as publishing sends it; a published one is downloaded only
+     * when the phone's copy is gone or isn't the one published, once per original, as objects
+     * never change.
+     */
+    private fun fetch(
+        context: Context,
+        media: MomentMedia,
+        urls: MediaUrls,
+        directory: File,
+        originals: File,
+        index: Int,
+    ): Pair<File, String> {
         val video = media.type == MediaType.VIDEO
         val published = media.published
-        if (published != null) {
-            val type = published.contentType
-            val file = File(directory, "$index.${extension(type)}")
-            Http.client.newCall(Request.Builder().url(urls.asset(published.key)).build()).execute().use { response ->
-                if (!response.isSuccessful) throw IOException("GET ${published.key} answered ${response.code}")
-                file.outputStream().use { response.body!!.byteStream().copyTo(it) }
+        media.local?.let { local ->
+            val fromPhone = if (published == null) {
+                fromPhone(context, local, video, directory, index)
+            } else {
+                runCatching { fromPhone(context, local, video, directory, index) }.getOrNull()
             }
-            return file to type
+            // Publishing blanks a location in place, so the published original keeps the size of the phone's copy without it.
+            if (fromPhone != null && (published == null || fromPhone.first.length() == published.bytes)) return fromPhone
+            fromPhone?.first?.delete()
         }
-        val local = media.local ?: throw IOException("${media.uid} is neither published nor on the phone")
+        if (published == null) throw IOException("${media.uid} is neither published nor on the phone")
+        val type = published.contentType
+        val name = "${published.key}-${published.etag}".replace(Regex("[^A-Za-z0-9._-]"), "_")
+        val cached = File(originals, name)
+        if (!cached.isFile || cached.length() != published.bytes) {
+            val partial = File.createTempFile("download-", null, originals)
+            try {
+                Http.client.newCall(Request.Builder().url(urls.asset(published.key)).build()).execute().use { response ->
+                    if (!response.isSuccessful) throw IOException("GET ${published.key} answered ${response.code}")
+                    partial.outputStream().use { response.body!!.byteStream().copyTo(it) }
+                }
+                if (!partial.renameTo(cached)) throw IOException("Can't keep ${published.key}")
+            } finally {
+                partial.delete()
+            }
+        } else {
+            cached.setLastModified(System.currentTimeMillis())
+        }
+        val file = File(directory, "$index.${extension(type)}")
+        cached.copyTo(file, overwrite = true)
+        return file to type
+    }
+
+    private fun fromPhone(context: Context, local: LocalMedia, video: Boolean, directory: File, index: Int): Pair<File, String> {
         val uri = (if (video) local.videoUri ?: local.uri else local.uri).toUri()
         val type = context.contentResolver.getType(uri)
             ?: MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(uri.toString()))
@@ -233,8 +278,13 @@ object Share {
         val file = File(directory, "$index.${extension(type)}")
         val input = context.contentResolver.openInputStream(uri) ?: throw IOException("Can't read $uri")
         input.use { from -> file.outputStream().use { from.copyTo(it) } }
+        val stripped = Location.stripped(file, video, directory)
+        if (stripped != file && !stripped.renameTo(file)) throw IOException("Can't blank the location of $uri")
         return file to type
     }
 
     private fun extension(type: String) = MimeTypeMap.getSingleton().getExtensionFromMimeType(type) ?: type.substringAfter('/')
+
+    private const val ORIGINALS = "shared-originals"
+    private const val PARALLEL = 4
 }
