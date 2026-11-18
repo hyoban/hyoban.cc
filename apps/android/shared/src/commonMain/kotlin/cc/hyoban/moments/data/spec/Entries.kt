@@ -255,6 +255,24 @@ object Entries {
         }
 
     /**
+     * A collection without the covers whose entry no longer has their photo: [mediaOf] gives the
+     * uids of an entry's photos as it now is (none once it is deleted), or null for one not known
+     * here, whose covers stay. A photo picked again comes in with a new uid, so a cover of the
+     * one it replaced would otherwise point at nothing.
+     */
+    fun withoutStaleCovers(collection: JsonObject, mediaOf: (String) -> Set<String>?): JsonObject {
+        val covers = coversOf(collection)
+        val kept = covers.filter { (entry, media) -> mediaOf(entry)?.contains(media) ?: true }
+        if (kept.size == covers.size) return collection
+        return JsonObject(collection + ("covers" to JsonArray(kept.map { (entry, media) -> buildJsonObject { put("entry", entry); put("media", media) } })))
+    }
+
+    /** The uids of an entry's photos and videos. */
+    fun mediaUidsOf(entry: JsonObject): Set<String> =
+        (((entry["parts"] as? JsonObject)?.get("media") as? JsonObject)?.get("items") as? JsonArray).orEmpty()
+            .mapNotNullTo(HashSet()) { ((it as? JsonObject)?.get("uid") as? JsonPrimitive)?.contentOrNull }
+
+    /**
      * A collection as a trip, as the spec's `collectionToTrip`: its marks with a place, in its
      * span, become the waypoints, one on the day of the waypoint before it following that one.
      */

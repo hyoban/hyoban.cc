@@ -1044,18 +1044,31 @@ class MomentsRepository(
     }
 
     /**
-     * Has each trip between records follow them: each end of its span its record's time as it
-     * now is, and, the record deleted, that end its own. A trip brought back to what the site
-     * has is no longer a change.
+     * The uids of an entry's photos as the phone has it now, none once it is deleted. The phone
+     * keeps a whole copy of the records, so an entry it doesn't know of is one that is gone, as
+     * one written on the phone and deleted before it was published.
+     */
+    private fun mediaOf(uid: String): Set<String> {
+        if (uid in removedEntries) return emptySet()
+        return (changedEntries[uid] ?: copyEntries[uid])?.let(Entries::mediaUidsOf).orEmpty()
+    }
+
+    /**
+     * Has each trip follow its records: each end of a trip between records its record's time as
+     * it now is, and, the record deleted, that end its own; and its covers only the photos their
+     * records still have, so a photo taken out or picked again takes its cover with it. A trip
+     * brought back to what the site has is no longer a change.
      */
     private fun followBounds() {
         val now by lazy { cc.hyoban.moments.data.local.recordTime() }
         val site = _records.value.collections
         var trips = changedTrips
         for ((id, collection) in site.filterKeys { it !in changedTrips } + changedTrips) {
-            val (from, to) = boundsOf(collection) ?: continue
             // A record gone, its end stays where it was, its own from then on.
-            val followed = withBounds(collection, from?.takeIf { entryAt(it) != null }, to?.takeIf { entryAt(it) != null })
+            val bounded = boundsOf(collection)?.let { (from, to) ->
+                withBounds(collection, from?.takeIf { entryAt(it) != null }, to?.takeIf { entryAt(it) != null })
+            } ?: collection
+            val followed = Entries.withoutStaleCovers(bounded, ::mediaOf)
             if (followed == collection) continue
             val onSite = site[id]?.takeIf { apiTrips.any { trip -> trip.id == id } }
             trips = if (onSite != null && JsonObjectsEqualApartFrom(onSite, followed, "updatedAt")) {

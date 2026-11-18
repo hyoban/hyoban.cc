@@ -168,7 +168,10 @@ Moment stepped through from a toolbar, by a swipe or with a keyboard's arrows an
 covers, published as a collection. Each end is a record or a time set by hand: chosen on a page
 of its own from every check-in and Moment, searched by words and place, the nearest in time
 first, it shows only that record and is its time, followed when the record is edited; set by
-hand, a day or to the minute, it follows none. What came before the start on its first day, or
+hand, a day or to the minute, it follows none. A cover follows its photo too: taken out of its
+Moment, picked again (which gives it a new uid) or gone with the Moment, its cover leaves the
+trip, a change published with the rest, so no cover points at a photo the site doesn't have.
+What came before the start on its first day, or
 after the end on its last, is not in the trip, on the site as here;
 its days' Moments are counted in one row that opens them, each with a switch to leave it
 out, and those of the two days either side are listed under it, out until added. The + on

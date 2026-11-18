@@ -922,6 +922,26 @@ class MomentsRepositoryTest {
         assertEquals(null to back, repository.boundsOf(repository.tripCollection(other)!!))
     }
 
+    @Test
+    fun `a trip's cover goes with its photo when the Moment drops it or picks it again`() = runBlocking {
+        val repository = MomentsRepository(copy(), api, Dispatchers.Unconfined, local = DataStore(localDirectory), writer = FakeWriter())
+        repository.load()
+        val sea = MomentMedia("sea", MediaType.IMAGE)
+        val hill = MomentMedia("hill", MediaType.IMAGE)
+        repository.addLocal(moment("M", "2026-10-02T09:00:00+08:00", published = false).copy(media = listOf(sea, hill)))
+        repository.addLocal(moment("N", "2026-10-02T10:00:00+08:00", published = false).copy(media = listOf(MomentMedia("lake", MediaType.IMAGE))))
+        val private = cc.hyoban.moments.data.spec.Visibility.PRIVATE
+        val id = repository.createTrip("江南", "2026-10-01", "2026-10-03", private, covers = listOf("M" to "sea", "M" to "hill", "N" to "lake"))
+        val covers = { Entries.coversOf(repository.tripCollection(id)!!) }
+
+        // The sea picked again comes back under a new uid; its old cover goes, the rest keep their order.
+        repository.updateLocal(moment("M", "2026-10-02T09:00:00+08:00", published = false).copy(media = listOf(hill, MomentMedia("sea-again", MediaType.IMAGE))))
+        assertEquals(listOf("M" to "hill", "N" to "lake"), covers())
+
+        repository.delete("N")
+        assertEquals(listOf("M" to "hill"), covers(), "a deleted Moment's covers go with it")
+    }
+
     private fun moment(uid: String, day: String, text: String = "", hidden: Boolean = false, published: Boolean = true) =
         MomentRecord(
             uid = uid,

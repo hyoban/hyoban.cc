@@ -117,6 +117,20 @@ class SpecRoundTripTest {
     }
 
     @Test
+    fun `a trip drops the covers whose photo its record no longer has`() {
+        val trip = Spec.json.parseToJsonElement(
+            """{"uid":"T","kind":"trip","title":"t","span":{"start":"2026-10-01","end":"2026-10-03"},"covers":[{"entry":"A","media":"a1"},{"entry":"A","media":"a2"},{"entry":"B","media":"b1"},{"entry":"C","media":"c1"}]}""",
+        ) as JsonObject
+        val entry = Spec.json.parseToJsonElement("""{"uid":"A","at":"2026-10-02","parts":{"media":{"v":1,"items":[{"uid":"a2"},{"uid":"a3"}]}}}""") as JsonObject
+        // A keeps a2 but picked a1 again as a3; B is deleted; C isn't known here, so its cover stays.
+        val media = mapOf("A" to Entries.mediaUidsOf(entry), "B" to emptySet())
+        val kept = Entries.withoutStaleCovers(trip, media::get)
+        assertEquals(listOf("A" to "a2", "C" to "c1"), Entries.coversOf(kept))
+        // With nothing stale, the trip is the same object, so it isn't taken for a change.
+        assertTrue(Entries.withoutStaleCovers(kept, media::get) === kept)
+    }
+
+    @Test
     fun `fields the app doesn't know survive a copy`() {
         val text = """{"uid":"01M3VDBHC042D43KWZWE67YP1T","occurredAt":"2026-10-01","text":"","mood":"sunny","createdAt":"2026-10-01T17:41:00+08:00","updatedAt":"2026-10-01T17:41:00+08:00"}"""
         val record = Spec.json.decodeFromString(MomentRecord.serializer(), text)
