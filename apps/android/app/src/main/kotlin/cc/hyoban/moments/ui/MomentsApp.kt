@@ -509,7 +509,6 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                 val deviceContext = androidx.compose.ui.platform.LocalContext.current
                 val device = remember(deviceContext) { PhoneDevice(deviceContext) }
                 DisposableEffect(device) { onDispose(device::close) }
-                val footprintPlaceName: @Composable (cc.hyoban.moments.ledger.Txn) -> String? = { cc.hyoban.moments.footprints.billSpot(it)?.name }
                 SharedTransitionLayout(Modifier.fillMaxSize().hazeSource(pageHaze).background(AppColors.page)) {
                     CompositionLocalProvider(
                         LocalSharedTransitionScope provides this,
@@ -996,6 +995,10 @@ data class TabClearance(val bottom: Dp, val fab: Dp)
 // Not static: they change as the bar and the button come and go, often as a page changes,
 // and only what reads them need be drawn again then, not every page under them.
 private val LocalTabClearance = compositionLocalOf { TabClearance(0.dp, 0.dp) }
+
+// Made once: a composable lambda that returns a value is not remembered for us, and a new
+// one given to its static local each time the app is composed would compose every page again.
+private val footprintPlaceName: @Composable (cc.hyoban.moments.ledger.Txn) -> String? = { cc.hyoban.moments.footprints.billSpot(it)?.name }
 
 /**
  * Goes to [route] as a page over the one shown, or, when it is the page just under it, back
