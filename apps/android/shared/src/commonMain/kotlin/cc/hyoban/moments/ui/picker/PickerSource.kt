@@ -2,10 +2,9 @@ package cc.hyoban.moments.ui.picker
 
 import cc.hyoban.moments.res.*
 import org.jetbrains.compose.resources.StringResource
-import cc.hyoban.moments.ui.viewer.VideoState
-import android.content.Context
-import android.graphics.Bitmap
-import android.net.Uri
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.runtime.staticCompositionLocalOf
+import cc.hyoban.moments.data.local.PhotoRef
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,7 +21,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -41,19 +39,22 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 /**
- * Where 选照片's photos come from: the phone's gallery, the paired camera or the NAS. Each keeps
+ * Where 相册's photos come from: the phone's gallery, the paired camera, the NAS. Each keeps
  * what it reads, says what the title's menu offers of it, fetches its chosen photos for the Moment
  * and deletes its own; the page only lays them out.
  */
-internal interface PhotoSource {
+interface PhotoSource {
     /** What it offers in the title's menu, in order; nothing while it can't be reached. */
     @Composable fun choices(): List<Choice>
+
+    /** What the page lists of it first: all its photos. */
+    val home: Listing
 
     /** Whether its photos come down before they go in, counted in the bar as they come. */
     val fetches: Boolean
 
-    /** [picks], its own, as Uris for the Moment, in their order; [progress] has the index and how far that one is. */
-    suspend fun fetch(picks: List<Pick>, progress: (Int, Float) -> Unit): List<Uri>
+    /** [picks], its own, kept on the device for the Moment, in their order; [progress] has the index and how far that one is. */
+    suspend fun fetch(picks: List<Pick>, progress: (Int, Float) -> Unit): List<PhotoRef>
 
     /** Deletes [picks], its own: chosen ones from the bar, or the one shown in the viewer. */
     fun delete(picks: List<Pick>, fromViewer: Boolean)
@@ -69,7 +70,7 @@ internal interface PhotoSource {
 }
 
 /** What the page lists, one of [source]'s: the whole gallery or an album, the camera's card, the NAS or one of its albums. */
-internal interface Listing {
+interface Listing {
     val source: PhotoSource
 
     @Composable fun title(): String
@@ -94,7 +95,7 @@ internal interface Listing {
  * Where a listing's photos were taken, and the photos of the heap opened on its map: the map
  * shows [spots] in heaps, and one tapped is [open]ed, its photos read as the grid under it asks.
  */
-internal interface Places {
+interface Places {
     /** Every photo with a place, once [load]ed; null until then. */
     val spots: List<Spot>?
 
@@ -104,7 +105,7 @@ internal interface Places {
     suspend fun load()
 
     /** The small thumbnail of the photo at [spot], a heap's cover. */
-    suspend fun thumbnail(spot: Spot): Bitmap?
+    suspend fun thumbnail(spot: Spot): ImageBitmap?
 
     /** The heap opened, by its photos; null when none is. */
     val opened: List<Spot>?
@@ -119,10 +120,10 @@ internal interface Places {
 }
 
 /** One line of the title's menu. */
-internal class Choice(val label: String, val count: Int?, val icon: ImageVector, val tag: String, val listing: Listing)
+class Choice(val label: String, val count: Int?, val icon: ImageVector, val tag: String, val listing: Listing)
 
 /** A photo the picker shows, one of [source]'s: what the grid and the viewer ask of it. */
-internal interface Pick {
+interface Pick {
     val key: String
     val day: LocalDate?
     val source: PhotoSource
@@ -134,10 +135,10 @@ internal interface Pick {
     val openable: Boolean get() = true
 
     /** Its thumbnail at [size] pixels, if it is at hand already. */
-    fun cachedThumb(size: Int): Bitmap? = null
+    fun cachedThumb(size: Int): ImageBitmap? = null
 
     /** Its thumbnail, at [size] pixels where its source keeps sizes. */
-    suspend fun thumbnail(context: Context, size: Int): Bitmap?
+    suspend fun thumbnail(size: Int): ImageBitmap?
 
     /** What its tile says in its corner: a video's length, 实况, or RAW. */
     @Composable fun badge(): String?
@@ -159,16 +160,66 @@ internal interface Pick {
 
     /**
      * It full size in the viewer, [active] while it is the one shown: a video then plays over its
-     * still through [video], which the viewer's controls work; [onTap] hides the viewer's bars.
+     * still, by its key in [LocalPickerVideos], whose controls the viewer shows; [onTap] hides the viewer's bars.
      */
-    @Composable fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit, onTap: () -> Unit)
+    @Composable fun Page(active: Boolean, onZoom: (Boolean) -> Unit, onTap: () -> Unit)
 }
+
+/**
+ * The device's own for 相册: the sources it has besides the NAS (the phone's gallery and paired
+ * camera, none on a computer), its videos, and what it does with photos kept on it.
+ */
+interface PickerDevice {
+    /**
+     * Its sources, in the title's menu before the NAS, the first listed first. [onFallback] is the
+     * gallery refused, and [onRefused] a source given up on, back to the first.
+     */
+    @Composable fun sources(deletion: Deletion, onFallback: () -> Unit, onRefused: () -> Unit): List<PhotoSource>
+
+    /** The videos played in the viewer, each by its photo's key. */
+    @Composable fun rememberVideos(): PickerVideos
+
+    /** Hands [refs] to another app, where the device has a way to; null where it has none. */
+    val share: ((List<PhotoRef>) -> Unit)?
+
+    /** What saving to the device is called: 存到相册 on the phone, the Pictures folder on a computer. */
+    val saveWords: StringResource
+}
+
+/** A computer's: the NAS alone, no videos and no share sheet, its photos kept in the Pictures folder's Here. */
+object NasOnly : PickerDevice {
+    @Composable override fun sources(deletion: Deletion, onFallback: () -> Unit, onRefused: () -> Unit) = emptyList<PhotoSource>()
+    @Composable override fun rememberVideos(): PickerVideos = NoVideos
+    override val share: ((List<PhotoRef>) -> Unit)? = null
+    override val saveWords = Res.string.album_save_pictures
+}
+
+/**
+ * The videos the viewer plays, each by its photo's [key]: over its still while it is [active],
+ * a ring while it waits, and the controls under the viewer for the one shown.
+ */
+interface PickerVideos {
+    /** Plays the video at [url] (asked for with [headers]); false where the device doesn't, and the still stays. */
+    @Composable fun Play(key: String, url: String, headers: Map<String, String>, active: Boolean, modifier: Modifier): Boolean
+    @Composable fun Waiting(key: String)
+    @Composable fun Controls(key: String, modifier: Modifier)
+}
+
+/** No video plays: the still stays, without controls. */
+object NoVideos : PickerVideos {
+    @Composable override fun Play(key: String, url: String, headers: Map<String, String>, active: Boolean, modifier: Modifier) = false
+    @Composable override fun Waiting(key: String) {}
+    @Composable override fun Controls(key: String, modifier: Modifier) {}
+}
+
+/** The videos of the picker shown. */
+val LocalPickerVideos = staticCompositionLocalOf<PickerVideos> { NoVideos }
 
 /**
  * A delete going on, as the page shows it: a count in the bar for several, a veil over the viewer
  * for one. [gone] has the keys of what went, to leave the choice and the viewer.
  */
-internal class Deletion(private val scope: CoroutineScope, val gone: (Set<String>) -> Unit) {
+class Deletion(private val scope: CoroutineScope, val gone: (Set<String>) -> Unit) {
     var job by mutableStateOf<Job?>(null)
         private set
     var done by mutableIntStateOf(0)
@@ -191,22 +242,32 @@ internal class Deletion(private val scope: CoroutineScope, val gone: (Set<String
 
 /** [pick]'s thumbnail at [size] pixels, shared by the grid and the viewer. */
 @Composable
-internal fun rememberThumb(pick: Pick, size: Int = 320): State<Bitmap?> {
-    val context = LocalContext.current
+fun rememberThumb(pick: Pick, size: Int = 320): State<ImageBitmap?> {
     return produceState(pick.cachedThumb(size), pick.key, size) {
         if (value != null) return@produceState
-        value = pick.thumbnail(context, size)
+        value = pick.thumbnail(size)
     }
 }
 
 /** A source that couldn't be reached: why, and trying again. */
 @Composable
-internal fun Failed(icon: ImageVector, reason: StringResource, note: StringResource, onRetry: () -> Unit) {
+fun Failed(icon: ImageVector, reason: StringResource, note: StringResource, onRetry: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(top = LocalTopClearance.current + Space.xl * 3).padding(horizontal = Space.xl),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Space.s)) {
         Icon(icon, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(48.dp))
         Text(stringResource(reason), style = AppTheme.typography.body, textAlign = TextAlign.Center)
         Text(stringResource(note), style = AppTheme.typography.caption, color = tokens.tx3, textAlign = TextAlign.Center)
         Box(Modifier.padding(top = Space.l)) { Button(onClick = onRetry, modifier = Modifier.testTag("camera_retry")) { Text(stringResource(Res.string.action_retry)) } }
+    }
+}
+
+/** The NAS not set up yet, where it is all there is to list: what is missing and where to set it. */
+@Composable
+fun Unset() {
+    Column(Modifier.fillMaxSize().padding(top = LocalTopClearance.current + Space.xl * 3).padding(horizontal = Space.xl).testTag("album_no_nas"),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Space.s)) {
+        Icon(cc.hyoban.moments.ui.design.AppIcons.Nas, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(48.dp))
+        Text(stringResource(Res.string.album_no_nas), style = AppTheme.typography.body, textAlign = TextAlign.Center)
+        Text(stringResource(Res.string.album_no_nas_note), style = AppTheme.typography.caption, color = tokens.tx3, textAlign = TextAlign.Center)
     }
 }

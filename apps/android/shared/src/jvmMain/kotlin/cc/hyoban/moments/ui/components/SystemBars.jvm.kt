@@ -14,3 +14,6 @@ actual fun fullWindowDialogProperties(): DialogProperties = DialogProperties(use
 @Composable
 actual fun ViewerSystemBars(hidden: Boolean) {
 }
+
+@Composable
+actual fun DarkDialogStatusBar() {}

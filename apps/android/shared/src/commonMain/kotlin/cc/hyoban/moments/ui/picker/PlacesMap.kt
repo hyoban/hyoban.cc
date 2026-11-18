@@ -1,8 +1,8 @@
 package cc.hyoban.moments.ui.picker
 
 import cc.hyoban.moments.res.*
-import android.graphics.Bitmap
-import androidx.activity.compose.BackHandler
+import androidx.compose.ui.graphics.ImageBitmap
+import cc.hyoban.moments.ui.components.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -35,7 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
+
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
@@ -96,7 +96,7 @@ private const val CLOSEST = 14.0
  * beside the map.
  */
 @Composable
-internal fun PlacesMap(places: Places, sideways: Boolean, grid: @Composable (onNearEnd: () -> Unit) -> Unit) {
+fun PlacesMap(places: Places, sideways: Boolean, grid: @Composable (onNearEnd: () -> Unit) -> Unit) {
     LaunchedEffect(places) { places.load() }
     val spots = places.spots
     val failed = places.failed
@@ -257,7 +257,7 @@ private fun VisibleBounds.near(latitude: Double, longitude: Double): Boolean {
 private fun HeapMark(places: Places, heap: Heap, chosen: Boolean, modifier: Modifier, onOpen: () -> Unit) {
     val shape = AppTheme.shapes.medium
     val cover = heap.cover
-    val thumb by produceState<Bitmap?>(null, cover.id) { value = places.thumbnail(cover) }
+    val thumb by produceState<ImageBitmap?>(null, cover.id) { value = places.thumbnail(cover) }
     val label = stringResource(Res.string.picker_heap_description, heap.count)
     Box(modifier.size(HEAP)) {
         Box(
@@ -266,7 +266,7 @@ private fun HeapMark(places: Places, heap: Heap, chosen: Boolean, modifier: Modi
                 .clickable(onClickLabel = label, role = Role.Button, onClick = onOpen)
                 .testTag("picker_heap_${cover.id}"),
         ) {
-            thumb?.let { Image(it.asImageBitmap(), contentDescription = label, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
+            thumb?.let { Image(it, contentDescription = label, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
         }
         Box(Modifier.fillMaxSize().border(if (chosen) 3.dp else 2.dp, if (chosen) tokens.accent else MediaOverlay.content, shape))
         if (heap.count > 1) Box(

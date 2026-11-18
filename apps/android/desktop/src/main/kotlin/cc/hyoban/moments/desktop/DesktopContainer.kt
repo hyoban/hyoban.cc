@@ -44,6 +44,17 @@ class DesktopContainer(private val root: File) : AppContainer(
     )
     override val footprints: cc.hyoban.moments.footprints.Footprints get() = phoneBackup.footprints
 
+    /** The NAS 相册 lists: its settings beside the app's, its password with the other secrets, what is read off it in the user's caches and its originals kept in the Pictures folder's Here. */
+    override val nas by lazy {
+        cc.hyoban.moments.nas.Nas(
+            FilePrefs(File(root, "nas.json")),
+            cc.hyoban.moments.Token(File(root, "private/nas-password")),
+            File(System.getProperty("user.home"), "Library/Caches/Here"),
+            cc.hyoban.moments.nas.FolderKeep(File(System.getProperty("user.home"), "Pictures/Here")),
+            clientId = "here-mac",
+        )
+    }
+
     private var publish: Job? = null
 
     init {

@@ -54,6 +54,8 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.core.ktx)
             implementation(libs.exifinterface)
+            // A picked photo's original read in tiles as it zooms; the Mac has no build of it.
+            implementation(libs.telephoto.zoomable.image.coil3)
             implementation(libs.capsule)
             implementation(libs.mlkit.faces)
             implementation(libs.mlkit.text.chinese)

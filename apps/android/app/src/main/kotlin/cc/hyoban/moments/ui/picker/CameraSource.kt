@@ -1,9 +1,8 @@
 package cc.hyoban.moments.ui.picker
 
 import cc.hyoban.moments.res.*
-import cc.hyoban.moments.ui.viewer.VideoState
 import android.content.Context
-import android.graphics.Bitmap
+import androidx.compose.ui.graphics.ImageBitmap
 import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
@@ -96,6 +95,7 @@ internal class CameraSource(
         private set
     var ask: () -> Unit = {}
     val listing = CameraListing(this)
+    override val home get() = listing
 
     fun connect() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -214,8 +214,8 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
     override val choosable get() = photo.photo
 
     /** As the camera sent it, whatever the size. */
-    override suspend fun thumbnail(context: Context, size: Int): Bitmap? =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.transfer?.thumbnail(photo) else null
+    override suspend fun thumbnail(size: Int): ImageBitmap? =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.transfer?.thumbnail(photo)?.asImageBitmap() else null
 
     @Composable
     override fun badge() = if (photo.raw) "RAW" else null
@@ -256,7 +256,7 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
 
     /** Its thumbnail enlarged until its original is down in the cache, then the original in tiles. */
     @Composable
-    override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {
+    override fun Page(active: Boolean, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             val transfer = source.transfer
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || transfer == null) return@Box
@@ -268,7 +268,7 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
                 ZoomableOriginal(file, thumb, shape, photo.name, onZoom, onTap = onTap)
             } else {
                 ZoomablePhoto(shape, onZoom, onTap = onTap) {
-                    thumb?.let { Image(it.asImageBitmap(), contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
+                    thumb?.let { Image(it, contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
                 }
             }
             if (photo.photo && file == null && original != null) Loading(original) { transfer.loadOriginal(photo) }

@@ -16,7 +16,7 @@ import cc.hyoban.moments.PhoneContainer
  * taken. It stays here while the documents picker is open, so its answer has somewhere to come back to.
  */
 @Composable
-fun PhonePhotoPicker(container: PhoneContainer, limit: Int, onDismiss: () -> Unit, onPicked: (List<Uri>) -> Unit) {
+fun PhonePhotoPicker(container: cc.hyoban.moments.AppContainer, limit: Int, onDismiss: () -> Unit, onPicked: (List<Uri>) -> Unit) {
     val documents = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { picked -> onPicked(picked) }
     var browsing by remember { mutableStateOf(true) }
     if (browsing) androidx.compose.ui.window.Dialog(

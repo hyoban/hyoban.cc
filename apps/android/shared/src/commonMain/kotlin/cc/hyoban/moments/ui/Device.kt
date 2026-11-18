@@ -68,6 +68,9 @@ interface Device {
     /** Choosing photos for a Moment, [limit] at most: what was picked told to [onPicked], or [onDismiss] with none. */
     @Composable fun PhotoPicker(container: AppContainer, limit: Int, onDismiss: () -> Unit, onPicked: (List<cc.hyoban.moments.data.local.PhotoRef>) -> Unit)
 
+    /** What 相册 has of the device: its own sources besides the NAS, its videos, sharing and where it keeps photos. */
+    val picker: cc.hyoban.moments.ui.picker.PickerDevice get() = cc.hyoban.moments.ui.picker.NasOnly
+
     /** Asking for where the device is, as it asks: [onResult] hears whether it may be read. */
     @Composable fun rememberLocationAsk(onResult: (Boolean) -> Unit): LocationAsk
 

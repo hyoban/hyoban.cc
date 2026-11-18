@@ -56,7 +56,7 @@ import kotlin.math.roundToInt
  * reached. It reaches only what the grid holds, so a source read a page at a time reads on at the end.
  */
 @Composable
-internal fun BoxScope.DateScrubber(state: LazyGridState, bottom: Dp, label: (Int) -> String?) {
+fun BoxScope.DateScrubber(state: LazyGridState, bottom: Dp, label: (Int) -> String?) {
     // Not worth a handle under three screens of photos.
     val long by remember(state) {
         derivedStateOf { state.layoutInfo.let { it.visibleItemsInfo.isNotEmpty() && it.totalItemsCount > it.visibleItemsInfo.size * 3 } }

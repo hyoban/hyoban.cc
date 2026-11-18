@@ -1,18 +1,13 @@
 package cc.hyoban.moments.nas
 
-import android.content.ContentUris
-import android.content.ContentValues
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.net.Uri
-import android.os.Environment
-import android.provider.MediaStore
-import android.util.Log
-import android.util.LruCache
+import androidx.compose.ui.graphics.ImageBitmap
+import cc.hyoban.moments.Prefs
 import cc.hyoban.moments.Setting
+import cc.hyoban.moments.data.local.PhotoRef
+import cc.hyoban.moments.logWarning
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.jetbrains.compose.resources.decodeToImageBitmap
 import cc.hyoban.moments.Token
-import cc.hyoban.moments.camera.TAG
 import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.HttpException
 import cc.hyoban.moments.data.media.MediaCache
@@ -47,7 +42,6 @@ import java.io.File
 import java.io.IOException
 import java.io.OutputStream
 import java.security.PublicKey
-import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 
 /** Why the NAS couldn't be reached or signed in to, for the words the picker shows. */
@@ -56,18 +50,34 @@ enum class NasFailure { NOT_FOUND, UNREACHABLE, SIGN_IN, OTHER }
 class NasException(val failure: NasFailure, message: String, cause: Throwable? = null) : IOException(message, cause)
 
 /**
- * The owner's UGREEN NAS, its photo app's photos and albums, for 选照片: where it is (its
- * UGREENlink ID, looked up, or an address), who signs in, and the session once signed in.
- * The password is kept beside the WebDAV backup's, out of the phone's backups.
+ * Where the photos of the NAS go when they are kept on the device: the phone's gallery, in its Here
+ * album, or a folder of the computer's. One already kept is found again rather than kept twice.
  */
-class Nas(context: Context, private val client: OkHttpClient = Http.client) {
-    private val context = context.applicationContext
-    private val prefs = context.getSharedPreferences("nas", Context.MODE_PRIVATE)
+interface NasKeep {
+    /** [photo], already kept, or null. */
+    fun existing(photo: NasPhoto): PhotoRef?
 
+    /** Keeps [photo] as [write] writes it, and gives where it is; nothing is kept if [write] throws. */
+    suspend fun save(photo: NasPhoto, write: suspend (OutputStream) -> Unit): PhotoRef
+}
+
+/**
+ * The owner's UGREEN NAS, its photo app's photos and albums, for 相册 and 选照片: where it is (its
+ * UGREENlink ID, looked up, or an address), who signs in, and the session once signed in. The
+ * password is kept beside the WebDAV backup's, out of the device's backups ([password]); what is
+ * read off it is kept under [cacheDir], and its originals are kept on the device by [keep].
+ */
+class Nas(
+    private val prefs: Prefs,
+    val password: Token,
+    cacheDir: File,
+    private val keep: NasKeep,
+    private val clientId: String,
+    private val client: OkHttpClient = Http.client,
+) {
     /** The UGREENlink ID, or the NAS's own address. */
-    val link = Setting(cc.hyoban.moments.SharedPrefs(prefs), "link", "")
-    val user = Setting(cc.hyoban.moments.SharedPrefs(prefs), "user", "")
-    val password = Token(File(context.noBackupFilesDir, "nas-password"))
+    val link = Setting(prefs, "link", "")
+    val user = Setting(prefs, "user", "")
 
     val configured get() = link.isSet && user.isSet && password.isSet
 
@@ -92,13 +102,13 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
 
     private fun forgetSession() {
         session = null
-        thumbs.evictAll()
+        synchronized(thumbs) { thumbs.clear() }
     }
 
     /** The address it answered at last, tried first next time, so a lookup is needed only when that fails. */
     private var lastBase: String?
         get() = prefs.getString("base", null)
-        set(value) = prefs.edit().putString("base", value).apply()
+        set(value) = prefs.edit { if (value == null) remove("base") else putString("base", value) }
 
     private val json = Json { ignoreUnknownKeys = true }
     private val jsonType = "application/json".toMediaType()
@@ -169,7 +179,7 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
         val token = data?.text("token")
         val key = data?.text("public_key")
         if (answer.code() != 200 || token == null || key == null) {
-            Log.w(TAG, "nas: sign-in refused (${answer.code()}) ${answer.text("msg")}")
+            logWarning(TAG, "nas: sign-in refused (${answer.code()}) ${answer.text("msg")}")
             throw NasException(NasFailure.SIGN_IN, answer.text("msg") ?: "sign-in refused")
         }
         Session(base, data.text("uid").orEmpty(), token, data.text("static_token") ?: token, NasProtocol.publicKey(key)).also { session = it }
@@ -186,7 +196,7 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
         val token = NasProtocol.encrypt(s.token, s.key)
         return header("x-ugreen-token", token)
             .header("x-ugreen-security-key", NasProtocol.md5(s.token))
-            .header("client-id", CLIENT_ID)
+            .header("client-id", clientId)
             // The photo app's API version the web app asks for; its lists' shapes follow it.
             .header("Album-Api-Version", "6")
             .header("Cookie", "token_uid=${s.uid}; token=$token")
@@ -213,7 +223,7 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
                     return@repeat
                 }
                 if (answer.code() == 200) return@withContext answer.obj("data")
-                Log.w(TAG, "nas: $path answered ${answer.code()} ${answer.text("msg")}")
+                logWarning(TAG, "nas: $path answered ${answer.code()} ${answer.text("msg")}")
                 session = null
                 if (attempt == 1) throw NasException(NasFailure.OTHER, answer.text("msg") ?: "$path refused")
             }
@@ -309,7 +319,7 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
         }))
 
     /** The small thumbnail of the photo at [spot]. */
-    suspend fun thumbnail(spot: NasSpot): Bitmap? =
+    suspend fun thumbnail(spot: NasSpot): ImageBitmap? =
         thumbnail(NasPhoto(spot.id, "", 0, null, null, video = false, live = false, duration = null, taken = null, uploaded = spot.uploaded))
 
     /** The stream of [photo] at [size]: a thumbnail, or the original. It wants the session's cookie and static token, no headers. */
@@ -319,7 +329,7 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
             .addQueryParameter("id", photo.id.toString())
             .addQueryParameter("size_type", size.toString())
             .apply { photo.album?.let { addQueryParameter("source_album_uuid", it.uuid); addQueryParameter("source_album_type", it.type.toString()) } }
-            .addQueryParameter("client_id", CLIENT_ID)
+            .addQueryParameter("client_id", clientId)
             .addQueryParameter("upload_time", photo.uploaded.toString())
             .addQueryParameter("ugk", s.static)
             .build()
@@ -332,18 +342,22 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
         return request.url.toString() to mapOf("Cookie" to request.header("Cookie").orEmpty())
     }
 
-    private val thumbs = LruCache<String, Bitmap>(400)
+    /** The thumbnails read lately, the least lately used going first past [THUMBS]. */
+    private val thumbs = object : LinkedHashMap<String, ImageBitmap>(64, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ImageBitmap>) = size > THUMBS
+    }
 
     /** Thumbnails kept on disk, from one visit to the next. */
-    private val keptThumbs = MediaCache.nas(context, originals = false)
+    private val keptThumbs = MediaCache.nas(cacheDir, originals = false)
 
     /**
      * [photo]'s thumbnail, [size] the stream's, small for the grid and big for the viewer; null when
      * it couldn't be had. Kept in memory, and on disk for the next visit.
      */
-    suspend fun thumbnail(photo: NasPhoto, size: Int = NasProtocol.SMALL): Bitmap? {
+    @OptIn(ExperimentalResourceApi::class)
+    suspend fun thumbnail(photo: NasPhoto, size: Int = NasProtocol.SMALL): ImageBitmap? {
         val key = "${photo.key}@$size"
-        thumbs.get(key)?.let { return it }
+        synchronized(thumbs) { thumbs[key] }?.let { return it }
         val kept = "${kept(photo)}@$size"
         return runCatching {
             withContext(Dispatchers.IO) { keptThumbs.bitmap(kept) } ?: run {
@@ -352,16 +366,16 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
                     client.newCall(request).execute().use { response ->
                         if (!response.isSuccessful) return@use null
                         response.body?.bytes()?.let { bytes ->
-                            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.also { keptThumbs.put(kept, bytes) }
+                            runCatching { bytes.decodeToImageBitmap() }.getOrNull()?.also { keptThumbs.put(kept, bytes) }
                         }
                     }
                 }
             }
-        }.onFailure { Log.w(TAG, "nas: thumbnail not read", it) }.getOrNull()?.also { thumbs.put(key, it) }
+        }.onFailure { logWarning(TAG, "nas: thumbnail not read", it) }.getOrNull()?.also { synchronized(thumbs) { thumbs[key] = it } }
     }
 
     /** Originals fetched to be zoomed into, kept for adding and for the next visit. */
-    private val originals = MediaCache.nas(context, originals = true)
+    private val originals = MediaCache.nas(cacheDir, originals = true)
     private val fetching = mutableMapOf<String, Mutex>()
 
     /** [photo] on another visit too: changed on the NAS, it is uploaded again. */
@@ -401,7 +415,7 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
                 }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                Log.w(TAG, "nas: original not read", e)
+                logWarning(TAG, "nas: original not read", e)
                 null
             }
         }
@@ -428,19 +442,19 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
     }.getOrNull()
 
     /**
-     * Saves [photos]' originals to the gallery's Here album, one after another, one already
-     * there kept rather than saved twice. [progress] is how many are done and how far into
+     * Keeps [photos]' originals on the device ([keep]), one after another, one already there
+     * kept rather than saved twice. [progress] is how many are done and how far into
      * the one under way, 0 to 1.
      */
-    suspend fun download(photos: List<NasPhoto>, progress: (Int, Float) -> Unit): List<Uri> =
+    suspend fun download(photos: List<NasPhoto>, progress: (Int, Float) -> Unit): List<PhotoRef> =
         photos.mapIndexed { index, photo ->
             progress(index, 0f)
             val request = stream(photo, NasProtocol.ORIGINAL)
             withContext(Dispatchers.IO) {
-                existing(photo) ?: cached(photo)?.let { file ->
+                keep.existing(photo) ?: cached(photo)?.let { file ->
                     // Already down to be zoomed into: copied, not fetched again.
-                    save(photo) { out -> file.inputStream().use { it.copyTo(out) } }.also { progress(index, 1f) }
-                } ?: save(photo) { out ->
+                    keep.save(photo) { out -> file.inputStream().use { it.copyTo(out) } }.also { progress(index, 1f) }
+                } ?: keep.save(photo) { out ->
                     client.newCall(request).execute().use { response ->
                         if (!response.isSuccessful) throw HttpException(response.code, "original answered ${response.code}")
                         val body = response.body ?: throw IOException("original without a body")
@@ -463,40 +477,6 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
             }
         }.also { progress(photos.size, 0f) }
 
-    private fun collection(photo: NasPhoto) =
-        if (photo.video) MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        else MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-
-    private fun existing(photo: NasPhoto): Uri? {
-        val collection = collection(photo)
-        context.contentResolver.query(
-            collection, arrayOf(MediaStore.MediaColumns._ID),
-            "${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND ${MediaStore.MediaColumns.SIZE} = ? AND ${MediaStore.MediaColumns.RELATIVE_PATH} = ?",
-            arrayOf(photo.name, photo.size.toString(), ALBUM), null,
-        )?.use { if (it.moveToFirst()) return ContentUris.withAppendedId(collection, it.getLong(0)) }
-        return null
-    }
-
-    private suspend fun save(photo: NasPhoto, write: suspend (OutputStream) -> Unit): Uri {
-        val resolver = context.contentResolver
-        val values = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, photo.name)
-            put(MediaStore.MediaColumns.MIME_TYPE, photo.mime)
-            put(MediaStore.MediaColumns.RELATIVE_PATH, ALBUM)
-            photo.taken?.let { put(MediaStore.MediaColumns.DATE_TAKEN, it.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()) }
-            put(MediaStore.MediaColumns.IS_PENDING, 1)
-        }
-        val uri = resolver.insert(collection(photo), values) ?: throw IOException("the gallery took nothing")
-        try {
-            resolver.openOutputStream(uri)!!.buffered(1 shl 20).use { write(it) }
-            resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
-            return uri
-        } catch (e: Throwable) {
-            resolver.delete(uri, null, null)
-            throw e
-        }
-    }
-
     private fun deleteBody(photos: List<NasPhoto>) = buildJsonObject {
         putJsonArray("picture_ids") { photos.forEach { add(JsonPrimitive(it.id)) } }
         putJsonArray("folder_ids") {}
@@ -511,7 +491,7 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
     suspend fun delete(photos: List<NasPhoto>): Int =
         photos.chunked(100).sumOf { batch -> NasProtocol.deleteMissed(call("v5/photo/picture/file/remove", deleteBody(batch))) }
             .also {
-                thumbs.evictAll()
+                synchronized(thumbs) { thumbs.clear() }
                 photos.forEach { photo ->
                     originals.remove(kept(photo))
                     listOf(NasProtocol.SMALL, NasProtocol.BIG).forEach { keptThumbs.remove("${kept(photo)}@$it") }
@@ -522,7 +502,7 @@ class Nas(context: Context, private val client: OkHttpClient = Http.client) {
         const val PAGE = 200
         private const val SPOTS = 5000
         private const val HEAD = 256 * 1024
-        private const val CLIENT_ID = "here-android"
-        private val ALBUM = Environment.DIRECTORY_PICTURES + "/Here/"
+        private const val THUMBS = 400
+        private const val TAG = "Moments"
     }
 }

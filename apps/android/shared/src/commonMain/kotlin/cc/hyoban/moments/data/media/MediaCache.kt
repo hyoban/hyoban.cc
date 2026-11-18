@@ -1,8 +1,8 @@
 package cc.hyoban.moments.data.media
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import androidx.compose.ui.graphics.ImageBitmap
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.jetbrains.compose.resources.decodeToImageBitmap
 import coil3.disk.DiskCache
 import okio.Path.Companion.toOkioPath
 import java.io.File
@@ -21,7 +21,8 @@ class MediaCache private constructor(private val disk: DiskCache) {
     fun file(key: String): File? = disk.openSnapshot(key)?.use { it.data.toFile() }
 
     /** The picture kept under [key], or null. */
-    fun bitmap(key: String): Bitmap? = file(key)?.let { BitmapFactory.decodeFile(it.path) }
+    @OptIn(ExperimentalResourceApi::class)
+    fun bitmap(key: String): ImageBitmap? = file(key)?.let { runCatching { it.readBytes().decodeToImageBitmap() }.getOrNull() }
 
     /**
      * Keeps what [write] writes under [key] and gives its file; nothing is kept if [write] throws,
@@ -50,16 +51,16 @@ class MediaCache private constructor(private val disk: DiskCache) {
         private val made = mutableMapOf<String, MediaCache>()
 
         /** The camera's photos' thumbnails and originals, by the photo's name and size. */
-        fun camera(context: Context, originals: Boolean) =
-            of(context, if (originals) "camera-originals" else "camera-thumbnails", if (originals) ORIGINALS else THUMBNAILS)
+        fun camera(cacheDir: File, originals: Boolean) =
+            of(cacheDir, if (originals) "camera-originals" else "camera-thumbnails", if (originals) ORIGINALS else THUMBNAILS)
 
         /** The NAS's photos' thumbnails and originals, by the photo's id and when it was uploaded. */
-        fun nas(context: Context, originals: Boolean) =
-            of(context, if (originals) "nas-originals" else "nas-thumbnails", if (originals) ORIGINALS else THUMBNAILS)
+        fun nas(cacheDir: File, originals: Boolean) =
+            of(cacheDir, if (originals) "nas-originals" else "nas-thumbnails", if (originals) ORIGINALS else THUMBNAILS)
 
-        private fun of(context: Context, name: String, size: Long): MediaCache = synchronized(made) {
+        private fun of(cacheDir: File, name: String, size: Long): MediaCache = synchronized(made) {
             made.getOrPut(name) {
-                val directory = File(context.applicationContext.cacheDir, name)
+                val directory = File(cacheDir, name)
                 MediaCache(DiskCache.Builder().directory(directory.toOkioPath()).maxSizeBytes(size).build())
             }
         }

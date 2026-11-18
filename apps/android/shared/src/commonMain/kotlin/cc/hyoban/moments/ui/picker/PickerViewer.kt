@@ -16,18 +16,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
+
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.contentDescription
 import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.tokens
-import cc.hyoban.moments.ui.viewer.VideoControls
-import cc.hyoban.moments.ui.viewer.VideoState
-import com.kyant.capsule.ContinuousRoundedRectangle
 import kotlin.math.abs
 import kotlinx.coroutines.launch
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -61,7 +57,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
@@ -69,9 +64,8 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogWindowProvider
-import androidx.core.view.WindowCompat
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.ui.components.DarkDialogStatusBar
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
@@ -92,8 +86,8 @@ import androidx.compose.ui.text.style.TextOverflow
  * keeps light icons over the black while it is open.
  */
 @Composable
-internal fun Viewer(
-    container: PhoneContainer,
+fun Viewer(
+    container: AppContainer,
     shown: List<Pick>,
     start: Int,
     order: Map<String, Int>,
@@ -109,17 +103,11 @@ internal fun Viewer(
 ) {
     val pager = rememberPagerState(initialPage = start) { shown.size }
     // Light icons over the black while it is open, on the dialog's own window the picker is in.
-    val view = LocalView.current
-    DisposableEffect(view) {
-        val controller = (view.parent as? DialogWindowProvider)?.window?.let { WindowCompat.getInsetsController(it, view) }
-        val before = controller?.isAppearanceLightStatusBars
-        controller?.isAppearanceLightStatusBars = false
-        onDispose { if (before != null) controller.isAppearanceLightStatusBars = before }
-    }
+    DarkDialogStatusBar()
     val current = shown.getOrNull(pager.currentPage)
     val details = current?.rememberDetails()
-    // Each page's video, held here so the controls under the pages work the one shown.
-    val videos = remember { mutableMapOf<String, VideoState>() }
+    // The videos, each its page's, played by the device; the controls under the pages work the one shown.
+    val videos = LocalPickerVideos.current
     LaunchedEffect(current?.key, pager.isScrollInProgress) {
         // Once it rests there a moment, so the row of small ones dragged past it asks nothing of it.
         if (!pager.isScrollInProgress) {
@@ -134,7 +122,7 @@ internal fun Viewer(
         modifier = Modifier.testTag("picker_viewer"),
         thumb = { index ->
             val thumb by rememberThumb(shown[index])
-            thumb?.let { Image(it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
+            thumb?.let { Image(it, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
         },
         thumbLabel = { shown[it].description() },
         marked = { shown[it].key in order },
@@ -144,7 +132,7 @@ internal fun Viewer(
                 Icon(AppIcons.Trash, contentDescription = stringResource(current?.source?.deleteWords ?: Res.string.camera_delete), tint = MediaOverlay.content)
             }
         },
-        controls = { if (current != null) VideoControls(videos.getOrPut(current.key) { VideoState() }, Modifier.padding(horizontal = Space.xs)) },
+        controls = { if (current != null) videos.Controls(current.key, Modifier.padding(horizontal = Space.xs)) },
         caption = {
             val at = details?.takenAt
             Text(
@@ -182,6 +170,6 @@ internal fun Viewer(
             }
         },
     ) { page, onZoom, onTap ->
-        shown[page].Page(pager.currentPage == page, videos.getOrPut(shown[page].key) { VideoState() }, onZoom, onTap)
+        shown[page].Page(pager.currentPage == page, onZoom, onTap)
     }
 }

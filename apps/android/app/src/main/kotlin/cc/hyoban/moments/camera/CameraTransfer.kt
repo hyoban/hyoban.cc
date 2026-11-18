@@ -99,9 +99,9 @@ class CameraTransfer(private val context: Context) {
     /** Thumbnails being fetched, so the grid and the viewer asking for one share the request. Touched on the main thread alone. */
     private val fetching = mutableMapOf<String, CompletableDeferred<Bitmap?>>()
     /** Thumbnails kept on disk, from one visit to the next. */
-    private val keptThumbs = MediaCache.camera(context, originals = false)
+    private val keptThumbs = MediaCache.camera(context.cacheDir, originals = false)
     /** Originals downloaded to be looked at, kept for adding and for the next visit. */
-    private val originals = MediaCache.camera(context, originals = true)
+    private val originals = MediaCache.camera(context.cacheDir, originals = true)
     /** What goes on while the page is open whichever photo is shown: originals fetched, the list read again. */
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var relisting: Job? = null

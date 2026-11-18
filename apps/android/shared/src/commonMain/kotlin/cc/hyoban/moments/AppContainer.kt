@@ -29,6 +29,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -61,11 +63,21 @@ abstract class AppContainer(
     /** The ledger the pages read; the phone's own, or none. */
     abstract val ledger: cc.hyoban.moments.ledger.LedgerSource
 
-    /** Photos shared into the app from elsewhere, until a new Moment takes them; none where the device has no such way in. */
-    open val sharedPhotos: StateFlow<List<cc.hyoban.moments.data.local.PhotoRef>> = MutableStateFlow(emptyList())
+    private val _sharedPhotos = MutableStateFlow<List<cc.hyoban.moments.data.local.PhotoRef>>(emptyList())
+
+    /** Photos shared into the app from elsewhere, or chosen in 相册 to write with, until a new Moment takes them. */
+    val sharedPhotos: StateFlow<List<cc.hyoban.moments.data.local.PhotoRef>> = _sharedPhotos
+
+    /** Photos for a new Moment to take, as those shared in: from another app, or chosen in 相册. */
+    fun offerPhotos(refs: List<cc.hyoban.moments.data.local.PhotoRef>) {
+        _sharedPhotos.update { it + refs }
+    }
 
     /** The photos shared into the app, taken so they are used once. */
-    open fun takeSharedPhotos(): List<cc.hyoban.moments.data.local.PhotoRef> = emptyList()
+    fun takeSharedPhotos(): List<cc.hyoban.moments.data.local.PhotoRef> = _sharedPhotos.getAndUpdate { emptyList() }
+
+    /** The owner's UGREEN NAS, whose photos 相册 lists, kept as the device keeps its settings. */
+    abstract val nas: cc.hyoban.moments.nas.Nas
 
     /** Where the device's own records put a bill paid at [time], or null where it keeps none. */
     open suspend fun billPointAt(time: Long): cc.hyoban.moments.data.local.Fix? = null

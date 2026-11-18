@@ -1487,6 +1487,9 @@
     <string name="album_save">Save to gallery</string>
     <string name="album_saving">Saving %1$d of %2$d to the gallery</string>
     <string name="album_nine">A Moment holds nine</string>
+    <string name="album_no_nas">No NAS connected</string>
+    <string name="album_no_nas_note">Fill in the UGREEN NAS's ID, user and password in Sync &amp; sources.</string>
+    <string name="album_save_pictures">Save to Pictures</string>
     <string name="section_nas">UGREEN NAS</string>
     <string name="nas_photos">Photos</string>
     <string name="nas_as">%1$s · %2$s</string>

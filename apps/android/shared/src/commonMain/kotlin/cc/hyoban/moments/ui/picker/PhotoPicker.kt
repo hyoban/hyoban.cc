@@ -1,19 +1,16 @@
 package cc.hyoban.moments.ui.picker
 
 import cc.hyoban.moments.res.*
-import android.content.ClipData
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
+import cc.hyoban.moments.data.local.PhotoRef
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import cc.hyoban.moments.ui.components.fullWindowDialogProperties
 import cc.hyoban.moments.ui.Album
 import cc.hyoban.moments.ui.LocalNavAccessory
 import cc.hyoban.moments.ui.LocalTabsHidden
@@ -49,7 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.TitleMenu
 import cc.hyoban.moments.ui.components.isPhoneLandscape
@@ -79,7 +76,7 @@ import java.time.LocalDate
  * has the photos, the camera's and the NAS's saved to the gallery's Here album first.
  */
 @Composable
-fun PhotoPickerScreen(container: PhoneContainer, limit: Int, onClose: () -> Unit, onFallback: () -> Unit, onAdded: (List<Uri>) -> Unit) =
+fun PhotoPickerScreen(container: AppContainer, limit: Int, onClose: () -> Unit, onFallback: () -> Unit, onAdded: (List<PhotoRef>) -> Unit) =
     PhotoBrowser(container, limit, album = null, onClose = onClose, onFallback = onFallback, onAdded = onAdded)
 
 /**
@@ -89,7 +86,7 @@ fun PhotoPickerScreen(container: PhoneContainer, limit: Int, onClose: () -> Unit
  * place of the tabs. [onNew] is the tab's own button, as the timeline's.
  */
 @Composable
-fun AlbumScreen(container: PhoneContainer, onNew: () -> Unit, onWrite: () -> Unit) =
+fun AlbumScreen(container: AppContainer, onNew: () -> Unit, onWrite: () -> Unit) =
     PhotoBrowser(
         container, Int.MAX_VALUE,
         album = AlbumActions(onNew) { uris -> container.offerPhotos(uris); onWrite() },
@@ -97,7 +94,7 @@ fun AlbumScreen(container: PhoneContainer, onNew: () -> Unit, onWrite: () -> Uni
     )
 
 /** What 相册 does that 选照片 doesn't: its tab's button, and a new Moment with the photos given. */
-private class AlbumActions(val onNew: () -> Unit, val onWrite: (List<Uri>) -> Unit)
+private class AlbumActions(val onNew: () -> Unit, val onWrite: (List<PhotoRef>) -> Unit)
 
 /**
  * The gallery, the paired camera and the NAS in one page, one grid and one viewer, switched from
@@ -105,10 +102,10 @@ private class AlbumActions(val onNew: () -> Unit, val onWrite: (List<Uri>) -> Un
  * it is 相册, else 选照片. Leaving it leaves the camera's network.
  */
 @Composable
-private fun PhotoBrowser(container: PhoneContainer, limit: Int, album: AlbumActions?, onClose: () -> Unit, onFallback: () -> Unit, onAdded: (List<Uri>) -> Unit) {
+private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumActions?, onClose: () -> Unit, onFallback: () -> Unit, onAdded: (List<PhotoRef>) -> Unit) {
     val haptics = rememberHaptics()
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val device = cc.hyoban.moments.ui.LocalDevice.current.picker
 
     val chosen = remember { mutableStateListOf<Pick>() }
     val order by remember { derivedStateOf { chosen.withIndex().associate { (i, p) -> p.key to i } } }
@@ -149,13 +146,16 @@ private fun PhotoBrowser(container: PhoneContainer, limit: Int, album: AlbumActi
         }
     }
 
-    val gallery = rememberGallery(deletion, onFallback)
-    var listing by remember { mutableStateOf<Listing>(gallery.all) }
-    val camera = rememberCamera(deletion, onRefused = { listing = gallery.all })
+    // The device's own sources first (the phone's gallery and paired camera), then the NAS; the
+    // first source's photos listed first, and gone back to when another is given up on.
+    var picked by remember { mutableStateOf<Listing?>(null) }
+    val own = device.sources(deletion, onFallback, onRefused = { picked = null })
     val nas = rememberNas(container.nas, deletion)
-    // In the title's menu in this order; fetched in the order of [fetched].
-    val sources = listOf(gallery, camera, nas)
-    val fetched = listOf(camera, nas, gallery)
+    val sources = own + nas
+    val listing = picked ?: sources.first().home
+    // Fetched those that come down first, so the bar counts them as they come.
+    val fetched = sources.sortedBy { !it.fetches }
+    val videos = device.rememberVideos()
     // The map of what is listed, where its source knows where its photos were taken: then the
     // photos shown, in the grid under it and in the viewer, are the opened heap's.
     var mapped by remember { mutableStateOf(false) }
@@ -175,7 +175,7 @@ private fun PhotoBrowser(container: PhoneContainer, limit: Int, album: AlbumActi
     var done by remember { mutableIntStateOf(0) }
     var within by remember { mutableFloatStateOf(0f) }
     var retry by remember { mutableStateOf<(() -> Unit)?>(null) }
-    fun run(picks: List<Pick>, words: StringResource, then: (List<Uri>) -> Unit) {
+    fun run(picks: List<Pick>, words: StringResource, then: (List<PhotoRef>) -> Unit) {
         retry = null
         runWords = words
         runCount = picks.count { it.source.fetches }
@@ -183,7 +183,7 @@ private fun PhotoBrowser(container: PhoneContainer, limit: Int, album: AlbumActi
         within = 0f
         running = scope.launch {
             try {
-                val byKey = mutableMapOf<String, Uri>()
+                val byKey = mutableMapOf<String, PhotoRef>()
                 var before = 0
                 fetched.forEach { source ->
                     val these = picks.filter { it.source === source }
@@ -201,7 +201,7 @@ private fun PhotoBrowser(container: PhoneContainer, limit: Int, album: AlbumActi
     }
     val add: () -> Unit = { run(chosen.toList(), Res.string.picker_adding, onAdded) }
     val write: (List<Pick>) -> Unit = { picks -> run(picks, Res.string.album_saving) { uris -> album?.onWrite(uris); stopChoosing() } }
-    val share: (List<Pick>) -> Unit = { picks -> run(picks, Res.string.album_saving) { uris -> shareMedia(context, uris) } }
+    val share: ((List<Pick>) -> Unit)? = device.share?.let { hand -> { picks -> run(picks, Res.string.album_saving) { refs -> hand(refs) } } }
     val save: (List<Pick>) -> Unit = { picks -> run(picks.filter { it.source.fetches }, Res.string.album_saving) { if (picks.size > 1) stopChoosing() } }
 
     val idle = running == null && deletion.job == null
@@ -231,7 +231,7 @@ private fun PhotoBrowser(container: PhoneContainer, limit: Int, album: AlbumActi
                             if (choice.listing == listing) Icon(AppIcons.Check, contentDescription = null)
                         }
                     },
-                    onClick = { close(); listing = choice.listing; choice.listing.opened() },
+                    onClick = { close(); picked = choice.listing; choice.listing.opened() },
                     modifier = Modifier.testTag(choice.tag),
                 )
             }
@@ -274,7 +274,7 @@ private fun PhotoBrowser(container: PhoneContainer, limit: Int, album: AlbumActi
             if (sideways && canAdd) addButton("picker_add") {}
         } else if (choosing) IconButton(onClick = stopChoosing, modifier = Modifier.testTag("album_select_done")) {
             Icon(AppIcons.Close, contentDescription = stringResource(Res.string.album_select_done))
-        } else IconButton(onClick = { choosingAlbum = true }, modifier = Modifier.testTag("album_select")) {
+        } else if (shown.isNotEmpty()) IconButton(onClick = { choosingAlbum = true }, modifier = Modifier.testTag("album_select")) {
             Icon(AppIcons.Check, contentDescription = stringResource(Res.string.album_select))
         }
     }
@@ -308,7 +308,8 @@ private fun PhotoBrowser(container: PhoneContainer, limit: Int, album: AlbumActi
             ) { running?.cancel() }
             else if (album != null && choosing) ChoosingBar(
                 chosen, listedChosen, idle,
-                onShare = { share(chosen.toList()) },
+                onShare = share?.let { { it(chosen.toList()) } },
+                saveWords = device.saveWords,
                 onSave = { save(chosen.toList()) },
                 onDelete = { listed.delete(listedChosen, fromViewer = false) },
                 onWrite = { write(chosen.toList()) },
@@ -318,14 +319,16 @@ private fun PhotoBrowser(container: PhoneContainer, limit: Int, album: AlbumActi
             }
         }
     }
-    if (album != null) TabPage(listing.title(), Album, subtitle = subtitle, actions = actions, titleMenu = menu, content = content)
-    else SubPage(listing.title(), onClose, subtitle = subtitle, close = true, small = onMap, titleMenu = menu, actions = actions, content = content)
+    CompositionLocalProvider(LocalPickerVideos provides videos) {
+        if (album != null) TabPage(listing.title(), Album, subtitle = subtitle, actions = actions, titleMenu = menu, content = content)
+        else SubPage(listing.title(), onClose, subtitle = subtitle, close = true, small = onMap, titleMenu = menu, actions = actions, content = content)
+    }
 
     // The viewer turns through what is read, not the NAS's tiles still waiting for theirs.
     val viewable = remember(shown) { shown.filter { it.openable } }
     viewing?.let { key -> viewable.indexOfFirst { it.key == key } }?.takeIf { it >= 0 }?.let { start ->
         val viewer = @Composable {
-            Viewer(
+            CompositionLocalProvider(LocalPickerVideos provides videos) { Viewer(
                 container, viewable, start, order, full, enabled = idle && !deletion.busy, busy = deletion.busy, onToggle = toggle,
                 addButton = {
                     if (album == null) { if (canAdd) addButton("picker_viewer_add") { viewing = null } }
@@ -338,11 +341,11 @@ private fun PhotoBrowser(container: PhoneContainer, limit: Int, album: AlbumActi
                 lead = if (album != null && !choosing) ({ pick ->
                     // What comes down first shows how far it is on the page, so the viewer makes way.
                     val leaving = { if (pick.source.fetches) viewing = null }
-                    IconButton(onClick = { leaving(); share(listOf(pick)) }, enabled = idle, modifier = Modifier.testTag("album_viewer_share")) {
+                    if (share != null) IconButton(onClick = { leaving(); share(listOf(pick)) }, enabled = idle, modifier = Modifier.testTag("album_viewer_share")) {
                         Icon(AppIcons.Share, contentDescription = stringResource(Res.string.action_share), tint = MediaOverlay.content)
                     }
                     if (pick.source.fetches) IconButton(onClick = { leaving(); save(listOf(pick)) }, enabled = idle, modifier = Modifier.testTag("album_viewer_save")) {
-                        Icon(AppIcons.Download, contentDescription = stringResource(Res.string.album_save), tint = MediaOverlay.content)
+                        Icon(AppIcons.Download, contentDescription = stringResource(device.saveWords), tint = MediaOverlay.content)
                     }
                     Spacer(Modifier.weight(1f))
                     if (pick.choosable) Button(onClick = { viewing = null; write(listOf(pick)) }, enabled = idle, modifier = Modifier.testTag("album_viewer_write")) {
@@ -355,12 +358,12 @@ private fun PhotoBrowser(container: PhoneContainer, limit: Int, album: AlbumActi
                     pick.source.delete(listOf(pick), fromViewer = true)
                 },
                 onClose = { viewing = null },
-            )
+            ) }
         }
         // Over the tabs, as the picker's own dialog already is.
         if (album != null) Dialog(
             onDismissRequest = { viewing = null },
-            properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+            properties = fullWindowDialogProperties(),
         ) { DialogPane { viewer() } }
         else viewer()
     }
@@ -392,7 +395,8 @@ private fun ChoosingBar(
     chosen: List<Pick>,
     listedChosen: List<Pick>,
     idle: Boolean,
-    onShare: () -> Unit,
+    onShare: (() -> Unit)?,
+    saveWords: StringResource,
     onSave: () -> Unit,
     onDelete: () -> Unit,
     onWrite: () -> Unit,
@@ -400,11 +404,11 @@ private fun ChoosingBar(
     Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(start = Space.gutter, end = Space.gutter, top = Space.s, bottom = Space.s), contentAlignment = Alignment.Center) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             FloatingBar {
-                IconButton(onClick = onShare, enabled = idle && chosen.isNotEmpty(), modifier = Modifier.testTag("album_share")) {
+                if (onShare != null) IconButton(onClick = onShare, enabled = idle && chosen.isNotEmpty(), modifier = Modifier.testTag("album_share")) {
                     Icon(AppIcons.Share, contentDescription = stringResource(Res.string.action_share))
                 }
                 if (chosen.any { it.source.fetches }) IconButton(onClick = onSave, enabled = idle, modifier = Modifier.testTag("album_save")) {
-                    Icon(AppIcons.Download, contentDescription = stringResource(Res.string.album_save))
+                    Icon(AppIcons.Download, contentDescription = stringResource(saveWords))
                 }
                 IconButton(onClick = onDelete, enabled = idle && listedChosen.isNotEmpty(), modifier = Modifier.testTag("album_delete")) {
                     Icon(AppIcons.Trash, contentDescription = stringResource(Res.string.camera_delete_chosen, listedChosen.size))
@@ -421,27 +425,6 @@ private fun ChoosingBar(
             )
         }
     }
-}
-
-/**
- * Hands [uris] to the system's share sheet: the gallery's own, as the media store names them,
- * without asking for the original (which only this app may), each readable by the app chosen.
- */
-private fun shareMedia(context: Context, uris: List<Uri>) {
-    if (uris.isEmpty()) return
-    val plain = uris.map { it.buildUpon().clearQuery().build() }
-    val types = plain.map { context.contentResolver.getType(it).orEmpty() }
-    val type = when {
-        types.all { it.startsWith("image/") } -> "image/*"
-        types.all { it.startsWith("video/") } -> "video/*"
-        else -> "*/*"
-    }
-    val send = if (plain.size == 1) Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_STREAM, plain.single())
-    else Intent(Intent.ACTION_SEND_MULTIPLE).putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(plain))
-    send.setType(type)
-        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        .clipData = ClipData.newRawUri(null, plain.first()).apply { plain.drop(1).forEach { addItem(ClipData.Item(it)) } }
-    context.startActivity(Intent.createChooser(send, null))
 }
 
 /** The bar at the foot of the page while something goes on: what, how far, and stopping it; or failed, to try again. */

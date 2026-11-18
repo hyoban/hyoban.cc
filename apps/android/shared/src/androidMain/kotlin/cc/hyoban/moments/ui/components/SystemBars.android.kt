@@ -26,6 +26,17 @@ actual fun DialogSystemBars(hidden: Boolean) {
     }
 }
 
+@Composable
+actual fun DarkDialogStatusBar() {
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val controller = (view.parent as? DialogWindowProvider)?.window?.let { WindowCompat.getInsetsController(it, view) }
+        val before = controller?.isAppearanceLightStatusBars
+        controller?.isAppearanceLightStatusBars = false
+        onDispose { if (before != null) controller.isAppearanceLightStatusBars = before }
+    }
+}
+
 actual fun fullWindowDialogProperties(): DialogProperties =
     DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
 

@@ -12,9 +12,8 @@ import cc.hyoban.moments.PhoneContainer
 fun PhoneStorageSettings(container: PhoneContainer) {
     var editingBackup by rememberSaveable { mutableStateOf(false) }
     var restoring by rememberSaveable { mutableStateOf(false) }
-    var editingNas by rememberSaveable { mutableStateOf(false) }
     BackupSection(container.backup, onEdit = { editingBackup = true }, onRestore = { restoring = true })
-    NasSection(container.nas) { editingNas = true }
+    NasSettings(container.nas)
 
     if (editingBackup) {
         val backup = container.backup
@@ -31,21 +30,6 @@ fun PhoneStorageSettings(container: PhoneContainer) {
         ) { url, user, password ->
             backup.change(url, user, password)
             editingBackup = false
-        }
-    }
-
-    if (editingNas) {
-        val nas = container.nas
-        NasDialog(
-            nas,
-            onDismiss = { editingNas = false },
-            onForget = {
-                nas.forget()
-                editingNas = false
-            },
-        ) { link, user, password ->
-            nas.change(link, user, password)
-            editingNas = false
         }
     }
 

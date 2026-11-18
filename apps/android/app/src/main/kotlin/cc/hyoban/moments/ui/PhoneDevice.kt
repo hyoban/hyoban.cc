@@ -70,7 +70,9 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
 
     @Composable
     override fun PhotoPicker(container: AppContainer, limit: Int, onDismiss: () -> Unit, onPicked: (List<android.net.Uri>) -> Unit) =
-        cc.hyoban.moments.ui.picker.PhonePhotoPicker(container as PhoneContainer, limit, onDismiss, onPicked)
+        cc.hyoban.moments.ui.picker.PhonePhotoPicker(container, limit, onDismiss, onPicked)
+
+    override val picker = cc.hyoban.moments.ui.picker.PhonePicker(context)
 
     // Asked with the sheet first (PermissionSheet); refused, the map waits for a drag or a search.
     @Composable

@@ -716,6 +716,15 @@ first for all three, with how far it is and 停止 at the foot. Looked through, 
 tabs and its foot has 分享, 存到相册 for the camera's and the NAS's, and 用这张写时刻 for the photo
 shown; choosing, it chooses as 选照片's does, with 写时刻.
 
+On the Mac, 相册 is the sidebar's (⌘4), the same page in `:shared` with the NAS as its one source:
+the computer has no gallery of the phone's and pairs no camera, so the phone adds its two
+(`PhonePicker`, the `Device`'s `picker`) and the Mac lists the NAS alone, set up in the settings
+window's 同步与来源 as on the phone, and said not to be set up there until it is. The NAS's videos
+stay stills there and an original is zoomed into whole, not in tiles (telephoto's tiles are
+Android's); there is no share sheet, and 存到「图片」 keeps the originals, as 写时刻 does first, in
+the Pictures folder's Here, one of the same name and size already there kept rather than saved
+twice.
+
 ## 选照片
 
 记录's photo row ends with two tiles: 加照片 opens 选照片, 相册 in its choosing look, over the Moment,

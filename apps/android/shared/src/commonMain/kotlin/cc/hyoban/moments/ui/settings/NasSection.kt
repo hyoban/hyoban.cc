@@ -134,3 +134,21 @@ fun NasDialog(nas: Nas, onDismiss: () -> Unit, onForget: () -> Unit, onSave: (St
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }
+
+/** 同步与来源's NAS section with the dialog it opens: the phone's and the computer's alike. */
+@Composable
+fun NasSettings(nas: Nas) {
+    var editing by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    NasSection(nas) { editing = true }
+    if (editing) NasDialog(
+        nas,
+        onDismiss = { editing = false },
+        onForget = {
+            nas.forget()
+            editing = false
+        },
+    ) { link, user, password ->
+        nas.change(link, user, password)
+        editing = false
+    }
+}

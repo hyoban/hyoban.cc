@@ -41,6 +41,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   content address or a file on the Mac), taking the application's context from `AndroidApp`
   where no caller has one; the Mac's is in `jvmMain`. The Mac takes pictures from the system's
   file dialog and not yet videos.
+- 相册 and 选照片 (`ui/picker`) and the NAS's client (`nas/`) are shared: a device adds its own
+  sources, videos, sharing and where it keeps photos through `Device.picker` (`PickerDevice`), the
+  phone its gallery and paired camera (`PhonePicker`, in `:app`), the Mac nothing but the NAS.
 - The ledger and the footprints on a desktop or a tablet are the phone's latest WebDAV backup,
   read by `backup/PhoneBackup` in `:shared` and only shown (`LedgerSource.writable` false): no bill
   is written, edited or deleted there and the ledger's settings stay on the phone, as the canvas's

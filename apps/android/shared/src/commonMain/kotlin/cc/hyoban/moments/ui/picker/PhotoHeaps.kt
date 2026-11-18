@@ -8,15 +8,15 @@ import kotlin.math.pow
 import kotlin.math.sin
 
 /** Where a photo was taken, for the picker's map. */
-internal data class Spot(val id: Long, val latitude: Double, val longitude: Double)
+data class Spot(val id: Long, val latitude: Double, val longitude: Double)
 
 /** The photos that stand too near each other on the map to tell apart: where their middle is, and them, [cover] the first. */
-internal class Heap(val latitude: Double, val longitude: Double, val spots: List<Spot>) {
+class Heap(val latitude: Double, val longitude: Double, val spots: List<Spot>) {
     val cover get() = spots.first()
     val count get() = spots.size
 }
 
-internal object PhotoHeaps {
+object PhotoHeaps {
     /** The map's world is this many points across at zoom 0, doubling with each zoom. */
     private const val WORLD = 512.0
 

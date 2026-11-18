@@ -1,13 +1,6 @@
 package cc.hyoban.moments.ui.picker
 
 import cc.hyoban.moments.res.*
-import cc.hyoban.moments.ui.viewer.VideoPlayback
-import cc.hyoban.moments.ui.viewer.VideoState
-import cc.hyoban.moments.ui.viewer.VideoWaiting
-import android.content.Context
-import android.graphics.Bitmap
-import android.net.Uri
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,13 +19,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
+
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import cc.hyoban.moments.camera.TAG
+import androidx.compose.ui.graphics.ImageBitmap
+import cc.hyoban.moments.data.local.PhotoRef
+import cc.hyoban.moments.logWarning
 import cc.hyoban.moments.nas.Nas
 import cc.hyoban.moments.nas.NasAlbum
 import cc.hyoban.moments.nas.NasDay
@@ -62,15 +56,16 @@ import java.time.ZoneId
 
 /** The NAS's photos, asked for only once they are listed, and its albums then, for the title's menu. */
 @Composable
-internal fun rememberNas(nas: Nas, deletion: Deletion): NasSource {
-    val context = LocalContext.current
+fun rememberNas(nas: Nas, deletion: Deletion): NasSource {
+    val device = cc.hyoban.moments.ui.LocalDevice.current
     val scope = rememberCoroutineScope()
-    return remember { NasSource(nas, context, scope, deletion) }
+    return remember { NasSource(nas, device::toast, scope, deletion) }
 }
 
-internal class NasSource(
+class NasSource(
     val nas: Nas,
-    val context: Context,
+    /** Says a short word of what went wrong, as the device does. */
+    val toast: (String) -> Unit,
     private val scope: CoroutineScope,
     private val deletion: Deletion,
 ) : PhotoSource {
@@ -78,7 +73,7 @@ internal class NasSource(
     /** The one listing read, the timeline or an album: another starts again. */
     var list by mutableStateOf<NasList?>(null)
         private set
-    private val root = NasListing(this, null)
+    override val home = NasListing(this, null)
     /** Where the photos were taken, for the map of them all. */
     val places = NasPlaces(this, scope)
 
@@ -107,13 +102,13 @@ internal class NasSource(
     @Composable
     override fun choices(): List<Choice> {
         if (!nas.configured) return emptyList()
-        return listOf(Choice(stringResource(Res.string.section_nas), null, AppIcons.Nas, "picker_nas", root)) +
+        return listOf(Choice(stringResource(Res.string.section_nas), null, AppIcons.Nas, "picker_nas", home)) +
             albums.map { Choice(it.name, it.count, AppIcons.Nas, "picker_nas_${it.uuid}", NasListing(this, it)) }
     }
 
     override val fetches = true
 
-    override suspend fun fetch(picks: List<Pick>, progress: (Int, Float) -> Unit): List<Uri> =
+    override suspend fun fetch(picks: List<Pick>, progress: (Int, Float) -> Unit): List<PhotoRef> =
         if (picks.isEmpty()) emptyList() else nas.download(picks.map { (it as NasPick).photo }, progress)
 
     // The NAS says first whether they go to its recycle bin, and the dialog says so.
@@ -124,7 +119,7 @@ internal class NasSource(
         scope.launch {
             try { deleting = these to nas.deleteKind(these) } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                Toast.makeText(context, textOf(Res.string.camera_delete_failed), Toast.LENGTH_SHORT).show()
+                toast(textOf(Res.string.camera_delete_failed))
             }
         }
     }
@@ -161,10 +156,10 @@ internal class NasSource(
                                 list?.removed(ids)
                                 places.removed(ids)
                                 deletion.gone(these.map { it.key }.toSet())
-                            } else Toast.makeText(context, textOf(Res.string.camera_delete_missed, missed), Toast.LENGTH_SHORT).show()
+                            } else toast(textOf(Res.string.camera_delete_missed, missed))
                         } catch (e: Exception) {
                             if (e is CancellationException) throw e
-                            Toast.makeText(context, textOf(Res.string.camera_delete_failed), Toast.LENGTH_SHORT).show()
+                            toast(textOf(Res.string.camera_delete_failed))
                         }
                     }
                 }, modifier = Modifier.testTag("nas_delete_confirm")) { Text(stringResource(Res.string.camera_delete), color = tokens.danger) }
@@ -174,7 +169,7 @@ internal class NasSource(
 }
 
 /** The NAS's timeline, or its [album]. */
-internal data class NasListing(val nas: NasSource, val album: NasAlbum?) : Listing {
+data class NasListing(val nas: NasSource, val album: NasAlbum?) : Listing {
     override val source get() = nas
 
     private val list get() = nas.list?.takeIf { it.album == album }
@@ -206,6 +201,8 @@ internal data class NasListing(val nas: NasSource, val album: NasAlbum?) : Listi
         val list = list
         val failure = list?.failure
         when {
+            // Listed only where there is nothing else to list, a computer's, before the NAS is set up.
+            !nas.nas.configured -> Unset()
             failure != null -> Failed(AppIcons.Nas, nasReason(failure), Res.string.nas_failed_note) { list.retry(); nas.more(list) }
             list == null || !list.started || shown.isEmpty() && list.loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Spinner() }
             else -> grid(null) { nas.more(list) }
@@ -217,12 +214,12 @@ internal data class NasListing(val nas: NasSource, val album: NasAlbum?) : Listi
  * A photo of the timeline's not read yet: a grey tile in its day, which reads its page once it has
  * stayed in view a moment, so a fling past it reads nothing. It is neither chosen nor opened.
  */
-internal data class NasSlot(val list: NasList, val index: Int, override val day: LocalDate?, override val source: NasSource, val album: NasAlbum?) : Pick {
+data class NasSlot(val list: NasList, val index: Int, override val day: LocalDate?, override val source: NasSource, val album: NasAlbum?) : Pick {
     override val key get() = "nas-slot/${album?.uuid}/$index"
     override val choosable get() = false
     override val openable get() = false
 
-    override suspend fun thumbnail(context: Context, size: Int): Bitmap? {
+    override suspend fun thumbnail(size: Int): ImageBitmap? {
         delay(150)
         source.need(list, index)
         return null
@@ -232,16 +229,16 @@ internal data class NasSlot(val list: NasList, val index: Int, override val day:
     @Composable override fun description() = stringResource(Res.string.section_nas)
     @Composable override fun place(): String? = null
     @Composable override fun rememberDetails(): PhotoDetails? = null
-    @Composable override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {}
+    @Composable override fun Page(active: Boolean, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {}
 }
 
 /** A photo of the NAS's; in its timeline, under the day the timeline puts it, [listedDay]. */
-internal data class NasPick(val photo: NasPhoto, override val source: NasSource, val listedDay: LocalDate? = null) : Pick {
+data class NasPick(val photo: NasPhoto, override val source: NasSource, val listedDay: LocalDate? = null) : Pick {
     override val key get() = photo.key
     override val day get() = listedDay ?: photo.taken?.toLocalDate()
 
     /** The NAS keeps its own thumbnails, small for the grid and big for the viewer, and its client caches them. */
-    override suspend fun thumbnail(context: Context, size: Int): Bitmap? =
+    override suspend fun thumbnail(size: Int): ImageBitmap? =
         source.nas.thumbnail(photo, if (size > 320) NasProtocol.BIG else NasProtocol.SMALL)
 
     /** The next one's big thumbnail, fetched ahead so turning to it shows it at once. */
@@ -284,8 +281,9 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource,
      * when it is added. A video plays from the NAS over it, as much of it as is watched.
      */
     @Composable
-    override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {
-        val plays = photo.video && photo.mime in PLAYED
+    override fun Page(active: Boolean, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {
+        val videos = LocalPickerVideos.current
+        val plays = photo.video && photo.mime in PLAYED && videos !== NoVideos
         val stream by produceState<Pair<String, Map<String, String>>?>(null, key, active) {
             if (active && plays) value = runCatching { source.nas.original(photo) }.getOrNull()
         }
@@ -297,8 +295,8 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource,
                 ?: if (photo.width != null && photo.height != null && photo.height > 0) photo.width.toFloat() / photo.height else 1f
             if (photo.video) {
                 ZoomablePhoto(shape, onZoom, onTap = onTap) {
-                    shown?.let { Image(it.asImageBitmap(), contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
-                    stream?.let { (url, headers) -> VideoPlayback(url, active, video, Modifier.fillMaxSize(), headers = headers, window = false) }
+                    shown?.let { Image(it, contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
+                    stream?.let { (url, headers) -> videos.Play(key, url, headers, active, Modifier.fillMaxSize()) }
                 }
             } else if (shown != null) {
                 // Zoomed in, its original comes down, then is read in tiles as it zooms.
@@ -312,7 +310,7 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource,
                 }, onTap = onTap)
             }
             if (shown == null) Spinner(color = MediaOverlay.content)
-            if (stream != null) VideoWaiting(video) else if (photo.video && !plays) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))
+            if (stream != null) videos.Waiting(key) else if (photo.video && !plays) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))
         }
     }
 }
@@ -321,7 +319,7 @@ internal data class NasPick(val photo: NasPhoto, override val source: NasSource,
  * Where the NAS's photos were taken, as its photo app keeps them, read whole the first time the
  * map is shown; and the photos of the heap opened, read a page at a time.
  */
-internal class NasPlaces(private val source: NasSource, private val scope: CoroutineScope) : Places {
+class NasPlaces(private val source: NasSource, private val scope: CoroutineScope) : Places {
     private val nas get() = source.nas
     private var known by mutableStateOf<Map<Long, NasSpot>?>(null)
     private var failure by mutableStateOf<NasFailure?>(null)
@@ -340,12 +338,12 @@ internal class NasPlaces(private val source: NasSource, private val scope: Corou
             spots = read.map { Spot(it.id, it.latitude, it.longitude) }
         } catch (e: Exception) {
             if (e is CancellationException) throw e
-            android.util.Log.w(TAG, "nas: places not read", e)
+            logWarning("Moments", "nas: places not read", e)
             failure = (e as? NasException)?.failure ?: if (e is java.io.IOException) NasFailure.UNREACHABLE else NasFailure.OTHER
         }
     }
 
-    override suspend fun thumbnail(spot: Spot): Bitmap? = known?.get(spot.id)?.let { nas.thumbnail(it) }
+    override suspend fun thumbnail(spot: Spot): ImageBitmap? = known?.get(spot.id)?.let { nas.thumbnail(it) }
 
     override var opened by mutableStateOf<List<Spot>?>(null)
         private set
@@ -375,9 +373,9 @@ internal class NasPlaces(private val source: NasSource, private val scope: Corou
                 ended = page.size < Nas.PAGE || photos.size >= heap.size
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                android.util.Log.w(TAG, "nas: a heap's photos not read", e)
+                logWarning("Moments", "nas: a heap's photos not read", e)
                 ended = true
-                Toast.makeText(source.context, textOf(nasReason((e as? NasException)?.failure ?: NasFailure.UNREACHABLE)), Toast.LENGTH_SHORT).show()
+                source.toast(textOf(nasReason((e as? NasException)?.failure ?: NasFailure.UNREACHABLE)))
             } finally { reading = false }
         }
     }
@@ -403,7 +401,7 @@ private val PLAYED = setOf("video/mp4", "video/quicktime")
  * a page at a time as the grid nears the end of what is read. [failure] says why the first page
  * couldn't be read.
  */
-internal class NasList(private val nas: Nas, val album: NasAlbum?) {
+class NasList(private val nas: Nas, val album: NasAlbum?) {
     val photos: SnapshotStateList<NasPhoto?> = mutableStateListOf()
     /** The timeline's days, newest first, with how many each holds; empty for an album or before they're read. */
     var days by mutableStateOf<List<NasDay>>(emptyList())
@@ -426,7 +424,7 @@ internal class NasList(private val nas: Nas, val album: NasAlbum?) {
         if (album == null) days = try { nas.timelineDays() } catch (e: Exception) {
             if (e is CancellationException) throw e
             // Without them it reads on a page at a time, as an album does.
-            android.util.Log.w(TAG, "nas: timeline days not read", e)
+            logWarning("Moments", "nas: timeline days not read", e)
             emptyList()
         }
         val laid = days.sumOf { it.count }
@@ -461,7 +459,7 @@ internal class NasList(private val nas: Nas, val album: NasAlbum?) {
             }
         } catch (e: Exception) {
             if (e is CancellationException) throw e
-            android.util.Log.w(TAG, "nas: photos not read", e)
+            logWarning("Moments", "nas: photos not read", e)
             // Only a listing with nothing read says so; a page further on is asked for again when it is come to.
             if (photos.none { it != null }) failure = (e as? NasException)?.failure ?: if (e is java.io.IOException) NasFailure.UNREACHABLE else NasFailure.OTHER
         } finally { reading -= page }

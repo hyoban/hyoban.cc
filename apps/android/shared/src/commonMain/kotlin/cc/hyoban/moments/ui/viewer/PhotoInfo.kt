@@ -1,8 +1,6 @@
 package cc.hyoban.moments.ui.viewer
 
 import cc.hyoban.moments.res.*
-import android.content.Context
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,14 +23,12 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.exifinterface.media.ExifInterface
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.exifTime
@@ -87,36 +83,6 @@ data class PhotoDetails(
     val bytes: Long? = null,
     val album: String? = null,
 ) {
-    /** These, with what [exif] says filled in where it says it. */
-    fun with(exif: ExifInterface): PhotoDetails {
-        fun text(tag: String) = exif.getAttribute(tag)?.trim()?.takeIf { it.isNotEmpty() }
-        fun number(tag: String) = exif.getAttributeDouble(tag, Double.NaN).takeIf { !it.isNaN() && it != 0.0 }
-        val zone = text(ExifInterface.TAG_OFFSET_TIME_ORIGINAL) ?: text(ExifInterface.TAG_OFFSET_TIME)
-        val turned = exif.rotationDegrees == 90 || exif.rotationDegrees == 270
-        val w = exif.getAttributeInt(ExifInterface.TAG_PIXEL_X_DIMENSION, 0).takeIf { it > 0 }
-            ?: exif.getAttributeInt(ExifInterface.TAG_IMAGE_WIDTH, 0).takeIf { it > 0 }
-        val h = exif.getAttributeInt(ExifInterface.TAG_PIXEL_Y_DIMENSION, 0).takeIf { it > 0 }
-            ?: exif.getAttributeInt(ExifInterface.TAG_IMAGE_LENGTH, 0).takeIf { it > 0 }
-        val make = text(ExifInterface.TAG_MAKE)
-        return copy(
-            takenAt = exifTime(text(ExifInterface.TAG_DATETIME_ORIGINAL) ?: text(ExifInterface.TAG_DATETIME), zone) ?: takenAt,
-            offset = zone ?: offset,
-            make = make ?: this.make,
-            // A model that repeats its make (Apple's "iPhone", Sony's "ILCE-…" don't) is written once.
-            model = text(ExifInterface.TAG_MODEL)?.let { m -> if (make != null && m.startsWith(make, ignoreCase = true)) m.substring(make.length).trim() else m } ?: model,
-            lens = text(ExifInterface.TAG_LENS_MODEL) ?: lens,
-            focal = number(ExifInterface.TAG_FOCAL_LENGTH) ?: focal,
-            focal35 = exif.getAttributeInt(ExifInterface.TAG_FOCAL_LENGTH_IN_35MM_FILM, 0).takeIf { it > 0 } ?: focal35,
-            aperture = number(ExifInterface.TAG_F_NUMBER) ?: aperture,
-            exposure = number(ExifInterface.TAG_EXPOSURE_TIME) ?: exposure,
-            iso = exif.getAttributeInt(ExifInterface.TAG_PHOTOGRAPHIC_SENSITIVITY, 0).takeIf { it > 0 } ?: iso,
-            bias = number(ExifInterface.TAG_EXPOSURE_BIAS_VALUE) ?: bias,
-            fix = exif.latLong?.let { (lat, lng) -> Fix(lat, lng) }?.takeIf { it.latitude != 0.0 || it.longitude != 0.0 } ?: fix,
-            width = width ?: (if (turned) h else w),
-            height = height ?: (if (turned) w else h),
-        )
-    }
-
     companion object {
         /** The format to show for a [mime] type. */
         fun format(mime: String?, name: String? = null): String? = when {
@@ -130,7 +96,7 @@ data class PhotoDetails(
 
         /** [base] with what the EXIF read from [open] says; [base] alone when it can't be read. */
         suspend fun read(base: PhotoDetails, open: () -> InputStream?): PhotoDetails = withContext(Dispatchers.IO) {
-            runCatching { open()?.use { base.with(ExifInterface(it)) } }.getOrNull() ?: base
+            runCatching { open()?.use { base.withExif(it) } }.getOrNull() ?: base
         }
 
         /** How much of a published original is fetched for its EXIF: it is at the start of the file. */
@@ -161,10 +127,6 @@ data class PhotoDetails(
         /** [base] with what the start of the file at [url] says. */
         suspend fun readRemote(base: PhotoDetails, url: String): PhotoDetails =
             head(url)?.let { bytes -> read(base) { ByteArrayInputStream(bytes) } } ?: base
-
-        /** [base] with what [uri] says, read from the original when the app may see where it was taken. */
-        suspend fun readLocal(context: Context, base: PhotoDetails, uri: Uri): PhotoDetails =
-            read(base) { context.contentResolver.openInputStream(uri) }
     }
 }
 
@@ -175,8 +137,7 @@ data class PhotoDetails(
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun PhotoInfoPanel(container: PhoneContainer, details: PhotoDetails?, modifier: Modifier = Modifier, note: String? = null) {
-    val context = LocalContext.current
+fun PhotoInfoPanel(container: AppContainer, details: PhotoDetails?, modifier: Modifier = Modifier, note: String? = null) {
     val place by produceState<String?>(null, details?.fix) {
         value = details?.fix?.let { runCatching { container.placeSearch.around(it).name }.getOrNull() }
     }
@@ -212,13 +173,24 @@ fun PhotoInfoPanel(container: PhoneContainer, details: PhotoDetails?, modifier: 
             val file = listOfNotNull(
                 details.format,
                 if (details.width != null && details.height != null) "${details.width} × ${details.height}" else null,
-                details.bytes?.let { android.text.format.Formatter.formatShortFileSize(context, it) },
+                details.bytes?.let(::fileSize),
                 details.album,
             ).joinToString(" · ").ifEmpty { null }
             if (details.name != null || file != null) InfoRow(AppIcons.File, details.name ?: file!!, file.takeIf { details.name != null })
             note?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.padding(start = 36.dp)) }
         }
     }
+}
+
+/** These, with what the EXIF in [input] says filled in where it says it: the phone's reader, or the computer's. */
+expect fun PhotoDetails.withExif(input: InputStream): PhotoDetails
+
+/** [bytes] as a file's size is written: 512 KB, 3.4 MB. */
+fun fileSize(bytes: Long): String = when {
+    bytes < 1000 -> "$bytes B"
+    bytes < 1000 * 1000 -> "${(bytes / 1000.0).let { if (it < 10) "%.1f".format(Locale.ROOT, it) else "%.0f".format(Locale.ROOT, it) }} kB"
+    bytes < 1000L * 1000 * 1000 -> "${"%.1f".format(Locale.ROOT, bytes / 1e6).removeSuffix(".0")} MB"
+    else -> "${"%.2f".format(Locale.ROOT, bytes / 1e9)} GB"
 }
 
 /** The shooting settings, each one written as a camera does: 35 mm, ƒ/1.8, 1/250 s, ISO 100, +0.3 EV. */

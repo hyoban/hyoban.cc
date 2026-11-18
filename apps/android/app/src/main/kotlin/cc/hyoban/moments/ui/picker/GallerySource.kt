@@ -6,12 +6,11 @@ import cc.hyoban.moments.data.local.MotionPhotos
 import cc.hyoban.moments.ui.viewer.LiveMotion
 import cc.hyoban.moments.ui.viewer.LiveMotionState
 import cc.hyoban.moments.ui.viewer.VideoPlayback
-import cc.hyoban.moments.ui.viewer.VideoState
 import cc.hyoban.moments.ui.viewer.VideoWaiting
 import android.Manifest
 import android.app.Activity
 import android.content.Context
-import android.graphics.Bitmap
+import androidx.compose.ui.graphics.ImageBitmap
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.LruCache
@@ -59,6 +58,7 @@ import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.viewer.PhotoDetails
+import cc.hyoban.moments.ui.viewer.readLocal
 import cc.hyoban.moments.ui.viewer.ZoomablePhoto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
@@ -122,7 +122,7 @@ internal fun rememberGallery(deletion: Deletion, onFallback: () -> Unit): Galler
 }
 
 internal class GallerySource(
-    private val context: Context,
+    val context: Context,
     private val itemsState: State<List<LocalItem>>,
     private val accessState: State<GalleryAccess>,
     val reselect: () -> Unit,
@@ -131,6 +131,7 @@ internal class GallerySource(
     val items get() = itemsState.value
     val access get() = accessState.value
     val all = GalleryListing(this, null, null)
+    override val home get() = all
 
     @Composable
     override fun choices(): List<Choice> {
@@ -178,16 +179,16 @@ internal data class GalleryListing(val gallery: GallerySource, val albumId: Long
 }
 
 /** The gallery's thumbnails, by the media store's id, shared by the grid and the viewer. */
-private val localThumbs = LruCache<String, Bitmap>(300)
+private val localThumbs = LruCache<String, ImageBitmap>(300)
 
 internal data class GalleryPick(val item: LocalItem, override val source: GallerySource) : Pick {
     override val key get() = item.key
     override val day get() = item.day
 
-    override fun cachedThumb(size: Int): Bitmap? = localThumbs.get("$key@$size")
+    override fun cachedThumb(size: Int): ImageBitmap? = localThumbs.get("$key@$size")
 
-    override suspend fun thumbnail(context: Context, size: Int): Bitmap? = withContext(Dispatchers.IO) {
-        runCatching { context.contentResolver.loadThumbnail(item.uri, Size(size, size), null) }.getOrNull()
+    override suspend fun thumbnail(size: Int): ImageBitmap? = withContext(Dispatchers.IO) {
+        runCatching { source.context.contentResolver.loadThumbnail(item.uri, Size(size, size), null).asImageBitmap() }.getOrNull()
     }?.also { localThumbs.put("$key@$size", it) }
 
     @Composable
@@ -224,8 +225,9 @@ internal data class GalleryPick(val item: LocalItem, override val source: Galler
      * photo plays its clip once and again with its sound while held, both read from the media store.
      */
     @Composable
-    override fun Page(active: Boolean, video: VideoState, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {
+    override fun Page(active: Boolean, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {
         val context = LocalContext.current
+        val video = (LocalPickerVideos.current as PhoneVideos).state(key)
         // Only what the players read: MP4 and its kin.
         val plays = item.video && item.mime in PLAYED
         val live = remember(key) { LiveMotionState() }
@@ -239,7 +241,7 @@ internal data class GalleryPick(val item: LocalItem, override val source: Galler
             val fitted = shape ?: small?.let { it.width.toFloat() / it.height } ?: 1f
             if (item.video) {
                 ZoomablePhoto(fitted, onZoom, onTap = onTap) {
-                    large?.let { Image(it.asImageBitmap(), contentDescription = item.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
+                    large?.let { Image(it, contentDescription = item.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
                     if (plays) VideoPlayback(item.uri.toString(), active, video, Modifier.fillMaxSize(), window = false)
                 }
             } else {

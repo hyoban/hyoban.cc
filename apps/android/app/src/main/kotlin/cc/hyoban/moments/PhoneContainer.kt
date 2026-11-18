@@ -61,7 +61,13 @@ class PhoneContainer private constructor(
     val backup = cc.hyoban.moments.backup.Backup(context)
 
     /** The owner's UGREEN NAS, whose photo app 选照片 reads; nothing is asked of it until it is set up. */
-    val nas = cc.hyoban.moments.nas.Nas(context)
+    override val nas = cc.hyoban.moments.nas.Nas(
+        cc.hyoban.moments.SharedPrefs(context.getSharedPreferences("nas", Context.MODE_PRIVATE)),
+        cc.hyoban.moments.Token(java.io.File(context.noBackupFilesDir, "nas-password")),
+        context.cacheDir,
+        cc.hyoban.moments.nas.GalleryKeep(context),
+        clientId = "here-android",
+    )
     /** The app's own updates, from its GitHub releases. */
     val updates = cc.hyoban.moments.update.Updates(context)
 
@@ -156,11 +162,6 @@ class PhoneContainer private constructor(
         }
     }
 
-    private val _sharedPhotos = MutableStateFlow<List<Uri>>(emptyList())
-
-    /** Photos and videos shared into the app from the gallery, as the app's own copies, until a new Moment takes them. */
-    override val sharedPhotos: StateFlow<List<Uri>> = _sharedPhotos.asStateFlow()
-
     /**
      * Copies photos and videos shared from another app into the app's cache, as they are, EXIF and
      * all, while the sharing still lets them be read; those that can't be read are left out.
@@ -170,12 +171,7 @@ class PhoneContainer private constructor(
             runCatching { Photos.copy(appContext, uri, sharedDirectory, Ulid.next()).file }.getOrNull()?.let(Uri::fromFile)
         }
         if (copies.size < uris.size) say(textOf(Res.string.error_shared_photos))
-        _sharedPhotos.value = _sharedPhotos.value + copies
-    }
-
-    /** Photos chosen in 相册 for a new Moment, which takes them as it takes those shared in; the gallery's own, not copies. */
-    fun offerPhotos(uris: List<Uri>) {
-        _sharedPhotos.value = _sharedPhotos.value + uris
+        offerPhotos(copies)
     }
 
     private val _sharedExport = MutableStateFlow<Uri?>(null)
@@ -198,8 +194,6 @@ class PhoneContainer private constructor(
     /** The iCost export shared into the app, taken so it is imported once. */
     fun takeSharedExport(): Uri? = _sharedExport.getAndUpdate { null }
 
-    /** The photos shared into the app, taken so they are used once. */
-    override fun takeSharedPhotos(): List<Uri> = _sharedPhotos.getAndUpdate { emptyList() }
 }
 
 private const val DAY_MS = 24 * 60 * 60 * 1000L

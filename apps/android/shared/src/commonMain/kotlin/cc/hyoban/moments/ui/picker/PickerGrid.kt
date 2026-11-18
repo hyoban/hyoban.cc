@@ -46,7 +46,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.asImageBitmap
+
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -89,7 +89,7 @@ private val Sideways = listOf(6, 8, 12)
  * it to a day picked from the calendar.
  */
 @Composable
-internal fun Grid(
+fun Grid(
     shown: List<Pick>,
     order: Map<String, Int>,
     full: Boolean,
@@ -306,7 +306,7 @@ internal fun Grid(
                             .semantics { contentDescription = label; selected = index >= 0 }
                             .clickable(enabled = pick.openable, onClickLabel = stringResource(Res.string.camera_view)) { onOpen(pick) },
                     ) {
-                        thumb?.let { Image(it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().alpha(if (setBack) 0.38f else 1f)) }
+                        thumb?.let { Image(it, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().alpha(if (setBack) 0.38f else 1f)) }
                         if (!byMonth) corner?.let {
                             Text(it, style = AppTheme.typography.caption.strong, color = MediaOverlay.content, modifier = Modifier.align(Alignment.BottomStart).padding(6.dp))
                         }
@@ -332,7 +332,7 @@ internal fun Grid(
 }
 
 /** A day picked from the calendar for the grid to go to, and the day at its top, where the calendar opens. */
-internal class DateJump {
+class DateJump {
     var target by mutableStateOf<LocalDate?>(null)
     var showing by mutableStateOf<LocalDate?>(null)
 }
@@ -449,7 +449,7 @@ private fun Modifier.pinchGesture(onStart: (Offset) -> Unit, onZoom: (Float) -> 
 
 /** Whether a photo is chosen: an empty ring, or the accent with its place among those chosen. */
 @Composable
-internal fun ChoiceMark(index: Int, modifier: Modifier) {
+fun ChoiceMark(index: Int, modifier: Modifier) {
     Box(
         modifier.then(if (index >= 0) Modifier.background(tokens.accent, CircleShape) else Modifier.background(MediaOverlay.control, CircleShape).border(2.dp, MediaOverlay.content, CircleShape)),
         contentAlignment = Alignment.Center,

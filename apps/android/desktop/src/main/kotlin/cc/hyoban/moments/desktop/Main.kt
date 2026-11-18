@@ -65,10 +65,12 @@ import cc.hyoban.moments.res.me_ledger
 import cc.hyoban.moments.res.footprints_title
 import cc.hyoban.moments.res.me_things
 import cc.hyoban.moments.res.occasions_title
+import cc.hyoban.moments.res.tab_album
 import cc.hyoban.moments.res.tab_map
 import cc.hyoban.moments.res.tab_moments
 import cc.hyoban.moments.res.title_changes
 import cc.hyoban.moments.res.title_trips
+import cc.hyoban.moments.ui.Album
 import cc.hyoban.moments.ui.Atlas
 import cc.hyoban.moments.ui.Changes
 import cc.hyoban.moments.ui.Day
@@ -272,6 +274,7 @@ private enum class Section(
     Map("map", Res.string.tab_map, AppIcons.Map, Atlas, "⌘2"),
     Trips("trips", Res.string.title_trips, AppIcons.Route, TripsList, "⌘3"),
     Footprints("footprints", Res.string.footprints_title, AppIcons.Footprints, FootprintDays, module = Module.FOOTPRINTS),
+    Photos("album", Res.string.tab_album, AppIcons.Photos, Album, "⌘4"),
     Ledger("ledger", Res.string.me_ledger, AppIcons.Wallet, LedgerHome(), module = Module.LEDGER, mine = true),
     ThingsOwned("things", Res.string.me_things, AppIcons.Laptop, Things(), module = Module.THINGS, mine = true),
     Days("occasions", Res.string.occasions_title, AppIcons.Gift, Occasions(), module = Module.OCCASIONS, mine = true),
@@ -374,6 +377,7 @@ private class Shell(private val settings: cc.hyoban.moments.Settings) {
             Key.One -> show(Section.Timeline)
             Key.Two -> show(Section.Map)
             Key.Three -> show(Section.Trips)
+            Key.Four -> show(Section.Photos)
             Key.Comma -> settingsOpen = true
             Key.LeftBracket -> if (!cc.hyoban.moments.ui.components.DesktopBack.dispatch()) back()
             else -> return false
@@ -659,6 +663,8 @@ private fun Route(
         is TripPlay -> TripPlayerScreen(container, route.id, onMoment = openMoment, onBack = back)
         Search -> SearchScreen(container, onMoment = openMoment, onBack = back)
         TripsList -> Trips(container, openTrip)
+        // 相册 (D40): the NAS's photos, written into a new Moment in its dialog.
+        Album -> cc.hyoban.moments.ui.picker.AlbumScreen(container, onNew = { shell.open(NewMoment()) }, onWrite = { shell.open(NewMoment()) })
         is Things -> ThingsScreen(container, onBack = back, onDay = openDay, kind = ThingKind.of(route.kind), open = route.open)
         is Occasions -> OccasionsScreen(container, onBack = back, open = route.open)
         Changes -> ChangesScreen(container, onMoment = openMoment, onBack = back, onBill = { shell.open(LedgerBill(it)) })

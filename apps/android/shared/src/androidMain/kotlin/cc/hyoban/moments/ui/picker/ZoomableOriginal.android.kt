@@ -1,6 +1,6 @@
 package cc.hyoban.moments.ui.picker
 
-import android.graphics.Bitmap
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -17,7 +17,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
+
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import cc.hyoban.moments.ui.viewer.DOUBLE_TAP_ZOOM
@@ -36,15 +36,15 @@ import me.saket.telephoto.zoomable.rememberZoomableState
  * unzoomed: a live photo's clip, which plays only while it is held at full size.
  */
 @Composable
-fun ZoomableOriginal(
+actual fun ZoomableOriginal(
     model: Any,
-    thumb: Bitmap?,
+    thumb: ImageBitmap?,
     shape: Float,
     contentDescription: String?,
     onZoom: (Boolean) -> Unit,
-    onHold: ((Boolean) -> Unit)? = null,
-    onTap: (() -> Unit)? = null,
-    overlay: @Composable () -> Unit = {},
+    onHold: ((Boolean) -> Unit)?,
+    onTap: (() -> Unit)?,
+    overlay: @Composable () -> Unit,
 ) {
     val zoom = rememberZoomableState(ZoomSpec(maxZoomFactor = MAX_ZOOM))
     val image = rememberZoomableImageState(zoom)
@@ -69,7 +69,7 @@ fun ZoomableOriginal(
     ) {
         if (!image.isImageDisplayed) {
             thumb?.let {
-                Image(it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.aspectRatio(shape))
+                Image(it, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.aspectRatio(shape))
             }
         }
         ZoomableAsyncImage(

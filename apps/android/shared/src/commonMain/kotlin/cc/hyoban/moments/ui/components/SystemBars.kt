@@ -17,6 +17,10 @@ fun hidesSystemBars(): Boolean = isLandscape() && isCompactHeight()
 @Composable
 expect fun DialogSystemBars(hidden: Boolean)
 
+/** In a dialog's own window over black, the status bar's icons light while it is open. */
+@Composable
+expect fun DarkDialogStatusBar()
+
 /** A dialog that lays itself out over the whole window, under the system's bars where there are any. */
 expect fun fullWindowDialogProperties(): DialogProperties
 
