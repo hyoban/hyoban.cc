@@ -360,7 +360,7 @@ data class NasPick(val photo: NasPhoto, override val source: NasSource, val list
             } else {
                 // Not read at all ([head] failed) is tried again next time rather than taken for an iPhone's.
                 if (photo.size > 0 && head == null) return@produceState
-                val (url, headers) = runCatching { source.nas.liveClip(photo) }.getOrNull() ?: return@produceState
+                val (url, headers) = runCatching { source.nas.liveStream(photo) }.getOrNull() ?: return@produceState
                 cc.hyoban.moments.ui.viewer.MotionSource(url, 0, headers)
             }
         }.value

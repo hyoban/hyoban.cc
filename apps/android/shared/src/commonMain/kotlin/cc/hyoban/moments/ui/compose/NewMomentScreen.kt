@@ -335,7 +335,10 @@ fun NewMomentScreen(
     EnsureBook(container, enabled = withBill)
 
     LaunchedEffect(photos) {
-        photos.filter { it !in infos && it !in originalMedia }.forEach { infos[it] = Photos.read(it) }
+        photos.filter { it !in infos && it !in originalMedia }.forEach { ref ->
+            // An iPhone's live photo from the NAS has its clip beside it, which comes along.
+            infos[ref] = Photos.read(ref).let { info -> if (info.video) info else container.nas.liveClip(ref)?.let { info.copy(motionClip = it) } ?: info }
+        }
         // What the site can't take, a video too big or of a type it doesn't keep, is left out
         // as soon as it is read, saying why.
         val refused = photos.mapNotNull { uri -> infos[uri]?.let(PhotoRules::refusal)?.let { uri to it } }
@@ -785,8 +788,11 @@ fun NewMomentScreen(
                 // A motion photo picked and not yet saved plays its clip from its own file, where it starts.
                 motionSource = { shown ->
                     val ref = refs[shown.uid]
-                    val start = ref?.takeIf { it !in originalMedia }?.let { infos[it]?.motionStart }
+                    val info = ref?.takeIf { it !in originalMedia }?.let { infos[it] }
+                    val start = info?.motionStart
+                    val clip = info?.motionClip
                     if (start != null && shown.type == MediaType.LIVE_PHOTO) cc.hyoban.moments.ui.viewer.MotionSource(ref.toString(), start)
+                    else if (clip != null && shown.type == MediaType.LIVE_PHOTO) cc.hyoban.moments.ui.viewer.MotionSource(clip.toPhotoRef().toString())
                     else container.mediaUrls.motion(shown)?.let { cc.hyoban.moments.ui.viewer.MotionSource(it) }
                 },
                 onBack = { viewing = null },
@@ -1565,6 +1571,11 @@ private suspend fun buildMoment(
         val patches = masks[uri].orEmpty().takeIf { !info.video }.orEmpty()
         val copied = Photos.copy(uri, directory, uid, splitMotion = !info.video, poster = info.video)
             .let { photo ->
+                // A clip kept beside the still, as an iPhone's, is copied beside it as a split one is.
+                val clip = info.motionClip?.takeIf { !info.video && photo.video == null && it.isFile } ?: return@let photo
+                photo.copy(video = clip.copyTo(File(directory, "$uid.${clipExtension(clip)}"), overwrite = true))
+            }
+            .let { photo ->
                 if (info.video || (uri !in stills && patches.isEmpty())) return@let photo
                 photo.video?.delete()
                 photo.copy(video = null)
@@ -1656,3 +1667,9 @@ private const val CAMERA_KEY = "camera"
 /** How much a photo held to move grows, and Material 3's dragged state layer over it. */
 private const val LIFTED_SCALE = 1.06f
 private const val DRAGGED_LAYER = 0.16f
+
+/** A clip's extension by its first box's brand: QuickTime's `qt  `, else MP4. */
+private fun clipExtension(clip: File): String {
+    val head = runCatching { clip.inputStream().use { it.readNBytes(12) } }.getOrNull() ?: return "mp4"
+    return if (head.size == 12 && String(head, 4, 8, Charsets.ISO_8859_1) == "ftypqt  ") "mov" else "mp4"
+}

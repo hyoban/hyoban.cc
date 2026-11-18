@@ -246,7 +246,8 @@ is its place's name once the place is another, and the check-in goes with the pl
   copy as picked and the patches stay beside it until the Moment is published, so opening it again
   shows the patches to change, and saving draws them again from that copy; publishing lets it go,
   and a published photo's patches stay as they are. They are copied in whole; a motion
-  photo is split into a live photo's still and video. A video over 100 MB, or other than
+  photo is split into a live photo's still and video, and an iPhone's live photo from the NAS
+  takes its clip, the MOV the NAS keeps beside it, along as its video. A video over 100 MB, or other than
   MP4, MOV or WebM, is refused, since the Worker and the site's poster can't take it. A
   photo marked 不用作封面 never becomes a cover, widget or share card.
 - **Time.** The earliest photo's EXIF time and offset, else a video's creation time, else
@@ -873,7 +874,9 @@ list of where its photos were taken (`ai/map/gps/list`, five thousand at a time,
 time they show; WGS‑84, as the EXIF has them), so no original is read for it, and a heap opened reads
 its photos by their ids (`ai/map/gps/photo`, two hundred at a time). The list says nothing of when, so
 with a year picked from the legend they step away.
-加入 saves the originals to the gallery's Here album first, as the camera's. 删除 asks the NAS first
+加入 saves the originals to the gallery's Here album first, as the camera's; an iPhone's live photo
+brings its clip (`size_type` 5) into the app's cache, and which kept originals were live is kept with
+their links, so the editor finds the clip again, read anew if the cache let it go. 删除 asks the NAS first
 what it would do (`file/remove_operability`): to its recycle bin, or for good where there is none,
 and the dialog says which before `file/remove`. Through the relay an original comes at about
 2 MB/s, so a large video is better added at home.

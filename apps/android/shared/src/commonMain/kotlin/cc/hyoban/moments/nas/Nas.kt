@@ -357,7 +357,7 @@ class Nas(
     suspend fun original(photo: NasPhoto): Pair<String, Map<String, String>> = playable(photo, NasProtocol.ORIGINAL)
 
     /** A live photo's clip as the NAS gives it apart, as a player asks for it: an iPhone's MOV, kept beside its still. */
-    suspend fun liveClip(photo: NasPhoto): Pair<String, Map<String, String>> = playable(photo, NasProtocol.LIVE)
+    suspend fun liveStream(photo: NasPhoto): Pair<String, Map<String, String>> = playable(photo, NasProtocol.LIVE)
 
     private suspend fun playable(photo: NasPhoto, size: Int): Pair<String, Map<String, String>> {
         val request = stream(photo, size)
@@ -507,8 +507,43 @@ class Nas(
                         }
                     }
                 }).also { remember(it, photo) }
-            }
+            }.also { ref -> if (photo.live) liveClip(ref) }
         }.also { progress(photos.size, 0f) }
+
+    /**
+     * The clip of the live photo kept at [ref] where the NAS keeps it beside the still (an
+     * iPhone's MOV), read into the cache the first time; null for any other photo, a motion
+     * photo's being inside its file, or when it couldn't be had.
+     */
+    suspend fun liveClip(ref: PhotoRef): File? {
+        val photo = linkOf(ref)?.takeIf { ref.toString() in liveLinks() }?.let(::photo) ?: return null
+        val inside = withContext(Dispatchers.IO) {
+            runCatching {
+                cc.hyoban.moments.data.local.Photos.open(ref)?.use { it.readNBytes(HEAD) }
+                    ?.let { cc.hyoban.moments.data.local.MotionPhotos.videoLength(String(it, Charsets.ISO_8859_1)) != null }
+            }.getOrNull()
+        } ?: return null
+        if (inside) return null
+        val key = "live:${kept(photo)}"
+        originals.file(key)?.let { return it }
+        val lock = synchronized(fetching) { fetching.getOrPut(key) { Mutex() } }
+        return lock.withLock {
+            originals.file(key) ?: try {
+                val request = stream(photo, NasProtocol.LIVE)
+                withContext(Dispatchers.IO) {
+                    client.newCall(request).execute().use { response ->
+                        if (!response.isSuccessful) throw HttpException(response.code, "live clip answered ${response.code}")
+                        val body = response.body ?: throw IOException("live clip without a body")
+                        originals.put(key) { out -> body.byteStream().use { it.copyTo(out, 1 shl 16) } }
+                    }
+                }
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                logWarning(TAG, "nas: live clip not read", e)
+                null
+            }
+        }
+    }
 
     // What matching reads, kept ----------------------------------------------------------------
 
@@ -565,8 +600,17 @@ class Nas(
         next.remove(ref.toString())
         next[ref.toString()] = photo.link
         while (next.size > LINKS) next.remove(next.keys.first())
-        prefs.edit { putString("links", Json.encodeToString(next.mapValues { (_, l) -> listOf(l.id.toString(), l.uploaded.toString(), l.name) })) }
+        val live = (liveLinks() - ref.toString()).let { if (photo.live) it + ref.toString() else it }.filter { it in next }
+        prefs.edit {
+            putString("links", Json.encodeToString(next.mapValues { (_, l) -> listOf(l.id.toString(), l.uploaded.toString(), l.name) }))
+            putString("liveLinks", Json.encodeToString(live))
+        }
     }
+
+    /** Which of the originals kept were live photos on the NAS. */
+    private fun liveLinks(): Set<String> = runCatching {
+        Json.decodeFromString<List<String>>(prefs.getString("liveLinks", null) ?: return emptySet()).toSet()
+    }.getOrDefault(emptySet())
 
     private fun links(): Map<String, NasLink> = runCatching {
         Json.decodeFromString<Map<String, List<String>>>(prefs.getString("links", null) ?: return emptyMap())

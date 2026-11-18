@@ -39,9 +39,11 @@ data class PhotoInfo(
     val video: Boolean = false,
     val type: String? = null,
     val bytes: Long? = null,
+    /** A live photo's clip kept beside it rather than inside it, as an iPhone's from the NAS. */
+    val motionClip: File? = null,
 ) {
-    /** Whether it is a motion photo, with a clip after its still. */
-    val motion: Boolean get() = motionStart != null
+    /** Whether it is a live photo: a motion photo, with a clip after its still, or one with its clip beside it. */
+    val motion: Boolean get() = motionStart != null || motionClip != null
 }
 
 /**
