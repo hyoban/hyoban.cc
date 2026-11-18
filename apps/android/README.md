@@ -809,7 +809,8 @@ twice.
 ## 选照片
 
 记录's photo row ends with two tiles: 加照片 opens 选照片, 相册 in its choosing look, over the Moment,
-in place of the system's picker, and the other opens the phone's camera app. 选照片 reads the gallery itself (`ui/picker`):
+in place of the system's picker, and the other opens the phone's camera app, whose photos and videos join the Moment as
+the gallery keeps them, until a little after coming back. 选照片 reads the gallery itself (`ui/picker`):
 the first time it asks for the photos and videos with the photos' places (`READ_MEDIA_IMAGES`,
 `READ_MEDIA_VIDEO`, `ACCESS_MEDIA_LOCATION`); declined, the system's documents picker opens instead.
 Given only some photos (Android 14 and later), a row at the top says how many and 更改 asks the

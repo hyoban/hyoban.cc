@@ -9,12 +9,14 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import cc.hyoban.moments.ui.CameraShot
 import cc.hyoban.moments.ui.components.hasPermission
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import java.time.Instant
@@ -78,14 +80,17 @@ object LocalMedia {
     private val collection: Uri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
 
     /** Every photo and video the app may see, newest first, again whenever the gallery changes. */
-    fun items(context: Context): Flow<List<LocalItem>> = callbackFlow {
+    fun items(context: Context): Flow<List<LocalItem>> = changes(context).map { query(context) }.flowOn(Dispatchers.IO)
+
+    /** Once at first and again whenever the gallery changes, conflated. */
+    private fun changes(context: Context): Flow<Unit> = callbackFlow {
         val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
             override fun onChange(selfChange: Boolean) { trySend(Unit) }
         }
         context.contentResolver.registerContentObserver(collection, true, observer)
         trySend(Unit)
         awaitClose { context.contentResolver.unregisterContentObserver(observer) }
-    }.conflate().map { query(context) }.flowOn(Dispatchers.IO)
+    }.conflate()
 
     private fun query(context: Context): List<LocalItem> {
         val columns = arrayOf(
@@ -131,6 +136,41 @@ object LocalMedia {
                         width = if (turned) h else w,
                         height = if (turned) w else h,
                     ))
+                }
+            }
+        }.orEmpty()
+    }
+
+    /**
+     * The photos and videos added to the gallery since [since] (in milliseconds), oldest first, each
+     * with its size, again whenever the gallery changes: what the camera app saved while a Moment
+     * waited for it. A camera may list a live photo's still first and write it again with its clip
+     * a few seconds later, so the same one comes again with its new size. The app's own albums are
+     * left out, and nothing is seen without the whole gallery to look in.
+     */
+    fun addedSince(context: Context, since: Long): Flow<List<CameraShot>> = changes(context).map {
+        if (access(context) == GalleryAccess.ALL) shotsSince(context, since) else emptyList()
+    }.distinctUntilChanged().flowOn(Dispatchers.IO)
+
+    private fun shotsSince(context: Context, since: Long): List<CameraShot> {
+        val columns = arrayOf(
+            MediaStore.Files.FileColumns._ID,
+            MediaStore.Files.FileColumns.MEDIA_TYPE,
+            MediaStore.MediaColumns.BUCKET_DISPLAY_NAME,
+            MediaStore.MediaColumns.SIZE,
+        )
+        val selection = "${MediaStore.Files.FileColumns.MEDIA_TYPE} IN (${MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE}, ${MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO})" +
+            " AND ${MediaStore.MediaColumns.DATE_ADDED} >= ?"
+        val order = "${MediaStore.MediaColumns.DATE_ADDED} ASC, ${MediaStore.Files.FileColumns._ID} ASC"
+        val images = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        val videos = MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        return context.contentResolver.query(collection, columns, selection, arrayOf((since / 1000).toString()), order)?.use { c ->
+            buildList {
+                while (c.moveToNext()) {
+                    val bytes = if (c.isNull(3)) 0L else c.getLong(3)
+                    if (bytes <= 0 || ownAlbum(c.getString(2))) continue
+                    val video = c.getInt(1) == MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO
+                    add(CameraShot(forMoment(context, ContentUris.withAppendedId(if (video) videos else images, c.getLong(0))), bytes))
                 }
             }
         }.orEmpty()

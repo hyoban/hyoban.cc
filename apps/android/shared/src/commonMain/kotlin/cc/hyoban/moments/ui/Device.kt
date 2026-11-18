@@ -105,6 +105,12 @@ interface Device {
     /** Opens the device's camera app; false when there is none. */
     fun openCamera(): Boolean
 
+    /**
+     * What the camera app has kept since [since] (in milliseconds), oldest first, again as more is
+     * kept or one is written again; nothing where the device can't see where it keeps them.
+     */
+    fun cameraShots(since: Long): kotlinx.coroutines.flow.Flow<List<CameraShot>> = kotlinx.coroutines.flow.emptyFlow()
+
     /** Says [text] for a moment, over whatever is shown. */
     fun toast(text: String)
 
@@ -176,3 +182,6 @@ val LocalDevice = staticCompositionLocalOf<Device> { error("No device provided")
 
 /** Bringing a ledger in from a file: [pick] chooses it, [Dialog] asks what to do with what was found. */
 class LedgerImport(val pick: () -> Unit, val Dialog: @Composable () -> Unit)
+
+/** A photo or video the camera app kept, [bytes] its size as now written. */
+data class CameraShot(val ref: cc.hyoban.moments.data.local.PhotoRef, val bytes: Long)

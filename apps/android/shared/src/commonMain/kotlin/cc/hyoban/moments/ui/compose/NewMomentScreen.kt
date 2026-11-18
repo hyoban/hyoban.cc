@@ -119,6 +119,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.local.Around
@@ -196,6 +197,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -403,10 +405,36 @@ fun NewMomentScreen(
         photos = (photos + added).distinct().take(MAX_PHOTOS)
         picking = false
     }
-    // The tile opens the phone's camera app itself, with all it can do; what it takes goes to
-    // the gallery, to be added from there.
+    // The tile opens the phone's camera app itself, with all it can do; what it keeps to the
+    // gallery meanwhile joins the Moment's photos, in the order taken, as it is kept. One taken
+    // off again isn't put back. One the camera writes again (a live photo's still, then the
+    // photo with its clip) is read again, and looked at for faces and plates again.
+    var cameraSince by remember { mutableStateOf<Long?>(null) }
+    var fromCamera by remember { mutableStateOf(emptyMap<PhotoRef, Long>()) }
+    LaunchedEffect(cameraSince) {
+        val since = cameraSince ?: return@LaunchedEffect
+        device.cameraShots(since).collect { shots ->
+            val fresh = shots.filter { it.ref !in fromCamera }.map { it.ref }
+            val rewritten = shots.filter { shot -> fromCamera[shot.ref].let { it != null && it != shot.bytes } }.map { it.ref }
+            fromCamera = fromCamera + shots.associate { it.ref to it.bytes }
+            rewritten.filter { it in photos }.forEach { ref ->
+                infos[ref] = Photos.read(ref)
+                scanned = scanned - ref
+                masks = masks - ref
+            }
+            if (fresh.isNotEmpty()) photos = (photos + fresh).distinct().take(MAX_PHOTOS)
+        }
+    }
+    // Back from the camera, what it is still saving is waited for a little, then no longer, so
+    // the gallery's later photos stay out.
+    LifecycleResumeEffect(cameraSince) {
+        val waiting = cameraSince?.let { scope.launch { delay(CAMERA_SETTLE_MILLIS); cameraSince = null } }
+        onPauseOrDispose { waiting?.cancel() }
+    }
     val openCamera: () -> Unit = {
-        if (!device.openCamera()) saveError = textOf(Res.string.error_no_camera)
+        val since = System.currentTimeMillis()
+        if (device.openCamera()) cameraSince = cameraSince ?: since
+        else saveError = textOf(Res.string.error_no_camera)
     }
 
     val written = text.isNotBlank() || photos.isNotEmpty()
@@ -1656,6 +1684,10 @@ private fun refusalText(refusal: Refusal): StringResource = when (refusal) {
 private val ROW_PADDING = 16.dp
 /** How many photos and videos a Moment holds. */
 const val MAX_PHOTOS = 9
+
+/** How long, back from the camera app, what it is still saving is waited for. */
+private const val CAMERA_SETTLE_MILLIS = 15_000L
+
 private val CURSOR_ROOM = 2.dp
 /** How wide the site's photos are fetched for the strip: its tiles, at a phone's density. */
 private const val PHOTO_WIDTH = 480

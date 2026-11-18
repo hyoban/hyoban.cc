@@ -129,9 +129,12 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
 
     override val hasCamera: Boolean = true
 
-    // The phone's camera app itself, with all it can do; what it takes goes to the gallery, to be added from there.
+    // The phone's camera app itself, with all it can do; what it takes goes to the gallery, where
+    // [cameraShots] finds it.
     override fun openCamera(): Boolean =
         runCatching { context.startActivity(android.content.Intent(android.provider.MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)) }.isSuccess
+
+    override fun cameraShots(since: Long) = cc.hyoban.moments.ui.picker.LocalMedia.addedSince(context, since)
 
     override fun toast(text: String) = android.widget.Toast.makeText(context, text, android.widget.Toast.LENGTH_SHORT).show()
 
