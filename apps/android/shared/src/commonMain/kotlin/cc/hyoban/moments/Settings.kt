@@ -102,6 +102,15 @@ class Settings(private val prefs: Prefs, secrets: File) {
         prefs.edit { putBoolean("map_routes", on) }
     }
 
+    /** Whether 地图 shows the photos of 相册 that know where they were taken (09 地图的照片); off at first. */
+    var mapPhotos: Boolean by mutableStateOf(prefs.getBoolean("map_photos", false))
+        private set
+
+    fun changeMapPhotos(on: Boolean) {
+        mapPhotos = on
+        prefs.edit { putBoolean("map_photos", on) }
+    }
+
     /** How close 选照片's grid is: 0 the largest photos, 2 the smallest, by month. */
     var pickerDensity: Int by mutableStateOf(prefs.getInt("picker_density", 1).coerceIn(0, 2))
         private set

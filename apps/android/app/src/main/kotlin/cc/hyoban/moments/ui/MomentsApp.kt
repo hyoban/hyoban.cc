@@ -556,6 +556,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                         onFocused = { mapFocus = null },
                                         onFootprintSettings = { navController.navigate(FootprintSettings) },
                                         onWriteAtStay = { navController.navigate(opened(NewMoment(stay = it.encoded))) },
+                                        onWrite = { navController.navigate(opened(NewMoment())) },
                                         onCheckin = checkinNav,
                                         onNewTrip = { navController.navigate(TripEdit()) },
                                         onSuggestedTrip = { navController.navigate(TripEdit(start = it.startAt, end = it.endAt, title = it.name, from = it.from, to = it.to)) },
@@ -668,6 +669,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                         container,
                                         onNew = { openEditor(null, false) },
                                         onWrite = { navController.navigate(opened(NewMoment())) },
+                                        onMoment = openMoment,
                                     )
                                 }
                                 screen<Preferences> {

@@ -10,6 +10,7 @@ import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.TextButton
 import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.picker.PhotoLayerSheet
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.groupedShapes
 import cc.hyoban.moments.ui.design.groupedRow
@@ -220,12 +221,14 @@ fun MapScreen(
     onCheckin: (String) -> Unit = {},
     onNewTrip: () -> Unit = {},
     onSuggestedTrip: (TripSuggestion) -> Unit = {},
+    /** A new Moment with the photos chosen on the map, which the container offers it. */
+    onWrite: () -> Unit = {},
     modifier: Modifier = Modifier,
     // Read only where it is needed, so the map covered by another tab is not composed again.
     active: () -> Boolean = { true },
 ) {
     LocalDevice.current.FootprintsOnMap(container, onFootprintSettings, onWriteAtStay, onCheckin) { footprints ->
-        MapContent(container, onMoment, onPlace, onTrip, onPlay, onSearch, focus, onFocused, footprints, onNewTrip, onSuggestedTrip, modifier, active)
+        MapContent(container, onMoment, onPlace, onTrip, onPlay, onSearch, focus, onFocused, footprints, onNewTrip, onSuggestedTrip, onWrite, modifier, active)
     }
 }
 
@@ -242,6 +245,7 @@ private fun MapContent(
     footprints: AtlasFootprintsOnMap?,
     onNewTrip: () -> Unit,
     onSuggestedTrip: (TripSuggestion) -> Unit,
+    onWrite: () -> Unit,
     modifier: Modifier,
     active: () -> Boolean,
 ) {
@@ -261,6 +265,9 @@ private fun MapContent(
     val byPlace = atlas.byPlace
     val checkinsByPlace = if (checkinsOn) atlas.checkinsByPlace else emptyMap()
     val footprintsOn = footprints != null && settings.isOn(Module.FOOTPRINTS)
+    // 地图's photos (09 地图的照片): the gallery's and the NAS's that know where they were taken,
+    // read only while they are shown.
+    val photoLayer = if (settings.mapPhotos) cc.hyoban.moments.ui.picker.rememberPhotoLayer(container, onWrite) else null
     val mapPlaces = if (checkinsOn) atlas.placesWithCheckins else atlas.placesWithoutCheckins
     val colors = if (checkinsOn) atlas.colorsWithCheckins else atlas.colorsWithoutCheckins
     val mapRoutes = atlas.routes
@@ -443,6 +450,7 @@ private fun MapContent(
             },
             panel = if (wide) panelWidth + Space.m else 0.dp,
             year = year,
+            overlay = photoLayer?.let { layer -> { state -> cc.hyoban.moments.ui.picker.HeapsOver(state, layer.places, year) } },
         )
         // At the top: the search and the fog's switch on one line, the legend under them and,
         // while the fog is on, how much of it is lit. On a wide window the search is the panel's
@@ -510,6 +518,7 @@ private fun MapContent(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             CompassButton(turned, bearing, onClick = { north++ })
+            PhotosButton(settings.mapPhotos) { settings.changeMapPhotos(!settings.mapPhotos) }
             if (footprintsOn) FootprintsButton(footprints?.recording == true, onClick = openFootprints)
             if (device.hasLocation) LocateButton(locating, onClick = requestLocate)
         }
@@ -626,6 +635,7 @@ private fun MapContent(
                     .padding(start = rail.left).width(panelWidth).testTag("map_panel"),
             ) { panel() }
         }
+        photoLayer?.let { layer -> Box(Modifier.fillMaxSize()) { PhotoLayerSheet(container, layer, onMoment) } }
         return
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -639,6 +649,7 @@ private fun MapContent(
             sheetContent = { sheetContent() },
         ) { }
     }
+    photoLayer?.let { layer -> Box(Modifier.fillMaxSize()) { PhotoLayerSheet(container, layer, onMoment) } }
 }
 
 /** The colour of a trip's year on the map, when a place first visited that year has one. */
@@ -1068,6 +1079,14 @@ private fun FootprintsButton(recording: Boolean, onClick: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+/** Shows 地图's photos and puts them away: a round switch, filled with the accent while it's on, as the fog's. */
+@Composable
+private fun PhotosButton(on: Boolean, onClick: () -> Unit) {
+    MapButton(stringResource(Res.string.map_photos), onClick, tag = "map_photos", on = on) {
+        Icon(if (on) AppIcons.PhotosFill else AppIcons.Photos, contentDescription = null)
     }
 }
 

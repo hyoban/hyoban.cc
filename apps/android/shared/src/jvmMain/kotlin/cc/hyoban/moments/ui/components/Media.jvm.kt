@@ -27,3 +27,5 @@ actual fun edgeColors(image: coil3.Image, top: Boolean): ImageBitmap {
     }
     return edge
 }
+
+actual fun coil3.Image.toImageBitmap(): ImageBitmap = toBitmap().asComposeImageBitmap()

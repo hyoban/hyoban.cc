@@ -1487,6 +1487,10 @@
     <string name="album_save">Save to gallery</string>
     <string name="album_saving">Saving %1$d of %2$d to the gallery</string>
     <string name="album_nine">A Moment holds nine</string>
+    <string name="map_photos">Photos</string>
+    <string name="map_photos_here">This spot</string>
+    <string name="album_published">Published</string>
+    <string name="album_open_moment">Open Moment</string>
     <string name="album_no_nas">No NAS connected</string>
     <string name="album_no_nas_note">Fill in the UGREEN NAS's ID, user and password in Sync &amp; sources.</string>
     <string name="album_save_pictures">Save to Pictures</string>

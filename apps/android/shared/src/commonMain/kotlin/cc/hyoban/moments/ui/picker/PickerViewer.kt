@@ -128,7 +128,7 @@ fun Viewer(
         marked = { shown[it].key in order },
         info = { modifier -> PhotoInfoPanel(container, details, modifier, note = current?.infoNote(details)?.let { stringResource(it) }) },
         top = { at ->
-            IconButton(onClick = { current?.let(onDelete) }, enabled = enabled && current != null, modifier = Modifier.align(at).testTag("picker_viewer_delete")) {
+            if (current?.deletable != false) IconButton(onClick = { current?.let(onDelete) }, enabled = enabled && current != null, modifier = Modifier.align(at).testTag("picker_viewer_delete")) {
                 Icon(AppIcons.Trash, contentDescription = stringResource(current?.source?.deleteWords ?: Res.string.camera_delete), tint = MediaOverlay.content)
             }
         },

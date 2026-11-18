@@ -94,7 +94,8 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   far it went and its line; a piece that barely moved shows nothing. A banner marks where each trip begins, among its first day's bubbles at the time it set off when that is known, else above that day; or, for the trip under way, says
   进行中 and which day it is. Reading back to older days folds the tabs and the title away;
   heading back to today brings them back.
-- **地图** shows the places, the trips' routes (listed in the sheet at its foot) and the
+- **地图** shows the places, the trips' routes (listed in the sheet at its foot), the
+  photos of 相册 that know where they were taken once its 照片 switch is on (相册, 地图's photos), and the
   footprints, drawn as the site's map draws them: a place as the newest photo taken there,
   framed in white with its year's dot, or without one a balloon in its year's colour with its
   kind's icon and its name under it where there's room; the pins pile up on their spots, the
@@ -716,6 +717,22 @@ first for all three, with how far it is and 停止 at the foot. Looked through, 
 tabs and its foot has 分享, 存到相册 for the camera's and the NAS's, and 用这张写时刻 for the photo
 shown; choosing, it chooses as 选照片's does, with 写时刻.
 
+已发布, in 相册's title after the gallery's albums (and in 选照片 not at all), is every photo and video
+of the Moments, the private ones too and in 演示模式 only what is shown, newest Moment first under its
+day, each the site's own (or the phone's, not published yet). They are only looked at: the viewer
+shares one as a Moment's viewer does and 打开时刻 takes it to its Moment; none is chosen or deleted here.
+
+**地图's photos.** The map's 照片 switch, over 足迹 down its side and off at first, lays 相册's
+photos that know where they were taken over the map (`PhotoLayer`, `HeapsOver`): the gallery's, whose
+places the media store doesn't keep, so each photo's EXIF is read once from its original in the
+background and kept on the phone (`GalleryLocations`, a file in `noBackupFilesDir`, read again only for
+a photo new or changed), and the NAS's (above). Published photos aren't among them: they are the
+map's places already. Photos within 64 points of each other on screen stand as one heap (`PhotoHeaps`:
+a grid fixed to the world, then neighbours joined), one of them showing with how many, grouped again
+each half zoom; a year picked from the legend keeps that year's. A heap tapped brings its photos up
+from the foot as 相册's grid, the map staying above: looked at, and chosen (held, or 选择) to write,
+share, save or delete as in 相册, the tabs giving way to the bar. On the Mac they are the NAS's alone.
+
 On the Mac, 相册 is the sidebar's (⌘4), the same page in `:shared` with the NAS as its one source:
 the computer has no gallery of the phone's and pairs no camera, so the phone adds its two
 (`PhonePicker`, the `Device`'s `picker`) and the Mac lists the NAS alone, set up in the settings
@@ -785,16 +802,11 @@ Zoomed into, a photo's original comes down to the app's cache, the big thumbnail
 meanwhile, and is then read in tiles as it zooms; 加入 copies it rather than fetching it again.
 Thumbnails and originals are kept on disk as the camera's are (`MediaCache`), by the photo's id
 and when it was uploaded, and the viewer fetches the next photo's big thumbnail ahead.
-With all the NAS's photos listed, a button in the bar switches between the grid and a map
-(`ui/picker/PlacesMap.kt`): the photo app's own list of where its photos were taken
-(`ai/map/gps/list`, five thousand at a time, read whole the first time the map shows; WGS‑84, as the
-EXIF has them), so no original is read for it. Photos within 64 points of each other on screen stand
-as one heap (`PhotoHeaps`: a grid fixed to the world, then neighbours joined), showing one of them
-and how many, grouped again each half zoom, so the map coming closer parts them. A heap tapped
-brings its photos up from the foot (`ai/map/gps/photo`, by their ids, two hundred at a time), the
-map staying above, chosen and looked at as in the grid; dragged down, a tap on the map or going
-back puts them away. On its side they are a panel beside the map. An album has no map: the NAS
-lists places only for them all.
+On 地图 (相册, above: 地图's photos) the NAS's photos stand where they were taken: the photo app's own
+list of where its photos were taken (`ai/map/gps/list`, five thousand at a time, read whole the first
+time they show; WGS‑84, as the EXIF has them), so no original is read for it, and a heap opened reads
+its photos by their ids (`ai/map/gps/photo`, two hundred at a time). The list says nothing of when, so
+with a year picked from the legend they step away.
 加入 saves the originals to the gallery's Here album first, as the camera's. 删除 asks the NAS first
 what it would do (`file/remove_operability`): to its recycle bin, or for good where there is none,
 and the dialog says which before `file/remove`. Through the relay an original comes at about

@@ -143,7 +143,8 @@ even when starting from the repository root.
   router back.
 - Map year colors, fog behavior and the places' pins (photos, balloons, piling and stacks,
   the open place lifted, routes in their year's colour, a year picked from the legend) match across Web and App; change
-  both together. No line on a map grows thicker: a route keeps one width whether it's lifted,
+  both together; the app's 照片 switch, 相册's own photos where they were taken, is the app's alone, as the
+  footprints are. No line on a map grows thicker: a route keeps one width whether it's lifted,
   zoomed or handed to playback, and a lifted one stands out only by the others stepping back.
   On every map a check-in's place is a place like a Moment's: listed, counted, filtered by
   year, month or trip and kept beside a lifted trip alike, the two read together by time.

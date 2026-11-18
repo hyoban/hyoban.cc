@@ -505,6 +505,8 @@ fun SharedAtlasMap(
     onlyPlaces: Set<String>? = null,
     /** The footprints are being looked at: the routes and the places step back behind them. */
     recede: Boolean = false,
+    /** What stands over the map where it draws it, laid out against [MapState]'s camera: 地图's photos. */
+    overlay: (@Composable (MapState) -> Unit)? = null,
 ) {
     val reduced = LocalReducedMotion.current
     val dark = LocalDarkTheme.current
@@ -1224,11 +1226,14 @@ fun SharedAtlasMap(
             footprintsFramed.value()
         }
     }
-    SharedMap(
-        state = state,
-        interactive = true,
-        modifier = modifier,
-        interactions = interactions,
-        attributionPadding = attributionPadding,
-    )
+    androidx.compose.foundation.layout.Box(modifier) {
+        SharedMap(
+            state = state,
+            interactive = true,
+            modifier = Modifier.matchParentSize(),
+            interactions = interactions,
+            attributionPadding = attributionPadding,
+        )
+        overlay?.invoke(state)
+    }
 }

@@ -17,3 +17,5 @@ actual fun edgeColors(image: coil3.Image, top: Boolean): ImageBitmap {
     val row = averageEdge(pixels, width, rows)
     return android.graphics.Bitmap.createBitmap(row, EDGE_COLOUR_COUNT, 1, android.graphics.Bitmap.Config.ARGB_8888).asImageBitmap()
 }
+
+actual fun coil3.Image.toImageBitmap(): ImageBitmap = toBitmap().asImageBitmap()

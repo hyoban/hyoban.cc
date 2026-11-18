@@ -7,8 +7,11 @@ import kotlin.math.ln
 import kotlin.math.pow
 import kotlin.math.sin
 
-/** Where a photo was taken, for the picker's map. */
-data class Spot(val id: Long, val latitude: Double, val longitude: Double)
+/**
+ * Where a photo was taken, for 地图's photos: its [year] where its source knows when it was taken,
+ * and [from], which of the merged sources it is of.
+ */
+data class Spot(val id: Long, val latitude: Double, val longitude: Double, val year: Int? = null, val from: Int = 0)
 
 /** The photos that stand too near each other on the map to tell apart: where their middle is, and them, [cover] the first. */
 class Heap(val latitude: Double, val longitude: Double, val spots: List<Spot>) {

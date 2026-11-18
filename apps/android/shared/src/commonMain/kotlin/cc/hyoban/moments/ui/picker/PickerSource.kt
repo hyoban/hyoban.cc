@@ -134,6 +134,15 @@ interface Pick {
     /** Whether it opens in the viewer: a photo not read yet doesn't. */
     val openable: Boolean get() = true
 
+    /** Whether it can be deleted from here: a published one can't. */
+    val deletable: Boolean get() = true
+
+    /** The Moment it is of, a published photo's, opened from the viewer. */
+    val moment: String? get() = null
+
+    /** Shares it as the Moment's viewer does, a published photo's own way; nothing for the rest. */
+    suspend fun shareOwn() {}
+
     /** Its thumbnail at [size] pixels, if it is at hand already. */
     fun cachedThumb(size: Int): ImageBitmap? = null
 
@@ -175,6 +184,9 @@ interface PickerDevice {
      * gallery refused, and [onRefused] a source given up on, back to the first.
      */
     @Composable fun sources(deletion: Deletion, onFallback: () -> Unit, onRefused: () -> Unit): List<PhotoSource>
+
+    /** Its sources that know where their photos were taken without reading each, for 地图's photos: the phone's gallery, once read. */
+    @Composable fun places(deletion: Deletion): List<Places> = emptyList()
 
     /** The videos played in the viewer, each by its photo's key. */
     @Composable fun rememberVideos(): PickerVideos

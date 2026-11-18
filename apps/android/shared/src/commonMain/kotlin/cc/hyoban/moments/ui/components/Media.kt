@@ -219,6 +219,9 @@ expect fun ImageRequest.Builder.readable(): ImageRequest.Builder
 /** The band along a still's top or bottom edge, a quarter of its height, averaged into a row of [EDGE_COLOURS]. */
 expect fun edgeColors(image: coil3.Image, top: Boolean): ImageBitmap
 
+/** [image], as Coil loaded it, for Compose to draw. */
+expect fun coil3.Image.toImageBitmap(): ImageBitmap
+
 /**
  * A still with what it holds marked: a play button on a video, a live badge on a live
  * photo, in the corner [liveBadgeAlignment] names. Among a Moment's photos in a small

@@ -1488,6 +1488,10 @@
     <string name="album_save">存到相册</string>
     <string name="album_saving">正在存到相册 %1$d / %2$d</string>
     <string name="album_nine">一条时刻最多九张</string>
+    <string name="map_photos">照片</string>
+    <string name="map_photos_here">这一处</string>
+    <string name="album_published">已发布</string>
+    <string name="album_open_moment">打开时刻</string>
     <string name="album_no_nas">还没有接上 NAS</string>
     <string name="album_no_nas_note">在 同步与来源 里填好绿联 NAS 的 ID、用户名和密码。</string>
     <string name="album_save_pictures">存到「图片」</string>

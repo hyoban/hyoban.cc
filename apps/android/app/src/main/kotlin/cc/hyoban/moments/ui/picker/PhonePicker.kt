@@ -22,6 +22,14 @@ class PhonePicker(private val context: Context) : PickerDevice {
         return listOf(gallery, camera)
     }
 
+    /** The gallery's photos by where they were taken, read once each and kept (09 地图的照片). */
+    @Composable
+    override fun places(deletion: Deletion): List<Places> {
+        val gallery = rememberGallery(deletion, onFallback = {})
+        val locations = (context.applicationContext as cc.hyoban.moments.MomentsApplication).container.galleryLocations
+        return listOf(remember(gallery) { GalleryPlaces(gallery, locations) })
+    }
+
     @Composable
     override fun rememberVideos(): PickerVideos = remember { PhoneVideos() }
 

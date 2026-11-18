@@ -61,6 +61,9 @@ class PhoneContainer private constructor(
     val backup = cc.hyoban.moments.backup.Backup(context)
 
     /** The owner's UGREEN NAS, whose photo app 选照片 reads; nothing is asked of it until it is set up. */
+    /** Where the gallery's photos were taken, read once each for 地图's photos and kept on the phone. */
+    val galleryLocations by lazy { cc.hyoban.moments.ui.picker.GalleryLocations(context) }
+
     override val nas = cc.hyoban.moments.nas.Nas(
         cc.hyoban.moments.SharedPrefs(context.getSharedPreferences("nas", Context.MODE_PRIVATE)),
         cc.hyoban.moments.Token(java.io.File(context.noBackupFilesDir, "nas-password")),

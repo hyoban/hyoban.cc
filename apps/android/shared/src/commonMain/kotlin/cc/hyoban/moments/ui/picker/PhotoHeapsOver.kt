@@ -79,118 +79,23 @@ import org.maplibre.compose.util.VisibleBounds
 private val HEAP = 48.dp
 private const val REACH = 64.0
 
-/** How much of the page the opened heap's photos take at rest, the map keeping the rest. */
-private const val SHEET_SHARE = 0.55f
-
-/** How wide the opened heap's photos are beside the map, on a phone on its side. */
-private val PANEL = 360.dp
-
-/** A lone place is framed no closer than its streets. */
-private const val CLOSEST = 14.0
-
-/**
- * 选照片's map (39): the photos of what is listed where they were taken, those near each other on
- * screen in one heap that shows one of them and says how many, parting as the map comes closer. A
- * heap tapped is opened: its photos come up from the foot in [grid], the map staying above, and
- * go again dragged down, with a tap on the map or by going back. On its side they are a panel
- * beside the map.
- */
-@Composable
-fun PlacesMap(places: Places, sideways: Boolean, grid: @Composable (onNearEnd: () -> Unit) -> Unit) {
-    LaunchedEffect(places) { places.load() }
-    val spots = places.spots
-    val failed = places.failed
-    when {
-        failed != null && spots == null -> { failed(); return }
-        spots == null -> { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Spinner() }; return }
-        spots.isEmpty() -> {
-            Text(stringResource(Res.string.picker_map_empty), style = AppTheme.typography.body, color = tokens.tx3, textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxSize().padding(top = LocalTopClearance.current + Space.xl * 3).padding(horizontal = Space.xl))
-            return
-        }
-    }
-    val opened = places.opened
-    BackHandler(enabled = opened != null) { places.open(null) }
-    val photos: @Composable () -> Unit = {
-        // Under the sheet's own top, not the page's bar.
-        CompositionLocalProvider(LocalTopClearance provides 0.dp) {
-            Box(Modifier.fillMaxSize()) {
-                grid { places.more() }
-                if (places.reading) Spinner(Modifier.align(Alignment.TopCenter).padding(top = Space.xl))
-            }
-        }
-    }
-    if (sideways) {
-        Row(Modifier.fillMaxSize()) {
-            HeapsMap(places, spots, opened, Modifier.weight(1f).fillMaxHeight())
-            if (opened != null) Box(Modifier.width(PANEL).fillMaxHeight().background(AppColors.sheet).padding(top = LocalTopClearance.current)) { photos() }
-        }
-        return
-    }
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        HeapsMap(places, spots, opened, Modifier.fillMaxSize())
-        if (opened != null) key(opened.first().id) {
-            val sheet = rememberStandardBottomSheetState(initialValue = SheetValue.PartiallyExpanded, skipHiddenState = false)
-            LaunchedEffect(sheet) {
-                snapshotFlow { sheet.currentValue }.drop(1).collect { if (it == SheetValue.Hidden) places.open(null) }
-            }
-            BottomSheetScaffold(
-                scaffoldState = rememberBottomSheetScaffoldState(sheet),
-                // Drawn up to the bar's circles at most.
-                modifier = Modifier.padding(top = LocalTopClearance.current).testTag("picker_heap_sheet"),
-                sheetPeekHeight = maxHeight * SHEET_SHARE,
-                sheetContainerColor = AppColors.sheet,
-                containerColor = Color.Transparent,
-                sheetContent = { photos() },
-            ) { }
-        }
-    }
-}
-
 /** A heap as it stands on the screen now. */
 private class Placed(val heap: Heap, val at: DpOffset)
 
 /**
- * The map and its heaps over it. The heaps are grouped again each half zoom, and laid over the
- * map where it draws their points, every frame the map moves.
+ * [places]' photos over the map [state] draws, those within [REACH] points of each other on screen in
+ * one heap that shows one of them and says how many, grouped again each half zoom and laid where
+ * the map draws their points every frame it moves; [year] leaves only that year's. A heap tapped is
+ * opened, its photos read for the sheet under the map.
  */
 @Composable
-private fun HeapsMap(places: Places, spots: List<Spot>, opened: List<Spot>?, modifier: Modifier) {
+fun HeapsOver(state: MapState, places: Places, year: Int?) {
+    LaunchedEffect(places) { places.load() }
+    val all = places.spots ?: return
+    val spots = remember(all, year) { if (year == null) all else all.filter { it.year == year } }
+    val opened = places.opened
     var placed by remember { mutableStateOf<List<Placed>>(emptyList()) }
-    var framed by remember { mutableStateOf(false) }
-    val dark = LocalDarkTheme.current
-    val top = LocalTopClearance.current
     val heapsAt = remember(spots) { HashMap<Double, List<Heap>>() }
-    val close = remember(places) { { places.open(null) } }
-    val interactions = remember(close) {
-        MapInteractions(MapInteractions.Standard) {
-            camera {
-                rotate { enabled = false }
-                pitch { enabled = false }
-            }
-            callbacks {
-                click {
-                    onUnhandled {
-                        close()
-                        ClickResult.Consume
-                    }
-                }
-            }
-        }
-    }
-    val state = rememberMapState(
-        baseStyle = mapStyle(dark),
-        initialCameraPosition = CameraPosition(center = positionOf(latitude = 32.0, longitude = 110.0), zoom = 3.0),
-    )
-
-    LaunchedEffect(state, spots, framed) {
-        state.awaitViewport()
-        if (!framed) {
-            frame(state, spots, HEAP + Space.xl, top + HEAP + Space.xl)
-            framed = true
-        }
-    }
-    // Deleted photos leave their heaps; camera and photo changes both rebuild what is over the map.
     LaunchedEffect(state, spots) {
         snapshotFlow { state.viewport }.collectLatest { viewport ->
             if (viewport == null) return@collectLatest
@@ -205,42 +110,16 @@ private fun HeapsMap(places: Places, spots: List<Spot>, opened: List<Spot>?, mod
                 .toList()
         }
     }
-
-    Box(modifier.clip(androidx.compose.ui.graphics.RectangleShape)) {
-        SharedMap(
-            state = state,
-            interactive = true,
-            modifier = Modifier.fillMaxSize().testTag("picker_map"),
-            interactions = interactions,
-            attributionPadding = androidx.compose.foundation.layout.PaddingValues(
-                start = Space.m,
-                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + Space.m,
-            ),
-        )
+    Box(Modifier.fillMaxSize().clip(androidx.compose.ui.graphics.RectangleShape)) {
         placed.forEach { at ->
-            key(at.heap.cover.id) {
+            key(at.heap.cover) {
                 HeapMark(
-                    places, at.heap, chosen = opened != null && opened.first().id == at.heap.cover.id,
+                    places, at.heap, chosen = opened != null && opened.first() == at.heap.cover,
                     modifier = Modifier.offset(at.at.x - HEAP / 2, at.at.y - HEAP / 2),
                 ) { places.open(at.heap.spots) }
             }
         }
     }
-}
-
-/** All of [spots] in view, clear of [padding] at each edge; a lone place no closer than its streets. */
-private suspend fun frame(map: MapState, spots: List<Spot>, padding: androidx.compose.ui.unit.Dp, topPadding: androidx.compose.ui.unit.Dp) {
-    val points = spots.map { positionOf(it.latitude, it.longitude) }
-    val first = points.firstOrNull() ?: return
-    if (points.all { it.latitude == first.latitude && it.longitude == first.longitude }) {
-        map.setCameraPosition(CameraPosition(center = first, zoom = CLOSEST))
-        return
-    }
-    val camera = map.cameraForCoordinates(
-        points,
-        CameraFit(fitPadding = DpPadding(left = padding, top = topPadding, right = padding, bottom = padding)),
-    )
-    if (camera != null) map.setCameraPosition(camera.copy(zoom = minOf(camera.zoom, CLOSEST)))
 }
 
 /** A heap just off an edge still shows the half of it that is on, including across the antimeridian. */
@@ -257,14 +136,14 @@ private fun VisibleBounds.near(latitude: Double, longitude: Double): Boolean {
 private fun HeapMark(places: Places, heap: Heap, chosen: Boolean, modifier: Modifier, onOpen: () -> Unit) {
     val shape = AppTheme.shapes.medium
     val cover = heap.cover
-    val thumb by produceState<ImageBitmap?>(null, cover.id) { value = places.thumbnail(cover) }
+    val thumb by produceState<ImageBitmap?>(null, cover) { value = places.thumbnail(cover) }
     val label = stringResource(Res.string.picker_heap_description, heap.count)
     Box(modifier.size(HEAP)) {
         Box(
             Modifier.fillMaxSize().softShadow(ShadowElevation, shape).background(tokens.fill, shape).clip(shape)
                 .semantics { selected = chosen }
                 .clickable(onClickLabel = label, role = Role.Button, onClick = onOpen)
-                .testTag("picker_heap_${cover.id}"),
+                .testTag("photo_heap_${cover.from}_${cover.id}"),
         ) {
             thumb?.let { Image(it, contentDescription = label, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
         }
