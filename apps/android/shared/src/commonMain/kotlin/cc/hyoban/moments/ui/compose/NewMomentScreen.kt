@@ -858,7 +858,9 @@ fun NewMomentScreen(
                     // 换成 NAS 原图: a published photo linked to the NAS, put back as the NAS's original,
                     // a photo new here: its faces and plates covered as it comes in, uploaded anew.
                     val link = originalMedia[ref]?.takeIf { it.published != null }?.nas?.takeIf { container.nas.configured }
-                    if (link != null) Tooltip(stringResource(Res.string.action_replace_nas), below = true) {
+                    // Offered only where the site's copy is less than the NAS's original.
+                    val lesser = link != null && androidx.compose.runtime.key(ref) { rememberLesserThanNas(container, originalMedia.getValue(ref), link) }
+                    if (link != null && lesser) Tooltip(stringResource(Res.string.action_replace_nas), below = true) {
                         IconButton(
                             onClick = {
                                 val old = originalMedia.getValue(ref)
@@ -965,6 +967,26 @@ private fun draftMedia(ref: PhotoRef, original: MomentMedia?, info: PhotoInfo?, 
         utility = utility.takeIf { it },
         local = LocalMedia(uri = ref.toString(), videoUri = ref.toString().takeIf { video }),
     )
+
+/**
+ * Whether [media]'s published copy is less than the NAS's original it is linked to: one the
+ * site optimized (not kept as uploaded) is; one kept as uploaded is only if the NAS's is larger,
+ * as its EXIF says, an upload smaller than what was taken. Unknown, kept as uploaded, it isn't.
+ */
+@Composable
+private fun rememberLesserThanNas(container: AppContainer, media: MomentMedia, link: cc.hyoban.moments.data.spec.NasLink): Boolean {
+    val published = media.published ?: return false
+    if (published.original != true) return true
+    return androidx.compose.runtime.produceState(false, media.uid, link) {
+        if (media.type == MediaType.VIDEO) return@produceState
+        val nas = container.nas
+        val head = nas.head(nas.photo(link)) ?: return@produceState
+        val read = cc.hyoban.moments.ui.viewer.PhotoDetails.read(cc.hyoban.moments.ui.viewer.PhotoDetails()) { head.inputStream() }
+        val longest = maxOf(read.width ?: 0, read.height ?: 0)
+        val shown = maxOf(published.width ?: media.width ?: 0, published.height ?: media.height ?: 0)
+        value = longest > 0 && shown > 0 && longest > shown
+    }.value
+}
 
 /** One of a patch's styles in the viewer's bar, the one it has marked with a dot under it. */
 @Composable
