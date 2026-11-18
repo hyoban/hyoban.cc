@@ -44,7 +44,7 @@ data class NasPhoto(
     val width: Int?,
     val height: Int?,
     val video: Boolean,
-    /** A motion photo, its video inside the file (实况). */
+    /** A live photo (实况): a motion photo, its clip inside the file, or an iPhone's, its clip a MOV beside it. */
     val live: Boolean,
     /** A video's length as the NAS writes it, 03:25. */
     val duration: String?,
@@ -96,10 +96,11 @@ object NasProtocol {
     /** Where UGREENlink says a NAS is, by its ID. */
     const val LOOKUP = "https://api.ugnas.com/api/p2p/v2/ta/nodeInfo/byAlias"
 
-    /** The stream's sizes: the original, and the thumbnails the web app draws. */
+    /** The stream's sizes: the original, the thumbnails the web app draws, and a live photo's clip. */
     const val ORIGINAL = 0
     const val SMALL = 1
     const val BIG = 3
+    const val LIVE = 5
 
     /** The web app encrypts in chunks of this many characters, whatever the key's size. */
     private const val CHUNK = 117

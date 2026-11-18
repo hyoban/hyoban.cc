@@ -720,7 +720,8 @@ foot, 用这张写时刻 for the photo shown, or 打开时刻 for one in a Momen
 选照片's does, with 写时刻. A live photo plays in every viewer as in a Moment's, once on arriving,
 again from its button or held down with its sound, and Space: the gallery's and the NAS's from the
 motion photo itself, where its clip starts after its still (the NAS's read by range, the start of its
-original kept on the device), a published one's from its clip, and in the editor one picked and not
+original kept on the device), an iPhone's on the NAS from the MOV it keeps beside the still (its stream's
+`size_type` 5), a published one's from its clip, and in the editor one picked and not
 yet saved from its own file, unless it goes in as a photo alone or 打码'd. Every viewer, resting on one
 a moment, reads those either side ahead: their stills and their info.
 
@@ -828,8 +829,8 @@ zooms, so it stays sharp. Under it, upright, the photos before and after are sma
 in the middle and those chosen dotted: a tap turns to one, and dragging the row turns the viewer
 along. A video of the gallery's or the NAS's (MP4 or QuickTime) plays where it is, silent until
 asked, with the photo viewer's controls, the NAS's read from its stream as far as it is watched and
-not kept; a motion photo of the gallery's plays its clip once, read from inside its file, and with
-its sound while held. The camera's videos and the NAS's motion photos stay stills. Its 删除 hands one of the gallery's to the system, which asks and moves it to its bin
+not kept; a live photo of the gallery's or the NAS's plays its clip once, and with its sound while
+held. The camera's videos stay stills. Its 删除 hands one of the gallery's to the system, which asks and moves it to its bin
 (`createTrashRequest`), and deletes one of the camera's off its card, after asking. With
 photos chosen, the bar's 删除 does the same with those chosen from the source shown: the
 gallery's in one request, the system asking once, the camera's one at a time. 加入 adds the gallery's as they are, their

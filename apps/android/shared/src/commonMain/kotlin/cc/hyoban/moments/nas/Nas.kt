@@ -354,8 +354,13 @@ class Nas(
     }
 
     /** [photo]'s original as a player asks for it: its address, and the cookie it wants. */
-    suspend fun original(photo: NasPhoto): Pair<String, Map<String, String>> {
-        val request = stream(photo, NasProtocol.ORIGINAL)
+    suspend fun original(photo: NasPhoto): Pair<String, Map<String, String>> = playable(photo, NasProtocol.ORIGINAL)
+
+    /** A live photo's clip as the NAS gives it apart, as a player asks for it: an iPhone's MOV, kept beside its still. */
+    suspend fun liveClip(photo: NasPhoto): Pair<String, Map<String, String>> = playable(photo, NasProtocol.LIVE)
+
+    private suspend fun playable(photo: NasPhoto, size: Int): Pair<String, Map<String, String>> {
+        val request = stream(photo, size)
         return request.url.toString() to mapOf("Cookie" to request.header("Cookie").orEmpty())
     }
 

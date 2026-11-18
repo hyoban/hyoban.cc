@@ -343,19 +343,26 @@ data class NasPick(val photo: NasPhoto, override val source: NasSource, val list
     override val inMoment get() = photo.id in source.linked
 
     /**
-     * A motion photo's clip, read by range from its original on the NAS where the start of the
-     * original says it starts (kept on the device once read), once its page is first shown.
+     * A live photo's clip, once its page is first shown: a motion photo's read by range from its
+     * original on the NAS where the start of the original says it starts (kept on the device once
+     * read); an iPhone's, whose original holds no clip, the MOV the NAS keeps beside it.
      */
     @Composable
     override fun rememberMotion(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? =
         produceState<cc.hyoban.moments.ui.viewer.MotionSource?>(null, key, active) {
-            if (!active || !photo.live || photo.size <= 0 || value != null) return@produceState
-            val head = source.nas.head(photo) ?: return@produceState
-            val length = cc.hyoban.moments.data.local.MotionPhotos.videoLength(String(head, Charsets.ISO_8859_1)) ?: return@produceState
-            val start = photo.size - length
-            if (start <= 0) return@produceState
-            val (url, headers) = runCatching { source.nas.original(photo) }.getOrNull() ?: return@produceState
-            value = cc.hyoban.moments.ui.viewer.MotionSource(url, start, headers)
+            if (!active || !photo.live || value != null) return@produceState
+            val head = if (photo.size > 0) source.nas.head(photo) else null
+            val length = head?.let { cc.hyoban.moments.data.local.MotionPhotos.videoLength(String(it, Charsets.ISO_8859_1)) }
+            val start = length?.let { photo.size - it }?.takeIf { it > 0 }
+            value = if (start != null) {
+                val (url, headers) = runCatching { source.nas.original(photo) }.getOrNull() ?: return@produceState
+                cc.hyoban.moments.ui.viewer.MotionSource(url, start, headers)
+            } else {
+                // Not read at all ([head] failed) is tried again next time rather than taken for an iPhone's.
+                if (photo.size > 0 && head == null) return@produceState
+                val (url, headers) = runCatching { source.nas.liveClip(photo) }.getOrNull() ?: return@produceState
+                cc.hyoban.moments.ui.viewer.MotionSource(url, 0, headers)
+            }
         }.value
 
     /** The NAS keeps its own thumbnails, small for the grid and big for the viewer, and its client caches them. */
