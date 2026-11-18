@@ -727,10 +727,13 @@ record: its id there, when it was uploaded and its file's name, which the NAS's 
 published copy has lost where it was taken, and may be smaller or 打码'd, while the NAS keeps the
 original whole. One added from the NAS is linked as it is written (the NAS remembers which of its
 photos each original it kept came from, the last five hundred); for those written before, 关联已发布的照片
-under 同步与来源's NAS reads the NAS's timeline for only the days they were taken on and links each to
-the one taken at the same second on the clock, a photo for a photo and a video for a video, of the
-same shape upright or not (`NasMatch`); two alike are told apart only by being the same size, else
-left unlinked. Each Moment so changed waits in 发布更改 like any other edit, under NAS 原图 each photo
+under 同步与来源's NAS reads the NAS's timeline for only the days they are looked for on (the day taken,
+or for one that doesn't say its Moment's day and those either side) and links each, a photo to a photo
+and a video to a video (`NasMatch`): to the one taken at the same second on the clock, of the same shape
+upright or not, unless the two look plainly else; else, or where two are alike at that second, to the
+one that looks the same, by a 64-bit difference hash (dHash) of the published small still and the NAS's
+small thumbnail, close and clearly closer than the next. What can't be told apart, a burst's frames
+or a photo mostly 打码'd, is left unlinked. Each Moment so changed waits in 发布更改 like any other edit, under NAS 原图 each photo
 beside the NAS's thumbnail and its file's name, to see they are the same. Linked, a published
 photo's info is read from the NAS's original, where it was taken too (only ever on the device), and its
 viewer keeps the NAS's original (存 NAS 原图) as the NAS's own are kept; the NAS's photo marks itself as in a

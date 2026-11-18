@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.logWarning
 import cc.hyoban.moments.nas.Nas
+import cc.hyoban.moments.nas.NasMatch
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -76,7 +77,12 @@ fun NasSection(nas: Nas, linking: NasLinking?, onEdit: () -> Unit) {
                     val state = linking.state
                     Text(
                         when (state) {
-                            is NasLinking.State.Reading -> stringResource(Res.string.nas_match_reading, state.done, state.total)
+                            is NasLinking.State.Reading -> when {
+                                state.stage == NasMatch.Stage.SAVING -> stringResource(Res.string.nas_match_saving, state.total)
+                                state.total == 0 -> stringResource(Res.string.nas_match_starting)
+                                state.stage == NasMatch.Stage.DAYS -> stringResource(Res.string.nas_match_reading, state.done + 1, state.total)
+                                else -> stringResource(Res.string.nas_match_comparing, state.done, state.total)
+                            }
                             is NasLinking.State.Done -> stringResource(Res.string.nas_match_done, state.linked)
                             NasLinking.State.Failed -> stringResource(Res.string.nas_match_failed)
                             null -> stringResource(Res.string.nas_match_note)
@@ -94,7 +100,7 @@ fun NasSection(nas: Nas, linking: NasLinking?, onEdit: () -> Unit) {
 /** 关联已发布的照片 under way, or how it went: the Moments' photos linked to the NAS's ([AppContainer.linkNas]). */
 class NasLinking(private val container: AppContainer, private val scope: CoroutineScope) {
     sealed interface State {
-        data class Reading(val done: Int, val total: Int) : State
+        data class Reading(val stage: NasMatch.Stage, val done: Int, val total: Int) : State
         data class Done(val linked: Int) : State
         data object Failed : State
     }
@@ -105,10 +111,10 @@ class NasLinking(private val container: AppContainer, private val scope: Corouti
 
     fun start() {
         if (running) return
-        state = State.Reading(0, 0)
+        state = State.Reading(NasMatch.Stage.DAYS, 0, 0)
         scope.launch {
             state = try {
-                State.Done(container.linkNas { done, total -> state = State.Reading(done, total) })
+                State.Done(container.linkNas { stage, done, total -> state = State.Reading(stage, done, total) })
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 logWarning("Moments", "nas: photos not linked", e)

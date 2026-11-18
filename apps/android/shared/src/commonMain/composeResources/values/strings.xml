@@ -1506,8 +1506,11 @@
     <string name="action_stop_nas">不再连接</string>
     <string name="settings_nas_note">选照片里能看这台 NAS 相册里的照片，加入时把原图存到手机，也能删除。用 UGREENlink ID 时先问绿联它在哪：在家里直连，在外面走绿联的中转。密码只留在这台手机上。</string>
     <string name="nas_match">关联已发布的照片</string>
-    <string name="nas_match_note">按拍摄时间和形状在 NAS 里找时刻的照片，关联后的改动在发布更改里审阅</string>
+    <string name="nas_match_note">按拍摄时间、形状和内容在 NAS 里找时刻的照片，关联后的改动在发布更改里审阅</string>
     <string name="nas_match_reading">正在读 NAS 的第 %1$d / %2$d 天</string>
+    <string name="nas_match_starting">正在读 NAS…</string>
+    <string name="nas_match_comparing">正在比对第 %1$d / %2$d 张</string>
+    <string name="nas_match_saving">正在保存 %1$d 个时刻的改动</string>
     <string name="nas_match_done">关联了 %1$d 张，在发布更改里审阅</string>
     <string name="nas_match_failed">没能读到 NAS，再试一次</string>
     <string name="nas_failed_not_found">UGREENlink 找不到这台 NAS</string>

@@ -9,6 +9,7 @@ import cc.hyoban.moments.data.copy.CopyStore
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.nas.matchMoments
+import org.jetbrains.compose.resources.decodeToImageBitmap
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.store.BillChange
 import cc.hyoban.moments.data.store.DataStore
@@ -306,13 +307,29 @@ abstract class AppContainer(
         recordsChanged()
     }
 
+    /** [media]'s published still at a thumbnail's size, to compare how it looks; null for one not published or not read. */
+    @OptIn(org.jetbrains.compose.resources.ExperimentalResourceApi::class)
+    private suspend fun smallStill(media: cc.hyoban.moments.data.spec.MomentMedia): androidx.compose.ui.graphics.ImageBitmap? {
+        val url = mediaUrls.still(media, 320)?.takeIf { it.startsWith("https://") || it.startsWith("http://") } ?: return null
+        return runCatching {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                cc.hyoban.moments.data.Http.client.newCall(okhttp3.Request.Builder().url(url).build()).execute().use { response ->
+                    if (!response.isSuccessful) null
+                    else response.body?.bytes()?.decodeToImageBitmap()
+                }
+            }
+        }.onFailure { logWarning("Moments", "nas: a still not read to compare", it) }.getOrNull()
+    }
+
     /**
      * Links the Moments' photos and videos written before they were linked as they were picked to
      * the same ones on the NAS ([cc.hyoban.moments.nas.NasMatch]), each Moment so changed kept to
-     * be reviewed and published; [progress] is the NAS's days read, of how many. How many it linked.
+     * be reviewed and published; [progress] says how far it is ([cc.hyoban.moments.nas.NasMatch.Stage]),
+     * of how many. How many it linked.
      */
-    suspend fun linkNas(progress: (Int, Int) -> Unit): Int {
-        val found = nas.matchMoments(repository.moments.value, progress)
+    suspend fun linkNas(progress: (cc.hyoban.moments.nas.NasMatch.Stage, Int, Int) -> Unit): Int {
+        val found = nas.matchMoments(repository.moments.value, ::smallStill, progress)
+        progress(cc.hyoban.moments.nas.NasMatch.Stage.SAVING, 0, found.size)
         var linked = 0
         found.forEach { (uid, photos) ->
             val moment = repository.moment(uid) ?: return@forEach
