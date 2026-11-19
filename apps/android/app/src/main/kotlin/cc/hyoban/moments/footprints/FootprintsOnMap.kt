@@ -145,9 +145,13 @@ fun FootprintsOnMap(
     LaunchedEffect(revision, selection) {
         try {
             view = withContext(Dispatchers.IO) {
-                val points = store.points(selection)
+                val state = store.state()
+                val (points, unconfirmed) = store.pointsWithTail(selection)
+                // Only what is being recorded now has an unconfirmed end: today's or the running trip's.
+                val live = state.recording && (if (session != null) session == state.session else day == LocalDate.now().toString())
+                val tail = unconfirmed.takeIf { live && it.isNotEmpty() && System.currentTimeMillis() - it.last().time <= TRACK_GAP_MS }.orEmpty()
                 val parts = trackParts(points, if (points.isEmpty()) emptyList() else store.activities(points.first().time - ACTIVITY_LOOKBACK_MS, points.last().time))
-                TrackView(store.state(), store.history(), points, trackStats(points), parts, footprintDrawing(points, parts), store.deletable(selection))
+                TrackView(state, store.history(), points, trackStats(points), parts, footprintDrawing(points, parts, tail), store.deletable(selection))
             }
             loaded = true
         } catch (e: CancellationException) { throw e } catch (_: Exception) {

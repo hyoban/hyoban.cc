@@ -36,17 +36,21 @@ data class FootprintDrawing(
     val lines: List<Pair<TravelMode, List<TrackPoint>>> = emptyList(),
     val ends: List<TrackPoint> = emptyList(),
     val stays: List<TrackPoint> = emptyList(),
+    /** While recording, the line's last point to the newest fix still unconfirmed, drawn pale. */
+    val tail: List<TrackPoint> = emptyList(),
 ) {
-    val points get() = lines.flatMap { it.second } + stays
+    val points get() = lines.flatMap { it.second } + stays + tail
 }
 
-fun footprintDrawing(points: List<TrackPoint>, parts: List<TrackPart>): FootprintDrawing {
+fun footprintDrawing(points: List<TrackPoint>, parts: List<TrackPart>, tail: List<TrackPoint> = emptyList()): FootprintDrawing {
     val stays = parts.filterIsInstance<TrackStay>().map { TrackPoint(it.start, it.latitude, it.longitude, 0.0) }
     val lines = parts.filterIsInstance<TrackMove>().flatMap { move -> trackSegments(move.points).filter { it.size > 1 }.map { move.mode to it } }
     // A stay's marker stands for the breaks around it; ends elsewhere show where the line was lost.
+    // The line's end that the tail goes on from is not lost.
     val ends = trackSegments(points).flatMap { listOf(it.first(), it.last()).distinct() }
         .filter { end -> stays.none { distanceMetres(it, end) <= 2 * STAY_RADIUS_M } }
-    return FootprintDrawing(lines, ends, stays)
+        .filter { end -> tail.firstOrNull()?.time != end.time }
+    return FootprintDrawing(lines, ends, stays, tail)
 }
 
 /**

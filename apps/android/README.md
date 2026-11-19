@@ -571,7 +571,9 @@ behaves.
 - **Storage and refinement.** Every fresh, valid fix is stored raw. `TrackRefiner` derives
   the map's line and ordinary GPX from them: it drops spikes and stationary clouds, and
   breaks the line at fixes over 50 m uncertainty, gaps over 45 seconds, pauses and
-  restarts. 导出当前原始采样 GPX exports every stored sample of the chosen day or trip, and
+  restarts. While today or the running trip records, the map goes on from the line's last
+  point to the newest fix still waiting to confirm it, pale, once that fix has moved past the
+  fixes' uncertainty; nothing else counts it. 导出当前原始采样 GPX exports every stored sample of the chosen day or trip, and
   导出全部原始采样 GPX those of every day, with accuracy and speed in
   `https://hyoban.cc/ns/footprints/1` extensions: the full backup to import again.
 - **Import.** 导入 GPX 轨迹, in 我 → 导入, reads a GPX the app exported (`footprints/TrackImport`), a line

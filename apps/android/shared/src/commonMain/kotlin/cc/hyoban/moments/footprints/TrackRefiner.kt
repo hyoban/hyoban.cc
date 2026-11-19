@@ -11,6 +11,13 @@ import kotlin.math.sqrt
  */
 fun refinedTrack(samples: Sequence<TrackPoint>): Sequence<TrackPoint> = replayTrack(samples)
 
+/** The refined track and its [TrackRefiner.tail], the unconfirmed end, after the last sample. */
+fun refinedTrackWithTail(samples: Sequence<TrackPoint>): Pair<List<TrackPoint>, List<TrackPoint>> {
+    val refiner = TrackRefiner()
+    val points = buildList { for (sample in samples) addAll(refiner.add(sample)) }
+    return points to refiner.tail()
+}
+
 /** Only scalar evidence leaves the filter; never coordinates, altitude or a Location/TrackPoint. */
 data class TrackDecision(val reason: String, val fields: Map<String, Any?>)
 
@@ -50,6 +57,19 @@ class TrackRefiner(private val trace: ((TrackDecision) -> Unit)? = null) {
 
     fun finish() {
         if (trace != null) pending.forEach { report("unconfirmed_tail", it) }
+    }
+
+    /**
+     * The last drawn point and the newest fix still waiting to confirm it, when that one has
+     * moved past the fixes' uncertainty: what the map shows pale while recording. Never stored,
+     * measured or exported; the next confirmation draws it as part of the line.
+     */
+    fun tail(): List<TrackPoint> {
+        val start = anchor ?: return emptyList()
+        val last = pending.lastOrNull() ?: return emptyList()
+        val threshold = max(MIN_DISPLACEMENT_M, UNCERTAINTY_SCALE * sqrt(start.accuracy * start.accuracy + last.accuracy * last.accuracy))
+        if (distanceMetres(start, last) < threshold) return emptyList()
+        return listOf(displayed(start), displayed(last))
     }
 
     private fun displayed(point: TrackPoint) = point.copy(segment = "${point.segment}:refined:$part")

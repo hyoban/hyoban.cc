@@ -112,6 +112,7 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
                 },
                 ends = state.drawing.ends,
                 stays = state.drawing.stays,
+                tail = state.drawing.tail,
             )
         }
         content(cc.hyoban.moments.ui.map.AtlasFootprintsOnMap(

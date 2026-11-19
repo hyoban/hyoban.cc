@@ -24,6 +24,28 @@ class TrackRefinerTest {
         assertEquals(72.0, trackStats(result).metres, 0.1)
     }
 
+    @Test fun unconfirmedEndIsATailFromTheLastDrawnPointOnly() {
+        val points = listOf(p(0, accuracy = 10.0), p(15, 18.0, accuracy = 10.0), p(30, 36.0, accuracy = 10.0), p(45, 54.0, accuracy = 10.0))
+        val (line, tail) = refinedTrackWithTail(points.asSequence())
+        assertEquals(points.dropLast(1).map { it.time }, line.map { it.time })
+        // A step within the fixes' uncertainty is no tail yet.
+        val coarse = listOf(p(0), p(15, 18.0), p(30, 36.0), p(45, 54.0))
+        assertTrue(refinedTrackWithTail(coarse.asSequence()).second.isEmpty())
+        assertEquals(listOf(line.last().time, points.last().time), tail.map { it.time })
+        assertEquals(line.last().segment, tail.first().segment)
+        // Standing still, the newest fix is within the jitter: no tail.
+        val still = (0..8).map { p(it * 5, if (it % 2 == 0) 2.0 else -2.0, accuracy = 10.0) }
+        assertTrue(refinedTrackWithTail(still.asSequence()).second.isEmpty())
+    }
+
+    @Test fun drawingDropsTheEndTheTailGoesOnFrom() {
+        val points = listOf(p(0, accuracy = 10.0), p(15, 18.0, accuracy = 10.0), p(30, 36.0, accuracy = 10.0), p(45, 54.0, accuracy = 10.0))
+        val (line, tail) = refinedTrackWithTail(points.asSequence())
+        val drawing = footprintDrawing(line, trackParts(line), tail)
+        assertFalse(drawing.ends.any { it.time == line.last().time })
+        assertEquals(tail, drawing.tail)
+    }
+
     @Test fun stationaryCloudDoesNotBecomeDistanceOrARoute() {
         val points = (0..80).map { p(it * 15, if (it % 2 == 0) 3.0 else -3.0, if (it % 3 == 0) 4.0 else -4.0) }
         val result = refine(points)

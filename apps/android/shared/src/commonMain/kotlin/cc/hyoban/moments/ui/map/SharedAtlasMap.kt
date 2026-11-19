@@ -180,8 +180,10 @@ data class AtlasFootprints(
     val ends: List<TrackPoint> = emptyList(),
     val stays: List<TrackPoint> = emptyList(),
     val focus: LongRange? = null,
+    /** While recording, the line's last point to the newest fix still unconfirmed. */
+    val tail: List<TrackPoint> = emptyList(),
 ) {
-    val points get() = lines.flatMap(AtlasFootprintLine::points) + stays
+    val points get() = lines.flatMap(AtlasFootprintLine::points) + stays + tail
 }
 
 /**
@@ -237,6 +239,8 @@ private val RouteWidth = 2.5.dp
 // at its end; outside a focused part they step back to this opacity.
 private const val FootprintPale = 0.75f
 private const val FootprintUnfocused = 0.2f
+// The unconfirmed end while recording: the ink, as pale as this, the line's own width.
+private const val FootprintTailOpacity = 0.35f
 // About this many pieces a day, each shaded by its middle's time.
 private const val FootprintPieces = 240
 // An open place's pin lifts off it with a little overshoot, and comes down quicker.
@@ -606,6 +610,11 @@ fun SharedAtlasMap(
     val cycleGeoJson = remember(footprints.lines) { footprintsOf(AtlasFootprintMode.CYCLE) }
     val walkGeoJson = remember(footprints.lines) { footprintsOf(AtlasFootprintMode.WALK) }
     val endGeoJson = remember(footprints) { pointsData(footprints.ends) }
+    val tailGeoJson = remember(footprints.tail) {
+        GeoJsonData.Features(FeatureCollection(listOfNotNull(footprints.tail.takeIf { it.size >= 2 }?.let { tail ->
+            Feature(LineString(tail.map { positionOf(it.latitude, it.longitude) }), buildJsonObject { })
+        })))
+    }
     val stayGeoJson = remember(footprints) { stayData(footprints.stays) }
     val allPositions = remember(places, footprints, prepared) {
         (prepared?.placePositions ?: places.map { positionOf(it.place.latitude, it.place.longitude) }) +
@@ -768,6 +777,7 @@ fun SharedAtlasMap(
         val cycles = rememberGeoJsonSource(cycleGeoJson)
         val walks = rememberGeoJsonSource(walkGeoJson)
         val ends = rememberGeoJsonSource(endGeoJson)
+        val tail = rememberGeoJsonSource(tailGeoJson)
         val stays = rememberGeoJsonSource(stayGeoJson)
         // Loading this 1.8 MB GeoJSON parses and tiles it. Keep it out of the style until fog is
         // actually visible, and retain it through an exit sweep until the final clear frame.
@@ -921,6 +931,7 @@ fun SharedAtlasMap(
             LineLayer("shared-footprint-drives", drives, color = footprintColor, opacity = footprintOpacity, width = const(2.dp), cap = const(LineCap.Round), join = const(LineJoin.Round), onClick = footprintClick, hitPadding = 22.dp)
             LineLayer("shared-footprint-cycles", cycles, color = footprintColor, opacity = footprintOpacity, width = const(1.5.dp), cap = const(LineCap.Round), join = const(LineJoin.Round), onClick = footprintClick, hitPadding = 22.dp)
             LineLayer("shared-footprint-walks", walks, color = footprintColor, opacity = footprintOpacity, width = const(2.5.dp), cap = const(LineCap.Round), join = const(LineJoin.Round), dasharray = const(listOf(0, 2)), onClick = footprintClick, hitPadding = 22.dp)
+            LineLayer("shared-footprint-tail", tail, color = const(ink), opacity = const(if (focus == null) FootprintTailOpacity else FootprintUnfocused * FootprintTailOpacity), width = const(2.dp), cap = const(LineCap.Round), join = const(LineJoin.Round))
             CircleLayer("shared-footprint-ends", ends, radius = const(4.dp), color = const(ink), strokeWidth = const(1.5.dp), strokeColor = const(ring), onClick = footprintClick, hitPadding = 22.dp)
             CircleLayer("shared-footprint-stays", stays, radius = const(5.dp), color = const(ring), strokeWidth = const(2.5.dp), strokeColor = const(ink), onClick = stayClick, hitPadding = 22.dp)
         }

@@ -259,6 +259,11 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         refinedTrack(sequence { while (c.moveToNext()) yield(c.point()) }).toList()
     }
 
+    /** [points] and the unconfirmed end after them, for the map while recording. */
+    @Synchronized fun pointsWithTail(selection: TrackSelection): Pair<List<TrackPoint>, List<TrackPoint>> = cursor(selection).use { c ->
+        refinedTrackWithTail(sequence { while (c.moveToNext()) yield(c.point()) })
+    }
+
     @Synchronized fun export(selection: TrackSelection, writer: Writer, raw: Boolean = false) = cursor(selection).use { c ->
         val samples = sequence { while (c.moveToNext()) yield(c.point()) }
         writeGpx(writer, if (raw) samples else refinedTrack(samples), raw = raw)
