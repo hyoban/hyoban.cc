@@ -82,6 +82,7 @@ import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.DropdownMenu
 import cc.hyoban.moments.ui.design.DropdownMenuItem
+import cc.hyoban.moments.ui.design.HorizontalDivider
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.SegmentedListItem
 import cc.hyoban.moments.ui.design.ListItemDefaults
@@ -225,6 +226,8 @@ fun NewMomentScreen(
     onDeleted: () -> Unit = onBack,
     startWithBill: Boolean = false,
     stay: cc.hyoban.moments.ui.StayAt? = null,
+    /** The trip whose plan a new Moment is written into: planned, at its first day's morning. */
+    plan: String? = null,
 ) {
     val device = cc.hyoban.moments.ui.LocalDevice.current
     val scope = rememberCoroutineScope()
@@ -307,7 +310,17 @@ fun NewMomentScreen(
     /** Private: kept on the phone and in the API for its owner, never on the site. */
     var private by rememberSaveable { mutableStateOf(original?.hidden ?: false) }
     val openedAt = remember { OffsetDateTime.now() }
-    var chosenTime by remember { mutableStateOf(originalTime) }
+    // Written into a plan, it starts on the plan's first day, at nine unless the plan starts later.
+    val planTrip = remember(plan) { plan?.let { id -> container.shownTrips.value.firstOrNull { it.id == id } } }
+    val planTime = remember(planTrip) {
+        planTrip?.let { trip ->
+            trip.startAt?.let(OffsetDateTime::parse)
+                ?: java.time.LocalDate.parse(trip.start).atTime(9, 0).atZone(java.time.ZoneId.systemDefault()).toOffsetDateTime()
+        }
+    }
+    var chosenTime by remember { mutableStateOf(originalTime ?: planTime) }
+    /** Planned: written into a plan rather than lived, set by hand, and from the start when written from a plan. */
+    var planned by rememberSaveable { mutableStateOf(original?.planned == true || planTrip != null) }
     val stayFix = remember(stay) { stay?.let { Fix(it.latitude, it.longitude) } }
     val stayTime = remember(stay) { stay?.let { OffsetDateTime.ofInstant(Instant.ofEpochMilli(it.start), java.time.ZoneId.systemDefault()) } }
     // At a stay, the phone's own place there, as the footprints' list names it.
@@ -461,7 +474,7 @@ fun NewMomentScreen(
         text != original.text || photos != originalMedia.keys.toList() || utility.intersect(photos.toSet()) != originalUtility ||
         masks.filter { (ref, laid) -> ref in photos && laid.isNotEmpty() } != originalMasks.filterKeys { it in photos } ||
         chosenTime != originalTime || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || cost != originalCost ||
-        private != original.hidden
+        private != original.hidden || planned != (original.planned == true)
     // What leaving would lose: anything written, or, for a Moment being changed, any change.
     val changed = if (original == null) (withMoment && (written || cost != null)) || billWritten else momentChanged || newKind != null
     val leave = { if (changed) confirmingDiscard = true else onBack() }
@@ -489,7 +502,9 @@ fun NewMomentScreen(
                     // No new photo goes in before its faces and plates have been looked for.
                     if (withMoment) coverFound(unscanned)
                     val moment = if (withMoment) {
-                        val (moment, newPlace) = buildMoment(container, text, photos, utility, stills, masks, infos, time, place, cost, private, original, originalMedia, stayUid, replaced)
+                        val (built, newPlace) = buildMoment(container, text, photos, utility, stills, masks, infos, time, place, cost, private, original, originalMedia, stayUid, replaced)
+                        // Planned or lived, as the bar's menu says.
+                        val moment = built.copy(planned = true.takeIf { planned })
                         // Kept as what it now is, a Moment or a check-in, named after its place when that moved.
                         if (original == null || momentChanged) {
                             val venue = when (place) {
@@ -560,7 +575,7 @@ fun NewMomentScreen(
             close = true,
             small = keypad,
             centre = if (withMoment) {
-                { Visibility(private) { private = it } }
+                { Visibility(private, planned, onPlanned = { planned = it }) { private = it } }
             } else {
                 null
             },
@@ -1283,14 +1298,20 @@ private fun AddChip(added: Boolean, icon: ImageVector, label: String, tag: Strin
     )
 }
 
-/** Whether the Moment is public, in the middle of the bar, a tap opening the two to choose from. */
+/**
+ * Whether the Moment is public, in the middle of the bar, a tap opening the two to choose from;
+ * under a hairline, whether it is [planned], a check of its own, which the bar then says too.
+ */
 @Composable
-private fun Visibility(private: Boolean, onPrivate: (Boolean) -> Unit) {
+private fun Visibility(private: Boolean, planned: Boolean, onPlanned: (Boolean) -> Unit, onPrivate: (Boolean) -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
         AssistChip(
             onClick = { open = true },
-            label = { Text(stringResource(if (private) Res.string.visibility_private else Res.string.visibility_public)) },
+            label = {
+                val seen = stringResource(if (private) Res.string.visibility_private else Res.string.visibility_public)
+                Text(if (planned) seen + " " + stringResource(Res.string.trip_planned) else seen)
+            },
             leadingIcon = { Icon(if (private) AppIcons.EyeOff else AppIcons.Eye, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
             trailingIcon = { Icon(AppIcons.CaretDown, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
             modifier = Modifier.semantics { role = Role.DropdownList }.testTag("moment_private"),
@@ -1314,6 +1335,21 @@ private fun Visibility(private: Boolean, onPrivate: (Boolean) -> Unit) {
                     },
                 )
             }
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.trip_planned)) },
+                leadingIcon = { Icon(AppIcons.Calendar, contentDescription = null, tint = if (planned) tokens.accent else LocalContentColor.current) },
+                modifier = (if (planned) Modifier.background(tokens.accentSoft) else Modifier).testTag("moment_planned"),
+                trailingIcon = if (planned) {
+                    { Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent) }
+                } else {
+                    null
+                },
+                onClick = {
+                    open = false
+                    onPlanned(!planned)
+                },
+            )
         }
     }
 }

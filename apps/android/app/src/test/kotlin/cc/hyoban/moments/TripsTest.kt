@@ -127,6 +127,24 @@ class TripsTest {
         assertEquals(listOf("during"), txnsOfTrip(Ledger(txns = listOf(before, during, hidden, moved, after)), trip).map { it.id })
     }
 
+    @Test
+    fun `a planned Moment and a plan stay planned through their entry and collection`() {
+        val planned = moment("B", "2026-12-25T08:30:00+09:00").copy(planned = true)
+
+        val entry = cc.hyoban.moments.data.spec.Entries.fromMoment(planned)
+        assertEquals(true, cc.hyoban.moments.data.spec.Entries.toMoment(entry)?.planned)
+        assertNull(cc.hyoban.moments.data.spec.Entries.toMoment(cc.hyoban.moments.data.spec.Entries.fromMoment(planned.copy(planned = null)))?.planned)
+
+        val collection = cc.hyoban.moments.data.spec.Entries.collectionOf(trip("tokyo", "2026-12-24", "2026-12-29"))
+        val plan = cc.hyoban.moments.data.spec.Entries.editCollection(
+            collection, "东京", "2026-12-24", "2026-12-29", cc.hyoban.moments.data.spec.Visibility.PUBLIC, "2026-11-19T12:00:00+08:00", planned = true,
+        )
+        assertEquals(true, cc.hyoban.moments.data.spec.Entries.isPlanned(plan))
+        assertEquals(true, cc.hyoban.moments.data.spec.Entries.toTrip(plan, emptyList()).planned)
+        val taken = cc.hyoban.moments.data.spec.Entries.editCollection(plan, "东京", "2026-12-24", "2026-12-29", cc.hyoban.moments.data.spec.Visibility.PUBLIC, "2026-12-30T12:00:00+08:00", planned = false)
+        assertNull(cc.hyoban.moments.data.spec.Entries.toTrip(taken, emptyList()).planned)
+    }
+
     private fun moment(uid: String, occurredAt: String, place: String? = null, trip: String? = null) =
         MomentRecord(uid, occurredAt, listOfNotNull(place), "", trip = trip, createdAt = occurredAt, updatedAt = occurredAt)
 }

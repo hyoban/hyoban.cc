@@ -960,6 +960,7 @@ class MomentsRepository(
             val changed = changedTrips[trip.id] ?: return@map trip
             val span = changed["span"] as? kotlinx.serialization.json.JsonObject
             trip.copy(
+                planned = true.takeIf { Entries.isPlanned(changed) },
                 covers = Entries.coversOf(changed).map { (entry, media) -> cc.hyoban.moments.data.spec.Cover(entry, media) },
                 title = (changed["title"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: trip.title,
                 start = (span?.get("start") as? kotlinx.serialization.json.JsonPrimitive)?.content?.take(10) ?: trip.start,
@@ -992,6 +993,7 @@ class MomentsRepository(
         covers: List<Pair<String, String>> = emptyList(),
         from: String? = null,
         to: String? = null,
+        planned: Boolean = false,
     ): String = lock.withLock {
         val local = checkNotNull(local) { "No store for the phone's changes" }
         withContext(io) {
@@ -1001,7 +1003,7 @@ class MomentsRepository(
                 put("kind", kotlinx.serialization.json.JsonPrimitive("trip"))
                 put("createdAt", kotlinx.serialization.json.JsonPrimitive(now))
             }
-            val collection = Entries.editCollection(base, title, start, end, visibility, now, include, exclude, covers)
+            val collection = Entries.editCollection(base, title, start, end, visibility, now, include, exclude, covers, planned)
                 .let { made -> withBounds(made, from, to) }
             val id = Entries.collectionKey(collection)
             changedTrips = changedTrips + (id to collection)
@@ -1099,6 +1101,7 @@ class MomentsRepository(
         covers: List<Pair<String, String>>? = null,
         from: String? = null,
         to: String? = null,
+        planned: Boolean? = null,
     ) = lock.withLock {
         val local = checkNotNull(local) { "No store for the phone's changes" }
         withContext(io) {
@@ -1114,6 +1117,7 @@ class MomentsRepository(
                 include = include ?: Entries.strings(base, "include"),
                 exclude = exclude ?: Entries.strings(base, "exclude"),
                 covers = covers ?: Entries.coversOf(base),
+                planned = planned ?: Entries.isPlanned(base),
             ).let { edited -> withBounds(edited, from, to) }
             val same = made == null && JsonObjectsEqualApartFrom(base, edited, "updatedAt")
             changedTrips = if (same) changedTrips - id else changedTrips + (id to edited)

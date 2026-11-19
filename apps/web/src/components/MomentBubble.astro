@@ -48,7 +48,9 @@ const hasText = moment.text.trim() !== ''
 // Where and when follow the words' last line, as a message's time does; the words keep
 // that much room at their end (as a string the stylesheet sets there unseen), so the foot
 // only takes a line of its own when it doesn't fit beside them.
-const footText = [...moment.locations.map(location => location.name), moment.occurredLabel].filter(Boolean).join(' ')
+// A planned one says so first, as its outline does.
+const planned = moment.planned === true
+const footText = [planned && '计划', ...moment.locations.map(location => location.name), moment.occurredLabel].filter(Boolean).join(' ')
 const footSpace = `"${footText.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`
 ---
 
@@ -72,7 +74,7 @@ const footSpace = `"${footText.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"
     </a>
   </div>
   <div
-    class:list={['chat-bubble', 'chat-bubble--sent', { 'chat-bubble--fill': hasMedia || hasFoot, 'chat-bubble--joined-above': joinedAbove, 'chat-bubble--joined-below': joinedBelow }]}
+    class:list={['chat-bubble', 'chat-bubble--sent', { 'chat-bubble--planned': planned, 'chat-bubble--fill': hasMedia || hasFoot, 'chat-bubble--joined-above': joinedAbove, 'chat-bubble--joined-below': joinedBelow }]}
   >
     <div class="chat-bubble__body">
       {hasMedia && <MomentGallery media={moment.media} shown={3} />}
@@ -80,6 +82,7 @@ const footSpace = `"${footText.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"
         <div class:list={['chat-moment__words', { 'chat-moment__words--empty': !hasText }]} style={`--chat-foot: ${footSpace}`}>
           {hasText && <MomentText text={moment.text} />}
           <div class="chat-moment__foot">
+            {planned && <span>计划</span>}
             {
               moment.locations.map(location => (
                 <a href={`${mapMonthPath}${location.id}/`} data-trip-map-place-link={location.id}>{location.name}</a>
@@ -108,6 +111,6 @@ const footSpace = `"${footText.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"
         }
       </div>
     </div>
-    {!joinedBelow && <ChatTail sent />}
+    {!joinedBelow && !planned && <ChatTail sent />}
   </div>
 </article>

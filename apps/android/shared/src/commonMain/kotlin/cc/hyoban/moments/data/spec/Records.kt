@@ -171,6 +171,8 @@ data class TripRecord(
     /** When on its first day it began, and on its last it ended, when known to the minute. */
     val startAt: String? = null,
     val endAt: String? = null,
+    /** A trip not yet taken, set and cleared by hand, never by its dates. */
+    val planned: Boolean? = null,
     val music: String? = null,
     val note: String? = null,
     val waypoints: List<Waypoint> = emptyList(),
@@ -348,6 +350,8 @@ data class MomentRecord(
     val trip: String? = null,
     /** Where it sits among its day's Moments when their times don't say, lower first. */
     val order: Int? = null,
+    /** Written into a plan, not lived: only its plan or trip shows it, never as somewhere been. */
+    val planned: Boolean? = null,
     val published: PublishedMoment? = null,
     val createdAt: String,
     val updatedAt: String,

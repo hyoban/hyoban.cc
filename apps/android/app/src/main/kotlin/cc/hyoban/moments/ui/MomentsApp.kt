@@ -279,7 +279,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
     val opened: (Any) -> Any = { route ->
         when {
             !wide -> route
-            route is NewMoment -> EditorDialog(bill = route.bill, stay = route.stay)
+            route is NewMoment -> EditorDialog(bill = route.bill, stay = route.stay, plan = route.plan)
             route is EditMoment -> EditorDialog(route.uid)
             else -> route
         }
@@ -628,6 +628,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                         onDay = openDay,
                                         onMap = { showOnMap(MapFocus.Trip(it)) },
                                         onEdit = { navController.navigate(TripEdit(it)) },
+                                        onWritePlan = { navController.navigate(opened(NewMoment(plan = it))) },
                                     )
                                 }
                                 screen<TripEdit> { entry ->
@@ -725,7 +726,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                 }
                                 screen<NewMoment> { entry ->
                                     val route = entry.toRoute<NewMoment>()
-                                    NewMomentScreen(container, onBack = back, onSaved = back, startWithBill = route.bill, stay = StayAt.of(route.stay))
+                                    NewMomentScreen(container, onBack = back, onSaved = back, startWithBill = route.bill, stay = StayAt.of(route.stay), plan = route.plan)
                                 }
                                 screen<EditMoment> { entry ->
                                     NewMomentScreen(
@@ -754,6 +755,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                                 onDeleted = leaveMoment,
                                                 startWithBill = route.bill,
                                                 stay = StayAt.of(route.stay),
+                                                plan = route.plan,
                                             )
                                         }
                                     }

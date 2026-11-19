@@ -25,6 +25,7 @@ function toDefinition(record: TripRecord): TripDefinition {
     end: record.end,
     id: record.id,
     ...(record.music === undefined ? {} : { music: record.music }),
+    ...(record.planned ? { planned: true as const } : {}),
     sameWayBack: record.sameWayBack.map(({ from, to }) => [from, to] as const),
     start: record.start,
     ...(record.startAt === undefined ? {} : { startAt: record.startAt }),

@@ -109,6 +109,19 @@
     border-bottom-right-radius: 0;
   }
 
+  /* Written into a plan, not lived: no fill and no tail, a dashed hairline in their place,
+     its words a step fainter, as the app's planned MomentBubble. */
+  .chat-bubble--planned > & {
+    background: transparent;
+    outline: 1px dashed var(--color-tx-3);
+    outline-offset: -1px;
+    color: var(--color-tx-2);
+  }
+
+  .chat-bubble--planned:not(.chat-bubble--joined-below) > & {
+    border-bottom-right-radius: var(--chat-radius-large);
+  }
+
   /* The photos across its top, edge to edge, the bubble's corners theirs, laid out as the app's
      MomentPhotos: one 4:3; two side by side, 3:4 each; three, one large on the left and two on
      its right, 3:2 in all; more, the third saying how many more under a scrim. Over the gallery's

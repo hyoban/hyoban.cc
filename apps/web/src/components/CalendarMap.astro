@@ -503,7 +503,7 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
                           <span class="trip-map-trip-list__title">{trip.title}</span>
                           <span class="trip-map-trip-list__dates">{formatDateRange(trip.start, trip.end, 'zh-CN')}</span>
                           <span class="trip-map-trip-list__totals">
-                            {trip.dayCount} 天 {trip.placeCount} 个地点{trip.drivingKm > 0 && ` 自驾 ${trip.drivingKm.toLocaleString('zh-CN')} 公里`}
+                            {trip.planned && '计划 '}{trip.dayCount} 天 {trip.placeCount} 个地点{trip.drivingKm > 0 && ` 自驾 ${trip.drivingKm.toLocaleString('zh-CN')} 公里`}
                           </span>
                         </span>
                       </a>

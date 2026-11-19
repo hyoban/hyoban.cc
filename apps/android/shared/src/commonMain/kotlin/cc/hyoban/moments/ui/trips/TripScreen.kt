@@ -91,6 +91,8 @@ fun TripScreen(
     onDay: (String) -> Unit = {},
     onMap: (String) -> Unit = {},
     onEdit: (String) -> Unit = {},
+    /** Writes a Moment into the trip's plan; none where the device writes no Moments. */
+    onWritePlan: ((String) -> Unit)? = null,
 ) {
     val trips by container.shownTrips.collectAsStateWithLifecycle()
     val all by container.shownMoments.collectAsStateWithLifecycle()
@@ -164,9 +166,18 @@ fun TripScreen(
             TripSubhead(trip, moments.size, places = stops.distinctBy { it.placeId }.size)
             // Upright the name is the bar's, so what stays private sits beside the page's one button.
             val tagHere = privateTag.takeIf { !sideways }
-            if (moments.isNotEmpty() || tagHere != null) {
+            // A plan's one ink button writes into it; a trip's plays back what happened.
+            val writePlan = onWritePlan?.takeIf { trip.planned == true }
+            val playable = moments.any { it.planned != true }
+            if (writePlan != null || playable || tagHere != null) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.m)) {
-                    if (moments.isNotEmpty()) {
+                    if (writePlan != null) {
+                        cc.hyoban.moments.ui.design.Button(onClick = { writePlan(trip.id) }, modifier = Modifier.testTag("write_plan")) {
+                            Icon(AppIcons.Plus, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(Space.xs))
+                            Text(stringResource(Res.string.trip_write_plan))
+                        }
+                    } else if (playable) {
                         cc.hyoban.moments.ui.design.Button(onClick = { onPlay(trip.id) }, modifier = Modifier.testTag("play_trip")) {
                             Icon(AppIcons.Play, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(Space.xs))

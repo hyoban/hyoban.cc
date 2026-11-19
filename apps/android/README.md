@@ -181,6 +181,16 @@ its own, its id its uid in lowercase as the API will know it, shown and played b
 site's are. Until then it can be deleted from its 编辑旅程; once published it is the API's like
 the rest.
 
+A trip not yet taken is a plan: 编辑旅程's 计划 switch, set and cleared by hand whatever its days,
+makes any trip one, and its summary says 计划 before its dates. A plan's page has 写计划 where a
+trip has 回放旅程: a Moment written from it starts on the plan's first day and is planned
+(`planned` on its entry), as any Moment is once 计划 is checked in its editor's 公开/私有 menu, under a
+hairline; it is drawn in the trip's conversation with a dashed outline, no fill and no
+tail, 计划 first among where and when; it is shown wherever any Moment is, its place a stop of
+the route as any other's. Once the
+switch is off the plan is the trip, what happened read among what was planned; a planned Moment's
+page then offers 改成记录, which makes it a Moment like any other, or it is deleted from its editor.
+
 Below the trips, after a hairline, 可能的旅程 are the trips the records suggest
 (`data/trips/TripDiscovery.kt`, with `TripNames.kt`): the time between a check-in at home on
 leaving and the next one at home on coming back, when a record in between is more than 50 km

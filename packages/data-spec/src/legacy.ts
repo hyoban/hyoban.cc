@@ -74,6 +74,8 @@ export const momentRecordSchema = z
      * it names nothing, and needn't be unique or follow on.
      */
     order: count.optional(),
+    /** Written into a plan, not lived: shown only in its trip, never as somewhere been. */
+    planned: z.literal(true).optional(),
     /**
      * Set when the Moment is published: when it was. Nothing about it names the Moment,
      * which is its uid, so its day, places and words can all change afterwards.
@@ -127,6 +129,8 @@ export const tripRecordSchema = z
     /** When on its first day it began, and on its last it ended, when known to the minute. */
     startAt: timestamp.optional(),
     endAt: timestamp.optional(),
+    /** A trip not yet taken, set and cleared by hand. */
+    planned: z.literal(true).optional(),
     /** A track from apps/web/src/data/music.ts. */
     music: id.optional(),
     note: z.string().optional(),

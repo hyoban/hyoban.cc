@@ -278,6 +278,11 @@ export const entrySchema = z.looseObject({
   visibility: audienceSchema.optional(),
   /** Where it sits among its day's entries when their times don't say, lower first. */
   order: count.optional(),
+  /**
+   * Written into a plan, not lived: it shows only in the trip whose span holds it, never as
+   * somewhere been, until it is made a real record or deleted.
+   */
+  planned: z.literal(true).optional(),
   published: z.looseObject({ at: timestamp }).optional(),
   createdAt: timestamp,
   updatedAt: timestamp,
@@ -316,6 +321,8 @@ export const collectionSchema = z
     covers: z.array(z.looseObject({ entry: ulid, media: ulid })).default([]),
     visibility: audienceSchema.optional(),
     route: routeHintsSchema.optional(),
+    /** A trip not yet taken, set and cleared by hand, never by its dates. */
+    planned: z.literal(true).optional(),
     /** A track from apps/web/src/data/music.ts. */
     music: id.optional(),
     note: z.string().optional(),
@@ -599,6 +606,11 @@ export function isPublicCheckin(entry: Pick<Entry, 'parts' | 'visibility'>) {
     entry.parts.checkin !== undefined &&
     getPartAudience(entry, 'checkin', entry.parts.checkin as { visibility?: Audience }) === 'public'
   )
+}
+
+/** Whether an entry was written into a plan rather than lived. */
+export function isPlannedEntry(entry: Pick<Entry, 'planned'>) {
+  return entry.planned === true
 }
 
 /** Whether a collection holds an entry: in its span, or included, and not excluded. */

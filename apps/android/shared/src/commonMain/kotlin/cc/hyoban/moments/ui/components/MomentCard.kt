@@ -61,6 +61,7 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.SurfaceLevel
 import cc.hyoban.moments.ui.theme.fill
 import cc.hyoban.moments.ui.feed.bubbleWidth
+import cc.hyoban.moments.ui.feed.dashedOutline
 import cc.hyoban.moments.ui.design.sheetSurface
 
 /**
@@ -165,8 +166,14 @@ private fun MomentBubble(
     val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
     var menu by remember { mutableStateOf<DpOffset?>(null) }
     val density = LocalDensity.current
-    val shape = remember(joinedAbove, joinedBelow) { cc.hyoban.moments.ui.feed.BubbleShape(sent = true, joinedAbove, joinedBelow) }
+    // Written into a plan, not lived: no fill and no tail, a dashed hairline in their place.
+    val planned = moment.planned == true
+    val shape = remember(joinedAbove, joinedBelow, planned) {
+        if (planned) cc.hyoban.moments.ui.feed.PlannedBubbleShape(joinedAbove, joinedBelow)
+        else cc.hyoban.moments.ui.feed.BubbleShape(sent = true, joinedAbove, joinedBelow)
+    }
     val tail = cc.hyoban.moments.ui.feed.TAIL
+    val surface = if (planned) Modifier.clip(shape).dashedOutline(shape, tokens.borderStrong) else Modifier.clip(shape).background(tokens.fill)
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
         // Most of the column, never wider than 420 on a wide screen; with photos always that
         // wide, words alone only as wide as they need. The tail's strip comes on top, at the right.
@@ -175,7 +182,7 @@ private fun MomentBubble(
             onClick = onOpen,
             onLongClick = { at -> menu = with(density) { DpOffset(at.x.toDp(), at.y.toDp()) } },
             onLongClickLabel = stringResource(Res.string.action_more),
-            modifier = width.sharedCard(moment.uid).clip(shape).background(tokens.fill).border(2.dp, ring, shape).padding(end = tail)
+            modifier = width.sharedCard(moment.uid).then(surface).border(2.dp, ring, shape).padding(end = tail)
                 .semantics { this.selected = selected }.testTag("moment_${moment.uid}"),
             flat = true,
             shape = remember(joinedAbove, joinedBelow) { cc.hyoban.moments.ui.feed.sentBodyShape(joinedAbove, joinedBelow) },
@@ -188,7 +195,9 @@ private fun MomentBubble(
                 verticalArrangement = Arrangement.spacedBy(Space.xs),
             ) {
                 val private = moment.hidden.takeIf { it }?.let { stringResource(Res.string.visibility_private) }
-                val parts = moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
+                // A planned one says so first, a word as 私有 is.
+                val plan = if (planned) stringResource(Res.string.trip_planned) else null
+                val parts = listOfNotNull(plan) + moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
                 // The time in the figures' monospace, as the records bubbles beside it have theirs.
                 val time = formatTime(moment.occurredAt)
                 val numFont = AppTheme.typography.caption.fontFamily
@@ -213,7 +222,7 @@ private fun MomentBubble(
                     // As Telegram has it, where and when follow the last line of the words, on
                     // a line of their own only when they don't fit there.
                     TrailingFoot(if (moment.media.isNotEmpty() || withBills) Modifier.fillMaxWidth() else Modifier, foot) {
-                        Text(moment.text, style = AppTheme.typography.body, maxLines = 8, overflow = TextOverflow.Ellipsis, onTextLayout = it)
+                        Text(moment.text, style = AppTheme.typography.body, color = if (planned) tokens.tx2 else androidx.compose.ui.graphics.Color.Unspecified, maxLines = 8, overflow = TextOverflow.Ellipsis, onTextLayout = it)
                     }
                 } else {
                     Box(Modifier.align(Alignment.End)) { foot() }

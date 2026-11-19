@@ -71,11 +71,12 @@ fun TripSubhead(trip: TripRecord, count: Int, places: Int? = null) {
     )
 }
 
-/** A trip's dates and its length, and its count of Moments when given, as one line. */
+/** A trip's dates and its length, and its count of Moments when given, as one line; a plan's says so first. */
 @Composable
 fun tripSummary(trip: TripRecord, moments: Int? = null): String {
     val days = daysBetween(trip.start, trip.end)
     return listOfNotNull(
+        stringResource(Res.string.trip_planned).takeIf { trip.planned == true },
         formatRange(trip.start, trip.end),
         pluralStringResource(Res.plurals.count_days, days, days),
         moments?.let { pluralStringResource(Res.plurals.count_moments, it, it) },

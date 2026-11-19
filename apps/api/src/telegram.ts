@@ -14,7 +14,8 @@ import { toEntry } from './writes.ts'
 // with when and where it was and a meal's share and verdict, under its photos and videos, with no
 // link. A Moment that changes edits its post, replacing what media changed in place, or
 // posts again when its media changed in number; one the site no longer shows has its post
-// deleted. Only Moments published since the channel was first synced are posted, so a
+// deleted. A Moment written into a plan isn't posted until it is made a real one, and one made
+// planned after its post has the post deleted. Only Moments published since the channel was first synced are posted, so a
 // restore of the backup never floods it. Runs
 // after a write the site shows, after `POST /v2/build` and on the Worker's schedule, which
 // picks up whatever an earlier run left.
@@ -201,8 +202,11 @@ async function postChanges(context: ChannelContext) {
     const trip = entry
       ? trips.find((collection) => isInCollection(collection, entry))?.title
       : undefined
+    // A planned Moment hasn't happened yet: the channel waits until it is made a real one.
     const post =
-      moment && isMomentShown(moment) ? toPost(moment, placeNames, trip, context.now) : null
+      moment && isMomentShown(moment) && !moment.planned
+        ? toPost(moment, placeNames, trip, context.now)
+        : null
 
     if (!posted) {
       // Never posted: posted now if it was published since the channel was first synced.

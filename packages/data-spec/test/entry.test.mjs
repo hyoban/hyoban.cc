@@ -18,6 +18,7 @@ import {
   getPluginModule,
   isInCollection,
   isMarkEntry,
+  isPlannedEntry,
   modules,
   momentToEntry,
   plugins,
@@ -377,4 +378,30 @@ test('an occasion is on the day it started, public with every field, and once wi
     !entrySchema.safeParse({ ...base, parts: { occasion: { v: 1, name: '', repeat: 'month' } } })
       .success,
   )
+})
+
+test('a plan is a trip with its flag, and what was written into it stays planned both ways', () => {
+  const plan = collectionSchema.parse({
+    uid: getStableUlid(at, 'plan'),
+    kind: 'trip',
+    title: '东京',
+    span: { start: '2026-12-24', end: '2026-12-29' },
+    planned: true,
+    createdAt: at,
+    updatedAt: at,
+  })
+  assert.equal(collectionToTrip(plan, []).planned, true)
+  assert.throws(() => collectionSchema.parse({ ...plan, planned: false }))
+
+  const entry = entrySchema.parse({
+    ...base,
+    at: '2026-12-25T08:30:00+09:00',
+    parts: { text: { v: 1, text: '早点出门。' } },
+    planned: true,
+  })
+  assert.ok(isPlannedEntry(entry))
+  assert.ok(!isPlannedEntry({ ...entry, planned: undefined }))
+  const moment = momentRecordSchema.parse(entryToMoment(entry))
+  assert.equal(moment.planned, true)
+  assert.equal(momentToEntry(moment).planned, true)
 })

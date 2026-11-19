@@ -80,6 +80,8 @@ export type Moment = {
   occurredLabel?: string
   /** Where it sits among its day's Moments when times don't say (see `compareMoments`). */
   order?: number
+  /** Written into a plan rather than lived, drawn as planned wherever it shows. */
+  planned?: true
   text: string
   /** The record's ULID, as trips' covers name it. */
   uid: string
@@ -526,6 +528,7 @@ function resolveMoment(entry: MomentEntry): Moment | undefined {
     media: record.media.map((media) => resolveMedia(record.uid, media)),
     occurredAt: record.occurredAt,
     ...(record.order === undefined ? {} : { order: record.order }),
+    ...(record.planned ? { planned: true as const } : {}),
     text: record.text,
     uid: record.uid,
   }

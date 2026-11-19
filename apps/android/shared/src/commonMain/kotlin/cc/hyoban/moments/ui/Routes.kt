@@ -99,10 +99,11 @@ data class Occasions(val open: String? = null)
 
 /**
  * A Moment to write, kept on the phone, with a bill or the [bill] alone; at a [stay] of the
- * footprints (`StayAt.encoded`), its time and place, kept as that stay's check-in when nothing is written.
+ * footprints (`StayAt.encoded`), its time and place, kept as that stay's check-in when nothing is written;
+ * into the plan of the trip [plan], planned, from its first day.
  */
 @Serializable
-data class NewMoment(val bill: Boolean = false, val stay: String? = null)
+data class NewMoment(val bill: Boolean = false, val stay: String? = null, val plan: String? = null)
 
 /**
  * A stay of the footprints, from [start] to [end] in epoch milliseconds, at its middle: carried
@@ -128,7 +129,7 @@ data class EditMoment(val uid: String)
  * windows, where [NewMoment] and [EditMoment] are pages of their own.
  */
 @Serializable
-data class EditorDialog(val uid: String? = null, val bill: Boolean = false, val stay: String? = null)
+data class EditorDialog(val uid: String? = null, val bill: Boolean = false, val stay: String? = null, val plan: String? = null)
 
 /** The changes kept on the phone, to look over and publish. */
 @Serializable

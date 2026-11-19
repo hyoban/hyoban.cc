@@ -1004,6 +1004,9 @@
     <string name="section_new_trips">New trips</string>
     <string name="trip_new_title">New trip</string>
     <string name="trip_delete">Delete trip</string>
+    <string name="trip_planned">Planned</string>
+    <string name="trip_write_plan">Write a plan</string>
+    <string name="moment_make_real">Make it real</string>
     <string name="trip_delete_confirm">Delete this trip? Its Moments stay.</string>
     <string name="filter_moments">Moments</string>
     <string name="filter_checkins">Check-ins</string>

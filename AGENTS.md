@@ -153,6 +153,12 @@ even when starting from the repository root.
 - A trip reads as one conversation on both: the site's trip sidebar (`TripChat.astro`, see
   [DESIGN.md](apps/web/DESIGN.md)) draws the app's chat timeline; change both together, the
   calendar's day list keeping the same lines.
+- A planned trip is a trip like any other, made on the phone with its own dates, places and
+  written records, public unless it says otherwise and shown on the site as a trip. Only a
+  `planned` flag tells it apart, set and cleared by hand, never by the date. A record carries
+  `planned` too, set by hand or written from a plan; it is shown wherever any record is, with no
+  logic of its own deciding where, only drawn as planned. When the plan becomes the trip, its
+  planned records stay planned until each is deleted or made a real record.
 
 ## Website work
 

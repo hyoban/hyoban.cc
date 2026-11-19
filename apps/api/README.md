@@ -118,7 +118,8 @@ JPEGs from Cloudflare Images; a video over 50 MB goes as its first frame.
 
 Changed words edit the post, and changed photos or videos are replaced in their messages;
 media that change in number repost it, as Telegram can't add to an album or take from it. A
-Moment the site stops showing has its post deleted. `telegram_posts` keeps each Moment's messages. Only Moments published
+Moment the site stops showing has its post deleted, and so does one made planned: a planned
+Moment is posted only once it is made a real one. `telegram_posts` keeps each Moment's messages. Only Moments published
 since `telegram_since` are posted, so a restore never reposts old ones. It runs after a
 write the site shows, after `POST /v2/build`, and on the 15-minute cron, from the revision
 the last whole run reached (`telegram_revision`), under a lease in `meta` so two runs never

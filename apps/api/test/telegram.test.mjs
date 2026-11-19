@@ -185,6 +185,24 @@ test('a photo swapped for another is replaced in its message, its caption kept w
   assert.deepEqual(await sync(), { posted: 0, edited: 0, deleted: 0 }, 'and kept as it is now')
 })
 
+test('a planned Moment is posted only once made a real one, and one made planned loses its post', async () => {
+  const { env, calls, sync } = setUpChannel()
+
+  await publish(env, { planned: true })
+
+  assert.deepEqual(await sync(), { posted: 0, edited: 0, deleted: 0 })
+  assert.equal(calls.length, 0)
+
+  await publish(env, { updatedAt: '2026-10-01T18:00:00+08:00' })
+
+  assert.deepEqual(await sync(), { posted: 1, edited: 0, deleted: 0 })
+
+  await publish(env, { planned: true, updatedAt: '2026-10-01T18:10:00+08:00' })
+
+  assert.deepEqual(await sync(), { posted: 0, edited: 0, deleted: 1 })
+  assert.equal(calls.at(-1).method, 'deleteMessages')
+})
+
 test('a Moment posted that loses its words has its post deleted', async () => {
   const { env, sqlite, calls, sync } = setUpChannel()
 

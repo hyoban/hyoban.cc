@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.geometry.Size
@@ -176,6 +178,37 @@ fun Modifier.bubbleWidth(fill: Boolean, widest: (column: Dp) -> Dp): Modifier = 
         if (fill) constraints.copy(minWidth = max, maxWidth = max) else constraints.copy(minWidth = minOf(constraints.minWidth, max), maxWidth = max),
     )
     layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+}
+
+/**
+ * A planned bubble's outline: a sent bubble's corners with no tail, inside the tail's strip all
+ * the same so it lines up with the bubbles beside it, its last corner large where the tail would be.
+ */
+data class PlannedBubbleShape(private val joinedAbove: Boolean, private val joinedBelow: Boolean) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline = with(density) {
+        val large = androidx.compose.ui.geometry.CornerRadius(Radius.large.toPx())
+        val small = androidx.compose.ui.geometry.CornerRadius(Radius.medium.toPx())
+        Outline.Rounded(
+            androidx.compose.ui.geometry.RoundRect(
+                0f, 0f, size.width - TAIL.toPx(), size.height,
+                topLeftCornerRadius = large,
+                topRightCornerRadius = if (joinedAbove) small else large,
+                bottomRightCornerRadius = if (joinedBelow) small else large,
+                bottomLeftCornerRadius = large,
+            ),
+        )
+    }
+}
+
+/** A hairline of [color], dashed, along [shape]'s outline: what a planned bubble has for its fill. */
+fun Modifier.dashedOutline(shape: Shape, color: androidx.compose.ui.graphics.Color): Modifier = drawBehind {
+    val width = 1.dp.toPx()
+    val dash = 4.dp.toPx()
+    drawOutline(
+        shape.createOutline(size, layoutDirection, this),
+        color,
+        style = androidx.compose.ui.graphics.drawscope.Stroke(width, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(dash, dash / 1.5f))),
+    )
 }
 
 /** The corners of a sent bubble's body, inside its tail's strip: what its photos and its press are clipped to. */

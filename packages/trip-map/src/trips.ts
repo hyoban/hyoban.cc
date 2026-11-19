@@ -17,6 +17,8 @@ export type TripDefinition = Readonly<{
   id: string
   /** Default background music, an id from apps/web/src/data/music.ts. */
   music?: string
+  /** A trip not yet taken: its stops are what was written into its plan. */
+  planned?: true
   /**
    * Places driven back the way they came, as `[from, to]` location ids: the drive back
    * from `to` follows the road route from `from`, reversed, rather than its own.

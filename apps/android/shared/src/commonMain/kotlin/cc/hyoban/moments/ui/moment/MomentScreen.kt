@@ -253,6 +253,12 @@ fun MomentScreen(
         val show = rememberShowMessage()
         val copied = stringResource(Res.string.message_text_copied)
         val tools: @Composable RowScope.() -> Unit = {
+            // A planned one becomes a Moment of what happened, kept as a change like any other.
+            if (moment.planned == true && editable) {
+                ToolbarButton(AppIcons.Check, stringResource(Res.string.moment_make_real), "make_real") {
+                    container.scope.launch { container.updateLocal(moment.copy(planned = null), null) }
+                }
+            }
             ToolbarButton(AppIcons.Share, stringResource(Res.string.action_share), "share") { sharing = true }
             if (moment.text.isNotBlank()) {
                 ToolbarButton(AppIcons.Copy, stringResource(Res.string.action_copy_text), "copy_text") {

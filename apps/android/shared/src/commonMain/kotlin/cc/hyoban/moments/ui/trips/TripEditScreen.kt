@@ -98,6 +98,8 @@ fun TripEditScreen(
     var start by rememberSaveable { mutableStateOf(trip?.startAt ?: trip?.start ?: startDay ?: today) }
     var end by rememberSaveable { mutableStateOf(trip?.endAt ?: trip?.end ?: endDay ?: today) }
     var private by rememberSaveable { mutableStateOf(id != null && container.repository.isTripPrivate(id)) }
+    // A plan until said otherwise by hand, whatever its days.
+    var planned by rememberSaveable { mutableStateOf(trip?.planned == true) }
     var picking by rememberSaveable { mutableStateOf<String?>(null) }
     var deleting by rememberSaveable { mutableStateOf(false) }
     val unpublished = id != null && container.repository.isTripNew(id)
@@ -297,6 +299,9 @@ fun TripEditScreen(
                 stringResource(if (private) Res.string.moment_private_note else Res.string.trip_edit_public_note).takeIf { LocalSettings.current.connected },
                 listOfNotNull<Segment>(
                     { shapes ->
+                        SwitchRow(planned, AppIcons.Calendar, stringResource(Res.string.trip_planned), "trip_planned", shapes) { planned = !planned }
+                    },
+                    { shapes ->
                         SwitchRow(private, AppIcons.EyeOff, stringResource(Res.string.visibility_private), "trip_private", shapes) { private = !private }
                     },
                 ),
@@ -316,9 +321,9 @@ fun TripEditScreen(
                             val visibility = if (private) Visibility.PRIVATE else Visibility.PUBLIC
                             val chosen = covers.map { it.substringBefore('/') to it.substringAfter('/') }
                             if (id == null) {
-                                onMade(container.repository.createTrip(title.trim(), start, end, visibility, include, exclude, chosen, from, to))
+                                onMade(container.repository.createTrip(title.trim(), start, end, visibility, include, exclude, chosen, from, to, planned))
                             } else {
-                                container.repository.editTrip(id, title.trim(), start, end, visibility, include = include, exclude = exclude, covers = chosen, from = from, to = to)
+                                container.repository.editTrip(id, title.trim(), start, end, visibility, include = include, exclude = exclude, covers = chosen, from = from, to = to, planned = planned)
                                 onBack()
                             }
                         }

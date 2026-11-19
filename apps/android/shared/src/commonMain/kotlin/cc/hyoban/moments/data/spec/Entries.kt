@@ -4,6 +4,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
@@ -208,6 +209,7 @@ object Entries {
                 put("sameWayBack", record.getValue("sameWayBack"))
             })
         }
+        if (trip.planned == true) put("planned", true)
         trip.music?.let { put("music", it) }
         trip.note?.let { put("note", it) }
         put("createdAt", trip.createdAt)
@@ -215,9 +217,9 @@ object Entries {
     }
 
     /**
-     * A collection with its name, its days, who sees it, the entries taken in from outside its
-     * days or left out of them, and its covers (entry uid to media uid, best first) changed,
-     * stamped [now].
+     * A collection with its name, its days, who sees it, whether it is a plan, the entries taken
+     * in from outside its days or left out of them, and its covers (entry uid to media uid, best
+     * first) changed, stamped [now].
      */
     fun editCollection(
         collection: JsonObject,
@@ -229,6 +231,7 @@ object Entries {
         include: List<String> = strings(collection, "include"),
         exclude: List<String> = strings(collection, "exclude"),
         covers: List<Pair<String, String>> = coversOf(collection),
+        planned: Boolean = isPlanned(collection),
     ): JsonObject =
         JsonObject(
             collection + mapOf(
@@ -238,8 +241,13 @@ object Entries {
                 "exclude" to JsonArray(exclude.map(::JsonPrimitive)),
                 "covers" to JsonArray(covers.map { (entry, media) -> buildJsonObject { put("entry", entry); put("media", media) } }),
                 "updatedAt" to JsonPrimitive(now),
-            ) - "visibility" + (if (visibility == Visibility.PRIVATE) mapOf("visibility" to JsonPrimitive("private")) else emptyMap()),
+            ) - "visibility" - "planned" +
+                (if (visibility == Visibility.PRIVATE) mapOf("visibility" to JsonPrimitive("private")) else emptyMap()) +
+                (if (planned) mapOf("planned" to JsonPrimitive(true)) else emptyMap()),
         )
+
+    /** Whether a collection is a plan, a trip not yet taken, as its own flag says. */
+    fun isPlanned(collection: JsonObject): Boolean = (collection["planned"] as? JsonPrimitive)?.booleanOrNull == true
 
     /** A collection's list of uids under [key]. */
     fun strings(collection: JsonObject, key: String): List<String> =
