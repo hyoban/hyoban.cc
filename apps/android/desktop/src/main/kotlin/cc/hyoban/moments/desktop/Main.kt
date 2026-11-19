@@ -630,7 +630,7 @@ private fun Route(
             container, route.uid, onMedia = openMedia, onPlace = openPlace, onTrip = openTrip, onBack = back,
             onEdit = { shell.open(EditMoment(it)) }, onDay = openDay, onChanges = { shell.show(Section.Publish) },
         )
-        is NewMoment -> NewMomentScreen(container, onBack = back, onSaved = back)
+        is NewMoment -> NewMomentScreen(container, onBack = back, onSaved = back, plan = route.plan)
         is EditMoment -> NewMomentScreen(container, onBack = back, onSaved = back, edit = route.uid, onDeleted = { shell.back(); shell.back() })
         is Day -> DayScreen(container, route.date, onMoment = openMoment, onBack = back, onTrip = openTrip)
         is PlaceMoments -> PlaceScreen(
@@ -640,6 +640,7 @@ private fun Route(
         is Trip -> TripScreen(
             container, route.id, onMoment = openMoment, onPlay = { shell.open(TripPlay(it)) }, onBack = back, onDay = openDay,
             onMap = { shell.showOnMap(MapFocus.Trip(it)) }, onEdit = { shell.open(TripEdit(it)) },
+            onWritePlan = { shell.open(NewMoment(plan = it)) },
         )
         is TripEdit -> TripEditScreen(
             container, route.id, startDay = route.start, endDay = route.end, name = route.title,
