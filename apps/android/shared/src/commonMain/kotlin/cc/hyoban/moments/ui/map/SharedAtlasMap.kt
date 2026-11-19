@@ -55,6 +55,7 @@ import cc.hyoban.moments.ui.OnTabReselect
 import cc.hyoban.moments.ui.components.LocalReducedMotion
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.design.AppIcons
+import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.theme.LocalDarkTheme
 import cc.hyoban.moments.ui.theme.tokens
 import kotlin.math.PI
@@ -505,8 +506,8 @@ fun SharedAtlasMap(
     onlyPlaces: Set<String>? = null,
     /** The footprints are being looked at: the routes and the places step back behind them. */
     recede: Boolean = false,
-    /** What stands over the map where it draws it, laid out against [MapState]'s camera: 地图's photos. */
-    overlay: (@Composable (MapState) -> Unit)? = null,
+    /** 地图's photos, drawn over everything else on the map; null while they are off. */
+    photos: cc.hyoban.moments.ui.picker.Places? = null,
 ) {
     val reduced = LocalReducedMotion.current
     val dark = LocalDarkTheme.current
@@ -680,6 +681,20 @@ fun SharedAtlasMap(
     val pinIcon = rememberVectorPainter(AppIcons.Pin)
     val pinImages = remember(pinDensity, pinDirection, platformContext, mediaUrls, textMeasurer) {
         mediaUrls?.let { PlacePinImages(pinDensity, pinDirection, platformContext, it, textMeasurer, kindIcons, pinIcon) }
+    }
+    val photoHeaps = rememberPhotoHeaps(photos, year, dark)
+    val photoImages = remember(pinDensity, pinDirection, textMeasurer) { PhotoHeapImages(pinDensity, pinDirection, textMeasurer) }
+    val heapLook = HeapLook(
+        fill = tokens.fill,
+        frame = cc.hyoban.moments.ui.theme.MediaOverlay.content,
+        accent = tokens.accent,
+        badge = tokens.tx,
+        badgeText = tokens.bg,
+        count = cc.hyoban.moments.ui.design.AppTheme.typography.caption.strong,
+    )
+    // One resolver for the places' pins and the photos' heaps, each answering to its own names.
+    val imageResolver = remember(pinImages, photoImages) {
+        org.maplibre.compose.map.MissingImageResolver { request -> pinImages?.resolve(request) ?: photoImages.resolve(request) }
     }
     val fogCount = renderedFog?.weights.orEmpty()
     // The region-dependent part stays stable through a sweep. Each animation frame then changes
@@ -1011,6 +1026,7 @@ fun SharedAtlasMap(
                 onClick = placeClick,
                 hitPadding = 4.dp,
             )
+            photoHeaps?.let { PhotoHeapLayer(it) }
             LocationIndicatorLayer(
                 id = "shared-user-location",
                 location = userLocation,
@@ -1041,7 +1057,9 @@ fun SharedAtlasMap(
             unknown = unknown,
             leaves = { id -> leaves.read?.invoke(id) },
         )
-        state.missingImageResolver = pinImages
+        photoImages.heaps = photoHeaps
+        photoImages.look = heapLook
+        state.missingImageResolver = imageResolver
     }
 
     val density = LocalDensity.current
@@ -1234,6 +1252,5 @@ fun SharedAtlasMap(
             interactions = interactions,
             attributionPadding = attributionPadding,
         )
-        overlay?.invoke(state)
     }
 }

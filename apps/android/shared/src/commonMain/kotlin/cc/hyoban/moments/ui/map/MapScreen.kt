@@ -450,7 +450,7 @@ private fun MapContent(
             },
             panel = if (wide) panelWidth + Space.m else 0.dp,
             year = year,
-            overlay = photoLayer?.let { layer -> { state -> cc.hyoban.moments.ui.picker.HeapsOver(state, layer.places, year) } },
+            photos = photoLayer?.places,
         )
         // At the top: the search and the fog's switch on one line, the legend under them and,
         // while the fog is on, how much of it is lit. On a wide window the search is the panel's

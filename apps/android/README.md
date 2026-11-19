@@ -787,13 +787,13 @@ looking again is quick), and lists those less than the NAS's original
 under their Moments' days; the viewer's 换成 NAS 原图 opens the Moment's editor to put one back.
 
 **地图's photos.** The map's 照片 switch, over 足迹 down its side and off at first, lays 相册's
-photos that know where they were taken over the map (`PhotoLayer`, `HeapsOver`): the gallery's, whose
+photos that know where they were taken over the map (`PhotoLayer`, `PhotoHeapLayer`): the gallery's, whose
 places the media store doesn't keep, so each photo's EXIF is read once from its original in the
 background and kept on the phone (`GalleryLocations`, a file in `noBackupFilesDir`, read again only for
 a photo new or changed), and the NAS's (above). Published photos aren't among them, nor the NAS's linked to
-one: they are the map's places already. Photos within 64 points of each other on screen stand as one heap (`PhotoHeaps`:
-a grid fixed to the world, then neighbours joined), one of them showing with how many, grouped again
-each half zoom; a year picked from the legend keeps that year's. A heap tapped brings its photos up
+one: they are the map's places already. Photos within 64 points of each other on screen stand as one heap, one of them showing with how
+many: a symbol layer of the atlas's own, grouped by its source's clustering at each zoom, so the
+heaps move with the map in the frame it draws; a year picked from the legend keeps that year's. A heap tapped brings its photos up
 from the foot as 相册's grid, the map staying above: looked at, and chosen (held, or 选择) to write,
 share, save or delete as in 相册, the tabs giving way to the bar. On the Mac they are the NAS's alone.
 

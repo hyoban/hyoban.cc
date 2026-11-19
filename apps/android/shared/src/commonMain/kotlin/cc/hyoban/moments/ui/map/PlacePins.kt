@@ -307,7 +307,7 @@ internal class PlacePinImages(
 }
 
 /** A photo filling [frame], cropped to it and rounded; the year's colour where there's none. */
-private fun DrawScope.drawPhoto(photo: Painter?, frame: Rect, corner: CornerRadius, color: Color) {
+internal fun DrawScope.drawPhoto(photo: Painter?, frame: Rect, corner: CornerRadius, color: Color) {
     val path = Path().apply { addRoundRect(RoundRect(frame, corner)) }
     clipPath(path) {
         drawRect(color, frame.topLeft, frame.size)
@@ -333,7 +333,7 @@ private fun Size.isSpecified() = this != Size.Unspecified
  * a time, each as dark as makes the rings under it add up to that fade: the images are drawn in
  * software, where a blurred paint isn't to be had on every platform.
  */
-private fun DrawScope.shadow(shape: RoundRect, blur: Float, alpha: Float, dy: Float = 0f) {
+internal fun DrawScope.shadow(shape: RoundRect, blur: Float, alpha: Float, dy: Float = 0f) {
     val sigma = blur / 2
     // No further than the room around the image, where it comes down to nothing rather than
     // being cut off.
