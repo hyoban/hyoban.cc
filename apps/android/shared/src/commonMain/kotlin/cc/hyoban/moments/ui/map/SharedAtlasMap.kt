@@ -682,8 +682,9 @@ fun SharedAtlasMap(
     val pinImages = remember(pinDensity, pinDirection, platformContext, mediaUrls, textMeasurer) {
         mediaUrls?.let { PlacePinImages(pinDensity, pinDirection, platformContext, it, textMeasurer, kindIcons, pinIcon) }
     }
-    val photoHeaps = rememberPhotoHeaps(photos, year, dark)
-    val photoImages = remember(pinDensity, pinDirection, textMeasurer) { PhotoHeapImages(pinDensity, pinDirection, textMeasurer) }
+    val photoNames = remember { PhotoNames() }
+    val photoHeaps = rememberPhotoHeaps(photos, year, photoNames)
+    val photoImages = remember(pinDensity, pinDirection, textMeasurer) { PhotoHeapImages(pinDensity, pinDirection, textMeasurer, photoNames) }
     val heapLook = HeapLook(
         fill = tokens.fill,
         frame = cc.hyoban.moments.ui.theme.MediaOverlay.content,
@@ -1057,7 +1058,7 @@ fun SharedAtlasMap(
             unknown = unknown,
             leaves = { id -> leaves.read?.invoke(id) },
         )
-        photoImages.heaps = photoHeaps
+        photoImages.places = photos
         photoImages.look = heapLook
         state.missingImageResolver = imageResolver
     }
