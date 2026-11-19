@@ -562,7 +562,8 @@ behaves.
   It resumes when the app opens, and after a reboot when background location is allowed.
 - **Resting.** Daily recording rests GPS once several fixes over three minutes show no
   movement, and wakes on the significant-motion sensor, on passive or low-power network
-  positions showing it moved, or on a backed-off probe (two to ten minutes). While it
+  positions showing it moved, or on a backed-off probe (two to ten minutes); a passive
+  position that wakes it is kept as the first sample after the rest. While it
   rests the notification moves to a silent channel and says 省电等待. The optional
   活动识别增强 uses Play services' activity transitions as an extra wake-up, never as a
   reason to rest; while they say moving, a search that finds no fix (a garage, a tunnel)

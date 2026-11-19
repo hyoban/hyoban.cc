@@ -536,6 +536,12 @@ class RecordingService : Service() {
                         wakeSource = "passive_displacement"
                         android.util.Log.i("Footprints", "Passive displacement woke daily recording")
                         applyDailyPolicy()
+                        // The fix that showed the move is a real one: keep it as the new segment's
+                        // first sample, so the route starts nearer to where it left the stay.
+                        val stored = withContext(Dispatchers.IO) {
+                            store.appendBatch(listOf(point), expectedSegment = segmentId)
+                        }.single()
+                        diagnostic("passive_wake_stored", "decision" to stored.name)
                     }
                 }
             }
