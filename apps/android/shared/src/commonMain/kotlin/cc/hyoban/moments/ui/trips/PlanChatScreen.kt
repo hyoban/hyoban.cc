@@ -339,7 +339,7 @@ fun isAhead(at: String, now: java.time.Instant = java.time.Instant.now()): Boole
     else runCatching { LocalDate.parse(at).isAfter(now.atZone(ZoneId.systemDefault()).toLocalDate()) }.getOrDefault(false)
 
 /** A record the model may change, as what it lists is matched against it: its day, time, words and place. */
-data class PlanTarget(val uid: String, val day: String, val time: String?, val text: String, val place: String?, val fix: Fix?, val checkin: Boolean = false)
+data class PlanTarget(val uid: String, val day: String, val time: String?, val text: String, val place: String?, val fix: Fix?, val checkin: Boolean = false, val locked: Boolean = false)
 
 /** What a listed item is to the plan as it stands. */
 sealed interface PlanMatch {
@@ -351,6 +351,9 @@ sealed interface PlanMatch {
 
     /** Added again where the record [uid] is: a change of it. */
     data class Edits(val uid: String) : PlanMatch
+
+    /** A change of the record [uid], which its owner locked: nothing to do. */
+    data class Settled(val uid: String) : PlanMatch
 }
 
 /** How near a listed place must be to a record's to be its place, when named otherwise. */
@@ -379,9 +382,11 @@ fun matchPlan(item: PlanItem, plan: List<PlanTarget>, claimed: Set<String> = emp
     val place = item.place ?: return PlanMatch.AsWritten
     val there = plan.filter { it.uid !in claimed && it.day == item.day && it.at(place) }
     if (there.isEmpty()) return PlanMatch.AsWritten
-    there.firstOrNull { it.time == item.time }?.let { return if (unchanged(it)) PlanMatch.Same(it.uid) else PlanMatch.Edits(it.uid) }
-    val wanted = minutesOf(item.time) ?: return PlanMatch.Edits(there.first().uid)
-    return PlanMatch.Edits(there.minBy { kotlin.math.abs((minutesOf(it.time) ?: wanted) - wanted) }.uid)
+    // A change found for a locked record is let go: the owner settled it.
+    val edits = { target: PlanTarget -> if (target.locked) PlanMatch.Settled(target.uid) else PlanMatch.Edits(target.uid) }
+    there.firstOrNull { it.time == item.time }?.let { return if (unchanged(it)) PlanMatch.Same(it.uid) else edits(it) }
+    val wanted = minutesOf(item.time) ?: return edits(there.first())
+    return edits(there.minBy { kotlin.math.abs((minutesOf(it.time) ?: wanted) - wanted) })
 }
 
 /** Whether [suggestion], a change, leaves its record as it is: the same day, time and words, its place found to be the record's. */
@@ -431,13 +436,17 @@ fun planRecords(
     val written = own.map { moment ->
         val place = moment.places.firstOrNull()?.let { places[it] }
         val planned = moment.planned == true
-        PlanRecord(moment.occurredAt, checkin = false, moment.text.trim(), place?.name, planned, place?.let { it.fix() }, id = moment.uid.takeIf { planned })
+        // A locked one goes as settled, without the id it would be changed by.
+        val locked = planned && moment.locked == true
+        PlanRecord(moment.occurredAt, checkin = false, moment.text.trim(), place?.name, planned, place?.fix(), id = moment.uid.takeIf { planned && !locked }, locked = locked)
     }
     val checkedIn = checkins.filter { it.uid !in uids && cc.hyoban.moments.data.trips.isInTrip(trip, it.at) }
         .map { checkin ->
             val place = checkin.place?.let { places[it] }
             // One still to come was written down ahead, as part of the plan, and may be changed.
-            PlanRecord(checkin.at, checkin = true, "", checkin.venue, planned = false, fix = place?.let { it.fix() }, id = checkin.uid.takeIf { isAhead(checkin.at, now) })
+            // A locked one goes as settled, without its id.
+            val ahead = isAhead(checkin.at, now)
+            PlanRecord(checkin.at, checkin = true, "", checkin.venue, planned = false, fix = place?.let { it.fix() }, id = checkin.uid.takeIf { ahead && !checkin.locked }, locked = ahead && checkin.locked)
         }
     return (written + checkedIn).sortedBy { it.at }
 }
@@ -539,15 +548,19 @@ fun PlanChatScreen(container: AppContainer, id: String, onBack: () -> Unit, onMo
         // Each suggestion's place looked for as soon as it is written in full.
         // What the plan holds now that may be changed: its planned Moments, by uid.
         val plannedNow = cc.hyoban.moments.data.trips.momentsOf(trip, container.repository.moments.value, trips)
-            .filter { it.planned == true }.associateBy { it.uid }
-        // And the check-ins still to come, as the Moments the editor opens them as.
-        val checkinsAhead = container.repository.entries.value.values.mapNotNull { entry ->
+            .filter { it.planned == true && it.locked != true }.associateBy { it.uid }
+        // And the check-ins still to come, as the Moments the editor opens them as: those to change, and those locked.
+        val ahead = container.repository.entries.value.values.mapNotNull { entry ->
             val checkin = cc.hyoban.moments.data.things.checkinOf(entry) ?: return@mapNotNull null
             if (!isAhead(checkin.at) || !cc.hyoban.moments.data.trips.isInTrip(trip, checkin.at)) return@mapNotNull null
             cc.hyoban.moments.data.things.checkinAsMoment(entry)?.let { checkin.uid to it }
         }.toMap()
+        val checkinsAhead = ahead.filterValues { it.locked != true }
         // Those records as what the model lists is matched against them.
-        val targets = (plannedNow + checkinsAhead).values.map { moment ->
+        // Locked ones among them, so what the model still lists against one is let go rather than added again.
+        val lockedNow = cc.hyoban.moments.data.trips.momentsOf(trip, container.repository.moments.value, trips)
+            .filter { it.planned == true && it.locked == true }.associateBy { it.uid } + ahead.filterValues { it.locked == true }
+        val targets = (plannedNow + checkinsAhead + lockedNow).values.map { moment ->
             val place = moment.places.firstOrNull()?.let { places[it] }
             PlanTarget(
                 moment.uid,
@@ -556,7 +569,8 @@ fun PlanChatScreen(container: AppContainer, id: String, onBack: () -> Unit, onMo
                 moment.text,
                 place?.name,
                 place?.let { it.fix() },
-                checkin = moment.uid in checkinsAhead,
+                checkin = moment.uid in ahead,
+                locked = moment.uid in lockedNow,
             )
         }
         // What this answer listed so far, and the records its items stand for.
@@ -567,6 +581,10 @@ fun PlanChatScreen(container: AppContainer, id: String, onBack: () -> Unit, onMo
             // One the plan already holds as it is goes unshown; one added again where a record is, a change of it.
             var item = when (val match = matchPlan(given, targets, claimed)) {
                 is PlanMatch.Same -> {
+                    claimed += match.uid
+                    return@suggest
+                }
+                is PlanMatch.Settled -> {
                     claimed += match.uid
                     return@suggest
                 }
@@ -1266,7 +1284,7 @@ sealed interface DayEntry {
     val time: String
     val fix: Fix?
 
-    data class Kept(override val time: String, val text: String, val place: String?, override val fix: Fix?) : DayEntry
+    data class Kept(override val time: String, val text: String, val place: String?, override val fix: Fix?, val locked: Boolean = false) : DayEntry
     data class Suggested(val suggestion: PlanSuggestion, override val fix: Fix?) : DayEntry {
         override val time: String get() = suggestion.time.orEmpty()
     }
@@ -1305,9 +1323,9 @@ fun planDays(
     return days.map { day ->
         val kept = own.filter { it.occurredAt.take(10) == day && it.uid !in handled }.map { moment ->
             val place = moment.places.firstOrNull()
-            DayEntry.Kept(formatTime(moment.occurredAt).orEmpty(), moment.text.trim().ifEmpty { places[place]?.name.orEmpty() }, places[place]?.name, fixOf(place))
+            DayEntry.Kept(formatTime(moment.occurredAt).orEmpty(), moment.text.trim().ifEmpty { places[place]?.name.orEmpty() }, places[place]?.name, fixOf(place), locked = moment.planned == true && moment.locked == true)
         } + checkins.filter { it.uid !in uids && it.uid !in handled && it.at.take(10) == day && cc.hyoban.moments.data.trips.isInTrip(trip, it.at) }.map { checkin ->
-            DayEntry.Kept(formatTime(checkin.at).orEmpty(), checkin.venue, null, fixOf(checkin.place))
+            DayEntry.Kept(formatTime(checkin.at).orEmpty(), checkin.venue, null, fixOf(checkin.place), locked = checkin.locked)
         }
         val changes = suggestions.filter { it.day == day }.map { suggestion ->
             val fix = when (val spot = suggestion.spot) {
@@ -1345,7 +1363,10 @@ private fun KeptRow(entry: DayEntry.Kept) {
                 }
             }
         }
-        Spacer(Modifier.size(36.dp, 24.dp))
+        // A locked one says so where a change's button would be.
+        Box(Modifier.size(36.dp, 24.dp), contentAlignment = Alignment.Center) {
+            if (entry.locked) Icon(AppIcons.Lock, contentDescription = stringResource(Res.string.plan_locked), tint = tokens.tx3, modifier = Modifier.size(14.dp).testTag("plan_locked"))
+        }
     }
 }
 

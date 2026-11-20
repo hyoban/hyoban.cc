@@ -50,7 +50,10 @@ const hasText = moment.text.trim() !== ''
 // only takes a line of its own when it doesn't fit beside them.
 // A planned one says so first, as its outline does.
 const planned = moment.planned === true
-const footText = [planned && '计划', ...moment.locations.map(location => location.name), moment.occurredLabel].filter(Boolean).join(' ')
+// Settled by its owner: the dashed line drawn whole, and a lock before 计划.
+const locked = planned && moment.locked === true
+// A lock takes about two figures' room before 计划.
+const footText = [planned && (locked ? '  计划' : '计划'), ...moment.locations.map(location => location.name), moment.occurredLabel].filter(Boolean).join(' ')
 const footSpace = `"${footText.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`
 ---
 
@@ -74,7 +77,7 @@ const footSpace = `"${footText.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"
     </a>
   </div>
   <div
-    class:list={['chat-bubble', 'chat-bubble--sent', { 'chat-bubble--planned': planned, 'chat-bubble--fill': hasMedia || hasFoot, 'chat-bubble--joined-above': joinedAbove, 'chat-bubble--joined-below': joinedBelow }]}
+    class:list={['chat-bubble', 'chat-bubble--sent', { 'chat-bubble--planned': planned, 'chat-bubble--locked': locked, 'chat-bubble--fill': hasMedia || hasFoot, 'chat-bubble--joined-above': joinedAbove, 'chat-bubble--joined-below': joinedBelow }]}
   >
     <div class="chat-bubble__body">
       {hasMedia && <MomentGallery media={moment.media} shown={3} />}
@@ -82,7 +85,7 @@ const footSpace = `"${footText.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"
         <div class:list={['chat-moment__words', { 'chat-moment__words--empty': !hasText }]} style={`--chat-foot: ${footSpace}`}>
           {hasText && <MomentText text={moment.text} />}
           <div class="chat-moment__foot">
-            {planned && <span>计划</span>}
+            {planned && <span class="chat-moment__plan">{locked && <span class="i-lucide-lock" aria-hidden="true" />}{locked && <span class="sr-only">已锁定</span>}计划</span>}
             {
               moment.locations.map(location => (
                 <a href={`${mapMonthPath}${location.id}/`} data-trip-map-place-link={location.id}>{location.name}</a>

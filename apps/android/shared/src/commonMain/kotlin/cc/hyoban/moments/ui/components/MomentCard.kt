@@ -168,12 +168,18 @@ private fun MomentBubble(
     val density = LocalDensity.current
     // Written into a plan, not lived: no fill and no tail, a dashed hairline in their place.
     val planned = moment.planned == true
+    // Settled by its owner: the dashed line drawn whole.
+    val locked = planned && moment.locked == true
     val shape = remember(joinedAbove, joinedBelow, planned) {
         if (planned) cc.hyoban.moments.ui.feed.PlannedBubbleShape(joinedAbove, joinedBelow)
         else cc.hyoban.moments.ui.feed.BubbleShape(sent = true, joinedAbove, joinedBelow)
     }
     val tail = cc.hyoban.moments.ui.feed.TAIL
-    val surface = if (planned) Modifier.clip(shape).dashedOutline(shape, tokens.borderStrong) else Modifier.clip(shape).background(tokens.fill)
+    val surface = when {
+        locked -> Modifier.clip(shape).border(1.dp, tokens.borderStrong, shape)
+        planned -> Modifier.clip(shape).dashedOutline(shape, tokens.borderStrong)
+        else -> Modifier.clip(shape).background(tokens.fill)
+    }
     Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
         // Most of the column, never wider than 420 on a wide screen; with photos always that
         // wide, words alone only as wide as they need. The tail's strip comes on top, at the right.
@@ -212,7 +218,11 @@ private fun MomentBubble(
                 }
                 val foot: @Composable () -> Unit = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                        Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                        Row(Modifier.weight(1f, fill = false), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                            // A locked one's 计划 comes after a lock.
+                            if (locked) Icon(AppIcons.Lock, contentDescription = stringResource(Res.string.plan_locked), tint = tokens.tx3, modifier = Modifier.size(12.dp))
+                            Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        }
                         if (moment.published == null && LocalSettings.current.connected) Pill(stringResource(Res.string.label_on_phone), icon = AppIcons.Phone)
                     }
                 }

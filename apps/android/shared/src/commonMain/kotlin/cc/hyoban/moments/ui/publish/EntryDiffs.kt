@@ -109,5 +109,13 @@ fun entryDiffs(before: JsonObject, after: JsonObject, places: Map<String, Place>
     if (wasPrivate != nowPrivate) {
         diffs += EntryDiff(Res.string.section_visibility, if (wasPrivate) private else public, if (nowPrivate) private else public, if (nowPrivate) AppIcons.EyeOff else AppIcons.Eye)
     }
+    // Planned or lived, and locked or not, as a Moment's are.
+    val flagOf = { entry: JsonObject, key: String -> (entry[key] as? kotlinx.serialization.json.JsonPrimitive)?.content == "true" }
+    if (flagOf(before, "planned") != flagOf(after, "planned")) {
+        diffs += EntryDiff(Res.string.trip_planned, flag(flagOf(before, "planned")), flag(flagOf(after, "planned")), AppIcons.Calendar)
+    }
+    if (flagOf(before, "locked") != flagOf(after, "locked")) {
+        diffs += EntryDiff(Res.string.moment_lock, flag(flagOf(before, "locked")), flag(flagOf(after, "locked")), AppIcons.Lock)
+    }
     return diffs
 }

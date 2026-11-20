@@ -1515,6 +1515,10 @@
       "type": "boolean",
       "const": true
     },
+    "locked": {
+      "type": "boolean",
+      "const": true
+    },
     "published": {
       "type": "object",
       "properties": {

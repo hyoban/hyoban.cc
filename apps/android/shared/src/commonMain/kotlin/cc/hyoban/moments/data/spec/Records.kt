@@ -352,6 +352,8 @@ data class MomentRecord(
     val order: Int? = null,
     /** Written into a plan, not lived: only its plan or trip shows it, never as somewhere been. */
     val planned: Boolean? = null,
+    /** A planned one settled by its owner: 和 AI 规划 takes it as it is and never changes it. */
+    val locked: Boolean? = null,
     val published: PublishedMoment? = null,
     val createdAt: String,
     val updatedAt: String,

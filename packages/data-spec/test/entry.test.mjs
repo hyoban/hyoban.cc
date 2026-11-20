@@ -405,3 +405,17 @@ test('a plan is a trip with its flag, and what was written into it stays planned
   assert.equal(moment.planned, true)
   assert.equal(momentToEntry(moment).planned, true)
 })
+
+test('a planned entry settled by its owner stays locked both ways', () => {
+  const entry = entrySchema.parse({
+    ...base,
+    at: '2026-12-25T08:30:00+09:00',
+    parts: { text: { v: 1, text: '早点出门。' } },
+    planned: true,
+    locked: true,
+  })
+  assert.throws(() => entrySchema.parse({ ...entry, locked: false }))
+  const moment = momentRecordSchema.parse(entryToMoment(entry))
+  assert.equal(moment.locked, true)
+  assert.equal(momentToEntry(moment).locked, true)
+})

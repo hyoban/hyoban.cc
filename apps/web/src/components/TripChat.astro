@@ -52,6 +52,8 @@ const formatKm = (meters: number) => `${(meters / 1000).toLocaleString('zh-CN', 
                           <span class="i-lucide-map-pin-check-inside" aria-hidden="true" />
                           <span class="sr-only">签到</span>
                           <span class="chat-checkin__venue">{bubble.checkin.venue}</span>
+                          {bubble.checkin.locked && <span class="chat-checkin__lock i-lucide-lock" aria-hidden="true" />}
+                          {bubble.checkin.locked && <span class="sr-only">已锁定</span>}
                           {bubble.checkin.occurredLabel && <time class="chat-row__time" datetime={bubble.checkin.occurredAt}>{bubble.checkin.occurredLabel}</time>}
                         </a>
                         {

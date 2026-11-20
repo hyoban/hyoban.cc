@@ -143,6 +143,7 @@ export function readCheckins(root = getDataRoot()): (CheckinPart & {
   at: string
   place: string
   order?: number
+  locked?: true
 })[] {
   return readPublicParts('checkin', root).flatMap(({ entry, part }) =>
     entry.place && entry.published && !isMomentEntry(entry)
@@ -153,6 +154,7 @@ export function readCheckins(root = getDataRoot()): (CheckinPart & {
             at: entry.at,
             place: entry.place,
             ...(entry.order === undefined ? {} : { order: entry.order }),
+            ...(entry.locked ? { locked: true as const } : {}),
           },
         ]
       : [],

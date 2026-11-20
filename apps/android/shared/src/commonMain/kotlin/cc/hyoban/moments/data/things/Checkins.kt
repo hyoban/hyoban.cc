@@ -13,7 +13,16 @@ import java.time.OffsetDateTime
  * A check-in with neither words nor photos: when, until when for one kept from a stay, the venue
  * it was at, that venue's place, and whether it is kept off the site.
  */
-data class Checkin(val uid: String, val at: String, val venue: String, val place: String? = null, val end: String? = null, val private: Boolean = false) {
+data class Checkin(
+    val uid: String,
+    val at: String,
+    val venue: String,
+    val place: String? = null,
+    val end: String? = null,
+    val private: Boolean = false,
+    /** One still to come its owner settled: 和 AI 规划 leaves it as it is. */
+    val locked: Boolean = false,
+) {
     /** The time it covers, in epoch milliseconds: from its start to its end, or [AROUND_MS] either side of a moment without one; null for a day alone. */
     val span: LongRange? by lazy {
         val start = millis(at) ?: return@lazy null
@@ -63,7 +72,7 @@ fun checkinOf(entry: JsonObject): Checkin? {
     if (Entries.isMoment(entry)) return null
     val checkin = (entry["parts"] as? JsonObject)?.get("checkin") as? JsonObject ?: return null
     val text = { key: String -> (entry[key] as? JsonPrimitive)?.content }
-    return Checkin(entry.entryUid, text("at") ?: return null, Entries.checkinName(checkin) ?: return null, text("place"), text("end"), Entries.isPrivate(entry))
+    return Checkin(entry.entryUid, text("at") ?: return null, Entries.checkinName(checkin) ?: return null, text("place"), text("end"), Entries.isPrivate(entry), locked = text("locked") == "true")
 }
 
 /**

@@ -216,7 +216,10 @@ hand is, public unless the plan is private, until 全部发布. The plan's plann
 suggestion may name one to change (its pen, the row saying what it was) or delete (its bin, the row struck through,
 the deletion undone from its message as one by hand is); check-ins still to come (written down ahead, such as
 where the trip sets out from) go with theirs too, only their time and place to change (a change may leave its words out, keeping the entry's); lived Moments and check-ins
-that happened are only read. The answer streams in (`stream: true`, its
+that happened are only read, and so is a planned Moment or a check-in still to come its owner locked (锁定 on a planned Moment's
+page, beside 改成记录, or in the editor's menu under 计划, which offers it for any check-in too: `locked` on the record,
+published with it, and listed on 发布更改 beside 计划 as a change of its own): it goes to the model as settled and without its id, a change the model
+still lists for it is let go, and the sheet marks it with a lock. The answer streams in (`stream: true`, its
 server-sent events read by `PlanStream`): its words grow across the column, in no bubble, and each suggestion shows, and
 its place is looked for, once its item is written in full; a service that refuses to stream is asked
 again for the whole answer. What a model thinks first, where its service shows it (`reasoning_content`, or

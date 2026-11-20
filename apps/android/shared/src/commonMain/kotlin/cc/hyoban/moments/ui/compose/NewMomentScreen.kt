@@ -321,6 +321,8 @@ fun NewMomentScreen(
     var chosenTime by remember { mutableStateOf(originalTime ?: planTime) }
     /** Planned: written into a plan rather than lived, set by hand, and from the start when written from a plan. */
     var planned by rememberSaveable { mutableStateOf(original?.planned == true || planTrip != null) }
+    /** Locked: a planned one, or a check-in still to come, settled, so 和 AI 规划 leaves it as it is. */
+    var locked by rememberSaveable { mutableStateOf(original?.locked == true) }
     val stayFix = remember(stay) { stay?.let { Fix(it.latitude, it.longitude) } }
     val stayTime = remember(stay) { stay?.let { OffsetDateTime.ofInstant(Instant.ofEpochMilli(it.start), java.time.ZoneId.systemDefault()) } }
     // At a stay, the phone's own place there, as the footprints' list names it.
@@ -454,6 +456,9 @@ fun NewMomentScreen(
     // Nothing written, nothing eaten, but somewhere: a check-in there, while check-ins are on.
     val checkinsOn = LocalSettings.current.isOn(Module.CHECKIN)
     val asCheckin = withMoment && checkinsOn && !written && cost == null && place != PlaceChoice.None
+    // What may be locked: a planned one, or any check-in; no longer either, it is unlocked.
+    val lockable = planned || asCheckin
+    val keptLocked = locked && lockable
     val billWritten = withBill && (bill.amount.isNotBlank() || bill.note.isNotBlank())
     // The bill's time is the Moment's, while there is one.
     val billAt = if (withMoment) time else OffsetDateTime.parse(bill.time)
@@ -474,7 +479,7 @@ fun NewMomentScreen(
         text != original.text || photos != originalMedia.keys.toList() || utility.intersect(photos.toSet()) != originalUtility ||
         masks.filter { (ref, laid) -> ref in photos && laid.isNotEmpty() } != originalMasks.filterKeys { it in photos } ||
         chosenTime != originalTime || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || cost != originalCost ||
-        private != original.hidden || planned != (original.planned == true)
+        private != original.hidden || planned != (original.planned == true) || keptLocked != (original.locked == true)
     // What leaving would lose: anything written, or, for a Moment being changed, any change.
     val changed = if (original == null) (withMoment && (written || cost != null)) || billWritten else momentChanged || newKind != null
     val leave = { if (changed) confirmingDiscard = true else onBack() }
@@ -504,7 +509,7 @@ fun NewMomentScreen(
                     val moment = if (withMoment) {
                         val (built, newPlace) = buildMoment(container, text, photos, utility, stills, masks, infos, time, place, cost, private, original, originalMedia, stayUid, replaced)
                         // Planned or lived, as the bar's menu says.
-                        val moment = built.copy(planned = true.takeIf { planned })
+                        val moment = built.copy(planned = true.takeIf { planned }, locked = true.takeIf { keptLocked })
                         // Kept as what it now is, a Moment or a check-in, named after its place when that moved.
                         if (original == null || momentChanged) {
                             val venue = when (place) {
@@ -575,7 +580,7 @@ fun NewMomentScreen(
             close = true,
             small = keypad,
             centre = if (withMoment) {
-                { Visibility(private, planned, onPlanned = { planned = it }) { private = it } }
+                { Visibility(private, planned, onPlanned = { planned = it }, locked = keptLocked, onLocked = if (lockable) { value: Boolean -> locked = value } else null) { private = it } }
             } else {
                 null
             },
@@ -1303,14 +1308,19 @@ private fun AddChip(added: Boolean, icon: ImageVector, label: String, tag: Strin
  * under a hairline, whether it is [planned], a check of its own, which the bar then says too.
  */
 @Composable
-private fun Visibility(private: Boolean, planned: Boolean, onPlanned: (Boolean) -> Unit, onPrivate: (Boolean) -> Unit) {
+private fun Visibility(private: Boolean, planned: Boolean, onPlanned: (Boolean) -> Unit, locked: Boolean, onLocked: ((Boolean) -> Unit)?, onPrivate: (Boolean) -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
         AssistChip(
             onClick = { open = true },
             label = {
                 val seen = stringResource(if (private) Res.string.visibility_private else Res.string.visibility_public)
-                Text(if (planned) seen + " " + stringResource(Res.string.trip_planned) else seen)
+                val said = listOfNotNull(
+                    seen,
+                    stringResource(Res.string.trip_planned).takeIf { planned },
+                    stringResource(Res.string.moment_lock).takeIf { locked },
+                )
+                Text(said.joinToString(" "))
             },
             leadingIcon = { Icon(if (private) AppIcons.EyeOff else AppIcons.Eye, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
             trailingIcon = { Icon(AppIcons.CaretDown, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
@@ -1350,6 +1360,23 @@ private fun Visibility(private: Boolean, planned: Boolean, onPlanned: (Boolean) 
                     onPlanned(!planned)
                 },
             )
+            // Settled, for 和 AI 规划 to leave as it is: a planned one, or a check-in still to come.
+            if (onLocked != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.moment_lock)) },
+                    leadingIcon = { Icon(AppIcons.Lock, contentDescription = null, tint = if (locked) tokens.accent else LocalContentColor.current) },
+                    modifier = (if (locked) Modifier.background(tokens.accentSoft) else Modifier).testTag("moment_locked"),
+                    trailingIcon = if (locked) {
+                        { Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent) }
+                    } else {
+                        null
+                    },
+                    onClick = {
+                        open = false
+                        onLocked(!locked)
+                    },
+                )
+            }
         }
     }
 }

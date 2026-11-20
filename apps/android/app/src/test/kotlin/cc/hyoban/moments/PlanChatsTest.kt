@@ -145,6 +145,24 @@ class PlanChatsTest {
     }
 
     @Test
+    fun aLockedCheckinStaysLockedAndSettled() {
+        val entry = cc.hyoban.moments.data.spec.Spec.json.parseToJsonElement(
+            """{"uid":"c-1","at":"2026-12-21T08:00:00+08:00","place":"p-1","locked":true,"parts":{"checkin":{"v":1,"venue":"老家","source":{"app":"phone"}}},"createdAt":"2026-11-01T00:00:00Z","updatedAt":"2026-11-01T00:00:00Z"}""",
+        ) as JsonObject
+        // Read as locked, and kept so through the editor and back.
+        val checkin = checkinOf(entry)!!
+        assertEquals(true, checkin.locked)
+        val opened = checkinAsMoment(entry)!!
+        assertEquals(true, opened.locked)
+        assertEquals(true, (editedEntry(opened, "老家", placeChanged = false)["locked"] as JsonPrimitive).content.toBoolean())
+        // Sent as settled, without its id.
+        val trip = TripRecord("t-1", "香港", "2026-12-21", "2026-12-26", planned = true, createdAt = "2026-11-01T00:00:00Z", updatedAt = "2026-11-01T00:00:00Z")
+        val records = planRecords(trip, emptyList(), listOf(checkin), listOf(trip), mapOf("p-1" to Place("老家", 35.68, 139.77)), java.time.Instant.parse("2026-11-20T00:00:00Z"))
+        assertNull(records.single().id)
+        assertEquals(true, records.single().locked)
+    }
+
+    @Test
     fun aCheckinMovedToAnotherTimeStaysTheSameCheckin() {
         val entry = cc.hyoban.moments.data.spec.Spec.json.parseToJsonElement(
             """{"uid":"c-1","at":"2026-12-21T08:00:00+08:00","place":"p-1","parts":{"checkin":{"v":1,"venue":"老家","source":{"app":"phone"}}},"createdAt":"2026-11-01T00:00:00Z","updatedAt":"2026-11-01T00:00:00Z"}""",
@@ -189,6 +207,10 @@ class PlanChatsTest {
         assertEquals(PlanMatch.AsWritten, matchPlan(PlanItem("2026-12-23", "21:30", "入住", PlanPlace("新宿的酒店", hotel)), plan))
         assertEquals(PlanMatch.AsWritten, matchPlan(PlanItem("", null, "", null, "m-1", delete = true), plan))
         assertEquals(PlanMatch.AsWritten, matchPlan(PlanItem("2026-12-24", "10:00", "晚点退房", null, edits = "m-1"), plan))
+        // One settled by its owner: listed again as it is, or changed, there is nothing to do.
+        val settled = plan.map { if (it.uid == "m-1") it.copy(locked = true) else it }
+        assertEquals(PlanMatch.Same("m-1"), matchPlan(PlanItem("2026-12-24", "09:00", "退房出门", PlanPlace("新宿的酒店", hotel)), settled))
+        assertEquals(PlanMatch.Settled("m-1"), matchPlan(PlanItem("2026-12-24", "09:30", "睡到九点半", PlanPlace("新宿的酒店", hotel)), settled))
     }
 
     @Test

@@ -160,7 +160,10 @@ even when starting from the repository root.
   `planned` flag tells it apart, set and cleared by hand, never by the date. A record carries
   `planned` too, set by hand or written from a plan; it is shown wherever any record is, with no
   logic of its own deciding where, only drawn as planned. When the plan becomes the trip, its
-  planned records stay planned until each is deleted or made a real record.
+  planned records stay planned until each is deleted or made a real record. A planned record, or a
+  check-in, its owner settles carries `locked`, set and cleared by hand on its page or in
+  its editor: planning with AI takes it as it is and never changes it, while the owner still edits it;
+  made a real record, it is no longer locked.
 
 ## Website work
 

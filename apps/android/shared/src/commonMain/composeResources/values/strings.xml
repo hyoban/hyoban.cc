@@ -967,6 +967,9 @@
     <string name="trip_planned">计划</string>
     <string name="trip_write_plan">写计划</string>
     <string name="moment_make_real">改成记录</string>
+    <string name="moment_lock">锁定</string>
+    <string name="moment_unlock">解除锁定</string>
+    <string name="plan_locked">已锁定</string>
     <string name="trip_delete_confirm">删除这段旅程？里面的时刻不受影响。</string>
     <string name="filter_moments">时刻</string>
     <string name="filter_checkins">签到</string>

@@ -82,6 +82,8 @@ export type Moment = {
   order?: number
   /** Written into a plan rather than lived, drawn as planned wherever it shows. */
   planned?: true
+  /** A planned one its owner settled: its dashed line drawn whole, a lock before 计划. */
+  locked?: true
   text: string
   /** The record's ULID, as trips' covers name it. */
   uid: string
@@ -99,6 +101,8 @@ export type MapCheckin = {
   occurredAt: string
   occurredLabel?: string
   order?: number
+  /** Settled by its owner: a lock before its time. */
+  locked?: true
   uid: string
   venue: string
 }
@@ -167,6 +171,7 @@ export function getCheckins() {
         occurredAt: checkin.at,
         ...(checkin.at.length > 10 ? { occurredLabel: checkin.at.slice(11, 16) } : {}),
         ...(checkin.order === undefined ? {} : { order: checkin.order }),
+        ...(checkin.locked ? { locked: true as const } : {}),
         uid: checkin.uid,
         venue: checkin.venue,
       }
@@ -529,6 +534,7 @@ function resolveMoment(entry: MomentEntry): Moment | undefined {
     occurredAt: record.occurredAt,
     ...(record.order === undefined ? {} : { order: record.order }),
     ...(record.planned ? { planned: true as const } : {}),
+    ...(record.planned && record.locked ? { locked: true as const } : {}),
     text: record.text,
     uid: record.uid,
   }

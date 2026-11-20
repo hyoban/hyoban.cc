@@ -41,7 +41,7 @@ import kotlin.coroutines.ContinuationInterceptor
  * with its words and its place's name; [planned] when written into the plan rather than lived,
  * and then its [id], by which the model may ask to change or delete it.
  */
-data class PlanRecord(val at: String, val checkin: Boolean, val text: String, val place: String?, val planned: Boolean, val fix: Fix? = null, val id: String? = null)
+data class PlanRecord(val at: String, val checkin: Boolean, val text: String, val place: String?, val planned: Boolean, val fix: Fix? = null, val id: String? = null, val locked: Boolean = false)
 
 /**
  * What the model is told besides the conversation: the plan's name and days, and every record it
@@ -582,7 +582,7 @@ class PlanAssistant(
                 append("to change one, give its id as edit with the whole entry as it should become (date, time, text, and place unless it stays); ")
                 append("to remove one, give only its id as edit and delete true. Those with an id are the planned entries and the check-ins still to come, ")
                 append("which the owner wrote down ahead, such as where they set out from; of a check-in change only its time and place, its name being its place's. ")
-                append("Entries without an id happened and stay as they are. Prefer changing an entry to removing it and adding another. ")
+                append("Entries without an id happened, or were settled by the owner, and stay as they are: plan around them, never list them. Prefer changing an entry to removing it and adding another. ")
                 append("Never list again an entry the plan already holds as it is, and never add one again to move or reword it: give its id as edit. ")
                 append("When you say an entry should go, list it with delete true; saying so is not enough.")
                 append("\n\nEnd every answer with exactly one suggest_plan call, after any lookups, holding the complete set of changes you propose ")
@@ -599,6 +599,7 @@ class PlanAssistant(
                             val kind = when {
                                 record.checkin && record.id != null -> "check-in still to come"
                                 record.checkin -> "check-in"
+                                record.locked -> "planned, settled by the owner"
                                 record.planned -> "planned"
                                 else -> "moment"
                             }

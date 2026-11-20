@@ -76,6 +76,8 @@ export const momentRecordSchema = z
     order: count.optional(),
     /** Written into a plan, not lived: shown only in its trip, never as somewhere been. */
     planned: z.literal(true).optional(),
+    /** A planned one settled by its owner: planning by AI leaves it as it is. */
+    locked: z.literal(true).optional(),
     /**
      * Set when the Moment is published: when it was. Nothing about it names the Moment,
      * which is its uid, so its day, places and words can all change afterwards.

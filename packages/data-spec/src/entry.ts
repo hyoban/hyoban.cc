@@ -283,6 +283,8 @@ export const entrySchema = z.looseObject({
    * somewhere been, until it is made a real record or deleted.
    */
   planned: z.literal(true).optional(),
+  /** A planned one settled by its owner: planning by AI leaves it as it is. */
+  locked: z.literal(true).optional(),
   published: z.looseObject({ at: timestamp }).optional(),
   createdAt: timestamp,
   updatedAt: timestamp,

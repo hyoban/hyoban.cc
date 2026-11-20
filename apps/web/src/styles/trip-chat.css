@@ -118,6 +118,11 @@
     color: var(--color-tx-2);
   }
 
+  /* Settled by its owner: the dashed line drawn whole, as the app's locked MomentBubble. */
+  .chat-bubble--locked > & {
+    outline-style: solid;
+  }
+
   .chat-bubble--planned:not(.chat-bubble--joined-below) > & {
     border-bottom-right-radius: var(--chat-radius-large);
   }
@@ -391,7 +396,26 @@
   }
 
   @media (hover: hover) {
-    &:hover .chat-checkin__venue {
+    &:hover /* A locked one's lock before 计划, and a locked check-in's before its time, the size of the
+   caption's figures, as the app's 12-point lock. */
+.chat-moment__plan {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.125rem;
+    }
+
+    .chat-moment__plan > [class*='i-lucide-'],
+    .chat-checkin__lock {
+      flex: none;
+      width: 0.75rem;
+      height: 0.75rem;
+    }
+
+    .chat-checkin__lock {
+      color: var(--color-tx-3);
+    }
+
+    .chat-checkin__venue {
       text-decoration: underline;
     }
   }

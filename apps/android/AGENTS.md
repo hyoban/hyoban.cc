@@ -329,7 +329,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   owner's places, to the OpenAI-compatible service the owner set in 同步与来源, straight from
   the device, and only when asked; what it suggests takes effect one by one, by the owner's tap:
   planned Moments added, or the plan's planned Moments and its check-ins still to come (never what
-  already happened) changed or deleted, all publishing only through 全部发布. Its lookups (`find_place`, `route_time`) ask
+  already happened, nor what its owner locked) changed or deleted, all publishing only through 全部发布. Its lookups (`find_place`, `route_time`) ask
   the place search and the keyless routers only what the model names. Its sheet's ways, and each day's driving sent with a
   question, ask the keyless routers for each two of the plan's places in a row, by their coordinates alone; when
   those can't be reached, they and `route_time` ask AMap's or Tencent's routing with the owner's own keys instead

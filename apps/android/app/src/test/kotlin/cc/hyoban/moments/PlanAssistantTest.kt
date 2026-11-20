@@ -359,6 +359,17 @@ class PlanAssistantTest {
     }
 
     @Test
+    fun aLockedPlanGoesAsSettled() {
+        val places = mapOf("temple" to Place("寺", 35.7, 139.8))
+        val plan = TripRecord("t-plan", "东京", "2026-12-24", "2026-12-29", planned = true, createdAt = "2026-11-01T00:00:00Z", updatedAt = "2026-11-01T00:00:00Z")
+        val moments = listOf(moment("1", "2026-12-25T08:30:00+09:00", "temple").copy(text = "去寺里", planned = true, locked = true))
+        val records = planRecords(plan, moments, emptyList(), listOf(plan), places, now = java.time.Instant.parse("2026-11-20T00:00:00Z"))
+        // No id to change it by, and said to be settled.
+        assertEquals(listOf<String?>(null), records.map { it.id })
+        assertEquals(listOf(true), records.map { it.locked })
+    }
+
+    @Test
     fun remembersOlderTurnsBriefly() {
         fun turn(n: Int): List<JsonObject> {
             val list = JsonPrimitive("""{"items":[{"date":"2026-12-25","text":"第$n 条"}]}""")

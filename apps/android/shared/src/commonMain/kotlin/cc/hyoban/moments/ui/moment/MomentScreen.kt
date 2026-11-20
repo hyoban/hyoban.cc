@@ -255,8 +255,19 @@ fun MomentScreen(
         val tools: @Composable RowScope.() -> Unit = {
             // A planned one becomes a Moment of what happened, kept as a change like any other.
             if (moment.planned == true && editable) {
+                // Made real, it is no longer a plan to settle.
                 ToolbarButton(AppIcons.Check, stringResource(Res.string.moment_make_real), "make_real") {
-                    container.scope.launch { container.updateLocal(moment.copy(planned = null), null) }
+                    container.scope.launch { container.updateLocal(moment.copy(planned = null, locked = null), null) }
+                }
+                // Locked, 和 AI 规划 takes it as settled; the owner still edits it.
+                val locked = moment.locked == true
+                ToolbarButton(
+                    AppIcons.Lock,
+                    stringResource(if (locked) Res.string.moment_unlock else Res.string.moment_lock),
+                    "lock",
+                    tint = if (locked) tokens.accent else null,
+                ) {
+                    container.scope.launch { container.updateLocal(moment.copy(locked = true.takeUnless { locked }), null) }
                 }
             }
             ToolbarButton(AppIcons.Share, stringResource(Res.string.action_share), "share") { sharing = true }
@@ -381,12 +392,23 @@ private fun MomentDetails(
     val carOn = settings.isOn(Module.CAR)
     Column(Modifier.padding(top = Space.xl, bottom = Space.xl)) {
         // When, in the second grey over the words, as the timeline's line over a Moment has it.
-        Text(
-            listOfNotNull(formatDay(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" "),
-            style = AppTheme.typography.body,
-            color = tokens.tx2,
-            modifier = Modifier.padding(horizontal = Space.gutter).semantics { heading() },
-        )
+        // A planned one says so after it, and a locked one that it is settled.
+        Row(
+            Modifier.padding(horizontal = Space.gutter).semantics(mergeDescendants = true) { heading() },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.xs),
+        ) {
+            val planned = moment.planned == true
+            Text(
+                listOfNotNull(formatDay(moment.occurredAt), formatTime(moment.occurredAt), stringResource(Res.string.trip_planned).takeIf { planned }).joinToString(" "),
+                style = AppTheme.typography.body,
+                color = tokens.tx2,
+            )
+            if (planned && moment.locked == true) {
+                Icon(AppIcons.Lock, contentDescription = null, tint = tokens.tx2, modifier = Modifier.padding(start = Space.xs).size(16.dp))
+                Text(stringResource(Res.string.plan_locked), style = AppTheme.typography.body, color = tokens.tx2)
+            }
+        }
         if (moment.text.isNotBlank()) {
             SelectionContainer(Modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.m)) {
                 Text(moment.text, style = AppTheme.typography.bodyReading)
@@ -584,10 +606,10 @@ private val TOOLBAR_CLEARANCE = 88.dp
 
 /** An action in the floating toolbar, named in a tooltip as an icon-only button is. */
 @Composable
-private fun ToolbarButton(icon: ImageVector, label: String, tag: String, onClick: () -> Unit) {
+private fun ToolbarButton(icon: ImageVector, label: String, tag: String, tint: androidx.compose.ui.graphics.Color? = null, onClick: () -> Unit) {
     Tooltip(label) {
         IconButton(onClick = onClick, modifier = Modifier.testTag(tag)) {
-            Icon(icon, contentDescription = label)
+            if (tint != null) Icon(icon, contentDescription = label, tint = tint) else Icon(icon, contentDescription = label)
         }
     }
 }

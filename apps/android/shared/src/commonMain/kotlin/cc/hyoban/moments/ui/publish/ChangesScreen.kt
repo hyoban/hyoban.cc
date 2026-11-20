@@ -811,6 +811,17 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
             FromTo(if (before.hidden) private else public, if (after.hidden) private else public, if (after.hidden) AppIcons.EyeOff else AppIcons.Eye)
         }
     }
+    // Planned or lived, and locked or not: each a change of its own, as on the record's page.
+    val yes = stringResource(Res.string.change_yes)
+    val no = stringResource(Res.string.change_no)
+    if ((before.planned == true) != (after.planned == true)) {
+        any = true
+        Field(Res.string.trip_planned) { FromTo(if (before.planned == true) yes else no, if (after.planned == true) yes else no, AppIcons.Calendar) }
+    }
+    if ((before.locked == true) != (after.locked == true)) {
+        any = true
+        Field(Res.string.moment_lock) { FromTo(if (before.locked == true) yes else no, if (after.locked == true) yes else no, AppIcons.Lock) }
+    }
     if (!any) {
         Text(stringResource(Res.string.note_change_nothing), style = AppTheme.typography.body, color = tokens.tx2)
     }
