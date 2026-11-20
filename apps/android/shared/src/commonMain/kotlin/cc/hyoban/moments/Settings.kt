@@ -144,6 +144,15 @@ class Settings(private val prefs: Prefs, secrets: File) {
         prefs.edit { putString("photo_filter", filter) }
     }
 
+    /** What 相册 and 选照片 list when opened, by the title menu's tag (`ui/picker/Choice`) last picked; empty for the first. */
+    var photoSource: String by mutableStateOf(prefs.getString("photo_source", null).orEmpty())
+        private set
+
+    fun changePhotoSource(tag: String) {
+        photoSource = tag
+        prefs.edit { putString("photo_source", tag) }
+    }
+
     /**
      * The gallery's albums hidden from 相册, 选照片 and 地图's photos, by the gallery's id: those
      * hidden here, and the app's own (its Here album and 准备图文's Here Share ones) unless

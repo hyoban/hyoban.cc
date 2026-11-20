@@ -917,7 +917,11 @@ the first time it asks for the photos and videos with the photos' places (`READ_
 `READ_MEDIA_VIDEO`, `ACCESS_MEDIA_LOCATION`); declined, the system's documents picker opens instead.
 Given only some photos (Android 14 and later), a row at the top says how many and 更改 asks the
 system again. Its title switches between 所有照片, the gallery's albums by size, the paired camera
-(Camera, below) and the UGREEN NAS's photos and albums (NAS, below); what is chosen stays chosen across them, numbered in the order it goes into the
+(Camera, below) and the UGREEN NAS's photos and albums (NAS, below). What was last switched to, in
+相册 or here, is kept on the phone and opened next time in both, even when it can't be reached (the
+NAS away from home, the camera off), where it says so as it does when switched to; a NAS album
+shows the NAS's timeline until its albums are read, and what isn't offered (the camera unpaired, 已发布
+here) opens the first. What is chosen stays chosen across them, numbered in the order it goes into the
 Moment, up to the nine a Moment holds. The grid is by day, newest first, four across (eight on its
 side), a video with its length and a motion photo marked 实况, its XMP read from the media store.
 Two fingers pinched or spread change how many go across, three, four or six (six, eight or twelve
