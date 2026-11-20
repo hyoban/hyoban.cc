@@ -610,20 +610,58 @@ class Nas(
      * as many as it did, read again once it holds more or fewer.
      */
     suspend fun dayPhotos(day: NasDay, start: Int): List<NasPhoto> {
-        val key = "day:${day.day}:${day.count}"
-        withContext(Dispatchers.IO) { keptData.bytes(key) }
-            ?.let { bytes -> runCatching { NasProtocol.photosFrom(bytes.decodeToString()) }.getOrNull() }
-            ?.let { return it }
-        val photos = buildList {
-            while (size < day.count) {
-                val (page, _) = timeline(start + size, minOf(PAGE, day.count - size))
-                if (page.isEmpty()) break
-                addAll(page)
-            }
-        }
-        if (photos.size == day.count) withContext(Dispatchers.IO) { keptData.put(key, NasProtocol.photosText(photos).encodeToByteArray()) }
+        keptDay(day)?.let { return it }
+        val photos = timelineRange(start, day.count)
+        if (photos.size == day.count) keepDay(day, photos)
         return photos
     }
+
+    /**
+     * Every photo and video of the timeline, newest first, for placing by time those that say
+     * nowhere: each day as [dayPhotos] keeps it, the days next to each other not kept yet read
+     * together a page at a time and kept each.
+     */
+    suspend fun everyPhoto(): List<NasPhoto> {
+        val days = timelineDays()
+        val kept = days.map { keptDay(it) }
+        val all = ArrayList<NasPhoto>()
+        var start = 0
+        var i = 0
+        while (i < days.size) {
+            kept[i]?.let { all += it; start += days[i].count; i++; continue }
+            var end = i
+            var count = 0
+            while (end < days.size && kept[end] == null && count < RUN) count += days[end++].count
+            val read = timelineRange(start, count)
+            var at = 0
+            for (d in i until end) {
+                val part = read.subList(minOf(at, read.size), minOf(at + days[d].count, read.size))
+                if (part.size == days[d].count) keepDay(days[d], part.toList())
+                all += part
+                at += days[d].count
+            }
+            start += count
+            i = end
+        }
+        return all
+    }
+
+    private suspend fun timelineRange(start: Int, count: Int): List<NasPhoto> = buildList {
+        while (size < count) {
+            val (page, _) = timeline(start + size, minOf(PAGE, count - size))
+            if (page.isEmpty()) break
+            addAll(page)
+        }
+    }
+
+    private fun dayKey(day: NasDay) = "day:${day.day}:${day.count}"
+
+    /** [day]'s photos as kept while it holds as many as it did; null when not kept. */
+    private suspend fun keptDay(day: NasDay): List<NasPhoto>? = withContext(Dispatchers.IO) { keptData.bytes(dayKey(day)) }
+        ?.let { bytes -> runCatching { NasProtocol.photosFrom(bytes.decodeToString()) }.getOrNull() }
+
+    private suspend fun keepDay(day: NasDay, photos: List<NasPhoto>) =
+        withContext(Dispatchers.IO) { keptData.put(dayKey(day), NasProtocol.photosText(photos).encodeToByteArray()) }
 
     /** The map's places as read last time, shown while [spots] reads them again; null before the first. */
     suspend fun keptSpots(): List<NasSpot>? = withContext(Dispatchers.IO) {
@@ -693,6 +731,9 @@ class Nas(
 
     companion object {
         const val PAGE = 200
+
+        /** How many photos of days not kept [everyPhoto] reads before keeping them. */
+        private const val RUN = 2_000
         private const val SPOTS = 5000
         private const val HEAD = 256 * 1024
         private const val THUMBS = 400

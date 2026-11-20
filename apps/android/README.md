@@ -889,7 +889,10 @@ under their Moments' days; the viewer's 换成 NAS 原图 opens the Moment's edi
 photos that know where they were taken over the map (`PhotoLayer`, `PhotoHeapLayer`): the gallery's, whose
 places the media store doesn't keep, so each photo's EXIF is read once from its original in the
 background and kept on the phone (`GalleryLocations`, a file in `noBackupFilesDir`, read again only for
-a photo new or changed), and the NAS's (above). Published photos aren't among them, nor the NAS's linked to
+a photo new or changed), and the NAS's (above). A photo that says nowhere stands where it was taken by
+time (`TimePlaces`, on the device alone): at the footprint nearest that time, while 足迹 is on, else at the
+place of the photo of either source nearest it in time, either within two hours, or off the map; its
+heap's grid holds it with the rest. Published photos aren't among them, nor the NAS's linked to
 one: they are the map's places already. Photos within 64 points of each other on screen stand as one heap, one of them showing with how
 many: a symbol layer of the atlas's own, grouped by its source's clustering at each zoom, so the
 heaps move with the map in the frame it draws; a year picked from the legend keeps that year's. A heap tapped brings its photos up
@@ -976,7 +979,10 @@ On 地图 (相册, above: 地图's photos) the NAS's photos stand where they wer
 list of where its photos were taken (`ai/map/gps/list`, five thousand at a time, read whole the first
 time they show; WGS‑84, as the EXIF has them), so no original is read for it, and a heap opened reads
 its photos by their ids (`ai/map/gps/photo`, two hundred at a time). The list says nothing of when, so
-with a year picked from the legend they step away.
+with a year picked from the legend they step away. For the photos it doesn't list, the timeline is read
+whole too (`Nas.everyPhoto`, each day kept as 相册 keeps it, so only days new or changed are read again),
+its times, the NAS's clock's, read in the device's zone; a heap the timeline holds whole opens from it,
+newest first, without asking the NAS again.
 加入 saves the originals to the gallery's Here album first, as the camera's; an iPhone's live photo
 brings its clip (`size_type` 5) into the app's cache, and which kept originals were live is kept with
 their links, so the editor finds the clip again, read anew if the cache let it go. 删除 asks the NAS first

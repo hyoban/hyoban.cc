@@ -38,6 +38,11 @@ class GalleryLocations(context: Context) {
     /** The photos read that say where they were taken, by id. */
     val located: StateFlow<Map<Long, Pair<Double, Double>>> = _located
 
+    private val _read = MutableStateFlow<Set<Long>>(emptySet())
+
+    /** Every photo read, with a place or without one. */
+    val read: StateFlow<Set<Long>> = _read
+
     /** Reads the photos of [items] not read yet, a few hundred at a time, each kept as it is read. */
     suspend fun scan(items: List<LocalItem>) = lock.withLock {
         withContext(Dispatchers.IO) {
@@ -63,6 +68,7 @@ class GalleryLocations(context: Context) {
 
     private fun publish(known: Map<Long, Pair<Long, Pair<Double, Double>?>>) {
         _located.value = known.mapNotNull { (id, read) -> read.second?.let { id to it } }.toMap()
+        _read.value = known.keys.toSet()
     }
 
     private fun load(): MutableMap<Long, Pair<Long, Pair<Double, Double>?>> {
@@ -84,9 +90,13 @@ class GalleryLocations(context: Context) {
     }
 }
 
-/** The gallery's photos as places on 地图: those read so far, by where they were taken, and the heap opened. */
+/**
+ * The gallery's photos as places on 地图: those read so far, by where they were taken, when they
+ * were taken for those that say nowhere, and the heap opened.
+ */
 internal class GalleryPlaces(private val gallery: GallerySource, private val locations: GalleryLocations) : Places {
     private var located by mutableStateOf<Map<Long, Pair<Double, Double>>>(emptyMap())
+    private var read by mutableStateOf<Set<Long>>(emptySet())
     private var openedIds by mutableStateOf<List<Spot>?>(null)
 
     override val spots: List<Spot>
@@ -99,14 +109,22 @@ internal class GalleryPlaces(private val gallery: GallerySource, private val loc
             }
         }
 
+    override val taken: Map<Long, Long>
+        get() {
+            val read = read
+            return gallery.items.filter { !it.video && it.id in read }.associate { it.id to it.taken }
+        }
+
     override val failed: (@Composable () -> Unit)? get() = null
 
     override suspend fun load() {
         // Every read shown as it comes, and the photos taken since read after them.
         kotlinx.coroutines.coroutineScope {
             val shown = launch { locations.located.collect { located = it } }
+            val known = launch { locations.read.collect { read = it } }
             androidx.compose.runtime.snapshotFlow { gallery.items }.collect { items -> if (items.isNotEmpty()) locations.scan(items) }
             shown.cancel()
+            known.cancel()
         }
     }
 

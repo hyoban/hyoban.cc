@@ -37,25 +37,96 @@ import cc.hyoban.moments.ui.design.rememberStandardBottomSheetState
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 /**
  * Several sources' places as one: their spots together, each marked with the source it is of, a
- * heap opened in each that has photos in it, and the photos of them all, newest first.
+ * heap opened in each that has photos in it, and the photos of them all, newest first. The photos
+ * a source says no place of are placed by time ([TimePlaces]), from [footprints] while there are
+ * any and from the photos of every source that have a place, and shown among its own.
  */
-class MergedPlaces(private val all: List<Places>) : Places {
+class MergedPlaces(
+    private val all: List<Places>,
+    private val footprints: () -> cc.hyoban.moments.footprints.Footprints? = { null },
+) : Places {
+    /** Each source's photos without a place of their own, placed by time. */
+    private var placed by mutableStateOf<List<List<Spot>>>(emptyList())
+
+    /** The footprint nearest each time asked, kept while the footprints stay as they were. */
+    private val nearestFootprint = HashMap<Long, TimedPlace?>()
+    private var footprintRevision: Long? = null
+
     override val spots: List<Spot>?
         get() {
-            val read = all.mapIndexedNotNull { i, places -> places.spots?.map { it.copy(from = i) } }
+            val placed = placed
+            val read = all.mapIndexedNotNull { i, places -> places.spots?.let { own -> own.map { it.copy(from = i) } + placed.getOrNull(i).orEmpty() } }
             return if (read.isEmpty()) null else read.flatten()
         }
 
     override val failed: (@Composable () -> Unit)? get() = null
 
-    override suspend fun load() = coroutineScope { all.forEach { launch { it.load() } } }
+    override suspend fun load() {
+        coroutineScope {
+            all.forEach { launch { it.load() } }
+            launch { place() }
+        }
+    }
+
+    /** Places the photos without one again whenever a source reads more, once it has settled. */
+    @OptIn(kotlinx.coroutines.FlowPreview::class)
+    private suspend fun place() {
+        snapshotFlow { all.map { it.spots to it.taken } to footprints() }
+            .debounce(PLACE_SETTLE_MS)
+            .collectLatest { (read, prints) -> placed = withContext(Dispatchers.IO) { place(read, prints) } }
+    }
+
+    private fun place(read: List<Pair<List<Spot>?, Map<Long, Long>?>>, prints: cc.hyoban.moments.footprints.Footprints?): List<List<Spot>> {
+        val located = read.flatMap { (spots, taken) ->
+            if (taken == null) emptyList() else spots.orEmpty().mapNotNull { spot -> taken[spot.id]?.let { TimedPlace(it, spot.latitude, spot.longitude) } }
+        }.sortedBy { it.time }
+        val placeless = read.map { (spots, taken) ->
+            if (spots == null || taken == null) emptyMap()
+            else spots.mapTo(HashSet()) { it.id }.let { own -> taken.filterKeys { it !in own } }
+        }
+        if (prints != null) readFootprints(placeless.flatMap { it.values }, prints)
+        val zone = java.time.ZoneId.systemDefault()
+        return placeless.mapIndexed { i, times ->
+            TimePlaces.place(times, located) { time -> if (prints != null) nearestFootprint[time] else null }.map { (id, at) ->
+                Spot(id, at.latitude, at.longitude, java.time.Instant.ofEpochMilli(times.getValue(id)).atZone(zone).year, from = i)
+            }
+        }
+    }
+
+    /** Finds the footprint nearest each of [times] not found yet, a [TimePlaces.BUCKET] of them read at a time. */
+    private fun readFootprints(times: List<Long>, prints: cc.hyoban.moments.footprints.Footprints) {
+        val revision = prints.revision.value
+        if (revision != footprintRevision) {
+            nearestFootprint.clear()
+            footprintRevision = revision
+        }
+        val read = HashMap<Long, List<TimedPlace>>()
+        times.filter { it !in nearestFootprint }.distinct().sorted().forEach { time ->
+            val buckets = TimePlaces.buckets(time)
+            read.keys.removeAll { it < buckets.first }
+            val near = buckets.flatMap { bucket ->
+                read.getOrPut(bucket) {
+                    prints.points(cc.hyoban.moments.footprints.TrackSelection(from = bucket * TimePlaces.BUCKET, to = (bucket + 1) * TimePlaces.BUCKET - 1))
+                        .map { TimedPlace(it.time, it.latitude, it.longitude) }
+                }
+            }
+            nearestFootprint[time] = TimePlaces.nearest(near, time)
+        }
+    }
 
     override suspend fun thumbnail(spot: Spot): ImageBitmap? = all.getOrNull(spot.from)?.thumbnail(spot.copy(from = 0))
 
@@ -75,6 +146,10 @@ class MergedPlaces(private val all: List<Places>) : Places {
     override val reading get() = all.any { it.reading }
 
     override fun more() = all.forEach { it.more() }
+
+    private companion object {
+        const val PLACE_SETTLE_MS = 1_000L
+    }
 }
 
 /**
@@ -92,7 +167,9 @@ fun rememberPhotoLayer(container: AppContainer, onWrite: () -> Unit): PhotoLayer
     val own = device.places(choice.deletion)
     val nas = rememberNas(container, choice.deletion)
     val all = own + listOfNotNull(nas.places.takeIf { container.nas.configured })
-    val places = remember(all) { MergedPlaces(all) }
+    val places = remember(all) {
+        MergedPlaces(all) { container.footprints.takeIf { container.settings.isOn(cc.hyoban.moments.data.spec.Module.FOOTPRINTS) } }
+    }
     val videos = device.rememberVideos()
     return remember(places, videos) { PhotoLayer(places, choice, videos) }
 }

@@ -465,6 +465,18 @@ class NasPlaces(private val source: NasSource, private val scope: CoroutineScope
 
     private var read by mutableStateOf<List<Spot>?>(null)
 
+    /** Every photo and video of the timeline, by id, once read: what places by time those without a place. */
+    private var timeline by mutableStateOf<Map<Long, NasPhoto>?>(null)
+
+    /** When its photos were taken, but those in a Moment, as the NAS's clock had it there, read as this device's zone. */
+    override val taken: Map<Long, Long>? by derivedStateOf {
+        val linked = source.linked
+        val zone = java.time.ZoneId.systemDefault()
+        timeline?.values?.mapNotNull { photo ->
+            photo.taken?.takeIf { !photo.video && photo.id !in linked }?.let { photo.id to it.atZone(zone).toInstant().toEpochMilli() }
+        }?.toMap()
+    }
+
     /** Its places but those of photos in a Moment, which 地图 shows as that Moment's place already. */
     override val spots: List<Spot>? by derivedStateOf {
         val linked = source.linked
@@ -493,9 +505,17 @@ class NasPlaces(private val source: NasSource, private val scope: CoroutineScope
             // Away from the NAS, what was kept stays without a word.
             if (this.read == null) failure = (e as? NasException)?.failure ?: if (e is java.io.IOException) NasFailure.UNREACHABLE else NasFailure.OTHER
         }
+        if (failure == null) try {
+            timeline = nas.everyPhoto().associateBy { it.id }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            // Without it, the photos without a place stay off the map.
+            logWarning("Moments", "nas: timeline not read for the map", e)
+        }
     }
 
-    override suspend fun thumbnail(spot: Spot): ImageBitmap? = known?.get(spot.id)?.let { nas.thumbnail(it) }
+    override suspend fun thumbnail(spot: Spot): ImageBitmap? =
+        known?.get(spot.id)?.let { nas.thumbnail(it) } ?: timeline?.get(spot.id)?.let { nas.thumbnail(it) }
 
     override var opened by mutableStateOf<List<Spot>?>(null)
         private set
@@ -517,12 +537,24 @@ class NasPlaces(private val source: NasSource, private val scope: CoroutineScope
     override fun more() {
         val heap = opened ?: return
         if (reading || ended) return
+        // Read whole from the timeline where it holds them all, newest first; otherwise those the
+        // NAS's map places come from it a page at a time, and those placed by time after them.
+        val timeline = timeline.orEmpty()
+        if (heap.all { it.id in timeline }) {
+            photos.clear()
+            photos.addAll(heap.mapNotNull { timeline[it.id] }.sortedByDescending { it.taken })
+            ended = true
+            return
+        }
+        val (mapped, placed) = heap.partition { known?.containsKey(it.id) == true }
+        val own = placed.mapNotNull { timeline[it.id] }.sortedByDescending { it.taken }
         reading = true
         job = scope.launch {
             try {
-                val page = nas.spotPhotos(heap.map { it.id }, photos.size)
+                val page = nas.spotPhotos(mapped.map { it.id }, photos.size)
                 photos.addAll(page)
-                ended = page.size < Nas.PAGE || photos.size >= heap.size
+                ended = page.size < Nas.PAGE || photos.size >= mapped.size
+                if (ended) photos.addAll(own)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 logWarning("Moments", "nas: a heap's photos not read", e)
@@ -538,6 +570,7 @@ class NasPlaces(private val source: NasSource, private val scope: CoroutineScope
     /** What was deleted leaves the map and the heap opened. */
     fun removed(ids: Set<Long>) {
         read = read?.filter { it.id !in ids }
+        timeline = timeline?.minus(ids)
         photos.removeAll { it.id in ids }
         opened = opened?.filter { it.id !in ids }?.takeIf { it.isNotEmpty() }
     }

@@ -126,6 +126,13 @@ interface Places {
 
     suspend fun load()
 
+    /**
+     * When each photo read so far was taken, in milliseconds, by its id, those with a place and those
+     * without, but not its videos: those without are placed by time ([TimePlaces]) and shown in
+     * heaps like the rest, which [open] and [picks] take as they take [spots]. Null where it can't say.
+     */
+    val taken: Map<Long, Long>? get() = null
+
     /** The small thumbnail of the photo at [spot], a heap's cover. */
     suspend fun thumbnail(spot: Spot): ImageBitmap?
 
