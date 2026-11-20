@@ -469,6 +469,8 @@
     <string name="change_repeat">重复</string>
     <string name="change_count">计数</string>
     <string name="change_link">链接</string>
+    <string name="change_reached_by">怎么过来</string>
+    <string name="reached_by_note">从上一处过来</string>
     <string name="change_note">备注</string>
     <string name="change_replaced">换了</string>
     <string name="change_order">顺序</string>
@@ -1667,6 +1669,11 @@
     <string name="plan_clear_body">对话和 AI 记得的都会删掉，不能恢复。已经应用到计划里的改动不受影响。</string>
     <string name="plan_clear_confirm">清空</string>
     <string name="plan_leg_failed">没算出来</string>
+    <string name="plan_by_plane">飞机</string>
+    <string name="plan_by_ferry">轮渡</string>
+    <string name="leg_straight">直线 %1$s</string>
+    <string name="leg_inferred">推断</string>
+    <string name="leg_open_day">打开这一天</string>
     <string name="plan_add_all">全部加入</string>
     <string name="plan_day_driving">开车 %1$s %2$s</string>
     <string name="plan_day_empty">这天还空着</string>

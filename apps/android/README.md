@@ -246,7 +246,25 @@ at its time first, else the nearest. With the next question the model is told, i
 `suggest_plan` call, which rows the owner applied and the entries they became, and each day's driving as the plan
 stands (by road between its places in order, the model's own lookups reused, a day not worked out in eight seconds
 left out); of turns before the latest two it is sent only the question, the last words and what came of the list,
-not the lookups and lists themselves. A change to a planned record shows what it changes, its words compared letter by letter as
+not the lookups and lists themselves. A trip's timeline tells the ways between its stops in its records bubbles, a footprints' line before
+a stop saying how the way to it was gone (its way's icon and name, 推断 where the footprints said it), a
+way with no footprints' line a bubble of one line of its own (`WayRow`, `WayBubble`); a day's first from where
+the day before ended (`tripLegs`, `rememberLegLines`), and so does the timeline, a stop joined only to
+one the same day or the day before, the footprints read only for the ways in sight. Only a planned way (a planned trip's or record's,
+or one still to come) asks the routers how long and far it is, each way asked once: their answers,
+that there is no way among them, are kept on the device past a restart (`TravelCache`,
+`travel-times.json` beside the private files, out of the backup, as it is worked out again), by both
+ends to about ten metres and the mode, the sheet's ways, the model's `route_time` and the timeline's
+alike; a way gone is measured by the
+footprints kept between its two stops (`measureWay`: the track's length as it moved, the time from
+when it began to move to when it stopped), and says only how it was gone where none were kept. The way itself: by the trip's leg not driven (train, flight, crossing) where it
+has one, else the record's `reachedBy` (written as the model said when a suggestion is applied, or
+chosen under the place in the editor, 怎么过来, for a planned record), else, on a trip taken, what the
+footprints kept between the two stops say (`inferWay`: a long jump with nothing between a flight, else
+by how fast most of the way went, the device's activities settling slow ways), marked 推断 and never
+written down, else by road. A flight or a crossing shows its distance as the crow flies. Tapping a way opens a menu of the six ways (and 打开这一天 on a footprints' line), picking another where it may change: walking, cycling or a train goes on the record, a train,
+flight or crossing on the trip as a leg not driven, so the site's route draws it, and by road takes
+that away; each waits on 发布更改 as any change. The site's sidebar doesn't draw them. A change to a planned record shows what it changes, its words compared letter by letter as
 发布更改 compares them and its time and place from old to new. Its
 parts are the design system's PlanAnswer, PlanSheet, SuggestionRow and ChatComposer.
 

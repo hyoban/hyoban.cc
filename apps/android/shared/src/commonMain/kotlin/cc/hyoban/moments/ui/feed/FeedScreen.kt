@@ -320,6 +320,16 @@ fun FeedScreen(
                                         }
                                     }
                                 }
+                                // The way between each two stops in a row, a day apart at most.
+                                val shownCheckins by container.shownCheckins.collectAsStateWithLifecycle()
+                                val checkinsOn = LocalSettings.current.isOn(Module.CHECKIN)
+                                val legLines = cc.hyoban.moments.ui.trips.rememberLegLines(
+                                    container,
+                                    shown,
+                                    if (checkinsOn) shownCheckins.all else emptyList(),
+                                    trips,
+                                    nextDayOnly = true,
+                                )
                                 MomentFeed(
                                     shown,
                                     places,
@@ -340,6 +350,7 @@ fun FeedScreen(
                                     // Read as a conversation, from the first day down to today, opening at today.
                                     chronological = true,
                                     fromEnd = true,
+                                    legs = legLines,
                                 )
                             }
                         }

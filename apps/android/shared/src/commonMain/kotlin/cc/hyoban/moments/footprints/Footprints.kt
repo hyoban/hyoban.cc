@@ -15,6 +15,9 @@ interface Footprints {
     /** The days there are footprints of, newest first. */
     fun days(): List<String>
     fun points(selection: TrackSelection): List<TrackPoint>
+
+    /** The activities the device said it was doing, entered and left, from [from] to [to]; none where it keeps none. */
+    fun activities(from: Long, to: Long): List<ActivityChange> = emptyList()
 }
 
 /** No footprints: a device that records none. */

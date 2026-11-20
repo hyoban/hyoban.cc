@@ -41,7 +41,18 @@ import kotlin.coroutines.ContinuationInterceptor
  * with its words and its place's name; [planned] when written into the plan rather than lived,
  * and then its [id], by which the model may ask to change or delete it.
  */
-data class PlanRecord(val at: String, val checkin: Boolean, val text: String, val place: String?, val planned: Boolean, val fix: Fix? = null, val id: String? = null, val locked: Boolean = false)
+data class PlanRecord(
+    val at: String,
+    val checkin: Boolean,
+    val text: String,
+    val place: String?,
+    val planned: Boolean,
+    val fix: Fix? = null,
+    val id: String? = null,
+    val locked: Boolean = false,
+    /** How a planned one is reached from the place before it, when it says. */
+    val by: String? = null,
+)
 
 /**
  * What the model is told besides the conversation: the plan's name and days, and every record it
@@ -604,7 +615,7 @@ class PlanAssistant(
                                 else -> "moment"
                             }
                             val at = record.fix?.let { "%.4f,%.4f".format(java.util.Locale.ROOT, it.latitude, it.longitude) }.orEmpty()
-                            listOf(record.id.orEmpty(), record.at, kind, record.place.orEmpty(), at, record.text.replace('\n', ' ')).joinToString("\t")
+                            listOf(record.id.orEmpty(), record.at, record.by?.let { "$kind, reached by $it" } ?: kind, record.place.orEmpty(), at, record.text.replace('\n', ' ')).joinToString("\t")
                         },
                     )
                 }

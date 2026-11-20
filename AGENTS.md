@@ -126,7 +126,9 @@ even when starting from the repository root.
   so, public with its expense unless it says private itself, and is shown and counted with that
   expense wherever it is, shown as what it cost after them with what was paid struck through. A trip's bills, on the phone and the site alike, are its public expenses and incomes paid
   in its span, by time alone, each refund counted with its expense; a bill names no trip. The footprints are never published, not even simplified: a trip's public route
-  is only the routers' (below), along the roads between its stops. A stay
+  is only the routers' (below), along the roads between its stops. How a way between a trip's stops
+  was gone may be inferred from them on the device and shown there, marked as inferred; only a way
+  the owner picks is written down (`reachedBy`, a leg not driven) and published. A stay
   kept as a check-in, by hand, is a check-in entry like Swarm's, its point the stay's middle. A check-in
   starts public, so the site's map dots it at its place, unless Swarm kept it private; its sheet on the phone
   makes it private. Raw Zeekr captures and report links stay under `.private/`;
@@ -154,7 +156,9 @@ even when starting from the repository root.
   that keeps moving during playback.
 - A trip reads as one conversation on both: the site's trip sidebar (`TripChat.astro`, see
   [DESIGN.md](apps/web/DESIGN.md)) draws the app's chat timeline; change both together, the
-  calendar's day list keeping the same lines.
+  calendar's day list keeping the same lines. One exception, the app's alone: a trip's timeline, and the
+  timeline, draw the way between their stops (the trip's leg not driven, else the record's `reachedBy`, else what the
+  footprints say, else by road), worked out on the device; the site's sidebar doesn't.
 - A planned trip is a trip like any other, made on the phone with its own dates, places and
   written records, public unless it says otherwise and shown on the site as a trip. Only a
   `planned` flag tells it apart, set and cleared by hand, never by the date. A record carries

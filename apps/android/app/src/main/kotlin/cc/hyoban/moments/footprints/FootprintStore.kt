@@ -222,7 +222,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         _revision.value++
     }
 
-    @Synchronized fun activities(from: Long, to: Long): List<ActivityChange> = readableDatabase.rawQuery(
+    @Synchronized override fun activities(from: Long, to: Long): List<ActivityChange> = readableDatabase.rawQuery(
         "SELECT time,activity,entering FROM activities WHERE time BETWEEN ? AND ? ORDER BY time", arrayOf(from.toString(), to.toString()),
     ).use { c -> buildList { while (c.moveToNext()) add(ActivityChange(c.getLong(0), c.getInt(1), c.getInt(2) != 0)) } }
 

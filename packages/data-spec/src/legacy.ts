@@ -78,6 +78,8 @@ export const momentRecordSchema = z
     planned: z.literal(true).optional(),
     /** A planned one settled by its owner: planning by AI leaves it as it is. */
     locked: z.literal(true).optional(),
+    /** How it is reached from the place before it, as its owner says: driving unless it says. */
+    reachedBy: z.enum(['drive', 'walk', 'bike', 'train']).optional(),
     /**
      * Set when the Moment is published: when it was. Nothing about it names the Moment,
      * which is its uid, so its day, places and words can all change afterwards.

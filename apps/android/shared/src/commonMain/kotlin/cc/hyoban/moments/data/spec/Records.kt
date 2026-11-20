@@ -354,6 +354,8 @@ data class MomentRecord(
     val planned: Boolean? = null,
     /** A planned one settled by its owner: 和 AI 规划 takes it as it is and never changes it. */
     val locked: Boolean? = null,
+    /** How it is reached from the place before it, `drive`, `walk`, `bike` or `train`, as its owner says; driving unless it says. */
+    val reachedBy: String? = null,
     val published: PublishedMoment? = null,
     val createdAt: String,
     val updatedAt: String,

@@ -438,7 +438,7 @@ fun planRecords(
         val planned = moment.planned == true
         // A locked one goes as settled, without the id it would be changed by.
         val locked = planned && moment.locked == true
-        PlanRecord(moment.occurredAt, checkin = false, moment.text.trim(), place?.name, planned, place?.fix(), id = moment.uid.takeIf { planned && !locked }, locked = locked)
+        PlanRecord(moment.occurredAt, checkin = false, moment.text.trim(), place?.name, planned, place?.fix(), id = moment.uid.takeIf { planned && !locked }, locked = locked, by = moment.reachedBy.takeIf { planned })
     }
     val checkedIn = checkins.filter { it.uid !in uids && cc.hyoban.moments.data.trips.isInTrip(trip, it.at) }
         .map { checkin ->
@@ -1206,14 +1206,14 @@ private fun SmallSpinner(size: androidx.compose.ui.unit.Dp, color: androidx.comp
 
 /** A way's time as it is read: minutes, or hours and minutes, never under one. */
 @Composable
-private fun duration(seconds: Long): String = cc.hyoban.moments.ui.format.formatMinutes(((seconds + 30) / 60).coerceAtLeast(1))
+internal fun duration(seconds: Long): String = cc.hyoban.moments.ui.format.formatMinutes(((seconds + 30) / 60).coerceAtLeast(1))
 
 /** A way's time and length, as a lookup and a leg both write them. */
 @Composable
-private fun travelWords(travel: Routers.Travel): String = duration(travel.seconds) + APART + cc.hyoban.moments.ui.compose.formatDistance(travel.metres.toDouble())
+internal fun travelWords(travel: Routers.Travel): String = duration(travel.seconds) + APART + cc.hyoban.moments.ui.compose.formatDistance(travel.metres.toDouble())
 
 /** A mode's icon and name. */
-private fun modeOf(by: Routers.By) = when (by) {
+internal fun modeOf(by: Routers.By) = when (by) {
     Routers.By.WALK -> AppIcons.Walk to Res.string.plan_by_walk
     Routers.By.BIKE -> AppIcons.Bike to Res.string.plan_by_bike
     Routers.By.TRAIN -> AppIcons.Train to Res.string.plan_by_train
@@ -1225,10 +1225,16 @@ private fun modeOf(by: Routers.By) = when (by) {
  * can't be reached, by AMap's or Tencent's routing with the owner's own keys through [search];
  * null when there is no way, an error when none could say.
  */
-suspend fun travelBetween(search: PlaceSearch, from: Fix, to: Fix, by: Routers.By): Routers.Travel? = try {
-    Routers.travel(from.longitude to from.latitude, to.longitude to to.latitude, by)
-} catch (unreached: java.io.IOException) {
-    search.travel(from, to, by) ?: throw unreached
+suspend fun travelBetween(search: PlaceSearch, from: Fix, to: Fix, by: Routers.By): Routers.Travel? {
+    // A way asked before, past a restart too, isn't asked again.
+    cc.hyoban.moments.data.trips.TravelCache.known(from, to, by)?.let { return it.travel }
+    val travel = try {
+        Routers.travel(from.longitude to from.latitude, to.longitude to to.latitude, by)
+    } catch (unreached: java.io.IOException) {
+        search.travel(from, to, by) ?: throw unreached
+    }
+    cc.hyoban.moments.data.trips.TravelCache.keep(from, to, by, travel)
+    return travel
 }
 
 /** The device's lookups for the model: its place search, and the routers. */
@@ -1284,7 +1290,7 @@ sealed interface DayEntry {
     val time: String
     val fix: Fix?
 
-    data class Kept(override val time: String, val text: String, val place: String?, override val fix: Fix?, val locked: Boolean = false) : DayEntry
+    data class Kept(override val time: String, val text: String, val place: String?, override val fix: Fix?, val locked: Boolean = false, val by: Routers.By? = null) : DayEntry
     data class Suggested(val suggestion: PlanSuggestion, override val fix: Fix?) : DayEntry {
         override val time: String get() = suggestion.time.orEmpty()
     }
@@ -1323,9 +1329,9 @@ fun planDays(
     return days.map { day ->
         val kept = own.filter { it.occurredAt.take(10) == day && it.uid !in handled }.map { moment ->
             val place = moment.places.firstOrNull()
-            DayEntry.Kept(formatTime(moment.occurredAt).orEmpty(), moment.text.trim().ifEmpty { places[place]?.name.orEmpty() }, places[place]?.name, fixOf(place), locked = moment.planned == true && moment.locked == true)
+            DayEntry.Kept(formatTime(moment.occurredAt).orEmpty(), moment.text.trim().ifEmpty { places[place]?.name.orEmpty() }, places[place]?.name, fixOf(place), locked = moment.planned == true && moment.locked == true, by = PlanAssistant.byOf(moment.reachedBy))
         } + checkins.filter { it.uid !in uids && it.uid !in handled && it.at.take(10) == day && cc.hyoban.moments.data.trips.isInTrip(trip, it.at) }.map { checkin ->
-            DayEntry.Kept(formatTime(checkin.at).orEmpty(), checkin.venue, null, fixOf(checkin.place), locked = checkin.locked)
+            DayEntry.Kept(formatTime(checkin.at).orEmpty(), checkin.venue, null, fixOf(checkin.place), locked = checkin.locked, by = PlanAssistant.byOf(checkin.reachedBy))
         }
         val changes = suggestions.filter { it.day == day }.map { suggestion ->
             val fix = when (val spot = suggestion.spot) {
@@ -1384,7 +1390,7 @@ fun lookedUpWay(ways: List<PlanLookup.Way>, from: Fix, to: Fix, by: Routers.By):
     }
 
 /** A way's time and length, worked out once a run of the app for each two places and mode. */
-private object Legs {
+internal object Legs {
     sealed interface Leg {
         data object Working : Leg
         data class Done(val travel: Routers.Travel?) : Leg
@@ -1441,7 +1447,7 @@ fun dayWays(entries: List<DayEntry>, start: Fix? = null): List<Triple<Fix, Fix, 
         val suggestion = (entry as? DayEntry.Suggested)?.suggestion
         val at = entry.fix
         if (suggestion?.kind == PlanChange.Delete || at == null) return@forEach
-        from?.let { ways += Triple(it, at, suggestion?.item?.by ?: Routers.By.DRIVE) }
+        from?.let { ways += Triple(it, at, suggestion?.item?.by ?: (entry as? DayEntry.Kept)?.by ?: Routers.By.DRIVE) }
         from = at
     }
     return ways
@@ -1457,6 +1463,58 @@ fun lastPlace(entries: List<DayEntry>): Fix? =
  */
 fun dayStarts(days: List<Pair<String, List<DayEntry>>>): List<Fix?> =
     days.runningFold(null as Fix?) { last, (_, entries) -> lastPlace(entries) ?: last }.dropLast(1)
+
+/**
+ * A stop of a trip's timeline: the feed's [key] for it, when, where, and how it is reached; the
+ * record it is ([uid], a check-in or a Moment) and its place's id, to note how it is reached by.
+ */
+data class PlanStop(
+    val key: String,
+    val at: String,
+    val fix: Fix?,
+    val reachedBy: String?,
+    val uid: String = key,
+    val place: String? = null,
+    val checkin: Boolean = false,
+    /** Written into a plan rather than lived: its way is worked out by the routers, not the footprints. */
+    val planned: Boolean = false,
+)
+
+/** A way between two stops of a timeline: where from and to, when it set out ([fromAt]), and the stop it leads to. */
+data class TripLeg(
+    val from: Fix,
+    val to: Fix,
+    val fromPlace: String?,
+    val stop: PlanStop,
+    val fromAt: String = "",
+    /** Its time, from the stop before to this one, in epoch milliseconds; null where either is a day alone. */
+    val span: LongRange? = null,
+)
+
+/**
+ * The way to each of [stops] from the one before it that has a place, in order of time, by its
+ * key: across a night too, as a day sets out from where the one before ended. One without a place
+ * has none, and is passed over.
+ */
+fun tripLegs(stops: List<PlanStop>, nextDayOnly: Boolean = false): Map<String, TripLeg> {
+    val millis = { at: String -> runCatching { java.time.OffsetDateTime.parse(at).toInstant().toEpochMilli() }.getOrNull() }
+    val ordered = stops.sortedWith(compareBy({ it.at.take(10) }, { millis(it.at) }))
+    val legs = mutableMapOf<String, TripLeg>()
+    var before: PlanStop? = null
+    ordered.forEach { stop ->
+        val at = stop.fix ?: return@forEach
+        // Where the stop before is further back than the night before, on a timeline that asks, no way is drawn.
+        val near = { last: PlanStop ->
+            !nextDayOnly || runCatching { !java.time.LocalDate.parse(last.at.take(10)).plusDays(1).isBefore(java.time.LocalDate.parse(stop.at.take(10))) }.getOrDefault(false)
+        }
+        before?.takeIf { it.fix != at && near(it) }?.let { last ->
+            val (start, end) = millis(last.at) to millis(stop.at)
+            legs[stop.key] = TripLeg(last.fix!!, at, last.place, stop, last.at, if (start != null && end != null && end > start) start..end else null)
+        }
+        before = stop
+    }
+    return legs
+}
 
 /** The sum of [travels], each day's driving; null unless every one came to a way. */
 fun totalOf(travels: List<Routers.Travel?>): Routers.Travel? =
@@ -1565,7 +1623,7 @@ private fun PlanSheet(
                     val gone = (entry as? DayEntry.Suggested)?.suggestion?.kind == PlanChange.Delete
                     val at = entry.fix
                     if (!gone && at != null) {
-                        from?.let { start -> LegRow(start, at, (entry as? DayEntry.Suggested)?.suggestion?.item?.by ?: Routers.By.DRIVE, container.placeSearch, ways) }
+                        from?.let { start -> LegRow(start, at, (entry as? DayEntry.Suggested)?.suggestion?.item?.by ?: (entry as? DayEntry.Kept)?.by ?: Routers.By.DRIVE, container.placeSearch, ways) }
                         from = at
                     }
                     when (entry) {
@@ -1695,7 +1753,7 @@ private fun SuggestionRow(suggestion: PlanSuggestion, onAdd: (PlanSuggestion) ->
                 PlanSpot.Nowhere -> {}
             }
             if (dayMoved) {
-                Text(listOfNotNull(cc.hyoban.moments.ui.format.formatDate(wasDay!!), wasTime).joinToString(" "), style = strikeCaption, color = tokens.tx3, maxLines = 1)
+                Text(listOfNotNull(cc.hyoban.moments.ui.format.formatDate(wasDay), wasTime).joinToString(" "), style = strikeCaption, color = tokens.tx3, maxLines = 1)
             }
         }
         // A 48 button whose 24 icon centres on the words' first line, taking 36 by 24 of the row:
@@ -1870,10 +1928,13 @@ private suspend fun applyToPlan(container: AppContainer, trip: TripRecord, sugge
         else -> emptyList()
     }
     // A check-in stays one, its words none, named for its place.
+    // How it is reached, as the model said; a change that says nothing keeps what it was.
+    val by = item.by?.takeUnless { it == Routers.By.DRIVE }?.name?.lowercase()
     val moment = target?.copy(
         occurredAt = stamp(at),
         places = placeIds,
         text = if (suggestion.checkin) "" else item.text.trim(),
+        reachedBy = if (item.by != null) by else target.reachedBy,
         updatedAt = now,
     ) ?: MomentRecord(
         uid = Ulid.next(),
@@ -1881,6 +1942,7 @@ private suspend fun applyToPlan(container: AppContainer, trip: TripRecord, sugge
         places = placeIds,
         text = item.text.trim(),
         planned = true,
+        reachedBy = by,
         createdAt = now,
         updatedAt = now,
     )

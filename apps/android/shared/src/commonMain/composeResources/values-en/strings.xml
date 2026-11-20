@@ -496,6 +496,8 @@
     <string name="change_repeat">Repeats</string>
     <string name="change_count">Counts</string>
     <string name="change_link">Link</string>
+    <string name="change_reached_by">Getting there</string>
+    <string name="reached_by_note">From the place before</string>
     <string name="change_note">Note</string>
     <string name="change_replaced">Replaced</string>
     <string name="change_order">Order</string>
@@ -1668,6 +1670,11 @@
     <string name="plan_clear_body">The conversation and what the AI remembers will be deleted and can’t be brought back. Changes already applied to the plan stay.</string>
     <string name="plan_clear_confirm">Clear</string>
     <string name="plan_leg_failed">couldn’t work out</string>
+    <string name="plan_by_plane">Flight</string>
+    <string name="plan_by_ferry">Ferry</string>
+    <string name="leg_straight">%1$s as the crow flies</string>
+    <string name="leg_inferred">(inferred)</string>
+    <string name="leg_open_day">Open this day</string>
     <string name="plan_add_all">Add all</string>
     <string name="plan_day_driving">Driving %1$s %2$s</string>
     <string name="plan_day_empty">Nothing planned yet</string>

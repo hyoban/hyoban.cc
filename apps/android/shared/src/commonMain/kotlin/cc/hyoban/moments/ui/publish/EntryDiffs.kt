@@ -118,6 +118,9 @@ fun entryDiffs(before: JsonObject, after: JsonObject, places: Map<String, Place>
     if (wasPrivate != nowPrivate) {
         diffs += EntryDiff(Res.string.section_visibility, if (wasPrivate) private else public, if (nowPrivate) private else public, if (nowPrivate) AppIcons.EyeOff else AppIcons.Eye)
     }
+    // How it is reached from the place before it, as a Moment's.
+    val reached = { entry: JsonObject -> (entry["reachedBy"] as? kotlinx.serialization.json.JsonPrimitive)?.content }
+    if ((reached(before) ?: "drive") != (reached(after) ?: "drive")) diffs += EntryDiff(Res.string.change_reached_by, reachedByName(reached(before)), reachedByName(reached(after)), AppIcons.Route)
     // Planned or lived, and locked or not, as a Moment's are.
     val flagOf = { entry: JsonObject, key: String -> (entry[key] as? kotlinx.serialization.json.JsonPrimitive)?.content == "true" }
     if (flagOf(before, "planned") != flagOf(after, "planned")) {
@@ -128,6 +131,17 @@ fun entryDiffs(before: JsonObject, after: JsonObject, places: Map<String, Place>
     }
     return diffs
 }
+
+/** How a planned record is reached, by name: driving when it doesn't say. */
+@Composable
+fun reachedByName(by: String?): String = stringResource(
+    when (cc.hyoban.moments.data.ai.PlanAssistant.byOf(by)) {
+        cc.hyoban.moments.data.trips.Routers.By.WALK -> Res.string.plan_by_walk
+        cc.hyoban.moments.data.trips.Routers.By.BIKE -> Res.string.plan_by_bike
+        cc.hyoban.moments.data.trips.Routers.By.TRAIN -> Res.string.plan_by_train
+        else -> Res.string.plan_by_drive
+    },
+)
 
 /**
  * What a change to a trip changed, against the site's [before] collection, field by field: its

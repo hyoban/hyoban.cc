@@ -22,6 +22,8 @@ data class Checkin(
     val private: Boolean = false,
     /** One still to come its owner settled: 和 AI 规划 leaves it as it is. */
     val locked: Boolean = false,
+    /** How it is reached from the place before it, as a planned one says; driving unless it says. */
+    val reachedBy: String? = null,
 ) {
     /** The time it covers, in epoch milliseconds: from its start to its end, or [AROUND_MS] either side of a moment without one; null for a day alone. */
     val span: LongRange? by lazy {
@@ -72,7 +74,7 @@ fun checkinOf(entry: JsonObject): Checkin? {
     if (Entries.isMoment(entry)) return null
     val checkin = (entry["parts"] as? JsonObject)?.get("checkin") as? JsonObject ?: return null
     val text = { key: String -> (entry[key] as? JsonPrimitive)?.content }
-    return Checkin(entry.entryUid, text("at") ?: return null, Entries.checkinName(checkin) ?: return null, text("place"), text("end"), Entries.isPrivate(entry), locked = text("locked") == "true")
+    return Checkin(entry.entryUid, text("at") ?: return null, Entries.checkinName(checkin) ?: return null, text("place"), text("end"), Entries.isPrivate(entry), locked = text("locked") == "true", reachedBy = text("reachedBy"))
 }
 
 /**

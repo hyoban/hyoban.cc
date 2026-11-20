@@ -167,6 +167,8 @@ fun MomentFeed(
      * it there as records arrive while it is read there; the tab tapped again goes back to it.
      */
     fromEnd: Boolean = false,
+    /** The ways between the conversation's stops: in the footprints' lines before a stop, else a bubble of their own. */
+    legs: cc.hyoban.moments.ui.trips.LegLines? = null,
     leading: FeedLeading.() -> Unit = {},
 ) {
     val days = remember(moments) { keptDays.get(moments) { moments.groupBy { it.dateKey }.toList() } }
@@ -327,12 +329,18 @@ fun MomentFeed(
                                 fun sent(at: ChatItem) = at !is ChatItem.Records
                                 val joinedAbove = index > 0 && sent(chats[index - 1]) == sent(item)
                                 val joinedBelow = index < chats.lastIndex && sent(chats[index + 1]) == sent(item)
+                                // The way to a stop: told in the footprints' lines just before it, else a bubble of its own over it.
+                                val tracked = { at: ChatItem? -> at is ChatItem.Records && at.lines.any { it is RecordLine.Track } }
+                                val alone = legs?.takeIf { item !is ChatItem.Records && it.has(item.key) && !tracked(chats.getOrNull(index - 1)) }
                                 val itemModifier = Modifier.animateItem().padding(
                                     start = Space.xs,
                                     end = Space.xs,
-                                    top = if (index == 0) 0.dp else if (joinedAbove) Space.xs else Space.m,
+                                    top = if (index == 0) 0.dp else if (joinedAbove && alone == null) Space.xs else Space.m,
                                     bottom = if (item.key == lastChat) Space.s else 0.dp,
                                 )
+                                androidx.compose.foundation.layout.Column(itemModifier.fillMaxWidth()) {
+                                if (alone != null) androidx.compose.foundation.layout.Box(Modifier.padding(bottom = Space.m)) { alone.Alone(item.key) }
+                                val itemModifier = Modifier
                                 when (item) {
                                     // Where a trip's banner marks its days, the bubbles within them needn't name it.
                                     is ChatItem.Moment -> MomentCard(
@@ -356,11 +364,18 @@ fun MomentFeed(
                                         bills.linked[item.checkin.uid].orEmpty(), bills.ledger, onBill,
                                         charges = bills.linkedCharges[item.checkin.uid].orEmpty(),
                                     )
-                                    is ChatItem.Records -> RecordsBubble(
-                                        item.lines, bills.ledger, onBill,
-                                        onDay = onDay?.let { { it(day) } },
-                                        modifier = itemModifier,
-                                    )
+                                    is ChatItem.Records -> {
+                                        // Its footprints' lines say how the way to the stop after them was gone.
+                                        val next = chats.getOrNull(index + 1)?.key
+                                        val openDay = onDay?.let { { it(day) } }
+                                        RecordsBubble(
+                                            item.lines, bills.ledger, onBill,
+                                            onDay = openDay,
+                                            modifier = itemModifier,
+                                            trackRow = next?.takeIf { legs?.has(it) == true }?.let { key -> { line -> legs!!.Track(key, line, openDay) } },
+                                        )
+                                    }
+                                }
                                 }
                             }
                         }

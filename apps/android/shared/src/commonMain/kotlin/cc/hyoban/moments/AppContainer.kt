@@ -109,6 +109,11 @@ abstract class AppContainer(
 
     /** The plans' conversations with the model, kept beside what must not leave the device but goes in its backup. */
     val planChats by lazy { cc.hyoban.moments.ui.trips.PlanChats(File(private, PLAN_CHATS_FILE), scope) }
+
+    init {
+        // The routers' answers, kept past a restart so a way is asked once; worked out again, so not backed up.
+        cc.hyoban.moments.data.trips.TravelCache.open(File(private, TRAVEL_CACHE_FILE))
+    }
     protected val api = MomentsApi(baseUrl = { settings.apiUrl.value }, token = { settings.apiToken.value })
     val repository = MomentsRepository(CopyStore(File(private, "copy.db"), driver), api, local = localStore, writer = api, outside = outside)
 
@@ -515,5 +520,8 @@ abstract class AppContainer(
 /** How long a trip's legs stay put before the phone routes them, so an edit in progress asks nothing. */
 /** Where the plans' conversations are kept, in the device's private folder, and named so in its backup. */
 const val PLAN_CHATS_FILE = "plan-chats.json"
+
+/** The routers' answers of how long and far a way is, kept on the device. */
+const val TRAVEL_CACHE_FILE = "travel-times.json"
 
 private const val ROUTE_SETTLE_MS = 2_000L

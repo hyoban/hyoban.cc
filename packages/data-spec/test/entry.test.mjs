@@ -419,3 +419,17 @@ test('a planned entry settled by its owner stays locked both ways', () => {
   assert.equal(moment.locked, true)
   assert.equal(momentToEntry(moment).locked, true)
 })
+
+test('a planned entry keeps how it is reached both ways', () => {
+  const entry = entrySchema.parse({
+    ...base,
+    at: '2026-12-25T08:30:00+09:00',
+    parts: { text: { v: 1, text: '坐电车过去。' } },
+    planned: true,
+    reachedBy: 'train',
+  })
+  assert.throws(() => entrySchema.parse({ ...entry, reachedBy: 'fly' }))
+  const moment = momentRecordSchema.parse(entryToMoment(entry))
+  assert.equal(moment.reachedBy, 'train')
+  assert.equal(momentToEntry(moment).reachedBy, 'train')
+})

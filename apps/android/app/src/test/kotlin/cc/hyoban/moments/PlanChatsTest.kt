@@ -24,6 +24,8 @@ import cc.hyoban.moments.ui.trips.matchPlan
 import cc.hyoban.moments.ui.trips.outcomeOf
 import cc.hyoban.moments.ui.trips.dayWays
 import cc.hyoban.moments.ui.trips.dayStarts
+import cc.hyoban.moments.ui.trips.PlanStop
+import cc.hyoban.moments.ui.trips.tripLegs
 import cc.hyoban.moments.ui.trips.totalOf
 import cc.hyoban.moments.ui.trips.lookedUpWay
 import cc.hyoban.moments.ui.trips.isAhead
@@ -282,5 +284,42 @@ class PlanChatsTest {
         // The first day from nowhere, an empty day from the last night's place, and the next from there too.
         assertEquals(listOf(null, inn, inn), dayStarts(days))
         assertEquals(listOf(Triple(inn, lake, Routers.By.DRIVE)), dayWays(days[2].second, dayStarts(days)[2]))
+    }
+
+    @Test
+    fun aPlannedTripsTimelineGoesStopToStop() {
+        val inn = Fix(35.69, 139.70)
+        val temple = Fix(35.71, 139.79)
+        val tower = Fix(35.66, 139.75)
+        val legs = tripLegs(
+            listOf(
+                PlanStop("m-2", "2026-12-25T09:00:00+09:00", temple, "train"),
+                PlanStop("checkin-c", "2026-12-24T20:00:00+09:00", inn, null),
+                PlanStop("m-3", "2026-12-25T12:00:00+09:00", null, null),
+                PlanStop("m-4", "2026-12-25T18:00:00+09:00", tower, "walk"),
+            ),
+        )
+        // In order of time, the night between too; one without a place passed over; each by its own way.
+        assertEquals(
+            mapOf("m-2" to Triple(inn, temple, "train"), "m-4" to Triple(temple, tower, "walk")),
+            legs.mapValues { (_, leg) -> Triple(leg.from, leg.to, leg.stop.reachedBy) },
+        )
+    }
+
+    @Test
+    fun theTimelineJoinsAStopOnlyToTheDayBefore() {
+        val a = Fix(35.69, 139.70)
+        val b = Fix(35.71, 139.79)
+        val c = Fix(35.66, 139.75)
+        val stops = listOf(
+            PlanStop("m-1", "2026-12-20T20:00:00+09:00", a, null),
+            PlanStop("m-2", "2026-12-21T09:00:00+09:00", b, null),
+            PlanStop("m-3", "2026-12-25T09:00:00+09:00", c, null),
+        )
+        // A trip's go across any night; the timeline's only from the night before.
+        assertEquals(setOf("m-2", "m-3"), tripLegs(stops).keys)
+        assertEquals(setOf("m-2"), tripLegs(stops, nextDayOnly = true).keys)
+        // Each with its span, to read the footprints between.
+        assertEquals(true, tripLegs(stops).getValue("m-2").span != null)
     }
 }

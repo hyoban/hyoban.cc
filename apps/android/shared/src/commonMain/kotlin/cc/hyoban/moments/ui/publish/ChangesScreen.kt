@@ -875,6 +875,11 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
         any = true
         Field(Res.string.change_checkin) { FromTo(venueOf(before), venueOf(after) ?: stringResource(Res.string.change_none), AppIcons.Flag) }
     }
+    // How a planned one is reached from the place before it.
+    if ((before.reachedBy ?: "drive") != (after.reachedBy ?: "drive")) {
+        any = true
+        Field(Res.string.change_reached_by) { FromTo(reachedByName(before.reachedBy), reachedByName(after.reachedBy), AppIcons.Route) }
+    }
     // Planned or lived, and locked or not: each a change of its own, as on the record's page.
     val yes = stringResource(Res.string.change_yes)
     val no = stringResource(Res.string.change_no)

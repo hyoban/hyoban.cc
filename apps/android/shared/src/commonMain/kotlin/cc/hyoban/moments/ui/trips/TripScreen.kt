@@ -1,5 +1,8 @@
 package cc.hyoban.moments.ui.trips
 
+
+import cc.hyoban.moments.data.local.fix
+
 import cc.hyoban.moments.ui.ledger.SpendingOf
 import cc.hyoban.moments.ui.ledger.billsOf
 import cc.hyoban.moments.res.*
@@ -147,6 +150,13 @@ fun TripScreen(
         )
     }
     val stops = remember(trip, all, places) { stopsOf(trip, all, trips, places) }
+    // Each stop's way from the one before, across days too, as the timeline draws them.
+    val tripCheckins = remember(allCheckins, trip, checkinsOn) {
+        if (!checkinsOn) emptyList() else allCheckins.byDay.filterKeys { it in trip.start..trip.end }.values.flatten()
+    }
+    val legLines = rememberLegLines(container, moments, tripCheckins, listOf(trip))
+    // The footprints between its records, as the timeline has them, each saying how the way was gone.
+    val tracks = cc.hyoban.moments.ui.feed.rememberTimelineTracks(container)
 
     val dayLabel = { day: String -> textOf(Res.string.trip_day, daysBetween(trip.start, day)) + " " + formatDay(day) }
     // 第 n 天 at the end of each day's header.
@@ -306,6 +316,8 @@ fun TripScreen(
                         chat = true,
                         chronological = true,
                         bills = tripRecords,
+                        legs = legLines,
+                        tracks = tracks,
                     ) {
                         item(key = "summary") { summary() }
                         if (ledgerOn) item(key = "spending") { spending() }
@@ -330,6 +342,8 @@ fun TripScreen(
                     chat = true,
                     chronological = true,
                     bills = tripRecords,
+                    legs = legLines,
+                        tracks = tracks,
                 ) {
                     item(key = "summary") { summary() }
                     if (ledgerOn) item(key = "spending") { spending() }

@@ -323,6 +323,9 @@ fun NewMomentScreen(
     var planned by rememberSaveable { mutableStateOf(original?.planned == true || planTrip != null) }
     /** Locked: a planned one, or a check-in still to come, settled, so 和 AI 规划 leaves it as it is. */
     var locked by rememberSaveable { mutableStateOf(original?.locked == true) }
+    /** How a planned one is reached from the place before it: driving unless chosen. */
+    var reachedBy by rememberSaveable { mutableStateOf(original?.reachedBy) }
+    var choosingWay by remember { mutableStateOf(false) }
     val stayFix = remember(stay) { stay?.let { Fix(it.latitude, it.longitude) } }
     val stayTime = remember(stay) { stay?.let { OffsetDateTime.ofInstant(Instant.ofEpochMilli(it.start), java.time.ZoneId.systemDefault()) } }
     // At a stay, the phone's own place there, as the footprints' list names it.
@@ -479,7 +482,7 @@ fun NewMomentScreen(
         text != original.text || photos != originalMedia.keys.toList() || utility.intersect(photos.toSet()) != originalUtility ||
         masks.filter { (ref, laid) -> ref in photos && laid.isNotEmpty() } != originalMasks.filterKeys { it in photos } ||
         chosenTime != originalTime || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || cost != originalCost ||
-        private != original.hidden || planned != (original.planned == true) || keptLocked != (original.locked == true)
+        private != original.hidden || planned != (original.planned == true) || keptLocked != (original.locked == true) || reachedBy.takeIf { planned } != original.reachedBy
     // What leaving would lose: anything written, or, for a Moment being changed, any change.
     val changed = if (original == null) (withMoment && (written || cost != null)) || billWritten else momentChanged || newKind != null
     val leave = { if (changed) confirmingDiscard = true else onBack() }
@@ -509,7 +512,7 @@ fun NewMomentScreen(
                     val moment = if (withMoment) {
                         val (built, newPlace) = buildMoment(container, text, photos, utility, stills, masks, infos, time, place, cost, private, original, originalMedia, stayUid, replaced)
                         // Planned or lived, as the bar's menu says.
-                        val moment = built.copy(planned = true.takeIf { planned }, locked = true.takeIf { keptLocked })
+                        val moment = built.copy(planned = true.takeIf { planned }, locked = true.takeIf { keptLocked }, reachedBy = reachedBy.takeIf { planned })
                         // Kept as what it now is, a Moment or a check-in, named after its place when that moved.
                         if (original == null || momentChanged) {
                             val venue = when (place) {
@@ -686,6 +689,40 @@ fun NewMomentScreen(
                                 PlaceChoice.None -> stringResource(Res.string.place_none)
                             },
                         )
+                    }
+                    // A planned one's way from the place before it, for its trip's legs to be worked out by.
+                    if (planned) {
+                        SegmentedListItem(
+                            onClick = { choosingWay = true },
+                            shapes = shapes,
+                            colors = segmentColors(),
+                            supportingContent = { Text(stringResource(Res.string.reached_by_note)) },
+                            leadingContent = { Icon(AppIcons.Route, contentDescription = null) },
+                            trailingContent = {
+                                Box {
+                                    Icon(AppIcons.CaretDown, contentDescription = null)
+                                    DropdownMenu(choosingWay, onDismissRequest = { choosingWay = false }) {
+                                        listOf("drive", "walk", "bike", "train").forEach { way ->
+                                            val chosen = (reachedBy ?: "drive") == way
+                                            DropdownMenuItem(
+                                                text = { Text(cc.hyoban.moments.ui.publish.reachedByName(way)) },
+                                                modifier = if (chosen) Modifier.background(tokens.accentSoft) else Modifier,
+                                                trailingIcon = if (chosen) {
+                                                    { Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent) }
+                                                } else {
+                                                    null
+                                                },
+                                                onClick = {
+                                                    choosingWay = false
+                                                    reachedBy = way.takeUnless { it == "drive" }
+                                                },
+                                            )
+                                        }
+                                    }
+                                }
+                            },
+                            modifier = Modifier.testTag("moment_reached_by"),
+                        ) { Text(cc.hyoban.moments.ui.publish.reachedByName(reachedBy)) }
                     }
                 }
                 // 加一项: the plugins in a row, each opening its fields when chosen, a tick in place of

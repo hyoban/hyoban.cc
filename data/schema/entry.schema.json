@@ -1519,6 +1519,15 @@
       "type": "boolean",
       "const": true
     },
+    "reachedBy": {
+      "type": "string",
+      "enum": [
+        "drive",
+        "walk",
+        "bike",
+        "train"
+      ]
+    },
     "published": {
       "type": "object",
       "properties": {

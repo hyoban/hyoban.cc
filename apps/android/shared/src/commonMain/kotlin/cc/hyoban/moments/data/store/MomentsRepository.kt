@@ -1130,6 +1130,43 @@ class MomentsRepository(
         }
     }
 
+    /**
+     * Notes how the trip [id] goes from the place [from] to the place [to]: by train, air or water
+     * ([by] `train`, `plane`, `ferry`), a leg not driven that its route draws so, or by road again
+     * (null), the leg's note gone; kept on the phone until published, as any change to a trip.
+     */
+    suspend fun setStraightLeg(id: String, from: String, to: String, by: String?) = lock.withLock {
+        val local = checkNotNull(local) { "No store for the phone's changes" }
+        withContext(io) {
+            val made = changedTrips[id]?.takeIf { apiTrips.none { it.id == id } }
+            val base = changedTrips[id] ?: Entries.collectionOf(
+                apiTrips.firstOrNull { it.id == id } ?: error("Unknown trip $id"),
+                _records.value.collections[id],
+            )
+            val route = base["route"] as? kotlinx.serialization.json.JsonObject
+            val legs = (route?.get("straightLegs") as? kotlinx.serialization.json.JsonArray).orEmpty().filterNot { leg ->
+                val o = leg as? kotlinx.serialization.json.JsonObject
+                (o?.get("from") as? kotlinx.serialization.json.JsonPrimitive)?.content == from && (o.get("to") as? kotlinx.serialization.json.JsonPrimitive)?.content == to
+            } + listOfNotNull(by?.let { way ->
+                kotlinx.serialization.json.JsonObject(mapOf("from" to kotlinx.serialization.json.JsonPrimitive(from), "to" to kotlinx.serialization.json.JsonPrimitive(to), "by" to kotlinx.serialization.json.JsonPrimitive(way)))
+            })
+            val sameWayBack = route?.get("sameWayBack") ?: kotlinx.serialization.json.JsonArray(emptyList())
+            val now = cc.hyoban.moments.data.local.recordTime()
+            val edited = kotlinx.serialization.json.JsonObject(
+                base + mapOf(
+                    "route" to kotlinx.serialization.json.JsonObject(mapOf("straightLegs" to kotlinx.serialization.json.JsonArray(legs), "sameWayBack" to sameWayBack)),
+                    "updatedAt" to kotlinx.serialization.json.JsonPrimitive(now),
+                ),
+            )
+            val site = apiTrips.firstOrNull { it.id == id }?.let { Entries.collectionOf(it, _records.value.collections[id]) }
+            val same = made == null && site != null && JsonObjectsEqualApartFrom(site, edited, "updatedAt")
+            changedTrips = if (same) changedTrips - id else changedTrips + (id to edited)
+            local.writeChangedTrips(changedTrips)
+            showTrips()
+            publish()
+        }
+    }
+
     /** Takes back the phone's change to a trip; one made on the phone is gone with it. */
     suspend fun revertTrip(id: String) = lock.withLock {
         withContext(io) {

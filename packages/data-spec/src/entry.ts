@@ -285,6 +285,8 @@ export const entrySchema = z.looseObject({
   planned: z.literal(true).optional(),
   /** A planned one settled by its owner: planning by AI leaves it as it is. */
   locked: z.literal(true).optional(),
+  /** How it is reached from the place before it, as its owner says: driving unless it says. */
+  reachedBy: z.enum(['drive', 'walk', 'bike', 'train']).optional(),
   published: z.looseObject({ at: timestamp }).optional(),
   createdAt: timestamp,
   updatedAt: timestamp,

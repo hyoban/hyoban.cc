@@ -310,6 +310,8 @@ fun RecordsBubble(
     onBill: (String) -> Unit,
     onDay: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    /** A footprints' line drawn as the way it was gone, with its own tap; else as 轨迹. */
+    trackRow: (@Composable (RecordLine.Track) -> Unit)? = null,
 ) {
     val shown = lines
     val single = shown.size == 1
@@ -318,7 +320,8 @@ fun RecordsBubble(
         is RecordLine.Bill -> ({ onBill(only.txn.id) })
         is RecordLine.ChargeLine -> only.charge.bill?.let { bill -> { onBill(bill.id) } } ?: onDay
         is RecordLine.ThingLine -> openThing?.let { { it(only.thing.uid) } }
-        is RecordLine.Track, is RecordLine.Drive -> onDay
+        is RecordLine.Track -> onDay.takeIf { trackRow == null }
+        is RecordLine.Drive -> onDay
         null -> onDay
     }
     val large = isLargeFont()
@@ -377,7 +380,7 @@ fun RecordsBubble(
                         timed = timed,
                         tag = "thing_${line.thing.uid}",
                     )
-                    is RecordLine.Track -> RecordRow(
+                    is RecordLine.Track -> if (trackRow != null) trackRow(line) else RecordRow(
                         icon = { Icon(AppIcons.Footprints, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
                         title = stringResource(Res.string.timeline_track),
                         time = trackTime(line.piece),
@@ -518,6 +521,58 @@ private fun RecordRow(
             Text(end, style = AppTheme.typography.body, color = endColor, maxLines = 1)
         }
         if (timed && timeAtEnd) timeColumn()
+    }
+}
+
+/**
+ * A way between two stops as a records bubble's line: its way's [icon] and [title], [note] faint
+ * after it (推断), [time] in the time column and [end] at the edge; tapped, [menu] opens over it.
+ */
+@Composable
+fun WayRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    note: String?,
+    time: String?,
+    end: String,
+    timed: Boolean,
+    tag: String,
+    busy: Boolean = false,
+    menu: (@Composable (dismiss: () -> Unit) -> Unit)?,
+) {
+    val open = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    Box((if (menu != null) Modifier.clickable { open.value = true } else Modifier)) {
+        RecordRow(
+            icon = {
+                if (busy) cc.hyoban.moments.ui.design.Spinner(color = tokens.tx3, size = 14.dp, stroke = 2.dp, inset = 2.dp)
+                else Icon(icon, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp))
+            },
+            title = title,
+            time = time,
+            note = note,
+            end = androidx.compose.ui.text.AnnotatedString(end),
+            endColor = tokens.tx,
+            large = isLargeFont(),
+            timed = timed,
+            tag = tag,
+        )
+        menu?.let { content -> cc.hyoban.moments.ui.design.DropdownMenu(open.value, onDismissRequest = { open.value = false }) { content { open.value = false } } }
+    }
+}
+
+/** A records bubble of one line: a way between two stops with no footprints' lines to tell it in. */
+@Composable
+fun WayBubble(modifier: Modifier = Modifier, row: @Composable () -> Unit) {
+    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopStart) {
+        val shape = BubbleShape(sent = false, joinedAbove = false, joinedBelow = false)
+        Column(
+            Modifier
+                .bubbleWidth(fill = false) { column -> minOf(column * 0.86f, 420.dp) }
+                .clip(shape)
+                .border(cardBorder(), shape)
+                .padding(start = TAIL)
+                .padding(horizontal = Space.m, vertical = Space.xs),
+        ) { row() }
     }
 }
 
