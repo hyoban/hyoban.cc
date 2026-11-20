@@ -312,7 +312,13 @@ is its place's name once the place is another, and the check-in goes with the pl
   Held and dragged in the row, they change places, the first being the cover; a tap opens them in
   the viewer, the same one a Moment's media and 选照片 open (`ui/viewer/ViewerFrame.kt`), where the
   bar takes one out, keeps it off covers (不用作封面) or has a motion photo go in as its still alone
-  (只用静态画面). 打码 is on by default for a photo newly picked: as each comes in, ML Kit (through Google Play
+  (只用静态画面), each photo by itself; a photo with patches over it goes in as its still, its switch
+  shown on and not to be turned off, since its clip would show what they cover. A saved photo linked
+  to the NAS has the switch too: the site's copy can't have its clip added or taken away, so switching
+  it brings the NAS's original down in its place, as 换成 NAS 原图 does (an iPhone's clip asked of the
+  NAS beside it, 不是实况 said when there is none), live or a still as chosen, to be uploaded anew
+  with the old one's alt text and 留档, the old object staying in R2; going in live it is covered as
+  a photo picked is, and switched back the photo saved goes back as it was. 打码 is on by default for a photo newly picked: as each comes in, ML Kit (through Google Play
   services, on the phone alone) finds the faces in it, and reads its text for anything written as a
   Chinese license plate (粤B·12345; without the province only when the dot is read), and lays a patch
   over each, and saving waits for any still being looked at, so nothing goes in uncovered by being

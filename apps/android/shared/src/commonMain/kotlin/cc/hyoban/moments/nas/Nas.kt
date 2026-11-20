@@ -545,6 +545,28 @@ class Nas(
             }.getOrNull()
         } ?: return null
         if (inside) return null
+        return fetchClip(photo, probing = false)
+    }
+
+    /**
+     * [link]'s original brought down as [download] brings a picked one, for a photo saved with that
+     * link alone, which doesn't say whether it is live. With [live], an iPhone's clip is asked of
+     * the NAS too and, if it has one, kept as a picked live photo's is ([liveClip]); a motion
+     * photo's is inside its file already.
+     */
+    suspend fun downloadLinked(link: NasLink, live: Boolean): PhotoRef {
+        val photo = photo(link)
+        val ref = download(listOf(photo)) { _, _ -> }.single()
+        if (!live || cc.hyoban.moments.data.local.Photos.read(ref).motionStart != null) return ref
+        if (fetchClip(photo, probing = true) != null) remember(ref, photo.copy(live = true))
+        return ref
+    }
+
+    /**
+     * [photo]'s clip as the NAS keeps it beside the still, read into the cache the first time. [probing]
+     * when it isn't known to be live: only a video answered is taken for its clip.
+     */
+    private suspend fun fetchClip(photo: NasPhoto, probing: Boolean): File? {
         val key = "live:${kept(photo)}"
         originals.file(key)?.let { return it }
         val lock = synchronized(fetching) { fetching.getOrPut(key) { Mutex() } }
@@ -553,8 +575,12 @@ class Nas(
                 val request = stream(photo, NasProtocol.LIVE)
                 withContext(Dispatchers.IO) {
                     client.newCall(request).execute().use { response ->
-                        if (!response.isSuccessful) throw HttpException(response.code, "live clip answered ${response.code}")
+                        if (!response.isSuccessful) {
+                            if (probing) return@withContext null
+                            throw HttpException(response.code, "live clip answered ${response.code}")
+                        }
                         val body = response.body ?: throw IOException("live clip without a body")
+                        if (probing && body.contentType()?.type != "video") return@withContext null
                         originals.put(key) { out -> body.byteStream().use { it.copyTo(out, 1 shl 16) } }
                     }
                 }

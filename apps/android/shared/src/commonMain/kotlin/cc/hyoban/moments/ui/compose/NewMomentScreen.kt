@@ -102,6 +102,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -185,6 +186,7 @@ import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
+import cc.hyoban.moments.ui.theme.Opacity
 import cc.hyoban.moments.ui.settings.PageCaption
 import cc.hyoban.moments.ui.settings.PageRows
 import cc.hyoban.moments.ui.theme.fill
@@ -270,6 +272,9 @@ fun NewMomentScreen(
     // text it keeps; and the one being fetched.
     var replaced by remember { mutableStateOf(emptyMap<PhotoRef, MomentMedia>()) }
     var replacing by remember { mutableStateOf<PhotoRef?>(null) }
+    // A saved photo linked to the NAS put in again as its original, live or a still as chosen
+    // there, by the photo it stands in for, to go back to that one when chosen back.
+    var swappedLive by remember { mutableStateOf(emptyMap<PhotoRef, PhotoRef>()) }
     // Where the patches are drawn from: a photo saved with them, the copy as it was picked.
     val unmaskedOf: (PhotoRef) -> PhotoRef = { ref -> originalMedia[ref]?.local?.unmasked?.toPhotoRef() ?: ref }
     // The patch chosen in the viewer, for the bar to change its style, and the style new ones take,
@@ -936,9 +941,71 @@ fun NewMomentScreen(
                         }
                         return@MomentMediaViewer
                     }
-                    // A photo pixelated goes in as a still: its clip would show what is covered.
-                    if (ref in motionPhotos && ref !in masks) BarToggle(ref in stills, AppIcons.LiveOff, stringResource(Res.string.action_photo_still), "viewer_still") {
-                        stills = if (ref in stills) stills - ref else stills + ref
+                    // A photo pixelated goes in as a still: its clip would show what is covered, so
+                    // its switch stays on, and says why. One put in for a saved photo goes back to
+                    // that one, as it was, when switched back.
+                    val back = swappedLive[ref]
+                    if (ref in motionPhotos || back != null) {
+                        val masked = ref in masks
+                        BarToggle(
+                            on = masked || ref in stills,
+                            icon = AppIcons.LiveOff,
+                            label = stringResource(if (masked && back == null) Res.string.action_photo_still_masked else Res.string.action_photo_still),
+                            tag = "viewer_still",
+                            enabled = !masked || back != null,
+                        ) {
+                            if (back != null) {
+                                photos = photos.map { if (it == ref) back else it }
+                                if (ref in utility) utility = utility - ref + back
+                                replaced = replaced - ref
+                                swappedLive = swappedLive - ref
+                                stills = stills - ref
+                                masks = masks - ref
+                            } else stills = if (ref in stills) stills - ref else stills + ref
+                        }
+                    }
+                    // A saved photo linked to the NAS: its clip can't be added to or taken from the
+                    // site's copy, so the NAS's original goes in for it, as 换成 NAS 原图's does, live
+                    // or a still as chosen, and is uploaded anew.
+                    val linked = originalMedia[ref]?.takeIf { it.type != MediaType.VIDEO && it.nas != null && container.nas.configured }
+                    if (linked != null) {
+                        val masked = ref in masks
+                        val live = linked.type == MediaType.LIVE_PHOTO
+                        BarToggle(
+                            on = masked || !live,
+                            icon = AppIcons.LiveOff,
+                            label = stringResource(if (masked) Res.string.action_photo_still_masked else Res.string.action_photo_still),
+                            tag = "viewer_still",
+                            enabled = !masked && replacing == null,
+                        ) {
+                            replacing = ref
+                            scope.launch {
+                                try {
+                                    val fresh = container.nas.downloadLinked(linked.nas!!, live = !live)
+                                    val info = Photos.read(fresh).let { info -> container.nas.liveClip(fresh)?.let { info.copy(motionClip = it) } ?: info }
+                                    if (!live && !info.motion) {
+                                        showMessage(textOf(Res.string.message_nas_not_live))
+                                        return@launch
+                                    }
+                                    infos[fresh] = info
+                                    askedMotion = askedMotion + fresh
+                                    // Going in live it is covered as it comes in, as a photo picked is; a
+                                    // still of a live photo public unpatched isn't.
+                                    if (live) {
+                                        stills = stills + fresh
+                                        scanned = scanned + fresh
+                                    }
+                                    photos = photos.map { if (it == ref) fresh else it }
+                                    if (ref in utility) utility = utility - ref + fresh
+                                    replaced = replaced + (fresh to linked)
+                                    swappedLive = swappedLive + (fresh to ref)
+                                } catch (e: Exception) {
+                                    if (e is kotlinx.coroutines.CancellationException) throw e
+                                    cc.hyoban.moments.logWarning("Moments", "nas: original not put in", e)
+                                    showMessage(textOf(Res.string.message_replace_failed))
+                                } finally { replacing = null }
+                            }
+                        }
                     }
                     // On a photo new here, or one saved here and not yet published: a published one is the site's as it is.
                     val maskable = originalMedia[ref]?.let { it.published == null && it.local?.copied == true } ?: true
@@ -980,7 +1047,7 @@ fun NewMomentScreen(
                                 replacing = ref
                                 scope.launch {
                                     try {
-                                        val fresh = container.nas.download(listOf(container.nas.photo(link))) { _, _ -> }.single()
+                                        val fresh = container.nas.downloadLinked(link, live = old.type == MediaType.LIVE_PHOTO)
                                         // It goes in as the old one went: a live photo with its clip, as it was
                                         // public unpatched, so neither asked about nor covered; a still as a
                                         // still, covered as it comes in, as the old one may have been.
@@ -1144,14 +1211,16 @@ private fun StickerChoice(sticker: Sticker, on: Boolean, onChoose: () -> Unit) {
 
 /** One of the viewer's switches for the photo shown: on, it stands filled. */
 @Composable
-private fun BarToggle(on: Boolean, icon: ImageVector, label: String, tag: String, onToggle: () -> Unit) {
+private fun BarToggle(on: Boolean, icon: ImageVector, label: String, tag: String, enabled: Boolean = true, onToggle: () -> Unit) {
     Tooltip(label) {
         IconButton(
             onClick = onToggle,
+            enabled = enabled,
             modifier = Modifier.semantics { toggleableState = ToggleableState(on) }.testTag(tag),
         ) {
             Box(
-                Modifier.size(36.dp).background(if (on) MediaOverlay.content else Color.Transparent, CircleShape),
+                Modifier.size(36.dp).alpha(if (enabled) 1f else Opacity.disabled)
+                    .background(if (on) MediaOverlay.content else Color.Transparent, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(icon, contentDescription = label, tint = if (on) Color.Black else MediaOverlay.content)

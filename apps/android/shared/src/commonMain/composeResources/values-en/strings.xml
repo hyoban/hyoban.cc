@@ -302,6 +302,7 @@
     <string name="action_remove_video">Remove video</string>
     <string name="action_photo_utility">Don't use as a cover</string>
     <string name="action_photo_still">Use the still only</string>
+    <string name="action_photo_still_masked">A covered photo uses the still only</string>
     <string name="action_photo_mask">Cover faces and plates</string>
     <string name="message_nothing_to_mask">No faces or plates found. Tap the photo to add a patch</string>
     <string name="message_masking_unavailable">Faces and plates can't be found now. Tap the photo to add a patch</string>
@@ -1567,6 +1568,7 @@
     <string name="album_save_nas_original">Save the NAS original</string>
     <string name="action_replace_nas">Use the NAS original</string>
     <string name="message_replace_failed">Couldn’t get the original from the NAS</string>
+    <string name="message_nas_not_live">The original on the NAS isn’t a live photo</string>
     <string name="album_no_nas">No NAS connected</string>
     <string name="album_no_nas_note">Fill in the UGREEN NAS's ID, user and password in Sync &amp; sources.</string>
     <string name="album_save_pictures">Save to Pictures</string>

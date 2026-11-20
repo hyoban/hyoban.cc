@@ -278,6 +278,7 @@
     <string name="action_remove_video">移除视频</string>
     <string name="action_photo_utility">不用作封面</string>
     <string name="action_photo_still">只用静态画面</string>
+    <string name="action_photo_still_masked">打码的照片只用静态画面</string>
     <string name="action_photo_mask">打码</string>
     <string name="message_nothing_to_mask">没找到人脸或车牌，点照片加一块</string>
     <string name="message_masking_unavailable">现在认不了人脸和车牌，点照片加一块</string>
@@ -1566,6 +1567,7 @@
     <string name="album_save_nas_original">存 NAS 原图</string>
     <string name="action_replace_nas">换成 NAS 原图</string>
     <string name="message_replace_failed">没能从 NAS 取到原图</string>
+    <string name="message_nas_not_live">NAS 上的原图不是实况</string>
     <string name="album_no_nas">还没有接上 NAS</string>
     <string name="album_no_nas_note">在 同步与来源 里填好绿联 NAS 的 ID、用户名和密码。</string>
     <string name="album_save_pictures">存到「图片」</string>
