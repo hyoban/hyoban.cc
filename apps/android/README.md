@@ -344,7 +344,8 @@ is its place's name once the place is another, and the check-in goes with the pl
 - **Place.** Where the first photo was taken, else none until one is chosen: the page itself
   never locates the phone. Once another is chosen, or a saved Moment opens at its saved place, the
   place picker's 用照片的地点 (用停留的地点 at a stay) goes back to it; the photos a Moment was saved
-  with aren't read for a place again, so only photos added to it give one. A photo's place is the known place within 2 km, else a new place
+  with have lost where they were taken, so of those only one linked to the NAS gives a place (and its
+  time), read from the NAS's original on the device, as one put in by 换成 NAS 原图 does. A photo's place is the known place within 2 km, else a new place
   named after what is nearest: in China, with the owner's AMap or Tencent key (高德地图 Key,
   腾讯地图 Key, under 同步与来源; with both, the one chosen under 国内地点来源 first and the other when it
   can't answer), the shops, sights and buildings that service knows, asked from the phone
@@ -871,7 +872,7 @@ the site optimized is taken to be less and one kept as uploaded not. The origina
 does and goes in where the old one was, as the old one went: a live photo with its clip, neither asked
 about nor covered, as it was public so; a still as a still, its faces and plates covered as it comes in;
 uploaded as a new photo (a new uid, so a new key) when the change is published, keeping the old
-one's alt text and 留档; where it was taken moves the Moment nowhere. The old object stays in R2,
+one's alt text and 留档; where it was taken moves the Moment nowhere, only offered as 用照片的地点. The old object stays in R2,
 as a photo taken out of a Moment does.
 可换原图, after 已发布 in 相册's title once the NAS is set up, looks at every published photo linked to
 the NAS that way, six at a time and saying how far it is (the originals' starts kept on the device, so

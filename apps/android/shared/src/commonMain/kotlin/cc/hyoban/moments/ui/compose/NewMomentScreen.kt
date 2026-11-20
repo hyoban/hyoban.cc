@@ -367,6 +367,21 @@ fun NewMomentScreen(
             saveError = refused.map { it.second }.distinct().joinToString("\n") { textOf(refusalText(it)) }
         }
     }
+    // A saved photo linked to the NAS goes by the NAS original's EXIF, its place included, which the
+    // published copy and the phone's have lost; read once and kept, and only ever on the device.
+    val nasDetails = remember { mutableStateMapOf<PhotoRef, cc.hyoban.moments.ui.viewer.PhotoDetails>() }
+    LaunchedEffect(originalMedia) {
+        if (!container.nas.configured) return@LaunchedEffect
+        originalMedia.forEach { (ref, media) ->
+            if (media.nas == null || media.type == MediaType.VIDEO || ref in nasDetails) return@forEach
+            try {
+                nasDetails[ref] = container.mediaDetails.read(media, original?.occurredAt)
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                cc.hyoban.moments.logWarning("Moments", "nas: details not read", e)
+            }
+        }
+    }
     // New photos, read, each has its faces and plates covered.
     val unscanned = if (!Masking.available) emptyList() else
         photos.filter { it !in originalMedia && it !in scanned && infos[it]?.let { info -> !info.video } == true }
@@ -381,7 +396,7 @@ fun NewMomentScreen(
     // When: as chosen or saved, else as worked out from the photos (those saved with it too), the
     // stay or now; a saved one whose photos say nothing keeps its saved time.
     val inferred = inferredTime(
-        taken = photos.mapNotNull { infos[it]?.takenAt ?: originalMedia[it]?.takenAt?.let(::parseStamp) },
+        taken = photos.mapNotNull { infos[it]?.takenAt ?: nasDetails[it]?.takenAt ?: originalMedia[it]?.takenAt?.let(::parseStamp) },
         saved = photos.mapNotNull { infos[it]?.savedAt },
         stay = stayTime,
         now = openedAt,
@@ -396,9 +411,10 @@ fun NewMomentScreen(
     }
 
     // Where: just where the first photo that says was taken, as a new place named after what
-    // is around it, else none until one is chosen; the map finds the phone when asked.
-    // A photo put in for a published one (换成 NAS 原图) is the same photo: it moves the Moment nowhere.
-    val photoFix = photos.filter { it !in replaced }.firstNotNullOfOrNull { infos[it]?.fix }
+    // is around it, else none until one is chosen; the map finds the phone when asked. A saved
+    // photo linked to the NAS says where by the NAS's original, as one put in from it (换成 NAS 原图)
+    // does by its own; a saved Moment keeps its place all the same, only offering that one.
+    val photoFix = photos.firstNotNullOfOrNull { infos[it]?.fix ?: nasDetails[it]?.fix }
     val fix = photoFix ?: stayFix
     LaunchedEffect(fix) {
         if (fix != null && geocoded?.first != fix) geocoded = fix to container.placeSearch.around(fix)
