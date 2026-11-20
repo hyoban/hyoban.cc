@@ -512,6 +512,8 @@ fun SharedAtlasMap(
     recede: Boolean = false,
     /** 地图's photos, drawn over everything else on the map; null while they are off. */
     photos: cc.hyoban.moments.ui.picker.Places? = null,
+    /** Whether it is 地图's own atlas, kept by the device across tabs; another (选照片's) lives and goes with its page. */
+    retained: Boolean = true,
 ) {
     val reduced = LocalReducedMotion.current
     val dark = LocalDarkTheme.current
@@ -1048,7 +1050,7 @@ fun SharedAtlasMap(
         }
     }
     val baseStyle = mapStyle(dark)
-    val store = device.atlasMapStateStore
+    val store = device.atlasMapStateStore?.takeIf { retained }
     val state = if (store == null) {
         rememberMapState(
             baseStyle = baseStyle,

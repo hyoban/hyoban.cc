@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -163,15 +165,19 @@ class PhotoLayer internal constructor(val places: Places, val choice: PhotoChoic
 @Composable
 fun rememberPhotoLayer(container: AppContainer, onWrite: () -> Unit): PhotoLayer {
     val choice = rememberPhotoChoice(Int.MAX_VALUE, alwaysChoosing = false, onWrite = { refs -> container.offerPhotos(refs); onWrite() })
-    val device = choice.device
-    val own = device.places(choice.deletion)
-    val nas = rememberNas(container, choice.deletion)
+    val places = rememberPhotoPlaces(container, choice, rememberNas(container, choice.deletion))
+    val videos = choice.device.rememberVideos()
+    return remember(places, videos) { PhotoLayer(places, choice, videos) }
+}
+
+/** The places of the device's sources that know them and of [nas], as one, for 地图's photos and 选照片's map. */
+@Composable
+internal fun rememberPhotoPlaces(container: AppContainer, choice: PhotoChoice, nas: NasSource): MergedPlaces {
+    val own = choice.device.places(choice.deletion)
     val all = own + listOfNotNull(nas.places.takeIf { container.nas.configured })
-    val places = remember(all) {
+    return remember(all) {
         MergedPlaces(all) { container.footprints.takeIf { container.settings.isOn(cc.hyoban.moments.data.spec.Module.FOOTPRINTS) } }
     }
-    val videos = device.rememberVideos()
-    return remember(places, videos) { PhotoLayer(places, choice, videos) }
 }
 
 /**
@@ -190,48 +196,12 @@ fun BoxScope.PhotoLayerSheet(container: AppContainer, layer: PhotoLayer, onMomen
     if (opened != null) key(opened.first()) {
         val shown = places.picks()
         CompositionLocalProvider(LocalPickerVideos provides layer.videos) {
-            BoxWithConstraints(Modifier.fillMaxSize()) {
-                val sheet = rememberStandardBottomSheetState(initialValue = SheetValue.PartiallyExpanded, skipHiddenState = false)
-                LaunchedEffect(sheet) {
-                    snapshotFlow { sheet.currentValue }.drop(1).collect { if (it == SheetValue.Hidden) places.open(null) }
+            HeapSheet(container, places, opened, shown, choice) {
+                if (choice.choosing) IconButton(onClick = choice::stop, modifier = Modifier.testTag("album_select_done")) {
+                    Icon(AppIcons.Close, contentDescription = stringResource(Res.string.album_select_done))
+                } else IconButton(onClick = choice::start, modifier = Modifier.testTag("album_select")) {
+                    Icon(AppIcons.Check, contentDescription = stringResource(Res.string.album_select))
                 }
-                BottomSheetScaffold(
-                    scaffoldState = rememberBottomSheetScaffoldState(sheet),
-                    modifier = Modifier.padding(top = LocalTopClearance.current).testTag("photo_heap_sheet"),
-                    sheetPeekHeight = maxHeight * SHEET_SHARE,
-                    sheetContainerColor = AppColors.sheet,
-                    containerColor = Color.Transparent,
-                    sheetContent = {
-                        CompositionLocalProvider(LocalTopClearance provides 0.dp) {
-                            Column(Modifier.fillMaxSize()) {
-                                Row(Modifier.fillMaxWidth().padding(start = Space.gutter, end = Space.s), verticalAlignment = Alignment.CenterVertically) {
-                                    Text(stringResource(Res.string.map_photos_here), style = AppTheme.typography.title, modifier = Modifier.padding(end = Space.s))
-                                    Text(
-                                        listOfNotNull(
-                                            stringResource(Res.string.camera_photo_count, opened.size),
-                                            choice.chosen.size.takeIf { it > 0 }?.let { stringResource(Res.string.picker_chosen_count, it) },
-                                        ).joinToString(" · "),
-                                        style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.weight(1f),
-                                    )
-                                    if (choice.choosing) IconButton(onClick = choice::stop, modifier = Modifier.testTag("album_select_done")) {
-                                        Icon(AppIcons.Close, contentDescription = stringResource(Res.string.album_select_done))
-                                    } else IconButton(onClick = choice::start, modifier = Modifier.testTag("album_select")) {
-                                        Icon(AppIcons.Check, contentDescription = stringResource(Res.string.album_select))
-                                    }
-                                }
-                                Box(Modifier.weight(1f)) {
-                                    Grid(
-                                        shown, choice.order, choice.full, enabled = choice.idle, sideways = false,
-                                        density = container.settings.pickerDensity, onDensity = container.settings::changePickerDensity,
-                                        limited = null, empty = false, onToggle = choice::toggle, onNearEnd = places::more,
-                                        circles = choice.choosing, onHold = choice::hold, onHoldOver = choice::holdOver,
-                                    ) { choice.viewing = it.key }
-                                    if (places.reading) Spinner(Modifier.align(Alignment.TopCenter).padding(top = Space.xl))
-                                }
-                            }
-                        }
-                    },
-                ) { }
             }
         }
         Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
@@ -240,6 +210,60 @@ fun BoxScope.PhotoLayerSheet(container: AppContainer, layer: PhotoLayer, onMomen
         }
         choice.ViewerOver(container, shown, layer.videos, overTabs = true, onMoment = onMoment)
         shown.map { it.source }.distinct().forEach { it.Dialogs() }
+    }
+}
+
+/**
+ * The opened heap's photos ([shown] of [opened]), risen from the foot over the map as 相册's grid,
+ * the map staying above; dragged down they are put away. [actions] stand at the end of its head.
+ */
+@Composable
+internal fun HeapSheet(
+    container: AppContainer,
+    places: Places,
+    opened: List<Spot>,
+    shown: List<Pick>,
+    choice: PhotoChoice,
+    actions: @Composable () -> Unit = {},
+) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val sheet = rememberStandardBottomSheetState(initialValue = SheetValue.PartiallyExpanded, skipHiddenState = false)
+        LaunchedEffect(sheet) {
+            snapshotFlow { sheet.currentValue }.drop(1).collect { if (it == SheetValue.Hidden) places.open(null) }
+        }
+        BottomSheetScaffold(
+            scaffoldState = rememberBottomSheetScaffoldState(sheet),
+            modifier = Modifier.padding(top = LocalTopClearance.current).testTag("photo_heap_sheet"),
+            sheetPeekHeight = maxHeight * SHEET_SHARE,
+            sheetContainerColor = AppColors.sheet,
+            containerColor = Color.Transparent,
+            sheetContent = {
+                CompositionLocalProvider(LocalTopClearance provides 0.dp) {
+                    Column(Modifier.fillMaxSize()) {
+                        Row(Modifier.fillMaxWidth().padding(start = Space.gutter, end = Space.s), verticalAlignment = Alignment.CenterVertically) {
+                            Text(stringResource(Res.string.map_photos_here), style = AppTheme.typography.title, modifier = Modifier.padding(end = Space.s))
+                            Text(
+                                listOfNotNull(
+                                    stringResource(Res.string.camera_photo_count, opened.size),
+                                    choice.chosen.size.takeIf { it > 0 }?.let { stringResource(Res.string.picker_chosen_count, it) },
+                                ).joinToString(" · "),
+                                style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.weight(1f).heightIn(min = 48.dp).wrapContentHeight(),
+                            )
+                            actions()
+                        }
+                        Box(Modifier.weight(1f)) {
+                            Grid(
+                                shown, choice.order, choice.full, enabled = choice.idle, sideways = false,
+                                density = container.settings.pickerDensity, onDensity = container.settings::changePickerDensity,
+                                limited = null, empty = false, onToggle = choice::toggle, onNearEnd = places::more,
+                                circles = choice.choosing, onHold = choice::hold, onHoldOver = choice::holdOver,
+                            ) { choice.viewing = it.key }
+                            if (places.reading) Spinner(Modifier.align(Alignment.TopCenter).padding(top = Space.xl))
+                        }
+                    }
+                }
+            },
+        ) { }
     }
 }
 

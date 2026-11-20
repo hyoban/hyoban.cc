@@ -770,7 +770,7 @@ private val TRIPS_PEEK = 68.dp
 private val FLOATING_PANEL = 320.dp
 
 /** How far the map's controls stand from the screen's edges. */
-private val MAP_EDGE = 16.dp
+internal val MAP_EDGE = 16.dp
 
 /** How far a 40 button's 48 target reaches past it on each side. */
 private val FLOATING_INSET = 4.dp
@@ -1141,7 +1141,7 @@ private fun FloatingPill(content: @Composable () -> Unit) {
  * fading out.
  */
 @Composable
-private fun Legend(colors: Map<Int, Color>, trips: Boolean, picked: Int?, routesShown: Boolean, onRoutes: () -> Unit, onPick: (Int?) -> Unit) {
+internal fun Legend(colors: Map<Int, Color>, trips: Boolean, picked: Int?, routesShown: Boolean, onRoutes: () -> Unit, onPick: (Int?) -> Unit) {
     FloatingPill {
         val scroll = rememberScrollState()
         val surface = SurfaceLevel.Floating.fill()

@@ -933,6 +933,15 @@ month, and reaches only what has been read, so a NAS album reads on at the end. 
 bar (跳到日期) opens on the month at the top of the grid, the days with photos dotted; a day picked
 takes the grid to it, or to the nearest day before it, a NAS album reading on page by page until it
 is reached, unless the grid is scrolled by hand meanwhile.
+
+**地图**, the bar's map button (选照片's alone; 相册 has 地图's photos), turns the page into the atlas
+(`ui/map/PhotoAtlas.kt`): the places and routes as 地图 draws them, with the legend's years, and over
+them every source's photos that know where they were taken, heaped as 地图's photos are (相册, 地图's
+photos), a year picked narrowing both. A heap tapped rises from the foot as the grid does, its photos'
+circles out and what is chosen there the same choice as the grid's, 加入 at the foot; dragged down, a tap
+on the map or back puts it away, and the button, now 照片格子, goes back to the grid. Its places only show
+where things were: tapped, nothing opens. Its map is its own and goes with the page, leaving 地图's kept
+atlas as it was.
 A tap opens one in the app's one viewer, on black, swiped through and zoomed as a Moment's are, chosen and
 added from there; a photo of the gallery's, the camera's or the NAS's is read from its original in tiles as it
 zooms, so it stays sharp. Under it, upright, the photos before and after are small in a row, the one shown

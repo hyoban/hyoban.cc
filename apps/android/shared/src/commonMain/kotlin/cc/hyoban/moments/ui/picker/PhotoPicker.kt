@@ -42,6 +42,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -149,6 +151,14 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
     val jump = remember { DateJump() }
     var picking by remember { mutableStateOf(false) }
     LaunchedEffect(listing) { jump.target = null }
+    // 选照片's map: the atlas with the photos that know where they were taken heaped over it, every
+    // source's at once; a heap opened rises as the grid does, chosen into the same choice. Kept on
+    // while the page is.
+    var onMap by rememberSaveable { mutableStateOf(false) }
+    val mapPlaces = if (album == null && onMap) rememberPhotoPlaces(container, choice, nas) else null
+    val heap = mapPlaces?.opened
+    val heapShown = if (mapPlaces != null && heap != null) key(heap.first()) { mapPlaces.picks() } else emptyList()
+    BackHandler(enabled = heap != null) { mapPlaces?.open(null) }
 
     val add: () -> Unit = { choice.run(choice.chosen.toList(), Res.string.picker_adding, onAdded) }
     val chosen = choice.chosen
@@ -158,7 +168,7 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
     // Filtering, the count is always said, as its button stands beside it.
     val count = listing.count(shown) ?: shown.size.takeIf { filtered.active }
     val subtitle = listOfNotNull(
-        count?.let { stringResource(Res.string.camera_photo_count, it) },
+        count?.takeIf { !onMap }?.let { stringResource(Res.string.camera_photo_count, it) },
         chosen.size.takeIf { it > 0 }?.let { stringResource(Res.string.picker_chosen_count, it) },
         if (album != null && chosen.size > MAX_PHOTOS) stringResource(Res.string.album_nine) else null,
     ).joinToString(" · ").ifEmpty { null }
@@ -201,11 +211,14 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
     }
 
     val actions: @Composable RowScope.() -> Unit = {
-        if (shown.isNotEmpty()) IconButton(onClick = { picking = true }, modifier = Modifier.testTag("picker_jump")) {
+        if (album == null) IconButton(onClick = { onMap = !onMap }, modifier = Modifier.testTag(if (onMap) "picker_grid" else "picker_show_map")) {
+            Icon(if (onMap) AppIcons.Photos else AppIcons.Map, contentDescription = stringResource(if (onMap) Res.string.picker_show_grid else Res.string.picker_show_map))
+        }
+        if (shown.isNotEmpty() && !onMap) IconButton(onClick = { picking = true }, modifier = Modifier.testTag("picker_jump")) {
             Icon(AppIcons.Calendar, contentDescription = stringResource(Res.string.picker_jump_to_date))
         }
         if (album == null) {
-            if (listedChosen.isNotEmpty() && idle) IconButton(onClick = { listed.delete(listedChosen, fromViewer = false) }, modifier = Modifier.testTag(listed.deleteTag)) {
+            if (listedChosen.isNotEmpty() && idle && !onMap) IconButton(onClick = { listed.delete(listedChosen, fromViewer = false) }, modifier = Modifier.testTag(listed.deleteTag)) {
                 Icon(AppIcons.Trash, contentDescription = stringResource(Res.string.camera_delete_chosen, listedChosen.size))
             }
             if (sideways && canAdd) addButton("picker_add") {}
@@ -216,7 +229,10 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
         }
     }
     val content: @Composable BoxScope.() -> Unit = {
-        listing.Body(shown) { limited, onNearEnd ->
+        if (mapPlaces != null) {
+            cc.hyoban.moments.ui.map.PhotoAtlas(container, mapPlaces)
+            if (heap != null) key(heap.first()) { HeapSheet(container, mapPlaces, heap, heapShown, choice) }
+        } else listing.Body(shown) { limited, onNearEnd ->
             // The conditions chosen head the grid, under the gallery's limited access where it is.
             val head: (@Composable () -> Unit)? = if (limited == null && !filtered.active) null else ({
                 Column {
@@ -244,6 +260,7 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
     val filterButton: @Composable () -> Unit = { FilterButton(filtered.active) { filtering = true } }
     CompositionLocalProvider(LocalPickerVideos provides videos) {
         if (album != null) TabPage(listing.title(), Album, subtitle = subtitle, actions = actions, titleMenu = menu, subtitleAction = filterButton, content = content)
+        else if (onMap) SubPage(stringResource(Res.string.picker_show_map), onClose, subtitle = subtitle, close = true, actions = actions, content = content)
         else SubPage(listing.title(), onClose, subtitle = subtitle, close = true, titleMenu = menu, actions = actions, subtitleAction = filterButton, content = content)
     }
 
@@ -255,7 +272,7 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
         onDismiss = { filtering = false },
     )
 
-    choice.ViewerOver(container, shown, videos, overTabs = album != null, onMoment = album?.onMoment, onEdit = album?.onEdit) {
+    choice.ViewerOver(container, if (mapPlaces != null) heapShown else shown, videos, overTabs = album != null, onMoment = album?.onMoment, onEdit = album?.onEdit) {
         if (canAdd) addButton("picker_viewer_add") { choice.viewing = null }
     }
 
@@ -273,5 +290,5 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
         }
     }
 
-    sources.forEach { it.Dialogs() }
+    (sources + heapShown.map { it.source }).distinct().forEach { it.Dialogs() }
 }
