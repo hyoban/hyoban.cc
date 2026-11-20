@@ -122,6 +122,7 @@ class PlanChats(private val file: File, private val scope: CoroutineScope) {
         private fun answerJson(turn: PlanTurn.Answered, growing: Boolean) = buildJsonObject {
             put("text", turn.text)
             put("stopped", turn.stopped)
+            put("failed", turn.failed)
             put("retired", turn.retired)
             // An answer still coming when last written: the app went before it ended.
             put("done", !growing)
@@ -146,7 +147,8 @@ class PlanChats(private val file: File, private val scope: CoroutineScope) {
         private fun answerOf(saved: JsonObject) = PlanTurn.Answered().apply {
             text = text(saved["text"]).orEmpty()
             retired = bool(saved["retired"])
-            stopped = bool(saved["stopped"]) || saved["done"]?.let { !bool(it) } == true
+            failed = bool(saved["failed"])
+            stopped = !failed && (bool(saved["stopped"]) || saved["done"]?.let { !bool(it) } == true)
             thoughtFor = (saved["thoughtFor"] as? JsonPrimitive)?.intOrNull
             (saved["steps"] as? JsonArray)?.forEach { element ->
                 val step = element as? JsonObject ?: return@forEach
@@ -154,7 +156,7 @@ class PlanChats(private val file: File, private val scope: CoroutineScope) {
                 (step["look"] as? JsonObject)?.let { lookupOf(it) }?.let { steps += PlanStep.Look(it) }
             }
             // Stopped before it said how long it thought: it thought until then.
-            if (stopped && thoughtFor == null && worked) thoughtFor = 0
+            if ((stopped || failed) && thoughtFor == null && worked) thoughtFor = 0
             // A change that came to nothing once its place was found is not kept.
             (saved["suggestions"] as? JsonArray)?.forEach { element ->
                 (element as? JsonObject)?.let { suggestionOf(it) }?.takeUnless { it.added == null && changesNothing(it) }?.let { suggestions += it }

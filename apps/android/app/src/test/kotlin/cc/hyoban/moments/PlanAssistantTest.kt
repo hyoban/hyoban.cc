@@ -162,6 +162,59 @@ class PlanAssistantTest {
         assertEquals(listOf("assistant", "tool", "tool"), read.kept.map { (it["role"] as JsonPrimitive).content })
     }
 
+    /** An assistant whose model answers [reply] to the request with each index, the requests' bodies kept in [sent]. */
+    private fun scripted(sent: MutableList<String>, reply: (Int) -> String) = PlanAssistant(
+        "https://example.test/v1",
+        "key",
+        "model",
+        okhttp3.OkHttpClient.Builder().addInterceptor { chain ->
+            val buffer = okio.Buffer()
+            chain.request().body!!.writeTo(buffer)
+            sent += buffer.readUtf8()
+            okhttp3.Response.Builder().request(chain.request()).protocol(okhttp3.Protocol.HTTP_1_1).code(200).message("OK")
+                .body(reply(sent.size - 1).toResponseBody("application/json".toMediaType())).build()
+        }.build(),
+    )
+
+    private val stillLooking = JsonPrimitive("""{"name":"充电站","lat":35.66,"lng":139.75}""").let { place ->
+        """{"choices":[{"message":{"role":"assistant","content":"","tool_calls":[{"id":"f","type":"function","function":{"name":"find_place","arguments":$place}}]}}]}"""
+    }
+
+    private val counting = object : PlanLookups {
+        var places = 0
+        override suspend fun places(name: String, near: Fix): List<FoundPlace> = emptyList<FoundPlace>().also { places++ }
+        override suspend fun travel(from: Fix, to: Fix, by: Routers.By): Routers.Travel? = null
+    }
+
+    @Test
+    fun answersOnceItMayLookNoMore() = kotlinx.coroutines.runBlocking {
+        val sent = mutableListOf<String>()
+        val items = JsonPrimitive("""{"items":[{"date":"2026-12-25","time":"10:00","text":"充电","place":{"name":"充电站","lat":35.66,"lng":139.75}}]}""")
+        // It looks things up past the last round, then answers once told it may not.
+        val answer = scripted(sent) { index ->
+            if (index <= PlanAssistant.MAX_LOOKUP_ROUNDS) stillLooking
+            else """{"choices":[{"message":{"role":"assistant","content":"排好了。","tool_calls":[{"id":"s","type":"function","function":{"name":"suggest_plan","arguments":$items}}]}}]}"""
+        }.ask("规划下充电", PlanContext("东京", "2026-12-24", "2026-12-29"), counting)
+        assertEquals("排好了。", answer.text)
+        assertEquals(1, answer.items.size)
+        // Each round's lookups done, but the one asked for when no more may be: that one is told so.
+        assertEquals(PlanAssistant.MAX_LOOKUP_ROUNDS, counting.places)
+        assertEquals(PlanAssistant.MAX_LOOKUP_ROUNDS + 2, sent.size)
+        assertEquals(true, sent.last().contains("No more lookups"))
+        assertEquals(false, sent.last().contains("\"find_place\",\"description"))
+    }
+
+    @Test
+    fun failsWhenItNeverAnswers() = kotlinx.coroutines.runBlocking {
+        val sent = mutableListOf<String>()
+        val failed = runCatching {
+            scripted(sent) { stillLooking }.ask("规划下充电", PlanContext("东京", "2026-12-24", "2026-12-29"), counting)
+        }.exceptionOrNull()
+        assertEquals(true, failed is cc.hyoban.moments.data.ai.PlanAnswerException)
+        // Told once it may look no more, and asked once more after that, then given up on.
+        assertEquals(PlanAssistant.MAX_LOOKUP_ROUNDS + 2, sent.size)
+    }
+
     @Test
     fun looksUpThenAnswers() = kotlinx.coroutines.runBlocking {
         val place = JsonPrimitive("""{"name":"东京塔","lat":35.66,"lng":139.75}""")

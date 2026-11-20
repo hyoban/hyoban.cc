@@ -23,6 +23,7 @@ import cc.hyoban.moments.ui.trips.PlanTarget
 import cc.hyoban.moments.ui.trips.matchPlan
 import cc.hyoban.moments.ui.trips.outcomeOf
 import cc.hyoban.moments.ui.trips.dayWays
+import cc.hyoban.moments.ui.trips.dayStarts
 import cc.hyoban.moments.ui.trips.totalOf
 import cc.hyoban.moments.ui.trips.lookedUpWay
 import cc.hyoban.moments.ui.trips.isAhead
@@ -244,5 +245,20 @@ class PlanChatsTest {
             .also { it.spot = PlanSpot.At(PlaceChoice.Known(place), place) }
         assertEquals(true, changesNothing(change("station")))
         assertEquals(false, changesNothing(change("home")))
+    }
+
+    @Test
+    fun aDaySetsOutFromWhereTheDayBeforeEnded() {
+        val town = Fix(35.0, 139.0)
+        val inn = Fix(35.5, 139.2)
+        val lake = Fix(36.0, 139.4)
+        val days = listOf(
+            "2026-12-24" to listOf(DayEntry.Kept("08:00", "出发", null, town), DayEntry.Kept("19:00", "住下", null, inn)),
+            "2026-12-25" to emptyList(),
+            "2026-12-26" to listOf(DayEntry.Kept("10:00", "湖边", null, lake)),
+        )
+        // The first day from nowhere, an empty day from the last night's place, and the next from there too.
+        assertEquals(listOf(null, inn, inn), dayStarts(days))
+        assertEquals(listOf(Triple(inn, lake, Routers.By.DRIVE)), dayWays(days[2].second, dayStarts(days)[2]))
     }
 }

@@ -234,7 +234,7 @@ class PlanAssistant(
      * Asks [text] of the model, with [context], and gives what it answered, telling [onProgress]
      * on the caller's thread of its thoughts, words, lookups and suggestions as they come. Before
      * it answers the model may look places and ways up through [lookups], a round each, at most
-     * [MAX_LOOKUP_ROUNDS] rounds. A service that won't stream is asked for whole answers. On
+     * [MAX_LOOKUP_ROUNDS] rounds, past which it is told to answer with what it has. A service that won't stream is asked for whole answers. On
      * failure or when cancelled the conversation is as it was.
      */
     suspend fun ask(text: String, context: PlanContext, lookups: PlanLookups, onProgress: (PlanProgress) -> Unit = {}): PlanAnswer {
@@ -249,10 +249,12 @@ class PlanAssistant(
         var said = ""
         var thought = ""
         val items = mutableListOf<PlanItem>()
-        for (round in 0..MAX_LOOKUP_ROUNDS) {
+        // Rounds of lookups, then up to two to answer in: a model still asking for more is told it can't, and asked again.
+        for (round in 0..MAX_LOOKUP_ROUNDS + 1) {
             val conversation = JsonArray(listOf(system(context, text)) + synchronized(turns) { recalled(turns) } + asked + turn)
-            // The last round may only answer.
-            val tools = if (round == MAX_LOOKUP_ROUNDS) listOf(SUGGEST_TOOL) else listOf(SUGGEST_TOOL, PLACE_TOOL, WAY_TOOL)
+            // The last rounds may only answer.
+            val answering = round >= MAX_LOOKUP_ROUNDS
+            val tools = if (answering) listOf(SUGGEST_TOOL) else listOf(SUGGEST_TOOL, PLACE_TOOL, WAY_TOOL)
             // A list in a later round stands for the whole answer's: the earlier one goes.
             var listed = false
             val message = withContext(Dispatchers.IO) {
@@ -295,6 +297,15 @@ class PlanAssistant(
             if (read.lookups.isEmpty()) {
                 turn += read.kept
                 break
+            }
+            // Lookups asked for when there may be no more: each told so, and the model asked once more to answer, unless it listed already.
+            if (answering) {
+                val refused = read.lookups.mapTo(HashSet()) { it.id }
+                turn += read.kept.map { kept ->
+                    if ((kept["tool_call_id"] as? JsonPrimitive)?.contentOrNull in refused) JsonObject(kept + ("content" to JsonPrimitive(NO_MORE_LOOKUPS))) else kept
+                }
+                if (items.isNotEmpty()) break
+                continue
             }
             // Each lookup asked for, its result in place of the tool call's answer.
             val results = read.lookups.associate { lookup ->
@@ -422,7 +433,10 @@ class PlanAssistant(
         private val json = Json { ignoreUnknownKeys = true }
 
         /** How many rounds of lookups a turn may take before the model must answer. */
-        const val MAX_LOOKUP_ROUNDS = 6
+        const val MAX_LOOKUP_ROUNDS = 10
+
+        /** What a lookup asked for past the last round is answered. */
+        const val NO_MORE_LOOKUPS = "No more lookups: answer now with what you have, and call suggest_plan."
 
         /** What the model is told of a list it showed, until the owner did something with it. */
         const val SHOWN = "Shown to the owner in the plan sheet, where they apply the ones they want."
@@ -562,7 +576,8 @@ class PlanAssistant(
                 append("\n\nBefore suggesting, check what you are unsure of: find_place tells whether a place is there and where, ")
                 append("and route_time how long a way takes by road, on foot, by bike or by train, so each day fits. ")
                 append("route_time knows no timetables: by train it gives the line's running time, and within a city public transport takes about as long as driving, with waiting. ")
-                append("Use the coordinates find_place gives for the places you suggest.")
+                append("Use the coordinates find_place gives for the places you suggest. ")
+                append("Ask for all the lookups a step needs at once, as several calls in one message, not one at a time: you have $MAX_LOOKUP_ROUNDS rounds of them, then must answer.")
                 append("\n\nThe entries below with an id are part of the plan, and you may change or remove them through suggest_plan too: ")
                 append("to change one, give its id as edit with the whole entry as it should become (date, time, text, and place unless it stays); ")
                 append("to remove one, give only its id as edit and delete true. Those with an id are the planned entries and the check-ins still to come, ")

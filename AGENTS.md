@@ -140,7 +140,9 @@ even when starting from the repository root.
   the place is chosen.
 - Trips' routes come from routers that need no key (Valhalla for drives, OpenRailRouting
   for trains), so the app can route its own trips as the API does; don't bring a keyed
-  router back.
+  router back for a route's line. Only a way's time and length in 和 AI 规划 (`route_time`,
+  the sheet's ways) may fall back, when the keyless router can't be reached, on AMap's or
+  Tencent's routing with the owner's own keys, within each key's calls.
 - Map year colors, fog behavior and the places' pins (photos, balloons, piling and stacks,
   the open place lifted, routes in their year's colour, a year picked from the legend) match across Web and App; change
   both together; the app's 照片 switch, 相册's own photos where they were taken, is the app's alone, as the

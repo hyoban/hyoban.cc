@@ -331,7 +331,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   planned Moments added, or the plan's planned Moments and its check-ins still to come (never what
   already happened) changed or deleted, all publishing only through 全部发布. Its lookups (`find_place`, `route_time`) ask
   the place search and the keyless routers only what the model names. Its sheet's ways, and each day's driving sent with a
-  question, ask the keyless routers for each two of the plan's places in a row, by their coordinates alone. Don't send it more, or apply its
+  question, ask the keyless routers for each two of the plan's places in a row, by their coordinates alone; when
+  those can't be reached, they and `route_time` ask AMap's or Tencent's routing with the owner's own keys instead
+  (in China, never by train), no faster than each key allows. Don't send it more, or apply its
   suggestions without that tap. Its conversations stay on the device, in its WebDAV backup (`plan-chats.json`,
   `BackupArchive`), and nowhere else.
 - Beyond the services named here, the app's one request of its own is for updates: the feed of this

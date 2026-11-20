@@ -521,6 +521,7 @@
     <string name="reason_timeout">the site took too long to answer. Try again later</string>
     <string name="reason_unreachable">the site can’t be reached. Check your connection</string>
     <string name="reason_unreadable">the site’s answer couldn’t be read</string>
+    <string name="reason_no_answer">the model gave no usable answer this time</string>
     <string name="reason_unknown">something unexpected went wrong</string>
 
     <string name="share_assist_enable_service">Turn on the share and ledger assistant</string>
@@ -1650,6 +1651,7 @@
     <string name="plan_day_driving">Driving %1$s %2$s</string>
     <string name="plan_day_empty">Nothing planned yet</string>
     <string name="plan_chat_stopped">Stopped</string>
+    <string name="plan_chat_unanswered">No answer</string>
     <string name="action_stop">Stop</string>
     <string name="plan_chat_thought">Thought for %1$d s</string>
     <string name="plan_chat_thinking_open">Thinking shown</string>

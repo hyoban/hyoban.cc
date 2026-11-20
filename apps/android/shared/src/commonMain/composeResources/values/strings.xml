@@ -494,6 +494,7 @@
     <string name="reason_timeout">网站太久没有回应，稍后再试</string>
     <string name="reason_unreachable">连不上网站，检查网络连接</string>
     <string name="reason_unreadable">读不懂网站返回的内容</string>
+    <string name="reason_no_answer">模型这次没有给出可用的回答</string>
     <string name="reason_unknown">发生了意外错误</string>
 
     <string name="share_assist_enable_service">开启分享与记账助手无障碍服务</string>
@@ -1649,6 +1650,7 @@
     <string name="plan_day_driving">开车 %1$s %2$s</string>
     <string name="plan_day_empty">这天还空着</string>
     <string name="plan_chat_stopped">已停止</string>
+    <string name="plan_chat_unanswered">没能得到回答</string>
     <string name="action_stop">停止</string>
     <string name="plan_chat_thought">想了 %1$d 秒</string>
     <string name="plan_chat_thinking_open">思考过程已展开</string>

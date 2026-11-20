@@ -196,6 +196,12 @@ sealed interface PlanTurn {
         val suggestions = mutableStateListOf<PlanSuggestion>()
         var stopped: Boolean by mutableStateOf(false)
 
+        /** It failed after it had thought or looked things up, which stay. */
+        var failed: Boolean by mutableStateOf(false)
+
+        /** Whether the model remembers it: it ended, neither stopped nor failed. */
+        val remembered: Boolean get() = !stopped && !failed
+
         /** A later answer listed its changes, in full: what wasn't applied here can't be any more. */
         var retired: Boolean by mutableStateOf(false)
 
@@ -278,7 +284,7 @@ class PlanChat(val trip: String) {
 
     /** Goes back to before the question at [index]: it and all after it go, from the page and from the model's memory. */
     fun rewind(index: Int) {
-        val kept = turns.take(index).count { it is PlanTurn.Answered && !it.stopped }
+        val kept = turns.take(index).count { it is PlanTurn.Answered && it.remembered }
         synchronized(memory) { while (memory.size > kept) memory.removeAt(memory.lastIndex) }
         while (turns.size > index) turns.removeAt(turns.lastIndex)
         // An answer stands retired only while a later one has listed its changes.
@@ -296,7 +302,7 @@ class PlanChat(val trip: String) {
         // Memory holds the answers that ended, in order, as rewind counts them.
         var at = 0
         turns.forEach { turn ->
-            if (turn !is PlanTurn.Answered || turn.stopped) return@forEach
+            if (turn !is PlanTurn.Answered || !turn.remembered) return@forEach
             val index = at++
             if (index < memory.size) outcome(turn)?.let { memory[index] = PlanAssistant.withOutcome(memory[index], it) }
         }
@@ -595,7 +601,7 @@ fun PlanChatScreen(container: AppContainer, id: String, onBack: () -> Unit, onMo
         chat.asking = scope.launch {
             try {
                 // Each day's driving as the plan stands, the days worked out in time, for the model to see a day too full.
-                val driving = drivingByDay(days, looked)
+                val driving = drivingByDay(days, looked, container.placeSearch)
                 val answer = assistant.ask(text, context.copy(driving = driving), PhoneLookups(container.placeSearch)) { progress ->
                     chat.changed()
                     when (progress) {
@@ -636,11 +642,26 @@ fun PlanChatScreen(container: AppContainer, id: String, onBack: () -> Unit, onMo
             } catch (error: Exception) {
                 // Why, as the service said it, for the log; the owner is told in words.
                 cc.hyoban.moments.logWarning("Moments", "Plan chat failed", error)
-                // The turn goes, and what was asked back into the field, to send again.
-                chat.turns.remove(answered)
-                chat.turns.remove(asked)
-                if (chat.draft.isBlank()) chat.draft = text
-                tell(textOf(Res.string.plan_chat_failed, failureReason(error))) { send() }
+                answered.doneThinking(askedAt)
+                val retry = if (answered.worked || answered.text.isNotEmpty() || answered.suggestions.isNotEmpty()) {
+                    // What it did stays, said to have come to no answer; trying again asks the same anew, in its place.
+                    answered.failed = true
+                    {
+                        val typed = chat.draft
+                        chat.turns.remove(answered)
+                        chat.turns.remove(asked)
+                        chat.draft = text
+                        send()
+                        if (typed.isNotBlank()) chat.draft = typed
+                    }
+                } else {
+                    // Nothing came: the turn goes, and what was asked back into the field, to send again.
+                    chat.turns.remove(answered)
+                    chat.turns.remove(asked)
+                    if (chat.draft.isBlank()) chat.draft = text
+                    send
+                }
+                tell(textOf(Res.string.plan_chat_failed, failureReason(error))) { retry() }
             } finally {
                 chat.thinking = false
                 chat.changed()
@@ -1002,9 +1023,9 @@ private fun PlanAnswer(turn: PlanTurn.Answered, growing: Boolean, onSheet: () ->
                 modifier = Modifier.padding(top = Space.s).testTag("plan_superseded"),
             )
         }
-        if (turn.stopped) {
+        if (turn.stopped || turn.failed) {
             Text(
-                stringResource(Res.string.plan_chat_stopped),
+                stringResource(if (turn.failed) Res.string.plan_chat_unanswered else Res.string.plan_chat_stopped),
                 style = AppTheme.typography.caption,
                 color = tokens.tx3,
                 modifier = Modifier.padding(top = Space.s).testTag("plan_stopped"),
@@ -1181,13 +1202,23 @@ private fun modeOf(by: Routers.By) = when (by) {
     Routers.By.DRIVE -> AppIcons.Car to Res.string.plan_by_drive
 }
 
-/** The device's lookups for the model: its place search, and the keyless routers. */
+/**
+ * How long and how far it is [by] from [from] to [to]: by the keyless routers, else, when they
+ * can't be reached, by AMap's or Tencent's routing with the owner's own keys through [search];
+ * null when there is no way, an error when none could say.
+ */
+suspend fun travelBetween(search: PlaceSearch, from: Fix, to: Fix, by: Routers.By): Routers.Travel? = try {
+    Routers.travel(from.longitude to from.latitude, to.longitude to to.latitude, by)
+} catch (unreached: java.io.IOException) {
+    search.travel(from, to, by) ?: throw unreached
+}
+
+/** The device's lookups for the model: its place search, and the routers. */
 private class PhoneLookups(private val search: PlaceSearch) : PlanLookups {
     override suspend fun places(name: String, near: Fix): List<FoundPlace> =
         search.search(name, near).filter { distance(it.fix, near) <= FOUND_WITHIN_METRES }.map { FoundPlace(it.name, it.address, it.fix) }
 
-    override suspend fun travel(from: Fix, to: Fix, by: Routers.By) =
-        Routers.travel(from.longitude to from.latitude, to.longitude to to.latitude, by)
+    override suspend fun travel(from: Fix, to: Fix, by: Routers.By) = travelBetween(search, from, to, by)
 }
 
 /** How many of each change [suggestions] hold, and how many took effect, apart by full-width spaces. */
@@ -1345,19 +1376,35 @@ private object Legs {
     fun shown(key: Triple<Fix, Fix, Routers.By>, ways: List<PlanLookup.Way>): Leg? =
         lookedUpWay(ways, key.first, key.second, key.third)?.let { Leg.Done(it.travel) } ?: known[key]
 
-    /** The way [key], worked out now unless it was, kept in [known] as it goes. */
-    suspend fun work(key: Triple<Fix, Fix, Routers.By>): Leg {
+    /** The ways being worked out, for anyone else after the same one to wait for rather than ask again. */
+    private val working = mutableMapOf<Triple<Fix, Fix, Routers.By>, kotlinx.coroutines.CompletableDeferred<Leg>>()
+
+    /**
+     * The way [key], worked out now unless it was or is being, kept in [known] as it goes; on the
+     * main thread, as the sheet and the question that ask are.
+     */
+    suspend fun work(key: Triple<Fix, Fix, Routers.By>, search: PlaceSearch): Leg {
         (known[key] as? Leg.Done)?.let { return it }
+        working[key]?.let { return it.await() }
+        val waiting = kotlinx.coroutines.CompletableDeferred<Leg>()
+        working[key] = waiting
         known[key] = Leg.Working
         val leg = try {
-            Leg.Done(Routers.travel(key.first.longitude to key.first.latitude, key.second.longitude to key.second.latitude, key.third))
+            Leg.Done(travelBetween(search, key.first, key.second, key.third))
         } catch (stopped: kotlinx.coroutines.CancellationException) {
+            // Whoever else waits goes without it; it is asked again when next wanted.
             known.remove(key)
+            working.remove(key)
+            waiting.complete(Leg.Failed)
             throw stopped
-        } catch (_: Exception) {
+        } catch (error: Exception) {
+            // Why, for the log: a router turning the phone away says so here.
+            cc.hyoban.moments.logWarning("Moments", "Plan leg failed", error)
             Leg.Failed
         }
         known[key] = leg
+        working.remove(key)
+        waiting.complete(leg)
         return leg
     }
 }
@@ -1366,9 +1413,9 @@ private object Legs {
  * The ways between [entries]' places in a row, one day's: each by how the second is reached, a
  * kept record by road; one being deleted or without a place passed over, as PlanSheet draws them.
  */
-fun dayWays(entries: List<DayEntry>): List<Triple<Fix, Fix, Routers.By>> {
+fun dayWays(entries: List<DayEntry>, start: Fix? = null): List<Triple<Fix, Fix, Routers.By>> {
     val ways = mutableListOf<Triple<Fix, Fix, Routers.By>>()
-    var from: Fix? = null
+    var from: Fix? = start
     entries.forEach { entry ->
         val suggestion = (entry as? DayEntry.Suggested)?.suggestion
         val at = entry.fix
@@ -1379,21 +1426,33 @@ fun dayWays(entries: List<DayEntry>): List<Triple<Fix, Fix, Routers.By>> {
     return ways
 }
 
+/** Where [entries], a day's, end: its last place but for one being deleted; null when it has none. */
+fun lastPlace(entries: List<DayEntry>): Fix? =
+    entries.lastOrNull { (it as? DayEntry.Suggested)?.suggestion?.kind != PlanChange.Delete && it.fix != null }?.fix
+
+/**
+ * Where each of [days] sets out from: the place the day before it ended, or the last day that
+ * had one; nowhere for the first. Each day's first way leads from there, the night between.
+ */
+fun dayStarts(days: List<Pair<String, List<DayEntry>>>): List<Fix?> =
+    days.runningFold(null as Fix?) { last, (_, entries) -> lastPlace(entries) ?: last }.dropLast(1)
+
 /** The sum of [travels], each day's driving; null unless every one came to a way. */
 fun totalOf(travels: List<Routers.Travel?>): Routers.Travel? =
     if (travels.isEmpty() || travels.any { it == null }) null
     else Routers.Travel(travels.sumOf { it!!.seconds }, travels.sumOf { it!!.metres })
 
 /** How long and far each of [days] is driven, by its drives, those [ways] the model looked up taken as they came; a day not worked out in time left out. */
-private suspend fun drivingByDay(days: List<Pair<String, List<DayEntry>>>, ways: List<PlanLookup.Way>): Map<String, Routers.Travel> =
+private suspend fun drivingByDay(days: List<Pair<String, List<DayEntry>>>, ways: List<PlanLookup.Way>, search: PlaceSearch): Map<String, Routers.Travel> =
     kotlinx.coroutines.coroutineScope {
-        days.map { (day, entries) ->
+        days.zip(dayStarts(days)).map { (dayEntries, start) ->
+            val (day, entries) = dayEntries
             async {
-                val drives = dayWays(entries).filter { it.third == Routers.By.DRIVE }
+                val drives = dayWays(entries, start).filter { it.third == Routers.By.DRIVE }
                 val travels = drives.map { key ->
                     async {
                         kotlinx.coroutines.withTimeoutOrNull(DRIVING_WAIT_MILLIS) {
-                            ((Legs.shown(key, ways) as? Legs.Leg.Done) ?: (Legs.work(key) as? Legs.Leg.Done))?.travel
+                            ((Legs.shown(key, ways) as? Legs.Leg.Done) ?: (Legs.work(key, search) as? Legs.Leg.Done))?.travel
                         }
                     }
                 }.awaitAll()
@@ -1410,12 +1469,12 @@ private const val DRIVING_WAIT_MILLIS = 8_000L
  * time column: its mode's icon, then how long and how far, a spinner while it is worked out.
  */
 @Composable
-private fun LegRow(from: Fix, to: Fix, by: Routers.By, ways: List<PlanLookup.Way> = emptyList()) {
+private fun LegRow(from: Fix, to: Fix, by: Routers.By, search: PlaceSearch, ways: List<PlanLookup.Way> = emptyList()) {
     val key = Triple(from, to, by)
     // The same way the model already looked up, taken as it came rather than asked again.
     val looked = remember(key, ways) { lookedUpWay(ways, from, to, by)?.let { Legs.Leg.Done(it.travel) } }
     LaunchedEffect(key, looked) {
-        if (looked == null) Legs.work(key)
+        if (looked == null) Legs.work(key, search)
     }
     val leg = looked ?: Legs.known[key] ?: Legs.Leg.Working
     val (icon, mode) = modeOf(by)
@@ -1472,18 +1531,20 @@ private fun PlanSheet(
         ) {
             PlanSheetTitle(turn, onAddAll)
             if (turn.retired) Text(stringResource(Res.string.plan_sheet_superseded), style = AppTheme.typography.caption, color = tokens.tx3)
+            val starts = dayStarts(days)
             days.forEachIndexed { index, (day, entries) ->
-                // The day's driving, once every drive of it is worked out.
-                val driven = totalOf(dayWays(entries).filter { it.third == Routers.By.DRIVE }.map { key -> (Legs.shown(key, ways) as? Legs.Leg.Done)?.travel })
+                // The day's driving, from where the day before ended, once every drive of it is worked out.
+                val driven = totalOf(dayWays(entries, starts[index]).filter { it.third == Routers.By.DRIVE }.map { key -> (Legs.shown(key, ways) as? Legs.Leg.Done)?.travel })
                 PlanDayLine(textOf(Res.string.trip_day, daysBetween(trip.start, day)) + APART + formatDay(day), driven, first = index == 0)
                 if (entries.isEmpty()) Text(stringResource(Res.string.plan_day_empty), style = AppTheme.typography.caption, color = tokens.tx3, modifier = Modifier.padding(vertical = Space.xs))
-                // A way between each two places in a row, but for one being deleted, written over the one it leads to.
-                var from: Fix? = null
+                // A way between each two places in a row, but for one being deleted, written over the one it leads to;
+                // the day's first from where the day before ended.
+                var from: Fix? = starts[index]
                 entries.forEach { entry ->
                     val gone = (entry as? DayEntry.Suggested)?.suggestion?.kind == PlanChange.Delete
                     val at = entry.fix
                     if (!gone && at != null) {
-                        from?.let { start -> LegRow(start, at, (entry as? DayEntry.Suggested)?.suggestion?.item?.by ?: Routers.By.DRIVE, ways) }
+                        from?.let { start -> LegRow(start, at, (entry as? DayEntry.Suggested)?.suggestion?.item?.by ?: Routers.By.DRIVE, container.placeSearch, ways) }
                         from = at
                     }
                     when (entry) {

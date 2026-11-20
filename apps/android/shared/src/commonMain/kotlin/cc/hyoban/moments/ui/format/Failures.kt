@@ -16,6 +16,7 @@ import javax.net.ssl.SSLException
 fun failureReason(error: Throwable): String = textOf(
     when (error) {
         is NoTokenException -> Res.string.reason_no_token
+        is cc.hyoban.moments.data.ai.PlanAnswerException -> Res.string.reason_no_answer
         is HttpException -> when (error.code) {
             401, 403 -> Res.string.reason_token
             404 -> Res.string.reason_not_found

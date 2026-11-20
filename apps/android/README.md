@@ -198,8 +198,9 @@ picked from what the service lists (`GET /models`), asked as its dialog opens on
 conversation, the plan's name and days, the time and time zone where the device is, and everything the
 plan holds (its Moments, planned or lived, and its check-ins, private ones too, each with its time,
 words, place and the place's coordinates), from which it takes where the trip sets out from; nothing
-else of the owner's places. Before answering it may look things up on the device, up to six rounds a
-turn: `find_place`, the place search's answers for a name near where the model says, and `route_time`,
+else of the owner's places. Before answering it may look things up on the device, several at once in a
+round, up to ten rounds a turn, after which a lookup it still asks for is answered that it must answer
+with what it has, and it is asked once more: `find_place`, the place search's answers for a name near where the model says, and `route_time`,
 how long and how far a way is by road, on foot or by bike (Valhalla) or by train (OpenRailRouting, its
 line's running time, no timetables), each shown in the answer with what came of it, between the thinking of the round that asked for it and the next's.
 What the owner writes in 补充说明 under 同步与来源 (how they travel, who with, what they eat) goes after the app's own
@@ -223,17 +224,18 @@ OpenRouter's `reasoning`), heads its answer: open and growing while it thinks, c
 the answer's first word or suggestion comes, opened again with a tap; it is shown, never sent back. Words a round says before
 it looks things up go with that round's thinking, so the answer itself is what it said last, once; what a `suggest_plan`
 call says besides (`reply`) shows only when the message said nothing. While it answers the send button stops it: what came stays, marked 已停止,
-and the model keeps no memory of that turn. A turn that fails goes, its question back in the field, and a
-message over the composer says why, waiting with 重试. Held, a question offers 复制文字 and 从这里重来, which takes it and everything after it off the page and out of the model's
+and the model keeps no memory of that turn. A turn that fails before anything came goes, its question back in the field; one that fails after it
+thought or looked things up keeps them, marked 没能得到回答, and like a stopped one is not remembered;
+either way a message over the composer says why, waiting with 重试, which asks the same again. Held, a question offers 复制文字 and 从这里重来, which takes it and everything after it off the page and out of the model's
 memory and puts it back in the field to send again, what was applied staying in the plan; held, an answer copies its words and
 its changes, a line each. Each plan's conversation, and what the model remembers of it, is kept on the device in `plan-chats.json` beside the
 ledger, written moments after anything in it changes and included in the WebDAV backup; an answer the app closed on
 comes back stopped, and a plan deleted takes its conversation with it the next time one is opened. 清空对话 in the bar
 deletes it, after asking. An answer's changes are one line under its words (PlanSummary) opening a sheet (PlanSheet) of the
 whole plan as it would be after them, every day from first to last, its settled records too, with each way between
-two places in a row by how the model says each is reached (`by` in `suggest_plan`, driving when it doesn't), its time
+two places in a row (a day's first from where the day before ended, and counted in its driving) by how the model says each is reached (`by` in `suggest_plan`, driving when it doesn't), its time
 and length the model's own `route_time` result when it looked that way up (the same mode, both ends within 500 m),
-else worked out on the device by the keyless routers; each day's line adds up its driving once all of it is worked out,
+else worked out on the device by the keyless routers, or, when they can't be reached (as a VPN may cut them off), by AMap's routing and then Tencent's with the owner's own keys, in China and never by train, AMap asked at most three times a second and Tencent five, a key whose calls are used up passed over until the next day (a way already being worked out is waited for, not asked again); each day's line adds up its driving once all of it is worked out,
 and 全部加入 in the sheet's title applies every row still to apply in order of time, each once its place is found.
 What the model lists against what the plan already holds (`matchPlan`): an entry listed again as it is doesn't show, nor a change whose place is found to be the one it has and that changes nothing else,
 and one added again on a planned entry's day at its place (by name, or within 300 m) is a change of that entry, the one

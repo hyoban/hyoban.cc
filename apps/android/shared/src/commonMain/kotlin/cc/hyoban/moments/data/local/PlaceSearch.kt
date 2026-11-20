@@ -3,6 +3,7 @@ package cc.hyoban.moments.data.local
 import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.spec.PlaceKind
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -208,6 +209,73 @@ class PlaceSearch(
         return Around(townAt(fix), emptyList())
     }
 
+    /**
+     * How long and how far it is [by] from [from] to [to] by AMap's routing, else Tencent's, with
+     * the owner's own keys, in China only and never by train: what the plan falls back on when
+     * the keyless routers can't be reached. Null where neither can say (no key, abroad, calls used
+     * up, no way); asked no faster than [ROUTES_PER_SECOND] says each key allows.
+     */
+    suspend fun travel(from: Fix, to: Fix, by: cc.hyoban.moments.data.trips.Routers.By): cc.hyoban.moments.data.trips.Routers.Travel? {
+        if (by == cc.hyoban.moments.data.trips.Routers.By.TRAIN || !inChina(from) || !inChina(to)) return null
+        val (a, b) = wgsToGcj(from) to wgsToGcj(to)
+        val asks: List<suspend () -> cc.hyoban.moments.data.trips.Routers.Travel?> = listOf(
+            {
+                amapKey()?.takeIf { it.isNotBlank() }?.let { key ->
+                    val endpoint = when (by) {
+                        cc.hyoban.moments.data.trips.Routers.By.WALK -> "$AMAP/v3/direction/walking"
+                        cc.hyoban.moments.data.trips.Routers.By.BIKE -> "$AMAP/v4/direction/bicycling"
+                        else -> "$AMAP/v3/direction/driving"
+                    }
+                    val url = endpoint.toHttpUrl().newBuilder()
+                        .addQueryParameter("origin", "${a.longitude},${a.latitude}")
+                        .addQueryParameter("destination", "${b.longitude},${b.latitude}")
+                        .build()
+                    route("AMap", url, key, ::parseAmapTravel)
+                }
+            },
+            {
+                tencentKey()?.takeIf { it.isNotBlank() }?.let { key ->
+                    val mode = when (by) {
+                        cc.hyoban.moments.data.trips.Routers.By.WALK -> "walking"
+                        cc.hyoban.moments.data.trips.Routers.By.BIKE -> "bicycling"
+                        else -> "driving"
+                    }
+                    val url = "$TENCENT/direction/v1/$mode/".toHttpUrl().newBuilder()
+                        .addQueryParameter("from", "${a.latitude},${a.longitude}")
+                        .addQueryParameter("to", "${b.latitude},${b.longitude}")
+                        .build()
+                    route("Tencent", url, key, ::parseTencentTravel)
+                }
+            },
+        )
+        val ordered = if (tencentFirst()) asks.reversed() else asks
+        for (ask in ordered) ask()?.let { return it }
+        return null
+    }
+
+    /** When each service's routing was last asked, to keep within its calls a second. */
+    private val routed = mutableMapOf<String, Long>()
+    private val routing = kotlinx.coroutines.sync.Mutex()
+
+    /** [url] of [service]'s routing asked with [key], in its turn, and read by [parse]; null when it can't answer. */
+    private suspend fun route(service: String, url: okhttp3.HttpUrl, key: String, parse: (String) -> cc.hyoban.moments.data.trips.Routers.Travel?): cc.hyoban.moments.data.trips.Routers.Travel? {
+        val endpoint = url.host + url.encodedPath
+        if (synchronized(kept) { spent[endpoint] == today() }) return null
+        val apart = 1000 / (ROUTES_PER_SECOND[service] ?: 1L)
+        routing.withLock {
+            val since = System.currentTimeMillis() - (routed[service] ?: 0)
+            if (since < apart) kotlinx.coroutines.delay(apart - since)
+            routed[service] = System.currentTimeMillis()
+        }
+        return runCatching { parse(get(url.newBuilder().addQueryParameter("key", key).build().toString())) }
+            .onFailure {
+                if (it is kotlinx.coroutines.CancellationException) throw it
+                if (it is CallsUsedUp) synchronized(kept) { spent[endpoint] = today() }
+                runCatching { cc.hyoban.moments.logWarning("Moments", "Asking $service for a way failed: ${it.message?.replace(key, "…")}") }
+            }
+            .getOrNull()
+    }
+
     private suspend fun get(url: String): String = withContext(Dispatchers.IO) {
         val request = Request.Builder().url(url).header("Accept", "application/json").header("User-Agent", USER_AGENT).build()
         client.newCall(request).execute().use { response ->
@@ -228,6 +296,9 @@ class PlaceSearch(
         private const val AMAP = "https://restapi.amap.com"
         private const val AMAP_PAGE = 20
         private const val USER_AGENT = "hyoban.cc Moments for Android"
+
+        /** How many ways a second each service's routing is asked: what a personal key allows, AMap three and Tencent five. */
+        private val ROUTES_PER_SECOND = mapOf("AMap" to 3L, "Tencent" to 5L)
     }
 }
 
@@ -577,4 +648,39 @@ fun kindOf(found: Found): PlaceKind? = found.placeKind ?: when (found.kind) {
     }
     "office" -> PlaceKind.WORK
     else -> null
+}
+
+/**
+ * AMap's routing answer, driving or walking (`route.paths`) or by bike (`data.paths`), as its
+ * first way's seconds and metres; null when it found no way, an error when it didn't answer.
+ */
+fun parseAmapTravel(json: String): cc.hyoban.moments.data.trips.Routers.Travel? {
+    val answer = Json.parseToJsonElement(json).jsonObject
+    fun JsonObject.text(key: String) = (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+    // The bike's v4 answers with errcode, the others' v3 with status.
+    val bike = answer["errcode"] != null
+    if (if (bike) answer.text("errcode") != "0" else answer.text("status") != "1") {
+        val code = answer.text("infocode") ?: answer.text("errcode")
+        val message = "AMap answered $code: ${(answer.text("info") ?: answer.text("errmsg")).orEmpty()}"
+        throw if (code in AMAP_USED_UP) CallsUsedUp(message) else IOException(message)
+    }
+    val paths = ((if (bike) answer["data"] else answer["route"]) as? JsonObject)?.get("paths") as? JsonArray
+    val way = paths?.firstOrNull() as? JsonObject ?: return null
+    val seconds = way.text("duration")?.toDoubleOrNull() ?: return null
+    val metres = way.text("distance")?.toDoubleOrNull() ?: return null
+    return cc.hyoban.moments.data.trips.Routers.Travel(seconds.toLong(), metres.toLong())
+}
+
+/** Tencent's routing answer (`result.routes`) as its first way's seconds and metres, its minutes made seconds; null when it found no way. */
+fun parseTencentTravel(json: String): cc.hyoban.moments.data.trips.Routers.Travel? {
+    val answer = Json.parseToJsonElement(json).jsonObject
+    val status = answer["status"]?.jsonPrimitive?.intOrNull
+    if (status != 0) {
+        val message = "Tencent answered $status: ${answer["message"]?.jsonPrimitive?.contentOrNull.orEmpty()}"
+        throw if (status == TENCENT_DAY_USED_UP) CallsUsedUp(message) else IOException(message)
+    }
+    val way = ((answer["result"] as? JsonObject)?.get("routes") as? JsonArray)?.firstOrNull() as? JsonObject ?: return null
+    val minutes = way["duration"]?.jsonPrimitive?.doubleOrNull ?: return null
+    val metres = way["distance"]?.jsonPrimitive?.doubleOrNull ?: return null
+    return cc.hyoban.moments.data.trips.Routers.Travel((minutes * 60).toLong(), metres.toLong())
 }
