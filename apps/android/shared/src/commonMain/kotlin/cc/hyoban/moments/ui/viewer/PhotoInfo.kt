@@ -35,6 +35,7 @@ import cc.hyoban.moments.data.local.exifTime
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Icon
+import cc.hyoban.moments.ui.design.SheetHandle
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.sheetSurface
 import cc.hyoban.moments.ui.map.SharedPointMap
@@ -146,11 +147,11 @@ fun PhotoInfoPanel(container: AppContainer, details: PhotoDetails?, modifier: Mo
             modifier.fillMaxWidth().sheetSurface(tokens.surface, AppTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize))
                 .verticalScroll(rememberScrollState())
                 .navigationBarsPadding()
-                .padding(horizontal = Space.gutter, vertical = Space.m)
+                .padding(start = Space.gutter, end = Space.gutter, bottom = Space.m)
                 .testTag("photo_info"),
             verticalArrangement = Arrangement.spacedBy(Space.xs),
         ) {
-            Box(Modifier.align(Alignment.CenterHorizontally).padding(bottom = Space.s).size(36.dp, 4.dp).background(tokens.borderStrong.copy(alpha = 0.6f), Corners.full))
+            SheetHandle(Modifier.align(Alignment.CenterHorizontally))
             if (details == null) return@Column
             details.takenAt?.let { at ->
                 InfoRow(AppIcons.Clock, at.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(Locale.getDefault())),

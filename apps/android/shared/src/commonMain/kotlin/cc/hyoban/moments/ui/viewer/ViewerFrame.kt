@@ -86,6 +86,8 @@ import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.ui.design.LocalDesktop
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.rememberHaptics
+import cc.hyoban.moments.ui.design.rememberSheetDrag
+import cc.hyoban.moments.ui.design.sheetDrag
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Radius
 import cc.hyoban.moments.ui.theme.Space
@@ -183,10 +185,19 @@ fun ViewerFrame(
             snapshotFlow { back.progress }.collect { drag = it * fadeOver }
         }
         BackHandler(enabled = showInfo) { showInfo = false }
-        val opened by animateFloatAsState(if (showInfo) 1f else 0f, AppTheme.motionScheme.defaultSpatialSpec(), label = "info")
-        // Upright the info comes up under the photo; on its side it opens beside it.
+        // Upright the info comes up under the photo; on its side it opens beside it. It is a sheet,
+        // dragged down (on its side, out to the end) by its handle, or by what it holds once that
+        // is at its top, as every sheet is.
         val panelHeight = maxHeight * 0.55f
         val panelWidth = 360.dp
+        val panelTravel = with(density) { (if (sideways) panelWidth else panelHeight).toPx() }
+        val panel = rememberSheetDrag(onSettled = { to -> if (to > 0f) showInfo = false })
+        LaunchedEffect(showInfo, panelTravel) {
+            panel.setAnchors(listOf(0f, panelTravel))
+            val to = if (showInfo) 0f else panelTravel
+            if (panel.position.isNaN()) panel.snapTo(to) else panel.animateTo(to)
+        }
+        val opened = panel.position.let { if (it.isNaN() || panelTravel <= 0f) 0f else (1f - it / panelTravel).coerceIn(0f, 1f) }
         val backdrop = Color.Black
         Box(Modifier.fillMaxSize().drawBehind { drawRect(backdrop.copy(alpha = 1f - progress())) })
         HorizontalPager(
@@ -279,9 +290,17 @@ fun ViewerFrame(
         }
         if (info != null && opened > 0f) {
             if (sideways) {
-                info(Modifier.align(Alignment.CenterEnd).width(panelWidth).fillMaxHeight().graphicsLayer { translationX = size.width * (1f - opened) })
+                info(
+                    Modifier.align(Alignment.CenterEnd).width(panelWidth).fillMaxHeight()
+                        .graphicsLayer { translationX = panel.position.takeUnless { it.isNaN() }.let { it ?: size.width } * if (rtl) -1f else 1f }
+                        .sheetDrag(panel, Orientation.Horizontal, reverse = rtl),
+                )
             } else {
-                info(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(panelHeight).graphicsLayer { translationY = size.height * (1f - opened) })
+                info(
+                    Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(panelHeight)
+                        .graphicsLayer { translationY = panel.position.takeUnless { it.isNaN() } ?: size.height }
+                        .sheetDrag(panel),
+                )
             }
         }
         overlay()

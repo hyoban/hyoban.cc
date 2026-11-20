@@ -9,13 +9,9 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import cc.hyoban.moments.ui.theme.Space
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -40,7 +36,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.shape.CornerBasedShape
@@ -56,21 +51,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import cc.hyoban.moments.ui.theme.Corners
 import cc.hyoban.moments.ui.theme.tokens
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 import kotlin.math.roundToInt
 
 // Sheets from the foot of the screen: the surface, its top in the large corners, a short handle
@@ -116,13 +105,12 @@ fun ModalBottomSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val offset = remember { Animatable(Float.MAX_VALUE) }
     // How far it travels out: its height from the foot, or on its side its width out to the end.
     var travel by remember { mutableFloatStateOf(0f) }
-    val haptics = rememberHaptics()
+    val drag = rememberSheetDrag(onSettled = { to -> if (to > 0f) onDismissRequest() })
     val leave: () -> Unit = {
         scope.launch {
-            offset.animateTo(travel, spring(stiffness = 1500f))
+            drag.animateTo(travel)
             onDismissRequest()
         }
     }
@@ -147,42 +135,6 @@ fun ModalBottomSheet(
                 side -> AppTheme.shapes.large.copy(topEnd = ZeroCornerSize, bottomEnd = ZeroCornerSize)
                 else -> AppTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
             }
-            val settle = { velocity: Float ->
-                scope.launch {
-                    if (offset.value > travel / 3 || velocity > 2000f) leave() else offset.animateTo(0f, spring(dampingRatio = 1f, stiffness = 500f))
-                }
-            }
-            // Moves it out by [out] (in, when negative) within its travel; what it took.
-            val move = { out: Float ->
-                val before = offset.value.coerceIn(0f, travel.coerceAtLeast(0f))
-                val after = (before + out).coerceIn(0f, travel.coerceAtLeast(0f))
-                haptics.across(before, after, travel / 3)
-                scope.launch { offset.snapTo(after) }
-                after - before
-            }
-            val currentMove by rememberUpdatedState(move)
-            val currentSettle by rememberUpdatedState(settle)
-            // A list in it scrolls until it is at its top; the rest of the drag takes the sheet down,
-            // and back up it goes before the list scrolls again. Its fling's leftover never does.
-            val drag = remember {
-                object : NestedScrollConnection {
-                    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                        if (available.y >= 0f || source != NestedScrollSource.UserInput || offset.value <= 0f) return Offset.Zero
-                        return Offset(0f, currentMove(available.y))
-                    }
-
-                    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-                        if (available.y <= 0f || source != NestedScrollSource.UserInput) return Offset.Zero
-                        return Offset(0f, currentMove(available.y))
-                    }
-
-                    override suspend fun onPreFling(available: Velocity): Velocity {
-                        if (offset.value <= 0f) return Velocity.Zero
-                        currentSettle(available.y)
-                        return available
-                    }
-                }
-            }
             Column(
                 modifier
                     .then(
@@ -193,24 +145,19 @@ fun ModalBottomSheet(
                         },
                     )
                     .onSizeChanged {
-                        val first = travel == 0f
                         travel = (if (side) it.width else it.height).toFloat()
-                        if (first) scope.launch { offset.snapTo(travel); offset.animateTo(0f, spring(dampingRatio = 1f, stiffness = 500f)) }
+                        drag.setAnchors(listOf(0f, travel))
+                        if (drag.position.isNaN()) scope.launch { drag.snapTo(travel); drag.animateTo(0f) }
                     }
                     .offset {
-                        val shift = offset.value.coerceIn(0f, travel.coerceAtLeast(0f)).roundToInt()
+                        val shift = (drag.position.takeUnless { it.isNaN() } ?: travel).coerceIn(0f, travel.coerceAtLeast(0f)).roundToInt()
                         if (side) IntOffset(if (ltr) shift else -shift, 0) else IntOffset(0, shift)
                     }
                     .clip(shape)
                     .background(containerColor)
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
-                    .draggable(
-                        rememberDraggableState { delta -> move(if (side && !ltr) -delta else delta) },
-                        if (side) Orientation.Horizontal else Orientation.Vertical,
-                        onDragStopped = { velocity -> settle(if (side && !ltr) -velocity else velocity) },
-                    )
                     // On its side it goes sideways, across the way its list scrolls.
-                    .then(if (side) Modifier else Modifier.nestedScroll(drag))
+                    .sheetDrag(drag, if (side) Orientation.Horizontal else Orientation.Vertical, reverse = side && !ltr)
                     .then(if (side) Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End + WindowInsetsSides.Vertical)).padding(top = Space.l) else Modifier.navigationBarsPadding())
                     .imePadding(),
             ) {
@@ -230,21 +177,31 @@ enum class SheetValue { Hidden, PartiallyExpanded, Expanded }
 
 /** Where a standard sheet is and is going; moved by [partialExpand], [expand] and [hide], or by dragging. */
 @Stable
-class SheetState(initialValue: SheetValue, val skipHiddenState: Boolean) {
+class SheetState internal constructor(initialValue: SheetValue, val skipHiddenState: Boolean, internal val drag: SheetDrag) {
     var currentValue by mutableStateOf(initialValue)
         private set
-    internal val offset = Animatable(Float.NaN)
     internal var anchors by mutableStateOf<Map<SheetValue, Float>>(emptyMap())
+        private set
+
+    internal fun place(values: Map<SheetValue, Float>) {
+        anchors = values
+        drag.setAnchors(values.values)
+    }
+
+    /** The value resting at [position], as it is let go. */
+    internal fun settleAt(position: Float) {
+        anchors.entries.firstOrNull { it.value == position }?.let { currentValue = it.key }
+    }
 
     /** Where its top edge is, in pixels from the top of its scaffold; NaN before it's laid out. */
-    val top: Float get() = offset.value
+    val top: Float get() = drag.position
 
     /** How far it is drawn up from resting toward its full height: 0 resting or below, 1 at full height. */
     val raised: Float
         get() {
             val rest = anchors[SheetValue.PartiallyExpanded] ?: return 0f
             val top = anchors[SheetValue.Expanded] ?: return 0f
-            val now = offset.value
+            val now = drag.position
             if (now.isNaN() || rest <= top) return 0f
             return ((rest - now) / (rest - top)).coerceIn(0f, 1f)
         }
@@ -253,36 +210,20 @@ class SheetState(initialValue: SheetValue, val skipHiddenState: Boolean) {
     suspend fun expand() = animateTo(SheetValue.Expanded)
     suspend fun hide() = animateTo(if (skipHiddenState) SheetValue.PartiallyExpanded else SheetValue.Hidden)
 
-    internal suspend fun animateTo(value: SheetValue, velocity: Float = 0f) {
+    internal suspend fun animateTo(value: SheetValue) {
         currentValue = value
         val target = anchors[value] ?: return
-        if (offset.value.isNaN()) offset.snapTo(target) else offset.animateTo(target, spring(dampingRatio = 1f, stiffness = 500f), velocity)
-    }
-
-    /** To the anchor nearest where it was let go, or the next one the way it was flung. */
-    internal suspend fun settle(velocity: Float) {
-        val now = offset.value
-        if (now.isNaN() || anchors.isEmpty()) return
-        val sorted = anchors.entries.sortedBy { it.value }
-        val target = when {
-            velocity > 1000f -> sorted.firstOrNull { it.value > now + 1 } ?: sorted.last()
-            velocity < -1000f -> sorted.lastOrNull { it.value < now - 1 } ?: sorted.first()
-            else -> sorted.minBy { abs(it.value - now) }
-        }
-        animateTo(target.key, velocity)
-    }
-
-    internal fun dragBy(delta: Float): Float {
-        val now = offset.value
-        if (now.isNaN() || anchors.isEmpty()) return 0f
-        val next = (now + delta).coerceIn(anchors.values.min(), anchors.values.max())
-        return next - now
+        drag.animateTo(target)
     }
 }
 
 @Composable
-fun rememberStandardBottomSheetState(initialValue: SheetValue = SheetValue.PartiallyExpanded, skipHiddenState: Boolean = true): SheetState =
-    remember { SheetState(initialValue, skipHiddenState) }
+fun rememberStandardBottomSheetState(initialValue: SheetValue = SheetValue.PartiallyExpanded, skipHiddenState: Boolean = true): SheetState {
+    lateinit var state: SheetState
+    val drag = rememberSheetDrag(onSettle = { state.settleAt(it) })
+    state = remember { SheetState(initialValue, skipHiddenState, drag) }
+    return state
+}
 
 class BottomSheetScaffoldState(val bottomSheetState: SheetState)
 
@@ -317,37 +258,12 @@ fun BottomSheetScaffold(
         val peek = with(density) { sheetPeekHeight.toPx() }
         LaunchedEffect(room, sheetHeight, peek, state.skipHiddenState) {
             if (sheetHeight == 0f) return@LaunchedEffect
-            state.anchors = buildMap {
+            state.place(buildMap {
                 put(SheetValue.PartiallyExpanded, (room - peek).coerceAtLeast(room - sheetHeight))
                 put(SheetValue.Expanded, (room - sheetHeight).coerceAtLeast(0f))
                 if (!state.skipHiddenState) put(SheetValue.Hidden, room)
-            }
+            })
             state.animateTo(state.currentValue)
-        }
-        val drag = remember(state) {
-            object : NestedScrollConnection {
-                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                    if (available.y >= 0f || source != NestedScrollSource.UserInput) return Offset.Zero
-                    val moved = state.dragBy(available.y)
-                    if (moved != 0f) scope.launch { state.offset.snapTo(state.offset.value + moved) }
-                    return Offset(0f, moved)
-                }
-
-                override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-                    if (available.y <= 0f || source != NestedScrollSource.UserInput) return Offset.Zero
-                    val moved = state.dragBy(available.y)
-                    if (moved != 0f) scope.launch { state.offset.snapTo(state.offset.value + moved) }
-                    return Offset(0f, moved)
-                }
-
-                override suspend fun onPreFling(available: Velocity): Velocity {
-                    val at = state.offset.value
-                    val resting = state.anchors.values.any { abs(it - at) < 1f }
-                    if (resting) return Velocity.Zero
-                    state.settle(available.y)
-                    return available
-                }
-            }
         }
         content()
         val shape = AppTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
@@ -358,20 +274,11 @@ fun BottomSheetScaffold(
                 .fillMaxWidth()
                 .heightIn(max = with(density) { room.toDp() })
                 .onSizeChanged { sheetHeight = it.height.toFloat() }
-                .offset { IntOffset(0, (state.offset.value.takeUnless { it.isNaN() } ?: room).roundToInt()) }
+                .offset { IntOffset(0, (state.drag.position.takeUnless { it.isNaN() } ?: room).roundToInt()) }
                 .then(if (sheetShadowElevation > 0.dp) Modifier.softShadow(sheetShadowElevation, shape) else Modifier)
                 // Below a handle, taller than the corners are round, nothing in the sheet reaches them.
                 .then(if (sheetDragHandle != null) Modifier.sheetSurface(sheetContainerColor, shape) else Modifier.clip(shape).background(sheetContainerColor))
-                .draggable(
-                    rememberDraggableState { delta ->
-                        val moved = state.dragBy(delta)
-                        if (moved != 0f) scope.launch { state.offset.snapTo(state.offset.value + moved) }
-                    },
-                    Orientation.Vertical,
-                    enabled = sheetSwipeEnabled,
-                    onDragStopped = { velocity -> state.settle(velocity) },
-                )
-                .then(if (sheetSwipeEnabled) Modifier.nestedScroll(drag) else Modifier),
+                .sheetDrag(state.drag, enabled = sheetSwipeEnabled),
         ) {
             if (sheetDragHandle != null) Box(Modifier.align(Alignment.CenterHorizontally)) { sheetDragHandle() }
             CompositionLocalProvider(LocalContentColor provides tokens.tx) { sheetContent() }
