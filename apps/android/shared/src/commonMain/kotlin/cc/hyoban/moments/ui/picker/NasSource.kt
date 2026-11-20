@@ -50,9 +50,11 @@ import cc.hyoban.moments.ui.viewer.PhotoDetails
 import cc.hyoban.moments.ui.viewer.ZoomablePhoto
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -344,8 +346,9 @@ data class NasPick(val photo: NasPhoto, override val source: NasSource, val list
 
     /**
      * A live photo's clip, once its page is first shown: a motion photo's read by range from its
-     * original on the NAS where the start of the original says it starts (kept on the device once
-     * read); an iPhone's, whose original holds no clip, the MOV the NAS keeps beside it.
+     * original on the NAS where the start of the original says it starts; an iPhone's, whose
+     * original holds no clip, the MOV the NAS keeps beside it. Either is kept on disk once played,
+     * and read from the original or clip already down on the device rather than from the NAS.
      */
     @Composable
     override fun rememberMotion(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? =
@@ -359,9 +362,14 @@ data class NasPick(val photo: NasPhoto, override val source: NasSource, val list
             } catch (_: Exception) {
                 return@produceState
             }
+            val kept = withContext(Dispatchers.IO) { if (start != null) source.nas.cached(photo) else source.nas.cachedClip(photo) }
+            if (kept != null) {
+                value = cc.hyoban.moments.ui.viewer.MotionSource(kept.toURI().toString(), start ?: 0)
+                return@produceState
+            }
             val (url, headers) = runCatching { if (start != null) source.nas.original(photo) else source.nas.liveStream(photo) }
                 .getOrNull() ?: return@produceState
-            value = cc.hyoban.moments.ui.viewer.MotionSource(url, start ?: 0, headers)
+            value = cc.hyoban.moments.ui.viewer.MotionSource(url, start ?: 0, headers, source.nas.motionKey(photo, apart = start == null))
         }.value
 
     /** The NAS keeps its own thumbnails, small for the grid and big for the viewer, and its client caches them. */

@@ -406,6 +406,15 @@ class Nas(
     /** [photo] on another visit too: changed on the NAS, it is uploaded again. */
     private fun kept(photo: NasPhoto) = "${photo.id}-${photo.uploaded}"
 
+    /**
+     * Where a live photo's clip played from the NAS is kept on disk, the same from one sign-in to the
+     * next: in its original ([original]) or apart ([liveStream]).
+     */
+    fun motionKey(photo: NasPhoto, apart: Boolean) = "nas/${if (apart) "live" else "original"}/${kept(photo)}"
+
+    /** An iPhone live photo's clip if it is already down in the cache ([liveClip]). */
+    fun cachedClip(photo: NasPhoto): File? = originals.file("live:${kept(photo)}")
+
     /** [photo]'s original if it is already down in the cache, whole. */
     fun cached(photo: NasPhoto): File? =
         originals.file(kept(photo))?.takeIf { photo.size <= 0 || it.length() == photo.size }

@@ -927,7 +927,8 @@ in the middle and those chosen dotted: a tap turns to one, and dragging the row 
 along. A video of the gallery's or the NAS's (MP4 or QuickTime) plays where it is, silent until
 asked, with the photo viewer's controls, the NAS's read from its stream as far as it is watched and
 not kept; a live photo of the gallery's or the NAS's plays its clip once, and with its sound while
-held. The camera's videos stay stills. Its 删除 hands one of the gallery's to the system, which asks and moves it to its bin
+held, the NAS's clip kept on disk with the clips seen before, under a key of its own rather than its
+signed-in address, and read from its original or clip once those are down on the phone. The camera's videos stay stills. Its 删除 hands one of the gallery's to the system, which asks and moves it to its bin
 (`createTrashRequest`), and deletes one of the camera's off its card, after asking. With
 photos chosen, the bar's 删除 does the same with those chosen from the source shown: the
 gallery's in one request, the system asking once, the camera's one at a time. 加入 adds the gallery's as they are, their

@@ -84,7 +84,8 @@ private class OffsetDataSource(private val upstream: DataSource, private val sta
 /**
  * A player of [url] through the disk cache, or of its file on the phone, while [active], set up by [configure] and
  * prepared, or null while not; it is released when the page goes or stops being shown. A file or a
- * gallery's item is read from [start] on; a url asked with [headers], a sign-in's, is not kept on disk.
+ * gallery's item is read from [start] on; a url asked with [headers], a sign-in's, is kept on disk only
+ * by a [cacheKey] of its own, the address changing with each sign-in.
  */
 @OptIn(UnstableApi::class)
 @Composable
@@ -93,13 +94,14 @@ fun rememberCachedPlayer(
     active: Boolean,
     start: Long = 0,
     headers: Map<String, String> = emptyMap(),
+    cacheKey: String? = null,
     configure: ExoPlayer.() -> Unit = {},
 ): ExoPlayer? {
     val context = LocalContext.current
     val setUp by rememberUpdatedState(configure)
     var player by remember { mutableStateOf<ExoPlayer?>(null) }
 
-    DisposableEffect(url, active, start, headers) {
+    DisposableEffect(url, active, start, headers, cacheKey) {
         if (!active) return@DisposableEffect onDispose { }
         // A clip still only on the phone, a live photo not yet published, is read from its file,
         // and a gallery's video or motion photo from the media store.
@@ -108,12 +110,13 @@ fun rememberCachedPlayer(
             url.startsWith("content:") -> DataSource.Factory { ContentDataSource(context.applicationContext) }
             else -> null
         }
+        val http = OkHttpDataSource.Factory(Http.client).apply { if (headers.isNotEmpty()) setDefaultRequestProperties(headers) }
         val read: DataSource.Factory = when {
             local != null -> local
-            headers.isNotEmpty() -> OkHttpDataSource.Factory(Http.client).setDefaultRequestProperties(headers)
+            headers.isNotEmpty() && cacheKey == null -> http
             else -> CacheDataSource.Factory()
                 .setCache(MotionCache.of(context))
-                .setUpstreamDataSourceFactory(OkHttpDataSource.Factory(Http.client))
+                .setUpstreamDataSourceFactory(http)
         }
         // A motion photo's clip, [start] bytes into the file it shares with its still: on the phone, or the NAS's read by range.
         val source: DataSource.Factory = if (start > 0) DataSource.Factory { OffsetDataSource(read.createDataSource(), start) } else read
@@ -123,7 +126,7 @@ fun rememberCachedPlayer(
             .build()
             .apply {
                 repeatMode = Player.REPEAT_MODE_OFF
-                setMediaItem(MediaItem.fromUri(url))
+                setMediaItem(MediaItem.Builder().setUri(url).setCustomCacheKey(cacheKey).build())
                 setUp()
                 prepare()
             }

@@ -6,9 +6,9 @@ import androidx.compose.ui.Modifier
 /**
  * Where an item's motion is read: its [url], [start] bytes in for a motion photo whose clip still
  * follows its still in one file (the gallery's, the NAS's, one picked and not yet saved), asked for
- * with [headers] (the NAS's cookie).
+ * with [headers] (the NAS's cookie), and kept on disk by [cacheKey] when its address changes with a sign-in.
  */
-data class MotionSource(val url: String, val start: Long = 0, val headers: Map<String, String> = emptyMap())
+data class MotionSource(val url: String, val start: Long = 0, val headers: Map<String, String> = emptyMap(), val cacheKey: String? = null)
 
 /**
  * What moves of one item in a viewer, a live photo's clip or a video, played the device's

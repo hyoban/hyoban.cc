@@ -25,7 +25,7 @@ class PhoneLiveMotion : ViewerMotion {
 
     @Composable
     override fun Over(source: MotionSource, active: Boolean, modifier: Modifier) =
-        LiveMotion(source.url, active, state, modifier, start = source.start, headers = source.headers)
+        LiveMotion(source.url, active, state, modifier, start = source.start, headers = source.headers, cacheKey = source.cacheKey)
 
     @Composable
     override fun LiveButton(modifier: Modifier) = ViewerLiveButton(state, modifier)
