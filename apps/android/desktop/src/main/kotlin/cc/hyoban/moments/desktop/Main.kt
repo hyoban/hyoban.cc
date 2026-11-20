@@ -88,6 +88,7 @@ import cc.hyoban.moments.ui.Things
 import cc.hyoban.moments.ui.Trip
 import cc.hyoban.moments.ui.TripEdit
 import cc.hyoban.moments.ui.TripPlay
+import cc.hyoban.moments.ui.TripPlanChat
 import cc.hyoban.moments.ui.Viewer
 import cc.hyoban.moments.ui.LedgerHome
 import cc.hyoban.moments.ui.LedgerBill
@@ -641,7 +642,9 @@ private fun Route(
             container, route.id, onMoment = openMoment, onPlay = { shell.open(TripPlay(it)) }, onBack = back, onDay = openDay,
             onMap = { shell.showOnMap(MapFocus.Trip(it)) }, onEdit = { shell.open(TripEdit(it)) },
             onWritePlan = { shell.open(NewMoment(plan = it)) },
+            onPlanChat = { shell.open(TripPlanChat(it)) },
         )
+        is TripPlanChat -> cc.hyoban.moments.ui.trips.PlanChatScreen(container, route.id, onBack = back, onMoment = openMoment)
         is TripEdit -> TripEditScreen(
             container, route.id, startDay = route.start, endDay = route.end, name = route.title,
             fromRecord = route.from, toRecord = route.to, onBack = back,

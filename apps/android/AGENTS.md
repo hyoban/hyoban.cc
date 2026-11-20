@@ -324,6 +324,16 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   Kit through Google Play services, the owner's choice: Play services fetches its models and ML Kit
   reports its own usage to Google, the one Google request the app makes beyond location; the photos
   never leave the phone for it. Ask before using ML Kit for anything else.
+- 和 AI 规划 sends the conversation, the owner's 补充说明 (after the app's own instructions), the plan's name and days, and every record the plan holds
+  (private ones too, the owner's choice), with the device's time and zone, and nothing else of the
+  owner's places, to the OpenAI-compatible service the owner set in 同步与来源, straight from
+  the device, and only when asked; what it suggests takes effect one by one, by the owner's tap:
+  planned Moments added, or the plan's planned Moments and its check-ins still to come (never what
+  already happened) changed or deleted, all publishing only through 全部发布. Its lookups (`find_place`, `route_time`) ask
+  the place search and the keyless routers only what the model names. Its sheet's ways, and each day's driving sent with a
+  question, ask the keyless routers for each two of the plan's places in a row, by their coordinates alone. Don't send it more, or apply its
+  suggestions without that tap. Its conversations stay on the device, in its WebDAV backup (`plan-chats.json`,
+  `BackupArchive`), and nowhere else.
 - Beyond the services named here, the app's one request of its own is for updates: the feed of this
   repository's GitHub releases (not GitHub's API, whose limit without a token a shared proxy uses up) and the APK it installs (`update/`), with nothing of the phone's.
 - No keys in the build (README, Elsewhere): a service that needs a key takes the owner's own,

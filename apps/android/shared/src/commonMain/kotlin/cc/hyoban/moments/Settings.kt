@@ -73,6 +73,21 @@ class Settings(private val prefs: Prefs, secrets: File) {
     /** The owner's own AMap Web Service key, with which the place picker asks AMap what is around in China. */
     val amapKey = Token(File(secrets, "amap-key"))
 
+    /** The OpenAI-compatible API a plan is talked over with, its base (`…/v1`); none until set. */
+    val aiUrl = Setting(prefs, "ai_url", "")
+
+    /** The owner's own key for [aiUrl], beside the API token. */
+    val aiKey = Token(File(secrets, "ai-key"))
+
+    /** The model asked at [aiUrl], by the name that service gives it. */
+    val aiModel = Setting(prefs, "ai_model", "")
+
+    /** What the owner adds for the model about themselves and how they travel, after the app's own instructions. */
+    val aiNotes = Setting(prefs, "ai_notes", "")
+
+    /** Whether a plan can be talked over: the address, the key and the model are all set. */
+    val aiReady get() = aiUrl.isSet && aiKey.isSet && aiModel.isSet
+
     /** Which of the two the place picker asks first in China when both keys are set, `amap` or `tencent`; the other answers when it can't. */
     val chinaPlaces = Setting(prefs, "china_places", CHINA_PLACES_AMAP)
 

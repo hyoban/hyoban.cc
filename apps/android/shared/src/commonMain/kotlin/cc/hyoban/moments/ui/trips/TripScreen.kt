@@ -93,6 +93,8 @@ fun TripScreen(
     onEdit: (String) -> Unit = {},
     /** Writes a Moment into the trip's plan; none where the device writes no Moments. */
     onWritePlan: ((String) -> Unit)? = null,
+    /** Talks the plan over with the model; none where the device writes no Moments. */
+    onPlanChat: ((String) -> Unit)? = null,
 ) {
     val trips by container.shownTrips.collectAsStateWithLifecycle()
     val all by container.shownMoments.collectAsStateWithLifecycle()
@@ -176,6 +178,12 @@ fun TripScreen(
                             Icon(AppIcons.Plus, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(Space.xs))
                             Text(stringResource(Res.string.trip_write_plan))
+                        }
+                        // Beside it, with a model set in 同步与来源, talking the plan over.
+                        onPlanChat?.takeIf { LocalSettings.current.aiReady }?.let { chat ->
+                            cc.hyoban.moments.ui.design.TextButton(onClick = { chat(trip.id) }, modifier = Modifier.testTag("plan_chat_open")) {
+                                Text(stringResource(Res.string.plan_chat_title))
+                            }
                         }
                     } else if (playable) {
                         cc.hyoban.moments.ui.design.Button(onClick = { onPlay(trip.id) }, modifier = Modifier.testTag("play_trip")) {

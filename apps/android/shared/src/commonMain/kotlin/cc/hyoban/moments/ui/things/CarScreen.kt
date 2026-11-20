@@ -218,6 +218,4 @@ private fun kwh(wh: Long): String = "%.1f kWh".format(wh / 1000.0)
 
 /** `3 小时 25 分钟`, or `25 分钟`. */
 @Composable
-private fun duration(minutes: Long): String =
-    if (minutes >= 60) stringResource(Res.string.footprints_hours_minutes, (minutes / 60).toInt(), (minutes % 60).toInt())
-    else stringResource(Res.string.footprints_minutes, minutes.toInt())
+private fun duration(minutes: Long): String = cc.hyoban.moments.ui.format.formatMinutes(minutes)

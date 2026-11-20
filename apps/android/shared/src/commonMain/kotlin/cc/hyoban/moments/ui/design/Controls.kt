@@ -356,14 +356,17 @@ private fun RowScope.Segment(on: Boolean, modifier: Modifier, label: @Composable
 
 // ---------------------------------------------------------------- progress
 
-/** Something being waited for: a thin ring in [color], turning. */
+/**
+ * Something being waited for: a thin ring in [color], turning, [size] across with [inset] round it;
+ * smaller ones, set in a line of text, with a thinner [stroke] and no inset.
+ */
 @Composable
-fun Spinner(modifier: Modifier = Modifier, color: Color = tokens.tx2) {
+fun Spinner(modifier: Modifier = Modifier, color: Color = tokens.tx2, size: Dp = 24.dp, stroke: Dp = 2.5.dp, inset: Dp = 4.dp) {
     val turning = rememberInfiniteTransition(label = "spinner")
     val angle by turning.animateFloat(0f, 360f, infiniteRepeatable(tween(900, easing = LinearEasing), RepeatMode.Restart), label = "spinner angle")
-    Canvas(modifier.padding(4.dp).size(24.dp)) {
-        val stroke = 2.5.dp.toPx()
-        drawArc(color, angle, 270f, useCenter = false, topLeft = Offset(stroke / 2, stroke / 2), size = Size(size.width - stroke, size.height - stroke), style = Stroke(stroke, cap = StrokeCap.Round))
+    Canvas(modifier.padding(inset).size(size)) {
+        val line = stroke.toPx()
+        drawArc(color, angle, 270f, useCenter = false, topLeft = Offset(line / 2, line / 2), size = Size(this.size.width - line, this.size.height - line), style = Stroke(line, cap = StrokeCap.Round))
     }
 }
 

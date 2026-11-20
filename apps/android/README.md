@@ -191,6 +191,60 @@ the route as any other's. Once the
 switch is off the plan is the trip, what happened read among what was planned; a planned Moment's
 page then offers 改成记录, which makes it a Moment like any other, or it is deleted from its editor.
 
+Beside 写计划, 和 AI 规划 talks the plan over with a model (`ui/trips/PlanChatScreen.kt`,
+`data/ai/PlanAssistant.kt`), shown only once 同步与来源's AI group has its address, key and model:
+any service speaking OpenAI's chat completions, asked straight from the device. The model is typed or
+picked from what the service lists (`GET /models`), asked as its dialog opens once the address and key are set. It is told the
+conversation, the plan's name and days, the time and time zone where the device is, and everything the
+plan holds (its Moments, planned or lived, and its check-ins, private ones too, each with its time,
+words, place and the place's coordinates), from which it takes where the trip sets out from; nothing
+else of the owner's places. Before answering it may look things up on the device, up to six rounds a
+turn: `find_place`, the place search's answers for a name near where the model says, and `route_time`,
+how long and how far a way is by road, on foot or by bike (Valhalla) or by train (OpenRailRouting, its
+line's running time, no timetables), each shown in the answer with what came of it, between the thinking of the round that asked for it and the next's.
+What the owner writes in 补充说明 under 同步与来源 (how they travel, who with, what they eat) goes after the app's own
+instructions in every conversation. Last, it is told to think and answer in the language of the owner's latest message (named when
+it is Chinese or Japanese), its thinking too. Each answer ends with its whole list of changes against the plan as it stands, repeating what was
+proposed before and not applied; only an answer's last list counts, and once a later answer lists its
+changes an earlier one's untapped rows can't be applied any more (已并入后面的回答). It answers in words and with suggestions through `suggest_plan`, each a day, a time, a note and a place. The place is found on the device: a place
+already kept by that name within 2 km of where the model put it, else what
+AMap, Tencent or Photon call it within 30 km of there, a place already kept when it
+is that one; none found, it is added without one. A
+suggestion's round plus button writes it into the plan as a planned Moment, as it says, kept as one written by
+hand is, public unless the plan is private, until 全部发布. The plan's planned Moments go with their uids, and a
+suggestion may name one to change (its pen, the row saying what it was) or delete (its bin, the row struck through,
+the deletion undone from its message as one by hand is); check-ins still to come (written down ahead, such as
+where the trip sets out from) go with theirs too, only their time and place to change (a change may leave its words out, keeping the entry's); lived Moments and check-ins
+that happened are only read. The answer streams in (`stream: true`, its
+server-sent events read by `PlanStream`): its words grow across the column, in no bubble, and each suggestion shows, and
+its place is looked for, once its item is written in full; a service that refuses to stream is asked
+again for the whole answer. What a model thinks first, where its service shows it (`reasoning_content`, or
+OpenRouter's `reasoning`), heads its answer: open and growing while it thinks, closed to 想了 n 秒 (and 查了 m 次) once
+the answer's first word or suggestion comes, opened again with a tap; it is shown, never sent back. Words a round says before
+it looks things up go with that round's thinking, so the answer itself is what it said last, once; what a `suggest_plan`
+call says besides (`reply`) shows only when the message said nothing. While it answers the send button stops it: what came stays, marked 已停止,
+and the model keeps no memory of that turn. A turn that fails goes, its question back in the field, and a
+message over the composer says why, waiting with 重试. Held, a question offers 复制文字 and 从这里重来, which takes it and everything after it off the page and out of the model's
+memory and puts it back in the field to send again, what was applied staying in the plan; held, an answer copies its words and
+its changes, a line each. Each plan's conversation, and what the model remembers of it, is kept on the device in `plan-chats.json` beside the
+ledger, written moments after anything in it changes and included in the WebDAV backup; an answer the app closed on
+comes back stopped, and a plan deleted takes its conversation with it the next time one is opened. 清空对话 in the bar
+deletes it, after asking. An answer's changes are one line under its words (PlanSummary) opening a sheet (PlanSheet) of the
+whole plan as it would be after them, every day from first to last, its settled records too, with each way between
+two places in a row by how the model says each is reached (`by` in `suggest_plan`, driving when it doesn't), its time
+and length the model's own `route_time` result when it looked that way up (the same mode, both ends within 500 m),
+else worked out on the device by the keyless routers; each day's line adds up its driving once all of it is worked out,
+and 全部加入 in the sheet's title applies every row still to apply in order of time, each once its place is found.
+What the model lists against what the plan already holds (`matchPlan`): an entry listed again as it is doesn't show, nor a change whose place is found to be the one it has and that changes nothing else,
+and one added again on a planned entry's day at its place (by name, or within 300 m) is a change of that entry, the one
+at its time first, else the nearest. With the next question the model is told, in its memory of each earlier list's
+`suggest_plan` call, which rows the owner applied and the entries they became, and each day's driving as the plan
+stands (by road between its places in order, the model's own lookups reused, a day not worked out in eight seconds
+left out); of turns before the latest two it is sent only the question, the last words and what came of the list,
+not the lookups and lists themselves. A change to a planned record shows what it changes, its words compared letter by letter as
+发布更改 compares them and its time and place from old to new. Its
+parts are the design system's PlanAnswer, PlanSheet, SuggestionRow and ChatComposer.
+
 Below the trips, after a hairline, 可能的旅程 are the trips the records suggest
 (`data/trips/TripDiscovery.kt`, with `TripNames.kt`): the time between a check-in at home on
 leaving and the next one at home on coming back, when a record in between is more than 50 km
@@ -920,8 +974,8 @@ runs (`MediaDetails`). A swipe down puts it away.
 - **Language and appearance.** Always the phone's: Chinese, or English when the phone speaks
   it, and light or dark as the system is. The API has no default and is set in 我 → 同步与来源,
   and the origin the photos and videos are served from is what the API says at `GET /`, asked
-  after each sync and kept. The AMap and Tencent keys have no default and stay on the phone,
-  out of the backup.
+  after each sync and kept. The AMap and Tencent keys and the AI group's address, key and model
+  have no default; the keys stay on the phone, out of the backup.
 - **Maps.** OpenFreeMap's vector tiles drawn by MapLibre, needing no key. The light and dark
   style documents, with Chinese labels and minor roads quieted, are packaged with the app;
   `node scripts/update-map-styles.mjs` refreshes both from OpenFreeMap.

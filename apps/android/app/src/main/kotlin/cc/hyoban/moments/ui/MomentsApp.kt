@@ -629,7 +629,11 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                         onMap = { showOnMap(MapFocus.Trip(it)) },
                                         onEdit = { navController.navigate(TripEdit(it)) },
                                         onWritePlan = { navController.navigate(opened(NewMoment(plan = it))) },
+                                        onPlanChat = { navController.navigate(TripPlanChat(it)) },
                                     )
+                                }
+                                screen<TripPlanChat> { entry ->
+                                    cc.hyoban.moments.ui.trips.PlanChatScreen(container, entry.toRoute<TripPlanChat>().id, onBack = back, onMoment = openMoment)
                                 }
                                 screen<TripEdit> { entry ->
                                     val edit = entry.toRoute<TripEdit>()

@@ -18,8 +18,8 @@ object BackupArchive {
     /** The databases, by their names in `noBackupFilesDir`: the ledger, the footprints and the copy of the API's records. */
     private val DATABASES = listOf("ledger.sqlite", "footprints.sqlite", "copy.db")
 
-    /** The footprints' reminders and companions, kept as JSON beside the databases. */
-    private val FILES = listOf("connection-reminders.json", "companion-connections.json")
+    /** The footprints' reminders and companions, and the plans' conversations, kept as JSON beside the databases. */
+    private val FILES = listOf("connection-reminders.json", "companion-connections.json", cc.hyoban.moments.PLAN_CHATS_FILE)
 
     /** The directory of `local/` that holds the photos and videos, which a backup leaves out. */
     private const val MEDIA = "media"

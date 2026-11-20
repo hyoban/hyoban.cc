@@ -40,6 +40,10 @@ data class TripEdit(
 @Serializable
 data class TripPlay(val id: String)
 
+/** 和 AI 规划: the plan [id] talked over with the model set in 同步与来源. */
+@Serializable
+data class TripPlanChat(val id: String)
+
 /**
  * One day's Moments, by its `YYYY-MM-DD`, and the key of the card it grows out of: a calendar
  * day, a day's pill or a Moment's row for it. Opened from elsewhere, a menu, it slides in.

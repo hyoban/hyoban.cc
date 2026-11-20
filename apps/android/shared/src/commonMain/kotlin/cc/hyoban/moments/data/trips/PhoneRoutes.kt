@@ -223,6 +223,57 @@ object Routers {
         return simplify(points.map { point -> point.jsonArray.let { (it[0] as JsonPrimitive).doubleOrNull!! to (it[1] as JsonPrimitive).doubleOrNull!! } })
     }
 
+    /** How a way between two points is gone: by road, on foot, by bike, or by train. */
+    enum class By { DRIVE, WALK, BIKE, TRAIN }
+
+    /** How long, in seconds, and how far, in metres, a way is as a router reckons it, timetables aside. */
+    data class Travel(val seconds: Long, val metres: Long)
+
+    /**
+     * How long and how far it is [by] from [from] to [to], or null when there is no way; an
+     * [IOException] when asking failed. A train's is the line's running, not a timetable's.
+     */
+    suspend fun travel(from: LngLat, to: LngLat, by: By): Travel? = withContext(Dispatchers.IO) {
+        if (by == By.TRAIN) return@withContext railTravel(from, to)
+        val query = buildJsonObject {
+            put("locations", buildJsonArray {
+                for ((lng, lat) in listOf(from, to)) add(buildJsonObject { put("lat", lat); put("lon", lng) })
+            })
+            put("costing", when (by) { By.WALK -> "pedestrian"; By.BIKE -> "bicycle"; else -> "auto" })
+            put("directions_type", "none")
+        }
+        val url = "https://valhalla1.openstreetmap.de/route".toHttpUrl().newBuilder().addQueryParameter("json", query.toString()).build()
+        val (code, body) = get(url.toString())
+        val answer = runCatching { Json.parseToJsonElement(body).jsonObject }.getOrNull()
+        val error = (answer?.get("error_code") as? JsonPrimitive)?.intOrNull
+        if (error != null && error in NO_PATH) return@withContext null
+        val summary = (answer?.get("trip") as? JsonObject)?.get("summary") as? JsonObject
+        val seconds = (summary?.get("time") as? JsonPrimitive)?.doubleOrNull
+        val km = (summary?.get("length") as? JsonPrimitive)?.doubleOrNull
+        if (code !in 200..299 || seconds == null || km == null) throw IOException("Valhalla answered $code")
+        Travel(seconds.toLong(), (km * 1000).toLong())
+    }
+
+    private fun railTravel(from: LngLat, to: LngLat): Travel? {
+        val url = "https://routing.openrailrouting.org/route".toHttpUrl().newBuilder()
+            .addQueryParameter("point", "${from.second},${from.first}")
+            .addQueryParameter("point", "${to.second},${to.first}")
+            .addQueryParameter("profile", "tgv_all")
+            .addQueryParameter("calc_points", "false")
+            .addQueryParameter("instructions", "false")
+            .build()
+        val (code, body) = get(url.toString())
+        val answer = runCatching { Json.parseToJsonElement(body).jsonObject }.getOrNull()
+        val path = (answer?.get("paths") as? JsonArray)?.firstOrNull() as? JsonObject
+        val ms = (path?.get("time") as? JsonPrimitive)?.doubleOrNull
+        val metres = (path?.get("distance") as? JsonPrimitive)?.doubleOrNull
+        if (ms == null || metres == null) {
+            if ((answer?.get("message") as? JsonPrimitive)?.content?.contains("not found") == true) return null
+            throw IOException("OpenRailRouting answered $code")
+        }
+        return Travel((ms / 1000).toLong(), metres.toLong())
+    }
+
     private fun get(url: String): Pair<Int, String> {
         val request = Request.Builder().url(url).header("Accept", "application/json").header("User-Agent", USER_AGENT).build()
         return Http.client.newCall(request).execute().use { it.code to (it.body?.string() ?: "") }

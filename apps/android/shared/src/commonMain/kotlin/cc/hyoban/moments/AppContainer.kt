@@ -106,6 +106,9 @@ abstract class AppContainer(
     // as it was kept before, as JSON files, and `data/` what the app recorded before it only
     // showed the site's records; both are left as they were.
     val localStore = DataStore(File(files, "local"))
+
+    /** The plans' conversations with the model, kept beside what must not leave the device but goes in its backup. */
+    val planChats by lazy { cc.hyoban.moments.ui.trips.PlanChats(File(private, PLAN_CHATS_FILE), scope) }
     protected val api = MomentsApi(baseUrl = { settings.apiUrl.value }, token = { settings.apiToken.value })
     val repository = MomentsRepository(CopyStore(File(private, "copy.db"), driver), api, local = localStore, writer = api, outside = outside)
 
@@ -510,4 +513,7 @@ abstract class AppContainer(
 }
 
 /** How long a trip's legs stay put before the phone routes them, so an edit in progress asks nothing. */
+/** Where the plans' conversations are kept, in the device's private folder, and named so in its backup. */
+const val PLAN_CHATS_FILE = "plan-chats.json"
+
 private const val ROUTE_SETTLE_MS = 2_000L

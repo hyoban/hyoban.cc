@@ -7,6 +7,8 @@ import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.Spinner
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -82,8 +84,12 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
     var editingToken by rememberSaveable { mutableStateOf(false) }
     var editingTencentKey by rememberSaveable { mutableStateOf(false) }
     var editingAmapKey by rememberSaveable { mutableStateOf(false) }
+    var editingAiKey by rememberSaveable { mutableStateOf(false) }
+    var editingAiModel by rememberSaveable { mutableStateOf(false) }
+    var editingAiNotes by rememberSaveable { mutableStateOf(false) }
     val rows = listOf(
         Row(settings.apiUrl, Res.string.setting_api_url, AppIcons.Cloud) { container.changeApi(it) },
+        Row(settings.aiUrl, Res.string.setting_ai_url, AppIcons.Cloud) { settings.aiUrl.set(it) },
     )
 
     SubPage(stringResource(Res.string.sync_title), onBack, Modifier.background(AppColors.page)) {
@@ -182,6 +188,44 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                     ) { Text(stringResource(Res.string.setting_tencent_key)) }
                 }
                 Section(stringResource(Res.string.section_map), emptyList(), 0, stringResource(Res.string.settings_map_note), extra = listOfNotNull(amapKey, tencentKey, chinaPlaces.takeIf { settings.amapKey.isSet && settings.tencentMapKey.isSet })) { editing = it }
+                // The model a plan is talked over with: its address, the owner's key and the model's name.
+                val aiKey: Segment = { shapes ->
+                    SegmentedListItem(
+                        onClick = { editingAiKey = true },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        leadingContent = { Icon(AppIcons.Key, contentDescription = null) },
+                        supportingContent = { Text(stringResource(if (settings.aiKey.isSet) Res.string.token_set else Res.string.token_unset)) },
+                        modifier = Modifier.testTag("ai_key"),
+                    ) { Text(stringResource(Res.string.setting_ai_key)) }
+                }
+                val aiModel: Segment = { shapes ->
+                    SegmentedListItem(
+                        onClick = { editingAiModel = true },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        leadingContent = { Icon(AppIcons.Sliders, contentDescription = null) },
+                        supportingContent = {
+                            Text(settings.aiModel.value.ifEmpty { stringResource(Res.string.setting_unset) }, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        },
+                        modifier = Modifier.testTag("ai_model"),
+                    ) { Text(stringResource(Res.string.setting_ai_model)) }
+                }
+                // What the owner tells the model besides, its first line shown.
+                val aiNotes: Segment = { shapes ->
+                    SegmentedListItem(
+                        onClick = { editingAiNotes = true },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        leadingContent = { Icon(AppIcons.Notes, contentDescription = null) },
+                        supportingContent = {
+                            val notes = settings.aiNotes.value.trim()
+                            Text(notes.lineSequence().first().ifEmpty { stringResource(Res.string.ai_notes_unset) }, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        },
+                        modifier = Modifier.testTag("ai_notes"),
+                    ) { Text(stringResource(Res.string.setting_ai_notes)) }
+                }
+                Section(stringResource(Res.string.section_ai), rows.subList(1, 2), 1, stringResource(Res.string.settings_ai_note), extra = listOf(aiKey, aiModel, aiNotes)) { editing = it }
                 device.UpdateSettings(container)
             }
         }
@@ -205,6 +249,27 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
         TokenDialog(settings.amapKey, TokenWords.Amap, "amap_key", onDismiss = { editingAmapKey = false }) { text ->
             settings.amapKey.set(text)
             editingAmapKey = false
+        }
+    }
+
+    if (editingAiKey) {
+        TokenDialog(settings.aiKey, TokenWords.Ai, "ai_key", onDismiss = { editingAiKey = false }) { text ->
+            settings.aiKey.set(text)
+            editingAiKey = false
+        }
+    }
+
+    if (editingAiModel) {
+        ModelDialog(settings.aiModel.value, settings.aiUrl.value, settings.aiKey.value, onDismiss = { editingAiModel = false }) { text ->
+            settings.aiModel.set(text)
+            editingAiModel = false
+        }
+    }
+
+    if (editingAiNotes) {
+        NotesDialog(settings.aiNotes.value, onDismiss = { editingAiNotes = false }) { text ->
+            settings.aiNotes.set(text.trim())
+            editingAiNotes = false
         }
     }
 
@@ -308,6 +373,117 @@ private enum class TokenWords(val title: StringResource, val hint: StringResourc
     Api(Res.string.setting_api_token, Res.string.token_hint, Res.string.token_replace, Res.string.settings_token_note, Res.string.action_forget_token, Res.string.action_show_token, Res.string.action_hide_token),
     Tencent(Res.string.setting_tencent_key, Res.string.tencent_key_hint, Res.string.tencent_key_replace, Res.string.settings_tencent_key_note, Res.string.action_forget_tencent_key, Res.string.action_show_key, Res.string.action_hide_key),
     Amap(Res.string.setting_amap_key, Res.string.amap_key_hint, Res.string.tencent_key_replace, Res.string.settings_amap_key_note, Res.string.action_forget_tencent_key, Res.string.action_show_key, Res.string.action_hide_key),
+    Ai(Res.string.setting_ai_key, Res.string.ai_key_hint, Res.string.tencent_key_replace, Res.string.settings_ai_key_note, Res.string.action_forget_tencent_key, Res.string.action_show_key, Res.string.action_hide_key),
+}
+
+/**
+ * The model to talk plans over with: typed, the whole of it selected to type over, or picked from
+ * what the service offers, asked of it as the dialog opens when its address and key are set and
+ * narrowed by what is typed; blank forgets it.
+ */
+@Composable
+private fun ModelDialog(value: String, url: String, key: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+    var field by remember { mutableStateOf(TextFieldValue(value, TextRange(0, value.length))) }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    // The service's models: null while asked, then the list, or why there is none.
+    var models by remember { mutableStateOf<List<String>?>(null) }
+    var failure by remember { mutableStateOf<String?>(null) }
+    val canAsk = url.isNotEmpty() && key.isNotEmpty()
+    LaunchedEffect(url, key) {
+        if (!canAsk) return@LaunchedEffect
+        try {
+            models = cc.hyoban.moments.data.ai.PlanAssistant.models(url, key)
+        } catch (error: Exception) {
+            if (error is kotlinx.coroutines.CancellationException) throw error
+            failure = textOf(Res.string.ai_models_failed, cc.hyoban.moments.ui.format.failureReason(error))
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.setting_ai_model)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                OutlinedTextField(
+                    value = field,
+                    onValueChange = { field = it },
+                    placeholder = { Text(stringResource(Res.string.ai_model_hint)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { onSave(field.text) }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("ai_model_field"),
+                )
+                when {
+                    !canAsk -> Text(stringResource(Res.string.ai_models_need_key), style = AppTheme.typography.caption, color = tokens.tx2)
+                    failure != null -> Text(failure!!, style = AppTheme.typography.caption, color = tokens.tx2)
+                    models == null -> Spinner(Modifier.size(24.dp))
+                    else -> {
+                        // Narrowed by what is typed, unless what is typed is what was set.
+                        val typed = field.text.trim()
+                        val shown = models!!.filter { typed.isEmpty() || typed == value || it.contains(typed, ignoreCase = true) }
+                        if (shown.isEmpty()) {
+                            Text(stringResource(Res.string.ai_models_none), style = AppTheme.typography.caption, color = tokens.tx2)
+                        } else {
+                            androidx.compose.foundation.lazy.LazyColumn(Modifier.fillMaxWidth().heightIn(max = 280.dp).testTag("ai_models")) {
+                                items(shown.size) { index ->
+                                    val model = shown[index]
+                                    androidx.compose.foundation.layout.Row(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(min = 48.dp)
+                                            .clickable { onSave(model) }
+                                            .padding(horizontal = Space.xs),
+                                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(Space.m),
+                                    ) {
+                                        Text(model, style = AppTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                        if (model == value) Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSave(field.text) }, modifier = Modifier.testTag("ai_model_save")) { Text(stringResource(Res.string.action_confirm)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
+    )
+}
+
+/**
+ * 补充说明: what the owner tells the model besides, in a field of four lines growing to ten, a line
+ * under it saying where it goes; blank forgets it.
+ */
+@Composable
+private fun NotesDialog(value: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+    var field by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.setting_ai_notes)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                OutlinedTextField(
+                    value = field,
+                    onValueChange = { field = it },
+                    placeholder = { Text(stringResource(Res.string.ai_notes_hint)) },
+                    minLines = 4,
+                    maxLines = 10,
+                    modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("ai_notes_field"),
+                )
+                Text(stringResource(Res.string.ai_notes_note), style = AppTheme.typography.caption, color = tokens.tx2)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSave(field.text) }, modifier = Modifier.testTag("ai_notes_save")) { Text(stringResource(Res.string.action_confirm)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
+    )
 }
 
 /**

@@ -19,6 +19,8 @@ fun failureReason(error: Throwable): String = textOf(
         is HttpException -> when (error.code) {
             401, 403 -> Res.string.reason_token
             404 -> Res.string.reason_not_found
+            402 -> Res.string.reason_payment
+            429 -> Res.string.reason_busy
             in 500..599 -> Res.string.reason_server
             else -> Res.string.reason_rejected
         }
