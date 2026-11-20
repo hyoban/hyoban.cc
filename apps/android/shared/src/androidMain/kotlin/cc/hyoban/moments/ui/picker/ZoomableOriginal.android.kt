@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.picker
 
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -73,7 +74,9 @@ actual fun ZoomableOriginal(
             }
         }
         ZoomableAsyncImage(
-            model,
+            // Coil reads a Bitmap but not Compose's ImageBitmap: until the original comes, the
+            // thumbnail stands in as one, so it zooms and the zoom can fetch the original.
+            if (model is ImageBitmap) model.asAndroidBitmap() else model,
             contentDescription = contentDescription,
             modifier = Modifier.fillMaxSize(),
             state = image,
