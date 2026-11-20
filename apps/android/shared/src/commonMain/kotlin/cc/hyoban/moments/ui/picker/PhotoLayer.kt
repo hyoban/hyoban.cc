@@ -23,7 +23,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.res.*
-import cc.hyoban.moments.ui.components.BackHandler
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
@@ -104,11 +103,11 @@ fun rememberPhotoLayer(container: AppContainer, onWrite: () -> Unit): PhotoLayer
  * stands in place of the tabs, and an opened photo is the viewer over the whole window.
  */
 @Composable
-fun BoxScope.PhotoLayerSheet(container: AppContainer, layer: PhotoLayer, onMoment: (String) -> Unit) {
+fun BoxScope.PhotoLayerSheet(container: AppContainer, layer: PhotoLayer, onMoment: (String) -> Unit, active: () -> Boolean = { true }) {
     val places = layer.places
     val choice = layer.choice
     val opened = places.opened
-    BackHandler(enabled = opened != null && !choice.choosing) { places.open(null) }
+    cc.hyoban.moments.ui.map.MapBack({ active() && opened != null && !choice.choosing }) { places.open(null) }
     choice.TabsGiveWay()
     LaunchedEffect(opened) { if (opened == null) choice.stop() }
     if (opened != null) key(opened.first()) {

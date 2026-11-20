@@ -552,7 +552,7 @@ private fun MapContent(
     // dragged up to all of it or down and away, back to the trips. Its handle is the panel's own,
     // tapped or focused as well as dragged. In the app's own window, so a trip or a Moment opened
     // from it grows out of its row.
-    BackHandler(enabled = selected != null) { selected = null }
+    MapBack({ active() && selected != null }) { selected = null }
     val scaffold = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
     LaunchedEffect(selected) { sheetState.partialExpand() }
     // Swiped away, a place is let go and the trips come back; the trips themselves stay resting.
@@ -635,7 +635,7 @@ private fun MapContent(
                     .padding(start = rail.left).width(panelWidth).testTag("map_panel"),
             ) { panel() }
         }
-        photoLayer?.let { layer -> Box(Modifier.fillMaxSize()) { PhotoLayerSheet(container, layer, onMoment) } }
+        photoLayer?.let { layer -> Box(Modifier.fillMaxSize()) { PhotoLayerSheet(container, layer, onMoment, active) } }
         return
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -649,7 +649,7 @@ private fun MapContent(
             sheetContent = { sheetContent() },
         ) { }
     }
-    photoLayer?.let { layer -> Box(Modifier.fillMaxSize()) { PhotoLayerSheet(container, layer, onMoment) } }
+    photoLayer?.let { layer -> Box(Modifier.fillMaxSize()) { PhotoLayerSheet(container, layer, onMoment, active) } }
 }
 
 /** The colour of a trip's year on the map, when a place first visited that year has one. */
@@ -882,9 +882,13 @@ private fun TripsSheet(
  * when it began, how many days and how many photos (or records, without any), then adding it as
  * it is and dismissing it.
  */
-/** Back lets a lifted route go, read on its own so the tab shown and hidden composes nothing else. */
+/**
+ * Back on the map while its tab is shown, as a lifted route's letting go: the map stays composed
+ * behind the pages, where a back of its own would take theirs. [enabled] is read on its own so
+ * the tab shown and hidden composes nothing else.
+ */
 @Composable
-private fun MapBack(enabled: () -> Boolean, onBack: () -> Unit) {
+internal fun MapBack(enabled: () -> Boolean, onBack: () -> Unit) {
     BackHandler(enabled = enabled(), onBack = onBack)
 }
 
