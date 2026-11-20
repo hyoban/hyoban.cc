@@ -938,7 +938,10 @@ class MomentsRepository(
             removed.mapNotNull { all[it] }.sortedWith(oldestFirst),
             changedPlaces.mapNotNull { (id, place) -> apiPlaces[id]?.let { PlaceChange(id, it, place) } }.sortedBy { it.after.name },
             outside?.pending(siteSpots()) ?: Outside(),
-            changedTrips.map { (id, collection) -> TripChange(id, apiTrips.firstOrNull { it.id == id }, collection) },
+            changedTrips.map { (id, collection) ->
+                val uid = (collection["uid"] as? kotlinx.serialization.json.JsonPrimitive)?.content
+                TripChange(id, apiTrips.firstOrNull { it.id == id }, collection, _records.value.collections.values.firstOrNull { (it["uid"] as? kotlinx.serialization.json.JsonPrimitive)?.content == uid })
+            },
             (changes - phone.keys).map { (uid, entry) -> EntryChange(_records.value.entries[uid], entry) } +
                 removed.filter { it !in all }.mapNotNull { uid -> _records.value.entries[uid]?.let { EntryChange(it, null) } },
         )
@@ -1223,7 +1226,13 @@ data class PendingChanges(
 data class EntryChange(val before: kotlinx.serialization.json.JsonObject?, val after: kotlinx.serialization.json.JsonObject?)
 
 /** A trip as the site has it, [before] (none for one made on the phone), and the collection it is changed to or made as. */
-data class TripChange(val id: String, val before: TripRecord?, val after: kotlinx.serialization.json.JsonObject)
+data class TripChange(
+    val id: String,
+    val before: TripRecord?,
+    val after: kotlinx.serialization.json.JsonObject,
+    /** The collection as the site has it, to say what changed; none for one made on the phone. */
+    val site: kotlinx.serialization.json.JsonObject? = null,
+)
 
 /** One of the site's places as the site has it, [before], and with the kind changed on the phone. */
 data class PlaceChange(val id: String, val before: Place, val after: Place)

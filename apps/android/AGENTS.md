@@ -273,6 +273,12 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Nothing reaches the site until 全部发布 on 发布更改, after the changes waiting have been
   reviewed: one change set, like a commit, sent as entries to `POST /v2/changes`. Don't add
   writes that bypass it.
+- 发布更改 says what each change changes, field by field (`ui/publish/ChangesScreen.kt`,
+  `EntryDiffs.kt`, `BillChanges.kt`): whatever a record, trip, place, check-in, occasion, device,
+  subscription or bill can have changed on the phone is listed there against the site's copy,
+  old beside new and writing marked letter by letter. A new field, or a new way to change one,
+  comes with its line there in the same change, so no change is published unseen or shows as
+  没有改动.
 - The phone keeps every record it writes or changes as the entry it will be published as
   (`changedEntries`, a Moment, a check-in and a device alike), and a Moment is only worked out
   from one, so a record changes shape by being saved as it now is. Don't bring back a store of

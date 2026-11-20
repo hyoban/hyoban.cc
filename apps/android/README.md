@@ -367,9 +367,11 @@ and nothing is marked 未发布, on the timeline or on a Moment's page, until th
 them the site's Moments can be changed and deleted too. Nothing reaches the site as it is
 saved: new, changed and deleted Moments, changed places, public bills, trips,
 check-ins, occasions and things wait on the phone, past a restart. 发布更改, from the card
-at the top of 我, lists them, shows what changed, each field of a changed Moment, place,
-check-in, occasion, device or subscription struck through beside what it is now, and takes a
-change back. Bills are a part of their own (`ui/publish/BillChanges.kt`), in three groups by
+at the top of 我, lists them, shows what changed, each field of a changed Moment, trip (against the site's own
+collection: its name, days, who sees it, 计划, the records it takes in or leaves out, covers, the
+check-ins it runs between, its route's hints, music and note), place, check-in, occasion, device or
+subscription struck through beside what it is now, writing (words, a photo's description, a note)
+marked letter by letter, and takes a change back. Bills are a part of their own (`ui/publish/BillChanges.kt`), in three groups by
 what the site gets: new, changed (its category, amount or note marked where it shows, or its time
 or place, told against the site's copy of a bill on its own, the site's struck through) and taken
 off (made private or deleted here, struck through); a group of more than three folds, and opened

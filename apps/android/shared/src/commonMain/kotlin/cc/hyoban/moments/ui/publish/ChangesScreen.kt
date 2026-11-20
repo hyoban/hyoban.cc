@@ -268,6 +268,10 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                             null,
                             stringResource(if (private) Res.string.visibility_private else Res.string.visibility_public),
                             revert,
+                            // A changed one, field by field against the site's; one made here is as it is.
+                            diffs = change.site?.let { site ->
+                                tripDiffs(site, after) { uid -> container.repository.entries.value[uid]?.let { cc.hyoban.moments.data.things.checkinOf(it) }?.venue }
+                            },
                         )
                     }
                 }
@@ -647,7 +651,7 @@ private fun OutsideCard(title: String, date: String?, figure: String?, note: Str
         if (diffs != null) {
             Column(Modifier.padding(top = Space.s), verticalArrangement = Arrangement.spacedBy(Space.m)) {
                 if (diffs.isEmpty()) Text(stringResource(Res.string.note_change_nothing), style = AppTheme.typography.body, color = tokens.tx2)
-                diffs.forEach { diff -> Field(diff.label) { FromTo(diff.from, diff.to, diff.icon) } }
+                diffs.forEach { diff -> Field(diff.label) { if (diff.words) TextChange(diff.from.orEmpty(), diff.to) else FromTo(diff.from, diff.to, diff.icon) } }
             }
         }
         CardActions(onRevert?.let { revert -> { RevertButton(revert) } })
@@ -673,6 +677,7 @@ private fun PlaceChangeCard(change: PlaceChange, onRevert: (() -> Unit)?) {
             val metres = distance(Fix(before.latitude, before.longitude), Fix(after.latitude, after.longitude))
             Field(Res.string.change_place_point) { FromTo(null, stringResource(Res.string.change_place_moved, formatDistance(metres)), AppIcons.Pin) }
         }
+        if (before.note.orEmpty() != after.note.orEmpty()) Field(Res.string.change_note) { TextChange(before.note.orEmpty(), after.note.orEmpty()) }
         if (before.kind != after.kind) {
             val kindOf = @Composable { place: Place -> PlaceKind.of(place.kind)?.let { stringResource(it.label) } ?: place.kind }
             Field(Res.string.change_place_kind) { FromTo(kindOf(before), kindOf(after).orEmpty(), AppIcons.Category) }
@@ -810,6 +815,65 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
         Field(Res.string.section_visibility) {
             FromTo(if (before.hidden) private else public, if (after.hidden) private else public, if (after.hidden) AppIcons.EyeOff else AppIcons.Eye)
         }
+    }
+    // Who sees each part, where one says otherwise than the Moment: 照片私有 and the like.
+    val sayOf = { moment: MomentRecord ->
+        (moment.extra[cc.hyoban.moments.data.spec.Entries.PART_VISIBILITY] as? kotlinx.serialization.json.JsonObject).orEmpty()
+            .mapValues { (it.value as? kotlinx.serialization.json.JsonPrimitive)?.content }
+    }
+    val (saidBefore, saidAfter) = sayOf(before) to sayOf(after)
+    val parts = (saidBefore.keys + saidAfter.keys).filter { saidBefore[it] != saidAfter[it] }
+    if (parts.isNotEmpty()) {
+        any = true
+        Field(Res.string.section_visibility) {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+                parts.forEach { part ->
+                    val name = stringResource(
+                        when (part) {
+                            "media" -> Res.string.part_photos
+                            "cost", "food" -> Res.string.part_cost
+                            else -> Res.string.part_text
+                        },
+                    )
+                    // Unsaid, a part is seen as the Moment is.
+                    val seen = @Composable { say: String? ->
+                        val private = say?.let { it == "private" } ?: before.hidden
+                        stringResource(if (private) Res.string.part_private else Res.string.part_public, name)
+                    }
+                    FromTo(seen(saidBefore[part]), seen(saidAfter[part]), if (saidAfter[part] == "private") AppIcons.EyeOff else AppIcons.Eye)
+                }
+            }
+        }
+    }
+    // A photo's description, each beside its photo, letter by letter.
+    val altBefore = before.media.associate { it.uid to it.alt }
+    val described = after.media.filter { it.uid in altBefore && altBefore[it.uid] != it.alt }
+    if (described.isNotEmpty()) {
+        any = true
+        Field(Res.string.change_alt) {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
+                described.forEach { media ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                        Thumbnail(media, urls, size = 40)
+                        Box(Modifier.weight(1f)) { TextChange(altBefore[media.uid].orEmpty(), media.alt) }
+                    }
+                }
+            }
+        }
+    }
+    // Where it sits among its day's when times don't say.
+    if (before.order != after.order) {
+        any = true
+        Field(Res.string.change_order) { FromTo(null, stringResource(Res.string.change_order_moved), AppIcons.Refresh) }
+    }
+    // The check-in it carries, renamed with its place.
+    val venueOf = { moment: MomentRecord ->
+        ((moment.extra[cc.hyoban.moments.data.spec.Entries.OTHER_PARTS] as? kotlinx.serialization.json.JsonObject)?.get("checkin") as? kotlinx.serialization.json.JsonObject)
+            ?.let { cc.hyoban.moments.data.spec.Entries.checkinName(it) }
+    }
+    if (venueOf(before) != venueOf(after)) {
+        any = true
+        Field(Res.string.change_checkin) { FromTo(venueOf(before), venueOf(after) ?: stringResource(Res.string.change_none), AppIcons.Flag) }
     }
     // Planned or lived, and locked or not: each a change of its own, as on the record's page.
     val yes = stringResource(Res.string.change_yes)
