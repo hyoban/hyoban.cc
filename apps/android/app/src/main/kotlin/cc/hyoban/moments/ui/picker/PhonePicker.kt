@@ -17,9 +17,14 @@ import kotlinx.coroutines.launch
 
 /** 相册 on the phone: its gallery and the paired camera before the NAS, its videos played by Media3, and the system's share sheet. */
 class PhonePicker(private val context: Context) : PickerDevice {
+    private val container get() = (context.applicationContext as cc.hyoban.moments.MomentsApplication).container
+
+    /** The gallery, one for 相册, 选照片 and 地图's photos alike. */
+    private val gallery by lazy { GallerySource(context.applicationContext, container.settings) }
+
     @Composable
     override fun sources(deletion: Deletion, onFallback: () -> Unit, onRefused: () -> Unit): List<PhotoSource> {
-        val gallery = rememberGallery(deletion, onFallback)
+        val gallery = rememberGallery(gallery, deletion, onFallback)
         val camera = rememberCamera(deletion, onRefused)
         return listOf(gallery, camera)
     }
@@ -27,8 +32,8 @@ class PhonePicker(private val context: Context) : PickerDevice {
     /** The gallery's photos by where they were taken, read once each and kept (09 地图的照片). */
     @Composable
     override fun places(deletion: Deletion): List<Places> {
-        val gallery = rememberGallery(deletion, onFallback = {})
-        val locations = (context.applicationContext as cc.hyoban.moments.MomentsApplication).container.galleryLocations
+        val gallery = rememberGallery(gallery, deletion, onFallback = {})
+        val locations = container.galleryLocations
         return listOf(remember(gallery) { GalleryPlaces(gallery, locations) })
     }
 

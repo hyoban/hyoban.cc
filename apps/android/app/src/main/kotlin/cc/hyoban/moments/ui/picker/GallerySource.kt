@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
@@ -65,18 +66,19 @@ import cc.hyoban.moments.ui.viewer.readLocal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 
 /**
- * The phone's gallery, asked for once, with where its photos were taken; refused, [onFallback]
- * opens the system's documents picker instead. Its photos go in as they are, and go to its bin
- * with the system's own prompt.
+ * The phone's [gallery] on a page: asked for once, with where its photos were taken; refused,
+ * [onFallback] opens the system's documents picker instead. The gallery is one for the app (相册,
+ * 选照片 and 地图's photos read the same list); each page showing it lends it the system's prompts,
+ * to choose its photos again and to move some to its bin, [deletion] told of what went.
  */
 @Composable
-internal fun rememberGallery(deletion: Deletion, onFallback: () -> Unit): GallerySource {
-    val context = LocalContext.current
-    val access = remember { mutableStateOf(LocalMedia.access(context)) }
+internal fun rememberGallery(gallery: GallerySource, deletion: Deletion, onFallback: () -> Unit): GallerySource {
     val ask = rememberPermissionAsk(
         LocalMedia.permissions + Manifest.permission.ACCESS_MEDIA_LOCATION,
         PermissionWords(
@@ -92,18 +94,13 @@ internal fun rememberGallery(deletion: Deletion, onFallback: () -> Unit): Galler
         isGranted = { LocalMedia.access(it) != GalleryAccess.NONE },
         onDecline = onFallback,
     ) { granted ->
-        access.value = LocalMedia.access(context)
+        gallery.checkAccess()
         if (!granted) onFallback()
     }
-    LaunchedEffect(Unit) { if (access.value == GalleryAccess.NONE) ask() }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { access.value = LocalMedia.access(context) }
+    LaunchedEffect(Unit) { if (gallery.access == GalleryAccess.NONE) ask() }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { gallery.checkAccess() }
     // 更改: the system's choice of photos again, on Android 14 and later, or all of them.
-    val reselect = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { access.value = LocalMedia.access(context) }
-    val all = remember(access.value) { if (access.value == GalleryAccess.NONE) flowOf(emptyList()) else LocalMedia.items(context) }
-        .collectAsStateWithLifecycle(emptyList())
-    // Without the albums hidden in 相簿, everywhere the gallery is shown.
-    val settings = LocalSettings.current
-    val items = remember(all) { derivedStateOf { all.value.filterNot { hiddenAlbum(settings, it) } } }
+    val reselect = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { gallery.checkAccess() }
 
     // Moving to the bin: the system asks, so the app doesn't too.
     var trashed by remember { mutableStateOf<List<LocalItem>>(emptyList()) }
@@ -112,6 +109,7 @@ internal fun rememberGallery(deletion: Deletion, onFallback: () -> Unit): Galler
         trashed = emptyList()
         if (result.resultCode == Activity.RESULT_OK) deletion.gone(gone)
     }
+    val context = LocalContext.current
     // One request for them all, so the system asks once.
     val moveToBin: (List<LocalItem>) -> Unit = { these ->
         runCatching {
@@ -120,28 +118,71 @@ internal fun rememberGallery(deletion: Deletion, onFallback: () -> Unit): Galler
             trash.launch(IntentSenderRequest.Builder(request.intentSender).build())
         }.onFailure { Toast.makeText(context, textOf(Res.string.picker_trash_failed), Toast.LENGTH_SHORT).show() }
     }
-    // Kept for the page's life: the states it reads stay the same objects as their values change.
-    return remember {
-        GallerySource(context, items, access, reselect = { reselect.launch(LocalMedia.permissions) }, moveToBin = moveToBin)
+    DisposableEffect(gallery) {
+        val leave = gallery.attach(GallerySource.Page(reselect = { reselect.launch(LocalMedia.permissions) }, moveToBin = moveToBin))
+        onDispose(leave)
     }
+    return gallery
 }
 
-internal class GallerySource(
-    val context: Context,
-    private val itemsState: State<List<LocalItem>>,
-    private val accessState: State<GalleryAccess>,
-    val reselect: () -> Unit,
-    private val moveToBin: (List<LocalItem>) -> Unit,
-) : PhotoSource {
-    val items get() = itemsState.value
-    val access get() = accessState.value
+/**
+ * The phone's gallery, one for the app: its photos read once and followed as they change while any
+ * page shows them, without the albums hidden in 相簿, and its motion photos listed once for them all.
+ */
+internal class GallerySource(val context: Context, private val settings: cc.hyoban.moments.Settings) : PhotoSource {
+    /** What a page showing the gallery lends it: the system's prompts, opened from that page. */
+    class Page(val reselect: () -> Unit, val moveToBin: (List<LocalItem>) -> Unit)
+
+    private var accessState: GalleryAccess by mutableStateOf(LocalMedia.access(context))
+    val access: GalleryAccess get() = accessState
+
+    /** Reads again what the gallery may be seen of, after the system has been asked. */
+    fun checkAccess() {
+        accessState = LocalMedia.access(context)
+    }
+
+    private var read: List<LocalItem> by mutableStateOf(emptyList())
+    private val shown: State<List<LocalItem>> = derivedStateOf { read.filterNot { hiddenAlbum(settings, it) } }
+
+    /** Its photos and videos, without the albums hidden in 相簿, everywhere the gallery is shown. */
+    val items: List<LocalItem> get() = shown.value
+
+    private val pages = mutableListOf<Page>()
+    private val scope = kotlinx.coroutines.MainScope()
+    private var following: kotlinx.coroutines.Job? = null
+
+    /**
+     * [page] showing the gallery, until the returned call: the photos are read and followed while
+     * any page shows them, and the prompts are the last page's, the one in front.
+     */
+    fun attach(page: Page): () -> Unit {
+        pages += page
+        if (following == null) following = scope.launch {
+            androidx.compose.runtime.snapshotFlow { access }.collectLatest { access ->
+                if (access == GalleryAccess.NONE) read = emptyList() else LocalMedia.items(context).collect { read = it }
+            }
+        }
+        return {
+            pages -= page
+            if (pages.isEmpty()) following?.cancel().also { following = null }
+        }
+    }
+
+    /** Asks the system for its choice of photos again, from the page in front. */
+    fun reselect() {
+        pages.lastOrNull()?.reselect?.invoke()
+    }
 
     /** The motion photos among [items], by id, once listed; null until then. */
     var motion by mutableStateOf<Set<Long>?>(null)
         private set
+    private var motionOf: List<LocalItem>? = null
 
     /** Lists the motion photos for the tiles' badges and the filter, in one query, again as the gallery changes. */
     suspend fun readMotion() {
+        val now = items
+        if (motionOf === now) return
+        motionOf = now
         motion = withContext(Dispatchers.IO) { LocalMedia.motionIds(context) }
     }
     val all = GalleryListing(this, null, null)
@@ -160,7 +201,9 @@ internal class GallerySource(
     override suspend fun fetch(picks: List<Pick>, progress: (Int, Float) -> Unit): List<Uri> =
         picks.map { LocalMedia.forMoment(context, (it as GalleryPick).item.uri) }
 
-    override fun delete(picks: List<Pick>, fromViewer: Boolean) = moveToBin(picks.map { (it as GalleryPick).item })
+    override fun delete(picks: List<Pick>, fromViewer: Boolean) {
+        pages.lastOrNull()?.moveToBin?.invoke(picks.map { (it as GalleryPick).item })
+    }
 
     override val deleteTag = "picker_trash_chosen"
     override val deleteWords = Res.string.picker_trash
@@ -201,7 +244,7 @@ internal data class GalleryListing(val gallery: GallerySource, val albumId: Long
 
     @Composable
     override fun Body(shown: List<Pick>, grid: @Composable ((@Composable () -> Unit)?, (() -> Unit)?) -> Unit) =
-        grid(if (gallery.access == GalleryAccess.CHOSEN) ({ Limited(gallery.items.size, gallery.reselect) }) else null, null)
+        grid(if (gallery.access == GalleryAccess.CHOSEN) ({ Limited(gallery.items.size, gallery::reselect) }) else null, null)
 }
 
 /** The phone's gallery says what each photo is, and when it was taken; where, only once each is read, which it isn't for this. */
