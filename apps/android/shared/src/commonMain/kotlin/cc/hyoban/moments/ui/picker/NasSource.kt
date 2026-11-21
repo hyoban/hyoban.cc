@@ -252,8 +252,10 @@ data class NasListing(val nas: NasSource, val album: NasAlbum?) : Listing {
         return list?.let { list ->
             // Every photo once read; until then a slot in its day, which reads its page once it is shown.
             remember(list, list.version) {
-                list.photos.mapIndexed { index, photo ->
-                    val day = list.dayAt(index)
+                val photos = list.photos.toList()
+                val days = list.daysOf(photos.size)
+                photos.mapIndexed { index, photo ->
+                    val day = days[index]
                     if (photo != null) NasPick(photo, nas, day) else NasSlot(list, index, day, nas, album)
                 }.also { picks -> album?.let { nas.albumDays.getOrPut(it.uuid) { mutableSetOf() } += picks.mapNotNull { it.day } } }
             }
@@ -664,7 +666,13 @@ class NasList(
             val limit = span?.let { minOf(Nas.PAGE, it - offset) } ?: Nas.PAGE
             if (limit <= 0) return
             val (got, count) = page(base + offset, limit)
-            got.forEachIndexed { i, photo -> if (offset + i < photos.size) photos[offset + i] = photo else photos += photo }
+            // The page's slots taken out and its photos put in, in two changes: one change a photo,
+            // the state list comparing itself up to that photo each time, cost a long list dearly.
+            val at = minOf(offset, photos.size)
+            if (got.isNotEmpty()) {
+                photos.removeRange(at, minOf(offset + got.size, photos.size).coerceAtLeast(at))
+                photos.addAll(at, got)
+            }
             version++
             total = when {
                 span != null -> span!!.coerceAtLeast(photos.size)
@@ -712,14 +720,15 @@ class NasList(
         } finally { reading -= SIFTING }
     }
 
-    /** The day the timeline puts the photo at [index] under, where its days are read. */
-    fun dayAt(index: Int): LocalDate? {
-        var at = 0
+    /** The day the timeline puts each of the first [count] photos under, where its days are read: one walk down the days, not one each. */
+    fun daysOf(count: Int): List<LocalDate?> {
+        val out = ArrayList<LocalDate?>(count)
         for (day in days) {
-            at += day.count
-            if (index < at) return day.day
+            repeat(minOf(day.count, count - out.size)) { out += day.day }
+            if (out.size == count) return out
         }
-        return null
+        while (out.size < count) out += null
+        return out
     }
 
     /** Takes out the photos of [ids], deleted, and their places in their days. */

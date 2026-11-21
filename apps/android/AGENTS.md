@@ -72,7 +72,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 
 - The phone is the user's, with their real data and a live link to the site. After a
   runtime or UI change, build the debug build and install it over what is there, without
-  asking: `./gradlew :app:assembleDebug`, then `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
+  asking: `./gradlew :app:assembleDebug`, then `adb install-multiple -r app/build/outputs/apk/debug/app-debug.apk
+  app/build/outputs/apk/debug/baselineProfiles/0/app-debug.dm`, its profile beside it so the phone compiles it
+  on install. The debug build is not debuggable, which slowed it several times over; build with
+  `-Pdebuggable` only for a debugger, the layout inspector or `run-as`.
   The user tests it: don't launch, open, tap or publish on the phone yourself. Say what to
   try and what to look for, and read logcat (its crash buffer, `Moments:W`) when asked.
   Build only what the step needs, not the CI set each time.
@@ -91,7 +94,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   and dropped frames on it then, as the debug build runs slower. Both are signed
   with the same key, the release key in `local.properties` or else the debug key, so either
   installs over the other and the app's data stays. The emulator only ever gets the debug
-  build, so `run-as` can read its files.
+  build, built with `-Pdebuggable` so `run-as` can read its files.
 - Release (README, Releasing) only when the user asks. Check a Mac packaging change in the
   packaged release (`./gradlew :desktop:packageReleaseDmg`), each page by `HERE_OPEN` with its
   standard error read, not only `:desktop:run`; a library reached by reflection, JNI or

@@ -1105,11 +1105,22 @@ The unit tests round-trip the made-up records in `packages/data-spec/test/fixtur
 through the app's models, so the app and the site can't drift apart unnoticed, and check the media URLs,
 trip membership and the sync against a stand-in API.
 
+The debug build isn't debuggable: a debuggable app runs Compose and all in ART's debuggable mode,
+several times slower than the release, and the phone wouldn't compile it ahead of time. Like the
+release, it carries the baseline profile, which the phone compiles on install when its `.dm` goes
+beside it:
+
+```sh
+adb install-multiple -r app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/baselineProfiles/0/app-debug.dm
+```
+
+`-Pdebuggable` builds it debuggable again, for a debugger, the layout inspector or `run-as`.
+
 `RecordingRecoveryTest` under `src/androidTest` checks the recorder's recovery and pause
 races with a mock GPS on an emulator (it skips physical devices):
 
 ```sh
-./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+./gradlew -Pdebuggable :app:assembleDebug :app:assembleDebugAndroidTest
 adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk
 adb -s emulator-5554 install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 adb -s emulator-5554 shell am instrument -w -e class cc.hyoban.moments.footprints.RecordingRecoveryTest cc.hyoban.moments.test/androidx.test.runner.AndroidJUnitRunner

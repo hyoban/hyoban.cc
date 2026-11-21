@@ -21,6 +21,10 @@ import cc.hyoban.moments.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -204,7 +208,7 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
     val allCheckins by container.repository.checkins.collectAsStateWithLifecycle()
     // Only the records of modules that are on (记录项与公开).
     val off = LocalSettings.current.modulesOff
-    return remember(ledger, records, entries, allCheckins, moments, filter, kind, off) { keptBills.get(ledger, records, entries, allCheckins, moments, filter, kind, off) {
+    val make: () -> TimelineBills = make@{
         val inFilter = { day: String ->
             (filter.year == null || day.take(4).toInt() == filter.year) && (filter.month == null || day.substring(5, 7).toInt() == filter.month)
         }
@@ -225,7 +229,7 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
         val book = ledger.book
         if (book == null || (kind != FeedKind.ALL && kind != FeedKind.BILLS) || Module.LEDGER.key in off) {
             val (looseCharges, linkedCharges, _) = placeCharges(charges, emptyList(), { null }, at)
-            return@get TimelineBills(ledger, emptyMap(), emptyMap(), emptyMap(), book?.currency ?: "CNY", looseCharges, things, checkins, linkedCharges, drives)
+            return@make TimelineBills(ledger, emptyMap(), emptyMap(), emptyMap(), book?.currency ?: "CNY", looseCharges, things, checkins, linkedCharges, drives)
         }
         val shown = ledger.books.filterNot { it.archived }.mapTo(HashSet()) { it.id }
         // A bill linked to a Moment or a check-in shown here goes with it.
@@ -256,7 +260,17 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
             linkedCharges = linkedCharges,
             drives = drives,
         )
-    } }
+    }
+    // Worked out in the frame for the first time and for a change of what is shown, so the page never
+    // shows another's bills; when the records or the ledger change under it (each arriving on its own
+    // as the app opens), off the main thread, the bills worked out last shown until then.
+    val inputs = arrayOf<Any?>(ledger, records, entries, allCheckins, moments, filter, kind, off)
+    val kept = remember(*inputs) { keptBills.find(*inputs) }
+    val shown = remember(filter, kind, off) { mutableStateOf(kept ?: keptBills.get(*inputs, make = make)) }
+    LaunchedEffect(*inputs) {
+        shown.value = kept ?: keptBills.find(*inputs) ?: withContext(Dispatchers.Default) { make() }.also { keptBills.put(it, *inputs) }
+    }
+    return kept ?: shown.value
 }
 
 private val keptBills = Kept<TimelineBills>(4)
@@ -265,18 +279,21 @@ private val keptBills = Kept<TimelineBills>(4)
  * The last few results worked out from the same inputs, kept past the composition that made them.
  * A page left and come back to, a Moment opened over it or another tab, is composed afresh, and
  * would otherwise work out every day's bills and rows again in the frame it comes back in. Only
- * read and written while composing, on the one thread that composes.
+ * read and written on the one thread that composes.
  */
 internal class Kept<T>(private val size: Int) {
     private val kept = ArrayDeque<Pair<List<Any?>, T>>()
 
-    fun get(vararg inputs: Any?, make: () -> T): T {
+    fun get(vararg inputs: Any?, make: () -> T): T = find(*inputs) ?: make().also { put(it, *inputs) }
+
+    fun find(vararg inputs: Any?): T? {
         val key = inputs.asList()
-        kept.firstOrNull { it.first == key }?.let { return it.second }
-        return make().also {
-            kept.addFirst(key to it)
-            if (kept.size > size) kept.removeLast()
-        }
+        return kept.firstOrNull { it.first == key }?.second
+    }
+
+    fun put(value: T, vararg inputs: Any?) {
+        kept.addFirst(inputs.asList() to value)
+        if (kept.size > size) kept.removeLast()
     }
 }
 

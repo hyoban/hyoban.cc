@@ -82,6 +82,11 @@ android {
     buildTypes {
         debug {
             signingConfig = signing
+            // A debuggable app runs in ART's debuggable mode, Compose and all, several times slower
+            // than the release (a cold start took three times as long), so the phone's debug build
+            // is not one. `-Pdebuggable` makes it one again, for a debugger, the layout inspector
+            // or `run-as` on the emulator.
+            isDebuggable = providers.gradleProperty("debuggable").isPresent
         }
         release {
             signingConfig = signing
