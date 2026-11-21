@@ -39,6 +39,9 @@ actual fun File.toPhotoRef(): PhotoRef = FileRef(toURI().toString())
  * itself; a video is told apart but not yet taken, as nothing here draws the frame it needs for its still.
  */
 actual object Photos {
+    /** A video isn't made a poster of here yet, so it isn't added. */
+    actual val copiesVideos = false
+
     actual fun open(ref: PhotoRef): java.io.InputStream? = runCatching { ref.file.inputStream() }.getOrNull()
 
     actual suspend fun read(ref: PhotoRef): PhotoInfo = withContext(Dispatchers.IO) {

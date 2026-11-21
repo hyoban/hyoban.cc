@@ -1,5 +1,10 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.data.spec.MediaType
+import cc.hyoban.moments.ui.components.BadgeKind
+import cc.hyoban.moments.ui.format.parseClock
+import cc.hyoban.moments.ui.viewer.clipOf
+
 import cc.hyoban.moments.res.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -47,7 +52,6 @@ import cc.hyoban.moments.ui.design.TextButton
 import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.viewer.PhotoDetails
-import cc.hyoban.moments.ui.viewer.ZoomablePhoto
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -324,11 +328,13 @@ data class NasSlot(val list: NasList, val index: Int, override val day: LocalDat
         return null
     }
 
-    @Composable override fun badge(): String? = null
+    override val type get() = MediaType.IMAGE
+
+    @Composable override fun badge(): BadgeKind? = null
     @Composable override fun description() = stringResource(Res.string.section_nas)
     @Composable override fun place(): String? = null
     @Composable override fun rememberDetails(): PhotoDetails? = null
-    @Composable override fun Page(active: Boolean, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {}
+    @Composable override fun rememberStill(active: Boolean, deep: Boolean) = cc.hyoban.moments.ui.viewer.ViewedStill(1f)
 }
 
 /** A photo of the NAS's; in its timeline, under the day the timeline puts it, [listedDay]. */
@@ -336,6 +342,9 @@ data class NasPick(val photo: NasPhoto, override val source: NasSource, val list
     override val key get() = photo.key
     override val day get() = listedDay ?: photo.taken?.toLocalDate()
     override val linkedMoment get() = source.linked[photo.id]
+
+    /** A video only where the device can add one; elsewhere it is looked at alone. */
+    override val choosable get() = !photo.video || cc.hyoban.moments.data.local.Photos.copiesVideos
     override val kind get() = when {
         photo.video -> PhotoKind.VIDEO
         photo.live -> PhotoKind.LIVE
@@ -344,47 +353,62 @@ data class NasPick(val photo: NasPhoto, override val source: NasSource, val list
     override val hasPlace get() = source.places.placed?.let { photo.id in it }
     override val inMoment get() = photo.id in source.linked
 
+    override val type get() = when {
+        photo.video -> MediaType.VIDEO
+        photo.live -> MediaType.LIVE_PHOTO
+        else -> MediaType.IMAGE
+    }
+
+    override val playable get() = photo.mime in cc.hyoban.moments.ui.viewer.PLAYED_VIDEOS
+
     /**
-     * A live photo's clip, once its page is first shown: a motion photo's read by range from its
-     * original on the NAS where the start of the original says it starts; an iPhone's, whose
-     * original holds no clip, the MOV the NAS keeps beside it. Either is kept on disk once played,
-     * and read from the original or clip already down on the device rather than from the NAS.
+     * A video played from the NAS, as much of it as is watched; a live photo's clip once its page is
+     * first shown, read as a Moment's linked to it is ([clipOf]).
      */
     @Composable
-    override fun rememberMotion(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? =
+    override fun rememberClip(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? =
         produceState<cc.hyoban.moments.ui.viewer.MotionSource?>(null, key, active) {
-            if (!active || !photo.live || value != null) return@produceState
-            // Not read at all is tried again next time rather than taken for an iPhone's.
-            val start = try {
-                source.nas.clipStart(photo)
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                return@produceState
+            if (!active || value != null) return@produceState
+            value = when {
+                photo.video -> if (playable) runCatching { source.nas.original(photo) }.getOrNull()
+                    ?.let { (url, headers) -> cc.hyoban.moments.ui.viewer.MotionSource(url, headers = headers) } else null
+                // Not read at all is tried again next time rather than taken for a still.
+                photo.live -> try {
+                    source.nas.clipOf(photo)
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    null
+                }
+                else -> null
             }
-            val kept = withContext(Dispatchers.IO) { if (start != null) source.nas.cached(photo) else source.nas.cachedClip(photo) }
-            if (kept != null) {
-                value = cc.hyoban.moments.ui.viewer.MotionSource(kept.toURI().toString(), start ?: 0)
-                return@produceState
-            }
-            val (url, headers) = runCatching { if (start != null) source.nas.original(photo) else source.nas.liveStream(photo) }
-                .getOrNull() ?: return@produceState
-            value = cc.hyoban.moments.ui.viewer.MotionSource(url, start ?: 0, headers, source.nas.motionKey(photo, apart = start == null))
         }.value
+
+    /** Its big thumbnail over its small one; the original comes down once it is zoomed into, or when it is added, read in tiles as it zooms. */
+    @Composable
+    override fun rememberStill(active: Boolean, deep: Boolean): cc.hyoban.moments.ui.viewer.ViewedStill {
+        val small by rememberThumb(this)
+        val large by rememberThumb(this, size = 1440)
+        val shown = large ?: small
+        val shape = shown?.let { it.width.toFloat() / it.height }
+            ?: if (photo.width != null && photo.height != null && photo.height > 0) photo.width.toFloat() / photo.height else 1f
+        val original by produceState(if (photo.video) null else source.nas.cached(photo), key, deep) {
+            if (!photo.video && deep && value == null) value = source.nas.fetchOriginal(photo)
+        }
+        return cc.hyoban.moments.ui.viewer.ViewedStill(shape, thumb = shown, model = original)
+    }
 
     /** The NAS keeps its own thumbnails, small for the grid and big for the viewer, and its client caches them. */
     override suspend fun thumbnail(size: Int): ImageBitmap? =
         source.nas.thumbnail(photo, if (size > 320) NasProtocol.BIG else NasProtocol.SMALL)
 
-    /** The next one's big thumbnail and the start of its original (its EXIF, kept), fetched ahead so turning to it shows it at once. */
-    override fun settled(next: Pick?) {
-        (next as? NasPick)?.let { source.prefetch(it.photo) }
-    }
+    /** Its big thumbnail and the start of its original (its EXIF, kept), fetched ahead so turning to it shows it at once. */
+    override fun ahead(from: cc.hyoban.moments.ui.viewer.ViewedMedia, reading: cc.hyoban.moments.ui.viewer.ReadAhead) = source.prefetch(photo)
 
     @Composable
-    override fun badge(): String? = when {
-        photo.video -> photo.duration?.trimStart('0')?.let { if (it.startsWith(':')) "0$it" else it }
-        photo.live -> stringResource(Res.string.label_live)
+    override fun badge(): BadgeKind? = when {
+        photo.video -> BadgeKind.Video(photo.duration?.let(::parseClock))
+        photo.live -> BadgeKind.Live
         else -> null
     }
 
@@ -409,45 +433,6 @@ data class NasPick(val photo: NasPhoto, override val source: NasSource, val list
             val head = if (photo.video) null else source.nas.head(photo)
             value = if (head != null) PhotoDetails.read(base) { head.inputStream() } else base
         }.value
-    }
-
-    /**
-     * Its big thumbnail over its small one; the original comes down once it is zoomed into, or
-     * when it is added. A video plays from the NAS over it, as much of it as is watched.
-     */
-    @Composable
-    override fun Page(active: Boolean, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {
-        val videos = LocalPickerVideos.current
-        val plays = photo.video && photo.mime in PLAYED && videos !== NoVideos
-        val stream by produceState<Pair<String, Map<String, String>>?>(null, key, active) {
-            if (active && plays) value = runCatching { source.nas.original(photo) }.getOrNull()
-        }
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            val small by rememberThumb(this@NasPick)
-            val large by rememberThumb(this@NasPick, size = 1440)
-            val shown = large ?: small
-            val shape = shown?.let { it.width.toFloat() / it.height }
-                ?: if (photo.width != null && photo.height != null && photo.height > 0) photo.width.toFloat() / photo.height else 1f
-            if (photo.video) {
-                ZoomablePhoto(shape, onZoom, onTap = onTap) {
-                    shown?.let { Image(it, contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
-                    stream?.let { (url, headers) -> videos.Play(key, url, headers, active, Modifier.fillMaxSize()) }
-                }
-            } else if (shown != null) {
-                // Zoomed in, its original comes down, then is read in tiles as it zooms.
-                var deep by remember(key) { mutableStateOf(false) }
-                val original by produceState(source.nas.cached(photo), key, deep) {
-                    if (deep && value == null) value = source.nas.fetchOriginal(photo)
-                }
-                val live = LocalPageLive.current
-                ZoomableOriginal(original ?: shown, shown, shape, photo.name, onZoom = { zoomed ->
-                    if (zoomed) deep = true
-                    onZoom(zoomed)
-                }, onHold = live?.hold, onTap = onTap) { live?.Over(active) }
-            }
-            if (shown == null) Spinner(color = MediaOverlay.content)
-            if (stream != null) videos.Waiting(key) else if (photo.video && !plays) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))
-        }
     }
 }
 
@@ -575,9 +560,6 @@ class NasPlaces(private val source: NasSource, private val scope: CoroutineScope
         opened = opened?.filter { it.id !in ids }?.takeIf { it.isNotEmpty() }
     }
 }
-
-/** The videos the viewer plays itself, as the players read MP4 alone. */
-private val PLAYED = setOf("video/mp4", "video/quicktime")
 
 /**
  * The NAS's photos for one listing, its timeline or one of its albums, under [filter], by their

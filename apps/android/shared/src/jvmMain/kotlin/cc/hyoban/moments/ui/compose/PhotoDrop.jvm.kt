@@ -9,6 +9,7 @@ import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.draganddrop.awtTransferable
 import cc.hyoban.moments.data.local.PhotoRef
 import cc.hyoban.moments.data.local.toPhotoRef
+import cc.hyoban.moments.data.media.Outgoing
 import java.awt.Image
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
@@ -17,14 +18,11 @@ import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
 
-/** The pictures a computer's files are, by their names' endings. */
-private val PICTURES = setOf("jpg", "jpeg", "png", "webp", "heic", "heif", "gif")
-
 private fun picturesIn(transferable: Transferable): List<PhotoRef> = runCatching {
     when {
         transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor) ->
             (transferable.getTransferData(DataFlavor.javaFileListFlavor) as List<*>).filterIsInstance<File>()
-                .filter { it.extension.lowercase() in PICTURES }.map { it.toPhotoRef() }
+                .filter { it.extension.lowercase() in Outgoing.PICTURES }.map { it.toPhotoRef() }
         transferable.isDataFlavorSupported(DataFlavor.imageFlavor) -> {
             // An image copied rather than a file: kept as a PNG of its own to be added like one.
             val image = transferable.getTransferData(DataFlavor.imageFlavor) as Image

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.widget
 
+import cc.hyoban.moments.ui.components.readStill
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.BuildConfig
 import androidx.core.net.toUri
@@ -382,9 +383,7 @@ internal fun shown(container: PhoneContainer): Shown {
 
 /** A media item's still, from Coil's cache when it has it, small enough for a widget to carry. */
 private suspend fun photo(context: Context, container: PhoneContainer, media: MomentMedia): Bitmap? {
-    val url = container.mediaUrls.still(media, PHOTO_WIDTH) ?: return null
-    val request = ImageRequest.Builder(context).data(url).size(PHOTO_WIDTH).allowHardware(false).build()
-    return (SingletonImageLoader.get(context).execute(request) as? SuccessResult)?.image?.toBitmap()
+    return container.mediaUrls.readStill(context, media, PHOTO_WIDTH)?.toBitmap()
 }
 
 private const val PHOTO_WIDTH = 720

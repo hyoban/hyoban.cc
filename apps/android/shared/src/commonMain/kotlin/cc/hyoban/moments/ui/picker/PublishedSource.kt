@@ -1,5 +1,12 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.ui.components.BadgeKind
+import cc.hyoban.moments.ui.components.badge
+import cc.hyoban.moments.ui.components.readStill
+import cc.hyoban.moments.ui.viewer.MomentViewed
+import cc.hyoban.moments.ui.viewer.ReadAhead
+import cc.hyoban.moments.ui.viewer.ViewedMedia
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,8 +35,6 @@ import cc.hyoban.moments.ui.components.kindLabel
 import cc.hyoban.moments.ui.components.readable
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.viewer.PhotoDetails
-import cc.hyoban.moments.ui.viewer.ZoomablePhoto
-import cc.hyoban.moments.ui.viewer.NasLinkedStill
 import cc.hyoban.moments.ui.viewer.linkedAhead
 import cc.hyoban.moments.ui.viewer.viewedClip
 import coil3.PlatformContext
@@ -127,13 +132,8 @@ class PublishedSource(val container: AppContainer, val context: PlatformContext,
     @Composable
     override fun Dialogs() {}
 
-    /**
-     * The stills read lately, by their address, so turning back or on to one shows it at once: many
-     * of the grid's small ones, a few of the viewer's large.
-     */
+    /** The grid's stills read lately, by their address, so scrolling back to one shows it at once. */
     private val stills = Lru(STILLS)
-    private val largeStills = Lru(LARGE_STILLS)
-    private fun kept(size: Int) = if (size > SMALL) largeStills else stills
 
     private class Lru(val most: Int) : LinkedHashMap<String, ImageBitmap>(64, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ImageBitmap>) = size > most
@@ -141,40 +141,19 @@ class PublishedSource(val container: AppContainer, val context: PlatformContext,
 
     /** The still of [media] at [size] pixels wide if it was read lately, without waiting. */
     fun cachedStill(media: MomentMedia, size: Int): ImageBitmap? =
-        container.mediaUrls.still(media, size)?.let { url -> kept(size).let { synchronized(it) { it[url] } } }
+        container.mediaUrls.still(media, size)?.let { url -> synchronized(stills) { stills[url] } }
 
     /** The still of [media] at [size] pixels wide, as the timeline loads it. */
     suspend fun still(media: MomentMedia, size: Int): ImageBitmap? {
         val url = container.mediaUrls.still(media, size) ?: return null
-        val kept = kept(size)
-        synchronized(kept) { kept[url] }?.let { return it }
-        val request = ImageRequest.Builder(context).data(url).size(Size(size, size)).readable().build()
-        return withContext(Dispatchers.IO) {
-            (SingletonImageLoader.get(context).execute(request) as? SuccessResult)?.image?.toImageBitmap()
-        }?.also { synchronized(kept) { kept[url] = it } }
+        synchronized(stills) { stills[url] }?.let { return it }
+        return withContext(Dispatchers.IO) { container.mediaUrls.readStill(context, media, size)?.toImageBitmap() }
+            ?.also { synchronized(stills) { stills[url] = it } }
     }
 
-    /** [pick]'s details if they were read already, without waiting. */
-    fun cachedDetails(pick: PublishedPick): PhotoDetails? = container.mediaDetails.cached(pick.media)
-
-    /** What [pick]'s record says of it, shown while its EXIF is read. */
-    fun baseDetails(pick: PublishedPick): PhotoDetails = container.mediaDetails.base(pick.media, pick.record.occurredAt)
-
-    /** [pick]'s details whole, read once for every viewer ([cc.hyoban.moments.ui.viewer.MediaDetails]). */
-    suspend fun details(pick: PublishedPick): PhotoDetails = container.mediaDetails.read(pick.media, pick.record.occurredAt)
-
-    /** Reads [pick]'s stills ahead, the viewer's two and the full one it zooms into, and its details, for a swipe on to show them at once. */
+    /** Reads [pick]'s tile still ahead; what the viewer shows of it is read ahead as a Moment's is. */
     fun fetchAhead(pick: PublishedPick) {
-        val media = pick.media
-        container.mediaDetails.ahead(scope, media, pick.record.occurredAt)
-        scope.launch {
-            still(media, SMALL)
-            // One linked to the NAS is looked at as the NAS keeps it: its big thumbnail, not the site's large stills.
-            val link = media.nas?.takeIf { container.nas.configured && media.type != MediaType.VIDEO }
-            if (link != null) return@launch container.nas.linkedAhead(link)
-            still(media, LARGE)
-            container.mediaUrls.still(media, FULL)?.let { url -> SingletonImageLoader.get(context).enqueue(ImageRequest.Builder(context).data(url).build()) }
-        }
+        scope.launch { still(pick.media, SMALL) }
     }
 }
 
@@ -274,34 +253,28 @@ data class PublishedPick(val media: MomentMedia, val record: MomentRecord, overr
 
     override suspend fun thumbnail(size: Int): ImageBitmap? = source.still(media, size)
 
-    /** A photo linked to the NAS is looked at as the NAS keeps it, live if the NAS's is; a video stays the site's. */
-    private val viewedLink get() = nasLink?.takeIf { media.type != MediaType.VIDEO }
-
-    /** The site's clip of a live photo, published beside its still. */
-    private val publishedClip get() =
-        if (media.type == MediaType.LIVE_PHOTO) source.container.mediaUrls.motion(media)?.let { cc.hyoban.moments.ui.viewer.MotionSource(it) } else null
-
-    /** A live photo's clip: the NAS's for one linked to it, once its page is first shown, else the site's. */
-    @Composable
-    override fun rememberMotion(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? {
-        val link = viewedLink ?: return publishedClip
-        return produceState<cc.hyoban.moments.ui.viewer.MotionSource?>(null, key, active) {
-            if (active && value == null) value = source.container.nas.viewedClip(link, publishedClip)
-        }.value
+    /** As a Moment's viewer shows it, looked at as the NAS keeps it where it is linked to it. */
+    private val viewed by lazy {
+        MomentViewed(media, source.container, source.container.nas.takeIf { it.configured }, occurredAt = record.occurredAt, key = key)
     }
 
-    override fun infoNote(details: PhotoDetails?) = if (viewedLink != null) Res.string.viewer_nas_original else null
+    override val type get() = viewed.type
+
+    @Composable override fun rememberStill(active: Boolean, deep: Boolean) = viewed.rememberStill(active, deep)
+    @Composable override fun rememberClip(active: Boolean) = viewed.rememberClip(active)
+    override fun infoNote(details: PhotoDetails?) = viewed.infoNote(details)
     override fun cachedThumb(size: Int): ImageBitmap? = source.cachedStill(media, size)
 
-    /** The next one's stills read ahead, so turning to it shows it at once. */
-    override fun settled(next: Pick?) {
-        (next as? PublishedPick)?.let { source.fetchAhead(it) }
+    /** Its tile's still and what the viewer turns to, read ahead so a swipe on shows them at once. */
+    override fun ahead(from: ViewedMedia, reading: ReadAhead) {
+        source.fetchAhead(this)
+        viewed.ahead(from, reading)
     }
 
     override suspend fun shareOwn() = source.device.shareMedia(media, source.container.mediaUrls, "")
 
     @Composable
-    override fun badge(): String? = if (media.type == MediaType.LIVE_PHOTO) stringResource(Res.string.label_live) else null
+    override fun badge(): BadgeKind? = media.badge()
 
     @Composable
     override fun description() = media.alt.ifEmpty { stringResource(media.kindLabel()) }
@@ -310,60 +283,17 @@ data class PublishedPick(val media: MomentMedia, val record: MomentRecord, overr
     override fun place(): String? = null
 
     @Composable
-    override fun rememberDetails(): PhotoDetails? = produceState(source.cachedDetails(this), key) {
-        if (value != null) return@produceState
-        value = source.baseDetails(this@PublishedPick)
-        value = source.details(this@PublishedPick)
-    }.value
-
-    /** Its still large over its small one; a video plays over it, a photo zooms in the whole. */
-    @Composable
-    override fun Page(active: Boolean, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {
-        val videos = LocalPickerVideos.current
-        val urls = source.container.mediaUrls
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            val small by rememberThumb(this@PublishedPick, size = SMALL)
-            // One linked to the NAS shows the NAS's own over its small one, not the site's large.
-            val large = if (viewedLink == null) rememberThumb(this@PublishedPick, size = LARGE).value else null
-            val shown = large ?: small
-            val shape = if (media.width != null && media.height != null && media.height > 0) media.width.toFloat() / media.height
-                else shown?.let { it.width.toFloat() / it.height } ?: 1f
-            val motion = if (media.type == MediaType.VIDEO) urls.motion(media) else null
-            if (motion != null) {
-                ZoomablePhoto(shape, onZoom, onTap = onTap) {
-                    shown?.let { Image(it, contentDescription = media.alt, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
-                    videos.Play(key, motion, emptyMap(), active, Modifier.fillMaxSize())
-                }
-                videos.Waiting(key)
-            } else {
-                val live = LocalPageLive.current
-                val site: @Composable () -> Unit = {
-                    urls.still(media, FULL)?.let { full ->
-                        ZoomableOriginal(full, small, shape, media.alt, onZoom, onHold = live?.hold, onTap = onTap) { live?.Over(active) }
-                    }
-                }
-                val link = viewedLink
-                if (link != null) {
-                    NasLinkedStill(source.container.nas, link, shape, media.alt, onZoom, onTap, live?.hold, { live?.Over(active) }, fallback = site)
-                } else {
-                    site()
-                }
-            }
-        }
-    }
+    override fun rememberDetails(): PhotoDetails? = viewed.rememberDetails()
 }
 
-/** The viewer's stills: the grid's, the one over it, and the one zoomed into. */
+/** The grid's stills. */
 private const val SMALL = 320
-private const val LARGE = 1440
-private const val FULL = 2560
 
 /** How many NAS originals are read at once while looking for the lesser. */
 private const val AT_ONCE = 6
 
-/** How many small stills, and large, are kept at hand. */
+/** How many small stills are kept at hand. */
 private const val STILLS = 300
-private const val LARGE_STILLS = 4
 
 /** A published photo says what it is, and its Moment where it was. */
 private val PUBLISHED_FACETS = setOf(Facet.KIND, Facet.TIME, Facet.PLACE)

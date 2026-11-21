@@ -23,8 +23,15 @@ class MediaDetails(private val container: AppContainer) {
     /** One photo as it is now: a change to its file, or its link, is another. */
     private fun key(media: MomentMedia) = "${media.uid}:${media.published?.etag ?: media.local?.uri}:${media.nas?.id}"
 
-    /** [media]'s details if they were read already, without waiting. */
-    fun cached(media: MomentMedia): PhotoDetails? = synchronized(kept) { kept[key(media)] }
+    /** [media]'s details if they were read already, without waiting; [occurredAt] as for [base]. */
+    fun cached(media: MomentMedia, occurredAt: String? = null): PhotoDetails? = synchronized(kept) { kept[key(media)] }?.at(occurredAt)
+
+    /**
+     * The photo's own time, else its Moment's [occurredAt]: what is kept is the photo's alone, so
+     * every viewer shows the same whichever read it first.
+     */
+    private fun PhotoDetails.at(occurredAt: String?): PhotoDetails =
+        if (takenAt != null || occurredAt == null) this else copy(takenAt = runCatching { OffsetDateTime.parse(occurredAt) }.getOrNull())
 
     /** What [media]'s record says of it, shown while its EXIF is read; [occurredAt] is its Moment's time, for one that doesn't say. */
     fun base(media: MomentMedia, occurredAt: String? = null): PhotoDetails {
@@ -41,21 +48,21 @@ class MediaDetails(private val container: AppContainer) {
 
     /** [media]'s details whole, read once and kept; one not published yet from its file on the device. */
     suspend fun read(media: MomentMedia, occurredAt: String? = null): PhotoDetails {
-        cached(media)?.let { return it }
-        val base = base(media, occurredAt)
-        if (media.type == MediaType.VIDEO) return base
+        cached(media, occurredAt)?.let { return it }
+        val base = base(media)
+        if (media.type == MediaType.VIDEO) return base.at(occurredAt)
         val published = media.published
         val nas = container.nas
         val link = media.nas?.takeIf { nas.configured }
         val head = link?.let { nas.head(nas.photo(it)) }
         val whole = when {
             head != null -> PhotoDetails.read(base.copy(name = link.name)) { head.inputStream() }
-            published == null -> media.local?.uri?.let { uri -> PhotoDetails.read(base) { Photos.open(uri.toPhotoRef()) } } ?: return base
+            published == null -> media.local?.uri?.let { uri -> PhotoDetails.read(base) { Photos.open(uri.toPhotoRef()) } } ?: return base.at(occurredAt)
             published.original == true -> PhotoDetails.readRemote(base, container.mediaUrls.asset(published.key))
             else -> base
         }
         synchronized(kept) { kept[key(media)] = whole }
-        return whole
+        return whole.at(occurredAt)
     }
 
     /** Reads [media]'s details ahead in [scope], those not read yet. */
@@ -70,7 +77,7 @@ class MediaDetails(private val container: AppContainer) {
      */
     @androidx.compose.runtime.Composable
     fun remember(media: MomentMedia, occurredAt: String? = null): PhotoDetails? =
-        androidx.compose.runtime.produceState(cached(media), media.uid) {
+        androidx.compose.runtime.produceState(cached(media, occurredAt), key(media)) {
             if (value != null) return@produceState
             value = base(media, occurredAt)
             value = read(media, occurredAt)

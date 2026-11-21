@@ -159,7 +159,8 @@ import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.data.spec.showcase
-import cc.hyoban.moments.ui.components.LiveBadge
+import cc.hyoban.moments.ui.components.BadgeKind
+import cc.hyoban.moments.ui.components.MediaBadge
 import cc.hyoban.moments.ui.ledger.BillFields
 import cc.hyoban.moments.ui.ledger.BillKeypad
 import cc.hyoban.moments.ui.ledger.keypadFits
@@ -887,6 +888,25 @@ fun NewMomentScreen(
                 // A photo saved with patches is shown as it was picked, the patches over it to change.
                 .map { media -> media.local?.unmasked?.let { media.copy(local = media.local.copy(uri = it)) } ?: media }
             val refs = media.indices.associateBy { media[it].uid }.mapValues { photos[it.value] }
+            // The NAS's original of the photo at [ref], linked to it by [link], put in its place, [live]
+            // with its clip if the NAS keeps one, to be uploaded anew as [old] was; [arrived] says what
+            // else goes with it, or false to leave [ref] as it is.
+            val putInNasOriginal: (PhotoRef, cc.hyoban.moments.data.spec.NasLink, MomentMedia, Boolean, suspend (PhotoRef) -> Boolean) -> Unit = { ref, link, old, live, arrived ->
+                replacing = ref
+                scope.launch {
+                    try {
+                        val fresh = container.nas.downloadLinked(link, live)
+                        if (!arrived(fresh)) return@launch
+                        photos = photos.map { if (it == ref) fresh else it }
+                        if (ref in utility) utility = utility - ref + fresh
+                        replaced = replaced + (fresh to old)
+                    } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
+                        cc.hyoban.moments.logWarning("Moments", "nas: original not put in", e)
+                        showMessage(textOf(Res.string.message_replace_failed))
+                    } finally { replacing = null }
+                }
+            }
             MomentMediaViewer(
                 container,
                 media,
@@ -978,32 +998,22 @@ fun NewMomentScreen(
                             tag = "viewer_still",
                             enabled = !masked && replacing == null,
                         ) {
-                            replacing = ref
-                            scope.launch {
-                                try {
-                                    val fresh = container.nas.downloadLinked(linked.nas!!, live = !live)
-                                    val info = Photos.read(fresh).let { info -> container.nas.liveClip(fresh)?.let { info.copy(motionClip = it) } ?: info }
-                                    if (!live && !info.motion) {
-                                        showMessage(textOf(Res.string.message_nas_not_live))
-                                        return@launch
-                                    }
-                                    infos[fresh] = info
-                                    askedMotion = askedMotion + fresh
-                                    // Going in live it is covered as it comes in, as a photo picked is; a
-                                    // still of a live photo public unpatched isn't.
-                                    if (live) {
-                                        stills = stills + fresh
-                                        scanned = scanned + fresh
-                                    }
-                                    photos = photos.map { if (it == ref) fresh else it }
-                                    if (ref in utility) utility = utility - ref + fresh
-                                    replaced = replaced + (fresh to linked)
-                                    swappedLive = swappedLive + (fresh to ref)
-                                } catch (e: Exception) {
-                                    if (e is kotlinx.coroutines.CancellationException) throw e
-                                    cc.hyoban.moments.logWarning("Moments", "nas: original not put in", e)
-                                    showMessage(textOf(Res.string.message_replace_failed))
-                                } finally { replacing = null }
+                            putInNasOriginal(ref, linked.nas!!, linked, !live) { fresh ->
+                                val info = Photos.read(fresh).let { info -> container.nas.liveClip(fresh)?.let { info.copy(motionClip = it) } ?: info }
+                                if (!live && !info.motion) {
+                                    showMessage(textOf(Res.string.message_nas_not_live))
+                                    return@putInNasOriginal false
+                                }
+                                infos[fresh] = info
+                                askedMotion = askedMotion + fresh
+                                // Going in live it is covered as it comes in, as a photo picked is; a
+                                // still of a live photo public unpatched isn't.
+                                if (live) {
+                                    stills = stills + fresh
+                                    scanned = scanned + fresh
+                                }
+                                swappedLive = swappedLive + (fresh to ref)
+                                true
                             }
                         }
                     }
@@ -1044,24 +1054,14 @@ fun NewMomentScreen(
                         IconButton(
                             onClick = {
                                 val old = originalMedia.getValue(ref)
-                                replacing = ref
-                                scope.launch {
-                                    try {
-                                        val fresh = container.nas.downloadLinked(link, live = old.type == MediaType.LIVE_PHOTO)
-                                        // It goes in as the old one went: a live photo with its clip, as it was
-                                        // public unpatched, so neither asked about nor covered; a still as a
-                                        // still, covered as it comes in, as the old one may have been.
-                                        askedMotion = askedMotion + fresh
-                                        if (old.type == MediaType.LIVE_PHOTO) scanned = scanned + fresh
-                                        else if (old.type == MediaType.IMAGE) stills = stills + fresh
-                                        photos = photos.map { if (it == ref) fresh else it }
-                                        if (ref in utility) utility = utility - ref + fresh
-                                        replaced = replaced + (fresh to old)
-                                    } catch (e: Exception) {
-                                        if (e is kotlinx.coroutines.CancellationException) throw e
-                                        cc.hyoban.moments.logWarning("Moments", "nas: original not put in", e)
-                                        showMessage(textOf(Res.string.message_replace_failed))
-                                    } finally { replacing = null }
+                                putInNasOriginal(ref, link, old, old.type == MediaType.LIVE_PHOTO) { fresh ->
+                                    // It goes in as the old one went: a live photo with its clip, as it was
+                                    // public unpatched, so neither asked about nor covered; a still as a
+                                    // still, covered as it comes in, as the old one may have been.
+                                    askedMotion = askedMotion + fresh
+                                    if (old.type == MediaType.LIVE_PHOTO) scanned = scanned + fresh
+                                    else if (old.type == MediaType.IMAGE) stills = stills + fresh
+                                    true
                                 }
                             },
                             enabled = replacing == null,
@@ -1305,6 +1305,8 @@ private fun PhotoStrip(
         horizontalArrangement = Arrangement.spacedBy(Space.s),
     ) {
         itemsIndexed(photos, key = { _, uri -> uri.toString() }) { index, uri ->
+            // Where it is now: a photo keeps its key as it is moved, so a tap reads its place afresh.
+            val at by rememberUpdatedState(index)
             val lifted = held == uri
             val moving = lifted || settling == uri
             // Lifted over the rest at the dragged level, level 4, with the drag's state layer over
@@ -1325,7 +1327,7 @@ private fun PhotoStrip(
                     // move first and, consuming them, keeps a hold-and-drag from ending as a tap;
                     // a long press is left to it (a tap detector's own long press would consume
                     // the moves and call the drag off).
-                    .pointerInput(uri) { detectTapGestures(onTap = { onOpen(index) }) }
+                    .pointerInput(uri) { detectTapGestures(onTap = { onOpen(at) }) }
                     .pointerInput(uri) {
                         detectDragGesturesAfterLongPress(
                             onDragStart = {
@@ -1355,15 +1357,9 @@ private fun PhotoStrip(
                 // The site's photos by their URL, the phone's by their Uri.
                 AsyncImage(model = cc.hyoban.moments.data.local.imageModel(uri), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 if (lift > 0f) Box(Modifier.fillMaxSize().background(tokens.tx.copy(alpha = DRAGGED_LAYER * lift)))
-                if (uri in motion && uri !in stills && uri !in masked) LiveBadge(Modifier.align(Alignment.TopStart).padding(Space.s))
-                if (uri in videos) {
-                    Box(
-                        Modifier.align(Alignment.TopStart).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(AppIcons.Play, contentDescription = stringResource(Res.string.media_video), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
-                    }
-                }
+                // At the top, as a Moment's live photo has it: its bottom corners are the cover's and the patches' marks.
+                if (uri in motion && uri !in stills && uri !in masked) MediaBadge(BadgeKind.Live, Modifier.align(Alignment.TopStart).padding(Space.s))
+                if (uri in videos) MediaBadge(BadgeKind.Video(), Modifier.align(Alignment.TopStart).padding(Space.s))
                 if (uri in utility) {
                     Box(
                         Modifier.align(Alignment.BottomStart).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),

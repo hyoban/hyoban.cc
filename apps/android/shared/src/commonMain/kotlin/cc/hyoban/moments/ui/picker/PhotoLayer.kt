@@ -160,14 +160,13 @@ class MergedPlaces(
  * opened, looked at, chosen and written, shared, saved or deleted as in 相册.
  */
 @Stable
-class PhotoLayer internal constructor(val places: Places, val choice: PhotoChoice, val videos: PickerVideos)
+class PhotoLayer internal constructor(val places: Places, val choice: PhotoChoice)
 
 @Composable
 fun rememberPhotoLayer(container: AppContainer, onWrite: () -> Unit): PhotoLayer {
     val choice = rememberPhotoChoice(Int.MAX_VALUE, alwaysChoosing = false, onWrite = { refs -> container.offerPhotos(refs); onWrite() })
     val places = rememberPhotoPlaces(container, choice, rememberNas(container, choice.deletion))
-    val videos = choice.device.rememberVideos()
-    return remember(places, videos) { PhotoLayer(places, choice, videos) }
+    return remember(places) { PhotoLayer(places, choice) }
 }
 
 /** The places of the device's sources that know them and of [nas], as one, for 地图's photos and 选照片's map. */
@@ -195,20 +194,18 @@ fun BoxScope.PhotoLayerSheet(container: AppContainer, layer: PhotoLayer, onMomen
     LaunchedEffect(opened) { if (opened == null) choice.stop() }
     if (opened != null) key(opened.first()) {
         val shown = places.picks()
-        CompositionLocalProvider(LocalPickerVideos provides layer.videos) {
-            HeapSheet(container, places, opened, shown, choice) {
-                if (choice.choosing) IconButton(onClick = choice::stop, modifier = Modifier.testTag("album_select_done")) {
-                    Icon(AppIcons.Close, contentDescription = stringResource(Res.string.album_select_done))
-                } else IconButton(onClick = choice::start, modifier = Modifier.testTag("album_select")) {
-                    Icon(AppIcons.Check, contentDescription = stringResource(Res.string.album_select))
-                }
+        HeapSheet(container, places, opened, shown, choice) {
+            if (choice.choosing) IconButton(onClick = choice::stop, modifier = Modifier.testTag("album_select_done")) {
+                Icon(AppIcons.Close, contentDescription = stringResource(Res.string.album_select_done))
+            } else IconButton(onClick = choice::start, modifier = Modifier.testTag("album_select")) {
+                Icon(AppIcons.Check, contentDescription = stringResource(Res.string.album_select))
             }
         }
         Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
             choice.sources = shown.map { it.source }.distinct()
             choice.Foot(choice.chosen.firstOrNull()?.source)
         }
-        choice.ViewerOver(container, shown, layer.videos, overTabs = true, onMoment = onMoment)
+        choice.ViewerOver(container, shown, overTabs = true, onMoment = onMoment)
         shown.map { it.source }.distinct().forEach { it.Dialogs() }
     }
 }

@@ -182,21 +182,9 @@ object LocalMedia {
             .map { (id, them) -> LocalAlbum(id, them.first().album ?: "", them.size) }
             .sortedByDescending { it.count }
 
-    /** Whether [item] is a motion photo, as its XMP in the media store says, without reading the file. */
-    fun isMotion(context: Context, item: LocalItem): Boolean {
-        if (item.video) return false
-        return runCatching {
-            context.contentResolver.query(item.uri, arrayOf(MediaStore.MediaColumns.XMP), null, null, null)?.use { c ->
-                if (!c.moveToFirst() || c.isNull(0)) return@use false
-                val xmp = String(c.getBlob(0), Charsets.UTF_8)
-                MOTION_MARKS.any { it in xmp }
-            } ?: false
-        }.getOrDefault(false)
-    }
-
     /**
-     * The gallery's motion photos, by id, as their XMP in the media store says ([isMotion]), in one
-     * query rather than one for each photo, for 相册's filter.
+     * The gallery's motion photos, by id, as their XMP in the media store says, in one
+     * query rather than one for each photo, for 相册's badges and filter.
      */
     fun motionIds(context: Context): Set<Long> = runCatching {
         val images = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)

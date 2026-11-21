@@ -151,9 +151,11 @@ interface Places {
 /** One line of the title's menu. */
 class Choice(val label: String, val count: Int?, val icon: ImageVector, val tag: String, val listing: Listing)
 
-/** A photo the picker shows, one of [source]'s: what the grid and the viewer ask of it. */
-interface Pick {
-    val key: String
+/**
+ * A photo the picker shows, one of [source]'s: what the grid asks of it, and the viewer as of any
+ * photo ([cc.hyoban.moments.ui.viewer.ViewedMedia]).
+ */
+interface Pick : cc.hyoban.moments.ui.viewer.ViewedMedia {
     val day: LocalDate?
     val source: PhotoSource
 
@@ -193,35 +195,24 @@ interface Pick {
     /** Its thumbnail, at [size] pixels where its source keeps sizes. */
     suspend fun thumbnail(size: Int): ImageBitmap?
 
-    /** What its tile says in its corner: a video's length, 实况, or RAW. */
-    @Composable fun badge(): String?
+    /** What its tile's badge says it holds: a video and its length, a live photo, or RAW. */
+    @Composable fun badge(): cc.hyoban.moments.ui.components.BadgeKind?
 
-    /** What TalkBack says of its tile. */
-    @Composable fun description(): String
+    /** What TalkBack says of its tile, and of the photo in the viewer. */
+    @Composable override fun description(): String
+
+    /** Small in the viewer's row, as its tile has it. */
+    @Composable
+    override fun Thumb(modifier: Modifier) {
+        val thumb by rememberThumb(this)
+        thumb?.let { androidx.compose.foundation.Image(it, contentDescription = null, contentScale = androidx.compose.ui.layout.ContentScale.Crop, modifier = modifier) }
+    }
 
     /** What the viewer says beside when it was taken. */
     @Composable fun place(): String?
 
     /** What it says of itself for the info panel: what the list knows, and the EXIF once it can be read. */
-    @Composable fun rememberDetails(): PhotoDetails?
-
-    /** A note for the info panel where [details] say too little. */
-    fun infoNote(details: PhotoDetails?): StringResource? = null
-
-    /**
-     * Where its live photo's clip is read, while its page is [active]; null for a still or a video,
-     * and until it is known. The viewer plays it as a Moment's ([LocalPageLive]).
-     */
-    @Composable fun rememberMotion(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? = null
-
-    /** Once the viewer rests on it, [next] the one a swipe on turns to, to fetch ahead. */
-    fun settled(next: Pick?) {}
-
-    /**
-     * It full size in the viewer, [active] while it is the one shown: a video then plays over its
-     * still, by its key in [LocalPickerVideos], whose controls the viewer shows; [onTap] hides the viewer's bars.
-     */
-    @Composable fun Page(active: Boolean, onZoom: (Boolean) -> Unit, onTap: () -> Unit)
+    @Composable override fun rememberDetails(): PhotoDetails?
 }
 
 /**
@@ -238,9 +229,6 @@ interface PickerDevice {
     /** Its sources that know where their photos were taken without reading each, for 地图's photos: the phone's gallery, once read. */
     @Composable fun places(deletion: Deletion): List<Places> = emptyList()
 
-    /** The videos played in the viewer, each by its photo's key. */
-    @Composable fun rememberVideos(): PickerVideos
-
     /** Hands [refs] to another app, where the device has a way to; null where it has none. */
     val share: ((List<PhotoRef>) -> Unit)?
 
@@ -248,47 +236,12 @@ interface PickerDevice {
     val saveWords: StringResource
 }
 
-/** A computer's: the NAS alone, no videos and no share sheet, its photos kept in the Pictures folder's Here. */
+/** A computer's: the NAS alone and no share sheet, its photos kept in the Pictures folder's Here. */
 object NasOnly : PickerDevice {
     @Composable override fun sources(deletion: Deletion, onFallback: () -> Unit, onRefused: () -> Unit) = emptyList<PhotoSource>()
-    @Composable override fun rememberVideos(): PickerVideos = NoVideos
     override val share: ((List<PhotoRef>) -> Unit)? = null
     override val saveWords = Res.string.album_save_pictures
 }
-
-/**
- * The videos the viewer plays, each by its photo's [key]: over its still while it is [active],
- * a ring while it waits, and the controls under the viewer for the one shown.
- */
-interface PickerVideos {
-    /** Plays the video at [url] (asked for with [headers]); false where the device doesn't, and the still stays. */
-    @Composable fun Play(key: String, url: String, headers: Map<String, String>, active: Boolean, modifier: Modifier): Boolean
-    @Composable fun Waiting(key: String)
-    @Composable fun Controls(key: String, modifier: Modifier)
-}
-
-/** No video plays: the still stays, without controls. */
-object NoVideos : PickerVideos {
-    @Composable override fun Play(key: String, url: String, headers: Map<String, String>, active: Boolean, modifier: Modifier) = false
-    @Composable override fun Waiting(key: String) {}
-    @Composable override fun Controls(key: String, modifier: Modifier) {}
-}
-
-/**
- * A page's live photo in the viewer: the device's [motion] for it and where its clip is read
- * ([Pick.rememberMotion]). The page draws [Over] over its still and holds play it with sound,
- * as a Moment's do; the viewer's bar has its button.
- */
-class PageLive(val motion: cc.hyoban.moments.ui.viewer.ViewerMotion, val source: cc.hyoban.moments.ui.viewer.MotionSource) {
-    @Composable fun Over(active: Boolean) = motion.Over(source, active, Modifier.fillMaxSize())
-    val hold: ((Boolean) -> Unit)? get() = motion.hold
-}
-
-/** The live photo of the page being drawn, if it is one; null for any other. */
-val LocalPageLive = androidx.compose.runtime.compositionLocalOf<PageLive?> { null }
-
-/** The videos of the picker shown. */
-val LocalPickerVideos = staticCompositionLocalOf<PickerVideos> { NoVideos }
 
 /**
  * A delete going on, as the page shows it: a count in the bar for several, a veil over the viewer

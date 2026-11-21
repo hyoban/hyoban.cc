@@ -139,7 +139,6 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
     val listing = picked ?: remembered ?: sources.first().home
     // A remembered listing opens as one picked from the menu does: the camera asks to connect.
     LaunchedEffect(remembered) { remembered?.opened() }
-    val videos = device.rememberVideos()
     // The filter, one for 相册 and 选照片, kept on the phone; each listing narrowed by what it can tell.
     val filter = remember(container.settings.photoFilter) { PhotoFilter.decode(container.settings.photoFilter) }
     val setFilter: (PhotoFilter) -> Unit = { container.settings.changePhotoFilter(it.encode()) }
@@ -258,11 +257,9 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
     }
     // Beside the count, which it changes; the bar's circles keep to their two.
     val filterButton: @Composable () -> Unit = { FilterButton(filtered.active) { filtering = true } }
-    CompositionLocalProvider(LocalPickerVideos provides videos) {
-        if (album != null) TabPage(listing.title(), Album, subtitle = subtitle, actions = actions, titleMenu = menu, subtitleAction = filterButton, content = content)
-        else if (onMap) SubPage(stringResource(Res.string.picker_show_map), onClose, subtitle = subtitle, close = true, actions = actions, content = content)
-        else SubPage(listing.title(), onClose, subtitle = subtitle, close = true, titleMenu = menu, actions = actions, subtitleAction = filterButton, content = content)
-    }
+    if (album != null) TabPage(listing.title(), Album, subtitle = subtitle, actions = actions, titleMenu = menu, subtitleAction = filterButton, content = content)
+    else if (onMap) SubPage(stringResource(Res.string.picker_show_map), onClose, subtitle = subtitle, close = true, actions = actions, content = content)
+    else SubPage(listing.title(), onClose, subtitle = subtitle, close = true, titleMenu = menu, actions = actions, subtitleAction = filterButton, content = content)
 
     if (filtering) FilterSheet(
         filter, facets,
@@ -272,7 +269,7 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
         onDismiss = { filtering = false },
     )
 
-    choice.ViewerOver(container, if (mapPlaces != null) heapShown else shown, videos, overTabs = album != null, onMoment = album?.onMoment, onEdit = album?.onEdit) {
+    choice.ViewerOver(container, if (mapPlaces != null) heapShown else shown, overTabs = album != null, onMoment = album?.onMoment, onEdit = album?.onEdit) {
         if (canAdd) addButton("picker_viewer_add") { choice.viewing = null }
     }
 

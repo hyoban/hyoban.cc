@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.map
 
+import cc.hyoban.moments.ui.components.readStill
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -162,14 +163,7 @@ internal class PlacePinImages(
     /** The photo's still, loaded small; null when it can't be, the frame then in its year's colour. */
     private suspend fun load(media: MomentMedia): Painter? {
         val pixels = ceil(with(density) { (PinSize.Photo * PinSize.OpenPhoto).dp.toPx() }).toInt()
-        val url = urls.still(media, pixels) ?: return null
-        val request = ImageRequest.Builder(context)
-            .data(url)
-            .size(pixels, pixels)
-            .scale(Scale.FILL)
-            .readable()
-            .build()
-        val image = (SingletonImageLoader.get(context).execute(request) as? SuccessResult)?.image ?: return null
+        val image = urls.readStill(context, media, pixels, fill = true) ?: return null
         return image.asPainter(context)
     }
 

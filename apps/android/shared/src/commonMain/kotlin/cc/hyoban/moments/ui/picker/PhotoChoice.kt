@@ -176,11 +176,28 @@ class PhotoChoice internal constructor(
 
     fun save(picks: List<Pick>) = run(picks.filter { it.source.fetches }, Res.string.album_saving) { if (picks.size > 1) stop() }
 
-    /** Keeps the NAS's original of a published photo linked to it, as the NAS's own are kept. */
+    /**
+     * Keeps the NAS's original of a published photo linked to it, as the NAS's own are kept: the
+     * link alone says neither its size nor whether it is live, so both are asked of the NAS first
+     * (as its viewer asks them), and an iPhone's live photo keeps the clip the NAS has beside it.
+     */
     fun saveNasOriginal(pick: Pick) {
         val link = pick.nasLink ?: return
         val nas = sources.filterIsInstance<NasSource>().firstOrNull() ?: return
-        save(listOf(NasPick(nas.nas.photo(link), nas)))
+        scope.launch {
+            val linked = nas.nas.photo(link)
+            val photo = if (linked.video) linked else nas.nas.linkedPhoto(link)?.let { sized ->
+                // A motion photo's clip is inside its original; else the NAS is asked for one beside it.
+                val start = try {
+                    nas.nas.clipStart(sized)
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    null
+                }
+                sized.copy(live = start != null || nas.nas.probeClip(sized) != null)
+            } ?: linked
+            save(listOf(NasPick(photo, nas)))
+        }
     }
 
     /** Shares a published photo as the Moment's viewer does. */
@@ -251,7 +268,6 @@ fun PhotoChoice.Foot(deletable: PhotoSource?, note: String? = null, rest: @Compo
 fun PhotoChoice.ViewerOver(
     container: AppContainer,
     shown: List<Pick>,
-    videos: PickerVideos,
     overTabs: Boolean,
     onMoment: ((String) -> Unit)? = null,
     onEdit: ((String) -> Unit)? = null,
@@ -260,7 +276,6 @@ fun PhotoChoice.ViewerOver(
     val viewable = remember(shown) { shown.filter { it.openable } }
     val start = viewing?.let { key -> viewable.indexOfFirst { it.key == key } }?.takeIf { it >= 0 } ?: return
     val viewer = @Composable {
-        CompositionLocalProvider(LocalPickerVideos provides videos) {
             Viewer(
                 container, viewable, start, order, full, enabled = idle && !deletion.busy, busy = deletion.busy, onToggle = ::toggle,
                 addButton = {
@@ -322,7 +337,6 @@ fun PhotoChoice.ViewerOver(
                 },
                 onClose = { viewing = null },
             )
-        }
     }
     if (overTabs) Dialog(onDismissRequest = { viewing = null }, properties = fullWindowDialogProperties()) { DialogPane { viewer() } }
     else viewer()

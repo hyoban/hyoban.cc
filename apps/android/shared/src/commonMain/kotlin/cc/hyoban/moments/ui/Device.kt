@@ -123,6 +123,9 @@ interface Device {
      */
     fun viewerMotion(type: cc.hyoban.moments.data.spec.MediaType): cc.hyoban.moments.ui.viewer.ViewerMotion?
 
+    /** As [viewerMotion], in a viewer that is a dialog of its own ([inDialog]), where a video doesn't go on in a window when the app is left. */
+    fun viewerMotion(type: cc.hyoban.moments.data.spec.MediaType, inDialog: Boolean): cc.hyoban.moments.ui.viewer.ViewerMotion? = viewerMotion(type)
+
     /** Shares the one item [media] shown in the viewer, fetched first when it is the site's, with its Moment's [text] where the device can send words with it. */
     suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls, text: String)
 

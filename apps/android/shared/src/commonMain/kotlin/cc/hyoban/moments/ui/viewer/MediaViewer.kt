@@ -47,7 +47,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -93,6 +92,7 @@ import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.NasLink
 import cc.hyoban.moments.nas.Nas
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.rememberUpdatedState
 import cc.hyoban.moments.ui.components.DrawnStills
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.Tooltip
@@ -121,7 +121,7 @@ import me.saket.telephoto.zoomable.rememberZoomableState
 import me.saket.telephoto.zoomable.zoomable
 
 /**
- * A Moment's media in the viewer ([ViewerFrame]): pinch or double-tap to zoom, a live photo's
+ * A Moment's media in the viewer ([MediaViewerFrame]): pinch or double-tap to zoom, a live photo's
  * motion in the bar over it and a video's controls under it, with when and where, which opens
  * the day, and sharing. What else there is about it is on the Moment's page under the viewer.
  */
@@ -162,16 +162,17 @@ fun MediaViewer(
         },
         actions = { shown -> ShareShown(container, shown, shareText(moment, moment.places.firstOrNull()?.let { places[it]?.name }, trip?.title)) },
         nasOriginals = true,
+        occurredAt = moment.occurredAt,
     )
 }
 
 /**
- * [media] in the viewer ([ViewerFrame]), from [index]: a Moment's, or those picked for one being
- * written, each drawn as the Moment will show it, zoomed in for a wider file, a live photo's clip
- * played from the bar or held down and a video with its controls. [caption] and [actions] fill the
- * bar under it, [top] the bar over it beside a live photo's button, for the one shown; [over]
- * lies on each photo, at its size, zooming and panning with it. With [nasOriginals], a photo
- * linked to the NAS is looked at as the NAS keeps it ([NasLinkedStill]), live if the NAS's is.
+ * [media] in the viewer ([MediaViewerFrame]), from [index]: a Moment's, or those picked for one being
+ * written, each drawn as the Moment will show it ([MomentViewed]), a live photo's clip played from the
+ * bar or held down and a video with its controls. [caption] and [actions] fill the bar under it, [top]
+ * the bar over it beside a live photo's button, for the one shown; [over] lies on each photo, at its
+ * size, zooming and panning with it. With [nasOriginals], a photo linked to the NAS is looked at as
+ * the NAS keeps it, live if the NAS's is.
  */
 @Composable
 fun MomentMediaViewer(
@@ -187,97 +188,26 @@ fun MomentMediaViewer(
     /** Where each one's motion is read: what is published or saved, or a motion photo picked and not yet saved. */
     motionSource: (MomentMedia) -> MotionSource? = { container.mediaUrls.motion(it)?.let(::MotionSource) },
     nasOriginals: Boolean = false,
+    /** Its Moment's time, for a photo that doesn't say its own. */
+    occurredAt: String? = null,
 ) {
     if (media.isEmpty()) return
     val pager = rememberPagerState(initialPage = index.coerceIn(0, media.lastIndex)) { media.size }
-    // The NAS a photo linked to it is looked at from, once it is set up; a video stays the site's.
+    // The NAS a photo linked to it is looked at from, once it is set up.
     val nas = container.nas.takeIf { nasOriginals && it.configured }
-    val linkOf: (MomentMedia) -> NasLink? = { item -> item.nas?.takeIf { nas != null && item.type != MediaType.VIDEO } }
-    // A linked photo's clip once the NAS has said (the site's where it couldn't), by its uid; none until then.
-    val nasClips = remember { mutableStateMapOf<String, MotionSource?>() }
-    val clipOf: (MomentMedia) -> MotionSource? = { item -> if (linkOf(item) != null) nasClips[item.uid] else motionSource(item) }
-    val liveOf: (MomentMedia) -> Boolean = { item -> item.type != MediaType.VIDEO && (linkOf(item) != null || item.type == MediaType.LIVE_PHOTO) && clipOf(item) != null }
-    // Each one's motion and video, held here so the bars over the pages work the one shown.
-    val device = LocalDevice.current
-    // By what each is too: a photo just picked is read after it shows, and turns out a live photo then.
-    // One linked to the NAS may turn out live there, whatever the site's is.
-    val motions = remember(media.map { it.uid to it.type }, nas != null) {
-        media.associate { it.uid to device.viewerMotion(if (linkOf(it) != null) MediaType.LIVE_PHOTO else it.type) }
-    }
-    val shown = media[pager.currentPage.coerceIn(0, media.lastIndex)]
-    LaunchedEffect(shown.uid) {
-        val link = linkOf(shown) ?: return@LaunchedEffect
-        if (shown.uid !in nasClips) nasClips[shown.uid] = nas?.viewedClip(link, motionSource(shown))
-    }
-    // Once it rests on one a moment, as 相册's viewer does: those either side read ahead, their stills
-    // at the screen's width and their details, so turning to one shows it whole at once.
-    val aheadScope = rememberCoroutineScope()
-    val context = coil3.compose.LocalPlatformContext.current
-    val screen = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width
-    LaunchedEffect(shown.uid, pager.isScrollInProgress) {
-        if (pager.isScrollInProgress) return@LaunchedEffect
-        kotlinx.coroutines.delay(AHEAD_AFTER)
-        listOfNotNull(media.getOrNull(pager.currentPage + 1), media.getOrNull(pager.currentPage - 1)).forEach { next ->
-            container.mediaDetails.ahead(aheadScope, next)
-            val link = linkOf(next)
-            if (link != null) aheadScope.launch { nas?.linkedAhead(link) }
-            else container.mediaUrls.still(next, screen)?.let { url ->
-                coil3.SingletonImageLoader.get(context).enqueue(coil3.request.ImageRequest.Builder(context).data(url).build())
-            }
-        }
-    }
-    // Space pressed, for the page shown to play or pause what it holds.
-    val playKeys = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
-    ViewerFrame(
-        pager = pager,
-        key = { media[it].uid },
+    val motion by rememberUpdatedState(motionSource)
+    val items = remember(media, nas) { media.map { MomentViewed(it, container, nas, { item -> motion(item) }, occurredAt) } }
+    MediaViewerFrame(
+        container,
+        items,
+        pager,
         onClose = onBack,
         modifier = modifier,
-        thumb = { MediaStill(media[it], container.mediaUrls, Modifier.fillMaxSize()) },
-        thumbLabel = { media[it].alt.ifEmpty { null } },
-        // Its own for each photo, so turning to one starts from what is known of it, never the last one's.
-        info = { panel ->
-            androidx.compose.runtime.key(shown.uid) {
-                PhotoInfoPanel(
-                    container,
-                    container.mediaDetails.remember(shown),
-                    panel,
-                    note = if (linkOf(shown) != null) stringResource(Res.string.viewer_nas_original) else null,
-                )
-            }
-        },
-        onSpace = { playKeys.tryEmit(Unit) },
-        top = { at ->
-            Row(Modifier.align(at), verticalAlignment = Alignment.CenterVertically) {
-                top(shown)
-                if (liveOf(shown)) {
-                    motions[shown.uid]?.LiveButton(Modifier)
-                }
-            }
-        },
-        controls = {
-            if (shown.type == MediaType.VIDEO && motionSource(shown) != null) {
-                motions[shown.uid]?.Controls(Modifier.padding(horizontal = Space.xs))
-            }
-        },
-        caption = { caption(shown) },
-        actions = { actions(shown) },
-    ) { page, onZoom, onTap ->
-        ViewerPage(
-            media = media[page],
-            urls = container.mediaUrls,
-            active = pager.currentPage == page,
-            motion = motions[media[page].uid],
-            source = clipOf(media[page]),
-            live = liveOf(media[page]),
-            nas = nas,
-            link = linkOf(media[page]),
-            onZoom = onZoom,
-            onTap = onTap,
-            playKeys = playKeys,
-            over = { over(media[page]) },
-        )
-    }
+        caption = { caption((it as MomentViewed).media) },
+        actions = { actions((it as MomentViewed).media) },
+        top = { top((it as MomentViewed).media) },
+        over = { over((it as MomentViewed).media) },
+    )
 }
 
 /** The one shown with its Moment's words, fetched first when it's the site's, the spinner in its place meanwhile. */
@@ -316,204 +246,3 @@ private fun ShareShown(container: AppContainer, shown: MomentMedia, text: String
         }
     }
 }
-
-@Composable
-private fun ViewerPage(
-    media: MomentMedia,
-    urls: MediaUrls,
-    active: Boolean,
-    motion: ViewerMotion?,
-    source: MotionSource?,
-    live: Boolean,
-    nas: Nas?,
-    link: NasLink?,
-    onZoom: (Boolean) -> Unit,
-    onTap: () -> Unit,
-    playKeys: SharedFlow<Unit>,
-    over: @Composable () -> Unit,
-) {
-    val url = source?.takeIf { motion != null }
-    // Space, while this page is the one shown: a video plays or pauses, a live photo plays or stops.
-    LaunchedEffect(active, playKeys) {
-        if (active && url != null) playKeys.collect { motion?.toggle() }
-    }
-
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        // Held down, a live photo plays with its sound until let go.
-        val onHold = motion?.hold?.takeIf { url != null && live }
-        val overlay: @Composable () -> Unit = {
-            if (url != null) motion?.Over(url, active, Modifier.fillMaxSize())
-            over()
-        }
-        val site: @Composable () -> Unit = { ZoomableStill(media, urls, onZoom, onTap, onHold = onHold, overlay = overlay) }
-        if (nas != null && link != null) {
-            NasLinkedStill(nas, link, shapeOf(media), media.alt.ifEmpty { null }, onZoom, onTap, onHold, overlay, fallback = site)
-        } else {
-            site()
-        }
-        if (url != null) motion?.Waiting()
-    }
-}
-
-/**
- * A still that zooms with two fingers or a double tap and pans once zoomed, with
- * telephoto's flings and edges. One finger at full size is left to the pager and the
- * swipes, so they still turn and close. Zoomed in, it asks for a wider file, so the
- * detail holds up.
- */
-@Composable
-private fun ZoomableStill(
-    media: MomentMedia,
-    urls: MediaUrls,
-    onZoom: (Boolean) -> Unit,
-    onTap: () -> Unit,
-    onHold: ((Boolean) -> Unit)? = null,
-    overlay: @Composable () -> Unit = {},
-) {
-    val zoom = rememberZoomableState(ZoomSpec(maxZoomFactor = MAX_ZOOM))
-    val scale = zoom.contentTransformation.scale.scaleX.takeIf { it.isFinite() } ?: 1f
-    val zoomed = (zoom.zoomFraction ?: 0f) > 0.01f
-    LaunchedEffect(zoomed) { onZoom(zoomed) }
-    // The still the card drew, already in memory, stands in while the larger one loads.
-    val drawn = remember(media.uid) { DrawnStills.of(media.uid) }
-    val shape = shapeOf(media)
-    var held by remember { mutableStateOf(false) }
-
-    // The screen takes the gestures; the photo, at its own shape and no larger than the
-    // screen, is what grows out of the card's tile and back into it, so the tile's crop
-    // opens out into the whole photo rather than jumping to it.
-    BoxWithConstraints(
-        Modifier.fillMaxSize()
-            // Held down, the finger's lifting ends what the hold started.
-            .pointerInput(onHold) {
-                awaitEachGesture {
-                    awaitFirstDown(requireUnconsumed = false)
-                    waitForUpOrCancellation()
-                    if (held) {
-                        held = false
-                        onHold?.invoke(false)
-                    }
-                }
-            }
-            .zoomable(
-                zoom,
-                onClick = { onTap() },
-                onLongClick = if (onHold != null) {
-                    {
-                        if (!zoomed) {
-                            held = true
-                            onHold(true)
-                        }
-                    }
-                } else {
-                    null
-                },
-                onDoubleClick = DoubleClickToZoomListener.cycle(DOUBLE_TAP_ZOOM),
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        // Where the photo sits inside the screen, fitted and centred as it is laid out, so
-        // a pan stops at the photo's edges rather than the screen's.
-        val fitted = remember(shape, constraints) {
-            val width = constraints.maxWidth.toFloat()
-            val height = constraints.maxHeight.toFloat()
-            if (width / height > shape) Size(height * shape, height) else Size(width, width / shape)
-        }
-        // Told before the first frame is drawn: until then the zoom keeps the photo hidden
-        // and unscaled, and the first flight into the viewer measured that instead.
-        SideEffect { zoom.setContentLocation(ZoomableContentLocation.scaledInsideAndCenterAligned(fitted)) }
-
-        // The still and the motion over it zoom and pan as one.
-        Box(Modifier.aspectRatio(shape)) {
-            MediaStill(
-                media,
-                urls,
-                placeholder = Color.Transparent,
-                placeholderUrl = drawn,
-                detail = if (scale > 1.5f) scale else 1f,
-                modifier = Modifier.fillMaxSize(),
-                // Fetching it failed: said in the middle, with the way to try again, on the black.
-                failed = { retry ->
-                    Column(
-                        Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(Space.s),
-                    ) {
-                        Text(stringResource(Res.string.media_not_loaded), style = AppTheme.typography.body, color = MediaOverlay.content)
-                        TextButton(onClick = retry, modifier = Modifier.testTag("media_retry")) {
-                            Text(stringResource(Res.string.action_retry), color = MediaOverlay.content)
-                        }
-                    }
-                },
-            )
-            overlay()
-        }
-    }
-}
-
-/** As far as a photo zooms, and how far a double tap takes it. */
-const val MAX_ZOOM = 6f
-const val DOUBLE_TAP_ZOOM = 2.5f
-
-/**
- * A photo of [shape] (width over height) that zooms as the viewer's do: two fingers or a
- * double tap, up to the same limit, panning once zoomed and stopping at the photo's edges.
- * [onZoom] says whether it is zoomed in, for a pager to stop turning meanwhile; [onHold] whether
- * it is held down, at full size, until the finger lifts; [onTap] a tap, for the viewer to hide its bars.
- */
-@Composable
-fun ZoomablePhoto(
-    shape: Float,
-    onZoom: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-    onHold: ((Boolean) -> Unit)? = null,
-    onTap: (() -> Unit)? = null,
-    content: @Composable () -> Unit,
-) {
-    val zoom = rememberZoomableState(ZoomSpec(maxZoomFactor = MAX_ZOOM))
-    val zoomed = (zoom.zoomFraction ?: 0f) > 0.01f
-    LaunchedEffect(zoomed) { onZoom(zoomed) }
-    var held by remember { mutableStateOf(false) }
-    val hold by rememberUpdatedState(onHold)
-    BoxWithConstraints(
-        modifier.fillMaxSize()
-            // Held down, the finger's lifting ends what the hold started.
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    awaitFirstDown(requireUnconsumed = false)
-                    waitForUpOrCancellation()
-                    if (held) {
-                        held = false
-                        hold?.invoke(false)
-                    }
-                }
-            }
-            .zoomable(
-                zoom,
-                onClick = onTap?.let { tap -> { tap() } },
-                onLongClick = if (onHold != null) {
-                    {
-                        if (!zoomed) {
-                            held = true
-                            onHold(true)
-                        }
-                    }
-                } else {
-                    null
-                },
-                onDoubleClick = DoubleClickToZoomListener.cycle(DOUBLE_TAP_ZOOM),
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        val fitted = remember(shape, constraints) {
-            val width = constraints.maxWidth.toFloat()
-            val height = constraints.maxHeight.toFloat()
-            if (width / height > shape) Size(height * shape, height) else Size(width, width / shape)
-        }
-        SideEffect { zoom.setContentLocation(ZoomableContentLocation.scaledInsideAndCenterAligned(fitted)) }
-        Box(Modifier.aspectRatio(shape)) { content() }
-    }
-}
-
-/** How long a viewer rests on one before those either side are read ahead, so a run of swipes asks nothing of those swiped past. */
-const val AHEAD_AFTER = 300L

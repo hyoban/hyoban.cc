@@ -1,4 +1,4 @@
-package cc.hyoban.moments.ui.picker
+package cc.hyoban.moments.ui.viewer
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -28,8 +28,8 @@ import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.PointerInputModifierNode
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.layout.ContentScale
-import cc.hyoban.moments.ui.viewer.DOUBLE_TAP_ZOOM
-import cc.hyoban.moments.ui.viewer.MAX_ZOOM
+import cc.hyoban.moments.ui.design.Spinner
+import cc.hyoban.moments.ui.theme.MediaOverlay
 import me.saket.telephoto.zoomable.DoubleClickToZoomListener
 import me.saket.telephoto.zoomable.ZoomSpec
 import me.saket.telephoto.zoomable.coil3.ZoomableAsyncImage
@@ -37,23 +37,21 @@ import me.saket.telephoto.zoomable.rememberZoomableImageState
 import me.saket.telephoto.zoomable.rememberZoomableState
 
 /**
- * A picked photo's original, zooming as [cc.hyoban.moments.ui.viewer.ZoomablePhoto] does, read
- * by telephoto in tiles of the original as it zooms, so the detail holds up as far as it goes
- * rather than the screen-sized picture being stretched. [thumb], at [shape] (width over height),
- * stands in until the original is drawn. [overlay] lies over the photo at its fitted size,
- * zooming and panning with it: a live photo's clip.
+ * On the phone telephoto reads [ViewedStill.model] in tiles as it zooms, so the detail holds up as
+ * far as it goes rather than a screen-sized picture being stretched; the thumbnail stands in until
+ * it is drawn, and is zoomed itself while there is nothing more.
  */
 @Composable
-actual fun ZoomableOriginal(
-    model: Any,
-    thumb: ImageBitmap?,
-    shape: Float,
+actual fun ZoomableMedia(
+    still: ViewedStill,
     contentDescription: String?,
     onZoom: (Boolean) -> Unit,
+    onTap: () -> Unit,
     onHold: ((Boolean) -> Unit)?,
-    onTap: (() -> Unit)?,
     overlay: @Composable () -> Unit,
 ) {
+    val shape = still.shape
+    val thumb = still.thumb
     val zoom = rememberZoomableState(ZoomSpec(maxZoomFactor = MAX_ZOOM))
     val image = rememberZoomableImageState(zoom)
     val zoomed = (zoom.zoomFraction ?: 0f) > 0.01f
@@ -80,14 +78,16 @@ actual fun ZoomableOriginal(
                 Image(it, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.aspectRatio(shape))
             }
         }
-        ZoomableAsyncImage(
-            // Coil reads a Bitmap but not Compose's ImageBitmap: until the original comes, the
-            // thumbnail stands in as one, so it zooms and the zoom can fetch the original.
-            if (model is ImageBitmap) model.asAndroidBitmap() else model,
+        // Coil reads a Bitmap but not Compose's ImageBitmap: until the original comes, the
+        // thumbnail stands in as one, so it zooms and the zoom can fetch the original.
+        val model = (still.model ?: thumb)?.let { if (it is ImageBitmap) it.asAndroidBitmap() else it }
+        if (model == null && still.failed == null) Spinner(color = MediaOverlay.content)
+        if (model != null) ZoomableAsyncImage(
+            model,
             contentDescription = contentDescription,
             modifier = Modifier.fillMaxSize(),
             state = image,
-            onClick = onTap?.let { tap -> { tap() } },
+            onClick = { onTap() },
             onLongClick = if (onHold != null) {
                 {
                     if (!zoomed) {
@@ -124,6 +124,8 @@ actual fun ZoomableOriginal(
         ) {
             Box(Modifier.aspectRatio(shape)) { overlay() }
         }
+        // Not read, and nothing else of it to show.
+        if (thumb == null) still.failed?.let { StillFailed(it) }
     }
 }
 

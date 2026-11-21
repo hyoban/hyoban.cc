@@ -174,6 +174,7 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
         cc.hyoban.moments.ui.onboarding.PhoneOnboardingFootprints(container as PhoneContainer, onBack, onDone)
 
     override fun viewerMotion(type: cc.hyoban.moments.data.spec.MediaType) = cc.hyoban.moments.ui.viewer.phoneViewerMotion(type)
+    override fun viewerMotion(type: cc.hyoban.moments.data.spec.MediaType, inDialog: Boolean) = cc.hyoban.moments.ui.viewer.phoneViewerMotion(type, window = !inDialog)
 
     override suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls, text: String) =
         cc.hyoban.moments.data.media.Share.media(context, media, urls, text)

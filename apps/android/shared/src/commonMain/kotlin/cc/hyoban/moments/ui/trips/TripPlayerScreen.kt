@@ -145,6 +145,8 @@ import cc.hyoban.moments.ui.components.FLOATING_BAR
 import cc.hyoban.moments.ui.components.FloatingBack
 import cc.hyoban.moments.ui.components.LocalReducedMotion
 import cc.hyoban.moments.ui.components.MediaStill
+import cc.hyoban.moments.ui.components.MediaBadge
+import cc.hyoban.moments.ui.components.badge
 import cc.hyoban.moments.ui.components.Tooltip
 import cc.hyoban.moments.ui.components.isLandscape
 import cc.hyoban.moments.ui.components.sharedCard
@@ -619,13 +621,14 @@ private fun StopCard(slide: PlaybackSlide.Stop, controller: PlaybackController, 
                 ) {
                     items(photos.size) { n ->
                         val label = stringResource(Res.string.media_position, stringResource(photos[n].kindLabel()), n + 1, photos.size)
-                        MediaStill(
-                            photos[n],
-                            urls,
+                        Box(
                             Modifier.width(width).fillMaxHeight().clip(AppTheme.shapes.large)
                                 .clickable(onClickLabel = if (n == photo) open else view) { if (n == photo) onMoment(moment.uid) else controller.selectPhoto(n) }
                                 .semantics { contentDescription = listOf(label, photos[n].alt).filter { it.isNotBlank() }.joinToString(clause) },
-                        )
+                        ) {
+                            MediaStill(photos[n], urls, Modifier.fillMaxSize())
+                            photos[n].badge()?.let { MediaBadge(it, Modifier.align(Alignment.BottomStart).padding(Space.s)) }
+                        }
                     }
                 }
             }

@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.media.MediaUrls
+import cc.hyoban.moments.data.media.Outgoing
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.trips.RouteSegment
@@ -76,7 +77,7 @@ object DesktopDevice : Device {
             val files = withContext(Dispatchers.IO) {
                 val dialog = FileDialog(null as Frame?, "", FileDialog.LOAD).apply {
                     isMultipleMode = true
-                    setFilenameFilter { _, name -> name.substringAfterLast('.', "").lowercase() in PICTURES }
+                    setFilenameFilter { _, name -> name.substringAfterLast('.', "").lowercase() in Outgoing.PICTURES }
                     isVisible = true
                 }
                 dialog.files.orEmpty().toList()
@@ -114,7 +115,7 @@ object DesktopDevice : Device {
             savePhotos = { photos ->
                 scope.launch {
                     val folder = chooseFolder() ?: return@launch
-                    val count = withContext(Dispatchers.IO) { savePhotos(photos, folder, moment.dateKey) }
+                    val count = withContext(Dispatchers.IO) { savePhotos(photos, urls, folder, moment.dateKey) }
                     if (count > 0) show(org.jetbrains.compose.resources.getString(Res.string.desktop_photos_saved, count))
                     onDismiss()
                 }
@@ -151,9 +152,9 @@ object DesktopDevice : Device {
 
     // The one shown kept in a folder, as sharing a Moment keeps its photos.
     override suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls, text: String) {
-        val source = media.published?.let { urls.image(it, 4096) } ?: media.local?.uri ?: return
+        if (media.published == null && media.local == null) return
         val folder = chooseFolder() ?: return
-        withContext(Dispatchers.IO) { savePhotos(listOf(source), folder, media.takenAt?.take(10) ?: media.uid) }
+        withContext(Dispatchers.IO) { savePhotos(listOf(media), urls, folder, media.takenAt?.take(10) ?: media.uid) }
     }
 
     // The system's file dialog, offering files by their names' endings.
@@ -191,20 +192,42 @@ object DesktopDevice : Device {
         }
     }
 
-    /** Fetches each of [photos] (a URL or a file) into [folder], numbered in order after [day]; how many arrived. */
-    private fun savePhotos(photos: List<String>, folder: File, day: String): Int = photos.withIndex().count { (index, source) ->
-        runCatching {
-            val name = "$day-${index + 1}.${source.substringAfterLast('.', "jpg").substringBefore('?').takeIf { it.length in 2..4 } ?: "jpg"}"
-            val into = File(folder, name)
-            if (source.startsWith("http")) {
-                cc.hyoban.moments.data.Http.client.newCall(okhttp3.Request.Builder().url(source).build()).execute().use { response ->
-                    check(response.isSuccessful)
-                    into.outputStream().use { response.body!!.byteStream().copyTo(it) }
-                }
-            } else {
-                File(URI(source).takeIf { source.startsWith("file:") }?.path ?: source).copyTo(into, overwrite = true)
+    /**
+     * Keeps each of [media] in [folder], numbered in order after [day], as [Outgoing] has it leave:
+     * a photo, a video's file, a live photo's still and its clip under the same name, the computer's
+     * own copy while it is there, else the published original, never with where it was taken; how
+     * many arrived whole.
+     */
+    private fun savePhotos(media: List<cc.hyoban.moments.data.spec.MomentMedia>, urls: MediaUrls, folder: File, day: String): Int {
+        val originals = java.nio.file.Files.createTempDirectory("here-originals-").toFile()
+        try {
+            return media.withIndex().count { (index, item) ->
+                Outgoing.parts(item, withClip = true).map { part ->
+                    runCatching { Outgoing.fetch(part, urls, ComputerFiles, folder, originals, "$day-${index + 1}") }
+                        .onFailure { cc.hyoban.moments.logWarning("Moments", "not saved: ${item.uid}", it) }
+                        .isSuccess
+                }.all { it }
             }
-        }.isSuccess
+        } finally {
+            originals.deleteRecursively()
+        }
+    }
+
+    /** The computer's files, by their `file:` addresses or paths, their types as their names' endings say. */
+    private object ComputerFiles : Outgoing.Files {
+        private val TYPES = mapOf(
+            "jpg" to "image/jpeg", "jpeg" to "image/jpeg", "png" to "image/png", "webp" to "image/webp",
+            "heic" to "image/heic", "heif" to "image/heif", "gif" to "image/gif", "avif" to "image/avif",
+            "mp4" to "video/mp4", "mov" to "video/quicktime", "webm" to "video/webm",
+        )
+
+        private fun file(address: String) = File(URI(address).takeIf { address.startsWith("file:") }?.path ?: address)
+
+        override fun open(address: String) = runCatching { file(address).inputStream() }.getOrNull()
+
+        override fun type(address: String) = TYPES[file(address).extension.lowercase()]
+
+        override fun extension(type: String) = TYPES.entries.firstOrNull { it.value == type }?.key ?: type.substringAfter('/')
     }
 
     @Composable
@@ -242,6 +265,3 @@ object DesktopDevice : Device {
         Desktop.getDesktop().browse(URI("https://maps.apple.com/?daddr=${place.latitude},${place.longitude}&q=$name"))
     }.isSuccess
 }
-
-/** The pictures the file dialog offers, by their names' endings. */
-private val PICTURES = setOf("jpg", "jpeg", "png", "webp", "heic", "heif", "gif")

@@ -35,11 +35,12 @@ class PhotoFilterTest {
         override val key = "photo/$day"
         override val source: PhotoSource get() = error("not asked")
         override suspend fun thumbnail(size: Int): ImageBitmap? = null
-        @Composable override fun badge(): String? = null
+        override val type get() = cc.hyoban.moments.data.spec.MediaType.IMAGE
+        @Composable override fun badge(): cc.hyoban.moments.ui.components.BadgeKind? = null
         @Composable override fun description() = ""
         @Composable override fun place(): String? = null
         @Composable override fun rememberDetails(): PhotoDetails? = null
-        @Composable override fun Page(active: Boolean, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {}
+        @Composable override fun rememberStill(active: Boolean, deep: Boolean) = cc.hyoban.moments.ui.viewer.ViewedStill(1f)
     }
 
     private val october = LocalDate.of(2025, 10, 12)

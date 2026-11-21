@@ -53,15 +53,13 @@ fun DesktopShareDialog(
     place: String?,
     trip: String?,
     onDismiss: () -> Unit,
-    savePhotos: ((List<String>) -> Unit)?,
+    savePhotos: ((List<cc.hyoban.moments.data.spec.MomentMedia>) -> Unit)?,
     more: (() -> Unit)? = null,
 ) {
     val device = LocalDevice.current
     val show = rememberShowMessage()
     val copied = stringResource(Res.string.message_text_copied)
-    val photos = moment.media.mapNotNull { media ->
-        media.published?.let { urls.image(it, ORIGINAL_WIDTH) } ?: media.local?.uri
-    }
+    val photos = moment.media.filter { it.published != null || it.local != null }
     DesktopDialog(560.dp, onDismiss) {
         Column {
             Toolbar(
@@ -118,6 +116,3 @@ fun DesktopShareDialog(
 
 /** A row that does [action] when clicked, washed as it is pressed or hovered. */
 private fun Modifier.clickableRow(action: () -> Unit): Modifier = clickable(onClick = action)
-
-/** The width asked of a published photo kept in full. */
-private const val ORIGINAL_WIDTH = 4096

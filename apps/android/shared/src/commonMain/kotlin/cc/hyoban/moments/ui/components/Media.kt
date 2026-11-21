@@ -69,6 +69,7 @@ import coil3.request.crossfade
 import coil3.size.Precision
 import coil3.size.Scale
 import kotlin.math.roundToInt
+import cc.hyoban.moments.ui.format.formatClock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -126,7 +127,7 @@ fun MediaStill(
                 .apply { if (placeholderUrl != null) placeholderMemoryCacheKey(placeholderUrl) }
                 .build()
         }
-        SideEffect { if (url != null && placeholderUrl == null) DrawnStills.note(media.uid, url) }
+        SideEffect { if (url != null && placeholderUrl == null) DrawnStills.note(media.uid, url, widest[0]) }
         AsyncImage(
             model = request,
             contentDescription = media.alt.ifEmpty { null },
@@ -260,8 +261,8 @@ fun MediaTile(
     ) {
         MediaStill(media, urls, Modifier.fillMaxSize())
         when (media.type) {
-            MediaType.VIDEO -> if (videoAsLabel) VideoBadge(Modifier.align(Alignment.BottomStart).padding(Space.s)) else PlayBadge(Modifier.align(Alignment.Center))
-            MediaType.LIVE_PHOTO -> LiveBadge(Modifier.align(liveBadgeAlignment).padding(Space.s))
+            MediaType.VIDEO -> if (videoAsLabel) MediaBadge(BadgeKind.Video(), Modifier.align(Alignment.BottomStart).padding(Space.s)) else PlayBadge(Modifier.align(Alignment.Center))
+            MediaType.LIVE_PHOTO -> MediaBadge(BadgeKind.Live, Modifier.align(liveBadgeAlignment).padding(Space.s))
             MediaType.IMAGE -> Unit
         }
     }
@@ -277,30 +278,58 @@ fun PlayBadge(modifier: Modifier = Modifier) {
     )
 }
 
-/** A video among photos: the live label's look, a play icon and the word. */
+/**
+ * [media]'s still read whole and small, outside a page, by the address a page draws it from, so
+ * what one has already read the other finds in Coil's caches: [width] by [height] pixels, filling
+ * them with [fill] (a map's pin) or fitted inside them, its pixels readable for drawing it again
+ * elsewhere (a widget, a pin, the picker's tiles). Null when it can't be had.
+ */
+suspend fun MediaUrls.readStill(context: coil3.PlatformContext, media: MomentMedia, width: Int, height: Int = width, fill: Boolean = false): coil3.Image? {
+    val url = still(media, width) ?: return null
+    val request = ImageRequest.Builder(context).data(url).size(width, height).scale(if (fill) Scale.FILL else Scale.FIT).readable().build()
+    return (SingletonImageLoader.get(context).execute(request) as? SuccessResult)?.image
+}
+
+/** What a tile's [MediaBadge] says it holds. */
+sealed interface BadgeKind {
+    data object Live : BadgeKind
+    /** A video, [millis] long where that is known. */
+    data class Video(val millis: Long? = null) : BadgeKind
+    data object Raw : BadgeKind
+}
+
+/**
+ * The design's MediaBadge: the small label on a tile saying what it holds, a live photo's icon and
+ * 实况, a video's play icon and its length (视频 where that isn't known), or RAW, on a scrim, 20 high.
+ * It is read with the tile it is on, so a screen reader skips it.
+ */
 @Composable
-fun VideoBadge(modifier: Modifier = Modifier) {
+fun MediaBadge(kind: BadgeKind, modifier: Modifier = Modifier) {
     Row(
-        modifier.height(20.dp).clip(CircleShape).background(MediaOverlay.control).padding(horizontal = 6.dp),
+        modifier.height(20.dp).clip(CircleShape).background(MediaOverlay.control).padding(horizontal = 6.dp).clearAndSetSemantics {},
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.xs),
     ) {
-        Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(12.dp))
-        Text(stringResource(Res.string.media_video), color = MediaOverlay.content, style = AppTheme.typography.caption)
+        val icon = when (kind) {
+            BadgeKind.Live -> AppIcons.Live
+            is BadgeKind.Video -> AppIcons.Play
+            BadgeKind.Raw -> null
+        }
+        icon?.let { Icon(it, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(12.dp)) }
+        val words = when (kind) {
+            BadgeKind.Live -> stringResource(Res.string.label_live)
+            is BadgeKind.Video -> kind.millis?.let(::formatClock) ?: stringResource(Res.string.media_video)
+            BadgeKind.Raw -> "RAW"
+        }
+        Text(words, color = MediaOverlay.content, style = AppTheme.typography.caption)
     }
 }
 
-@Composable
-fun LiveBadge(modifier: Modifier = Modifier) {
-    Row(
-        // The design's small label on a photo: 20 high, its icon 12.
-        modifier.height(20.dp).clip(CircleShape).background(MediaOverlay.control).padding(horizontal = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.xs),
-    ) {
-        Icon(AppIcons.Live, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(12.dp))
-        Text(stringResource(Res.string.label_live), color = MediaOverlay.content, style = AppTheme.typography.caption)
-    }
+/** What a Moment's media is marked with on a tile; nothing for a still. */
+fun MomentMedia.badge(): BadgeKind? = when (type) {
+    MediaType.LIVE_PHOTO -> BadgeKind.Live
+    MediaType.VIDEO -> BadgeKind.Video()
+    MediaType.IMAGE -> null
 }
 
 /**

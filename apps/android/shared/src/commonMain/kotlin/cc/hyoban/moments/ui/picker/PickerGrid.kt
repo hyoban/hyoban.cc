@@ -312,9 +312,7 @@ fun Grid(
                             .clickable(enabled = pick.openable, onClickLabel = stringResource(Res.string.camera_view)) { onOpen(pick) },
                     ) {
                         thumb?.let { Image(it, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().alpha(if (setBack) 0.38f else 1f)) }
-                        if (!byMonth) corner?.let {
-                            Text(it, style = AppTheme.typography.caption.strong, color = MediaOverlay.content, modifier = Modifier.align(Alignment.BottomStart).padding(6.dp))
-                        }
+                        if (!byMonth) corner?.let { cc.hyoban.moments.ui.components.MediaBadge(it, Modifier.align(Alignment.BottomStart).padding(6.dp)) }
                         // In a Moment already: published, or waiting to be.
                         if (!byMonth && pick.linkedMoment != null) Icon(
                             AppIcons.Cloud, contentDescription = stringResource(Res.string.album_in_moment), tint = MediaOverlay.content,

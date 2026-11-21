@@ -1,5 +1,11 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.data.spec.MediaType
+import cc.hyoban.moments.ui.components.BadgeKind
+import cc.hyoban.moments.ui.viewer.ReadAhead
+import cc.hyoban.moments.ui.viewer.ViewedMedia
+import cc.hyoban.moments.ui.viewer.ViewedStill
+
 import cc.hyoban.moments.res.*
 import android.content.Context
 import androidx.compose.ui.graphics.ImageBitmap
@@ -55,7 +61,6 @@ import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.viewer.PhotoDetails
-import cc.hyoban.moments.ui.viewer.ZoomablePhoto
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.ZoneId
@@ -217,8 +222,10 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
     override suspend fun thumbnail(size: Int): ImageBitmap? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.transfer?.thumbnail(photo)?.asImageBitmap() else null
 
+    override val type get() = MediaType.IMAGE
+
     @Composable
-    override fun badge() = if (photo.raw) "RAW" else null
+    override fun badge() = if (photo.raw) BadgeKind.Raw else null
 
     @Composable
     override fun description() =
@@ -243,36 +250,35 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
     override fun infoNote(details: PhotoDetails?) =
         Res.string.picker_info_camera_note.takeIf { details?.make == null && details?.focal == null }
 
-    /**
-     * Its original, once the viewer is still on it, so swiping past doesn't queue downloads; then
-     * the next one's.
-     */
-    override fun settled(next: Pick?) {
+    /** Its original, once the viewer is still on it, so swiping past doesn't queue downloads. */
+    override fun settled(reading: ReadAhead) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         val transfer = source.transfer ?: return
         if (photo.photo) transfer.loadOriginal(photo)
-        (next as? CameraPick)?.let { transfer.prefetch(it.photo, after = photo) }
+    }
+
+    /** Then those either side of the one rested on. */
+    override fun ahead(from: ViewedMedia, reading: ReadAhead) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val transfer = source.transfer ?: return
+        (from as? CameraPick)?.let { transfer.prefetch(photo, after = it.photo) }
     }
 
     /** Its thumbnail enlarged until its original is down in the cache, then the original in tiles. */
     @Composable
-    override fun Page(active: Boolean, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            val transfer = source.transfer
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || transfer == null) return@Box
-            val thumb by rememberThumb(this@CameraPick)
-            val original = transfer.originalOf(photo)
-            val file = original?.file
-            val shape = thumb?.let { it.width.toFloat() / it.height } ?: 1.5f
-            if (file != null) {
-                ZoomableOriginal(file, thumb, shape, photo.name, onZoom, onTap = onTap)
-            } else {
-                ZoomablePhoto(shape, onZoom, onTap = onTap) {
-                    thumb?.let { Image(it, contentDescription = photo.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
-                }
-            }
-            if (photo.photo && file == null && original != null) Loading(original) { transfer.loadOriginal(photo) }
-        }
+    override fun rememberStill(active: Boolean, deep: Boolean): ViewedStill {
+        val thumb by rememberThumb(this)
+        val file = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.transfer?.originalOf(photo)?.file else null
+        return ViewedStill(thumb?.let { it.width.toFloat() / it.height } ?: 1.5f, thumb = thumb, model = file)
+    }
+
+    /** Its original coming down, over it. */
+    @Composable
+    override fun Decor() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val transfer = source.transfer ?: return
+        val original = transfer.originalOf(photo)
+        if (photo.photo && original != null && original.file == null) Loading(original) { transfer.loadOriginal(photo) }
     }
 }
 

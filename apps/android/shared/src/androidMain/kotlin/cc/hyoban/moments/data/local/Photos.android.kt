@@ -27,6 +27,8 @@ actual fun File.toPhotoRef(): PhotoRef = Uri.fromFile(this)
 
 /** Photos and videos picked for a Moment written on the phone: read for their time and place, and copied in. */
 actual object Photos {
+    actual val copiesVideos = true
+
     actual suspend fun read(ref: PhotoRef): PhotoInfo = read(AndroidApp.context, ref)
 
     actual suspend fun copy(ref: PhotoRef, directory: File, name: String, splitMotion: Boolean, poster: Boolean): CopiedPhoto =

@@ -790,7 +790,7 @@ UbiquitousBear/shutter-bridge's measurements on an a7C II for the Wi‑Fi one.
   thumbnails, 1 GB of originals, the least lately used going first), so one looked at before
   shows at once, this visit or the next. It zooms as the
   photo viewer does (two fingers or a double tap), the original read in tiles as it zooms
-  (`ZoomableOriginal`, telephoto's subsampling), so its detail holds up. The ring in the corner, or
+  (`ZoomableMedia`, telephoto's subsampling), so its detail holds up. The ring in the corner, or
   选中 there, chooses it. JPEG and HEIF can be chosen, RAW only looked at. The camera's Wi‑Fi
   band is the camera's to choose: on 2.4 GHz the a7C II gave about 3 MB/s, on 5 GHz several
   times that. The viewer's 删除 deletes a photo from the camera's card, after asking, in the
@@ -812,7 +812,7 @@ NAS's map is switched to from the title's menu. Its photos have no circles until
 starts choosing; held and dragged on, every photo from it to the finger is chosen with it, as the
 system's gallery does (in 选照片 too). Choosing, the circles show, 选择 turns into 不选了 (as does
 back), and the tabs give way to a bar of what to do with those chosen, as many as liked: 分享 hands
-them to the system's share sheet, 存到相册 (once the camera's or the NAS's are chosen) saves those to
+them to the system's share sheet as copies without where they were taken, as a Moment's are shared (`Outgoing`), 存到相册 (once the camera's or the NAS's are chosen) saves those to
 the gallery's Here album and lets the choice go, 删除 deletes those chosen from the source shown as
 选照片's does, and 写时刻, 记录's ink button grown to hold its words, opens a new Moment with them in the order chosen, set back past the nine a
 Moment holds, which the subtitle then says. The camera's and the NAS's are saved to the Here album
@@ -825,8 +825,14 @@ again from its button or held down with its sound, and Space: the gallery's and 
 motion photo itself, where its clip starts after its still (the NAS's read by range, the start of its
 original kept on the device), an iPhone's on the NAS from the MOV it keeps beside the still (its stream's
 `size_type` 5), a published one's from its clip, and in the editor one picked and not
-yet saved from its own file, unless it goes in as a photo alone or 打码'd. Every viewer, resting on one
-a moment, reads those either side ahead: their stills and their info.
+yet saved from its own file, unless it goes in as a photo alone or 打码'd. A video plays and pauses with
+Space in every viewer too. Every viewer, resting on one a moment, reads those either side ahead: their
+stills and their info. The viewers are one: each source says what it has of a photo (`ViewedMedia`: its
+still as it comes, its clip or video, its info) and every page is drawn alike (`ui/viewer/MediaPages.kt`),
+zoomed by one component (`ZoomableMedia`) with whatever lies over the photo, a clip, a video or the
+patches being drawn, zooming with it. On a tile, a live photo, a video (with its length where the source
+knows it) and a RAW are marked by the design's MediaBadge alike, in 相册, 选照片, a Moment's photos, the
+editor's row and the trip playback.
 
 **相簿**, under 我, lists the gallery's albums, the largest first, each with a switch: one turned
 off leaves 相册, 选照片 and 地图's photos wholly, the title's menu too, its photos still on the phone.
@@ -954,11 +960,13 @@ A tap opens one in the app's one viewer, on black, swiped through and zoomed as 
 added from there; a photo of the gallery's, the camera's or the NAS's is read from its original in tiles as it
 zooms, so it stays sharp. Under it, upright, the photos before and after are small in a row, the one shown
 in the middle and those chosen dotted: a tap turns to one, and dragging the row turns the viewer
-along. A video of the gallery's or the NAS's (MP4 or QuickTime) plays where it is, silent until
+along. A video of the gallery's or the NAS's (MP4, QuickTime or 3GP) plays where it is, silent until
 asked, with the photo viewer's controls, the NAS's read from its stream as far as it is watched and
-not kept; a live photo of the gallery's or the NAS's plays its clip once, and with its sound while
-held, the NAS's clip kept on disk with the clips seen before, under a key of its own rather than its
-signed-in address, and read from its original or clip once those are down on the phone. The camera's videos stay stills. Its 删除 hands one of the gallery's to the system, which asks and moves it to its bin
+not kept; on the Mac a NAS video is only looked at, as videos aren't added there yet. A live photo of the
+gallery's or the NAS's plays its clip once, and with its sound while held: a motion photo's clip read by
+range from its original, kept on disk with the clips seen before under a key of its own rather than its
+signed-in address, and from the original once that is down on the phone; an iPhone's MOV brought down
+once and kept with the originals, the same way a Moment's photo linked to it is played (`Nas.clipOf`). The camera's videos stay stills. Its 删除 hands one of the gallery's to the system, which asks and moves it to its bin
 (`createTrashRequest`), and deletes one of the camera's off its card, after asking. With
 photos chosen, the bar's 删除 does the same with those chosen from the source shown: the
 gallery's in one request, the system asking once, the camera's one at a time. 加入 adds the gallery's as they are, their

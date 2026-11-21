@@ -37,12 +37,12 @@ class PhoneLiveMotion : ViewerMotion {
     override val hold: (Boolean) -> Unit = { held -> if (held) state.play(sound = true) else state.stop() }
 }
 
-/** A video on the phone, with its controls in the bar under it. */
-class PhoneVideoMotion : ViewerMotion {
+/** A video on the phone, with its controls in the bar under it; going on in a [window] of its own when the app is left. */
+class PhoneVideoMotion(private val window: Boolean = true) : ViewerMotion {
     private val state = VideoState()
 
     @Composable
-    override fun Over(source: MotionSource, active: Boolean, modifier: Modifier) = VideoPlayback(source.url, active, state, modifier, headers = source.headers)
+    override fun Over(source: MotionSource, active: Boolean, modifier: Modifier) = VideoPlayback(source.url, active, state, modifier, headers = source.headers, window = window)
 
     @Composable
     override fun Waiting() = VideoWaiting(state)
@@ -61,11 +61,11 @@ class PhoneVideoMotion : ViewerMotion {
     }
 }
 
-/** The phone's motion for an item of [type]: its clip, its video, or none for a still. */
-fun phoneViewerMotion(type: MediaType): ViewerMotion? = when (type) {
+/** The phone's motion for an item of [type]: its clip, its video (in a [window] of its own when the app is left), or none for a still. */
+fun phoneViewerMotion(type: MediaType, window: Boolean = true): ViewerMotion? = when (type) {
     MediaType.IMAGE -> null
     MediaType.LIVE_PHOTO -> PhoneLiveMotion()
-    MediaType.VIDEO -> PhoneVideoMotion()
+    MediaType.VIDEO -> PhoneVideoMotion(window)
 }
 
 /** A live photo's motion in the bar over it: a ring while it loads, then a tap plays it again or stops it. */

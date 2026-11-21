@@ -1,5 +1,8 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.data.spec.MediaType
+import cc.hyoban.moments.ui.components.BadgeKind
+
 import cc.hyoban.moments.data.local.videoStart
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.local.MotionPhotos
@@ -59,7 +62,6 @@ import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.viewer.PhotoDetails
 import cc.hyoban.moments.ui.viewer.readLocal
-import cc.hyoban.moments.ui.viewer.ZoomablePhoto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
@@ -134,11 +136,11 @@ internal class GallerySource(
     val items get() = itemsState.value
     val access get() = accessState.value
 
-    /** The motion photos among [items], by id, once a filter by kind has asked; null until then. */
+    /** The motion photos among [items], by id, once listed; null until then. */
     var motion by mutableStateOf<Set<Long>?>(null)
         private set
 
-    /** Lists the motion photos for the filter, again as the gallery changes. */
+    /** Lists the motion photos for the tiles' badges and the filter, in one query, again as the gallery changes. */
     suspend fun readMotion() {
         motion = withContext(Dispatchers.IO) { LocalMedia.motionIds(context) }
     }
@@ -184,11 +186,11 @@ internal data class GalleryListing(val gallery: GallerySource, val albumId: Long
 
     override val facets get() = GALLERY_FACETS
 
-    /** On the device; a kind asked for first lists the motion photos, whose XMP says what they are. */
+    /** On the device, the motion photos listed among them, as their XMP says, for the badges and the filter. */
     @Composable
     override fun shown(filter: PhotoFilter): List<Pick> {
         val items = gallery.items
-        if (filter.kinds.isNotEmpty()) LaunchedEffect(items) { gallery.readMotion() }
+        LaunchedEffect(items) { gallery.readMotion() }
         val all = picks()
         val motion = gallery.motion
         return remember(all, filter, motion) { if (filter.active) all.filter(filter::matches) else all }
@@ -223,23 +225,47 @@ internal data class GalleryPick(val item: LocalItem, override val source: Galler
         runCatching { source.context.contentResolver.loadThumbnail(item.uri, Size(size, size), null).asImageBitmap() }.getOrNull()
     }?.also { localThumbs.put("$key@$size", it) }
 
-    /** A motion photo's clip, read from the media store where it starts after its still. */
+    /** A video; else a motion photo where the media store says so, or until it has said. */
+    override val type get() = when {
+        item.video -> MediaType.VIDEO
+        source.motion?.contains(item.id) == false -> MediaType.IMAGE
+        else -> MediaType.LIVE_PHOTO
+    }
+
+    /** Only what the players read: MP4 and its kin; another kind shows a frame. */
+    override val playable get() = item.mime in cc.hyoban.moments.ui.viewer.PLAYED_VIDEOS
+
+    /**
+     * A video plays from the file, silent until asked; a motion photo's clip is read from the media
+     * store where it starts after its still, played once and again with its sound while held.
+     */
     @Composable
-    override fun rememberMotion(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? {
+    override fun rememberClip(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? {
         val context = LocalContext.current
+        if (item.video) return remember(key) { if (playable) cc.hyoban.moments.ui.viewer.MotionSource(item.uri.toString()) else null }
         return produceState<cc.hyoban.moments.ui.viewer.MotionSource?>(null, key, active) {
-            if (!active || item.video || value != null) return@produceState
+            if (!active || value != null) return@produceState
             value = withContext(Dispatchers.IO) { MotionPhotos.videoStart(context, item.uri) }
                 ?.let { cc.hyoban.moments.ui.viewer.MotionSource(item.uri.toString(), it) }
         }.value
     }
 
+    /** From the file itself, read in tiles as it zooms, over its thumbnail; a video's frame, large. */
     @Composable
-    override fun badge(): String? {
-        if (item.video) return item.duration?.let(::clock)
-        val context = LocalContext.current
-        val live by produceState(false, key) { value = withContext(Dispatchers.IO) { LocalMedia.isMotion(context, item) } }
-        return if (live) stringResource(Res.string.label_live) else null
+    override fun rememberStill(active: Boolean, deep: Boolean): cc.hyoban.moments.ui.viewer.ViewedStill {
+        val small by rememberThumb(this)
+        val large = if (item.video) rememberThumb(this, size = 1440).value else null
+        val shape = if (item.width != null && item.height != null && item.height > 0) item.width.toFloat() / item.height
+            else small?.let { it.width.toFloat() / it.height } ?: 1f
+        return cc.hyoban.moments.ui.viewer.ViewedStill(shape, thumb = large ?: small, model = if (item.video) null else item.uri)
+    }
+
+    /** A video and its length, or a motion photo as the media store says, listed once for all of them. */
+    @Composable
+    override fun badge(): BadgeKind? = when {
+        item.video -> BadgeKind.Video(item.duration)
+        source.motion?.contains(item.id) == true -> BadgeKind.Live
+        else -> null
     }
 
     @Composable
@@ -262,46 +288,6 @@ internal data class GalleryPick(val item: LocalItem, override val source: Galler
             value = if (item.video) base else PhotoDetails.readLocal(context, base, LocalMedia.forMoment(context, item.uri))
         }.value
     }
-
-    /**
-     * From the file itself. A video plays over a frame of it, silent until asked, and a motion
-     * photo plays its clip once and again with its sound while held, both read from the media store.
-     */
-    @Composable
-    override fun Page(active: Boolean, onZoom: (Boolean) -> Unit, onTap: () -> Unit) {
-        val context = LocalContext.current
-        val video = (LocalPickerVideos.current as PhoneVideos).state(key)
-        // Only what the players read: MP4 and its kin.
-        val plays = item.video && item.mime in PLAYED
-        val live = LocalPageLive.current
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            val small by rememberThumb(this@GalleryPick)
-            val large by rememberThumb(this@GalleryPick, size = if (item.video) 1440 else 320)
-            val shape = if (item.width != null && item.height != null && item.height > 0) item.width.toFloat() / item.height else null
-            val fitted = shape ?: small?.let { it.width.toFloat() / it.height } ?: 1f
-            if (item.video) {
-                ZoomablePhoto(fitted, onZoom, onTap = onTap) {
-                    large?.let { Image(it, contentDescription = item.name, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
-                    if (plays) VideoPlayback(item.uri.toString(), active, video, Modifier.fillMaxSize(), window = false)
-                }
-            } else {
-                ZoomableOriginal(
-                    item.uri, small, fitted, item.name, onZoom,
-                    onHold = live?.hold,
-                    onTap = onTap,
-                ) { live?.Over(active) }
-            }
-            if (plays) VideoWaiting(video) else if (item.video) Icon(AppIcons.Play, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(48.dp))
-        }
-    }
-}
-
-/** The videos the viewer plays itself; another kind shows a frame, as the players read MP4 alone. */
-private val PLAYED = setOf("video/mp4", "video/quicktime", "video/3gpp")
-
-private fun clock(millis: Long): String {
-    val seconds = millis / 1000
-    return if (seconds >= 3600) "%d:%02d:%02d".format(seconds / 3600, seconds / 60 % 60, seconds % 60) else "%d:%02d".format(seconds / 60, seconds % 60)
 }
 
 /** Only some of the gallery may be seen: says so, and [onChange] asks the system again. */

@@ -99,15 +99,17 @@ private class CornerClip(private val corner: State<Dp>) : Shape {
 }
 
 /**
- * The URL each media item's still was last drawn from, so a larger view can show that
- * one, already in memory, while its own loads.
+ * The URL each media item's still was drawn widest from, so a larger view can show that one,
+ * already in memory, while its own loads; a small one drawn since (the viewer's row of thumbnails)
+ * doesn't take its place.
  */
 object DrawnStills {
-    private val urls = mutableMapOf<String, String>()
+    private val drawn = mutableMapOf<String, Pair<String, Int>>()
 
-    fun note(mediaUid: String, url: String) {
-        urls[mediaUid] = url
+    fun note(mediaUid: String, url: String, width: Int) {
+        val known = drawn[mediaUid]
+        if (known == null || width >= known.second) drawn[mediaUid] = url to width
     }
 
-    fun of(mediaUid: String): String? = urls[mediaUid]
+    fun of(mediaUid: String): String? = drawn[mediaUid]?.first
 }

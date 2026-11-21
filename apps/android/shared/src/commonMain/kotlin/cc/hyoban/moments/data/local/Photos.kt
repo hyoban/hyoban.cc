@@ -90,4 +90,7 @@ expect object Photos {
 
     /** The bytes at [ref], to read what it says of itself (its EXIF); null where it can't be opened. */
     fun open(ref: PhotoRef): java.io.InputStream?
+
+    /** Whether a video can be copied in ([copy]) on this device, so chosen for a Moment. */
+    val copiesVideos: Boolean
 }
