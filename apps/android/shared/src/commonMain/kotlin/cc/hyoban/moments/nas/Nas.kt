@@ -563,10 +563,50 @@ class Nas(
     }
 
     /**
-     * [photo]'s clip as the NAS keeps it beside the still, read into the cache the first time. [probing]
-     * when it isn't known to be live: only a video answered is taken for its clip.
+     * The photo a Moment's photo linked to [link] is on the NAS, with its original's size, which its
+     * clip's start is worked out from ([clipStart]): read by asking for the original's first byte and
+     * kept, or the original's own once it is down; null when it couldn't be had.
      */
-    private suspend fun fetchClip(photo: NasPhoto, probing: Boolean): File? {
+    suspend fun linkedPhoto(link: NasLink): NasPhoto? {
+        val photo = photo(link)
+        val key = "size:${kept(photo)}"
+        val known = withContext(Dispatchers.IO) {
+            keptData.bytes(key)?.takeIf { it.size == 8 }?.let { java.nio.ByteBuffer.wrap(it).long }
+                ?: cached(photo)?.length()?.takeIf { it > 0 }
+        }
+        val size = known ?: runCatching {
+            val request = stream(photo, NasProtocol.ORIGINAL).newBuilder().header("Range", "bytes=0-0").build()
+            withContext(Dispatchers.IO) {
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) return@use null
+                    response.header("Content-Range")?.substringAfterLast('/')?.toLongOrNull()
+                        ?: response.body?.contentLength()?.takeIf { response.code == 200 && it > 0 }
+                }
+            }
+        }.onFailure { logWarning(TAG, "nas: size not read", it) }.getOrNull()?.also { total ->
+            withContext(Dispatchers.IO) { keptData.put(key, java.nio.ByteBuffer.allocate(8).putLong(total).array()) }
+        } ?: return null
+        return photo.copy(size = size)
+    }
+
+    /**
+     * The clip the NAS keeps beside [photo] (an iPhone's MOV), for one not known to be live, read
+     * into the cache the first time; null for one it has no clip for, which is kept too, so it isn't
+     * asked again, or when the NAS couldn't be asked, which is asked again next time.
+     */
+    suspend fun probeClip(photo: NasPhoto): File? {
+        cachedClip(photo)?.let { return it }
+        val none = "still:${kept(photo)}"
+        if (withContext(Dispatchers.IO) { keptData.bytes(none) } != null) return null
+        return fetchClip(photo, probing = true, onNone = { keptData.put(none, byteArrayOf(1)) })
+    }
+
+    /**
+     * [photo]'s clip as the NAS keeps it beside the still, read into the cache the first time. [probing]
+     * when it isn't known to be live: only a video answered is taken for its clip, and [onNone] told
+     * when the NAS answers with something else.
+     */
+    private suspend fun fetchClip(photo: NasPhoto, probing: Boolean, onNone: () -> Unit = {}): File? {
         val key = "live:${kept(photo)}"
         originals.file(key)?.let { return it }
         val lock = synchronized(fetching) { fetching.getOrPut(key) { Mutex() } }
@@ -576,11 +616,17 @@ class Nas(
                 withContext(Dispatchers.IO) {
                     client.newCall(request).execute().use { response ->
                         if (!response.isSuccessful) {
-                            if (probing) return@withContext null
+                            if (probing) {
+                                if (response.code == 404) onNone()
+                                return@withContext null
+                            }
                             throw HttpException(response.code, "live clip answered ${response.code}")
                         }
                         val body = response.body ?: throw IOException("live clip without a body")
-                        if (probing && body.contentType()?.type != "video") return@withContext null
+                        if (probing && body.contentType()?.type != "video") {
+                            onNone()
+                            return@withContext null
+                        }
                         originals.put(key) { out -> body.byteStream().use { it.copyTo(out, 1 shl 16) } }
                     }
                 }

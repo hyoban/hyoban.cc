@@ -871,6 +871,13 @@ photo's info is read from the NAS's original, where it was taken too (only ever 
 viewer keeps the NAS's original (存 NAS 原图) as the NAS's own are kept; the NAS's photo marks itself as in a
 Moment in the grid, its viewer opening that Moment, and it leaves 地图's photos, where the Moment's place
 stands for it already. The site never shows the link.
+Looked at in a Moment's viewer or 已发布's, a linked photo (a video stays the site's) is the NAS's own while
+the NAS is set up (`ui/viewer/NasLinked.kt`), so it is whole, not 打码'd: its big thumbnail, its original
+once zoomed into, and its clip if the NAS has one, whatever the site's is, a motion photo's read from its
+original (its size asked once and kept) and an iPhone's from the MOV beside it (whether there is one asked
+once and kept). The site's copy, and its clip, stand in while the NAS isn't reached, and the info panel says
+it is the NAS's original. Only what is looked at changes: 分享 still hands on the site's copy, and the
+editor's viewer shows what will be published.
 In a published Moment's editor, the viewer puts a linked photo back as the NAS's original (换成 NAS 原图),
 offered only where the site's copy is less than it: its long side shorter than the NAS's original's, as the
 original's EXIF says, whether the site kept it as uploaded or optimized it; where the EXIF says nothing, one

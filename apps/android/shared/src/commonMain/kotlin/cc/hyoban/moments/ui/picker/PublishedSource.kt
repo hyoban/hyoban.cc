@@ -29,6 +29,9 @@ import cc.hyoban.moments.ui.components.readable
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.viewer.PhotoDetails
 import cc.hyoban.moments.ui.viewer.ZoomablePhoto
+import cc.hyoban.moments.ui.viewer.NasLinkedStill
+import cc.hyoban.moments.ui.viewer.linkedAhead
+import cc.hyoban.moments.ui.viewer.viewedClip
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.compose.LocalPlatformContext
@@ -166,6 +169,9 @@ class PublishedSource(val container: AppContainer, val context: PlatformContext,
         container.mediaDetails.ahead(scope, media, pick.record.occurredAt)
         scope.launch {
             still(media, SMALL)
+            // One linked to the NAS is looked at as the NAS keeps it: its big thumbnail, not the site's large stills.
+            val link = media.nas?.takeIf { container.nas.configured && media.type != MediaType.VIDEO }
+            if (link != null) return@launch container.nas.linkedAhead(link)
             still(media, LARGE)
             container.mediaUrls.still(media, FULL)?.let { url -> SingletonImageLoader.get(context).enqueue(ImageRequest.Builder(context).data(url).build()) }
         }
@@ -268,10 +274,23 @@ data class PublishedPick(val media: MomentMedia, val record: MomentRecord, overr
 
     override suspend fun thumbnail(size: Int): ImageBitmap? = source.still(media, size)
 
-    /** A live photo's clip, published beside its still. */
-    @Composable
-    override fun rememberMotion(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? =
+    /** A photo linked to the NAS is looked at as the NAS keeps it, live if the NAS's is; a video stays the site's. */
+    private val viewedLink get() = nasLink?.takeIf { media.type != MediaType.VIDEO }
+
+    /** The site's clip of a live photo, published beside its still. */
+    private val publishedClip get() =
         if (media.type == MediaType.LIVE_PHOTO) source.container.mediaUrls.motion(media)?.let { cc.hyoban.moments.ui.viewer.MotionSource(it) } else null
+
+    /** A live photo's clip: the NAS's for one linked to it, once its page is first shown, else the site's. */
+    @Composable
+    override fun rememberMotion(active: Boolean): cc.hyoban.moments.ui.viewer.MotionSource? {
+        val link = viewedLink ?: return publishedClip
+        return produceState<cc.hyoban.moments.ui.viewer.MotionSource?>(null, key, active) {
+            if (active && value == null) value = source.container.nas.viewedClip(link, publishedClip)
+        }.value
+    }
+
+    override fun infoNote(details: PhotoDetails?) = if (viewedLink != null) Res.string.viewer_nas_original else null
     override fun cachedThumb(size: Int): ImageBitmap? = source.cachedStill(media, size)
 
     /** The next one's stills read ahead, so turning to it shows it at once. */
@@ -304,7 +323,8 @@ data class PublishedPick(val media: MomentMedia, val record: MomentRecord, overr
         val urls = source.container.mediaUrls
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             val small by rememberThumb(this@PublishedPick, size = SMALL)
-            val large by rememberThumb(this@PublishedPick, size = LARGE)
+            // One linked to the NAS shows the NAS's own over its small one, not the site's large.
+            val large = if (viewedLink == null) rememberThumb(this@PublishedPick, size = LARGE).value else null
             val shown = large ?: small
             val shape = if (media.width != null && media.height != null && media.height > 0) media.width.toFloat() / media.height
                 else shown?.let { it.width.toFloat() / it.height } ?: 1f
@@ -315,9 +335,19 @@ data class PublishedPick(val media: MomentMedia, val record: MomentRecord, overr
                     videos.Play(key, motion, emptyMap(), active, Modifier.fillMaxSize())
                 }
                 videos.Waiting(key)
-            } else urls.still(media, FULL)?.let { full ->
+            } else {
                 val live = LocalPageLive.current
-                ZoomableOriginal(full, small, shape, media.alt, onZoom, onHold = live?.hold, onTap = onTap) { live?.Over(active) }
+                val site: @Composable () -> Unit = {
+                    urls.still(media, FULL)?.let { full ->
+                        ZoomableOriginal(full, small, shape, media.alt, onZoom, onHold = live?.hold, onTap = onTap) { live?.Over(active) }
+                    }
+                }
+                val link = viewedLink
+                if (link != null) {
+                    NasLinkedStill(source.container.nas, link, shape, media.alt, onZoom, onTap, live?.hold, { live?.Over(active) }, fallback = site)
+                } else {
+                    site()
+                }
             }
         }
     }

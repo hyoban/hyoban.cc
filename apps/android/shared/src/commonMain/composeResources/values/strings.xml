@@ -1596,6 +1596,7 @@
     <string name="nas_delete_forever">%1$s 会从 NAS 上删掉。NAS 没开回收站，不能恢复。</string>
     <string name="nas_delete_forever_many">它们会从 NAS 上删掉。NAS 没开回收站，不能恢复。</string>
     <string name="photo_info">信息</string>
+    <string name="viewer_nas_original">这是 NAS 上的原图，网站上的可能更小、打了码或不是实况</string>
     <string name="photo_info_place">拍摄地点</string>
     <string name="permission_gallery_title">读出相册里的照片和视频</string>
     <string name="permission_gallery_body">在 Here 里直接挑照片和视频，带着拍摄的时间和地点。</string>

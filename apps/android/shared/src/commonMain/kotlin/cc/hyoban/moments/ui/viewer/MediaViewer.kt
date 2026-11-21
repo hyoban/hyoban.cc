@@ -90,6 +90,9 @@ import cc.hyoban.moments.ui.components.ViewerSystemBars
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MediaType
 import cc.hyoban.moments.data.spec.MomentMedia
+import cc.hyoban.moments.data.spec.NasLink
+import cc.hyoban.moments.nas.Nas
+import androidx.compose.runtime.mutableStateMapOf
 import cc.hyoban.moments.ui.components.DrawnStills
 import cc.hyoban.moments.ui.components.MediaStill
 import cc.hyoban.moments.ui.components.Tooltip
@@ -158,6 +161,7 @@ fun MediaViewer(
             )
         },
         actions = { shown -> ShareShown(container, shown, shareText(moment, moment.places.firstOrNull()?.let { places[it]?.name }, trip?.title)) },
+        nasOriginals = true,
     )
 }
 
@@ -166,7 +170,8 @@ fun MediaViewer(
  * written, each drawn as the Moment will show it, zoomed in for a wider file, a live photo's clip
  * played from the bar or held down and a video with its controls. [caption] and [actions] fill the
  * bar under it, [top] the bar over it beside a live photo's button, for the one shown; [over]
- * lies on each photo, at its size, zooming and panning with it.
+ * lies on each photo, at its size, zooming and panning with it. With [nasOriginals], a photo
+ * linked to the NAS is looked at as the NAS keeps it ([NasLinkedStill]), live if the NAS's is.
  */
 @Composable
 fun MomentMediaViewer(
@@ -181,14 +186,29 @@ fun MomentMediaViewer(
     modifier: Modifier = Modifier,
     /** Where each one's motion is read: what is published or saved, or a motion photo picked and not yet saved. */
     motionSource: (MomentMedia) -> MotionSource? = { container.mediaUrls.motion(it)?.let(::MotionSource) },
+    nasOriginals: Boolean = false,
 ) {
     if (media.isEmpty()) return
     val pager = rememberPagerState(initialPage = index.coerceIn(0, media.lastIndex)) { media.size }
+    // The NAS a photo linked to it is looked at from, once it is set up; a video stays the site's.
+    val nas = container.nas.takeIf { nasOriginals && it.configured }
+    val linkOf: (MomentMedia) -> NasLink? = { item -> item.nas?.takeIf { nas != null && item.type != MediaType.VIDEO } }
+    // A linked photo's clip once the NAS has said (the site's where it couldn't), by its uid; none until then.
+    val nasClips = remember { mutableStateMapOf<String, MotionSource?>() }
+    val clipOf: (MomentMedia) -> MotionSource? = { item -> if (linkOf(item) != null) nasClips[item.uid] else motionSource(item) }
+    val liveOf: (MomentMedia) -> Boolean = { item -> item.type != MediaType.VIDEO && (linkOf(item) != null || item.type == MediaType.LIVE_PHOTO) && clipOf(item) != null }
     // Each one's motion and video, held here so the bars over the pages work the one shown.
     val device = LocalDevice.current
     // By what each is too: a photo just picked is read after it shows, and turns out a live photo then.
-    val motions = remember(media.map { it.uid to it.type }) { media.associate { it.uid to device.viewerMotion(it.type) } }
+    // One linked to the NAS may turn out live there, whatever the site's is.
+    val motions = remember(media.map { it.uid to it.type }, nas != null) {
+        media.associate { it.uid to device.viewerMotion(if (linkOf(it) != null) MediaType.LIVE_PHOTO else it.type) }
+    }
     val shown = media[pager.currentPage.coerceIn(0, media.lastIndex)]
+    LaunchedEffect(shown.uid) {
+        val link = linkOf(shown) ?: return@LaunchedEffect
+        if (shown.uid !in nasClips) nasClips[shown.uid] = nas?.viewedClip(link, motionSource(shown))
+    }
     // Once it rests on one a moment, as 相册's viewer does: those either side read ahead, their stills
     // at the screen's width and their details, so turning to one shows it whole at once.
     val aheadScope = rememberCoroutineScope()
@@ -199,7 +219,9 @@ fun MomentMediaViewer(
         kotlinx.coroutines.delay(AHEAD_AFTER)
         listOfNotNull(media.getOrNull(pager.currentPage + 1), media.getOrNull(pager.currentPage - 1)).forEach { next ->
             container.mediaDetails.ahead(aheadScope, next)
-            container.mediaUrls.still(next, screen)?.let { url ->
+            val link = linkOf(next)
+            if (link != null) aheadScope.launch { nas?.linkedAhead(link) }
+            else container.mediaUrls.still(next, screen)?.let { url ->
                 coil3.SingletonImageLoader.get(context).enqueue(coil3.request.ImageRequest.Builder(context).data(url).build())
             }
         }
@@ -214,12 +236,21 @@ fun MomentMediaViewer(
         thumb = { MediaStill(media[it], container.mediaUrls, Modifier.fillMaxSize()) },
         thumbLabel = { media[it].alt.ifEmpty { null } },
         // Its own for each photo, so turning to one starts from what is known of it, never the last one's.
-        info = { panel -> androidx.compose.runtime.key(shown.uid) { PhotoInfoPanel(container, container.mediaDetails.remember(shown), panel) } },
+        info = { panel ->
+            androidx.compose.runtime.key(shown.uid) {
+                PhotoInfoPanel(
+                    container,
+                    container.mediaDetails.remember(shown),
+                    panel,
+                    note = if (linkOf(shown) != null) stringResource(Res.string.viewer_nas_original) else null,
+                )
+            }
+        },
         onSpace = { playKeys.tryEmit(Unit) },
         top = { at ->
             Row(Modifier.align(at), verticalAlignment = Alignment.CenterVertically) {
                 top(shown)
-                if (shown.type == MediaType.LIVE_PHOTO && motionSource(shown) != null) {
+                if (liveOf(shown)) {
                     motions[shown.uid]?.LiveButton(Modifier)
                 }
             }
@@ -237,7 +268,10 @@ fun MomentMediaViewer(
             urls = container.mediaUrls,
             active = pager.currentPage == page,
             motion = motions[media[page].uid],
-            source = motionSource(media[page]),
+            source = clipOf(media[page]),
+            live = liveOf(media[page]),
+            nas = nas,
+            link = linkOf(media[page]),
             onZoom = onZoom,
             onTap = onTap,
             playKeys = playKeys,
@@ -290,6 +324,9 @@ private fun ViewerPage(
     active: Boolean,
     motion: ViewerMotion?,
     source: MotionSource?,
+    live: Boolean,
+    nas: Nas?,
+    link: NasLink?,
     onZoom: (Boolean) -> Unit,
     onTap: () -> Unit,
     playKeys: SharedFlow<Unit>,
@@ -302,16 +339,17 @@ private fun ViewerPage(
     }
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        ZoomableStill(
-            media,
-            urls,
-            onZoom,
-            onTap,
-            // Held down, a live photo plays with its sound until let go.
-            onHold = motion?.hold?.takeIf { url != null && media.type == MediaType.LIVE_PHOTO },
-        ) {
+        // Held down, a live photo plays with its sound until let go.
+        val onHold = motion?.hold?.takeIf { url != null && live }
+        val overlay: @Composable () -> Unit = {
             if (url != null) motion?.Over(url, active, Modifier.fillMaxSize())
             over()
+        }
+        val site: @Composable () -> Unit = { ZoomableStill(media, urls, onZoom, onTap, onHold = onHold, overlay = overlay) }
+        if (nas != null && link != null) {
+            NasLinkedStill(nas, link, shapeOf(media), media.alt.ifEmpty { null }, onZoom, onTap, onHold, overlay, fallback = site)
+        } else {
+            site()
         }
         if (url != null) motion?.Waiting()
     }

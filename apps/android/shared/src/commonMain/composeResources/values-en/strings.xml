@@ -1597,6 +1597,7 @@
     <string name="nas_delete_forever">%1$s will be deleted from the NAS. Its recycle bin is off, so it can’t be restored.</string>
     <string name="nas_delete_forever_many">They will be deleted from the NAS. Its recycle bin is off, so they can’t be restored.</string>
     <string name="photo_info">Info</string>
+    <string name="viewer_nas_original">This is the original on the NAS; the site\'s copy may be smaller, covered or not live</string>
     <string name="photo_info_place">Where it was taken</string>
     <string name="permission_gallery_title">Read your photos and videos</string>
     <string name="permission_gallery_body">Choose photos and videos right in Here, with when and where they were taken.</string>
