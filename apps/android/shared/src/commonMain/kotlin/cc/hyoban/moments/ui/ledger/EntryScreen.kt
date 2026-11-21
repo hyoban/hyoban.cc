@@ -653,7 +653,7 @@ fun BillFields(
                 .filter { !(demo && it.private) }
                 .sortedBy { checkin -> checkin.span?.let { kotlin.math.abs((it.first + it.last) / 2 - time) } ?: Long.MAX_VALUE }
             ChoiceSheet(
-                near.map { it.uid to listOfNotNull(formatDay(it.at.take(10)), formatTime(it.at), it.venue).joinToString(" ") },
+                near.map { it.uid to listOfNotNull(formatDay(it.at.take(10)), cc.hyoban.moments.ui.feed.checkinTime(it), it.venue).joinToString(" ") },
                 onDismiss = { sheet = null },
                 empty = stringResource(Res.string.ledger_no_checkins_near),
             ) { uid ->

@@ -42,4 +42,16 @@ class ChatItemsTest {
         assertEquals(null, links.of(bill("c", 2)), "a minute off isn't the same time")
         assertEquals("s", links.of(bill("d", 2).copy(moment = "s")), "one linked by hand stays so")
     }
+
+    @Test
+    fun `a bill paid during a stay kept as a check-in belongs to it, the shortest stay when several cover it`() {
+        val mall = Checkin("mall", "2023-11-14T22:00:00Z", "Mall", end = "2023-11-14T23:00:00Z")
+        val shop = Checkin("shop", "2023-11-14T22:10:00Z", "Shop", end = "2023-11-14T22:20:00Z")
+        val links = cc.hyoban.moments.ledger.AutoLinks(emptyList(), listOf(mall, shop))
+        assertEquals("shop", links.of(bill("a", 0)))
+        assertEquals("mall", links.of(bill("b", 30)))
+        assertEquals(null, links.of(bill("c", 70)), "after the stay")
+        val plain = cc.hyoban.moments.ledger.AutoLinks(emptyList(), listOf(Checkin("p", "2023-11-14T22:10:00Z", "Cafe")))
+        assertEquals(null, plain.of(bill("d", 0)), "a check-in with no end covers only its very time")
+    }
 }

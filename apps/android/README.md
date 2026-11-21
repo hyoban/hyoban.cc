@@ -555,7 +555,8 @@ The ledger meets the Moments: a Moment's page lists its bills, a Moment with an 
 check-ins by time (one linked to a Moment or a check-in under it), a place's page, opening on its map, lists its bills by their days
 among its Moments and check-ins with what was spent there beside its counts. A bill not linked by
 hand is taken, as it is shown, to be the Moment's or the check-in's at its very time (a Moment
-first), never kept on the bill. A trip's bills are its public expenses and incomes paid in its span, as the site counts them, each
+first), else the stay's kept as a check-in it was paid during (the shortest, a shop's inside a mall's),
+never kept on the bill; a linked bill goes in its record's bubble whenever it was paid. A trip's bills are its public expenses and incomes paid in its span, as the site counts them, each
 refund with its expense; a bill names no trip. Its list of bills also shows each of its Moments' costs
 by its time, opening the Moment, and what they came to apart, each one's own share where a cost was for
 several.

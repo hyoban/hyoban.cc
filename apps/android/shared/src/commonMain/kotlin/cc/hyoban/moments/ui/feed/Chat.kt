@@ -617,7 +617,7 @@ fun CheckinBubble(
             ) {
                 Icon(AppIcons.Pin, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
                 Text(checkin.venue, style = AppTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = withBills))
-                val meta = listOfNotNull(stringResource(Res.string.visibility_private).takeIf { checkin.private }, formatTime(checkin.at)).joinToString(" ")
+                val meta = listOfNotNull(stringResource(Res.string.visibility_private).takeIf { checkin.private }, checkinTime(checkin)).joinToString(" ")
                 // A locked one says so before its time, with a lock.
                 if (checkin.locked) Icon(AppIcons.Lock, contentDescription = stringResource(Res.string.plan_locked), tint = tokens.tx3, modifier = Modifier.size(12.dp))
                 if (meta.isNotEmpty()) Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 1)

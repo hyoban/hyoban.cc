@@ -125,7 +125,9 @@ even when starting from the repository root.
   balance, and an expense what its refunds brought back of it (`refunded`): a refund goes out only
   so, public with its expense unless it says private itself, and is shown and counted with that
   expense wherever it is, shown as what it cost after them with what was paid struck through. A trip's bills, on the phone and the site alike, are its public expenses and incomes paid
-  in its span, by time alone, each refund counted with its expense; a bill names no trip. The footprints are never published, not even simplified: a trip's public route
+  in its span, by time alone, each refund counted with its expense; a bill names no trip. On the phone a bill linked to a record shown, by
+  hand or paid during a stay kept as its check-in, goes in that record's bubble whenever it was paid (a trip's only if public), not counted in
+  what the trip or the days shown spent. The footprints are never published, not even simplified: a trip's public route
   is only the routers' (below), along the roads between its stops. How a way between a trip's stops
   was gone may be inferred from them on the device and shown there, marked as inferred; only a way
   the owner picks is written down (`reachedBy`, a leg not driven) and published. A stay

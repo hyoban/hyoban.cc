@@ -2,6 +2,7 @@ package cc.hyoban.moments.ui.trips
 
 
 import cc.hyoban.moments.data.local.fix
+import cc.hyoban.moments.data.store.isPublic
 
 import cc.hyoban.moments.ui.ledger.SpendingOf
 import cc.hyoban.moments.ui.ledger.billsOf
@@ -122,11 +123,20 @@ fun TripScreen(
             .filterValues { it.isNotEmpty() }
         val currency = ledger.book?.currency ?: "CNY"
         val shown = ledger.books.filterNot { it.archived }.mapTo(HashSet()) { it.id }
-        val bills = if (!ledgerOn) emptyList() else {
-            cc.hyoban.moments.ledger.txnsOfTrip(ledger, trip).filter { it.book in shown && it.kind in cc.hyoban.moments.ui.feed.SHOWN_KINDS }
-        }
         val uids = moments.mapTo(HashSet()) { it.uid } + checkins.values.flatten().map { it.uid }
         val links = cc.hyoban.moments.ledger.AutoLinks(moments, checkins.values.flatten())
+        val inSpan = if (!ledgerOn) emptyList() else {
+            cc.hyoban.moments.ledger.txnsOfTrip(ledger, trip).filter { it.book in shown && it.kind in cc.hyoban.moments.ui.feed.SHOWN_KINDS }
+        }
+        // A public bill linked to one of its Moments or check-ins goes in that bubble whenever it
+        // was paid; the trip's spending stays what was paid in its span.
+        val bills = if (!ledgerOn) emptyList() else inSpan + run {
+            val ids = inSpan.mapTo(HashSet()) { it.id }
+            ledger.txns.filter {
+                it.id !in ids && it.book in shown && it.kind in cc.hyoban.moments.ui.feed.SHOWN_KINDS &&
+                    it.moment in uids && ledger.isPublic(it)
+            }
+        }
         val inTripDay = { day: String -> day in trip.start..trip.end }
         val charges = if (!carOn) emptyList() else cc.hyoban.moments.ui.feed.chargesOf(records.entries.values, inTripDay)
             .filter { cc.hyoban.moments.data.trips.isInTrip(trip, it.at) }
@@ -141,7 +151,7 @@ fun TripScreen(
             ledger,
             linked = withMoment.groupBy { links.of(it)!! }.mapValues { (_, txns) -> txns.sortedBy { it.time } },
             loose = without.groupBy { it.dateKey },
-            spent = bills.groupBy { it.dateKey }.mapValues { (_, txns) -> cc.hyoban.moments.ledger.spendingOf(ledger, txns, currency).expense },
+            spent = inSpan.groupBy { it.dateKey }.mapValues { (_, txns) -> cc.hyoban.moments.ledger.spendingOf(ledger, txns, currency).expense },
             currency = currency,
             checkins = checkins,
             charges = looseCharges,

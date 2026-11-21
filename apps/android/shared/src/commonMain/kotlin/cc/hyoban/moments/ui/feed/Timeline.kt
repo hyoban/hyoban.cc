@@ -230,16 +230,19 @@ fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, 
         val shown = ledger.books.filterNot { it.archived }.mapTo(HashSet()) { it.id }
         // A bill linked to a Moment or a check-in shown here goes with it.
         val uids = moments.mapTo(HashSet()) { it.uid }.apply { checkins.values.forEach { day -> day.forEach { add(it.uid) } } }
-        val bills = ledger.txns.filter { txn ->
-            txn.book in shown && txn.kind in SHOWN_KINDS &&
-                (filter.year == null || txn.date.year == filter.year) &&
-                (filter.month == null || txn.date.monthValue == filter.month)
-        }
         val links = cc.hyoban.moments.ledger.AutoLinks(moments, checkins.values.flatten())
+        val inDays = { txn: Txn ->
+            (filter.year == null || txn.date.year == filter.year) && (filter.month == null || txn.date.monthValue == filter.month)
+        }
+        // A bill linked to a Moment or a check-in shown goes in its bubble whenever it was paid.
+        val bills = ledger.txns.filter { txn ->
+            txn.book in shown && txn.kind in SHOWN_KINDS && (inDays(txn) || links.of(txn) in uids)
+        }
         // A charge and the bill paid for it at its very time are one line, where that bill would go.
         val (looseCharges, linkedCharges, paid) = placeCharges(charges, bills, { txn -> links.of(txn)?.takeIf { it in uids } }, at)
         val (withMoment, without) = bills.filterNot { it.id in paid }.partition { links.of(it) in uids }
-        val ids = bills.mapTo(HashSet()) { it.id }
+        // Each day's spending is the bills paid on the days shown alone.
+        val ids = bills.filter(inDays).mapTo(HashSet()) { it.id }
         val sums = summarize(ledger.entries.filter { it.txn.id in ids }, ledger.rates, book.currency, null, null)
         TimelineBills(
             ledger,
@@ -364,9 +367,13 @@ fun CheckinRow(checkin: Checkin, modifier: Modifier = Modifier, withDate: Boolea
         supporting = if (checkin.private) stringResource(Res.string.visibility_private) else null,
         onClick = open?.let { { it(checkin.uid) } },
         modifier = modifier.testTag("checkin_${checkin.uid}"),
-        time = formatTime(checkin.at).orEmpty(),
+        time = checkinTime(checkin).orEmpty(),
     )
 }
+
+/** When a check-in was, `15:04`, or the stay it was kept from, `15:04–16:30`. */
+fun checkinTime(checkin: Checkin): String? =
+    formatTime(checkin.at)?.let { start -> checkin.end?.let(::formatTime)?.let { "$start–$it" } ?: start }
 
 /** `签到 面馆`, or on its place's own list `10月12日 签到`. */
 @Composable

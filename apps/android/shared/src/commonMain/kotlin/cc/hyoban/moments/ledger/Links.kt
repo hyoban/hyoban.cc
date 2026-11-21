@@ -24,7 +24,8 @@ private fun millisOf(at: String): Long? = at.takeIf { it.length > 10 }?.let { ru
 /**
  * What a bill not linked by hand is taken to belong to, by the time of each Moment and check-in
  * ([moments] first, so a Moment wins over a check-in of the same time): the one at the very same
- * time. Worked out as it is shown, never kept on the bill.
+ * time, else the check-in kept from a stay (one with an end) it was paid during, the shortest when
+ * several were (a shop's inside a mall's). Worked out as it is shown, never kept on the bill.
  */
 class AutoLinks(moments: Collection<MomentRecord>, checkins: Collection<Checkin> = emptyList()) {
     private val byTime: Map<Long, String> = buildMap {
@@ -32,8 +33,13 @@ class AutoLinks(moments: Collection<MomentRecord>, checkins: Collection<Checkin>
         moments.forEach { moment -> millisOf(moment.occurredAt)?.let { put(it, moment.uid) } }
     }
 
-    /** The entry [txn] belongs to: the one it names, else the one at its very time. */
-    fun of(txn: Txn): String? = txn.moment ?: byTime[txn.time]
+    /** The stays, shortest first, so the first that covers a time is the one it goes with. */
+    private val stays: List<Pair<LongRange, String>> = checkins
+        .mapNotNull { checkin -> checkin.span?.takeIf { checkin.end != null }?.let { it to checkin.uid } }
+        .sortedBy { (span, _) -> span.last - span.first }
+
+    /** The entry [txn] belongs to: the one it names, else the one at its very time, else the stay it was paid in. */
+    fun of(txn: Txn): String? = txn.moment ?: byTime[txn.time] ?: stays.firstOrNull { (span, _) -> txn.time in span }?.second
 }
 
 /** The bills of a Moment: those linked to it, and those not linked by hand at its very time. */

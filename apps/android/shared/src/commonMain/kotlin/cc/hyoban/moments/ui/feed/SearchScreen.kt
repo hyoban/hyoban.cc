@@ -509,7 +509,7 @@ private fun SearchCheckin(checkin: cc.hyoban.moments.data.things.Checkin, text: 
         lead = { Icon(AppIcons.Pin, contentDescription = null, tint = tokens.tx2) },
         onClick = open?.let { { it(checkin.uid) } },
         modifier = modifier.testTag("checkin_${checkin.uid}"),
-        trailing = { formatTime(checkin.at)?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx3) } },
+        trailing = { checkinTime(checkin)?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx3) } },
     ) {
         Text(marked(checkin.venue, text, mark), style = AppTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(
