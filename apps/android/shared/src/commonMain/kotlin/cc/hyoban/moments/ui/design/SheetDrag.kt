@@ -64,9 +64,10 @@ class SheetDrag internal constructor(private val scope: CoroutineScope) {
     fun dragBy(delta: Float): Float {
         val now = offset.value
         if (now.isNaN() || anchors.isEmpty()) return 0f
-        if (origin.isNaN()) origin = now
         val next = (now + delta).coerceIn(anchors.first(), anchors.last())
+        // Held where it is (open all the way, a list scrolled up within it), it isn't being dragged.
         if (next == now) return 0f
+        if (origin.isNaN()) origin = now
         val way = sign(next - origin)
         val goal = if (way > 0f) anchors.firstOrNull { it > origin + 1f } else anchors.lastOrNull { it < origin - 1f }
         if (goal != null) haptics?.across((now - origin) * way, (next - origin) * way, abs(goal - origin) / 3f)
@@ -126,6 +127,11 @@ class SheetDrag internal constructor(private val scope: CoroutineScope) {
 
         override suspend fun onPreFling(available: Velocity): Velocity {
             if (origin.isNaN() && resting) return Velocity.Zero
+            // Dragged open all the way and the list then scrolled on: the fling up is the list's.
+            if (available.y < 0f && anchors.isNotEmpty() && abs(position - anchors.first()) < 1f) {
+                settle(0f)
+                return Velocity.Zero
+            }
             settle(available.y)
             return available
         }
