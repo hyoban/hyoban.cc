@@ -53,6 +53,7 @@ class RecordingService : Service() {
     private var lastDeliveredNanos = 0L
     private var fallback: CancellationSignal? = null
     private var fallbackPolicy: DailyRecordingPolicy? = null
+    private var departure: CancellationSignal? = null
     private var daily: DailyRecordingPolicy? = null
     private var policyTimer: Job? = null
     private var tripWatchdog: Job? = null
@@ -149,6 +150,7 @@ class RecordingService : Service() {
             "paused" to state.paused, *environment())
         stopUpdates()
         stopFallback()
+        stopDeparture()
         stopMotion()
         stopPassive()
         policyTimer?.cancel()
@@ -171,6 +173,7 @@ class RecordingService : Service() {
                 if (motionWake != null) policy.activity(true, SystemClock.elapsedRealtime())
             }
             applyDailyPolicy()
+            daily?.let(::startDeparture)
         } else {
             startUpdates(trip = true)
             tripWatchdog = scope.launch {
@@ -374,6 +377,8 @@ class RecordingService : Service() {
             val from = reportedPhase
             if (policy.phase == DailyRecordingPolicy.Phase.REST && from == DailyRecordingPolicy.Phase.ACTIVE)
                 withContext(Dispatchers.IO) { store.event("rest", policy.restReason?.name?.lowercase()) }
+            // What moved an active recorder (activity saying moving while it records) didn't wake it.
+            if (policy.phase == DailyRecordingPolicy.Phase.REST) wakeSource = null
             if (policy.phase == DailyRecordingPolicy.Phase.ACTIVE && from != null && from != DailyRecordingPolicy.Phase.ACTIVE) {
                 withContext(Dispatchers.IO) { store.event("wake", wakeSource ?: "probe") }
                 wakeSource = null
@@ -448,6 +453,45 @@ class RecordingService : Service() {
             fallback = null
             diagnostic("fallback_failed", "exception" to e.javaClass.simpleName)
         }
+    }
+
+    /** After a long pause GPS takes most of a minute to its first fix, a walk of a street or more
+     *  (leaving a chosen Wi-Fi, say). A network position in that time, accurate enough for the
+     *  line, starts it nearer to where recording began. It is stored only, never given to the
+     *  policy, whose anchor should be a satellite fix. */
+    private fun startDeparture(policy: DailyRecordingPolicy) {
+        if (departure != null) return
+        if (LocationManager.NETWORK_PROVIDER !in manager.getProviders(true)) return
+        val cancellation = CancellationSignal()
+        departure = cancellation
+        val accept: (Location?) -> Unit = { location ->
+            val copy = location?.let(::Location)
+            events.trySend {
+                if (departure !== cancellation || daily !== policy) return@trySend
+                departure = null
+                val point = copy?.let { usablePoint(it, 30_000_000_000L, "departure") }
+                // Once GPS has delivered, the line already starts there.
+                val stored = point?.takeIf { lastDeliveredNanos == 0L }?.let {
+                    withContext(Dispatchers.IO) { store.appendBatch(listOf(it), expectedSegment = segmentId) }.single()
+                }
+                diagnostic("departure_fix", "available" to (point != null), "decision" to stored?.name,
+                    "accuracy_m" to point?.accuracy)
+            }
+        }
+        try {
+            manager.getCurrentLocation(LocationManager.NETWORK_PROVIDER, LocationRequest.Builder(0)
+                .setQuality(LocationRequest.QUALITY_BALANCED_POWER_ACCURACY)
+                .setDurationMillis(LocationDeliveryPolicy.FALLBACK_DURATION_MS).build(),
+                cancellation, mainExecutor, accept)
+        } catch (e: Exception) {
+            departure = null
+            diagnostic("departure_fix_failed", "exception" to e.javaClass.simpleName)
+        }
+    }
+
+    private fun stopDeparture() {
+        departure?.cancel()
+        departure = null
     }
 
     private fun stopFallback() {
@@ -625,6 +669,7 @@ class RecordingService : Service() {
         (application as MomentsApplication).container.scope.launch { yield(); ActivityTransitions.sync(this@RecordingService) }
         stopUpdates()
         stopFallback()
+        stopDeparture()
         stopMotion()
         stopPassive()
         unregisterReceiver(providers)

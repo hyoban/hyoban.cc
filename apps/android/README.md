@@ -672,9 +672,14 @@ behaves.
   when they stop because the receiver sees too few satellites (a garage, a tunnel), it
   searches again unbatched and batches again after the next fix, without the backoff.
   It resumes when the app opens, and after a reboot when background location is allowed.
+  As it starts, GPS can take most of a minute to its first fix, so a network position in that
+  time, accurate enough for the line, is kept as its first sample.
 - **Resting.** Daily recording rests GPS once several fixes over three minutes show no
   movement, and wakes on the significant-motion sensor, on passive or low-power network
-  positions showing it moved, or on a backed-off probe (two to ten minutes); a passive
+  positions showing it moved, or on a probe, two minutes after the rest and then four, eight
+  and ten as each probe finds it unmoved, or as each finds no fix. Until a fix has moved since
+  the rest, a move takes 50 m and two fixes that agree, never a fix that used no satellites,
+  since a probe's first fixes can sit tens of metres off; a passive
   position that wakes it is kept as the first sample after the rest. While it
   rests the notification moves to a silent channel and says 省电等待. The optional
   活动识别增强 uses Play services' activity transitions as an extra wake-up, never as a
@@ -751,7 +756,8 @@ behaves.
 足迹记录 → 连接自动控制 starts and pauses recording by connections the user picks, none by
 default: joining a chosen Wi-Fi pauses and leaving all of them starts; connecting a chosen
 Bluetooth device starts and disconnecting the last pauses, and Bluetooth wins over Wi-Fi.
-Changes settle for five seconds; a manual choice made since always wins, except that
+Changes settle for five seconds, GNSS warming up meanwhile when leaving a Wi-Fi while
+paused, its position thrown away; a manual choice made since always wins, except that
 starting recording by hand (daily, resuming or a trip) on a chosen Wi-Fi with no chosen
 device connected pauses it again. Turning the automation on or changing what it watches
 starts or pauses once by the connections then, Bluetooth first. A `specialUse`

@@ -68,6 +68,8 @@ class DailyRecordingPolicyTest {
         for (t in 300_000L..300_020L) p.fix(point(), t)
         assertEquals(DailyRecordingPolicy.Phase.PROBE, p.phase)
         p.fix(point(80.0), 315_000)
+        assertEquals(DailyRecordingPolicy.Phase.PROBE, p.phase)
+        p.fix(point(82.0), 320_000)
         assertEquals(DailyRecordingPolicy.Phase.ACTIVE, p.phase)
     }
 
@@ -123,7 +125,82 @@ class DailyRecordingPolicyTest {
         p.fix(point(), 201_000)
         assertTrue(p.settled)
         p.fix(point(100.0), 206_000)
+        assertTrue(p.settled)
+        p.fix(point(105.0), 211_000)
         assertFalse(p.settled)
+    }
+
+    private fun DailyRecordingPolicy.stillProbe(start: Long) {
+        tick(start)
+        assertEquals(DailyRecordingPolicy.Phase.PROBE, phase)
+        for (time in start + 1_000..start + 31_000 step 15_000) fix(point(), time)
+        assertEquals(DailyRecordingPolicy.Phase.REST, phase)
+    }
+
+    @Test fun aProbesOneStrayFixDoesNotEndTheStay() {
+        val p = restingPolicy()
+        p.tick(300_000)
+        p.fix(point(), 301_000)
+        p.fix(point(60.0, accuracy = 20.0), 306_000)
+        p.fix(point(), 311_000)
+        assertTrue(p.settled)
+        p.fix(point(), 326_000)
+        p.fix(point(), 341_000)
+        assertEquals(DailyRecordingPolicy.Phase.REST, p.phase)
+        assertTrue(p.settled)
+    }
+
+    @Test fun aFixThatUsedNoSatellitesCannotEndTheStay() {
+        val p = restingPolicy()
+        p.tick(300_000)
+        val unaided = point(80.0).copy(extras = FixExtras(satellitesUsed = 0))
+        p.fix(unaided, 301_000)
+        p.fix(unaided, 306_000)
+        assertTrue(p.settled)
+        assertEquals(DailyRecordingPolicy.Phase.PROBE, p.phase)
+    }
+
+    @Test fun aStaysFixesWanderingUnderFiftyMetresKeepIt() {
+        val p = restingPolicy()
+        p.tick(300_000)
+        for (time in 301_000L..331_000L step 5_000L) p.fix(point(42.0, accuracy = 4.0), time)
+        assertTrue(p.settled)
+    }
+
+    @Test fun burstCallbacksCannotConfirmAMoveTogether() {
+        val p = restingPolicy()
+        p.tick(300_000)
+        p.fix(point(80.0), 301_000)
+        p.fix(point(80.0), 301_100)
+        assertTrue(p.settled)
+    }
+
+    @Test fun stillProbesBackOffToTenMinutes() {
+        val p = restingPolicy()
+        assertEquals(300_000L, p.nextCheck)
+        var start = 300_000L
+        for (wait in listOf(240_000L, 480_000L, 600_000L, 600_000L)) {
+            p.stillProbe(start)
+            assertEquals(start + 31_000 + wait, p.nextCheck)
+            start = p.nextCheck
+        }
+    }
+
+    @Test fun anUnconfirmedWakeKeepsTheBackoffAndAMoveResetsIt() {
+        val p = restingPolicy()
+        p.stillProbe(300_000)
+        p.stillProbe(571_000)
+        p.motion(700_000)
+        for (time in 701_000L..881_000L step 15_000L) p.fix(point(), time)
+        assertEquals(DailyRecordingPolicy.Phase.REST, p.phase)
+        assertEquals(881_000L + 480_000, p.nextCheck)
+        p.motion(1_000_000)
+        p.fix(point(200.0), 1_001_000)
+        p.fix(point(210.0), 1_006_000)
+        assertFalse(p.settled)
+        for (time in 1_021_000L..1_201_000L step 15_000L) p.fix(point(210.0), time)
+        assertEquals(DailyRecordingPolicy.Phase.REST, p.phase)
+        assertEquals(1_186_000L + 120_000, p.nextCheck)
     }
 
     @Test fun freshPassiveDisplacementCanWakeWithoutTheMotionSensor() {

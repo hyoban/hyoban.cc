@@ -9,6 +9,7 @@ import android.bluetooth.*
 import android.content.*
 import android.content.pm.ServiceInfo
 import android.location.LocationManager
+import android.location.LocationRequest
 import android.net.*
 import android.os.*
 import androidx.core.app.NotificationCompat
@@ -50,6 +51,7 @@ class ConnectionReminderService : Service() {
     private val networks = mutableMapOf<Network, String?>()
     private val initialNetworks = mutableSetOf<Network>()
     private var debounce: Job? = null
+    private var warmup: CancellationSignal? = null
     private var changeVersion = 0
     private var permissionState = false
     private var recording: RecordingState? = null
@@ -173,6 +175,7 @@ class ConnectionReminderService : Service() {
                     networks.remove(network)
                     initialNetworks.remove(network)
                     if (known || pending) {
+                        if (recording?.let { it.daily && it.paused } == true) warmGps()
                         identitySeed = false
                         transitions.resolvingWifi(unresolvedNetworks.isNotEmpty())
                         if (unresolvedNetworks.isEmpty()) stopIdentityLookup("disconnected")
@@ -360,6 +363,27 @@ class ConnectionReminderService : Service() {
         }
     }
 
+    /** Leaving a chosen Wi-Fi may resume recording once the change settles: start GNSS now, so
+     *  its first fix comes those seconds sooner. Its location is thrown away; only recording keeps any. */
+    @SuppressLint("MissingPermission")
+    private fun warmGps() {
+        val manager = getSystemService(LocationManager::class.java)
+        if (warmup != null || !manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) return
+        val cancellation = CancellationSignal()
+        warmup = cancellation
+        try {
+            manager.getCurrentLocation(LocationManager.GPS_PROVIDER, LocationRequest.Builder(0)
+                .setQuality(LocationRequest.QUALITY_HIGH_ACCURACY)
+                .setDurationMillis(SETTLE_DELAY_MS + WARMUP_OVERLAP_MS).build(), cancellation, mainExecutor) {
+                if (warmup === cancellation) warmup = null
+            }
+            diagnostic("gps_warmup", "duration_ms" to SETTLE_DELAY_MS + WARMUP_OVERLAP_MS)
+        } catch (e: Exception) {
+            warmup = null
+            diagnostic("gps_warmup_failed", "exception" to e.javaClass.simpleName)
+        }
+    }
+
     private fun diagnostic(event: String, vararg fields: Pair<String, Any?>) {
         container.footprintDiagnostics.record(event, mapOf("elapsed_ms" to SystemClock.elapsedRealtime()) + fields.toMap())
     }
@@ -380,6 +404,8 @@ class ConnectionReminderService : Service() {
     private fun releaseListeners() {
         epoch++
         debounce?.cancel()
+        warmup?.cancel()
+        warmup = null
         changeVersion++
         callback?.let { runCatching { connectivity.unregisterNetworkCallback(it) } }
         callback = null
@@ -403,6 +429,8 @@ class ConnectionReminderService : Service() {
 
     companion object {
         private const val SETTLE_DELAY_MS = 5_000L
+        /** The warm-up outlasts the wait, so GNSS is still on when recording asks for fixes. */
+        private const val WARMUP_OVERLAP_MS = 10_000L
         private const val IDENTITY_TIMEOUT_MS = 10_000L
         private const val WATCH_CHANNEL = "connection-watch"
         private const val WATCH_ID = 2301
