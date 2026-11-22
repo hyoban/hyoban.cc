@@ -87,6 +87,9 @@ data class FootprintsMapState(
     val looking: Boolean = false,
     /** Done looking at them, the map's own things tapped again. */
     val stopLooking: () -> Unit = {},
+    /** The days with footprints, and the trips recorded by session, said as when each began, for the 足迹 layer's time. */
+    val days: Set<LocalDate> = emptySet(),
+    val trips: List<Pair<String, String>> = emptyList(),
 )
 
 @Composable
@@ -101,7 +104,9 @@ fun FootprintsOnMap(
     // The sheet is a window over every page, so it closes for the settings page and opens again on the way back.
     var reopen by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) { if (reopen) { reopen = false; expanded = true } }
-    var showTracks by rememberSaveable { mutableStateOf(true) }
+    // Whether the map draws them: the layers menu's 足迹, which looking at a day or a part turns on.
+    val settings = LocalSettings.current
+    val showTracks = settings.mapFootprints
     var frameRequested by rememberSaveable { mutableStateOf(false) }
     var frame by remember { mutableStateOf(emptyList<TrackPoint>()) }
     // The part chosen, by its start and end; and whether the map is still on the footprints after
@@ -113,10 +118,13 @@ fun FootprintsOnMap(
     val store = container.footprints
     val revision by store.revision.collectAsStateWithLifecycle()
     val status by RecordingService.status.collectAsStateWithLifecycle()
-    var day by rememberSaveable { mutableStateOf(LocalDate.now().toString()) }
-    var session by rememberSaveable { mutableStateOf<String?>(null) }
-    val selection = TrackSelection(day = day.takeIf { session == null }, session = session)
-    LaunchedEffect(day, session) { focus = null }
+    // What they show is the 足迹 layer's time, chosen in the map's layers menu with every other layer's.
+    val times = remember(settings) { cc.hyoban.moments.ui.map.MapTimes(settings) }
+    val time = times.of(cc.hyoban.moments.ui.map.TimedLayer.FOOTPRINTS)
+    val selection = remember(time, LocalDate.now()) { cc.hyoban.moments.ui.map.footprintSelection(time) }
+    val day = selection.day
+    val session = selection.session
+    LaunchedEffect(selection) { focus = null }
     var view by remember { mutableStateOf(TrackView()) }
     var loaded by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
@@ -126,7 +134,6 @@ fun FootprintsOnMap(
     var exportSession by rememberSaveable { mutableStateOf<String?>(null) }
     var exportRaw by rememberSaveable { mutableStateOf(false) }
     var pendingAction by rememberSaveable { mutableStateOf<String?>(null) }
-    var pickingDay by rememberSaveable { mutableStateOf(false) }
 
     fun work(block: suspend () -> Unit) {
         scope.launch {
@@ -139,16 +146,23 @@ fun FootprintsOnMap(
     }
     fun control(action: String) = work {
         RecordingService.control(context, action)
-        if (action == "start_trip") session = withContext(Dispatchers.IO) { store.state().session }
+        if (action == "start_trip") withContext(Dispatchers.IO) { store.state().session }?.let { times.setOwn(cc.hyoban.moments.ui.map.TimedLayer.FOOTPRINTS, cc.hyoban.moments.ui.map.MapTime.Trip(it)) }
     }
 
     LaunchedEffect(revision, selection) {
         try {
             view = withContext(Dispatchers.IO) {
                 val state = store.state()
-                val (points, unconfirmed) = store.pointsWithTail(selection)
-                // Only what is being recorded now has an unconfirmed end: today's or the running trip's.
-                val live = state.recording && (if (session != null) session == state.session else day == LocalDate.now().toString())
+                val (read, unconfirmed) = store.pointsWithTail(selection)
+                // A long time is drawn from every so many points, as the map can draw only so many.
+                val points = if (read.size <= MAX_DRAWN) read else (read.indices step (read.size / MAX_DRAWN + 1)).map { read[it] } + read.last()
+                // Only what is being recorded now has an unconfirmed end: today's, the running trip's, or a time running to now.
+                val now = System.currentTimeMillis()
+                val live = state.recording && when {
+                    session != null -> session == state.session
+                    day != null -> day == LocalDate.now().toString()
+                    else -> (selection.to ?: Long.MAX_VALUE) >= now && (selection.from ?: 0L) <= now
+                }
                 val tail = unconfirmed.takeIf { live && it.isNotEmpty() && System.currentTimeMillis() - it.last().time <= TRACK_GAP_MS }.orEmpty()
                 val parts = trackParts(points, if (points.isEmpty()) emptyList() else store.activities(points.first().time - ACTIVITY_LOOKBACK_MS, points.last().time))
                 TrackView(state, store.history(), points, trackStats(points), parts, footprintDrawing(points, parts, tail), store.deletable(selection))
@@ -265,6 +279,8 @@ fun FootprintsOnMap(
         recording = state.recording,
         focus = focus.takeIf { showTracks },
         looking = showTracks && view.points.isNotEmpty() && (expanded || framed),
+        days = remember(view.history.days) { view.history.days.mapNotNullTo(HashSet()) { runCatching { LocalDate.parse(it) }.getOrNull() } },
+        trips = view.history.sessions.map { it.id to stamp(it.started) },
         stopLooking = { framed = false; focus = null },
         // A stay tapped is written at, a Moment or its check-in; one kept already opens that check-in.
         openStay = { start ->
@@ -321,11 +337,6 @@ fun FootprintsOnMap(
                                 enabled = !busy,
                             ) { if (resumable) enable("resume") else control("pause") }
                         } else null,
-                        { shapes ->
-                            SwitchRow(showTracks, AppIcons.Layers, stringResource(Res.string.footprints_show), "footprints_layer", shapes) {
-                                showTracks = !showTracks
-                            }
-                        },
                     ),
                 )
             }
@@ -338,7 +349,7 @@ fun FootprintsOnMap(
                         { shapes ->
                             // What is chosen, and a tap shows the whole of it on the map.
                             SegmentedListItem(
-                                onClick = { showTracks = true; frame = emptyList(); focus = null; framed = true; frameRequested = true; expanded = false },
+                                onClick = { settings.changeMapFootprints(true); frame = emptyList(); focus = null; framed = true; frameRequested = true; expanded = false },
                                 shapes = shapes,
                                 enabled = view.points.isNotEmpty(),
                                 colors = segmentColors(),
@@ -354,7 +365,7 @@ fun FootprintsOnMap(
                                 } else null,
                                 modifier = Modifier.testTag("footprints_frame"),
                             ) {
-                                Text(if (selectedTrip == null) day else stamp(selectedTrip.started) + " – " + (selectedTrip.ended?.let(::stamp) ?: stringResource(Res.string.footprints_active_trip)))
+                                Text(if (selectedTrip == null) cc.hyoban.moments.ui.map.timeWords(time) else stamp(selectedTrip.started) + " – " + (selectedTrip.ended?.let(::stamp) ?: stringResource(Res.string.footprints_active_trip)))
                             }
                         },
                         { shapes ->
@@ -363,7 +374,7 @@ fun FootprintsOnMap(
                                 exportDay = selection.day
                                 exportSession = selection.session
                                 exportRaw = false
-                                export.launch("footprints-${session ?: day}.gpx")
+                                export.launch("footprints-${session ?: day ?: time.encode().replace(':', '-')}.gpx")
                             }
                         },
                         { shapes ->
@@ -382,7 +393,7 @@ fun FootprintsOnMap(
                                 exportDay = selection.day
                                 exportSession = selection.session
                                 exportRaw = true
-                                export.launch("footprints-raw-${session ?: day}.gpx")
+                                export.launch("footprints-raw-${session ?: day ?: time.encode().replace(':', '-')}.gpx")
                             }
                         },
                         { shapes ->
@@ -404,39 +415,6 @@ fun FootprintsOnMap(
                             }
                         },
                     ),
-                    header = {
-                        // Today, yesterday and the day chosen, then any other day from a month's
-                        // calendar, the days with footprints dotted; then trips. One chosen at a time.
-                        Column(Modifier.padding(bottom = Space.s), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                            val today = LocalDate.now()
-                            val near = listOf(today.toString(), today.minusDays(1).toString())
-                            LazyRow(contentPadding = PaddingValues(horizontal = Space.gutter), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                                items((near + day).distinct()) { date ->
-                                    val label = when (date) {
-                                        near[0] -> stringResource(Res.string.footprints_today)
-                                        near[1] -> stringResource(Res.string.footprints_yesterday)
-                                        else -> date
-                                    }
-                                    FilterChip(selected = session == null && day == date, onClick = { day = date; session = null }, label = { Text(label) },
-                                        leadingIcon = if (session == null && day == date) {
-                                            { Icon(AppIcons.Check, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) }
-                                        } else null)
-                                }
-                                item {
-                                    AssistChip(onClick = { pickingDay = true }, label = { Text(stringResource(Res.string.footprints_pick_day)) },
-                                        leadingIcon = { Icon(AppIcons.Calendar, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
-                                        modifier = Modifier.testTag("footprints_pick_day"))
-                                }
-                            }
-                            if (view.history.sessions.isNotEmpty()) LazyRow(contentPadding = PaddingValues(horizontal = Space.gutter), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-                                items(view.history.sessions, key = { it.id }) { trip ->
-                                    FilterChip(selected = session == trip.id, onClick = { session = trip.id },
-                                        leadingIcon = { Icon(if (session == trip.id) AppIcons.Check else AppIcons.Flag, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
-                                        label = { Text(stamp(trip.started) + if (trip.ended == null) " " + stringResource(Res.string.footprints_active_trip) else "") })
-                                }
-                            }
-                        }
-                    },
                 )
             }
             if (view.parts.isNotEmpty()) item {
@@ -466,7 +444,7 @@ fun FootprintsOnMap(
                                     }).joinToString("\n"))
                             }
                             SegmentedListItem(
-                                onClick = { showTracks = true; frame = part.points; focus = part.start..part.end; framed = true; frameRequested = true; expanded = false },
+                                onClick = { settings.changeMapFootprints(true); frame = part.points; focus = part.start..part.end; framed = true; frameRequested = true; expanded = false },
                                 shapes = shapes,
                                 colors = segmentColors(),
                                 leadingContent = { Icon(icon, contentDescription = null) },
@@ -491,12 +469,6 @@ fun FootprintsOnMap(
             }
         }
     }
-    if (pickingDay) {
-        val marked = remember(view.history.days) { view.history.days.mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }.toSet() }
-        DateDialog(LocalDate.parse(day), stringResource(Res.string.footprints_pick_day), onDismiss = { pickingDay = false }, marked = marked) {
-            day = it.toString(); session = null; pickingDay = false
-        }
-    }
     deleting?.let { target ->
         AlertDialog(
             onDismissRequest = { deleting = null },
@@ -506,7 +478,7 @@ fun FootprintsOnMap(
                 deleting = null
                 work {
                     withContext(Dispatchers.IO) { store.delete(target) }
-                    if (target.session != null) session = null
+                    if (target.session != null) times.reset(cc.hyoban.moments.ui.map.TimedLayer.FOOTPRINTS)
                 }
             }) { Text(stringResource(Res.string.footprints_delete)) } },
             dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(Res.string.footprints_cancel)) } },
@@ -531,6 +503,9 @@ private fun duration(millis: Long): String {
     return if (minutes < 60) stringResource(Res.string.footprints_minutes, minutes)
     else stringResource(Res.string.footprints_hours_minutes, minutes / 60, minutes % 60)
 }
+
+/** At most how many points of a time the map draws. */
+private const val MAX_DRAWN = 20_000
 
 private fun stamp(time: Long): String = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
 

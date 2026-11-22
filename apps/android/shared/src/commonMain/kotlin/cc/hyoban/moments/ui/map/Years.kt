@@ -15,3 +15,6 @@ fun yearColors(years: Iterable<Int>): Map<Int, Color> =
 
 /** The year of an ISO date or timestamp. */
 fun yearOf(occurredAt: String): Int = occurredAt.take(4).toInt()
+
+/** The day a record's local time falls on. */
+fun dayOf(occurredAt: String): java.time.LocalDate = java.time.LocalDate.parse(occurredAt.take(10))

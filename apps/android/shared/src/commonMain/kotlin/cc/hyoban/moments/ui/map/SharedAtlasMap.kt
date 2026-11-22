@@ -147,8 +147,11 @@ data class MapPlace(
     val count: Int,
     val firstYear: Int,
     val photo: MomentMedia? = null,
-    /** The years it has records in, which keep it on the map when one is picked. */
+    /** The years it has records in. */
     val years: Set<Int> = emptySet(),
+    /** The days of its Moments and of its check-ins, which keep it on the map in a time chosen. */
+    val momentDays: List<java.time.LocalDate> = emptyList(),
+    val checkinDays: List<java.time.LocalDate> = emptyList(),
 )
 
 /**
@@ -499,11 +502,17 @@ fun SharedAtlasMap(
     panel: Dp = 0.dp,
     mediaUrls: MediaUrls? = null,
     /**
-     * The year picked: only the places with records then and the trips under way then stay on
-     * the map, the other places stepping back to gray dots; the map frames them, and going back
-     * to every year puts it back where it was, unless it was moved since.
+     * The time every layer shows, as `MapTime` encodes it, or null for every time: while one is
+     * chosen the map frames [keptPlaces], and going back to every time puts it back where it was,
+     * unless it was moved since.
      */
-    year: Int? = null,
+    time: String? = null,
+    /** The places in their layers' time, the others stepping back to gray dots; null for every place. */
+    keptPlaces: Set<String>? = null,
+    /** The trips under way in the routes' time; null for every trip. */
+    keptTrips: Set<String>? = null,
+    /** The days the photos' layer shows; null for every day. */
+    photoDays: ClosedRange<java.time.LocalDate>? = null,
     /** Whether every trip's route is drawn; off, only the lifted one is. */
     showRoutes: Boolean = true,
     /** The only places on the map, a lifted trip's own; null for every place. */
@@ -574,18 +583,18 @@ fun SharedAtlasMap(
     val ring = tokens.bg
     val unknown = tokens.borderStrong
     val me = tokens.accent
-    val shownPlaces = remember(places, year, onlyPlaces) {
-        places.filter { (year == null || year in it.years) && (onlyPlaces == null || it.id in onlyPlaces) }
+    val shownPlaces = remember(places, keptPlaces, onlyPlaces) {
+        places.filter { (keptPlaces == null || it.id in keptPlaces) && (onlyPlaces == null || it.id in onlyPlaces) }
     }
-    // The prepared data is every place's, of no year.
-    val whole = year == null && onlyPlaces == null
-    val dimGeoJson = remember(places, year) {
+    // The prepared data is every place's, of every time.
+    val whole = keptPlaces == null && onlyPlaces == null
+    val dimGeoJson = remember(places, keptPlaces) {
         GeoJsonData.Features(
             FeatureCollection(
-                if (year == null) {
+                if (keptPlaces == null) {
                     emptyList()
                 } else {
-                    places.filter { year !in it.years }.map { pointFeature(positionOf(it.place.latitude, it.place.longitude)) }
+                    places.filter { it.id !in keptPlaces }.map { pointFeature(positionOf(it.place.latitude, it.place.longitude)) }
                 },
             ),
         )
@@ -596,12 +605,13 @@ fun SharedAtlasMap(
     val stackPrefix = stackImagePrefix(
         remember(shownPlaces, colors, prepared, whole) { prepared?.stackKey?.takeIf { whole } ?: stackKey(shownPlaces, colors) },
     )
-    // The year's places to frame, whatever trip is lifted.
-    val yearPositions = remember(places, year) {
-        (if (year == null) places else places.filter { year in it.years }).map { positionOf(it.place.latitude, it.place.longitude) }
+    // The time's places to frame, whatever trip is lifted.
+    val keptPositions = remember(places, keptPlaces) {
+        (if (keptPlaces == null) places else places.filter { it.id in keptPlaces }).map { positionOf(it.place.latitude, it.place.longitude) }
     }
-    val routeYearTest = year?.let { feature["year"].asNumber() lte const(it) and (feature["endYear"].asNumber() gte const(it)) }
-    val routeGeoJson = remember(routes, prepared) { prepared?.routes ?: routeData(routes) }
+    val routeGeoJson = remember(routes, prepared, keptTrips) {
+        if (keptTrips == null) prepared?.routes ?: routeData(routes) else routeData(routes.filter { it.id in keptTrips })
+    }
     val footprintSpan = remember(footprints.lines) {
         val times = footprints.lines.flatMap { line -> listOfNotNull(line.points.firstOrNull()?.time, line.points.lastOrNull()?.time) }
         (times.minOrNull() ?: 0L) to (times.maxOrNull() ?: 0L)
@@ -694,7 +704,7 @@ fun SharedAtlasMap(
         mediaUrls?.let { PlacePinImages(pinDensity, pinDirection, platformContext, it, textMeasurer, kindIcons, pinIcon) }
     }
     val photoNames = remember { PhotoNames() }
-    val photoHeaps = rememberPhotoHeaps(photos, year, photoNames)
+    val photoHeaps = rememberPhotoHeaps(photos, photoDays, photoNames)
     val photoImages = remember(pinDensity, pinDirection, textMeasurer) { PhotoHeapImages(pinDensity, pinDirection, textMeasurer, photoNames) }
     val heapLook = HeapLook(
         fill = tokens.fill,
@@ -890,7 +900,6 @@ fun SharedAtlasMap(
                 }
             }
             fun routeFilter(straight: Boolean) = (if (straight) feature["straight"].asBoolean() else !feature["straight"].asBoolean())
-                .let { if (routeYearTest == null) it else it and routeYearTest }
                 .let { if (routesShownTest == null) it else it and routesShownTest }
             LineLayer(
                 id = "shared-routes",
@@ -1131,8 +1140,8 @@ fun SharedAtlasMap(
             }
         }
     }
-    // What the map frames: the year's places while one is picked, else everything on it.
-    val homePositions = if (year != null && yearPositions.isNotEmpty()) yearPositions else allPositions
+    // What the map frames: the time's places while one is chosen, else everything on it.
+    val homePositions = if (time != null && keptPositions.isNotEmpty()) keptPositions else allPositions
     LaunchedEffect(state, allPositions, shape) {
         state.awaitViewport()
         if ((!framed || framedShape != shape) && homePositions.isNotEmpty()) {
@@ -1144,30 +1153,30 @@ fun SharedAtlasMap(
     OnTabReselect(tab) {
         if (homePositions.isNotEmpty()) framePositions(state, homePositions, framePadding, 12.0, animated = true, reduced = reduced)
     }
-    // Where the map was before a year was picked, and where picking it left the map: going back
-    // to every year returns there only if the map hasn't been moved since.
-    var framedYear by rememberSaveable { mutableStateOf(year) }
-    var beforeYear by remember { mutableStateOf<CameraPosition?>(null) }
-    var yearView by remember { mutableStateOf<CameraPosition?>(null) }
-    LaunchedEffect(state, year, framed) {
-        if (!framed || year == framedYear) return@LaunchedEffect
-        val previous = framedYear
-        framedYear = year
-        if (year != null) {
-            if (previous == null) beforeYear = state.cameraPosition
-            if (yearPositions.isNotEmpty() && focusedPlace == null && selected == null) {
-                framePositions(state, yearPositions, framePadding, 12.0, animated = true, reduced = reduced)
+    // Where the map was before a time was chosen, and where choosing it left the map: going back
+    // to every time returns there only if the map hasn't been moved since.
+    var framedTime by rememberSaveable { mutableStateOf(time) }
+    var beforeTime by remember { mutableStateOf<CameraPosition?>(null) }
+    var timeView by remember { mutableStateOf<CameraPosition?>(null) }
+    LaunchedEffect(state, time, framed) {
+        if (!framed || time == framedTime) return@LaunchedEffect
+        val previous = framedTime
+        framedTime = time
+        if (time != null) {
+            if (previous == null) beforeTime = state.cameraPosition
+            if (keptPositions.isNotEmpty() && focusedPlace == null && selected == null) {
+                framePositions(state, keptPositions, framePadding, 12.0, animated = true, reduced = reduced)
             }
-            yearView = state.cameraPosition
+            timeView = state.cameraPosition
         } else {
-            val back = beforeYear
-            if (back != null && state.cameraPosition == yearView) {
+            val back = beforeTime
+            if (back != null && state.cameraPosition == timeView) {
                 state.animateCamera(back.toCameraUpdate(), cameraAnimation(reduced, 600, fly = true))
             } else if (selected == null && allPositions.isNotEmpty()) {
                 framePositions(state, allPositions, framePadding, 12.0, animated = true, reduced = reduced)
             }
-            beforeYear = null
-            yearView = null
+            beforeTime = null
+            timeView = null
         }
     }
     LaunchedEffect(state, focusedPlace, focusedTrip, framed, places, routes) {

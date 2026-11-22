@@ -95,7 +95,7 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   进行中 and which day it is. Reading back to older days folds the tabs and the title away;
   heading back to today brings them back.
 - **地图** shows the places, the trips' routes (listed in the sheet at its foot), the
-  photos of 相册 that know where they were taken once its 照片 switch is on (相册, 地图's photos), and the
+  photos of 相册 that know where they were taken once its 照片 layer is on (相册, 地图's photos), and the
   footprints, drawn as the site's map draws them: a place as the newest photo taken there,
   framed in white with its year's dot, or without one a balloon in its year's colour with its
   kind's icon and its name under it where there's room; the pins pile up on their spots, the
@@ -103,17 +103,25 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   counted, that opens as the map comes closer. The open place's pin lifts off it, larger, over
   a dot left on the spot with its name in bold, and each route is drawn in its year's colour,
   a flight or ferry dotted. The pins' images are drawn as the map asks for them
-  (`ui/map/PlacePins.kt`). Search sits at the top beside the fog's switch, over a legend of the years;
-  a year tapped there narrows the map to it, as the site's does: only the places with records
-  then keep their pins, the rest stepping back to gray dots, only the trips under way then keep
-  their routes and stay in the list, and the map frames them; tapped again, or its close,
-  every year comes back and the map returns to where it was unless it was moved since; the
-  legend's 旅程 is the routes' switch, off leaving only a lifted route (as the site's 地图设置
-  does); the footprints and the phone's place are buttons down the side. A place tapped fills the
+  (`ui/map/PlacePins.kt`). Search sits at the top beside 图层 (`ui/map/MapLayers.kt`), the one place what the map draws
+  is switched and its year picked. Its switches, each remembered: 地点 (off, only an open place's pin stays), 签到 (the check-ins'
+  places among the places, while 签到 is on, and with 地点 off the only ones drawn), 旅程 (off, only a lifted route is drawn, as the site's
+  地图设置 does), 照片, 足迹 (while 足迹 is on; looking at a day or a part from its panel turns it on)
+  and 迷雾 (足迹's from today, as every footprint at once is a lot to draw), the menu staying open as the map changes behind it. Over them 时间 is every layer's
+  time, and each layer's calendar its own (`ui/map/MapTime.kt`): 全部, 今年, 去年, 近 30 天 (as of
+  today, with 今天 and 昨天), a year with records and a month in it, or any days from one to another, each layer's
+  following every layer's until given its own, and remembered. The places keep those with a
+  Moment in their time, the check-ins those with a check-in in theirs, the rest stepping back to
+  gray dots; the routes, and the trips' list, keep the trips under way in theirs; the photos those
+  taken in theirs; the fog lights only the cities written in in its own. Every layer's time chosen
+  frames what the places keep, and back to 全部 the map returns to where it was unless it was moved
+  since. 足迹's sheet lists the trips it recorded too, and its panel shows its time. A pill under the search
+  says each time chosen, its close bringing every time back, or a layer's own to follow again.
+  选照片's map has the same menu with 地点 and 旅程, the same times. The footprints and the phone's place are buttons down the side. A place tapped fills the
   sheet with its Moments and check-ins together, newest first and counted as one, and the way
   there; a route tapped floats its trip's card, which
   opens the trip or plays it back, and leaves only the trip's own places on the map (those of its
-  Moments, and of its check-ins while they're on), as the site's trip sidebar does. 迷雾地图 lays a fog over it, as the site's map does, thinner
+  Moments, and of its check-ins while they're on), as the site's trip sidebar does. 迷雾 lays a fog over it, as the site's map does, thinner
   over a city the more Moments it has, from the site's
   `apps/web/src/data/boundaries/cities.json` shipped as an asset.
 - **我** is one screen: the changes waiting to be published, then four rows, 账本 (with this
@@ -659,8 +667,9 @@ reported instead. The settings and the original action stay out of Android's bac
 
 The footprints are GPS tracks kept on the phone alone, in
 `noBackupFilesDir/footprints.sqlite` (`footprints/FootprintStore`), outside sync and backup.
-地图 → 足迹 opens a panel to record, pick a day (今天, 昨天, or any from 选日期's month, the days
-with footprints dotted) or trip, export GPX and delete — while recording,
+地图 → 足迹 opens a panel to record and to look at the footprints of the 足迹 layer's time, chosen in
+地图's 图层 with every layer's (今天 at first, not following; a day, a span, or a trip it recorded,
+a long time drawn from every so many points), and export GPX and delete a day's or a trip's — while recording,
 anything but today and the running trip (importing is in 我 → 导入); 足迹记录
 (`moments://footprint-settings`), from the panel's settings button, sets how recording
 behaves.
@@ -920,17 +929,17 @@ the NAS that way, six at a time and saying how far it is (the originals' starts 
 looking again is quick), and lists those less than the NAS's original
 under their Moments' days; the viewer's 换成 NAS 原图 opens the Moment's editor to put one back.
 
-**地图's photos.** The map's 照片 switch, over 足迹 down its side and off at first, lays 相册's
+**地图's photos.** The map's 照片 layer, in 图层 and off at first, lays 相册's
 photos that know where they were taken over the map (`PhotoLayer`, `PhotoHeapLayer`): the gallery's, whose
 places the media store doesn't keep, so each photo's EXIF is read once from its original in the
 background and kept on the phone (`GalleryLocations`, a file in `noBackupFilesDir`, read again only for
 a photo new or changed), and the NAS's (above). A photo that says nowhere stands where it was taken by
 time (`TimePlaces`, on the device alone): at the footprint nearest that time, while 足迹 is on, else at the
 place of the photo of either source nearest it in time, either within two hours, or off the map; its
-heap's grid holds it with the rest. Published photos aren't among them, nor the NAS's linked to
-one: they are the map's places already. Photos within 64 points of each other on screen stand as one heap, one of them showing with how
+heap's grid holds it with the rest. While 地点 is on, published photos aren't among them, nor the NAS's linked to
+one: they are the map's places already; with 地点 off they are. Photos within 64 points of each other on screen stand as one heap, one of them showing with how
 many: a symbol layer of the atlas's own, grouped by its source's clustering at each zoom, so the
-heaps move with the map in the frame it draws; a year picked from the legend keeps that year's. A heap tapped brings its photos up
+heaps move with the map in the frame it draws; the photos' time in 图层 keeps those taken in it. A heap tapped brings its photos up
 from the foot as 相册's grid, the map staying above: looked at, and chosen (held, or 选择) to write,
 share, save or delete as in 相册, the tabs giving way to the bar. On the Mac they are the NAS's alone.
 
@@ -970,7 +979,7 @@ takes the grid to it, or to the nearest day before it, a NAS album reading on pa
 is reached, unless the grid is scrolled by hand meanwhile.
 
 **地图**, the bar's map button (选照片's alone; 相册 has 地图's photos), turns the page into the atlas
-(`ui/map/PhotoAtlas.kt`): the places and routes as 地图 draws them, with the legend's years, and over
+(`ui/map/PhotoAtlas.kt`): the places and routes as 地图 draws them, with 图层's times, and over
 them every source's photos that know where they were taken, heaped as 地图's photos are (相册, 地图's
 photos), a year picked narrowing both. A heap tapped rises from the foot as the grid does, its photos'
 circles out and what is chosen there the same choice as the grid's, 加入 at the foot; dragged down, a tap
@@ -1029,7 +1038,7 @@ On 地图 (相册, above: 地图's photos) the NAS's photos stand where they wer
 list of where its photos were taken (`ai/map/gps/list`, five thousand at a time, read whole the first
 time they show; WGS‑84, as the EXIF has them), so no original is read for it, and a heap opened reads
 its photos by their ids (`ai/map/gps/photo`, two hundred at a time). The list says nothing of when, so
-with a year picked from the legend they step away. For the photos it doesn't list, the timeline is read
+outside the photos' time in 图层 they step away. For the photos it doesn't list, the timeline is read
 whole too (`Nas.everyPhoto`, each day kept as 相册 keeps it, so only days new or changed are read again),
 its times, the NAS's clock's, read in the device's zone; a heap the timeline holds whole opens from it,
 newest first, without asking the NAS again.

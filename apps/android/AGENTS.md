@@ -221,6 +221,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   Nor do words repeat what is already shown: a planned bubble's dashed outline, a check, a lock,
   a switch's own state, the page's title or the caption over a row. Such a state goes to TalkBack
   (a `stateDescription` or the icon's description) instead.
+- What a map draws, and the time each layer shows, are chosen in one place, its layers menu
+  (`MapLayersMenu`, the times `MapTime`), and nowhere else: a new layer gets its row there, its
+  time following every layer's unless given its own, never a button, legend or panel switch of its
+  own; the map shows only what is chosen (the time pills). The footprints' time is chosen there too,
+  never in their panel.
 - The map's year colours are the tokens' `YearColors`, the same as `packages/trip-map/src/theme.ts`, and the
   fog is the site's `packages/trip-map/src/map/fog-layer.ts`. The ledger's charts are drawn on a
   Compose `Canvas` (`ui/ledger/Charts.kt`), not with a chart library.

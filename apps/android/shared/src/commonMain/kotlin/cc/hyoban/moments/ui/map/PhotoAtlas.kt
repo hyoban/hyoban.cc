@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,7 +22,7 @@ import cc.hyoban.moments.ui.picker.Places
 /**
  * 选照片's map: the atlas as 地图 draws it, the places and the routes in their years' colours, with
  * [photos]' heaps over it. A year picked from the legend narrows both; a heap tapped opens its
- * photos, a tap on nothing puts them away. The places are only where things were: tapped, nothing
+ * photos, a tap on nothing puts them away. Its places and routes are switched in the top bar's layers menu. The places are only where things were: tapped, nothing
  * opens. Its map is its own, gone with the page, so 地图's kept atlas stays as it was.
  */
 @Composable
@@ -41,11 +40,12 @@ fun PhotoAtlas(container: AppContainer, photos: Places, modifier: Modifier = Mod
     val mapPlaces = if (checkinsOn) atlas.placesWithCheckins else atlas.placesWithoutCheckins
     val colors = if (checkinsOn) atlas.colorsWithCheckins else atlas.colorsWithoutCheckins
     val mapData = if (checkinsOn) atlas.mapDataWithCheckins else atlas.mapDataWithoutCheckins
-    var pickedYear by rememberSaveable { mutableStateOf<Int?>(null) }
-    val year = pickedYear?.takeIf { it in colors }
+    val times = remember(settings) { MapTimes(settings) }
+    val sharedTime = times.shared
+    val kept = remember(mapPlaces, trips, checkinsOn, sharedTime, TimedLayer.entries.map { times.own(it) }) { keptIn(times::of, mapPlaces, trips, checkinsOn, moments = settings.mapPlaces) }
     Box(modifier.fillMaxSize().testTag("picker_map")) {
         SharedAtlasMap(
-            mapPlaces,
+            layerPlaces(mapPlaces, settings.mapPlaces, checkinsOn, null) ?: mapPlaces,
             colors,
             atlas.routes,
             selected = null,
@@ -53,20 +53,24 @@ fun PhotoAtlas(container: AppContainer, photos: Places, modifier: Modifier = Mod
             onPlace = {},
             onRoute = {},
             onTrip = {},
-            prepared = mapData,
+            prepared = mapData.takeIf { settings.mapPlaces },
             mediaUrls = container.mediaUrls,
             modifier = Modifier.fillMaxSize(),
             onEmptyTap = { photos.open(null) },
             showRoutes = settings.mapRoutes,
-            year = year,
+            time = sharedTime.takeUnless { it == MapTime.All }?.encode(),
+            keptPlaces = kept.places,
+            keptTrips = kept.trips,
+            photoDays = kept.photoDays,
             photos = photos,
             retained = false,
         )
-        if (colors.isNotEmpty()) Box(
+        Box(
             Modifier.align(Alignment.TopStart).fillMaxWidth()
                 .padding(top = LocalTopClearance.current, start = MAP_EDGE, end = MAP_EDGE),
         ) {
-            Legend(colors, trips = atlas.routes.isNotEmpty(), year, routesShown = settings.mapRoutes, onRoutes = { settings.changeMapRoutes(!settings.mapRoutes) }) { pickedYear = it }
+            TimePills(times, pickerLayers(settings))
         }
     }
 }
+

@@ -117,7 +117,13 @@ private fun mapPlaces(
     val here = moments[id].orEmpty()
     val visits = checkins[id].orEmpty()
     val years = here.map { yearOf(it.occurredAt) } + visits.map { yearOf(it.at) }
-    places[id]?.let { MapPlace(id, it, here.size + visits.size, years.min(), newestPhoto(here), years.toSet()) }
+    places[id]?.let {
+        MapPlace(
+            id, it, here.size + visits.size, years.min(), newestPhoto(here), years.toSet(),
+            momentDays = here.map { moment -> dayOf(moment.occurredAt) },
+            checkinDays = visits.map { visit -> dayOf(visit.at) },
+        )
+    }
 }
 
 /**

@@ -148,8 +148,9 @@ even when starting from the repository root.
   the sheet's ways) may fall back, when the keyless router can't be reached, on AMap's or
   Tencent's routing with the owner's own keys, within each key's calls.
 - Map year colors, fog behavior and the places' pins (photos, balloons, piling and stacks,
-  the open place lifted, routes in their year's colour, a year picked from the legend) match across Web and App; change
-  both together; the app's 照片 switch, 相册's own photos where they were taken, is the app's alone, as the
+  the open place lifted, routes in their year's colour) match across Web and App; change
+  both together. What the app's map shows by time (each layer's own, chosen in its layers menu) is the app's alone:
+  the site keeps a year picked from its legend; the app's 照片 switch, 相册's own photos where they were taken, is the app's alone, as the
   footprints are. No line on a map grows thicker: a route keeps one width whether it's lifted,
   zoomed or handed to playback, and a lifted one stands out only by the others stepping back.
   On every map a check-in's place is a place like a Moment's: listed, counted, filtered by

@@ -111,7 +111,7 @@ internal class PhotoNames {
 }
 
 /**
- * The photos of [places] the map shows, [year]'s alone when one is picked: a point each, with its
+ * The photos of [places] the map shows, those taken in [days] alone when they are chosen: a point each, with its
  * place in [spots] as `i` and `k` as [NameSpan] says. [nameOf] finds the opened heap's first photo.
  */
 internal class PhotoHeaps(
@@ -126,13 +126,13 @@ internal class PhotoHeaps(
 
 /** [places]' photos laid out for the atlas off the main thread; null until they are read. */
 @Composable
-internal fun rememberPhotoHeaps(places: Places?, year: Int?, names: PhotoNames): PhotoHeaps? {
+internal fun rememberPhotoHeaps(places: Places?, days: ClosedRange<java.time.LocalDate>?, names: PhotoNames): PhotoHeaps? {
     LaunchedEffect(places) { places?.load() }
     val all = places?.spots
     var heaps by remember { mutableStateOf<PhotoHeaps?>(null) }
-    LaunchedEffect(places, all, year) {
+    LaunchedEffect(places, all, days) {
         heaps = if (places == null || all == null) null else withContext(Dispatchers.Default) {
-            val spots = if (year == null) all else all.filter { it.year == year }
+            val spots = if (days == null) all else all.filter { spot -> spot.day?.let { java.time.LocalDate.ofEpochDay(it) in days } == true }
             val numbers = names.name(spots)
             val nameOf = HashMap<Pair<Int, Long>, Int>(spots.size * 2)
             val features = spots.mapIndexed { i, spot ->

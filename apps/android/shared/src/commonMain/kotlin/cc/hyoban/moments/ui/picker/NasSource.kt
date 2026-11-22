@@ -70,6 +70,8 @@ fun rememberNas(container: cc.hyoban.moments.AppContainer, deletion: Deletion): 
     val source = remember { NasSource(container.nas, device::toast, scope, deletion) }
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     source.linked = remember(moments) { nasLinked(moments) }
+    // While 地点 is drawn, a photo in a Moment is on the map as that Moment's place already.
+    source.hideLinked = cc.hyoban.moments.ui.LocalSettings.current.mapPlaces
     return source
 }
 
@@ -87,6 +89,9 @@ class NasSource(
 ) : PhotoSource {
     /** The NAS photos in a Moment, by their id, and that Moment's uid ([nasLinked]). */
     var linked by mutableStateOf<Map<Long, String>>(emptyMap())
+
+    /** Whether the map's photos leave out those [linked], as the places show them. */
+    var hideLinked by mutableStateOf(true)
 
     private var albums by mutableStateOf<List<NasAlbum>>(emptyList())
     /** The one listing read, the timeline or an album under a filter: another, or another filter, starts again. */
@@ -455,18 +460,18 @@ class NasPlaces(private val source: NasSource, private val scope: CoroutineScope
     /** Every photo and video of the timeline, by id, once read: what places by time those without a place. */
     private var timeline by mutableStateOf<Map<Long, NasPhoto>?>(null)
 
-    /** When its photos were taken, but those in a Moment, as the NAS's clock had it there, read as this device's zone. */
+    /** When its photos were taken, but those in a Moment while the places show them, as the NAS's clock had it there, read as this device's zone. */
     override val taken: Map<Long, Long>? by derivedStateOf {
-        val linked = source.linked
+        val linked = if (source.hideLinked) source.linked else emptyMap()
         val zone = java.time.ZoneId.systemDefault()
         timeline?.values?.mapNotNull { photo ->
             photo.taken?.takeIf { !photo.video && photo.id !in linked }?.let { photo.id to it.atZone(zone).toInstant().toEpochMilli() }
         }?.toMap()
     }
 
-    /** Its places but those of photos in a Moment, which 地图 shows as that Moment's place already. */
+    /** Its places but those of photos in a Moment, which 地图 shows as that Moment's place already while its places are on. */
     override val spots: List<Spot>? by derivedStateOf {
-        val linked = source.linked
+        val linked = if (source.hideLinked) source.linked else emptyMap()
         read?.let { all -> if (linked.isEmpty()) all else all.filter { it.id !in linked } }
     }
 

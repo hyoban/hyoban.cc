@@ -104,7 +104,7 @@ internal class GalleryPlaces(private val gallery: GallerySource, private val loc
             val located = located
             return gallery.items.mapNotNull { item ->
                 located[item.id]?.let { (lat, lng) ->
-                    Spot(item.id, lat, lng, Instant.ofEpochMilli(item.taken).atZone(ZoneId.systemDefault()).year)
+                    Instant.ofEpochMilli(item.taken).atZone(ZoneId.systemDefault()).toLocalDate().let { day -> Spot(item.id, lat, lng, day.year, day = day.toEpochDay()) }
                 }
             }
         }

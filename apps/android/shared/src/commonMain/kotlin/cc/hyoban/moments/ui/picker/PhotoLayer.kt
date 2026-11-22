@@ -71,7 +71,16 @@ class MergedPlaces(
     override val spots: List<Spot>?
         get() {
             val placed = placed
-            val read = all.mapIndexedNotNull { i, places -> places.spots?.let { own -> own.map { it.copy(from = i) } + placed.getOrNull(i).orEmpty() } }
+            val zone = java.time.ZoneId.systemDefault()
+            // Each its day where its source says when it was taken, for the photos' time.
+            val read = all.mapIndexedNotNull { i, places ->
+                val taken = places.taken
+                places.spots?.let { own ->
+                    own.map { spot ->
+                        spot.copy(from = i, day = spot.day ?: taken?.get(spot.id)?.let { java.time.Instant.ofEpochMilli(it).atZone(zone).toLocalDate().toEpochDay() })
+                    } + placed.getOrNull(i).orEmpty()
+                }
+            }
             return if (read.isEmpty()) null else read.flatten()
         }
 
@@ -104,7 +113,7 @@ class MergedPlaces(
         val zone = java.time.ZoneId.systemDefault()
         return placeless.mapIndexed { i, times ->
             TimePlaces.place(times, located) { time -> if (prints != null) nearestFootprint[time] else null }.map { (id, at) ->
-                Spot(id, at.latitude, at.longitude, java.time.Instant.ofEpochMilli(times.getValue(id)).atZone(zone).year, from = i)
+                java.time.Instant.ofEpochMilli(times.getValue(id)).atZone(zone).toLocalDate().let { day -> Spot(id, at.latitude, at.longitude, day.year, from = i, day = day.toEpochDay()) }
             }
         }
     }

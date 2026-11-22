@@ -187,6 +187,9 @@ data class AtlasFootprintsOnMap(
     val looking: Boolean = false,
     /** Done looking at them: a place, a route or the map itself tapped. */
     val stopLooking: () -> Unit = {},
+    /** The days with footprints, and the trips recorded, for their time's sheet. */
+    val days: Set<LocalDate> = emptySet(),
+    val trips: List<Pair<String, String>> = emptyList(),
 )
 
 private val NoFootprints = AtlasFootprints()
@@ -261,7 +264,8 @@ private fun MapContent(
         prepared?.takeIf { it.matches(inputs) } ?: prepareAtlas(inputs)
     }
     val settings = LocalSettings.current
-    val checkinsOn = settings.isOn(Module.CHECKIN)
+    // The check-ins' places among the places while 签到 is on and the layers menu keeps them.
+    val checkinsOn = settings.isOn(Module.CHECKIN) && settings.mapCheckins
     val byPlace = atlas.byPlace
     val checkinsByPlace = if (checkinsOn) atlas.checkinsByPlace else emptyMap()
     val footprintsOn = footprints != null && settings.isOn(Module.FOOTPRINTS)
@@ -275,15 +279,19 @@ private fun MapContent(
     val mapData = if (checkinsOn) atlas.mapDataWithCheckins else atlas.mapDataWithoutCheckins
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var highlighted by rememberSaveable { mutableStateOf<String?>(null) }
-    // The year picked from the legend, or none: the map, its trips and their list narrowed to it.
-    var pickedYear by rememberSaveable { mutableStateOf<Int?>(null) }
-    val year = pickedYear?.takeIf { it in colors }
-    val inYear: (String, String) -> Boolean = { start, end -> year == null || (yearOf(start) <= year && yearOf(end) >= year) }
-    // What the year leaves off the map lets go: a place open, a route lifted.
-    LaunchedEffect(year, mapPlaces) {
-        if (year == null) return@LaunchedEffect
-        if (selected != null && mapPlaces.firstOrNull { it.id == selected }?.years?.contains(year) == false) selected = null
-        if (highlighted != null && trips.firstOrNull { it.id == highlighted }?.let { inYear(it.start, it.end) } == false) highlighted = null
+    // Each layer's time (09 地图的时间), and what it keeps on the map: the places, the trips and
+    // their list, the photos, the cities the fog lights.
+    val times = remember(settings) { MapTimes(settings) }
+    val sharedTime = times.shared
+    val kept = remember(mapPlaces, trips, checkinsOn, sharedTime, TimedLayer.entries.map { times.own(it) }) {
+        keptIn(times::of, mapPlaces, trips, checkinsOn, moments = settings.mapPlaces)
+    }
+    val recordDays = remember(mapPlaces) { mapPlaces.flatMapTo(HashSet()) { it.momentDays + it.checkinDays } }
+    val inTime: (String) -> Boolean = { id -> kept.trips == null || id in kept.trips }
+    // What the time leaves off the map lets go: a place open, a route lifted.
+    LaunchedEffect(kept) {
+        if (selected != null && kept.places?.contains(selected) == false) selected = null
+        if (highlighted != null && !inTime(highlighted!!)) highlighted = null
     }
 
     // The fog of war: the cities read from the app's assets the first time it's turned on or a
@@ -326,9 +334,9 @@ private fun MapContent(
     LaunchedEffect(settings.mapFog) {
         if (settings.mapFog) readRegions()
     }
-    val fog = remember(fogRegions, mapPlaces) {
+    val fog = remember(fogRegions, kept.fogPlaces) {
         fogRegions?.let { regions ->
-            buildFogOfWar(regions, mapPlaces.map { it.place.longitude to it.place.latitude }, mapPlaces.map { it.count })
+            buildFogOfWar(regions, kept.fogPlaces.map { it.place.longitude to it.place.latitude }, kept.fogPlaces.map { it.count })
         }
     }
 
@@ -349,16 +357,23 @@ private fun MapContent(
     MapBack({ active() && lifted != null }) { highlighted = null }
     LaunchedEffect(focus) {
         when (focus) {
-            // Shown from its page, a place or trip the year picked leaves off brings every year back.
+            // Shown from its page, a place or trip its layer's time leaves off brings every time back.
             is MapFocus.Place -> {
                 highlighted = null
                 selected = focus.id
-                if (mapPlaces.firstOrNull { it.id == focus.id }?.years?.contains(pickedYear) == false) pickedYear = null
+                if (kept.places?.contains(focus.id) == false) {
+                    times.setShared(MapTime.All)
+                    times.setOwn(TimedLayer.PLACES, null)
+                    times.setOwn(TimedLayer.CHECKINS, null)
+                }
             }
             is MapFocus.Trip -> {
                 selected = null
                 highlighted = focus.id
-                if (trips.firstOrNull { it.id == focus.id }?.let { inYear(it.start, it.end) } == false) pickedYear = null
+                if (!inTime(focus.id)) {
+                    times.setShared(MapTime.All)
+                    times.setOwn(TimedLayer.ROUTES, null)
+                }
             }
             MapFocus.Footprints -> {
                 selected = null
@@ -404,15 +419,19 @@ private fun MapContent(
     }
     val openFootprints: () -> Unit = { selected = null; highlighted = null; footprints?.open?.invoke() }
     val shownFog = fog.takeIf { settings.mapFog }
-    val atlasFootprints = footprints?.drawing?.takeIf { footprintsOn } ?: NoFootprints
+    val footprintsShown = footprintsOn && settings.mapFootprints
+    val atlasFootprints = footprints?.drawing?.takeIf { footprintsShown } ?: NoFootprints
+    val layers = atlasLayers(settings, footprints = footprintsOn, toggleFog = toggleFog)
 
+    // With 地点 off, only the check-ins' places, and the one open.
+    val drawnPlaces = remember(mapPlaces, settings.mapPlaces, checkinsOn, selected) { layerPlaces(mapPlaces, settings.mapPlaces, checkinsOn, selected) }
     val sheetState = rememberStandardBottomSheetState(initialValue = SheetValue.PartiallyExpanded, skipHiddenState = false)
     var screenHeight by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
     val statusTop = WindowInsets.statusBars.getTop(density)
     Box(modifier.fillMaxSize().onSizeChanged { screenHeight = it.height }) {
         SharedAtlasMap(
-            mapPlaces,
+            drawnPlaces ?: mapPlaces,
             colors,
             mapRoutes,
             selected,
@@ -422,7 +441,7 @@ private fun MapContent(
             // A tap on nothing closes the place panel, and lets the footprints go back among the rest.
             onEmptyTap = { selected = null; footprints?.stopLooking?.invoke() },
             onTrip = onTrip,
-            prepared = mapData,
+            prepared = mapData.takeIf { drawnPlaces == null },
             mediaUrls = container.mediaUrls,
             modifier = Modifier.fillMaxSize(),
             locate = locate,
@@ -443,16 +462,19 @@ private fun MapContent(
             fogRegions = fogRegions.orEmpty(),
             showRoutes = settings.mapRoutes,
             onlyPlaces = tripPlaces,
-            recede = footprintsOn && footprints?.looking == true && lifted == null && selected == null,
+            recede = footprintsShown && footprints?.looking == true && lifted == null && selected == null,
             onLocated = { found ->
                 locating = false
                 if (!found) show(textOf(Res.string.error_location))
             },
             panel = if (wide) panelWidth + Space.m else 0.dp,
-            year = year,
+            time = sharedTime.takeUnless { it == MapTime.All }?.encode(),
+            keptPlaces = kept.places,
+            keptTrips = kept.trips,
+            photoDays = kept.photoDays,
             photos = photoLayer?.places,
         )
-        // At the top: the search and the fog's switch on one line, the legend under them and,
+        // At the top: the search and the layers' button on one line, the legend under them and,
         // while the fog is on, how much of it is lit. On a wide window the search is the panel's
         // and the rest stands over the map beside it; on a phone on its side, at the top of the
         // side away from the tabs.
@@ -469,13 +491,13 @@ private fun MapContent(
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                 if (wide) {
-                    Box(Modifier.weight(1f)) { if (colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty(), year, routesShown = settings.mapRoutes, onRoutes = { settings.changeMapRoutes(!settings.mapRoutes) }) { pickedYear = it } }
+                    Box(Modifier.weight(1f)) { TimePills(times, layers) }
                 } else {
                     SearchPill(onSearch, Modifier.weight(1f), floating = true)
                 }
-                FogButton(settings.mapFog, toggleFog)
+                LayersButton(layers, times, recordDays, footprints?.days.orEmpty(), footprints?.trips.orEmpty())
             }
-            if (!wide && colors.isNotEmpty()) Legend(colors, trips = mapRoutes.isNotEmpty(), year, routesShown = settings.mapRoutes, onRoutes = { settings.changeMapRoutes(!settings.mapRoutes) }) { pickedYear = it }
+            if (!wide) TimePills(times, layers)
             AnimatedVisibility(
                 shownFog != null,
                 enter = expandVertically(AppTheme.motionScheme.fastSpatialSpec()) + fadeIn(AppTheme.motionScheme.fastEffectsSpec()),
@@ -518,7 +540,6 @@ private fun MapContent(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             CompassButton(turned, bearing, onClick = { north++ })
-            PhotosButton(settings.mapPhotos) { settings.changeMapPhotos(!settings.mapPhotos) }
             if (footprintsOn) FootprintsButton(footprints?.recording == true, onClick = openFootprints)
             if (device.hasLocation) LocateButton(locating, onClick = requestLocate)
         }
@@ -568,13 +589,13 @@ private fun MapContent(
         val place = id?.let { places[it] }
         if (id == null || place == null) {
             TripsSheet(
-                trips.filter { inYear(it.start, it.end) }, moments, colors, kilometres, container.mediaUrls, bottom = if (wide) Space.l else clearance,
+                trips.filter { inTime(it.id) }, moments, colors, kilometres, container.mediaUrls, bottom = if (wide) Space.l else clearance,
                 inCard = wide && floatingPanel,
                 // Resting, only its title line shows above the tabs; its rows come in as it's drawn up.
                 shown = { if (wide) 1f else (sheetState.raised * TRIPS_REVEAL).coerceAtMost(1f) },
                 onTrip = onTrip,
                 onNew = onNewTrip,
-                suggestions = suggestions.filter { inYear(it.start, it.end) },
+                suggestions = suggestions.filter { kept.routeDays?.let { days -> dayOf(it.start) <= days.endInclusive && dayOf(it.end) >= days.start } != false },
                 onSuggestion = onSuggestedTrip,
                 onDismiss = { settings.dismissTrip(it.key) },
                 // Added in one tap, private, its page there to change it.
@@ -999,38 +1020,24 @@ private fun SearchPill(onClick: () -> Unit, modifier: Modifier = Modifier, float
     }
 }
 
-/**
- * A round button floating over the map: a 40 circle on the floating surface with its hairline and
- * shadow, its touch target still 48; [on] fills it with the accent, as a switch turned on.
- */
+/** A round button floating over the map: a 40 circle on the floating surface with its hairline and shadow, its touch target still 48. */
 @Composable
 private fun MapButton(
     label: String,
     onClick: () -> Unit,
     tag: String,
     modifier: Modifier = Modifier,
-    on: Boolean? = null,
     tint: Color = tokens.tx,
     content: @Composable () -> Unit,
 ) {
-    // Filling and emptying as a switch turns, on the motion scheme's effects spring.
-    val spec = AppTheme.motionScheme.defaultEffectsSpec<Color>()
-    val container by animateColorAsState(if (on == true) tokens.accent else SurfaceLevel.Floating.fill(), spec, label = "map button")
-    val color by animateColorAsState(if (on == true) tokens.onAccent else tint, spec, label = "map button icon")
     Tooltip(label) {
         Box(modifier.minimumInteractiveComponentSize().size(48.dp), contentAlignment = Alignment.Center) {
-            val inner = Modifier.size(40.dp).semantics { contentDescription = label }.testTag(tag)
-            val box: @Composable () -> Unit = { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { content() } }
-            if (on != null) {
-                Surface(
-                    checked = on, onCheckedChange = { onClick() }, shape = Corners.full, color = container, contentColor = color,
-                    border = if (on) null else cardBorder(), shadowElevation = ShadowElevation, modifier = inner, content = box,
-                )
-            } else {
-                Surface(
-                    onClick = onClick, shape = Corners.full, color = container, contentColor = color,
-                    border = cardBorder(), shadowElevation = ShadowElevation, modifier = inner, content = box,
-                )
+            Surface(
+                onClick = onClick, shape = Corners.full, color = SurfaceLevel.Floating.fill(), contentColor = tint,
+                border = cardBorder(), shadowElevation = ShadowElevation,
+                modifier = Modifier.size(40.dp).semantics { contentDescription = label }.testTag(tag),
+            ) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { content() }
             }
         }
     }
@@ -1086,19 +1093,15 @@ private fun FootprintsButton(recording: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** Shows 地图's photos and puts them away: a round switch, filled with the accent while it's on, as the fog's. */
+/** Opens the layers menu, where every layer the map draws is switched on and off. */
 @Composable
-private fun PhotosButton(on: Boolean, onClick: () -> Unit) {
-    MapButton(stringResource(Res.string.map_photos), onClick, tag = "map_photos", on = on) {
-        Icon(if (on) AppIcons.PhotosFill else AppIcons.Photos, contentDescription = null)
-    }
-}
-
-/** Turns the fog of war on and off: a round switch, filled with the accent while it's on. */
-@Composable
-private fun FogButton(on: Boolean, onClick: () -> Unit) {
-    MapButton(stringResource(Res.string.action_fog), onClick, tag = "fog", on = on) {
-        Icon(AppIcons.Fog, contentDescription = null)
+private fun LayersButton(layers: List<MapLayer>, times: MapTimes, days: Set<LocalDate>, footprintDays: Set<LocalDate>, footprintTrips: List<Pair<String, String>>) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        MapButton(stringResource(Res.string.map_layers), { open = true }, tag = "map_layers") {
+            Icon(AppIcons.Layers, contentDescription = null)
+        }
+        MapLayersMenu(open, { open = false }, layers, times, days, footprintDays, footprintTrips)
     }
 }
 
@@ -1115,11 +1118,8 @@ private fun FogCount(fog: FogOfWar) {
     }
 }
 
-/** How tall the legend and the fog's count stand. */
+/** How tall the year's pill and the fog's count stand. */
 private val LEGEND_HEIGHT = 28.dp
-
-/** The opacity of an ordinary trip in the map and its legend. */
-private const val ROUTE_OPACITY = 0.4f
 
 /** A bar floating over the map, at the floating level with its hairline and shadow. */
 @Composable
@@ -1135,75 +1135,46 @@ private fun FloatingPill(content: @Composable () -> Unit) {
 }
 
 /**
- * What the colours and lines mean, as on the site: each year's colour, and the routes for trips.
- * A year tapped narrows the map to it, the other years stepping back, and tapped again, or the
- * close beside it, brings every year back. When it doesn't fit it scrolls sideways, its far end
- * fading out.
+ * The times chosen, a pill each under the search while any is: every layer's, and each layer's
+ * own with its icon; a pill's close brings every time back, or has its layer follow every layer's.
+ * They scroll sideways when they don't fit.
  */
 @Composable
-internal fun Legend(colors: Map<Int, Color>, trips: Boolean, picked: Int?, routesShown: Boolean, onRoutes: () -> Unit, onPick: (Int?) -> Unit) {
-    FloatingPill {
-        val scroll = rememberScrollState()
-        val surface = SurfaceLevel.Floating.fill()
-        Box {
-            Row(
-                Modifier.height(LEGEND_HEIGHT).horizontalScroll(scroll).padding(horizontal = Space.m),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                colors.forEach { (year, color) ->
-                    val chosen = year == picked
-                    val label = if (chosen) stringResource(Res.string.map_year_all) else stringResource(Res.string.map_year_pick, year)
-                    Row(
-                        Modifier.fillMaxHeight()
-                            .graphicsLayer { alpha = if (picked == null || chosen) 1f else 0.4f }
-                            .clickable(role = Role.Button, onClickLabel = label) { onPick(if (chosen) null else year) }
-                            .semantics { selected = chosen },
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Space.xs),
-                    ) {
-                        Box(Modifier.size(8.dp).background(color, CircleShape))
-                        Text(
-                            "$year",
-                            style = if (chosen) AppTheme.typography.caption.strong else AppTheme.typography.caption,
-                            color = if (chosen) tokens.tx else tokens.tx2,
-                            maxLines = 1,
-                            softWrap = false,
-                        )
-                    }
-                }
-                if (picked != null) {
-                    val clear = stringResource(Res.string.map_year_all)
-                    Box(
-                        Modifier.fillMaxHeight().clickable(role = Role.Button) { onPick(null) }.semantics { contentDescription = clear },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(AppIcons.Close, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(14.dp))
-                    }
-                }
-                if (trips) {
-                    VerticalDivider(Modifier.height(14.dp), color = dividerColor())
-                    // The routes' key is their switch: off, only a lifted route is drawn.
-                    val label = stringResource(if (routesShown) Res.string.map_routes_hide else Res.string.map_routes_show)
-                    Row(
-                        Modifier.fillMaxHeight()
-                            .graphicsLayer { alpha = if (routesShown) 1f else 0.4f }
-                            .clickable(role = Role.Switch, onClickLabel = label, onClick = onRoutes)
-                            .semantics { selected = routesShown }
-                            .testTag("legend_routes"),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Space.xs),
-                    ) {
-                        Box(Modifier.width(14.dp).height(3.dp).background(tokens.tx.copy(alpha = ROUTE_OPACITY), CircleShape))
-                        Text(stringResource(Res.string.legend_trips), style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, softWrap = false)
-                    }
-                }
+internal fun TimePills(times: MapTimes, layers: List<MapLayer>) {
+    val shared = times.shared
+    // A layer's own while it is not as it starts: the footprints' once it is other than today.
+    val own = layers.mapNotNull { layer -> layer.timed.takeUnless { times.isFirst(it) }?.let { timed -> Triple(layer, timed, times.own(timed) ?: times.shared) } }
+    val motion = AppTheme.motionScheme
+    AnimatedVisibility(
+        shared != MapTime.All || own.isNotEmpty(),
+        enter = expandVertically(motion.fastSpatialSpec()) + fadeIn(motion.fastEffectsSpec()),
+        exit = shrinkVertically(motion.fastSpatialSpec()) + fadeOut(motion.fastEffectsSpec()),
+    ) {
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+            if (shared != MapTime.All) TimePill(null, timeWords(shared), stringResource(Res.string.map_time_all), "time_pill_all") { times.setShared(MapTime.All) }
+            own.forEach { (layer, timed, time) ->
+                TimePill(layer.icon, timeWords(time), stringResource(Res.string.map_time_clear), "time_pill_${timed.key}") { times.reset(timed) }
             }
-            if (scroll.canScrollForward) {
-                Box(
-                    Modifier.align(Alignment.CenterEnd).width(28.dp).height(LEGEND_HEIGHT)
-                        .background(Brush.horizontalGradient(listOf(surface.copy(alpha = 0f), surface))),
-                )
+        }
+    }
+}
+
+@Composable
+private fun TimePill(icon: androidx.compose.ui.graphics.vector.ImageVector?, words: String, clear: String, tag: String, onClear: () -> Unit) {
+    FloatingPill {
+        Row(
+            Modifier.height(LEGEND_HEIGHT).padding(start = Space.m).testTag(tag),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            if (icon != null) Icon(icon, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(14.dp))
+            Text(words, style = AppTheme.typography.caption.strong, color = tokens.tx, maxLines = 1, softWrap = false)
+            Box(
+                Modifier.fillMaxHeight().clickable(role = Role.Button, onClick = onClear)
+                    .semantics { contentDescription = clear }.padding(start = 2.dp, end = Space.m - 2.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(AppIcons.Close, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(14.dp))
             }
         }
     }

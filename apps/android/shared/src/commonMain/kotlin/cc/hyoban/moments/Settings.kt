@@ -117,6 +117,50 @@ class Settings(private val prefs: Prefs, secrets: File) {
         prefs.edit { putBoolean("map_routes", on) }
     }
 
+    /** Whether the maps draw the places' pins; off, only an open place's stays. */
+    var mapPlaces: Boolean by mutableStateOf(prefs.getBoolean("map_places", true))
+        private set
+
+    fun changeMapPlaces(on: Boolean) {
+        mapPlaces = on
+        prefs.edit { putBoolean("map_places", on) }
+    }
+
+    /** Whether 地图 counts the check-ins' places among its places, while 签到 is on. */
+    var mapCheckins: Boolean by mutableStateOf(prefs.getBoolean("map_checkins", true))
+        private set
+
+    fun changeMapCheckins(on: Boolean) {
+        mapCheckins = on
+        prefs.edit { putBoolean("map_checkins", on) }
+    }
+
+    /** Whether 地图 draws today's footprints, while 足迹 is on; off, only those its panel is looking at. */
+    var mapFootprints: Boolean by mutableStateOf(prefs.getBoolean("map_footprints", true))
+        private set
+
+    fun changeMapFootprints(on: Boolean) {
+        mapFootprints = on
+        prefs.edit { putBoolean("map_footprints", on) }
+    }
+
+    /**
+     * The maps' times (09 地图的时间), each as `MapTime` encodes it, by layer, `all` for every
+     * layer's; one not kept is every time, or for a layer, following `all`.
+     */
+    private var mapTimes: Map<String, String> by mutableStateOf(
+        prefs.getString("map_times", null).orEmpty().split(';').mapNotNull { pair ->
+            pair.split('=', limit = 2).takeIf { it.size == 2 }?.let { it[0] to it[1] }
+        }.toMap(),
+    )
+
+    fun mapTime(key: String): String? = mapTimes[key]
+
+    fun changeMapTime(key: String, value: String?) {
+        mapTimes = if (value == null) mapTimes - key else mapTimes + (key to value)
+        prefs.edit { putString("map_times", mapTimes.entries.joinToString(";") { "${it.key}=${it.value}" }) }
+    }
+
     /** Whether 地图 shows the photos of 相册 that know where they were taken (09 地图的照片); off at first. */
     var mapPhotos: Boolean by mutableStateOf(prefs.getBoolean("map_photos", false))
         private set

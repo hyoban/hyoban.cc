@@ -210,6 +210,16 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
     }
 
     val actions: @Composable RowScope.() -> Unit = {
+        // The map's layers, before the way back to the grid.
+        if (onMap) Box {
+            val settings = cc.hyoban.moments.ui.LocalSettings.current
+            val mapDays = remember(container) { container.shownMoments.value.mapTo(HashSet()) { cc.hyoban.moments.ui.map.dayOf(it.occurredAt) } }
+            var layersOpen by remember { mutableStateOf(false) }
+            IconButton(onClick = { layersOpen = true }, modifier = Modifier.testTag("map_layers")) {
+                Icon(AppIcons.Layers, contentDescription = stringResource(Res.string.map_layers))
+            }
+            cc.hyoban.moments.ui.map.MapLayersMenu(layersOpen, { layersOpen = false }, cc.hyoban.moments.ui.map.pickerLayers(settings), remember(settings) { cc.hyoban.moments.ui.map.MapTimes(settings) }, mapDays)
+        }
         if (album == null) IconButton(onClick = { onMap = !onMap }, modifier = Modifier.testTag(if (onMap) "picker_grid" else "picker_show_map")) {
             Icon(if (onMap) AppIcons.Photos else AppIcons.Map, contentDescription = stringResource(if (onMap) Res.string.picker_show_grid else Res.string.picker_show_map))
         }
