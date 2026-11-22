@@ -193,9 +193,10 @@ fun ViewerFrame(
         val panelTravel = with(density) { (if (sideways) panelWidth else panelHeight).toPx() }
         val panel = rememberSheetDrag(onSettled = { to -> if (to > 0f) showInfo = false })
         LaunchedEffect(showInfo, panelTravel) {
-            panel.setAnchors(listOf(0f, panelTravel))
             val to = if (showInfo) 0f else panelTravel
-            if (panel.position.isNaN()) panel.snapTo(to) else panel.animateTo(to)
+            val first = panel.position.isNaN()
+            panel.setAnchors(listOf(0f, panelTravel), start = to)
+            if (!first) panel.animateTo(to)
         }
         val opened = panel.position.let { if (it.isNaN() || panelTravel <= 0f) 0f else (1f - it / panelTravel).coerceIn(0f, 1f) }
         val backdrop = Color.Black

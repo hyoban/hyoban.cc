@@ -146,8 +146,9 @@ fun ModalBottomSheet(
                     )
                     .onSizeChanged {
                         travel = (if (side) it.width else it.height).toFloat()
-                        drag.setAnchors(listOf(0f, travel))
-                        if (drag.position.isNaN()) scope.launch { drag.snapTo(travel); drag.animateTo(0f) }
+                        val first = drag.position.isNaN()
+                        drag.setAnchors(listOf(0f, travel), start = travel)
+                        if (first) scope.launch { drag.animateTo(0f) }
                     }
                     .offset {
                         val shift = (drag.position.takeUnless { it.isNaN() } ?: travel).coerceIn(0f, travel.coerceAtLeast(0f)).roundToInt()
@@ -185,7 +186,7 @@ class SheetState internal constructor(initialValue: SheetValue, val skipHiddenSt
 
     internal fun place(values: Map<SheetValue, Float>) {
         anchors = values
-        drag.setAnchors(values.values)
+        drag.setAnchors(values.values, start = values[currentValue] ?: values.values.max())
     }
 
     /** The value resting at [position], as it is let go. */
