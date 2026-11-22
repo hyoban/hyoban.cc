@@ -216,6 +216,12 @@ class Nas(
                         if (!response.isSuccessful) throw HttpException(response.code, "$path answered ${response.code}")
                         parse(response.body?.string())
                     }
+                } catch (e: HttpException) {
+                    // Reached, but refused: a session gone is signed in again; anything else is said as it is.
+                    session = null
+                    if (e.code != 401 && e.code != 403) throw NasException(NasFailure.OTHER, e.message ?: "$path refused", e)
+                    if (attempt == 1) throw NasException(NasFailure.SIGN_IN, "$path refused the session", e)
+                    return@repeat
                 } catch (e: IOException) {
                     // The address may have changed (left home): look again next time.
                     session = null

@@ -43,6 +43,7 @@ kotlin {
             api(libs.telephoto.zoomable)
             implementation(libs.gson)
             implementation(libs.reorderable)
+            implementation(libs.java.diff.utils)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

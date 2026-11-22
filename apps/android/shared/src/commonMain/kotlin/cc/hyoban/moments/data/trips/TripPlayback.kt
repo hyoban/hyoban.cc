@@ -434,13 +434,7 @@ private fun distance(a: Pair<Double, Double>, b: Pair<Double, Double>): Double {
 
 /** Kilometres between two points: near enough flat for a road's short stretches, else along the great circle. */
 private fun kilometres(a: Pair<Double, Double>, b: Pair<Double, Double>, great: Boolean = false): Double {
-    if (great) {
-        val radians = PI / 180
-        val dLat = (b.second - a.second) * radians
-        val dLon = (b.first - a.first) * radians
-        val h = sin(dLat / 2) * sin(dLat / 2) + cos(a.second * radians) * cos(b.second * radians) * sin(dLon / 2) * sin(dLon / 2)
-        return 2 * 6371.0 * asin(sqrt(h))
-    }
+    if (great) return cc.hyoban.moments.data.local.greatCircleMetres(a.second, a.first, b.second, b.first) / 1000
     val latitude = (a.second + b.second) / 2 * PI / 180
     return hypot((b.first - a.first) * cos(latitude), b.second - a.second) * 111.32
 }

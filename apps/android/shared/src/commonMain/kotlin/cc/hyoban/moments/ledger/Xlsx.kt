@@ -25,13 +25,19 @@ object Xlsx {
                 }
             }
         }
-        val sheet = sheets["xl/worksheets/sheet1.xml"] ?: sheets.values.firstOrNull() ?: error("No sheet in the workbook")
+        // The first by its number, sheet2 before sheet10, when there is no sheet1.
+        val sheet = sheets["xl/worksheets/sheet1.xml"]
+            ?: sheets.entries.minByOrNull { (name, _) -> name.substringAfterLast('/').filter(Char::isDigit).toIntOrNull() ?: Int.MAX_VALUE }?.value
+            ?: error("No sheet in the workbook")
         val shared = strings?.let(::sharedStrings).orEmpty()
         return rows(sheet, shared)
     }
 
     private fun parse(bytes: ByteArray, handler: DefaultHandler) {
         val factory = SAXParserFactory.newInstance().apply { isNamespaceAware = false }
+        // A workbook from elsewhere reaches nothing outside itself; a parser that can't say so has no such entities to begin with.
+        for (feature in listOf("http://xml.org/sax/features/external-general-entities", "http://xml.org/sax/features/external-parameter-entities"))
+            runCatching { factory.setFeature(feature, false) }
         factory.newSAXParser().parse(InputSource(bytes.inputStream()), handler)
     }
 

@@ -436,10 +436,5 @@ private fun TripFacets(
 }
 
 /** The great-circle distance between two points, in kilometres. */
-fun haversineKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
-    val dLat = Math.toRadians(lat2 - lat1)
-    val dLng = Math.toRadians(lng2 - lng1)
-    val a = kotlin.math.sin(dLat / 2).let { it * it } +
-        kotlin.math.cos(Math.toRadians(lat1)) * kotlin.math.cos(Math.toRadians(lat2)) * kotlin.math.sin(dLng / 2).let { it * it }
-    return 2 * 6371 * kotlin.math.asin(kotlin.math.sqrt(a))
-}
+fun haversineKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double =
+    cc.hyoban.moments.data.local.greatCircleMetres(lat1, lng1, lat2, lng2) / 1000

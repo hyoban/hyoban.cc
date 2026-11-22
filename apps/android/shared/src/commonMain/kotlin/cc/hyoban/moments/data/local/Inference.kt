@@ -21,13 +21,7 @@ import kotlin.math.sqrt
 data class Fix(val latitude: Double, val longitude: Double)
 
 /** How far apart two points are, in metres, along the earth's surface. */
-fun distance(a: Fix, b: Fix): Double {
-    val radius = 6_371_000.0
-    val dLat = Math.toRadians(b.latitude - a.latitude)
-    val dLon = Math.toRadians(b.longitude - a.longitude)
-    val h = sin(dLat / 2).pow(2) + cos(Math.toRadians(a.latitude)) * cos(Math.toRadians(b.latitude)) * sin(dLon / 2).pow(2)
-    return 2 * radius * asin(sqrt(h))
-}
+fun distance(a: Fix, b: Fix): Double = greatCircleMetres(a.latitude, a.longitude, b.latitude, b.longitude)
 
 fun Place.fix() = Fix(latitude, longitude)
 

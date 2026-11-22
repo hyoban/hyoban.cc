@@ -77,7 +77,14 @@ class WebDav(private val client: OkHttpClient, directory: String, user: String, 
          * segment decoded, with its length, leaving out [directory] itself and the directories in it.
          */
         fun files(xml: InputStream, directory: String): List<DavFile> {
-            val factory = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }
+            val factory = DocumentBuilderFactory.newInstance().apply {
+                isNamespaceAware = true
+                isExpandEntityReferences = false
+                // What the server answers reaches nothing outside itself; a parser that can't say so has no such entities to begin with.
+                for (feature in listOf("http://xml.org/sax/features/external-general-entities", "http://xml.org/sax/features/external-parameter-entities"))
+                    runCatching { setFeature(feature, false) }
+                runCatching { setFeature("http://apache.org/xml/features/disallow-doctype-decl", true) }
+            }
             val document = factory.newDocumentBuilder().parse(xml)
             val responses = document.getElementsByTagNameNS("DAV:", "response")
             val own = directory.trimEnd('/')

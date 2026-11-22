@@ -33,12 +33,8 @@ data class FixExtras(
 const val TRACK_GAP_MS = 45_000L
 const val MAX_TRACK_ACCURACY = 50.0
 
-fun distanceMetres(a: TrackPoint, b: TrackPoint): Double {
-    val lat = Math.toRadians(b.latitude - a.latitude)
-    val lon = Math.toRadians(b.longitude - a.longitude)
-    val h = sin(lat / 2).pow(2) + cos(Math.toRadians(a.latitude)) * cos(Math.toRadians(b.latitude)) * sin(lon / 2).pow(2)
-    return 6_371_000 * 2 * asin(sqrt(h.coerceIn(0.0, 1.0)))
-}
+fun distanceMetres(a: TrackPoint, b: TrackPoint): Double =
+    cc.hyoban.moments.data.local.greatCircleMetres(a.latitude, a.longitude, b.latitude, b.longitude)
 
 enum class FixDecision {
     ACCEPT, NOT_RECORDING, INVALID_COORDINATES, INACCURATE, STALE, FUTURE,

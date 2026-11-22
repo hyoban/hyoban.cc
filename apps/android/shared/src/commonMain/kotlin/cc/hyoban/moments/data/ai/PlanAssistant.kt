@@ -411,13 +411,25 @@ class PlanAssistant(
                 whole = messageOf(source.readUtf8())
                 return@execute
             }
+            // An event is its data lines up to a blank one, joined by newlines (the SSE format's own rule);
+            // comments and its other fields say nothing here.
+            val data = StringBuilder()
+            var lines = 0
             while (true) {
                 currentCoroutineContext().ensureActive()
-                val line = source.readUtf8Line() ?: break
+                val line = source.readUtf8Line()
+                if (line.isNullOrEmpty()) {
+                    val event = data.toString().trim()
+                    data.setLength(0)
+                    lines = 0
+                    if (event == "[DONE]") break
+                    if (event.isNotEmpty()) reader.take(event).forEach { progress(it) }
+                    if (line == null) break
+                    continue
+                }
                 if (!line.startsWith("data:")) continue
-                val data = line.removePrefix("data:").trim()
-                if (data == "[DONE]") break
-                reader.take(data).forEach { progress(it) }
+                if (lines++ > 0) data.append('\n')
+                data.append(line.removePrefix("data:").removePrefix(" "))
             }
         }
         return whole ?: reader.message()

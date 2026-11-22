@@ -192,9 +192,5 @@ object TripDiscovery {
 }
 
 /** The kilometres between two points on the earth. */
-fun distanceKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
-    val rad = Math.PI / 180
-    val a = sin((lat2 - lat1) * rad / 2).let { it * it } +
-        cos(lat1 * rad) * cos(lat2 * rad) * sin((lng2 - lng1) * rad / 2).let { it * it }
-    return 12742 * asin(sqrt(a))
-}
+fun distanceKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double =
+    cc.hyoban.moments.data.local.greatCircleMetres(lat1, lng1, lat2, lng2) / 1000

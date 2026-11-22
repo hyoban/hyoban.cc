@@ -220,7 +220,13 @@ object Routers {
             if ((answer?.get("message") as? JsonPrimitive)?.content?.contains("not found") == true) return null
             throw IOException("OpenRailRouting answered $code")
         }
-        return simplify(points.map { point -> point.jsonArray.let { (it[0] as JsonPrimitive).doubleOrNull!! to (it[1] as JsonPrimitive).doubleOrNull!! } })
+        // A point that isn't two numbers is left out rather than failing the whole way.
+        return simplify(points.mapNotNull { point ->
+            val pair = point as? JsonArray ?: return@mapNotNull null
+            val lng = (pair.getOrNull(0) as? JsonPrimitive)?.doubleOrNull ?: return@mapNotNull null
+            val lat = (pair.getOrNull(1) as? JsonPrimitive)?.doubleOrNull ?: return@mapNotNull null
+            lng to lat
+        })
     }
 
     /** How a way between two points is gone: by road, on foot, by bike, or by train. */
@@ -285,11 +291,13 @@ object Routers {
         var index = 0
         var latitude = 0L
         var longitude = 0L
-        fun next(): Long {
+        // Null where the text ends inside a number: a line cut short keeps the points before it.
+        fun next(): Long? {
             var result = 0L
             var shift = 0
             var byte: Int
             do {
+                if (index >= text.length || shift > 60) return null
                 byte = text[index++].code - 63
                 result = result or ((byte and 0x1f).toLong() shl shift)
                 shift += 5
@@ -297,8 +305,8 @@ object Routers {
             return if (result and 1L != 0L) (result shr 1).inv() else result shr 1
         }
         while (index < text.length) {
-            latitude += next()
-            longitude += next()
+            latitude += next() ?: break
+            longitude += next() ?: break
             line += longitude / 1e6 to latitude / 1e6
         }
         return line

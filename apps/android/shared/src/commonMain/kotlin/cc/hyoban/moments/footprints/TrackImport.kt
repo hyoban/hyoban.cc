@@ -89,7 +89,7 @@ fun importable(point: TrackPoint, now: Long): Boolean {
 fun readFootprintCsv(input: InputStream): List<TrackPoint> {
     val lines = input.bufferedReader().lineSequence().iterator()
     if (!lines.hasNext()) return emptyList()
-    val header = lines.next().removePrefix("﻿").split(',').map { it.trim() }
+    val header = csvCells(lines.next().removePrefix("﻿")).map { it.trim() }
     fun column(name: String) = header.indexOf(name).takeIf { it >= 0 }
     val time = column("dataTime") ?: return emptyList()
     val latitude = column("latitude") ?: return emptyList()
@@ -100,7 +100,7 @@ fun readFootprintCsv(input: InputStream): List<TrackPoint> {
     val segment = UUID.randomUUID().toString()
     val points = mutableListOf<TrackPoint>()
     for (line in lines) {
-        val cells = line.split(',')
+        val cells = csvCells(line)
         fun number(index: Int?) = index?.let { cells.getOrNull(it)?.trim()?.toDoubleOrNull() }?.takeIf { it.isFinite() }
         val seconds = number(time) ?: continue
         points += TrackPoint(
@@ -110,4 +110,24 @@ fun readFootprintCsv(input: InputStream): List<TrackPoint> {
         )
     }
     return points.sortedBy { it.time }
+}
+
+/** A CSV line's cells: a quoted cell keeps its commas, and a doubled quote in it is one. */
+internal fun csvCells(line: String): List<String> {
+    val cells = mutableListOf<String>()
+    val cell = StringBuilder()
+    var quoted = false
+    var at = 0
+    while (at < line.length) {
+        val c = line[at]
+        when {
+            quoted && c == '"' && line.getOrNull(at + 1) == '"' -> { cell.append('"'); at++ }
+            c == '"' -> quoted = !quoted
+            !quoted && c == ',' -> { cells += cell.toString(); cell.setLength(0) }
+            else -> cell.append(c)
+        }
+        at++
+    }
+    cells += cell.toString()
+    return cells
 }

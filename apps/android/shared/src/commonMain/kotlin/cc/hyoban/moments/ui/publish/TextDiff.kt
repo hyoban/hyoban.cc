@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.publish
 
+import com.github.difflib.DiffUtils
+
 /** A stretch of a text diff: kept as it was, taken out, or put in. */
 data class DiffPart(val kind: Kind, val text: String) {
     enum class Kind { SAME, REMOVED, ADDED }
@@ -7,45 +9,36 @@ data class DiffPart(val kind: Kind, val text: String) {
 
 /**
  * How [before] became [after], as the stretches kept, taken out and put in, in reading
- * order. Compared token by token: each Chinese character on its own, a run of letters or
- * digits as a word, a run of spaces, any other character alone. Texts too long to compare
- * so come back as all of one taken out and all of the other put in.
+ * order. Compared token by token (java-diff-utils' Myers diff): each Chinese character on its
+ * own, a run of letters or digits as a word, a run of spaces, any other character alone. Texts
+ * too long to compare so come back as all of one taken out and all of the other put in.
  */
 fun diffText(before: String, after: String): List<DiffPart> {
     if (before == after) return if (before.isEmpty()) emptyList() else listOf(DiffPart(DiffPart.Kind.SAME, before))
     val a = tokens(before)
     val b = tokens(after)
-    if (a.size.toLong() * b.size > MAX_CELLS) {
+    if (a.size + b.size > MAX_TOKENS) {
         return listOfNotNull(
             before.takeIf { it.isNotEmpty() }?.let { DiffPart(DiffPart.Kind.REMOVED, it) },
             after.takeIf { it.isNotEmpty() }?.let { DiffPart(DiffPart.Kind.ADDED, it) },
         )
     }
 
-    // The longest common subsequence from each pair of positions to the ends.
-    val lengths = Array(a.size + 1) { IntArray(b.size + 1) }
-    for (i in a.indices.reversed()) {
-        for (j in b.indices.reversed()) {
-            lengths[i][j] = if (a[i] == b[j]) lengths[i + 1][j + 1] + 1 else maxOf(lengths[i + 1][j], lengths[i][j + 1])
-        }
-    }
-
     val parts = mutableListOf<DiffPart>()
-    fun add(kind: DiffPart.Kind, token: String) {
+    fun add(kind: DiffPart.Kind, tokens: List<String>) {
+        if (tokens.isEmpty()) return
+        val text = tokens.joinToString("")
         val last = parts.lastOrNull()
-        if (last?.kind == kind) parts[parts.lastIndex] = last.copy(text = last.text + token) else parts += DiffPart(kind, token)
+        if (last?.kind == kind) parts[parts.lastIndex] = last.copy(text = last.text + text) else parts += DiffPart(kind, text)
     }
-    var i = 0
-    var j = 0
-    while (i < a.size && j < b.size) {
-        when {
-            a[i] == b[j] -> { add(DiffPart.Kind.SAME, a[i]); i++; j++ }
-            lengths[i + 1][j] >= lengths[i][j + 1] -> add(DiffPart.Kind.REMOVED, a[i++])
-            else -> add(DiffPart.Kind.ADDED, b[j++])
-        }
+    var kept = 0
+    for (delta in DiffUtils.diff(a, b).deltas.sortedBy { it.source.position }) {
+        add(DiffPart.Kind.SAME, a.subList(kept, delta.source.position))
+        add(DiffPart.Kind.REMOVED, delta.source.lines)
+        add(DiffPart.Kind.ADDED, delta.target.lines)
+        kept = delta.source.position + delta.source.size()
     }
-    while (i < a.size) add(DiffPart.Kind.REMOVED, a[i++])
-    while (j < b.size) add(DiffPart.Kind.ADDED, b[j++])
+    add(DiffPart.Kind.SAME, a.subList(kept, a.size))
     return parts
 }
 
@@ -74,4 +67,4 @@ private fun tokens(text: String): List<String> {
     return tokens
 }
 
-private const val MAX_CELLS = 4_000_000L
+private const val MAX_TOKENS = 100_000
