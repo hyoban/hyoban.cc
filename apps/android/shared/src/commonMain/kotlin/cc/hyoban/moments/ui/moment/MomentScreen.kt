@@ -400,7 +400,7 @@ private fun MomentDetails(
         ) {
             val planned = moment.planned == true
             Text(
-                listOfNotNull(formatDay(moment.occurredAt), formatTime(moment.occurredAt), stringResource(Res.string.trip_planned).takeIf { planned }).joinToString(" "),
+                listOfNotNull(formatDay(moment.occurredAt), cc.hyoban.moments.ui.feed.momentTime(moment), stringResource(Res.string.trip_planned).takeIf { planned }).joinToString(" "),
                 style = AppTheme.typography.body,
                 color = tokens.tx2,
             )

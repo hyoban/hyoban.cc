@@ -322,6 +322,14 @@ fun NewMomentScreen(
         }
     }
     var chosenTime by remember { mutableStateOf(originalTime ?: planTime) }
+    // When it ended, for one that lasted: as saved or chosen once [endChosen], none among them; else
+    // the end worked out with the time.
+    val originalEnd = remember(original) { original?.end?.let { runCatching { OffsetDateTime.parse(it) }.getOrNull() } }
+    var chosenEnd by remember { mutableStateOf(originalEnd) }
+    var endChosen by remember { mutableStateOf(original != null || planTime != null) }
+    // Where an end kept through a start chosen by hand came from, said on as it was.
+    var endKeptFrom by remember { mutableStateOf<StringResource?>(null) }
+    var editingEnd by remember { mutableStateOf(false) }
     /** Planned: written into a plan rather than lived, set by hand, and from the start when written from a plan. */
     var planned by rememberSaveable { mutableStateOf(original?.planned == true || planTrip != null) }
     /** Locked: a planned one, or a check-in still to come, settled, so 和 AI 规划 leaves it as it is. */
@@ -331,6 +339,7 @@ fun NewMomentScreen(
     var choosingWay by remember { mutableStateOf(false) }
     val stayFix = remember(stay) { stay?.let { Fix(it.latitude, it.longitude) } }
     val stayTime = remember(stay) { stay?.let { OffsetDateTime.ofInstant(Instant.ofEpochMilli(it.start), java.time.ZoneId.systemDefault()) } }
+    val stayEnd = remember(stay) { stay?.let { OffsetDateTime.ofInstant(Instant.ofEpochMilli(it.end), java.time.ZoneId.systemDefault()) } }
     // At a stay, the phone's own place there, as the footprints' list names it.
     val stayPlace = remember(stay) {
         stayFix?.let { at ->
@@ -404,13 +413,22 @@ fun NewMomentScreen(
         stay = stayTime,
         now = openedAt,
         editing = original != null,
+        stayEnd = stayEnd,
     )
-    val time = chosenTime ?: inferred?.first ?: originalTime ?: openedAt
+    val time = chosenTime ?: inferred?.start ?: originalTime ?: openedAt
     val timeSource = when {
         original != null && chosenTime == originalTime -> Res.string.source_saved
         chosenTime != null -> Res.string.source_chosen
-        inferred != null -> inferred.second.label
+        inferred != null -> inferred.source.label
         else -> Res.string.source_saved
+    }
+    // An end is only ever after the start.
+    val end = (if (endChosen) chosenEnd else inferred?.end)?.takeIf { it.isAfter(time) && !sameMinute(it, time) }
+    val endSource = when {
+        original != null && endChosen && chosenEnd == originalEnd -> Res.string.source_saved
+        endChosen -> endKeptFrom ?: Res.string.source_chosen
+        inferred?.end != null -> inferred.source.label
+        else -> null
     }
 
     // Where: just where the first photo that says was taken, as a new place named after what
@@ -500,7 +518,7 @@ fun NewMomentScreen(
     val momentChanged = original == null ||
         text != original.text || photos != originalMedia.keys.toList() || utility.intersect(photos.toSet()) != originalUtility ||
         masks.filter { (ref, laid) -> ref in photos && laid.isNotEmpty() } != originalMasks.filterKeys { it in photos } ||
-        chosenTime != originalTime || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || cost != originalCost ||
+        chosenTime != originalTime || end != originalEnd || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || cost != originalCost ||
         private != original.hidden || planned != (original.planned == true) || keptLocked != (original.locked == true) || reachedBy.takeIf { planned } != original.reachedBy
     // What leaving would lose: anything written, or, for a Moment being changed, any change.
     val changed = if (original == null) (withMoment && (written || cost != null)) || billWritten else momentChanged || newKind != null
@@ -529,7 +547,7 @@ fun NewMomentScreen(
                     // No new photo goes in before its faces and plates have been looked for.
                     if (withMoment) coverFound(unscanned)
                     val moment = if (withMoment) {
-                        val (built, newPlace) = buildMoment(container, text, photos, utility, stills, masks, infos, time, place, cost, private, original, originalMedia, stayUid, replaced)
+                        val (built, newPlace) = buildMoment(container, text, photos, utility, stills, masks, infos, time, end, place, cost, private, original, originalMedia, stayUid, replaced)
                         // Planned or lived, as the bar's menu says.
                         val moment = built.copy(planned = true.takeIf { planned }, locked = true.takeIf { keptLocked }, reachedBy = reachedBy.takeIf { planned })
                         // Kept as what it now is, a Moment or a check-in, named after its place when that moved.
@@ -541,7 +559,7 @@ fun NewMomentScreen(
                             }
                             val moved = (place as? PlaceChoice.Known)?.id != (originalPlace as? PlaceChoice.Known)?.id || place is PlaceChoice.New
                             val entry = editedEntry(moment, venue, moved)
-                            container.saveEntry(if (stayCheckin == null) entry else stayEntry(entry, stayCheckin, until = time == stayTime), newPlace)
+                            container.saveEntry(if (stayCheckin == null) entry else stayEntry(entry, stayCheckin), newPlace)
                             // The bills paid while there, with no place, may take this one.
                             if (stayCheckin != null) moment.places.firstOrNull()?.let { container.offerPlaceToBills(it, stayCheckin.start, stayCheckin.end) }
                         }
@@ -674,6 +692,22 @@ fun NewMomentScreen(
                         trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
                         modifier = Modifier.testTag("moment_time"),
                     ) { Text(listOfNotNull(formatDay(stamp(time)), formatTime(stamp(time))).joinToString(" ")) }
+                    // Its end, for one that lasted: the time alone on the start's day.
+                    SegmentedListItem(
+                        onClick = { editingEnd = true },
+                        shapes = shapes,
+                        colors = segmentColors(),
+                        supportingContent = { Text(listOfNotNull(stringResource(Res.string.time_end), endSource?.let { stringResource(it) }).joinToString(" ")) },
+                        leadingContent = { Icon(AppIcons.Clock, contentDescription = null) },
+                        trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
+                        modifier = Modifier.testTag("moment_end"),
+                    ) {
+                        if (end == null) {
+                            Text(stringResource(Res.string.time_end_none), color = tokens.tx2)
+                        } else {
+                            Text(listOfNotNull(formatDay(stamp(end)).takeUnless { end.toLocalDate() == time.toLocalDate() }, formatTime(stamp(end))).joinToString(" "))
+                        }
+                    }
                     SegmentedListItem(
                         onClick = { editingPlace = true },
                         shapes = shapes,
@@ -842,16 +876,44 @@ fun NewMomentScreen(
         }
 
         if (editingTime) {
-            // Back to the time worked out, once another is chosen or saved.
-            val reset = inferred?.takeIf { (at, _) -> !sameMinute(at, time) }?.let { (_, source) ->
-                stringResource(source.reset) to {
+            // Back to the time worked out, its end with it, once another is chosen or saved.
+            val reset = inferred?.takeIf { !sameMinute(it.start, time) || endChosen && end != it.end }?.let { worked ->
+                stringResource(worked.source.reset) to {
                     chosenTime = null
+                    endChosen = false
+                    endKeptFrom = null
                     editingTime = false
                 }
             }
             TimeDialog(time, onDismiss = { editingTime = false }, reset = reset) {
+                // The end it had stays, while it is still after the start.
+                if (!endChosen) {
+                    endKeptFrom = endSource
+                    chosenEnd = end
+                    endChosen = true
+                }
                 chosenTime = it
                 editingTime = false
+            }
+        }
+        if (editingEnd) {
+            // None, for a Moment of a moment.
+            val clear = if (end == null) null else stringResource(Res.string.time_end_clear) to {
+                chosenEnd = null
+                endChosen = true
+                endKeptFrom = null
+                editingEnd = false
+            }
+            val endTooEarly = stringResource(Res.string.error_end_before_start)
+            TimeDialog(end ?: time, onDismiss = { editingEnd = false }, reset = clear) {
+                if (!it.isAfter(time) || sameMinute(it, time)) {
+                    showMessage(endTooEarly)
+                } else {
+                    chosenEnd = it
+                    endChosen = true
+                    endKeptFrom = null
+                    editingEnd = false
+                }
             }
         }
         // Over the whole page, back closing it before it leaves the page.
@@ -1626,10 +1688,14 @@ enum class TimeSource(val label: StringResource, val reset: StringResource) {
     NOW(Res.string.source_now, Res.string.time_use_now),
 }
 
+/** A time the editor worked out: when it starts, when it ends if it lasted, and where that came from. */
+data class InferredTime(val start: OffsetDateTime, val end: OffsetDateTime?, val source: TimeSource)
+
 /**
- * The time the editor works out for a Moment by itself: the earliest photo's, else, when none
- * says, the earliest a photo's file was made ([saved]), else a new one's [stay] or [now]. One being
- * [editing] has only its photos' to go by, and none when they say nothing.
+ * The time the editor works out for a Moment by itself: from the earliest photo's to the latest's,
+ * else, when none says, the times the photos' files were made ([saved]), else a new one's [stay]
+ * (to [stayEnd]) or [now]. One being [editing] has only its photos' to go by, and none when they
+ * say nothing. Photos all taken in one minute give no end.
  */
 fun inferredTime(
     taken: List<OffsetDateTime>,
@@ -1637,9 +1703,16 @@ fun inferredTime(
     stay: OffsetDateTime?,
     now: OffsetDateTime,
     editing: Boolean,
-): Pair<OffsetDateTime, TimeSource>? =
-    taken.ifEmpty { saved }.minByOrNull { it.toInstant() }?.let { it to TimeSource.PHOTO }
-        ?: if (editing) null else stay?.let { it to TimeSource.STAY } ?: (now to TimeSource.NOW)
+    stayEnd: OffsetDateTime? = null,
+): InferredTime? {
+    val photos = taken.ifEmpty { saved }
+    val first = photos.minByOrNull { it.toInstant() }
+    val last = photos.maxByOrNull { it.toInstant() }
+    if (first != null) return InferredTime(first, last?.takeUnless { sameMinute(it, first) }, TimeSource.PHOTO)
+    if (editing) return null
+    return stay?.let { InferredTime(it, stayEnd?.takeIf { end -> end.isAfter(it) && !sameMinute(end, it) }, TimeSource.STAY) }
+        ?: InferredTime(now, null, TimeSource.NOW)
+}
 
 /** Where the editor's own place for a Moment came from: its helper row's words, and its way back to it. */
 enum class PlaceOrigin(val label: StringResource, val reset: StringResource) {
@@ -1678,6 +1751,7 @@ private suspend fun buildMoment(
     masks: Map<PhotoRef, List<Mask>>,
     infos: Map<PhotoRef, PhotoInfo>,
     time: OffsetDateTime,
+    end: OffsetDateTime?,
     place: PlaceChoice,
     cost: MomentCost?,
     private: Boolean,
@@ -1778,10 +1852,11 @@ private suspend fun buildMoment(
         is PlaceChoice.New -> listOfNotNull(newPlace?.first)
         PlaceChoice.None -> emptyList()
     }
-    val moment = original?.copy(occurredAt = stamp(time), places = placeIds, text = text.trim(), media = media, cost = cost, hidden = private, updatedAt = now)
+    val moment = original?.copy(occurredAt = stamp(time), end = end?.let(::stamp), places = placeIds, text = text.trim(), media = media, cost = cost, hidden = private, updatedAt = now)
         ?: MomentRecord(
             uid = uid ?: Ulid.next(),
             occurredAt = stamp(time),
+            end = end?.let(::stamp),
             places = placeIds,
             text = text.trim(),
             media = media,
@@ -1793,17 +1868,14 @@ private suspend fun buildMoment(
     return moment to newPlace
 }
 
-/**
- * A check-in kept at [stay]: at its middle as the footprints have it, and [until] its end while
- * its time is still the stay's.
- */
-private fun stayEntry(entry: kotlinx.serialization.json.JsonObject, stay: cc.hyoban.moments.ui.StayAt, until: Boolean) =
+/** A check-in kept at [stay]: at its middle as the footprints have it, until the end its editor says. */
+private fun stayEntry(entry: kotlinx.serialization.json.JsonObject, stay: cc.hyoban.moments.ui.StayAt) =
     kotlinx.serialization.json.JsonObject(
         entry + ("point" to kotlinx.serialization.json.buildJsonObject {
             put("lat", kotlinx.serialization.json.JsonPrimitive(stay.latitude))
             put("lng", kotlinx.serialization.json.JsonPrimitive(stay.longitude))
             put("from", kotlinx.serialization.json.JsonPrimitive("track"))
-        }) + if (until) mapOf("end" to kotlinx.serialization.json.JsonPrimitive(stamp(OffsetDateTime.ofInstant(Instant.ofEpochMilli(stay.end), java.time.ZoneId.systemDefault())))) else emptyMap(),
+        }),
     )
 
 /** What says why a picked file was left out. */

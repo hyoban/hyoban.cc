@@ -787,9 +787,9 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
             }
         }
     }
-    if (before.occurredAt != after.occurredAt) {
+    if (before.occurredAt != after.occurredAt || before.end != after.end) {
         any = true
-        val whenOf = { moment: MomentRecord -> listOfNotNull(formatDate(moment.occurredAt), formatTime(moment.occurredAt)).joinToString(" ") }
+        val whenOf = { moment: MomentRecord -> listOfNotNull(formatDate(moment.occurredAt), cc.hyoban.moments.ui.feed.momentTime(moment)).joinToString(" ") }
         Field(Res.string.change_time) { FromTo(whenOf(before), whenOf(after), AppIcons.Clock) }
     }
     if (before.places != after.places) {

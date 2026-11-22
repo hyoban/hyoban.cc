@@ -351,6 +351,10 @@
     <string name="time_use_photo">Use photo time</string>
     <string name="time_use_stay">Use stay time</string>
     <string name="time_use_now">Use current time</string>
+    <string name="time_end">Ends</string>
+    <string name="time_end_none">No end time</string>
+    <string name="time_end_clear">No end time</string>
+    <string name="error_end_before_start">The end has to be after the start</string>
     <string name="place_use_photo">Use photo place</string>
     <string name="place_use_stay">Use stay place</string>
     <string name="place_unchosen">Tap to choose a place</string>

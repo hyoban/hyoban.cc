@@ -209,7 +209,7 @@ private fun MomentBubble(
                 val private = moment.hidden.takeIf { it }?.let { stringResource(Res.string.visibility_private) }
                 val parts = moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
                 // The time in the figures' monospace, as the records bubbles beside it have theirs.
-                val time = formatTime(moment.occurredAt)
+                val time = cc.hyoban.moments.ui.feed.momentTime(moment)
                 val numFont = AppTheme.typography.caption.fontFamily
                 val meta = androidx.compose.ui.text.buildAnnotatedString {
                     append(parts.joinToString(" "))
@@ -297,7 +297,7 @@ private fun TrailingFoot(
 @Composable
 fun MomentSubhead(moment: MomentRecord, places: Map<String, Place>, trip: TripRecord?, showDate: Boolean = false, hidePlace: String? = null) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
-        val time = listOfNotNull(if (showDate) formatDate(moment.occurredAt) else null, formatTime(moment.occurredAt)).joinToString(" ")
+        val time = listOfNotNull(if (showDate) formatDate(moment.occurredAt) else null, cc.hyoban.moments.ui.feed.momentTime(moment)).joinToString(" ")
         // Private is said in the faint line itself, as the design has it.
         val private = moment.hidden.takeIf { it }?.let { stringResource(Res.string.visibility_private) }
         val parts = listOfNotNull(time.ifEmpty { null }) + moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)

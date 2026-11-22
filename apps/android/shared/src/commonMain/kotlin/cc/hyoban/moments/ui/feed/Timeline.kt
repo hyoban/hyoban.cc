@@ -390,8 +390,14 @@ fun CheckinRow(checkin: Checkin, modifier: Modifier = Modifier, withDate: Boolea
 }
 
 /** When a check-in was, `15:04`, or the stay it was kept from, `15:04–16:30`. */
-fun checkinTime(checkin: Checkin): String? =
-    formatTime(checkin.at)?.let { start -> checkin.end?.let(::formatTime)?.let { "$start–$it" } ?: start }
+fun checkinTime(checkin: Checkin): String? = timeSpan(checkin.at, checkin.end)
+
+/** When a Moment was, `15:04`, or the while it lasted, `15:04–16:30`. */
+fun momentTime(moment: cc.hyoban.moments.data.spec.MomentRecord): String? = timeSpan(moment.occurredAt, moment.end)
+
+/** `15:04`, or `15:04–16:30` with an [end]. */
+fun timeSpan(at: String, end: String?): String? =
+    formatTime(at)?.let { start -> end?.let(::formatTime)?.let { "$start–$it" } ?: start }
 
 /** `签到 面馆`, or on its place's own list `10月12日 签到`. */
 @Composable

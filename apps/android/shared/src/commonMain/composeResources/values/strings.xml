@@ -327,6 +327,10 @@
     <string name="time_use_photo">用照片的时间</string>
     <string name="time_use_stay">用停留的时间</string>
     <string name="time_use_now">用现在的时间</string>
+    <string name="time_end">结束</string>
+    <string name="time_end_none">无结束时间</string>
+    <string name="time_end_clear">不设结束时间</string>
+    <string name="error_end_before_start">结束要晚于开始</string>
     <string name="place_use_photo">用照片的地点</string>
     <string name="place_use_stay">用停留的地点</string>
     <string name="place_unchosen">点按选择地点</string>

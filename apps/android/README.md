@@ -367,10 +367,14 @@ is its place's name once the place is another, and the check-in goes with the pl
   takes its clip, the MOV the NAS keeps beside it, along as its video. A video over 100 MB, or other than
   MP4, MOV or WebM, is refused, since the Worker and the site's poster can't take it. A
   photo marked 不用作封面 never becomes a cover, widget or share card.
-- **Time.** The earliest photo's EXIF time and offset, else a video's creation time, else
-  the files' dates, else now. Once a time is chosen by hand, or a saved Moment opens at its saved
-  time, the time dialog's 用照片的时间 goes back to that worked-out time (用停留的时间 or
-  用现在的时间 for a new Moment without photos; a saved one whose photos give no time has none).
+- **Time.** From the earliest photo's EXIF time and offset (else a video's creation time, else
+  the files' dates) to the latest's, else a stay's start to its end, else now. It starts and ends
+  on two rows: the end, the entry's `end`, can be chosen or cleared (不设结束时间), is never before
+  the start, and photos all taken in one minute give none. The timeline, the Moment's page and
+  发布更改 show it as `14:00–16:30`; the site shows only the start. Once a time is chosen by hand, or
+  a saved Moment opens at its saved time and end, the start's dialog's 用照片的时间 goes back to that
+  worked-out time and end (用停留的时间 or 用现在的时间 for a new Moment without photos; a saved one
+  whose photos give no time has none). A start chosen by hand keeps the end, while it is still after it.
 - **Place.** Where the first photo was taken, else none until one is chosen: the page itself
   never locates the phone. Once another is chosen, or a saved Moment opens at its saved place, the
   place picker's 用照片的地点 (用停留的地点 at a stay) goes back to it; the photos a Moment was saved
@@ -740,9 +744,9 @@ behaves.
   added. Such a stay is listed with that check-in's venue and a grey flag in place of its +.
   Kept as a check-in, its bills with no place nor a Moment's, if any, are offered its place in
   a message, 用这个地点.
-  A stay's ring tapped on the map opens 新签到 at it: the stay's start (来自足迹停留) and its place,
+  A stay's ring tapped on the map opens 新签到 at it: the stay's start and end (来自足迹停留) and its place,
   the phone's own within 300 m or a new one named after what is around it. Saved with nothing
-  written it is the stay's check-in, as 保存为签到 keeps one (its uid, its end, its bills
+  written it is the stay's check-in, as 保存为签到 keeps one (its uid, the end its editor shows, its bills
   offered the place); written in, it is a Moment there. A stay kept already opens its check-in.
 - **Notification.** Its icon shows the state (recording, waiting for a fix, location off).
   On Android 16 and later it asks to be a Live Update; on ColorOS that also needs

@@ -1,5 +1,6 @@
 package cc.hyoban.moments
 
+import cc.hyoban.moments.ui.compose.InferredTime
 import cc.hyoban.moments.ui.compose.TimeSource
 import cc.hyoban.moments.ui.compose.inferredTime
 import cc.hyoban.moments.ui.compose.sameMinute
@@ -17,23 +18,32 @@ class InferredTimeTest {
     private val stay = at("2026-10-30T09:15:00+08:00")
 
     @Test
-    fun `the earliest photo's time comes first`() {
-        val taken = listOf(at("2026-10-30T13:30:27+08:00"), at("2026-10-30T04:00:00Z"))
-        assertEquals(at("2026-10-30T04:00:00Z") to TimeSource.PHOTO, inferredTime(taken, emptyList(), stay, now, editing = false))
-        assertEquals(at("2026-10-30T04:00:00Z") to TimeSource.PHOTO, inferredTime(taken, emptyList(), null, now, editing = true))
+    fun `the photos' times run from the earliest to the latest`() {
+        val taken = listOf(at("2026-10-30T13:30:27+08:00"), at("2026-10-30T04:00:00Z"), at("2026-10-30T12:10:00+08:00"))
+        val span = InferredTime(at("2026-10-30T04:00:00Z"), at("2026-10-30T13:30:27+08:00"), TimeSource.PHOTO)
+        assertEquals(span, inferredTime(taken, emptyList(), stay, now, editing = false))
+        assertEquals(span, inferredTime(taken, emptyList(), null, now, editing = true))
+    }
+
+    @Test
+    fun `photos taken in one minute have no end`() {
+        val taken = listOf(at("2026-10-30T13:30:27+08:00"), at("2026-10-30T13:30:05+08:00"))
+        assertEquals(InferredTime(at("2026-10-30T13:30:05+08:00"), null, TimeSource.PHOTO), inferredTime(taken, emptyList(), null, now, editing = false))
     }
 
     @Test
     fun `a file's time stands in only when no photo says when it was taken`() {
         val saved = listOf(at("2026-10-29T20:00:00+08:00"))
-        assertEquals(saved.first() to TimeSource.PHOTO, inferredTime(emptyList(), saved, stay, now, editing = false))
-        assertEquals(at("2026-10-30T13:30:00+08:00"), inferredTime(listOf(at("2026-10-30T13:30:00+08:00")), saved, null, now, editing = false)?.first)
+        assertEquals(InferredTime(saved.first(), null, TimeSource.PHOTO), inferredTime(emptyList(), saved, stay, now, editing = false))
+        assertEquals(at("2026-10-30T13:30:00+08:00"), inferredTime(listOf(at("2026-10-30T13:30:00+08:00")), saved, null, now, editing = false)?.start)
     }
 
     @Test
     fun `a new one without photos falls back to the stay, then now`() {
-        assertEquals(stay to TimeSource.STAY, inferredTime(emptyList(), emptyList(), stay, now, editing = false))
-        assertEquals(now to TimeSource.NOW, inferredTime(emptyList(), emptyList(), null, now, editing = false))
+        val stayEnd = at("2026-10-30T11:40:00+08:00")
+        assertEquals(InferredTime(stay, stayEnd, TimeSource.STAY), inferredTime(emptyList(), emptyList(), stay, now, editing = false, stayEnd = stayEnd))
+        assertEquals(InferredTime(stay, null, TimeSource.STAY), inferredTime(emptyList(), emptyList(), stay, now, editing = false))
+        assertEquals(InferredTime(now, null, TimeSource.NOW), inferredTime(emptyList(), emptyList(), null, now, editing = false))
     }
 
     @Test

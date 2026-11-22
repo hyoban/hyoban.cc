@@ -2053,8 +2053,13 @@ private suspend fun applyToPlan(container: AppContainer, trip: TripRecord, sugge
     // A check-in stays one, its words none, named for its place.
     // How it is reached, as the model said; a change that says nothing keeps what it was.
     val by = item.by?.takeUnless { it == Routers.By.DRIVE }?.name?.lowercase()
+    // One that lasted keeps how long it lasts, moved with its start.
+    val end = target?.end?.let { end ->
+        runCatching { stamp(at.plus(java.time.Duration.between(java.time.OffsetDateTime.parse(target.occurredAt), java.time.OffsetDateTime.parse(end)))) }.getOrNull()
+    }
     val moment = target?.copy(
         occurredAt = stamp(at),
+        end = end,
         places = placeIds,
         text = if (suggestion.checkin) "" else item.text.trim(),
         reachedBy = if (item.by != null) by else target.reachedBy,

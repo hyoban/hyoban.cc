@@ -359,6 +359,8 @@ data class MomentRecord(
     val published: PublishedMoment? = null,
     val createdAt: String,
     val updatedAt: String,
+    /** When it ended, for one that lasted (a stay, an afternoon of photos): a timestamp with its offset. */
+    val end: String? = null,
     @Transient val extra: JsonObject = NoExtra,
 ) {
     /** The day it happened, `YYYY-MM-DD`. */
