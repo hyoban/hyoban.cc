@@ -507,7 +507,7 @@ fun SharedAtlasMap(
      * unless it was moved since.
      */
     time: String? = null,
-    /** The places in their layers' time, the others stepping back to gray dots; null for every place. */
+    /** The places in their layers' time, the others off the map; null for every place. */
     keptPlaces: Set<String>? = null,
     /** The trips under way in the routes' time; null for every trip. */
     keptTrips: Set<String>? = null,
@@ -588,17 +588,6 @@ fun SharedAtlasMap(
     }
     // The prepared data is every place's, of every time.
     val whole = keptPlaces == null && onlyPlaces == null
-    val dimGeoJson = remember(places, keptPlaces) {
-        GeoJsonData.Features(
-            FeatureCollection(
-                if (keptPlaces == null) {
-                    emptyList()
-                } else {
-                    places.filter { it.id !in keptPlaces }.map { pointFeature(positionOf(it.place.latitude, it.place.longitude)) }
-                },
-            ),
-        )
-    }
     val placeGeoJson = remember(shownPlaces, colors, prepared, whole) {
         prepared?.places?.takeIf { whole } ?: placeData(shownPlaces, colors)
     }
@@ -776,7 +765,6 @@ fun SharedAtlasMap(
             )
         }
         val openSource = rememberGeoJsonSource(openGeoJson)
-        val dimSource = rememberGeoJsonSource(dimGeoJson)
         SideEffect {
             leaves.read = { id ->
                 mapState.style.sources[placeSource]
@@ -947,18 +935,6 @@ fun SharedAtlasMap(
             CircleLayer("shared-footprint-stays", stays, radius = const(5.dp), color = const(ring), strokeWidth = const(2.5.dp), strokeColor = const(ink), onClick = stayClick, hitPadding = 22.dp)
         }
         Anchor.Top {
-            // Places outside the year picked, stepping back to small gray dots under every pin
-            // rather than leaving, so the year is seen among every place.
-            CircleLayer(
-                id = "shared-places-dim",
-                source = dimSource,
-                radius = const(4.dp - 1.5.dp),
-                color = const(tokens.tx3),
-                opacity = const(0.8f * placeAlpha),
-                strokeWidth = const(1.5.dp),
-                strokeColor = const(Color.White),
-                strokeOpacity = const(0.8f * placeAlpha),
-            )
             // A balloon's name under its tip, where it clears the pins and names around it:
             // placed after the pins over it, so it gives way to them.
             SymbolLayer(

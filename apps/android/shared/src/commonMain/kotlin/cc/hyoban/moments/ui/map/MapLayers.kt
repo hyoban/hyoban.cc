@@ -113,7 +113,8 @@ fun MapLayersMenu(
     }
     when (val target = choosing) {
         null -> Unit
-        TimeTarget.Shared -> MapTimeSheet(stringResource(Res.string.map_time), times.shared, follow = false, days, onDismiss = { choosing = null }) { times.setShared(it ?: MapTime.All) }
+        // Every layer's: a day of any record, the footprints' among them, so one with footprints can be seen with every layer.
+        TimeTarget.Shared -> MapTimeSheet(stringResource(Res.string.map_time), times.shared, follow = false, remember(days, footprintDays) { days + footprintDays }, onDismiss = { choosing = null }) { times.setShared(it ?: MapTime.All) }
         is TimeTarget.Own -> {
             val layer = target.layer.timed
             val footprints = layer == TimedLayer.FOOTPRINTS

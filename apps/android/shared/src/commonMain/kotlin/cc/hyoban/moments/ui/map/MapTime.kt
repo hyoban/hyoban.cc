@@ -144,7 +144,8 @@ fun timeWords(time: MapTime): String = when (time) {
     MapTime.Recent -> stringResource(Res.string.map_time_recent)
     is MapTime.Year -> stringResource(Res.string.filter_year, time.year)
     is MapTime.Month -> formatYearMonth(YearMonth.of(time.year, time.month))
-    is MapTime.Days -> stringResource(Res.string.album_filter_range, formatDate(time.from.toString()), formatDate(time.to.toString()))
+    is MapTime.Days -> if (time.from == time.to) formatDate(time.from.toString())
+        else stringResource(Res.string.album_filter_range, formatDate(time.from.toString()), formatDate(time.to.toString()))
 }
 
 /**
@@ -166,8 +167,10 @@ fun MapTimeSheet(
     onChange: (MapTime?) -> Unit,
 ) {
     val years = remember(days) { days.map { it.year }.distinct().sortedDescending() }
-    var custom by rememberSaveable { mutableStateOf(time is MapTime.Days) }
+    val oneDay = (time as? MapTime.Days)?.takeIf { it.from == it.to }
+    var custom by rememberSaveable { mutableStateOf(time is MapTime.Days && oneDay == null) }
     var picking by remember { mutableStateOf<Boolean?>(null) }
+    var pickingDay by remember { mutableStateOf(false) }
     val pickedYear = when (time) {
         is MapTime.Year -> time.year
         is MapTime.Month -> time.year
@@ -195,9 +198,11 @@ fun MapTimeSheet(
             years.forEach { year ->
                 TimeChoice(stringResource(Res.string.filter_year, year), pickedYear == year, "time_year_$year") { pick(MapTime.Year(year)) }
             }
-            TimeChoice((time as? MapTime.Days)?.let { timeWords(it) } ?: stringResource(Res.string.album_filter_custom), custom || time is MapTime.Days, "time_custom") {
+            TimeChoice(oneDay?.let { timeWords(it) } ?: stringResource(Res.string.map_time_day), oneDay != null && !custom, "time_day") { pickingDay = true }
+            val range = (time as? MapTime.Days)?.takeIf { oneDay == null }
+            TimeChoice(range?.let { timeWords(it) } ?: stringResource(Res.string.album_filter_custom), custom || range != null, "time_custom") {
                 custom = true
-                if (time !is MapTime.Days) picking = true
+                if (range == null) picking = true
             }
         }
         if (pickedYear != null && months.size > 1) FlowRow(
@@ -220,13 +225,20 @@ fun MapTimeSheet(
             }
         }
         val range = time as? MapTime.Days
-        if (custom || range != null) Box(Modifier.padding(top = Space.l)) {
+        if (custom) Box(Modifier.padding(top = Space.l)) {
             SegmentedGroup(null, null, listOf(
                 { shapes -> ActionRow(AppIcons.Calendar, stringResource(Res.string.album_filter_from), shapes, supporting = range?.let { formatDate(it.from.toString()) }, tag = "time_from") { picking = true } },
                 { shapes -> ActionRow(AppIcons.Calendar, stringResource(Res.string.album_filter_to), shapes, supporting = range?.let { formatDate(it.to.toString()) }, tag = "time_to") { picking = false } },
             ))
         }
         Box(Modifier.padding(bottom = Space.xl))
+    }
+    if (pickingDay) {
+        DateDialog(oneDay?.from ?: days.maxOrNull() ?: LocalDate.now(), stringResource(Res.string.map_time_day), onDismiss = { pickingDay = false }, marked = days) { day ->
+            pickingDay = false
+            custom = false
+            onChange(MapTime.Days(day, day))
+        }
     }
     picking?.let { start ->
         val range = time as? MapTime.Days

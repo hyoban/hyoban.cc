@@ -128,6 +128,7 @@
     <string name="map_time_this_year">This year</string>
     <string name="map_time_last_year">Last year</string>
     <string name="map_time_recent">Last 30 days</string>
+    <string name="map_time_day">Pick a day</string>
     <string name="map_time_follow">Same as every layer</string>
     <string name="map_time_of">Time of %1$s</string>
     <string name="map_time_clear">Stop its own time</string>

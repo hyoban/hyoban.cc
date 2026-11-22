@@ -109,10 +109,11 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   地图设置 does), 照片, 足迹 (while 足迹 is on; looking at a day or a part from its panel turns it on)
   and 迷雾, the menu staying open as the map changes behind it. Over them 时间 is every layer's
   time, and each layer's calendar its own (`ui/map/MapTime.kt`): 全部, 今年, 去年, 近 30 天 (as of
-  today, with 今天 and 昨天), a year with records and a month in it, or any days from one to another, each layer's
+  today, with 今天 and 昨天), a year with records and a month in it, one day (选一天), or any days from one to another; every layer's
+  counts the footprints' days among its records, so a day with footprints can be seen with every layer. Each layer's
   following every layer's until given its own, and remembered. The places keep those with a
-  Moment in their time, the check-ins those with a check-in in theirs, the rest stepping back to
-  gray dots; the routes, and the trips' list, keep the trips under way in theirs; the photos those
+  Moment in their time, the check-ins those with a check-in in theirs, the rest off the map;
+  the routes, and the trips' list, keep the trips under way in theirs; the photos those
   taken in theirs; the fog lights only the cities written in in its own. Every layer's time chosen
   frames what the places keep, and back to 全部 the map returns to where it was unless it was moved
   since. 足迹's sheet lists the trips it recorded too, and its panel shows its time. A pill under the search

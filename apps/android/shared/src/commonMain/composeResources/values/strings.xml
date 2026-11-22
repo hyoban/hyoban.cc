@@ -122,6 +122,7 @@
     <string name="map_time_this_year">今年</string>
     <string name="map_time_last_year">去年</string>
     <string name="map_time_recent">近 30 天</string>
+    <string name="map_time_day">选一天</string>
     <string name="map_time_follow">跟随全部图层</string>
     <string name="map_time_of">%1$s的时间</string>
     <string name="map_time_clear">不再单独设时间</string>
