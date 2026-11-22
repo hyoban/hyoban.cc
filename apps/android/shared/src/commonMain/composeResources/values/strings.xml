@@ -1698,6 +1698,7 @@
     <string name="plan_lookup_notes_read">读了 %1$d 篇</string>
     <string name="plan_lookup_signed_out">要重新登录</string>
     <string name="plan_notes_title">参考的小红书笔记</string>
+    <string name="plan_notes_count">%1$d 篇</string>
     <string name="plan_notes_all">显示全部 %1$d 篇</string>
     <string name="plan_note_likes">%1$s 赞</string>
     <string name="setting_xiaohongshu">小红书</string>

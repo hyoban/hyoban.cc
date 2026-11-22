@@ -19,6 +19,10 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import cc.hyoban.moments.ui.theme.dividerColor
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.gestures.scrollBy
 import cc.hyoban.moments.ui.components.PageWidth
@@ -1085,14 +1089,11 @@ private fun PlanAnswer(turn: PlanTurn.Answered, growing: Boolean, onSheet: () ->
 /** An answer's words in the body style, ending in a 2-wide caret in tx2 while they still come. */
 @Composable
 private fun Words(text: String, caret: Boolean) {
-    if (!caret) {
-        Text(text, style = AppTheme.typography.body, color = tokens.tx)
-        return
-    }
-    val annotated = androidx.compose.ui.text.buildAnnotatedString {
-        append(text)
-        appendInlineContent("caret", " ")
-    }
+    // Set as the model wrote it: list items hanging from their marker, headings and ** strong, a blank line a paragraph's gap.
+    val lines = answerLines(text)
+    val last = lines.indexOfLast { !it.empty }
+    val style = AppTheme.typography.body
+    val markerWidth = with(LocalDensity.current) { (style.fontSize * 1.4f).toDp() }
     val inline = mapOf(
         "caret" to androidx.compose.foundation.text.InlineTextContent(
             androidx.compose.ui.text.Placeholder(4.sp, 16.sp, androidx.compose.ui.text.PlaceholderVerticalAlign.TextCenter),
@@ -1100,7 +1101,32 @@ private fun Words(text: String, caret: Boolean) {
             Box(Modifier.fillMaxSize().padding(start = 2.dp).background(tokens.tx2))
         },
     )
-    Text(annotated, style = AppTheme.typography.body, color = tokens.tx, inlineContent = inline)
+    Column {
+        lines.forEachIndexed { index, line ->
+            if (line.empty) {
+                if (index in 1 until lines.lastIndex) Spacer(Modifier.height(Space.s))
+                return@forEachIndexed
+            }
+            val words = androidx.compose.ui.text.buildAnnotatedString {
+                line.runs.forEach { run ->
+                    if (run.strong || line.heading) withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(run.text) }
+                    else append(run.text)
+                }
+                if (caret && index == last) appendInlineContent("caret", " ")
+            }
+            val top = if (line.heading && index > 0) Space.xs else 0.dp
+            if (line.marker == null) {
+                Text(words, style = style, color = tokens.tx, inlineContent = inline, modifier = Modifier.padding(top = top))
+            } else {
+                Row {
+                    Text(line.marker, style = style, color = tokens.tx2, modifier = Modifier.width(markerWidth))
+                    Text(words, style = style, color = tokens.tx, inlineContent = inline, modifier = Modifier.weight(1f))
+                }
+            }
+        }
+        // Nothing come yet but the caret.
+        if (caret && last < 0) Text(androidx.compose.ui.text.buildAnnotatedString { appendInlineContent("caret", " ") }, style = style, inlineContent = inline)
+    }
 }
 
 /**
@@ -1231,43 +1257,61 @@ private fun SmallSpinner(size: androidx.compose.ui.unit.Dp, color: androidx.comp
 /** How many of an answer's notes are listed before 显示全部. */
 private const val NOTES_SHOWN = 5
 
+/** A note's id on Xiaohongshu, from its [link]: the same note found by two searches has two links, one id. */
+private fun noteId(link: String) = Regex("""/explore/([0-9a-f]{24})""").find(link)?.groupValues?.get(1) ?: link
+
 /**
- * The Xiaohongshu notes an answer's searches found, under a caption, each its title and who wrote it
- * with its likes, opening in Xiaohongshu's app, else the browser; the first few, then 显示全部.
+ * The Xiaohongshu notes an answer's searches found, each once: under the site's icon, 参考的小红书笔记
+ * and how many, each note its title and who wrote it with its likes, apart by hairlines, opening in
+ * Xiaohongshu's app, else the browser; the first few, then 显示全部 as a row of its own.
  */
 @Composable
 private fun NotesRead(turn: PlanTurn.Answered) {
     val notes = turn.lookups.filterIsInstance<PlanLookup.Notes>().flatMap { it.found.orEmpty() }
-        .filter { it.link != null && it.title.isNotBlank() }.distinctBy { it.link }
+        .filter { it.link != null && it.title.isNotBlank() }.distinctBy { noteId(it.link!!) }
     if (notes.isEmpty()) return
     var all by rememberSaveable { mutableStateOf(false) }
     val uris = LocalUriHandler.current
     Column(Modifier.padding(top = Space.l).fillMaxWidth().testTag("plan_notes")) {
-        Text(stringResource(Res.string.plan_notes_title), style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.padding(bottom = Space.xs))
-        (if (all) notes else notes.take(NOTES_SHOWN)).forEach { note ->
+        Row(Modifier.padding(bottom = Space.xs), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
+            Icon(AppIcons.Xiaohongshu, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(16.dp))
+            Text(stringResource(Res.string.plan_notes_title) + APART + stringResource(Res.string.plan_notes_count, notes.size), style = AppTheme.typography.caption, color = tokens.tx2)
+        }
+        val shown = if (all) notes else notes.take(NOTES_SHOWN)
+        shown.forEachIndexed { index, note ->
+            if (index > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(dividerColor()))
             Row(
                 Modifier
                     .fillMaxWidth()
                     .heightIn(min = 48.dp)
                     .clickable(role = androidx.compose.ui.semantics.Role.Button) { openNote(uris, note.link!!) }
                     .semantics(mergeDescendants = true) {}
-                    .padding(vertical = Space.xs)
+                    .padding(vertical = Space.s)
                     .testTag("plan_note"),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Space.m),
             ) {
-                Icon(AppIcons.Xiaohongshu, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(20.dp))
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(note.title, style = AppTheme.typography.body, color = tokens.tx, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     val byline = listOfNotNull(note.author, note.likes?.let { stringResource(Res.string.plan_note_likes, it) }).joinToString(APART)
                     if (byline.isNotEmpty()) Text(byline, style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                Icon(AppIcons.External, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(20.dp))
+                Icon(AppIcons.External, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp))
             }
         }
         if (!all && notes.size > NOTES_SHOWN) {
-            cc.hyoban.moments.ui.design.TextButton(onClick = { all = true }, modifier = Modifier.testTag("plan_notes_all")) {
-                Text(stringResource(Res.string.plan_notes_all, notes.size))
+            Box(Modifier.fillMaxWidth().height(1.dp).background(dividerColor()))
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button) { all = true }
+                    .testTag("plan_notes_all"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.xs),
+            ) {
+                Text(stringResource(Res.string.plan_notes_all, notes.size), style = AppTheme.typography.caption, color = tokens.tx2)
+                Icon(AppIcons.CaretDown, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
             }
         }
     }
@@ -1275,7 +1319,7 @@ private fun NotesRead(turn: PlanTurn.Answered) {
 
 /** A note's page, in Xiaohongshu's app by its own link when it is there, else at [link] in the browser. */
 private fun openNote(uris: UriHandler, link: String) {
-    val id = Regex("""/explore/([0-9a-f]{24})""").find(link)?.groupValues?.get(1)
+    val id = noteId(link).takeIf { it != link }
     if (id != null && runCatching { uris.openUri("xhsdiscover://item/$id") }.isSuccess) return
     runCatching { uris.openUri(link) }
 }

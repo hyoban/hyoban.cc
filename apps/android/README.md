@@ -211,7 +211,7 @@ second and a half apart, for their words, date and where they were posted from, 
 left out; the model is told them, and how to tell the many unmarked ads (copy-like praise, discounts and codes, 私信 or
 comment for details, 合作 tags, the shop's own account, the same words as other notes) from people's own notes, each note's
 words cut to 1,200 characters. The chat keeps each note's title, author, likes and link, not its
-words, and once the answer is in lists them under it (参考的小红书笔记, five, then 显示全部), each
+words, and once the answer is in lists them under it, each note once by its id (参考的小红书笔记 and how many, five, then 显示全部), each
 opening in Xiaohongshu's app by its `xhsdiscover://item/` link, else its page in the browser. Nothing is tapped, typed or posted there. A
 search follows the site's redirects to plain http over https; one the site answers with its sign-in wall showing marks the row 未登录 and tells the model to go on without it. The session is
 the WebView's cookies, kept out of Android's backup and device transfer; the Mac has no such search.
@@ -233,7 +233,8 @@ that happened are only read, and so is a planned Moment or a check-in still to c
 page, beside 改成记录, or in the editor's menu under 计划, which offers it for any check-in too: `locked` on the record,
 published with it, and listed on 发布更改 beside 计划 as a change of its own): it goes to the model as settled and without its id, a change the model
 still lists for it is let go, and the sheet marks it with a lock. The answer streams in (`stream: true`, its
-server-sent events read by `PlanStream`): its words grow across the column, in no bubble, and each suggestion shows, and
+server-sent events read by `PlanStream`): its words grow across the column, in no bubble, set as the model marks them
+(`- ` and `1. ` items hanging from their marker, `#` headings and `**` words strong, the marks taken out; `AnswerText.kt`), and each suggestion shows, and
 its place is looked for, once its item is written in full; a service that refuses to stream is asked
 again for the whole answer. What a model thinks first, where its service shows it (`reasoning_content`, or
 OpenRouter's `reasoning`), heads its answer: open and growing while it thinks, closed to 想了 n 秒 (and 查了 m 次) once

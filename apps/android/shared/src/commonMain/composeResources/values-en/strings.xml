@@ -1699,6 +1699,7 @@
     <string name="plan_lookup_notes_read">%1$d read</string>
     <string name="plan_lookup_signed_out">sign in again</string>
     <string name="plan_notes_title">Xiaohongshu notes read</string>
+    <string name="plan_notes_count">%1$d</string>
     <string name="plan_notes_all">Show all %1$d</string>
     <string name="plan_note_likes">%1$s likes</string>
     <string name="setting_xiaohongshu">Xiaohongshu</string>
