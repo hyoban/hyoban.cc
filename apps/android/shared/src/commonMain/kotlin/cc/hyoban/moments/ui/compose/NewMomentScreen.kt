@@ -39,7 +39,6 @@ import cc.hyoban.moments.data.local.PhotoRef
 import cc.hyoban.moments.data.local.PhotoRules
 import cc.hyoban.moments.data.local.toPhotoRef
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -47,16 +46,13 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.zIndex
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -199,10 +195,11 @@ import java.time.Instant
 import cc.hyoban.moments.data.spec.Entries
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 import kotlinx.coroutines.withContext
 
 /**
@@ -1240,7 +1237,8 @@ private val WORDS_COLUMN = 360.dp
  * it is kept off covers or goes in as a photo alone.
  * The first is the Moment's cover, so they are put in order as Material 3 has content
  * reordered: held and then dragged, the one held lifted under the finger and the others
- * stepping aside; a screen reader moves one earlier or later instead.
+ * stepping aside, the row scrolling on near its ends (Reorderable's); a screen reader moves one
+ * earlier or later instead.
  */
 @Composable
 private fun PhotoStrip(
@@ -1259,41 +1257,12 @@ private fun PhotoStrip(
 ) {
     val list = rememberLazyListState()
     val haptics = rememberHaptics()
-    val currentMove by rememberUpdatedState(onMove)
-    // The photo held, and how far it has been dragged from where it is laid out.
-    var held by remember { mutableStateOf<PhotoRef?>(null) }
-    var offset by remember { mutableFloatStateOf(0f) }
-    // The photo let go, gliding from under the finger into its place, still over the rest until it is there.
-    var settling by remember { mutableStateOf<PhotoRef?>(null) }
-    val scope = rememberCoroutineScope()
-    var settle by remember { mutableStateOf<Job?>(null) }
-    val settleSpec = AppTheme.motionScheme.defaultSpatialSpec<Float>()
-    val liftSpec = AppTheme.motionScheme.fastSpatialSpec<Float>()
-    val letGo: () -> Unit = {
-        val dropped = held
-        held = null
-        settling = dropped
-        settle = scope.launch {
-            animate(offset, 0f, animationSpec = settleSpec) { value, _ -> offset = value }
-            if (settling == dropped) settling = null
-        }
-    }
-    val drag: (Float) -> Unit = drag@{ by ->
-        val key = held?.toString() ?: return@drag
-        offset += by
-        val items = list.layoutInfo.visibleItemsInfo
-        val current = items.firstOrNull { it.key == key } ?: return@drag
-        val middle = (current.offset + current.size / 2 + offset).toInt()
-        val target = items.firstOrNull { it.key != key && it.key != ADD_KEY && it.key != CAMERA_KEY && middle in it.offset until it.offset + it.size } ?: return@drag
-        // The row keeps its place by its first item, which may be the one moving.
-        val first = list.firstVisibleItemIndex to list.firstVisibleItemScrollOffset
-        currentMove(current.index, target.index)
-        // Still under the finger once laid out where it now goes.
-        offset += current.offset - target.offset
+    // Only the photos are moved; the tiles to add more after them stay where they are.
+    val reorder = rememberReorderableLazyListState(list) { from, to ->
+        onMove(from.index, to.index)
         haptics.tick()
-        // Held where it was in the same layout, rather than following the item it was anchored to.
-        list.requestScrollToItem(first.first, first.second)
     }
+    val liftSpec = AppTheme.motionScheme.fastSpatialSpec<Float>()
     val photoShape = AppTheme.shapes.medium
     val earlier = stringResource(Res.string.action_move_earlier)
     val later = stringResource(Res.string.action_move_later)
@@ -1307,92 +1276,75 @@ private fun PhotoStrip(
         itemsIndexed(photos, key = { _, uri -> uri.toString() }) { index, uri ->
             // Where it is now: a photo keeps its key as it is moved, so a tap reads its place afresh.
             val at by rememberUpdatedState(index)
-            val lifted = held == uri
-            val moving = lifted || settling == uri
-            // Lifted over the rest at the dragged level, level 4, with the drag's state layer over
-            // it, growing into that as it is picked up and settling back as it is put down.
-            val lift by animateFloatAsState(if (lifted) 1f else 0f, liftSpec, label = "lift")
-            val placement = (if (moving) Modifier.zIndex(1f) else Modifier.animateItem()).graphicsLayer {
-                translationX = if (moving) offset else 0f
-                val scale = 1f + (LIFTED_SCALE - 1f) * lift
-                scaleX = scale
-                scaleY = scale
-                shadowElevation = ShadowElevation.toPx() * lift
-                shape = photoShape
-                clip = true
-            }
-            Box(
-                placement.size(PHOTO_SIZE).clip(photoShape)
-                    // A tap opens it in the viewer. Outside the drag below, so the drag sees each
-                    // move first and, consuming them, keeps a hold-and-drag from ending as a tap;
-                    // a long press is left to it (a tap detector's own long press would consume
-                    // the moves and call the drag off).
-                    .pointerInput(uri) { detectTapGestures(onTap = { onOpen(at) }) }
-                    .pointerInput(uri) {
-                        detectDragGesturesAfterLongPress(
-                            onDragStart = {
-                                haptics.lift()
-                                settle?.cancel()
-                                settling = null
-                                held = uri
-                                offset = 0f
-                            },
-                            onDrag = { change, amount ->
-                                change.consume()
-                                drag(amount.x)
-                            },
-                            onDragEnd = letGo,
-                            onDragCancel = letGo,
-                        )
-                    }
-                    .semantics {
-                        onClick(open) { onOpen(index); true }
-                        customActions = listOfNotNull(
-                            CustomAccessibilityAction(earlier) { onMove(index, index - 1); true }.takeIf { index > 0 },
-                            CustomAccessibilityAction(later) { onMove(index, index + 1); true }.takeIf { index < photos.lastIndex },
-                        )
-                    }
-                    .testTag("photo_$index"),
-            ) {
-                // The site's photos by their URL, the phone's by their Uri.
-                AsyncImage(model = cc.hyoban.moments.data.local.imageModel(uri), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                if (lift > 0f) Box(Modifier.fillMaxSize().background(tokens.tx.copy(alpha = DRAGGED_LAYER * lift)))
-                // At the top, as a Moment's live photo has it: its bottom corners are the cover's and the patches' marks.
-                if (uri in motion && uri !in stills && uri !in masked) MediaBadge(BadgeKind.Live, Modifier.align(Alignment.TopStart).padding(Space.s))
-                if (uri in videos) MediaBadge(BadgeKind.Video(), Modifier.align(Alignment.TopStart).padding(Space.s))
-                if (uri in utility) {
-                    Box(
-                        Modifier.align(Alignment.BottomStart).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(AppIcons.PhotoOff, contentDescription = stringResource(Res.string.label_photo_utility), tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
-                    }
+            ReorderableItem(reorder, key = uri.toString()) { lifted ->
+                // Lifted over the rest at the dragged level, level 4, with the drag's state layer over
+                // it, growing into that as it is picked up and settling back as it is put down.
+                val lift by animateFloatAsState(if (lifted) 1f else 0f, liftSpec, label = "lift")
+                val placement = Modifier.graphicsLayer {
+                    val scale = 1f + (LIFTED_SCALE - 1f) * lift
+                    scaleX = scale
+                    scaleY = scale
+                    shadowElevation = ShadowElevation.toPx() * lift
+                    shape = photoShape
+                    clip = true
                 }
-                if (uri in masked) {
-                    Box(
-                        Modifier.align(Alignment.BottomEnd).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(AppIcons.Mosaic, contentDescription = stringResource(Res.string.label_photo_masked), tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
-                    }
-                }
-                // A small dot to see, in a corner of the 48dp Material 3 has anything tapped take.
                 Box(
-                    Modifier.align(Alignment.TopEnd).size(REMOVE_TARGET)
-                        .clickable(
-                            interactionSource = null,
-                            indication = PressIndication,
-                            role = Role.Button,
-                            onClickLabel = stringResource(if (uri in videos) Res.string.action_remove_video else Res.string.action_remove_photo),
-                        ) { onRemove(uri) }
-                        .testTag("remove_photo_$index"),
-                    contentAlignment = Alignment.Center,
+                    placement.size(PHOTO_SIZE).clip(photoShape)
+                        // A tap opens it in the viewer. Outside the drag below, so the drag sees each
+                        // move first and, consuming them, keeps a hold-and-drag from ending as a tap;
+                        // a long press is left to it (a tap detector's own long press would consume
+                        // the moves and call the drag off).
+                        .pointerInput(uri) { detectTapGestures(onTap = { onOpen(at) }) }
+                        .longPressDraggableHandle(onDragStarted = { haptics.lift() })
+                        .semantics {
+                            onClick(open) { onOpen(index); true }
+                            customActions = listOfNotNull(
+                                CustomAccessibilityAction(earlier) { onMove(index, index - 1); true }.takeIf { index > 0 },
+                                CustomAccessibilityAction(later) { onMove(index, index + 1); true }.takeIf { index < photos.lastIndex },
+                            )
+                        }
+                        .testTag("photo_$index"),
                 ) {
+                    // The site's photos by their URL, the phone's by their Uri.
+                    AsyncImage(model = cc.hyoban.moments.data.local.imageModel(uri), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    if (lift > 0f) Box(Modifier.fillMaxSize().background(tokens.tx.copy(alpha = DRAGGED_LAYER * lift)))
+                    // At the top, as a Moment's live photo has it: its bottom corners are the cover's and the patches' marks.
+                    if (uri in motion && uri !in stills && uri !in masked) MediaBadge(BadgeKind.Live, Modifier.align(Alignment.TopStart).padding(Space.s))
+                    if (uri in videos) MediaBadge(BadgeKind.Video(), Modifier.align(Alignment.TopStart).padding(Space.s))
+                    if (uri in utility) {
+                        Box(
+                            Modifier.align(Alignment.BottomStart).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(AppIcons.PhotoOff, contentDescription = stringResource(Res.string.label_photo_utility), tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                    if (uri in masked) {
+                        Box(
+                            Modifier.align(Alignment.BottomEnd).padding(Space.s).size(UTILITY_DOT).clip(CircleShape).background(MediaOverlay.control),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(AppIcons.Mosaic, contentDescription = stringResource(Res.string.label_photo_masked), tint = MediaOverlay.content, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                    // A small dot to see, in a corner of the 48dp Material 3 has anything tapped take.
                     Box(
-                        Modifier.size(REMOVE_DOT).clip(CircleShape).background(MediaOverlay.control),
+                        Modifier.align(Alignment.TopEnd).size(REMOVE_TARGET)
+                            .clickable(
+                                interactionSource = null,
+                                indication = PressIndication,
+                                role = Role.Button,
+                                onClickLabel = stringResource(if (uri in videos) Res.string.action_remove_video else Res.string.action_remove_photo),
+                            ) { onRemove(uri) }
+                            .testTag("remove_photo_$index"),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(AppIcons.Close, contentDescription = stringResource(if (uri in videos) Res.string.action_remove_video else Res.string.action_remove_photo), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
+                        Box(
+                            Modifier.size(REMOVE_DOT).clip(CircleShape).background(MediaOverlay.control),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(AppIcons.Close, contentDescription = stringResource(if (uri in videos) Res.string.action_remove_video else Res.string.action_remove_photo), tint = MediaOverlay.content, modifier = Modifier.size(18.dp))
+                        }
                     }
                 }
             }

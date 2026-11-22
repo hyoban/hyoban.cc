@@ -42,6 +42,7 @@ kotlin {
             // The viewer's zoom and pan, the phone's and the Mac's alike.
             api(libs.telephoto.zoomable)
             implementation(libs.gson)
+            implementation(libs.reorderable)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
