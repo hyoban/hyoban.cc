@@ -565,10 +565,13 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                 }
                             }
                         }
-                        // A different top-level tab covers the retained Surface. Pushed pages from
-                        // the atlas do not: they need it underneath their shared-card transition.
+                        // Another tab, and every page pushed on it, covers the retained Surface, so
+                        // the map never shows through while such a page slides in or out. Pages
+                        // pushed on the atlas do not: they need it underneath their shared-card transition.
+                        val owner = stack.lastOrNull { e -> Tab.entries.any { e.destination.hasRoute(it.type) } }
+                            ?.let { e -> Tab.entries.first { e.destination.hasRoute(it.type) } }
                         AnimatedVisibility(
-                            visible = atlasMounted && current != null && !atlasShown,
+                            visible = atlasMounted && owner != null && owner != Tab.MAP,
                             enter = fadeIn(tween(FADE_THROUGH_OUT_MS)),
                             exit = fadeOut(tween(FADE_THROUGH_IN_MS)),
                             modifier = Modifier.fillMaxSize(),
