@@ -78,6 +78,8 @@ class PhoneContainer private constructor(
         appContext.contentResolver.openInputStream(android.net.Uri.parse(source)) ?: error("Can't read $source")
 
     /** Places by name and around a point, for a new Moment's place. */
+    override val noteSearch = cc.hyoban.moments.xiaohongshu.Xiaohongshu(context)
+
     override val placeSearch = PlaceSearch(BuildConfig.PLACE_SEARCH_URL, tencentKey = { settings.tencentMapKey.value },
         amapKey = { settings.amapKey.value },
         tencentFirst = { settings.chinaPlaces.value == CHINA_PLACES_TENCENT },

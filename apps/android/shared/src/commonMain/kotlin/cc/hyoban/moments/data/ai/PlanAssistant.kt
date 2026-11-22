@@ -94,12 +94,26 @@ sealed interface PlanLookup {
         val done: Boolean = false,
         val failed: Boolean = false,
     ) : PlanLookup
+
+    /** Notes on Xiaohongshu that [query] finds, [found] once read; [signedOut] when the site wanted the owner signed in. */
+    data class Notes(
+        override val id: String,
+        val query: String,
+        val found: List<FoundNote>? = null,
+        val failed: Boolean = false,
+        val signedOut: Boolean = false,
+    ) : PlanLookup
 }
 
-/** What the device looks up for the model: places by name, and how long a way takes. */
+/** What the device looks up for the model: places by name, how long a way takes, and, where it can, notes on Xiaohongshu. */
 interface PlanLookups {
     suspend fun places(name: String, near: Fix): List<FoundPlace>
     suspend fun travel(from: Fix, to: Fix, by: Routers.By): Routers.Travel?
+
+    /** Whether [notes] may be asked: the device reads Xiaohongshu and the owner is signed in. */
+    val searchesNotes: Boolean get() = false
+
+    suspend fun notes(query: String): List<FoundNote> = emptyList()
 }
 
 /** Where a suggestion is, as the model names it: [name], about [near]. */
@@ -262,10 +276,14 @@ class PlanAssistant(
         val items = mutableListOf<PlanItem>()
         // Rounds of lookups, then up to two to answer in: a model still asking for more is told it can't, and asked again.
         for (round in 0..MAX_LOOKUP_ROUNDS + 1) {
-            val conversation = JsonArray(listOf(system(context, text)) + synchronized(turns) { recalled(turns) } + asked + turn)
+            val conversation = JsonArray(listOf(system(context, text, lookups.searchesNotes)) + synchronized(turns) { recalled(turns) } + asked + turn)
             // The last rounds may only answer.
             val answering = round >= MAX_LOOKUP_ROUNDS
-            val tools = if (answering) listOf(SUGGEST_TOOL) else listOf(SUGGEST_TOOL, PLACE_TOOL, WAY_TOOL)
+            val tools = when {
+                answering -> listOf(SUGGEST_TOOL)
+                lookups.searchesNotes -> listOf(SUGGEST_TOOL, PLACE_TOOL, WAY_TOOL, NOTES_TOOL)
+                else -> listOf(SUGGEST_TOOL, PLACE_TOOL, WAY_TOOL)
+            }
             // A list in a later round stands for the whole answer's: the earlier one goes.
             var listed = false
             val message = withContext(Dispatchers.IO) {
@@ -367,13 +385,18 @@ class PlanAssistant(
                     }.toString()
                 }
             }
+            is PlanLookup.Notes -> {
+                val found = lookups.notes(lookup.query).take(FOUND_NOTES)
+                lookup.copy(found = found) to if (found.isEmpty()) "No notes were found for that." else notesJson(found)
+            }
         }
     } catch (error: Exception) {
         if (error is kotlinx.coroutines.CancellationException) throw error
         when (lookup) {
             is PlanLookup.Place -> lookup.copy(failed = true)
             is PlanLookup.Way -> lookup.copy(done = true, failed = true)
-        } to "The lookup failed; go on without it."
+            is PlanLookup.Notes -> lookup.copy(failed = true, signedOut = error is NoteSignInNeeded)
+        } to if (error is NoteSignInNeeded) "Xiaohongshu wants the owner to sign in again; go on without it." else "The lookup failed; go on without it."
     }
 
     private fun request(conversation: JsonArray, tools: List<JsonObject>, stream: Boolean): Request {
@@ -485,6 +508,24 @@ class PlanAssistant(
             })
         }
 
+        /**
+         * A question the owner stopped before it was answered, as the model remembers it: asked, and
+         * left unanswered, so what they write next reads against it rather than the question before.
+         */
+        fun unanswered(text: String): List<JsonObject> = listOf(
+            buildJsonObject {
+                put("role", "user")
+                put("content", text)
+            },
+            buildJsonObject {
+                put("role", "assistant")
+                put("content", STOPPED)
+            },
+        )
+
+        /** What the model is told of an answer the owner stopped. */
+        const val STOPPED = "[The owner stopped this answer before it was given; nothing was said or changed. What they write next may say what they meant.]"
+
         /** The ids of [turn]'s suggest_plan calls, the last one last. */
         private fun listCalls(turn: List<JsonObject>): List<String> = turn.flatMap { message ->
             (message["tool_calls"] as? JsonArray).orEmpty().mapNotNull { call ->
@@ -510,6 +551,13 @@ class PlanAssistant(
 
         /** How many places a place's lookup tells of. */
         private const val FOUND_PLACES = 5
+
+        /** How many notes a search tells of, and how much of each one's text. */
+        private const val FOUND_NOTES = 8
+        private const val NOTE_TEXT = 1200
+
+        /** The longest search the model may ask for. */
+        private const val MAX_NOTE_QUERY = 40
 
         /** Two pieces of an answer, one after the other. */
         private fun joined(before: String, after: String) = listOf(before, after).filter { it.isNotBlank() }.joinToString("\n\n")
@@ -584,8 +632,25 @@ class PlanAssistant(
             return data.mapNotNull { (it as? JsonObject)?.let { model -> text(model["id"]) } }.distinct().sorted()
         }
 
+        /**
+         * The notes as the model reads them: each one's title, author and likes, and the text of
+         * those read through, cut to [NOTE_TEXT] characters.
+         */
+        fun notesJson(notes: List<FoundNote>): String = JsonArray(
+            notes.map { note ->
+                buildJsonObject {
+                    put("title", note.title)
+                    note.author?.let { put("author", it) }
+                    note.likes?.let { put("likes", it) }
+                    note.posted?.let { put("posted", it) }
+                    note.ip?.let { put("from", it) }
+                    note.text?.let { put("text", if (it.length > NOTE_TEXT) it.take(NOTE_TEXT) + "…" else it) }
+                }
+            },
+        ).toString()
+
         /** What the model is told it is doing, and of the plan; in English, the model answering in the owner's words. */
-        private fun system(context: PlanContext, asked: String): JsonObject {
+        private fun system(context: PlanContext, asked: String, notes: Boolean = false): JsonObject {
             val prompt = buildString {
                 append("You help the owner of a travel journal plan a trip they have not taken yet. ")
                 append("The plan is called \"${context.title}\" and runs from ${context.start} to ${context.end}. ")
@@ -594,12 +659,22 @@ class PlanAssistant(
                 append("Write each item's text as a short note in the owner's own voice and language, as they might jot it in their journal, without emoji. ")
                 append("Name each place as a map would, and give its approximate coordinates so it can be looked up. ")
                 append("Say for each how the owner gets there from the place before it that day (drive, walk, bike or train); the app shows each way's time and distance by it. ")
-                append("Answer in the language the owner writes in, and keep what you say short; the items carry the plan.")
+                append("Answer in the language the owner writes in. When you suggest changes, keep what you say short; the items carry the plan. ")
+                append("The owner may also only want to talk: to ask about a place, weigh options or think aloud. Then just answer, as fully as the question needs, and suggest nothing.")
                 if (context.now.isNotEmpty()) append("\n\nNow, where the owner is: ${context.now}. ")
                 append("\n\nBefore suggesting, check what you are unsure of: find_place tells whether a place is there and where, ")
                 append("and route_time how long a way takes by road, on foot, by bike or by train, so each day fits. ")
                 append("route_time knows no timetables: by train it gives the line's running time, and within a city public transport takes about as long as driving, with waiting. ")
                 append("Use the coordinates find_place gives for the places you suggest. ")
+                if (notes) {
+                    append("search_notes searches Xiaohongshu, where people write up places they went, and reads the top notes: ")
+                    append("use it, in Chinese words as people there search, for what a place is like, what to eat, when to go or what to skip, then check the places it names with find_place. ")
+                    append("Many notes are ads, paid or a shop's own, without saying so: treat a note as likely one when it reads like copy, praises without a flaw, ")
+                    append("gives a discount, a group-buy, a code or a way to book through the author, tells readers to message or comment for details, is tagged 合作, 赞助 or 广告, ")
+                    append("is written by the shop or brand itself, or matches other notes word for word. Trust notes with a person's own details, prices paid, ")
+                    append("waits and complaints, and what several unrelated authors agree on; never lean on one note alone, leave out what only likely ads praise, ")
+                    append("and when a place is mostly promoted, say so. ")
+                }
                 append("Ask for all the lookups a step needs at once, as several calls in one message, not one at a time: you have $MAX_LOOKUP_ROUNDS rounds of them, then must answer.")
                 append("\n\nThe entries below with an id are part of the plan, and you may change or remove them through suggest_plan too: ")
                 append("to change one, give its id as edit with the whole entry as it should become (date, time, text, and place unless it stays); ")
@@ -608,7 +683,8 @@ class PlanAssistant(
                 append("Entries without an id happened, or were settled by the owner, and stay as they are: plan around them, never list them. Prefer changing an entry to removing it and adding another. ")
                 append("Never list again an entry the plan already holds as it is, and never add one again to move or reword it: give its id as edit. ")
                 append("When you say an entry should go, list it with delete true; saying so is not enough.")
-                append("\n\nEnd every answer with exactly one suggest_plan call, after any lookups, holding the complete set of changes you propose ")
+                append("\n\nCall suggest_plan only when you propose changes, and only when the owner asked for them or clearly would want them; an answer that only talks calls nothing, and what you listed before stays for the owner to apply. ")
+                append("When you do call it, call it once, at the end after any lookups, holding the complete set of changes you propose ")
                 append("against the plan as it stands now (the entries below): repeat what you proposed before that the owner has not applied and that still stands, ")
                 append("and leave out what no longer does, since only your latest list can be applied. Don't spread the changes over several calls or answers. ")
                 append("The app shows the owner how to apply them; don't explain it. What came of your earlier lists is told in their tool results: those applied are entries below now. ")
@@ -665,6 +741,25 @@ class PlanAssistant(
                 add("name")
                 add("lat")
                 add("lng")
+            }
+        }
+
+        /** Searching Xiaohongshu's notes. */
+        private val NOTES_TOOL: JsonObject = buildJsonObject {
+            put("type", "function")
+            putJsonObject("function") {
+                put("name", "search_notes")
+                put("description", "Search Xiaohongshu for people's notes: the top results' titles, authors and likes, and the text of the first few.")
+                putJsonObject("parameters") {
+                    put("type", "object")
+                    putJsonObject("properties") {
+                        putJsonObject("query") {
+                            put("type", "string")
+                            put("description", "What to search, as people search Xiaohongshu, such as 东京 拉面 推荐.")
+                        }
+                    }
+                    putJsonArray("required") { add("query") }
+                }
             }
         }
 
@@ -810,6 +905,10 @@ class PlanAssistant(
                         val to = endOf(parsed["to"]) ?: continue
                         val by = byOf(text(parsed["by"])) ?: Routers.By.DRIVE
                         lookups += PlanLookup.Way(id, from, to, by)
+                    }
+                    "search_notes" -> {
+                        val query = text(parsed["query"]) ?: continue
+                        lookups += PlanLookup.Notes(id, query.take(MAX_NOTE_QUERY))
                     }
                 }
             }

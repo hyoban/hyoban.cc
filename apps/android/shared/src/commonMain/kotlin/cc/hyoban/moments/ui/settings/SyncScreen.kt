@@ -74,9 +74,12 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 // Where the app reads from and what lets it write, a page under 我: rows grouped on one surface
 // under a small caption, a note under the group, and a tap on a row opening a dialog to change it.
 
-/** 同步与来源: the API, its token and reading from it again; the keys the map's place search uses. */
+/**
+ * 同步与来源: the API, its token and reading from it again; the keys the map's place search uses;
+ * the model a plan is talked over with, and, where the device reads it, Xiaohongshu, signed in to by [onNoteSignIn].
+ */
 @Composable
-fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
+fun SyncScreen(container: AppContainer, onBack: () -> Unit, onNoteSignIn: (() -> Unit)? = null) {
     val settings = container.settings
     val device = cc.hyoban.moments.ui.LocalDevice.current
     // The setting whose dialog is open, by its place in the list, so it stays open across a rotation.
@@ -225,7 +228,27 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit) {
                         modifier = Modifier.testTag("ai_notes"),
                     ) { Text(stringResource(Res.string.setting_ai_notes)) }
                 }
-                Section(stringResource(Res.string.section_ai), rows.subList(1, 2), 1, stringResource(Res.string.settings_ai_note), extra = listOf(aiKey, aiModel, aiNotes)) { editing = it }
+                // Xiaohongshu, for the model to search its notes: signed in to on its own page.
+                val noteSearch = container.noteSearch
+                val xiaohongshu: Segment? = if (noteSearch != null && onNoteSignIn != null) {
+                    { shapes ->
+                        SegmentedListItem(
+                            onClick = onNoteSignIn,
+                            shapes = shapes,
+                            colors = segmentColors(),
+                            leadingContent = { Icon(AppIcons.Xiaohongshu, contentDescription = null) },
+                            supportingContent = { Text(stringResource(if (noteSearch.signedIn.value) Res.string.xiaohongshu_signed_in else Res.string.xiaohongshu_signed_out)) },
+                            trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                            modifier = Modifier.testTag("xiaohongshu"),
+                        ) { Text(stringResource(Res.string.setting_xiaohongshu)) }
+                    }
+                } else {
+                    null
+                }
+                val aiNote = stringResource(Res.string.settings_ai_note).let { note ->
+                    if (xiaohongshu != null) note + stringResource(Res.string.settings_ai_note_xiaohongshu) else note
+                }
+                Section(stringResource(Res.string.section_ai), rows.subList(1, 2), 1, aiNote, extra = listOfNotNull(aiKey, aiModel, aiNotes, xiaohongshu)) { editing = it }
                 device.UpdateSettings(container)
             }
         }

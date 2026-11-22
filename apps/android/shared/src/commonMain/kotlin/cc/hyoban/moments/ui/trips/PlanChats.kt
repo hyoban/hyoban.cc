@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.data.ai.FoundNote
 import cc.hyoban.moments.data.ai.FoundPlace
 import cc.hyoban.moments.data.ai.PlanItem
 import cc.hyoban.moments.data.ai.PlanLookup
@@ -122,6 +123,7 @@ class PlanChats(private val file: File, private val scope: CoroutineScope) {
         private fun answerJson(turn: PlanTurn.Answered, growing: Boolean) = buildJsonObject {
             put("text", turn.text)
             put("stopped", turn.stopped)
+            put("stoppedKept", turn.stoppedKept)
             put("failed", turn.failed)
             put("retired", turn.retired)
             // An answer still coming when last written: the app went before it ended.
@@ -149,6 +151,7 @@ class PlanChats(private val file: File, private val scope: CoroutineScope) {
             retired = bool(saved["retired"])
             failed = bool(saved["failed"])
             stopped = !failed && (bool(saved["stopped"]) || saved["done"]?.let { !bool(it) } == true)
+            stoppedKept = stopped && bool(saved["stoppedKept"])
             thoughtFor = (saved["thoughtFor"] as? JsonPrimitive)?.intOrNull
             (saved["steps"] as? JsonArray)?.forEach { element ->
                 val step = element as? JsonObject ?: return@forEach
@@ -198,6 +201,29 @@ class PlanChats(private val file: File, private val scope: CoroutineScope) {
                 put("done", lookup.done)
                 put("failed", lookup.failed)
             }
+            // Each note's title, author, likes and link, for the owner to open; what they said stays in the model's memory of the turn.
+            is PlanLookup.Notes -> buildJsonObject {
+                put("kind", "notes")
+                put("id", lookup.id)
+                put("query", lookup.query)
+                lookup.found?.let { found ->
+                    put(
+                        "found",
+                        JsonArray(
+                            found.map { note ->
+                                buildJsonObject {
+                                    put("title", note.title)
+                                    note.author?.let { put("author", it) }
+                                    note.likes?.let { put("likes", it) }
+                                    note.link?.let { put("link", it) }
+                                }
+                            },
+                        ),
+                    )
+                }
+                put("failed", lookup.failed)
+                put("signedOut", lookup.signedOut)
+            }
         }
 
         private fun lookupOf(saved: JsonObject): PlanLookup? {
@@ -223,6 +249,21 @@ class PlanChats(private val file: File, private val scope: CoroutineScope) {
                         if (seconds != null && metres != null) Routers.Travel(seconds, metres) else null,
                         done = true,
                         failed = bool(saved["failed"]) || !done,
+                    )
+                }
+                "notes" -> {
+                    val found = (saved["found"] as? JsonArray)?.mapNotNull { element ->
+                        val note = element as? JsonObject ?: return@mapNotNull null
+                        FoundNote(text(note["title"]).orEmpty(), text(note["author"]), text(note["likes"]), link = text(note["link"]))
+                    }
+                        // Kept before the notes were: how many alone.
+                        ?: (saved["found"] as? JsonPrimitive)?.contentOrNull?.toIntOrNull()?.let { List(it) { FoundNote("") } }
+                    PlanLookup.Notes(
+                        id,
+                        text(saved["query"]) ?: return null,
+                        found,
+                        failed = bool(saved["failed"]) || found == null,
+                        signedOut = bool(saved["signedOut"]),
                     )
                 }
                 else -> null

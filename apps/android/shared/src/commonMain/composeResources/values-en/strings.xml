@@ -1695,6 +1695,17 @@
     <string name="plan_lookup_none">none found</string>
     <string name="plan_lookup_failed">couldn’t look up</string>
     <string name="plan_lookup_no_way">no way</string>
+    <string name="plan_lookup_notes">Xiaohongshu %1$s</string>
+    <string name="plan_lookup_notes_read">%1$d read</string>
+    <string name="plan_lookup_signed_out">sign in again</string>
+    <string name="plan_notes_title">Xiaohongshu notes read</string>
+    <string name="plan_notes_all">Show all %1$d</string>
+    <string name="plan_note_likes">%1$s likes</string>
+    <string name="setting_xiaohongshu">Xiaohongshu</string>
+    <string name="xiaohongshu_signed_in">Signed in</string>
+    <string name="xiaohongshu_signed_out">Not signed in</string>
+    <string name="xiaohongshu_sign_in_title">Sign in to Xiaohongshu</string>
+    <string name="settings_ai_note_xiaohongshu">Once you sign in to Xiaohongshu, planning with AI searches its website with your account for what the model asks, and the notes it reads go to this address too. Automated browsing may break Xiaohongshu’s rules, and your account may be restricted.</string>
     <string name="plan_by_drive">driving</string>
     <string name="plan_by_walk">walking</string>
     <string name="plan_by_bike">cycling</string>

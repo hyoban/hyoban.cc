@@ -203,10 +203,23 @@ round, up to ten rounds a turn, after which a lookup it still asks for is answer
 with what it has, and it is asked once more: `find_place`, the place search's answers for a name near where the model says, and `route_time`,
 how long and how far a way is by road, on foot or by bike (Valhalla) or by train (OpenRailRouting, its
 line's running time, no timetables), each shown in the answer with what came of it, between the thinking of the round that asked for it and the next's.
+On the phone, once the owner has signed in to Xiaohongshu's website from 同步与来源 (its row opens the
+site's own pages, desktop pages as Chrome on a Mac sees them, and goes back by itself once they say the owner is in;
+`xiaohongshu/`), it may also call `search_notes`: a WebView no one sees opens the site's search for the words the model
+names, in the owner's session, and reads the first eight results' titles, authors and likes, opening the first three, a
+second and a half apart, for their words, date and where they were posted from, the results the site marks as ads
+left out; the model is told them, and how to tell the many unmarked ads (copy-like praise, discounts and codes, 私信 or
+comment for details, 合作 tags, the shop's own account, the same words as other notes) from people's own notes, each note's
+words cut to 1,200 characters. The chat keeps each note's title, author, likes and link, not its
+words, and once the answer is in lists them under it (参考的小红书笔记, five, then 显示全部), each
+opening in Xiaohongshu's app by its `xhsdiscover://item/` link, else its page in the browser. Nothing is tapped, typed or posted there. A
+search follows the site's redirects to plain http over https; one the site answers with its sign-in wall showing marks the row 未登录 and tells the model to go on without it. The session is
+the WebView's cookies, kept out of Android's backup and device transfer; the Mac has no such search.
 What the owner writes in 补充说明 under 同步与来源 (how they travel, who with, what they eat) goes after the app's own
 instructions in every conversation. Last, it is told to think and answer in the language of the owner's latest message (named when
-it is Chinese or Japanese), its thinking too. Each answer ends with its whole list of changes against the plan as it stands, repeating what was
-proposed before and not applied; only an answer's last list counts, and once a later answer lists its
+it is Chinese or Japanese), its thinking too. The owner may only want to talk, and an answer may then suggest
+nothing; one that suggests ends with its whole list of changes against the plan as it stands, repeating what was
+proposed before and not applied; only an answer's last list counts, an answer with none leaving earlier ones as they were, and once a later answer lists its
 changes an earlier one's untapped rows can't be applied any more (已并入后面的回答). It answers in words and with suggestions through `suggest_plan`, each a day, a time, a note and a place. The place is found on the device: a place
 already kept by that name within 2 km of where the model put it, else what
 AMap, Tencent or Photon call it within 30 km of there, a place already kept when it
@@ -227,8 +240,9 @@ OpenRouter's `reasoning`), heads its answer: open and growing while it thinks, c
 the answer's first word or suggestion comes, opened again with a tap; it is shown, never sent back. Words a round says before
 it looks things up go with that round's thinking, so the answer itself is what it said last, once; what a `suggest_plan`
 call says besides (`reply`) shows only when the message said nothing. While it answers the send button stops it: what came stays, marked 已停止,
-and the model keeps no memory of that turn. A turn that fails before anything came goes, its question back in the field; one that fails after it
-thought or looked things up keeps them, marked 没能得到回答, and like a stopped one is not remembered;
+and the model remembers only the question, told it was stopped unanswered, so what the owner writes next ("我说景德镇") reads
+as about it. A turn that fails before anything came goes, its question back in the field; one that fails after it
+thought or looked things up keeps them, marked 没能得到回答, and is not remembered;
 either way a message over the composer says why, waiting with 重试, which asks the same again. Held, a question offers 复制文字 and 从这里重来, which takes it and everything after it off the page and out of the model's
 memory and puts it back in the field to send again, what was applied staying in the plan; held, an answer copies its words and
 its changes, a line each. Each plan's conversation, and what the model remembers of it, is kept on the device in `plan-chats.json` beside the
@@ -1105,22 +1119,21 @@ The unit tests round-trip the made-up records in `packages/data-spec/test/fixtur
 through the app's models, so the app and the site can't drift apart unnoticed, and check the media URLs,
 trip membership and the sync against a stand-in API.
 
-The debug build isn't debuggable: a debuggable app runs Compose and all in ART's debuggable mode,
-several times slower than the release, and the phone wouldn't compile it ahead of time. Like the
-release, it carries the baseline profile, which the phone compiles on install when its `.dm` goes
-beside it:
+The debug build is debuggable, so `run-as` reads the app's files on the phone. A debuggable app runs
+Compose and all in ART's debuggable mode, several times slower than the release, and the phone won't
+compile it ahead of time. `-Pfast` builds it not debuggable, carrying the baseline profile like the
+release, which the phone compiles on install when its `.dm` goes beside it:
 
 ```sh
+./gradlew -Pfast :app:assembleDebug
 adb install-multiple -r app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/baselineProfiles/0/app-debug.dm
 ```
-
-`-Pdebuggable` builds it debuggable again, for a debugger, the layout inspector or `run-as`.
 
 `RecordingRecoveryTest` under `src/androidTest` checks the recorder's recovery and pause
 races with a mock GPS on an emulator (it skips physical devices):
 
 ```sh
-./gradlew -Pdebuggable :app:assembleDebug :app:assembleDebugAndroidTest
+./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
 adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk
 adb -s emulator-5554 install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 adb -s emulator-5554 shell am instrument -w -e class cc.hyoban.moments.footprints.RecordingRecoveryTest cc.hyoban.moments.test/androidx.test.runner.AndroidJUnitRunner

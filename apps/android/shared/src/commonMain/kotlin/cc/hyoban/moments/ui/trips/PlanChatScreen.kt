@@ -28,6 +28,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.semantics.heading
 import cc.hyoban.moments.ui.design.strong
 import androidx.compose.foundation.verticalScroll
@@ -67,6 +71,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.data.ai.NoteSearch
 import cc.hyoban.moments.data.ai.PlanAssistant
 import cc.hyoban.moments.data.ai.PlanContext
 import cc.hyoban.moments.data.ai.FoundPlace
@@ -199,8 +204,11 @@ sealed interface PlanTurn {
         /** It failed after it had thought or looked things up, which stay. */
         var failed: Boolean by mutableStateOf(false)
 
-        /** Whether the model remembers it: it ended, neither stopped nor failed. */
-        val remembered: Boolean get() = !stopped && !failed
+        /** Stopped, its question kept in the model's memory, unanswered; stopped before that was so, it isn't. */
+        var stoppedKept: Boolean by mutableStateOf(false)
+
+        /** Whether the model remembers it: it ended, or was stopped with its question kept; never when it failed. */
+        val remembered: Boolean get() = !failed && (!stopped || stoppedKept)
 
         /** A later answer listed its changes, in full: what wasn't applied here can't be any more. */
         var retired: Boolean by mutableStateOf(false)
@@ -620,7 +628,7 @@ fun PlanChatScreen(container: AppContainer, id: String, onBack: () -> Unit, onMo
             try {
                 // Each day's driving as the plan stands, the days worked out in time, for the model to see a day too full.
                 val driving = drivingByDay(days, looked, container.placeSearch)
-                val answer = assistant.ask(text, context.copy(driving = driving), PhoneLookups(container.placeSearch)) { progress ->
+                val answer = assistant.ask(text, context.copy(driving = driving), PhoneLookups(container.placeSearch, container.noteSearch)) { progress ->
                     chat.changed()
                     when (progress) {
                         is PlanProgress.Thought -> {
@@ -653,9 +661,12 @@ fun PlanChatScreen(container: AppContainer, id: String, onBack: () -> Unit, onMo
                 answered.text = answer.text
                 answer.items.filter { it !in seen }.forEach(suggest)
             } catch (stopped: kotlinx.coroutines.CancellationException) {
-                // What came stays, said to be stopped; the model keeps no memory of this turn.
+                // What came stays, said to be stopped; the model remembers only the question, left
+                // unanswered, so what the owner writes next reads as about it.
                 answered.doneThinking(askedAt)
                 answered.stopped = true
+                synchronized(chat.memory) { chat.memory += PlanAssistant.unanswered(text) }
+                answered.stoppedKept = true
                 throw stopped
             } catch (error: Exception) {
                 // Why, as the service said it, for the log; the owner is told in words.
@@ -1033,6 +1044,8 @@ private fun PlanAnswer(turn: PlanTurn.Answered, growing: Boolean, onSheet: () ->
         }
         // Its changes in one line, opened in PlanSheet.
         if (turn.suggestions.isNotEmpty()) PlanSummary(turn, growing = growing, onClick = onSheet)
+        // The Xiaohongshu notes it read, once it has answered, for the owner to open.
+        if (!growing) NotesRead(turn)
         if (turn.retired && turn.suggestions.any { it.added == null && !it.adding }) {
             Text(
                 stringResource(Res.string.plan_chat_superseded),
@@ -1184,6 +1197,17 @@ private fun LookupRow(lookup: PlanLookup) {
             }
             Triple(AppIcons.Route, stringResource(Res.string.plan_lookup_way, lookup.from.name, lookup.to.name) + APART + by + result, !lookup.done)
         }
+        is PlanLookup.Notes -> Triple(
+            AppIcons.Xiaohongshu,
+            stringResource(Res.string.plan_lookup_notes, lookup.query) + when {
+                lookup.signedOut -> APART + stringResource(Res.string.plan_lookup_signed_out)
+                lookup.failed -> APART + stringResource(Res.string.plan_lookup_failed)
+                lookup.found == null -> ""
+                lookup.found.isEmpty() -> APART + stringResource(Res.string.plan_lookup_none)
+                else -> APART + stringResource(Res.string.plan_lookup_notes_read, lookup.found.size)
+            },
+            lookup.found == null && !lookup.failed,
+        )
     }
     Row(Modifier.height(24.dp).testTag("plan_lookup"), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Icon(icon, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(14.dp))
@@ -1203,6 +1227,58 @@ private fun LookupRow(lookup: PlanLookup) {
 @Composable
 private fun SmallSpinner(size: androidx.compose.ui.unit.Dp, color: androidx.compose.ui.graphics.Color) =
     cc.hyoban.moments.ui.design.Spinner(color = color, size = size, stroke = 2.dp, inset = 0.dp)
+
+/** How many of an answer's notes are listed before 显示全部. */
+private const val NOTES_SHOWN = 5
+
+/**
+ * The Xiaohongshu notes an answer's searches found, under a caption, each its title and who wrote it
+ * with its likes, opening in Xiaohongshu's app, else the browser; the first few, then 显示全部.
+ */
+@Composable
+private fun NotesRead(turn: PlanTurn.Answered) {
+    val notes = turn.lookups.filterIsInstance<PlanLookup.Notes>().flatMap { it.found.orEmpty() }
+        .filter { it.link != null && it.title.isNotBlank() }.distinctBy { it.link }
+    if (notes.isEmpty()) return
+    var all by rememberSaveable { mutableStateOf(false) }
+    val uris = LocalUriHandler.current
+    Column(Modifier.padding(top = Space.l).fillMaxWidth().testTag("plan_notes")) {
+        Text(stringResource(Res.string.plan_notes_title), style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.padding(bottom = Space.xs))
+        (if (all) notes else notes.take(NOTES_SHOWN)).forEach { note ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button) { openNote(uris, note.link!!) }
+                    .semantics(mergeDescendants = true) {}
+                    .padding(vertical = Space.xs)
+                    .testTag("plan_note"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.m),
+            ) {
+                Icon(AppIcons.Xiaohongshu, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(20.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(note.title, style = AppTheme.typography.body, color = tokens.tx, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    val byline = listOfNotNull(note.author, note.likes?.let { stringResource(Res.string.plan_note_likes, it) }).joinToString(APART)
+                    if (byline.isNotEmpty()) Text(byline, style = AppTheme.typography.caption, color = tokens.tx2, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                Icon(AppIcons.External, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(20.dp))
+            }
+        }
+        if (!all && notes.size > NOTES_SHOWN) {
+            cc.hyoban.moments.ui.design.TextButton(onClick = { all = true }, modifier = Modifier.testTag("plan_notes_all")) {
+                Text(stringResource(Res.string.plan_notes_all, notes.size))
+            }
+        }
+    }
+}
+
+/** A note's page, in Xiaohongshu's app by its own link when it is there, else at [link] in the browser. */
+private fun openNote(uris: UriHandler, link: String) {
+    val id = Regex("""/explore/([0-9a-f]{24})""").find(link)?.groupValues?.get(1)
+    if (id != null && runCatching { uris.openUri("xhsdiscover://item/$id") }.isSuccess) return
+    runCatching { uris.openUri(link) }
+}
 
 /** A way's time as it is read: minutes, or hours and minutes, never under one. */
 @Composable
@@ -1237,12 +1313,16 @@ suspend fun travelBetween(search: PlaceSearch, from: Fix, to: Fix, by: Routers.B
     return travel
 }
 
-/** The device's lookups for the model: its place search, and the routers. */
-private class PhoneLookups(private val search: PlaceSearch) : PlanLookups {
+/** The device's lookups for the model: its place search, the routers, and Xiaohongshu where the device reads it. */
+private class PhoneLookups(private val search: PlaceSearch, private val noteSearch: NoteSearch?) : PlanLookups {
     override suspend fun places(name: String, near: Fix): List<FoundPlace> =
         search.search(name, near).filter { distance(it.fix, near) <= FOUND_WITHIN_METRES }.map { FoundPlace(it.name, it.address, it.fix) }
 
     override suspend fun travel(from: Fix, to: Fix, by: Routers.By) = travelBetween(search, from, to, by)
+
+    override val searchesNotes get() = noteSearch?.signedIn?.value == true
+
+    override suspend fun notes(query: String) = noteSearch?.search(query).orEmpty()
 }
 
 /** How many of each change [suggestions] hold, and how many took effect, apart by full-width spaces. */

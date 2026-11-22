@@ -701,7 +701,10 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                     )
                                 }
                                 screen<SyncSettings> {
-                                    SyncScreen(container, onBack = back)
+                                    SyncScreen(container, onBack = back, onNoteSignIn = { navController.navigate(NoteSignIn) })
+                                }
+                                screen<NoteSignIn> {
+                                    cc.hyoban.moments.xiaohongshu.XiaohongshuSignInScreen(container.noteSearch, onBack = back)
                                 }
                                 screen<Imports> {
                                     cc.hyoban.moments.ui.settings.ImportScreen(container, onBack = back)
@@ -1078,7 +1081,7 @@ fun pagesOf(route: Any): List<Any> {
 private fun tabOf(route: Any): Any = when (route) {
     Feed, Atlas, Album, Preferences -> route
     is Trip, is TripEdit, is TripPlay, is PlaceMoments -> Atlas
-    SyncSettings, Imports, FootprintSettings, SideKeySettings, CameraSettings, GalleryAlbums, Items, Homes, Changes, is Things, is Occasions,
+    SyncSettings, NoteSignIn, Imports, FootprintSettings, SideKeySettings, CameraSettings, GalleryAlbums, Items, Homes, Changes, is Things, is Occasions,
     is LedgerHome, is LedgerEntry, is LedgerBill, is LedgerAccount, is LedgerAccountEdit, is LedgerSettings, is LedgerList,
     -> Preferences
     else -> Feed

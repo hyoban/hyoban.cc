@@ -87,6 +87,9 @@ abstract class AppContainer(
     /** Places by name and around a point, for a new Moment's place. */
     abstract val placeSearch: cc.hyoban.moments.data.local.PlaceSearch
 
+    /** Where planning with AI searches Xiaohongshu's notes: the phone's website session, or none. */
+    open val noteSearch: cc.hyoban.moments.data.ai.NoteSearch? get() = null
+
     /** The footprints the pages read; the phone's own, or none. */
     abstract val footprints: cc.hyoban.moments.footprints.Footprints
 

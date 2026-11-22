@@ -62,6 +62,10 @@ object Preferences
 @Serializable
 object SyncSettings
 
+/** Signing in to Xiaohongshu's website, for planning with AI to search its notes; the phone's alone. */
+@Serializable
+object NoteSignIn
+
 /** How footprints are recorded, a page under 我. */
 @Serializable
 object FootprintSettings

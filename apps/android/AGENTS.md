@@ -72,10 +72,13 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 
 - The phone is the user's, with their real data and a live link to the site. After a
   runtime or UI change, build the debug build and install it over what is there, without
-  asking: `./gradlew :app:assembleDebug`, then `adb install-multiple -r app/build/outputs/apk/debug/app-debug.apk
-  app/build/outputs/apk/debug/baselineProfiles/0/app-debug.dm`, its profile beside it so the phone compiles it
-  on install. The debug build is not debuggable, which slowed it several times over; build with
-  `-Pdebuggable` only for a debugger, the layout inspector or `run-as`.
+  asking: `./gradlew :app:assembleDebug`, then `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
+  The debug build is debuggable, the owner's choice, so the app's data can be read with
+  `adb exec-out run-as cc.hyoban.moments cat <file>` (a plan's chats are `no_backup/plan-chats.json`)
+  instead of scrolling the screen; read it only to answer what the owner asked. Being debuggable it runs
+  several times slower, so judge speed, motion and dropped frames on the release, or on `-Pfast`, the debug
+  build not debuggable with its profile beside it (`adb install-multiple -r …/app-debug.apk
+  …/baselineProfiles/0/app-debug.dm`).
   The user tests it: don't launch, open, tap or publish on the phone yourself. Say what to
   try and what to look for, and read logcat (its crash buffer, `Moments:W`) when asked.
   Build only what the step needs, not the CI set each time.
@@ -94,7 +97,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   and dropped frames on it then, as the debug build runs slower. Both are signed
   with the same key, the release key in `local.properties` or else the debug key, so either
   installs over the other and the app's data stays. The emulator only ever gets the debug
-  build, built with `-Pdebuggable` so `run-as` can read its files.
+  build.
 - Release (README, Releasing) only when the user asks. Check a Mac packaging change in the
   packaged release (`./gradlew :desktop:packageReleaseDmg`), each page by `HERE_OPEN` with its
   standard error read, not only `:desktop:run`; a library reached by reflection, JNI or
@@ -342,7 +345,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   the place search and the keyless routers only what the model names. Its sheet's ways, and each day's driving sent with a
   question, ask the keyless routers for each two of the plan's places in a row, by their coordinates alone; when
   those can't be reached, they and `route_time` ask AMap's or Tencent's routing with the owner's own keys instead
-  (in China, never by train), no faster than each key allows. Don't send it more, or apply its
+  (in China, never by train), no faster than each key allows. On the phone, once the owner signs in to
+  Xiaohongshu's website in 同步与来源 (the owner's choice, its automated reading against the site's rules
+  and their account at risk), `search_notes` searches it for what the model names in a WebView no one sees,
+  reads only (no taps, typing or posting), a few pages a search and never faster than one a second and a
+  half, and sends the model what the notes say; its session stays out of Android's backups. Don't send it more, or apply its
   suggestions without that tap. Its conversations stay on the device, in its WebDAV backup (`plan-chats.json`,
   `BackupArchive`), and nowhere else.
 - Beyond the services named here, the app's one request of its own is for updates: the feed of this

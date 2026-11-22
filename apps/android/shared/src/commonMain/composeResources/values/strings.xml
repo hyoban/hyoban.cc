@@ -1694,6 +1694,17 @@
     <string name="plan_lookup_none">没找到</string>
     <string name="plan_lookup_failed">没查到</string>
     <string name="plan_lookup_no_way">没有路</string>
+    <string name="plan_lookup_notes">搜小红书 %1$s</string>
+    <string name="plan_lookup_notes_read">读了 %1$d 篇</string>
+    <string name="plan_lookup_signed_out">要重新登录</string>
+    <string name="plan_notes_title">参考的小红书笔记</string>
+    <string name="plan_notes_all">显示全部 %1$d 篇</string>
+    <string name="plan_note_likes">%1$s 赞</string>
+    <string name="setting_xiaohongshu">小红书</string>
+    <string name="xiaohongshu_signed_in">已登录</string>
+    <string name="xiaohongshu_signed_out">未登录</string>
+    <string name="xiaohongshu_sign_in_title">登录小红书</string>
+    <string name="settings_ai_note_xiaohongshu">登录小红书后，AI 规划时会用你的账号在小红书网页上搜它想查的词，读到的笔记也发给这个地址；自动浏览可能违反小红书的规定，账号有被限制的风险。</string>
     <string name="plan_by_drive">开车</string>
     <string name="plan_by_walk">步行</string>
     <string name="plan_by_bike">骑车</string>

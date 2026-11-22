@@ -162,6 +162,100 @@ class PlanAssistantTest {
         assertEquals(listOf("assistant", "tool", "tool"), read.kept.map { (it["role"] as JsonPrimitive).content })
     }
 
+    @Test
+    fun remembersAQuestionStoppedUnanswered() = kotlinx.coroutines.runBlocking {
+        val sent = mutableListOf<String>()
+        val memory = mutableListOf<List<JsonObject>>(PlanAssistant.unanswered("会花多少钱"))
+        PlanAssistant(
+            "https://example.test/v1", "key", "model",
+            okhttp3.OkHttpClient.Builder().addInterceptor { chain ->
+                val buffer = okio.Buffer()
+                chain.request().body!!.writeTo(buffer)
+                sent += buffer.readUtf8()
+                okhttp3.Response.Builder().request(chain.request()).protocol(okhttp3.Protocol.HTTP_1_1).code(200).message("OK")
+                    .body("""{"choices":[{"message":{"role":"assistant","content":"大约三百。"}}]}""".toResponseBody("application/json".toMediaType())).build()
+            }.build(),
+            turns = memory,
+        ).ask("我说景德镇", PlanContext("东京", "2026-12-24", "2026-12-29"), counting)
+        val messages = (Json.parseToJsonElement(sent.single()).jsonObject["messages"] as kotlinx.serialization.json.JsonArray).map { it.jsonObject }
+        // The stopped question, then what it was told of it, then the new one.
+        assertEquals(listOf("system", "user", "assistant", "user"), messages.map { (it["role"] as JsonPrimitive).content })
+        assertEquals("会花多少钱", (messages[1]["content"] as JsonPrimitive).content)
+        assertEquals(PlanAssistant.STOPPED, (messages[2]["content"] as JsonPrimitive).content)
+    }
+
+    @Test
+    fun readsANotesSearch() {
+        val search = JsonPrimitive("""{"query":"东京 拉面 推荐"}""")
+        val read = PlanAssistant.read(
+            message("""{"role":"assistant","content":"","tool_calls":[{"id":"n","type":"function","function":{"name":"search_notes","arguments":$search}}]}"""),
+        )
+        assertEquals(listOf(PlanLookup.Notes("n", "东京 拉面 推荐")), read.lookups)
+    }
+
+    @Test
+    fun searchesNotesOnlyWhereTheDeviceCan() = kotlinx.coroutines.runBlocking {
+        val answer = """{"choices":[{"message":{"role":"assistant","content":"好。"}}]}"""
+        val without = mutableListOf<String>()
+        scripted(without) { answer }.ask("规划", PlanContext("东京", "2026-12-24", "2026-12-29"), counting)
+        assertEquals(false, without.single().contains("search_notes"))
+        val with = mutableListOf<String>()
+        val reading = object : PlanLookups by counting {
+            override val searchesNotes = true
+        }
+        scripted(with) { answer }.ask("规划", PlanContext("东京", "2026-12-24", "2026-12-29"), reading)
+        assertEquals(true, with.single().contains("\"search_notes\",\"description"))
+        // Told how to tell an ad from a note, only where it reads them.
+        assertEquals(true, with.single().contains("广告"))
+        assertEquals(false, without.single().contains("广告"))
+        // An answer that only talks, suggesting nothing, is an answer, and is allowed one.
+        assertEquals(false, without.single().contains("End every answer with exactly one suggest_plan"))
+    }
+
+    @Test
+    fun tellsTheModelTheNotesRead() = kotlinx.coroutines.runBlocking {
+        val sent = mutableListOf<String>()
+        val search = JsonPrimitive("""{"query":"东京 拉面"}""")
+        val reading = object : PlanLookups by counting {
+            override val searchesNotes = true
+            override suspend fun notes(query: String) = listOf(
+                cc.hyoban.moments.data.ai.FoundNote("一兰真的好吃", author = "某人", likes = "1.2万", text = "排了半小时".repeat(400), posted = "2026-10-01"),
+                cc.hyoban.moments.data.ai.FoundNote("别去这家"),
+            )
+        }
+        val progress = mutableListOf<cc.hyoban.moments.data.ai.PlanProgress>()
+        scripted(sent) { index ->
+            if (index == 0) """{"choices":[{"message":{"role":"assistant","content":"","tool_calls":[{"id":"n","type":"function","function":{"name":"search_notes","arguments":$search}}]}}]}"""
+            else """{"choices":[{"message":{"role":"assistant","content":"去一兰。"}}]}"""
+        }.ask("想吃拉面", PlanContext("东京", "2026-12-24", "2026-12-29"), reading) { progress += it }
+        val told = Json.parseToJsonElement(sent[1]).jsonObject["messages"]!!.let { it as kotlinx.serialization.json.JsonArray }
+            .last().jsonObject["content"]!!.let { (it as JsonPrimitive).content }
+        val notes = Json.parseToJsonElement(told) as kotlinx.serialization.json.JsonArray
+        assertEquals("一兰真的好吃", (notes[0].jsonObject["title"] as JsonPrimitive).content)
+        assertEquals("1.2万", (notes[0].jsonObject["likes"] as JsonPrimitive).content)
+        // A long note is cut, not sent whole.
+        assertEquals(true, (notes[0].jsonObject["text"] as JsonPrimitive).content.length < 1300)
+        assertEquals(2, ((progress.last { it is cc.hyoban.moments.data.ai.PlanProgress.Looked } as cc.hyoban.moments.data.ai.PlanProgress.Looked).lookup as PlanLookup.Notes).found?.size)
+    }
+
+    @Test
+    fun aSearchSignedOutSaysSo() = kotlinx.coroutines.runBlocking {
+        val sent = mutableListOf<String>()
+        val search = JsonPrimitive("""{"query":"东京 拉面"}""")
+        val signedOut = object : PlanLookups by counting {
+            override val searchesNotes = true
+            override suspend fun notes(query: String): List<cc.hyoban.moments.data.ai.FoundNote> = throw cc.hyoban.moments.data.ai.NoteSignInNeeded()
+        }
+        val progress = mutableListOf<cc.hyoban.moments.data.ai.PlanProgress>()
+        scripted(sent) { index ->
+            if (index == 0) """{"choices":[{"message":{"role":"assistant","content":"","tool_calls":[{"id":"n","type":"function","function":{"name":"search_notes","arguments":$search}}]}}]}"""
+            else """{"choices":[{"message":{"role":"assistant","content":"先这样。"}}]}"""
+        }.ask("想吃拉面", PlanContext("东京", "2026-12-24", "2026-12-29"), signedOut) { progress += it }
+        val done = (progress.last { it is cc.hyoban.moments.data.ai.PlanProgress.Looked } as cc.hyoban.moments.data.ai.PlanProgress.Looked).lookup as PlanLookup.Notes
+        assertEquals(true, done.signedOut)
+        assertEquals(true, sent[1].contains("sign in again"))
+    }
+
     /** An assistant whose model answers [reply] to the request with each index, the requests' bodies kept in [sent]. */
     private fun scripted(sent: MutableList<String>, reply: (Int) -> String) = PlanAssistant(
         "https://example.test/v1",

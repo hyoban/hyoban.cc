@@ -59,6 +59,7 @@ class PlanChatsTest {
             thought(0, "先找寺")
             looked(PlanLookup.Place("a", "浅草寺", Fix(35.71, 139.79), found = listOf(FoundPlace("浅草寺", null, Fix(35.71, 139.79)))))
             thought(1, "再排晚上")
+            looked(PlanLookup.Notes("n", "东京 拉面", found = listOf(cc.hyoban.moments.data.ai.FoundNote("一兰", author = "某人", likes = "30", text = "不保存的正文", link = "https://www.xiaohongshu.com/explore/0123456789abcdef01234567?xsec_token=AB"), cc.hyoban.moments.data.ai.FoundNote("阿夫利"))))
             suggestions += PlanSuggestion(PlanItem("2026-12-24", "18:00", "看灯", PlanPlace("表参道", Fix(35.66, 139.71)))).also {
                 it.spot = PlanSpot.At(PlaceChoice.New("表参道", Fix(35.66, 139.71)), "表参道")
                 it.added = "m-9"
@@ -66,6 +67,18 @@ class PlanChatsTest {
             suggestions += PlanSuggestion(PlanItem("2026-12-25", "09:30", "晚点去寺里", null, "m-1"), record, "浅草寺").also { it.spot = PlanSpot.At(PlaceChoice.Known("p-1"), "浅草寺") }
             suggestions += PlanSuggestion(PlanItem("", null, "", null, "m-1", delete = true), record, "浅草寺").also { it.spot = PlanSpot.Finding }
         }
+    }
+
+    @Test
+    fun aStoppedAnswerIsRememberedOnlyWhenItsQuestionWasKept() {
+        val chat = PlanChat("t-1").apply {
+            turns += PlanTurn.Asked("会花多少钱")
+            turns += PlanTurn.Answered().apply { stopped = true; stoppedKept = true }
+            turns += PlanTurn.Asked("之前停下的")
+            turns += PlanTurn.Answered().apply { stopped = true }
+        }
+        val back = PlanChats.chatOf("t-1", Json.parseToJsonElement(PlanChats.chatJson(chat).toString()) as JsonObject)
+        assertEquals(listOf(true, false), back.turns.filterIsInstance<PlanTurn.Answered>().map { it.remembered })
     }
 
     @Test
@@ -80,8 +93,16 @@ class PlanChatsTest {
         assertEquals(false, answer.stopped)
         assertEquals(4, answer.thoughtFor)
         // Its thinking and lookups in the order they came.
-        assertEquals(listOf("Thought", "Look", "Thought"), answer.steps.map { if (it is PlanStep.Thought) "Thought" else "Look" })
-        assertEquals(1, (answer.lookups.single() as PlanLookup.Place).found?.size)
+        assertEquals(listOf("Thought", "Look", "Thought", "Look"), answer.steps.map { if (it is PlanStep.Thought) "Thought" else "Look" })
+        assertEquals(1, (answer.lookups.first() as PlanLookup.Place).found?.size)
+        // A search on Xiaohongshu keeps each note's title, author, likes and link; what they said stays in the model's memory.
+        val notes = answer.lookups[1] as PlanLookup.Notes
+        assertEquals("东京 拉面", notes.query)
+        assertEquals(2, notes.found?.size)
+        assertEquals(false, notes.failed)
+        assertEquals("一兰", notes.found?.first()?.title)
+        assertEquals("https://www.xiaohongshu.com/explore/0123456789abcdef01234567?xsec_token=AB", notes.found?.first()?.link)
+        assertNull(notes.found?.first()?.text)
         assertEquals(listOf(PlanChange.Add, PlanChange.Change, PlanChange.Delete), answer.suggestions.map { it.kind })
         assertEquals("m-9", answer.suggestions[0].added)
         assertEquals("表参道", (answer.suggestions[0].spot as PlanSpot.At).name)
