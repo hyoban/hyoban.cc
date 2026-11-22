@@ -106,7 +106,7 @@ sealed interface MapTime {
     }
 }
 
-/** The layers that take a time of their own; the footprints' starts as today rather than following, as every footprint at once is a lot to draw. */
+/** The layers that take a time of their own, each following every layer's until given one. */
 enum class TimedLayer(val key: String) { PLACES("places"), CHECKINS("checkins"), ROUTES("routes"), PHOTOS("photos"), FOOTPRINTS("footprints"), FOG("fog") }
 
 /** Every layer's time, as the settings keep it. */
@@ -115,16 +115,9 @@ class MapTimes(private val settings: Settings) {
     val shared: MapTime get() = MapTime.decode(settings.mapTime(SHARED)) ?: MapTime.All
 
     /** [layer]'s own time, or null while it follows [shared]. */
-    fun own(layer: TimedLayer): MapTime? = when (val kept = settings.mapTime(layer.key)) {
-        null -> if (layer == TimedLayer.FOOTPRINTS) MapTime.Today else null
-        FOLLOW -> null
-        else -> MapTime.decode(kept)
-    }
+    fun own(layer: TimedLayer): MapTime? = MapTime.decode(settings.mapTime(layer.key))
 
-    /** Whether [layer]'s time is as it starts, following every layer's (the footprints: today). */
-    fun isFirst(layer: TimedLayer): Boolean = settings.mapTime(layer.key) == null
-
-    /** [layer]'s time back as it starts. */
+    /** [layer]'s time back to following every layer's. */
     fun reset(layer: TimedLayer) = settings.changeMapTime(layer.key, null)
 
     /** What [layer] shows: its own time, else the shared one. */
@@ -132,12 +125,10 @@ class MapTimes(private val settings: Settings) {
 
     fun setShared(time: MapTime) = settings.changeMapTime(SHARED, time.takeUnless { it == MapTime.All }?.encode())
 
-    fun setOwn(layer: TimedLayer, time: MapTime?) =
-        settings.changeMapTime(layer.key, time?.encode() ?: FOLLOW.takeIf { layer == TimedLayer.FOOTPRINTS })
+    fun setOwn(layer: TimedLayer, time: MapTime?) = settings.changeMapTime(layer.key, time?.encode())
 
     private companion object {
         const val SHARED = "all"
-        const val FOLLOW = "follow"
     }
 }
 

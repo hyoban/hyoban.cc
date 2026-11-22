@@ -1142,8 +1142,7 @@ private fun FloatingPill(content: @Composable () -> Unit) {
 @Composable
 internal fun TimePills(times: MapTimes, layers: List<MapLayer>) {
     val shared = times.shared
-    // A layer's own while it is not as it starts: the footprints' once it is other than today.
-    val own = layers.mapNotNull { layer -> layer.timed.takeUnless { times.isFirst(it) }?.let { timed -> Triple(layer, timed, times.own(timed) ?: times.shared) } }
+    val own = layers.mapNotNull { layer -> times.own(layer.timed)?.let { Triple(layer, layer.timed, it) } }
     val motion = AppTheme.motionScheme
     AnimatedVisibility(
         shared != MapTime.All || own.isNotEmpty(),

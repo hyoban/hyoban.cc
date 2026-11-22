@@ -107,7 +107,7 @@ rather than a dialog. Controls keep clear of the camera's cutout on whichever si
   is switched and its year picked. Its switches, each remembered: 地点 (off, only an open place's pin stays), 签到 (the check-ins'
   places among the places, while 签到 is on, and with 地点 off the only ones drawn), 旅程 (off, only a lifted route is drawn, as the site's
   地图设置 does), 照片, 足迹 (while 足迹 is on; looking at a day or a part from its panel turns it on)
-  and 迷雾 (足迹's from today, as every footprint at once is a lot to draw), the menu staying open as the map changes behind it. Over them 时间 is every layer's
+  and 迷雾, the menu staying open as the map changes behind it. Over them 时间 is every layer's
   time, and each layer's calendar its own (`ui/map/MapTime.kt`): 全部, 今年, 去年, 近 30 天 (as of
   today, with 今天 and 昨天), a year with records and a month in it, or any days from one to another, each layer's
   following every layer's until given its own, and remembered. The places keep those with a
@@ -668,8 +668,8 @@ reported instead. The settings and the original action stay out of Android's bac
 The footprints are GPS tracks kept on the phone alone, in
 `noBackupFilesDir/footprints.sqlite` (`footprints/FootprintStore`), outside sync and backup.
 地图 → 足迹 opens a panel to record and to look at the footprints of the 足迹 layer's time, chosen in
-地图's 图层 with every layer's (今天 at first, not following; a day, a span, or a trip it recorded,
-a long time drawn from every so many points), and export GPX and delete a day's or a trip's — while recording,
+地图's 图层 with every layer's (following every layer's until given its own: a day, a span, or a
+trip it recorded, a long time drawn from every so many points), and export GPX and delete a day's or a trip's — while recording,
 anything but today and the running trip (importing is in 我 → 导入); 足迹记录
 (`moments://footprint-settings`), from the panel's settings button, sets how recording
 behaves.

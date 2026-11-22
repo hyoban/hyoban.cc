@@ -105,7 +105,7 @@ fun MapLayersMenu(
         TimeHeader(timeWords(times.shared)) { onDismiss(); choosing = TimeTarget.Shared }
         Box(Modifier.width(MENU_WIDTH).padding(vertical = 4.dp).height(1.dp).background(dividerColor()))
         layers.forEach { layer ->
-            LayerRow(layer, times.own(layer.timed).takeUnless { times.isFirst(layer.timed) && layer.timed != TimedLayer.FOOTPRINTS }) {
+            LayerRow(layer, times.own(layer.timed)) {
                 onDismiss()
                 choosing = TimeTarget.Own(layer)
             }
@@ -161,7 +161,7 @@ private fun LayerRow(layer: MapLayer, own: MapTime?, onTime: () -> Unit) {
         }
         val label = stringResource(Res.string.map_time_of, stringResource(layer.name))
         IconButton(onClick = onTime, modifier = Modifier.testTag("${layer.tag}_time")) {
-            Icon(AppIcons.Calendar, contentDescription = label, tint = if (own != null && layer.timed != TimedLayer.FOOTPRINTS) tokens.accent else tokens.tx3, modifier = Modifier.size(20.dp))
+            Icon(AppIcons.Calendar, contentDescription = label, tint = if (own != null) tokens.accent else tokens.tx3, modifier = Modifier.size(20.dp))
         }
         AppSwitch(layer.on)
     }
