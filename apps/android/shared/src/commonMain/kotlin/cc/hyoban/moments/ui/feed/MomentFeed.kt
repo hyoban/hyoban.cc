@@ -32,7 +32,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -184,6 +187,13 @@ fun MomentFeed(
         }
     } }
     val bottom = LocalBottomClearance.current + LocalFabClearance.current + Space.xl
+    // The day the list opens at when it opens at its end: today, or the last day before it, the
+    // planned days to come after it.
+    val today = remember(timeline, fromEnd) {
+        val now = java.time.LocalDate.now().toString()
+        if (fromEnd && chronological) timeline.lastOrNull { it.first <= now }?.first else null
+    }
+    val todayEnd = remember { TodayEnd() }
     val card: @Composable (MomentRecord, Modifier, Boolean) -> Unit = { moment, cardModifier, showDate ->
         MomentCard(
             moment,
@@ -244,19 +254,24 @@ fun MomentFeed(
             }
         } else {
             if (fromEnd) {
-                // At the end until it is scrolled away from, and again once scrolled back to it.
+                // At today until it is scrolled away from, and again once scrolled back to it: the
+                // end of today, or of the last day before it, at the bottom, the planned days still
+                // to come below it.
                 var atEnd by rememberSaveable { mutableStateOf(true) }
+                fun target() = todayEnd.index.takeIf { it >= 0 } ?: (state.layoutInfo.totalItemsCount - 1)
                 LaunchedEffect(state) {
                     launch {
-                        snapshotFlow { state.isScrollInProgress }.drop(1).filter { !it }.collect { atEnd = !state.canScrollForward }
+                        snapshotFlow { state.isScrollInProgress }.drop(1).filter { !it }.collect {
+                            val end = target()
+                            atEnd = !state.canScrollForward || state.layoutInfo.visibleItemsInfo.any { it.index == end }
+                        }
                     }
                     snapshotFlow { state.layoutInfo.totalItemsCount }.collect { count ->
-                        if (atEnd && count > 0) state.scrollToItem(count - 1)
+                        if (atEnd && count > 0) state.showEnd(target(), animated = false)
                     }
                 }
                 OnTabReselect(tab) {
-                    val count = state.layoutInfo.totalItemsCount
-                    if (count > 0) state.animateScrollToItem(count - 1)
+                    if (state.layoutInfo.totalItemsCount > 0) state.showEnd(target(), animated = true)
                     atEnd = true
                 }
             } else {
@@ -266,7 +281,8 @@ fun MomentFeed(
                 Modifier.fillMaxSize(),
                 state = state,
                 contentPadding = PaddingValues(start = columns.margin, top = LocalTopClearance.current, end = columns.margin, bottom = bottom),
-            ) {
+            ) { CountingScope(this).run {
+                todayEnd.index = -1
                 leadingRows(leading)
                 var month: String? = null
                 val bannered = mutableSetOf<String>()
@@ -379,6 +395,7 @@ fun MomentFeed(
                                 }
                             }
                         }
+                        if (day == today) todayEnd.index = count - 1
                         return@forEach
                     }
                     // The day's header row above it, then the day across the column, days set
@@ -429,10 +446,43 @@ fun MomentFeed(
                             is DayItem.Drive -> DriveRow(item.drive, itemModifier)
                         }
                     }
+                    if (day == today) todayEnd.index = count - 1
                 }
-            }
+            } }
         }
     }
+}
+
+/** Where the list's day of today ends, worked out as its rows are laid out. */
+private class TodayEnd {
+    var index = -1
+}
+
+/** A list's rows, counted as they are added, so a row's index is known by where it was added. */
+private class CountingScope(private val list: LazyListScope) : LazyListScope by list {
+    var count = 0
+        private set
+
+    override fun item(key: Any?, contentType: Any?, content: @Composable LazyItemScope.() -> Unit) {
+        count++
+        list.item(key, contentType, content)
+    }
+
+    override fun items(count: Int, key: ((Int) -> Any)?, contentType: (Int) -> Any?, itemContent: @Composable LazyItemScope.(Int) -> Unit) {
+        this.count += count
+        list.items(count, key, contentType, itemContent)
+    }
+}
+
+/** Scrolls so that the row at [index] ends at the bottom of the list, above its padding. */
+private suspend fun LazyListState.showEnd(index: Int, animated: Boolean) {
+    if (layoutInfo.visibleItemsInfo.none { it.index == index }) {
+        if (animated) animateScrollToItem(index) else scrollToItem(index)
+    }
+    val info = layoutInfo
+    val row = info.visibleItemsInfo.firstOrNull { it.index == index } ?: return
+    val by = (row.offset + row.size - (info.viewportEndOffset - info.afterContentPadding)).toFloat()
+    if (animated) animateScrollBy(by) else scrollBy(by)
 }
 
 /**
