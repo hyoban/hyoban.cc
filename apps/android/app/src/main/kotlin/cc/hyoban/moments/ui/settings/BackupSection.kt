@@ -127,7 +127,6 @@ fun BackupSection(backup: Backup, onEdit: () -> Unit, onRestore: () -> Unit) {
             shapes = shapes,
             colors = segmentColors(),
             leadingContent = { Icon(AppIcons.Download, contentDescription = null) },
-            supportingContent = { Text(stringResource(Res.string.restore_note)) },
             modifier = Modifier.testTag("backup_restore"),
         ) { Text(stringResource(Res.string.action_restore_backup)) }
     }

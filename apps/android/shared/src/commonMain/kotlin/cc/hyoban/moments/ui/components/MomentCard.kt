@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
@@ -168,6 +169,7 @@ private fun MomentBubble(
     val density = LocalDensity.current
     // Written into a plan, not lived: no fill and no tail, a dashed hairline in their place.
     val planned = moment.planned == true
+    val plannedLabel = stringResource(Res.string.trip_planned)
     // Settled by its owner: the dashed line drawn whole.
     val locked = planned && moment.locked == true
     val shape = remember(joinedAbove, joinedBelow, planned) {
@@ -189,7 +191,11 @@ private fun MomentBubble(
             onLongClick = { at -> menu = with(density) { DpOffset(at.x.toDp(), at.y.toDp()) } },
             onLongClickLabel = stringResource(Res.string.action_more),
             modifier = width.sharedCard(moment.uid).then(surface).border(2.dp, ring, shape).padding(end = tail)
-                .semantics { this.selected = selected }.testTag("moment_${moment.uid}"),
+                // The dashed outline shows a planned one; TalkBack says it.
+                .semantics {
+                    this.selected = selected
+                    if (planned) stateDescription = plannedLabel
+                }.testTag("moment_${moment.uid}"),
             flat = true,
             shape = remember(joinedAbove, joinedBelow) { cc.hyoban.moments.ui.feed.sentBodyShape(joinedAbove, joinedBelow) },
             // Words alone wrap the bubble to them, so where and when end at its edge.
@@ -201,9 +207,7 @@ private fun MomentBubble(
                 verticalArrangement = Arrangement.spacedBy(Space.xs),
             ) {
                 val private = moment.hidden.takeIf { it }?.let { stringResource(Res.string.visibility_private) }
-                // A planned one says so first, a word as 私有 is.
-                val plan = if (planned) stringResource(Res.string.trip_planned) else null
-                val parts = listOfNotNull(plan) + moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
+                val parts = moment.places.filter { it != hidePlace }.map { places[it]?.name ?: it } + listOfNotNull(trip?.title, private)
                 // The time in the figures' monospace, as the records bubbles beside it have theirs.
                 val time = formatTime(moment.occurredAt)
                 val numFont = AppTheme.typography.caption.fontFamily
@@ -219,7 +223,7 @@ private fun MomentBubble(
                 val foot: @Composable () -> Unit = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
                         Row(Modifier.weight(1f, fill = false), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                            // A locked one's 计划 comes after a lock.
+                            // A locked one starts with a lock.
                             if (locked) Icon(AppIcons.Lock, contentDescription = stringResource(Res.string.plan_locked), tint = tokens.tx3, modifier = Modifier.size(12.dp))
                             Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }

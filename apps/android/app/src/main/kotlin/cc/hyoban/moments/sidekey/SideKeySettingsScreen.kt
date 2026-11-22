@@ -111,7 +111,8 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
                 SegmentedGroup(null, stringResource(Res.string.side_key_note), listOf { shapes ->
                     SwitchRow(config.enabled, AppIcons.Phone,
                         stringResource(Res.string.side_key_enabled), "sidekey_enabled", shapes,
-                        supporting = stringResource(state.phase.label)) {
+                        // Off or listening, the switch says so; only what's in the way is written.
+                        supporting = state.phase.takeIf { it != SideKeyPhase.OFF && it != SideKeyPhase.RUNNING }?.let { stringResource(it.label) }) {
                         // Turned on with Shizuku or the service still missing, the sheet says what it needs first (35).
                         if (!config.enabled && (!connected || runCatching { !Shizuku.pingBinder() || Shizuku.checkSelfPermission() != android.content.pm.PackageManager.PERMISSION_GRANTED }.getOrDefault(true))) explaining = true
                         SideKeys.setEnabled(!config.enabled)

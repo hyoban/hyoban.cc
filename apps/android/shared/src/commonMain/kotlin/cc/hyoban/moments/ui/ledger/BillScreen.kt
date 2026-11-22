@@ -260,7 +260,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
                     if (returns.isNotEmpty()) {
                         SegmentedGroup(
                             stringResource(Res.string.ledger_returns),
-                            pluralStringResource(Res.plurals.ledger_count_bills, returns.size, returns.size),
+                            null,
                             returns.sortedBy { it.time }.map { back ->
                                 { shapes ->
                                     InfoRow(shapes, txnIcon(back, ledger), kindLabel(back.kind), formatDay(back.dateKey) + " " + (back.account?.let(ledger.accountsById::get)?.name ?: ""),

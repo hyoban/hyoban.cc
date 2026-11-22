@@ -438,7 +438,7 @@ fun MomentFeed(
                             is DayItem.ChargeItem -> ChargeRow(item.charge, itemModifier, bills.ledger)
                             is DayItem.ThingItem -> ThingRow(item.thing, itemModifier)
                             is DayItem.CheckinItem -> Column(itemModifier) {
-                                CheckinRow(item.checkin)
+                                CheckinRow(item.checkin, hideVenue = hidePlace != null && item.checkin.place == hidePlace)
                                 bills.linkedCharges[item.checkin.uid]?.forEach { ChargeRow(it, ledger = bills.ledger) }
                                 bills.linked[item.checkin.uid]?.takeIf { it.isNotEmpty() }?.let { BillGroup(it, bills.ledger, onBill) }
                             }

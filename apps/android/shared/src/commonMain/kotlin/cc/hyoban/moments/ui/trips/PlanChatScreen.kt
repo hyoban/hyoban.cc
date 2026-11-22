@@ -804,7 +804,6 @@ fun PlanChatScreen(container: AppContainer, id: String, onBack: () -> Unit, onMo
 
     val subtitle = listOfNotNull(
         trip.title,
-        stringResource(Res.string.trip_planned).takeIf { trip.planned == true },
         formatRange(trip.start, trip.end),
     ).joinToString(APART)
     val clearLabel = stringResource(Res.string.action_clear_chat)
@@ -1275,7 +1274,7 @@ private fun NotesRead(turn: PlanTurn.Answered) {
     Column(Modifier.padding(top = Space.l).fillMaxWidth().testTag("plan_notes")) {
         Row(Modifier.padding(bottom = Space.xs), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.xs)) {
             Icon(AppIcons.Xiaohongshu, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(16.dp))
-            Text(stringResource(Res.string.plan_notes_title) + APART + stringResource(Res.string.plan_notes_count, notes.size), style = AppTheme.typography.caption, color = tokens.tx2)
+            Text(stringResource(Res.string.plan_notes_title), style = AppTheme.typography.caption, color = tokens.tx2)
         }
         val shown = if (all) notes else notes.take(NOTES_SHOWN)
         shown.forEachIndexed { index, note ->

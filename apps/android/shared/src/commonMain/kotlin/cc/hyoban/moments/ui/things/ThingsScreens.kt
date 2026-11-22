@@ -108,10 +108,10 @@ fun Figures(vararg figures: Triple<String, String, String?>, modifier: Modifier 
 
 /** A row on the page: its name, what it is under it, a figure at its end; tapped, it opens. */
 @Composable
-private fun ThingRow(title: String, supporting: String, figure: String, tag: String, dim: Boolean = false, supportingColor: androidx.compose.ui.graphics.Color? = null, onClick: () -> Unit) {
+private fun ThingRow(title: String, supporting: String?, figure: String, tag: String, dim: Boolean = false, supportingColor: androidx.compose.ui.graphics.Color? = null, onClick: () -> Unit) {
     ListItem(
         headlineContent = { Text(title, color = if (dim) tokens.tx2 else tokens.tx) },
-        supportingContent = { Text(supporting, color = supportingColor ?: tokens.tx2) },
+        supportingContent = supporting?.let { { Text(it, color = supportingColor ?: tokens.tx2) } },
         trailingContent = { Text(figure, style = AppTheme.typography.body, color = if (dim) tokens.tx2 else tokens.tx) },
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).testTag(tag),
     )
@@ -424,12 +424,12 @@ fun SubscriptionsScreen(container: AppContainer, onBack: () -> Unit, open: Strin
             }
             PageCaption(stringResource(Res.string.subscriptions_once))
             if (showOnce) once.forEach { SubscriptionRow(it, today) { editing = it } } else {
-                ThingRow(stringResource(Res.string.subscriptions_once), once.take(3).joinToString("、") { it.name }, sums(once).joinToString(" "), "subscriptions_once") { showOnce = true }
+                ThingRow(once.take(3).joinToString("、") { it.name }, null, sums(once).joinToString(" "), "subscriptions_once") { showOnce = true }
             }
             if (ended.isNotEmpty()) {
                 PageCaption(stringResource(Res.string.subscriptions_ended))
                 if (showEnded) ended.forEach { SubscriptionRow(it, today) { editing = it } } else {
-                    ThingRow(stringResource(Res.string.subscriptions_ended), ended.joinToString("、") { it.name }, ended.size.toString(), "subscriptions_ended", dim = true) { showEnded = true }
+                    ThingRow(ended.joinToString("、") { it.name }, null, ended.size.toString(), "subscriptions_ended", dim = true) { showEnded = true }
                 }
             }
             Text(
@@ -459,7 +459,7 @@ private fun SubscriptionRow(subscription: Subscription, today: LocalDate, onClic
     val next = subscription.next(today)?.toString()?.let { formatDate(it, today) }
     val lapsed = subscription.lapsed(today)
     val line = when {
-        subscription.ended != null -> stringResource(Res.string.subscription_stopped, formatDate(subscription.ended.toString(), today))
+        subscription.ended != null -> formatDate(subscription.ended.toString(), today)
         subscription.period == Period.ONCE -> stringResource(Res.string.subscription_bought, formatDate(subscription.paid.toString(), today))
         lapsed -> stringResource(Res.string.subscription_lapsed, next.orEmpty())
         subscription.autoRenew -> listOf(stringResource(Res.string.subscription_renews, next.orEmpty()), stringResource(Res.string.subscription_auto)).joinToString(APART)

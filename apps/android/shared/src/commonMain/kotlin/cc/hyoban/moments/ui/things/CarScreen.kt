@@ -144,7 +144,7 @@ fun CarScreen(container: AppContainer, onBack: () -> Unit, onDay: (String) -> Un
 @Composable
 private fun MonthSwitch(month: VehicleMonth, hasOlder: Boolean, hasNewer: Boolean, onOlder: () -> Unit, onNewer: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(horizontal = Space.gutter), verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(Res.string.car_report, month.month.monthValue), style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.weight(1f))
+        Text(stringResource(Res.string.car_report), style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.weight(1f))
         IconButton(onClick = onOlder, enabled = hasOlder, modifier = Modifier.testTag("car_older")) {
             Icon(AppIcons.ChevronLeft, contentDescription = stringResource(Res.string.car_previous_month))
         }

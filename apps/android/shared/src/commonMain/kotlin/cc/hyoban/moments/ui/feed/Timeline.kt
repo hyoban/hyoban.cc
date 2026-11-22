@@ -376,11 +376,12 @@ fun DriveRow(drive: DriveDay, modifier: Modifier = Modifier) {
 
 /** A check-in as a row on the page: its time, and the venue it was at, or on a page of that place its day; a tap opens its sheet. */
 @Composable
-fun CheckinRow(checkin: Checkin, modifier: Modifier = Modifier, withDate: Boolean = false) {
+fun CheckinRow(checkin: Checkin, modifier: Modifier = Modifier, withDate: Boolean = false, hideVenue: Boolean = false) {
     val open = LocalCheckinNav.current
     PageRow(
         leading = { Icon(AppIcons.Pin, contentDescription = null) },
-        title = checkinTitle(checkin, withDate),
+        // On its place's own page the venue is the page's title.
+        title = if (hideVenue && !withDate) stringResource(Res.string.change_checkin) else checkinTitle(checkin, withDate),
         supporting = if (checkin.private) stringResource(Res.string.visibility_private) else null,
         onClick = open?.let { { it(checkin.uid) } },
         modifier = modifier.testTag("checkin_${checkin.uid}"),

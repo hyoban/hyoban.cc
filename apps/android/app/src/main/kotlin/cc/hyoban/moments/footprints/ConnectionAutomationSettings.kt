@@ -153,11 +153,12 @@ fun ConnectionAutomationSettings(container: PhoneContainer) {
                     stringResource(Res.string.connection_automation_switch),
                     "connection_automation_enabled",
                     shapes,
-                    supporting = stringResource(when {
+                    // Off, the switch says so.
+                    supporting = when {
                         !rules.hasTargets -> Res.string.connection_automation_choose_first
                         rules.enabled -> status ?: Res.string.connection_automation_watching
-                        else -> Res.string.connection_automation_off
-                    }),
+                        else -> null
+                    }?.let { stringResource(it) },
                     enabled = loaded && !busy && rules.hasTargets,
                 ) { if (!rules.enabled) request("enable") else save(rules.copy(enabled = false)) }
             },

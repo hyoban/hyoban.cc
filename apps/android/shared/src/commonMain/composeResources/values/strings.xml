@@ -54,15 +54,15 @@
     <string name="share_telegram_open">打开 Telegram</string>
     <string name="share_telegram_unavailable">无法打开 Telegram，确认已安装</string>
     <plurals name="share_selected_photos">
-        <item quantity="other">已选 %1$d 张，按原顺序分享。点按照片来选择。</item>
+        <item quantity="other">已选 %1$d 张，按原顺序分享。</item>
     </plurals>
     <string name="share_x_hint">在 X 中检查后发布。这里的修改只用于这次分享，字数限制以 X 编辑器为准。</string>
     <string name="share_text">文字</string>
-    <string name="share_photos">已选 %1$d / %2$d 张，按原顺序分享。点按照片来选择。</string>
+    <string name="share_photos">已选 %1$d / %2$d 张，按原顺序分享。</string>
     <string name="action_prepare_share">准备图文</string>
     <string name="share_prepare_hint">「准备图文」会把所选照片存到一个单独的相册，并复制文字，之后到目标 App 里手动选照片、粘贴并发布。微信朋友圈、B 站、飞书和其他平台都可以用，照片数量按目标平台的限制来选。</string>
     <plurals name="share_prepare_photos">
-        <item quantity="other">已选 %1$d 张，按原顺序保存。点按照片来选择。</item>
+        <item quantity="other">已选 %1$d 张，按原顺序保存。</item>
     </plurals>
     <string name="share_save_and_copy">保存照片并复制文字</string>
     <string name="share_save_photos">保存照片</string>
@@ -387,7 +387,6 @@
     <string name="place_group_leisure">娱乐</string>
     <string name="place_group_transport">交通</string>
     <string name="place_group_life">生活</string>
-    <string name="place_drag_hint">拖动地图，把图钉放到这个时刻发生的地方</string>
     <string name="action_save_checkin">保存为签到</string>
     <string name="message_checkin_known">这段停留已有签到</string>
     <string name="share_save_place">保存为地点</string>
@@ -500,7 +499,6 @@
     <string name="message_change_reverted">已放弃更改</string>
     <string name="action_navigate_short">导航</string>
     <string name="action_refresh">刷新</string>
-    <string name="refresh_note">从 API 读取最新的时刻、地点和旅程</string>
     <string name="refresh_needs_api">填上 API 地址和令牌后才能刷新</string>
     <string name="refreshing">正在刷新</string>
     <string name="confirm_discard_note">还没保存的文字、照片和地点都会丢掉</string>
@@ -604,7 +602,6 @@
     <string name="footprints_trip">单次行程</string>
     <string name="footprints_trip_off_note">开始后持续记录，直到手动结束</string>
     <string name="connection_automation_switch">按连接开始和暂停</string>
-    <string name="connection_automation_off">已关闭</string>
     <string name="connection_automation_none">未选择</string>
     <string name="connection_automation_wifi_row">Wi-Fi</string>
     <string name="connection_automation_bluetooth_row">蓝牙设备</string>
@@ -618,7 +615,7 @@
     <!-- Local connection automation. -->
     <string name="connection_automation_auto_failed">记录服务未能启动，请打开足迹面板检查权限并恢复记录</string>
     <string name="connection_automation_title">连接自动控制</string>
-    <string name="connection_automation_watching">自动控制已开启，正在监听所选连接的变化</string>
+    <string name="connection_automation_watching">正在监听所选连接的变化</string>
     <string name="connection_automation_error">连接自动控制暂不可用，请重新开启后重试</string>
     <string name="connection_automation_permissions">自动控制已暂停，请检查通知、后台定位或蓝牙权限</string>
     <string name="connection_automation_wifi_unknown">暂时无法识别 Wi-Fi 名称，请检查定位权限和系统定位开关</string>
@@ -647,10 +644,10 @@
     <string name="footprints_chip_blocked">定位关闭</string>
     <string name="footprints_background_start_denied">系统限制了后台自动启动，请打开足迹面板恢复记录</string>
     <string name="footprints_activity_title">活动识别增强</string>
-    <string name="footprints_activity_off">未开启，继续使用手机移动传感器</string>
+    <string name="footprints_activity_off">继续使用手机移动传感器</string>
     <string name="footprints_activity_unavailable">Google Play 服务不可用，继续使用原有移动检测</string>
     <string name="footprints_activity_permission">请允许身体活动权限，或关闭此增强项</string>
-    <string name="footprints_activity_ready">已开启，将在日常记录时使用</string>
+    <string name="footprints_activity_ready">将在日常记录时使用</string>
     <string name="footprints_activity_active">正在辅助识别步行、骑行和乘车</string>
     <string name="footprints_activity_failed">活动识别暂不可用，原有移动检测继续工作</string>
     <string name="footprints_activity_note">可选功能，需要 Google Play 服务和身体活动权限，帮助日常记录更及时地恢复定位。静止识别仅作参考，不会直接暂停行程。轨迹仍只保存在本机。</string>
@@ -829,7 +826,6 @@
     <string name="ledger_trip_days_spent">这几天所有账本共 %1$s</string>
     <string name="ledger_some_unconverted">部分未换算</string>
     <string name="ledger_from_moment">记一笔 %1$s</string>
-    <string name="ledger_from_moment_note">按这个时刻写的花费记到账本</string>
     <string name="ledger_books">账本</string>
     <string name="ledger_add_book">新建账本</string>
     <string name="ledger_book_name">账本名称</string>
@@ -1133,7 +1129,6 @@
     <string name="subscription_runs_out">%1$s 到期</string>
     <string name="subscription_lapsed">%1$s 已到期</string>
     <string name="subscription_auto">自动</string>
-    <string name="subscription_stopped">%1$s 停了</string>
     <string name="subscription_bought">%1$s 买的</string>
     <string name="subscription_add">添加订阅</string>
     <string name="subscription_name">名称</string>
@@ -1150,7 +1145,7 @@
     <string name="subscription_ended">已经停了</string>
     <string name="subscription_note">描述</string>
     <string name="subscriptions_empty">还没有订阅</string>
-    <string name="car_report">%1$d 月月报</string>
+    <string name="car_report">月报</string>
     <string name="car_distance">里程</string>
     <string name="car_energy">用电</string>
     <string name="car_consumption">能耗</string>
@@ -1297,7 +1292,6 @@
     <string name="backup_failure_unreachable">连不上 WebDAV 服务器</string>
     <string name="backup_failure_other">发生了意外错误</string>
     <string name="action_restore_backup">从备份恢复</string>
-    <string name="restore_note">换成 WebDAV 上的一份</string>
     <string name="restore_none">WebDAV 上还没有备份</string>
     <string name="restore_dialog_note">记账、足迹、未发布的时刻和网站的副本换成这一份，换下来的在手机上留一份。之后 App 重新打开。</string>
     <string name="action_restore">恢复</string>
@@ -1376,13 +1370,13 @@
     <string name="permission_side_key_path">先在 Shizuku 里启动服务，回来后按系统的框授权</string>
     <string name="permission_side_key_primary">打开 Shizuku</string>
     <string name="footprints_needs">需要</string>
-    <string name="footprints_needs_notifications">关着：记录时看不到状态</string>
+    <string name="footprints_needs_notifications">记录时看不到状态</string>
     <string name="footprints_needs_activity">身体活动</string>
     <string name="footprints_needs_activity_note">活动识别增强要用</string>
     <string name="footprints_needs_location">位置</string>
     <string name="footprints_needs_location_note">只在使用 App 时允许：切到后台就会停</string>
     <string name="footprints_needs_live">实时活动</string>
-    <string name="footprints_needs_live_note">关着：状态栏和流体云不显示记录状态</string>
+    <string name="footprints_needs_live_note">状态栏和流体云不显示记录状态</string>
     <string name="footprints_needs_battery">电池不受限制</string>
     <string name="footprints_needs_battery_note">受限制：锁屏后系统可能停掉记录</string>
     <string name="footprints_auto_start">自启动</string>
@@ -1446,7 +1440,7 @@
     <string name="camera_location">位置</string>
     <string name="camera_send_location">给相机发位置</string>
     <string name="camera_send_location_on">相机开着、在附近时，每 10 秒发一次</string>
-    <string name="camera_send_location_off">关着：照片里没有地点</string>
+    <string name="camera_send_location_off">照片里没有地点</string>
     <string name="camera_location_note">相机里要打开「位置信息链接」；要按手机校准相机的时间和时区，再在那里打开「自动校正时间」和「自动调整区域」。</string>
     <string name="camera_needs">需要</string>
     <string name="camera_allowed">已允许</string>
@@ -1579,7 +1573,7 @@
     <string name="action_stop_nas">不再连接</string>
     <string name="settings_nas_note">选照片里能看这台 NAS 相册里的照片，加入时把原图存到手机，也能删除。用 UGREENlink ID 时先问绿联它在哪：在家里直连，在外面走绿联的中转。密码只留在这台手机上。</string>
     <string name="nas_match">关联已发布的照片</string>
-    <string name="nas_match_note">按拍摄时间、形状和内容在 NAS 里找时刻的照片，关联后的改动在发布更改里审阅</string>
+    <string name="nas_match_note">关联后的改动在发布更改里审阅</string>
     <string name="nas_match_reading">正在读 NAS 的第 %1$d / %2$d 天</string>
     <string name="nas_match_starting">正在读 NAS…</string>
     <string name="nas_match_comparing">正在比对第 %1$d / %2$d 张</string>
@@ -1698,7 +1692,6 @@
     <string name="plan_lookup_notes_read">读了 %1$d 篇</string>
     <string name="plan_lookup_signed_out">要重新登录</string>
     <string name="plan_notes_title">参考的小红书笔记</string>
-    <string name="plan_notes_count">%1$d 篇</string>
     <string name="plan_notes_all">显示全部 %1$d 篇</string>
     <string name="plan_note_likes">%1$s 赞</string>
     <string name="setting_xiaohongshu">小红书</string>

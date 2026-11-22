@@ -405,8 +405,7 @@ private fun MomentDetails(
                 color = tokens.tx2,
             )
             if (planned && moment.locked == true) {
-                Icon(AppIcons.Lock, contentDescription = null, tint = tokens.tx2, modifier = Modifier.padding(start = Space.xs).size(16.dp))
-                Text(stringResource(Res.string.plan_locked), style = AppTheme.typography.body, color = tokens.tx2)
+                Icon(AppIcons.Lock, contentDescription = stringResource(Res.string.plan_locked), tint = tokens.tx2, modifier = Modifier.padding(start = Space.xs).size(16.dp))
             }
         }
         if (moment.text.isNotBlank()) {

@@ -218,6 +218,9 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   telling how to use it (what + does, that a tap opens it, what a check means); if it needs
   one, the design is wrong, so change the design. A note stays only for what the page can't
   show: what an action costs, what leaves the phone, a rule's threshold, another app's limits.
+  Nor do words repeat what is already shown: a planned bubble's dashed outline, a check, a lock,
+  a switch's own state, the page's title or the caption over a row. Such a state goes to TalkBack
+  (a `stateDescription` or the icon's description) instead.
 - The map's year colours are the tokens' `YearColors`, the same as `packages/trip-map/src/theme.ts`, and the
   fog is the site's `packages/trip-map/src/map/fog-layer.ts`. The ledger's charts are drawn on a
   Compose `Canvas` (`ui/ledger/Charts.kt`), not with a chart library.

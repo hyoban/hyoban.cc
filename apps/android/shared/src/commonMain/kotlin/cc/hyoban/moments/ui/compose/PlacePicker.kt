@@ -626,12 +626,7 @@ private fun PlaceCard(
                     modifier = Modifier.align(Alignment.Center),
                 )
                 rows.isEmpty() && noLocation -> NoLocationRow(Modifier.align(Alignment.TopCenter))
-                rows.isEmpty() -> Text(
-                    stringResource(Res.string.place_drag_hint),
-                    style = AppTheme.typography.body,
-                    color = tokens.tx2,
-                    modifier = Modifier.align(Alignment.Center).padding(horizontal = Space.xl),
-                )
+                rows.isEmpty() -> Unit
                 else -> LazyColumn(Modifier.testTag("place_rows")) {
                     itemsIndexed(rows, key = { index, row ->
                         when (row) {

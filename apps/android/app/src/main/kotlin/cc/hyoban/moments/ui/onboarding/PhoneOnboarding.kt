@@ -160,9 +160,10 @@ internal fun Background(onBack: () -> Unit, onDone: () -> Unit) {
                     shapes = shapes,
                     colors = segmentColors(),
                     leadingContent = {
-                        Icon(if (background) AppIcons.Check else AppIcons.Alert, contentDescription = null, tint = if (background) tokens.accent else tokens.danger)
+                        Icon(if (background) AppIcons.Check else AppIcons.Alert, contentDescription = if (background) stringResource(Res.string.onboarding_allowed) else null, tint = if (background) tokens.accent else tokens.danger)
                     },
-                    supportingContent = { Text(stringResource(if (background) Res.string.onboarding_allowed else Res.string.onboarding_background_note)) },
+                    // Allowed, the check says so.
+                    supportingContent = if (background) null else { { Text(stringResource(Res.string.onboarding_background_note)) } },
                     trailingContent = { Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp)) },
                     modifier = Modifier.testTag("onboarding_background"),
                 ) { Text(stringResource(if (background) Res.string.footprints_needs_location else Res.string.onboarding_background)) }
@@ -175,9 +176,9 @@ internal fun Background(onBack: () -> Unit, onDone: () -> Unit) {
                     shapes = shapes,
                     colors = segmentColors(),
                     leadingContent = { Icon(AppIcons.Bell, contentDescription = null) },
-                    supportingContent = { Text(stringResource(if (notifying) Res.string.onboarding_allowed else Res.string.onboarding_notifications_off)) },
+                    supportingContent = if (notifying) null else { { Text(stringResource(Res.string.onboarding_notifications_off)) } },
                     trailingContent = {
-                        if (notifying) Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent)
+                        if (notifying) Icon(AppIcons.Check, contentDescription = stringResource(Res.string.onboarding_allowed), tint = tokens.accent)
                         else Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp))
                     },
                 ) { Text(stringResource(Res.string.onboarding_notifications)) }
@@ -216,9 +217,9 @@ private fun AllowanceRow(icon: ImageVector, title: StringResource, off: StringRe
         shapes = shapes,
         colors = segmentColors(),
         leadingContent = { Icon(icon, contentDescription = null) },
-        supportingContent = { Text(stringResource(if (allowed) Res.string.onboarding_allowed else off)) },
+        supportingContent = if (allowed) null else { { Text(stringResource(off)) } },
         trailingContent = {
-            if (allowed) Icon(AppIcons.Check, contentDescription = null, tint = tokens.accent)
+            if (allowed) Icon(AppIcons.Check, contentDescription = stringResource(Res.string.onboarding_allowed), tint = tokens.accent)
             else Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp))
         },
         modifier = Modifier.testTag(tag),

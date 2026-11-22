@@ -63,9 +63,9 @@ fun TripCard(trip: TripRecord, covers: List<MomentMedia>, count: Int, urls: Medi
 
 /** A trip's dates, its length, its count of Moments and of places when given, as a card's subhead in Material 3: one line of secondary text. */
 @Composable
-fun TripSubhead(trip: TripRecord, count: Int, places: Int? = null) {
+fun TripSubhead(trip: TripRecord, count: Int, places: Int? = null, planned: Boolean = true) {
     Text(
-        (listOf(tripSummary(trip, count)) + listOfNotNull(places?.let { pluralStringResource(Res.plurals.count_places, it, it) })).joinToString(" "),
+        (listOf(tripSummary(trip, count, planned)) + listOfNotNull(places?.let { pluralStringResource(Res.plurals.count_places, it, it) })).joinToString(" "),
         style = AppTheme.typography.body,
         color = tokens.tx2,
     )
@@ -73,10 +73,10 @@ fun TripSubhead(trip: TripRecord, count: Int, places: Int? = null) {
 
 /** A trip's dates and its length, and its count of Moments when given, as one line; a plan's says so first. */
 @Composable
-fun tripSummary(trip: TripRecord, moments: Int? = null): String {
+fun tripSummary(trip: TripRecord, moments: Int? = null, planned: Boolean = true): String {
     val days = daysBetween(trip.start, trip.end)
     return listOfNotNull(
-        stringResource(Res.string.trip_planned).takeIf { trip.planned == true },
+        stringResource(Res.string.trip_planned).takeIf { planned && trip.planned == true },
         formatRange(trip.start, trip.end),
         pluralStringResource(Res.plurals.count_days, days, days),
         moments?.let { pluralStringResource(Res.plurals.count_moments, it, it) },

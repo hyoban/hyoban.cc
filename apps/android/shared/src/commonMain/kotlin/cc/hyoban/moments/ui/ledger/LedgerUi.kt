@@ -415,8 +415,9 @@ fun txnSupporting(txn: Txn, ledger: Ledger, showDate: Boolean = false, withTime:
     val state = when {
         txn.reimburse == Reimburse.PENDING -> stringResource(Res.string.ledger_reimburse_pending)
         txn.reimburse == Reimburse.DONE -> stringResource(Res.string.ledger_reimburse_done)
-        txn.kind == TxnKind.REFUND -> stringResource(Res.string.ledger_kind_refund)
-        txn.kind == TxnKind.REIMBURSEMENT -> stringResource(Res.string.ledger_kind_reimbursement)
+        // Without a category the title is already the kind.
+        txn.kind == TxnKind.REFUND && ledger.categoryPath(txn.category) != null -> stringResource(Res.string.ledger_kind_refund)
+        txn.kind == TxnKind.REIMBURSEMENT && ledger.categoryPath(txn.category) != null -> stringResource(Res.string.ledger_kind_reimbursement)
         else -> null
     }
     // The day first, so a long note doesn't cut it off; the time only where the row's end lacks it.

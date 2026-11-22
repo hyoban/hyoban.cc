@@ -86,7 +86,6 @@ fun momentBillRows(
             colors = segmentColors(),
             leadingContent = { Icon(AppIcons.Plus, contentDescription = null) },
             trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null) },
-            supportingContent = { Text(stringResource(Res.string.ledger_from_moment_note)) },
             modifier = Modifier.testTag("moment_new_bill"),
         ) { Text(stringResource(Res.string.ledger_from_moment, money(Math.round(amount * 100), cost.currency ?: "CNY"))) }
     }

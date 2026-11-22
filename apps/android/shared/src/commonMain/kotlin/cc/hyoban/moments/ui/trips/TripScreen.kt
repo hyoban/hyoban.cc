@@ -185,7 +185,8 @@ fun TripScreen(
                     privateTag?.let { PrivateTag(it, Modifier.alignByBaseline()) }
                 }
             }
-            TripSubhead(trip, moments.size, places = stops.distinctBy { it.placeId }.size)
+            // A plan's own page shows it is one by its dashed bubbles and 写计划.
+            TripSubhead(trip, moments.size, places = stops.distinctBy { it.placeId }.size, planned = false)
             // Upright the name is the bar's, so what stays private sits beside the page's one button.
             val tagHere = privateTag.takeIf { !sideways }
             // A plan's one ink button writes into it; a trip's plays back what happened.

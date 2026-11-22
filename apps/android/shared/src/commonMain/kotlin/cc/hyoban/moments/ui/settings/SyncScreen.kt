@@ -127,8 +127,8 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit, onNoteSignIn: (() ->
                         shapes = shapes,
                         colors = segmentColors(),
                         leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
-                        supportingContent = {
-                            Text(stringResource(if (syncing) Res.string.refreshing else if (connected) Res.string.refresh_note else Res.string.refresh_needs_api))
+                        supportingContent = if (connected && !syncing) null else {
+                            { Text(stringResource(if (syncing) Res.string.refreshing else Res.string.refresh_needs_api)) }
                         },
                         trailingContent = if (syncing) {
                             { Spinner(Modifier.size(24.dp)) }
