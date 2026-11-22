@@ -78,6 +78,18 @@ class OutsideTest {
     }
 
     @Test
+    fun `a bill the site has as it is here waits for nothing, however its figures are written`() {
+        val part = ledger(txn, public = true).publicPart(txn)!!
+        // As the site writes it back: 12.5 for 12.50, a whole amount without its point.
+        val site = part.toString().replace("12.5", "12.50")
+        assertTrue(ledger(txn.copy(published = site), public = true).pendingBills().isEmpty())
+        val whole = txn.copy(amount = 3000)
+        val wholePart = ledger(whole, public = true).publicPart(whole)!!.toString()
+        assertTrue(wholePart.contains("30.0"))
+        assertTrue(ledger(whole.copy(published = wholePart.replace("30.0", "30")), public = true).pendingBills().isEmpty())
+    }
+
+    @Test
     fun `a published bill deleted here is taken off, with no undo`() {
         val change = Ledger(books = listOf(book), gone = listOf(txn.copy(published = "{}"))).pendingBills().single()
         assertTrue(change.deleted)
@@ -231,6 +243,9 @@ class OutsideTest {
         assertEquals(earlier, moved.site?.at)
         // So does one at a place the site doesn't have.
         assertEquals(1, public(published.copy(place = "p-shop")).pendingBills(mapOf(txn.id to SiteSpot(at, null))).size)
+        // A bill made part way through a second is where the site has it to the second.
+        val seconds = published.copy(time = txn.time + 400)
+        assertTrue(public(seconds).pendingBills(mapOf(txn.id to SiteSpot(seconds.at, null))).isEmpty())
         // A bill a Moment carries is at the Moment's time and place, not its own.
         assertTrue(public(published.copy(moment = "M1")).pendingBills(mapOf(txn.id to SiteSpot(earlier, null))).isEmpty())
     }

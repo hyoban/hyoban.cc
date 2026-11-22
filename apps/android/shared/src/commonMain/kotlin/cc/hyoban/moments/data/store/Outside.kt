@@ -100,13 +100,26 @@ fun Ledger.categoryLabel(txn: Txn): String? = categoriesById[txn.category]?.let 
 fun Ledger.pendingBills(site: Map<String, SiteSpot> = emptyMap()): List<BillChange> = txns.mapNotNull { txn ->
     val part = publicPart(txn)
     val spot = site[txn.id]?.takeIf { part != null && txn.published != null && txn.moment == null && it.movedFrom(txn) }
-    if (part?.toString() == txn.published && spot == null) null else BillChange(txn, part, categoryLabel(txn).orEmpty(), site = spot)
+    if (part.isPublished(txn.published) && spot == null) null else BillChange(txn, part, categoryLabel(txn).orEmpty(), site = spot)
 } + gone.map { txn -> BillChange(txn, null, categoryLabel(txn) ?: txn.note, deleted = true) }
 
-/** Whether the bill here is at another time or place than the site has it. */
+/**
+ * Whether this part, or none, is what [published] says the site has: the same by what it says,
+ * not by how it is written, as a part read back from the site writes `30` where the ledger's has `30.0`.
+ */
+private fun JsonObject?.isPublished(published: String?): Boolean {
+    if (this == null || published == null) return this == null && published == null
+    val site = runCatching { kotlinx.serialization.json.Json.parseToJsonElement(published) as? JsonObject }.getOrNull() ?: return false
+    return samePart(this, site)
+}
+
+/**
+ * Whether the bill here is at another time or place than the site has it: its time to the second,
+ * as an entry's `at` keeps it, so a bill made at 18:01:58.4 is still where the site has it.
+ */
 private fun SiteSpot.movedFrom(txn: Txn): Boolean {
-    val at = runCatching { java.time.OffsetDateTime.parse(at).toInstant().toEpochMilli() }.getOrNull() ?: return false
-    return at != txn.time || place != txn.place
+    val at = runCatching { java.time.OffsetDateTime.parse(at).toEpochSecond() }.getOrNull() ?: return false
+    return at != Math.floorDiv(txn.time, 1000L) || place != txn.place
 }
 
 /**
