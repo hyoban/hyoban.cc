@@ -379,7 +379,7 @@ private fun MomentDetails(
     val sameDay = remember(moments, moment.dateKey) { moments.count { it.dateKey == moment.dateKey } }
     // Its parts of modules turned off (记录项与公开) go unshown, kept as they are.
     val settings = LocalSettings.current
-    val shown = Plugins.all.filter { settings.isOn(it.module) }.mapNotNull { it.momentSection }
+    val shown = cc.hyoban.moments.plugins.Plugins.registry.on(cc.hyoban.moments.plugins.Points.momentSections, settings::isOn)
     Column(Modifier.padding(top = Space.xl, bottom = Space.xl)) {
         // When, in the second grey over the words, as the timeline's line over a Moment has it.
         // A planned one says so after it, and a locked one that it is settled.

@@ -13,7 +13,7 @@ class SearchScope(
 )
 
 /**
- * A kind of record the search lists beside the Moments, a module's (`ModulePlugin.searchKinds`):
+ * A kind of record the search lists beside the Moments, a module's (`Points.searchKinds`):
  * its chip, said by [label] and tagged `kind_<key>`, and what of it matches what was typed.
  */
 interface SearchKind {

@@ -46,76 +46,124 @@ class PhonePages(
     val openDay: (String) -> Unit,
 )
 
-/**
- * What a module brings to the phone alone, beside its [ModulePlugin]: its row on 我 and the
- * background work it starts and stops as it is turned on or off.
- */
-interface PhonePlugin {
-    val module: Module
+/** The points the phone's own pages read. */
+object PhonePoints {
+    /** A row among what is kept here on 我, each drawing itself only while it should be shown. */
+    val meRows = Point<MeRowItem>("me-rows")
 
-    /** Its row among what is kept here on 我, drawn only while it is on, unless it says otherwise. */
-    @Composable fun MeRow(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes) {}
+    /** Background work brought in line with its module's switch, just turned on or off. */
+    val background = Point<BackgroundWork>("background")
 
-    /** Brings its background work in line with its switch, just turned on or off. */
-    suspend fun applied(context: Context) {}
+    /** A group on 导入 of the phone's alone. */
+    val imports = Point<PhoneImportGroup>("phone-imports")
 
-    /** The names of the sources 导入 offers for it on the phone alone. */
-    val importSources: List<StringResource> get() = emptyList()
+    /** The side keys' actions, by their value, offered while their module is on. */
+    val sideKeys = Point<SideKeyActions>("side-keys")
 
-    /** Its group on 导入, drawn while it is on. */
-    @Composable fun ImportGroup(container: PhoneContainer) {}
+    /** What the heatmap widget can show. */
+    val heat = Point<cc.hyoban.moments.widget.HeatSource>("heat")
 
-    /** The side keys' actions it brings, by their value, offered while it is on. */
-    val sideKeyActions: Map<String, StringResource> get() = emptyMap()
+    /** Pages in the phone's navigation, each by its route. */
+    val pages = Point<PhonePageSet>("phone-pages")
 
-    /** What the heatmap widget can show of it. */
-    val heatSources: List<cc.hyoban.moments.widget.HeatSource> get() = emptyList()
+    /** What draws over the atlas and its panel. */
+    val mapOverlays = Point<MapOverlay>("map-overlays")
+
+    /** A step of its own in 初次打开, shown while its module is on. */
+    val onboarding = Point<OnboardingStep>("onboarding")
+}
+
+interface MeRowItem {
+    @Composable fun Row(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes)
+}
+
+fun interface BackgroundWork {
+    suspend fun applied(context: Context)
+}
+
+interface PhoneImportGroup {
+    /** The names of the sources 导入 offers on the phone alone. */
+    val sources: List<StringResource>
+
+    @Composable fun Group(container: PhoneContainer)
+}
+
+interface SideKeyActions {
+    val actions: Map<String, StringResource>
 
     /** Does its side key [action], [on] whether its module is: what to say, and whether to say it in a toast. */
-    fun sideKey(action: String, on: Boolean): Pair<String, Boolean> = "" to false
+    fun run(action: String, on: Boolean): Pair<String, Boolean>
+}
 
-    /** Its own pages in the phone's navigation, each by its route. */
-    fun androidx.navigation.NavGraphBuilder.pages(pages: PhonePages) {}
+interface PhonePageSet {
+    fun androidx.navigation.NavGraphBuilder.pages(pages: PhonePages)
+}
 
-    /** Whether it draws over the atlas, as [MapOverlay] does. */
-    val drawsOnMap: Boolean get() = false
-
+interface MapOverlay {
     /** What it draws over the atlas and its panel, given to [content]; its settings and what it leads to by [actions]. */
-    @Composable fun MapOverlay(
+    @Composable fun Overlay(
         container: PhoneContainer,
         actions: cc.hyoban.moments.ui.map.MapOverlayActions,
         content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
-    ) = content(null)
-
-    /** Whether it has a step of its own in 初次打开, shown while it is on. */
-    val onboards: Boolean get() = false
-
-    /** Its step in 初次打开, going [onBack] to where to start or on with [onDone]. */
-    @Composable fun OnboardingStep(container: PhoneContainer, onBack: () -> Unit, onDone: () -> Unit) {}
+    )
 }
 
-/** The phone's plugins, in the order of their rows on 我. */
-object PhonePlugins {
-    val all: List<PhonePlugin> = listOf(LedgerPhone, FootprintsPhone, ThingsPhone, OccasionsPhone)
+interface OnboardingStep {
+    /** Its step in 初次打开, going [onBack] to where to start or on with [onDone]. */
+    @Composable fun Step(container: PhoneContainer, onBack: () -> Unit, onDone: () -> Unit)
+}
 
-    fun of(module: Module): PhonePlugin? = all.firstOrNull { it.module == module }
+/** The phone's own plugins, installed beside every device's as the app starts; their order is their rows' on 我. */
+object PhonePlugins {
+    val all: List<Plugin> = listOf(LedgerPhone, FootprintsPhone, ThingsPhone, OccasionsPhone, GalleryPlugin, CameraPlugin)
+
+    private val registry get() = Plugins.registry
 
     /** [module]'s background work, just turned on or off in 记录项与公开. */
     suspend fun applied(context: Context, module: Module) {
-        of(module)?.applied(context)
+        registry.contributions(PhonePoints.background).filter { it.module == module }.forEach { it.item.applied(context) }
     }
 
-    /** The plugin whose side key action [action] is, or null for one of the side keys' own. */
-    fun sideKeyOwner(action: String?): PhonePlugin? = all.firstOrNull { action != null && action in it.sideKeyActions }
+    /** The side key actions [action] is one of, with its module, or null for one of the side keys' own. */
+    fun sideKeyOwner(action: String?): Contribution<SideKeyActions>? =
+        registry.contributions(PhonePoints.sideKeys).firstOrNull { action != null && action in it.item.actions }
 
     /** Whether 导入 has a source of the phone's own with these modules on. */
-    fun imports(settings: Settings): Boolean = all.any { settings.isOn(it.module) && it.importSources.isNotEmpty() }
+    fun imports(settings: Settings): Boolean = registry.on(PhonePoints.imports, settings::isOn).any { it.sources.isNotEmpty() }
 }
 
-private object LedgerPhone : PhonePlugin {
+/** The phone's gallery in 相册, 选照片 and 地图's photos. */
+private object GalleryPlugin : Plugin {
+    override fun Contributions.contribute() {
+        add(Points.photoSources, cc.hyoban.moments.ui.picker.GalleryPhotoSources)
+    }
+}
+
+/** The paired camera's photos in 相册 and 选照片, while 在相册里显示 on its page is on. */
+object CameraPlugin : Plugin {
+    /** Its switch, 在相册里显示 at the top of 相机's group. */
+    const val KEY = "camera"
+
+    override val switchKey = KEY
+
+    override fun Contributions.contribute() {
+        add(Points.photoSources, cc.hyoban.moments.ui.picker.CameraPhotoSources)
+    }
+}
+
+private object LedgerPhone : Plugin, MeRowItem, PhoneImportGroup, BackgroundWork, PhonePageSet, SideKeyActions {
     override val module = Module.LEDGER
 
-    @Composable override fun MeRow(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes) {
+    override fun Contributions.contribute() {
+        add(PhonePoints.meRows, this@LedgerPhone)
+        add(PhonePoints.imports, this@LedgerPhone)
+        add(PhonePoints.background, this@LedgerPhone)
+        add(PhonePoints.pages, this@LedgerPhone)
+        add(PhonePoints.sideKeys, this@LedgerPhone)
+        add(PhonePoints.heat, SpendingHeat)
+    }
+
+    @Composable override fun Row(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes) {
         if (!LocalSettings.current.isOn(module)) return
         val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
         // This month's spending in the shown books, in the book's currency, under the ledger's name.
@@ -126,9 +174,9 @@ private object LedgerPhone : PhonePlugin {
         ) { nav.goTo(LedgerHome(0)) }
     }
 
-    override val importSources = listOf(Res.string.import_source_icost)
+    override val sources = listOf(Res.string.import_source_icost)
 
-    @Composable override fun ImportGroup(container: PhoneContainer) = ICostGroup(container)
+    @Composable override fun Group(container: PhoneContainer) = ICostGroup(container)
 
     /** The payment reader listens for 自动记账 only while the ledger is on. */
     override suspend fun applied(context: Context) = ShareAccessibilityService.listenIdle()
@@ -173,12 +221,10 @@ private object LedgerPhone : PhonePlugin {
         }
     }
 
-    override val sideKeyActions = mapOf("ledger:capture" to Res.string.side_key_payment)
-
-    override val heatSources = listOf<cc.hyoban.moments.widget.HeatSource>(SpendingHeat)
+    override val actions = mapOf("ledger:capture" to Res.string.side_key_payment)
 
     /** Reads the payment on screen into a bill, or says the ledger is off. */
-    override fun sideKey(action: String, on: Boolean): Pair<String, Boolean> {
+    override fun run(action: String, on: Boolean): Pair<String, Boolean> {
         if (!on) return cc.hyoban.moments.res.textOf(Res.string.side_key_ledger_off) to true
         val result = ShareAccessibilityService.capturePayment()
         return cc.hyoban.moments.res.textOf(result.message) to (result != cc.hyoban.moments.accessibility.PaymentCapture.OPENED)
@@ -209,10 +255,20 @@ private fun monthExpense(ledger: Ledger): Pair<Long, String>? {
     return spent
 }
 
-private object FootprintsPhone : PhonePlugin {
+private object FootprintsPhone : Plugin, MeRowItem, PhoneImportGroup, BackgroundWork, PhonePageSet, MapOverlay, OnboardingStep {
     override val module = Module.FOOTPRINTS
 
-    @Composable override fun MeRow(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes) {
+    override fun Contributions.contribute() {
+        add(PhonePoints.meRows, this@FootprintsPhone)
+        add(PhonePoints.imports, this@FootprintsPhone)
+        add(PhonePoints.heat, FootprintsHeat)
+        add(PhonePoints.pages, this@FootprintsPhone)
+        add(PhonePoints.mapOverlays, this@FootprintsPhone)
+        add(PhonePoints.onboarding, this@FootprintsPhone)
+        add(PhonePoints.background, this@FootprintsPhone)
+    }
+
+    @Composable override fun Row(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes) {
         if (!LocalSettings.current.isOn(module)) return
         val revision by container.footprints.revision.collectAsStateWithLifecycle()
         // Whether the footprints are being recorded now.
@@ -226,21 +282,17 @@ private object FootprintsPhone : PhonePlugin {
         )
     }
 
-    override val importSources = listOf(Res.string.import_source_gpx, Res.string.import_source_footprint_csv)
+    override val sources = listOf(Res.string.import_source_gpx, Res.string.import_source_footprint_csv)
 
-    override val heatSources = listOf<cc.hyoban.moments.widget.HeatSource>(FootprintsHeat)
-
-    @Composable override fun ImportGroup(container: PhoneContainer) = TrackGroup(container)
+    @Composable override fun Group(container: PhoneContainer) = TrackGroup(container)
 
     override fun androidx.navigation.NavGraphBuilder.pages(pages: PhonePages) {
         screen<cc.hyoban.moments.ui.FootprintSettings> { cc.hyoban.moments.footprints.FootprintSettingsScreen(pages.container, onBack = pages.back) }
     }
 
     // Its own store and panel, drawn on the atlas as the shared map takes them.
-    override val drawsOnMap = true
-
     @Composable
-    override fun MapOverlay(
+    override fun Overlay(
         container: PhoneContainer,
         actions: cc.hyoban.moments.ui.map.MapOverlayActions,
         content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
@@ -269,9 +321,7 @@ private object FootprintsPhone : PhonePlugin {
     }
 
     /** Recording them, asked for in 初次打开 with what it asks of the system. */
-    override val onboards = true
-
-    @Composable override fun OnboardingStep(container: PhoneContainer, onBack: () -> Unit, onDone: () -> Unit) =
+    @Composable override fun Step(container: PhoneContainer, onBack: () -> Unit, onDone: () -> Unit) =
         cc.hyoban.moments.ui.onboarding.PhoneOnboardingFootprints(container, onBack, onDone)
 
     /**
@@ -291,10 +341,14 @@ private object FootprintsPhone : PhonePlugin {
 }
 
 /** The things' row, which the car's page shares: it names what of it is on. */
-private object ThingsPhone : PhonePlugin {
+private object ThingsPhone : Plugin, MeRowItem {
     override val module = Module.THINGS
 
-    @Composable override fun MeRow(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes) {
+    override fun Contributions.contribute() {
+        add(PhonePoints.meRows, this@ThingsPhone)
+    }
+
+    @Composable override fun Row(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes) {
         val settings = LocalSettings.current
         val things = listOfNotNull(
             stringResource(Res.string.devices_title).takeIf { settings.isOn(Module.THINGS) },
@@ -309,8 +363,13 @@ private object ThingsPhone : PhonePlugin {
     }
 }
 
-private object OccasionsPhone : PhonePlugin {
+private object OccasionsPhone : Plugin, MeRowItem, PhonePageSet {
     override val module = Module.OCCASIONS
+
+    override fun Contributions.contribute() {
+        add(PhonePoints.pages, this@OccasionsPhone)
+        add(PhonePoints.meRows, this@OccasionsPhone)
+    }
 
     override fun androidx.navigation.NavGraphBuilder.pages(pages: PhonePages) {
         screen<Occasions> { entry ->
@@ -318,7 +377,7 @@ private object OccasionsPhone : PhonePlugin {
         }
     }
 
-    @Composable override fun MeRow(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes) {
+    @Composable override fun Row(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes) {
         if (!LocalSettings.current.isOn(module)) return
         MeRow(
             OccasionsPlugin.icon, stringResource(Res.string.occasions_title), "me_occasions", shapes,

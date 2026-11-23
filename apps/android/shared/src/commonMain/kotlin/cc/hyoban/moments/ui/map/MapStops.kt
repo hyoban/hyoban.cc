@@ -34,7 +34,7 @@ private val stopsOf = java.util.WeakHashMap<AppContainer, StateFlow<List<MapStop
  */
 fun mapStops(container: AppContainer): StateFlow<List<MapStop>> = synchronized(stopsOf) {
     stopsOf.getOrPut(container) {
-        val flows = Plugins.all.mapNotNull { it.mapStops(container) }
+        val flows = cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.Points.mapStops).map { it.stops(container) }
         when (flows.size) {
             0 -> MutableStateFlow(emptyList())
             1 -> flows.single()

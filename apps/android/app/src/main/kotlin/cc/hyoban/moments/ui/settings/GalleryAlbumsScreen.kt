@@ -48,23 +48,22 @@ fun GalleryAlbumsScreen(onBack: () -> Unit) {
                     .padding(horizontal = columns.margin)
                     .padding(bottom = Space.xl),
             ) {
-                SegmentedGroup(
-                    null,
-                    stringResource(if (albums.isEmpty()) Res.string.albums_none else Res.string.albums_note),
-                    albums.map<LocalAlbum, Segment> { album ->
-                        { shapes ->
+                val note = stringResource(if (albums.isEmpty()) Res.string.albums_none else Res.string.albums_note)
+                // With no album, the card stays, empty, over what says so: the group view draws nothing without rows.
+                if (albums.isEmpty()) SegmentedGroup(null, note, emptyList())
+                else SettingsGroupView(
+                    SettingsGroupSpec(
+                        null,
+                        note,
+                        albums.map { album ->
                             val id = album.id.toString()
                             val hidden = settings.isAlbumHidden(id, album.own)
-                            SwitchRow(
-                                checked = !hidden,
-                                icon = AppIcons.Folder,
-                                title = album.name,
-                                tag = "album_$id",
-                                shapes = shapes,
+                            SettingsRow.Switch(
+                                AppIcons.Folder, album.name, "album_$id", !hidden,
                                 supporting = pluralStringResource(Res.plurals.albums_count, album.count, album.count),
                             ) { settings.changeAlbumHidden(id, album.own, !hidden) }
-                        }
-                    },
+                        },
+                    ),
                 )
             }
         }

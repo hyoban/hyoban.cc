@@ -8,8 +8,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import org.jetbrains.compose.resources.stringResource
-import cc.hyoban.moments.ui.settings.SegmentedGroup
-import cc.hyoban.moments.ui.settings.SwitchRow
+import cc.hyoban.moments.ui.settings.SettingsGroupSpec
+import cc.hyoban.moments.ui.settings.SettingsGroupView
+import cc.hyoban.moments.ui.settings.SettingsRow
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 
@@ -40,27 +41,28 @@ internal fun ActivityRecognitionSettings() {
         enabled = ActivityTransitions.enabled(context)
         RecordingService.refreshActivityRecognition(context)
     }
-    SegmentedGroup(
-        stringResource(Res.string.footprints_activity_section),
-        stringResource(Res.string.footprints_activity_note),
-        listOf { shapes ->
-            SwitchRow(
-                enabled,
-                AppIcons.Walk,
-                stringResource(Res.string.footprints_activity_title),
-                "footprints_activity_enabled",
-                shapes,
-                supporting = stringResource(when {
-                    !available -> Res.string.footprints_activity_unavailable
-                    !enabled -> Res.string.footprints_activity_off
-                    !permitted -> Res.string.footprints_activity_permission
-                    else -> status
-                }),
-                enabled = available || enabled,
-            ) {
-                if (!enabled && !permitted) permission()
-                else change(!enabled)
-            }
-        },
+    SettingsGroupView(
+        SettingsGroupSpec(
+            stringResource(Res.string.footprints_activity_section),
+            stringResource(Res.string.footprints_activity_note),
+            listOf(
+                SettingsRow.Switch(
+                    AppIcons.Walk,
+                    stringResource(Res.string.footprints_activity_title),
+                    "footprints_activity_enabled",
+                    enabled,
+                    supporting = stringResource(when {
+                        !available -> Res.string.footprints_activity_unavailable
+                        !enabled -> Res.string.footprints_activity_off
+                        !permitted -> Res.string.footprints_activity_permission
+                        else -> status
+                    }),
+                    enabled = available || enabled,
+                ) {
+                    if (!enabled && !permitted) permission()
+                    else change(!enabled)
+                },
+            ),
+        ),
     )
 }

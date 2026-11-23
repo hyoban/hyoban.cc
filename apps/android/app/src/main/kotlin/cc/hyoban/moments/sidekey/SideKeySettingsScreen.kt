@@ -41,7 +41,6 @@ import cc.hyoban.moments.ui.design.RadioButton
 import cc.hyoban.moments.ui.design.SegmentedListItem
 import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.accessibility.ShareAccessibilityService
-import cc.hyoban.moments.ui.settings.ActionRow
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.components.SubPage
@@ -52,7 +51,9 @@ import cc.hyoban.moments.ui.design.OutlinedTextField
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.TextButton
 import cc.hyoban.moments.ui.settings.SegmentedGroup
-import cc.hyoban.moments.ui.settings.SwitchRow
+import cc.hyoban.moments.ui.settings.SettingsGroupSpec
+import cc.hyoban.moments.ui.settings.SettingsGroupView
+import cc.hyoban.moments.ui.settings.SettingsRow
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
 import kotlinx.coroutines.Dispatchers
@@ -108,53 +109,47 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
         PageWidth(maxColumns = 1) { columns ->
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = LocalTopClearance.current).navigationBarsPadding()
                 .padding(horizontal = columns.margin).padding(bottom = Space.xl)) {
-                SegmentedGroup(null, stringResource(Res.string.side_key_note), listOf { shapes ->
-                    SwitchRow(config.enabled, AppIcons.Phone,
-                        stringResource(Res.string.side_key_enabled), "sidekey_enabled", shapes,
+                SettingsGroupView(SettingsGroupSpec(null, stringResource(Res.string.side_key_note), listOf(
+                    SettingsRow.Switch(AppIcons.Phone, stringResource(Res.string.side_key_enabled), "sidekey_enabled", config.enabled,
                         // Off or listening, the switch says so; only what's in the way is written.
                         supporting = state.phase.takeIf { it != SideKeyPhase.OFF && it != SideKeyPhase.RUNNING }?.let { stringResource(it.label) }) {
                         // Turned on with Shizuku or the service still missing, the sheet says what it needs first (35).
                         if (!config.enabled && (!connected || runCatching { !Shizuku.pingBinder() || Shizuku.checkSelfPermission() != android.content.pm.PackageManager.PERMISSION_GRANTED }.getOrDefault(true))) explaining = true
                         SideKeys.setEnabled(!config.enabled)
-                    }
-                })
+                    },
+                )))
                 // What it needs, each with where it stands, the way to the system's own settings at its end.
-                SegmentedGroup(stringResource(Res.string.side_key_needs), null, buildList {
-                    add { shapes -> ActionRow(AppIcons.Accessibility, stringResource(Res.string.side_key_service), shapes,
-                        supporting = stringResource(if (connected) Res.string.side_key_service_on else Res.string.side_key_service_off),
-                        tag = "sidekey_accessibility", external = true) {
+                SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.side_key_needs), null, buildList<SettingsRow> {
+                    add(SettingsRow.External(AppIcons.Accessibility, stringResource(Res.string.side_key_service), "sidekey_accessibility",
+                        supporting = stringResource(if (connected) Res.string.side_key_service_on else Res.string.side_key_service_off)) {
                         context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                    } }
-                    add { shapes -> ActionRow(AppIcons.Key,
-                        stringResource(Res.string.side_key_shizuku), shapes, tag = "sidekey_shizuku", external = true) {
+                    })
+                    add(SettingsRow.External(AppIcons.Key, stringResource(Res.string.side_key_shizuku), "sidekey_shizuku") {
                         val intent = context.packageManager.getLaunchIntentForPackage("moe.shizuku.privileged.api")
                         if (intent != null) context.startActivity(intent)
                         else Toast.makeText(context, textOf(Res.string.side_key_shizuku_missing), Toast.LENGTH_LONG).show()
-                    } }
-                    if (state.phase == SideKeyPhase.NEEDS_PERMISSION) add { shapes -> ActionRow(AppIcons.Check,
-                        stringResource(Res.string.side_key_grant), shapes, tag = "sidekey_grant") {
+                    })
+                    if (state.phase == SideKeyPhase.NEEDS_PERMISSION) add(SettingsRow.Action(AppIcons.Check, stringResource(Res.string.side_key_grant), "sidekey_grant") {
                         try { Shizuku.requestPermission(712) }
                         catch (_: Exception) { Toast.makeText(context, textOf(Res.string.side_key_needs_shizuku), Toast.LENGTH_LONG).show() }
-                    } }
-                })
-                SegmentedGroup(stringResource(Res.string.side_key_gestures), null,
-                    SideKeys.gestures.map { gesture -> { shapes ->
-                        ActionRow(AppIcons.Sliders, stringResource(SideKeyActions.gestureLabel(gesture)), shapes,
-                            supporting = actionLabel(config.actions[gesture] ?: "none", config.labels[gesture].orEmpty()),
-                            tag = "sidekey_$gesture") { editing = gesture }
-                    } })
-                SegmentedGroup(stringResource(Res.string.side_key_scenes), stringResource(Res.string.side_key_scenes_note), buildList {
-                    config.scenes.forEach { item -> add { shapes ->
-                        ActionRow(if (item.id == SideKeyScene.PAYMENT) AppIcons.Receipt else AppIcons.Sliders, sceneName(item), shapes,
-                            supporting = sceneSummary(item), tag = "sidekey_scene_${item.id}") { scene = item.id }
-                    } }
-                    add { shapes -> ActionRow(AppIcons.Plus, stringResource(Res.string.side_key_add_scene), shapes, tag = "sidekey_add_scene") { scene = "" } }
-                })
-                SegmentedGroup(null, stringResource(Res.string.side_key_timing_note), listOf { shapes ->
-                    ActionRow(AppIcons.Clock, stringResource(Res.string.side_key_timing), shapes,
-                        supporting = stringResource(Res.string.side_key_timing_value, config.doubleMs, config.longMs),
-                        tag = "sidekey_timing") { timing = true }
-                })
+                    })
+                }))
+                SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.side_key_gestures), null,
+                    SideKeys.gestures.map { gesture ->
+                        SettingsRow.Value(AppIcons.Sliders, stringResource(SideKeyActions.gestureLabel(gesture)), "sidekey_$gesture",
+                            actionLabel(config.actions[gesture] ?: "none", config.labels[gesture].orEmpty()), maxLines = Int.MAX_VALUE) { editing = gesture }
+                    }))
+                SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.side_key_scenes), stringResource(Res.string.side_key_scenes_note), buildList<SettingsRow> {
+                    config.scenes.forEach { item ->
+                        add(SettingsRow.Value(if (item.id == SideKeyScene.PAYMENT) AppIcons.Receipt else AppIcons.Sliders, sceneName(item),
+                            "sidekey_scene_${item.id}", sceneSummary(item), maxLines = Int.MAX_VALUE) { scene = item.id })
+                    }
+                    add(SettingsRow.Action(AppIcons.Plus, stringResource(Res.string.side_key_add_scene), "sidekey_add_scene") { scene = "" })
+                }))
+                SettingsGroupView(SettingsGroupSpec(null, stringResource(Res.string.side_key_timing_note), listOf(
+                    SettingsRow.Value(AppIcons.Clock, stringResource(Res.string.side_key_timing), "sidekey_timing",
+                        stringResource(Res.string.side_key_timing_value, config.doubleMs, config.longMs), maxLines = Int.MAX_VALUE) { timing = true },
+                )))
                 SegmentedGroup(stringResource(Res.string.side_key_last), null, listOf { _ ->
                     Column(Modifier.padding(Space.l), verticalArrangement = Arrangement.spacedBy(Space.s)) {
                         val gesture = state.lastGesture
@@ -228,7 +223,7 @@ private fun ColumnScope.ActionChoices(current: String?, follow: String?, onPick:
             // A module's actions only while it is on (记录项与公开); a gesture bound to one keeps it.
             val settings = LocalSettings.current
             val choices = SideKeyActions.choices.filterKeys { value ->
-                cc.hyoban.moments.plugins.PhonePlugins.sideKeyOwner(value)?.let { settings.isOn(it.module) } ?: true
+                cc.hyoban.moments.plugins.PhonePlugins.sideKeyOwner(value)?.shownWith(settings::isOn) ?: true
             }.map { (value, label) -> value to stringResource(label) }
             val items = if (follow != null) listOf(null to stringResource(Res.string.side_key_follow_value, follow)) + choices else choices
             SegmentedGroup(null, null, items.map { (value, label) ->

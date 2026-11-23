@@ -111,7 +111,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
     var kind by rememberSaveable { mutableStateOf(KIND_ALL) }
     // The kinds to choose from: everything, the Moments, and those of the modules that are on (记录项与公开).
     val settings = LocalSettings.current
-    val moduleKinds = Plugins.all.filter { settings.isOn(it.module) }.flatMap { it.searchKinds }
+    val moduleKinds = cc.hyoban.moments.plugins.Plugins.registry.on(cc.hyoban.moments.plugins.Points.searchKinds, settings::isOn)
     val kinds = listOf(KIND_ALL, KIND_MOMENTS) + moduleKinds.map { it.key }
     LaunchedEffect(kinds) { if (kind !in kinds) kind = KIND_ALL }
     var year by rememberSaveable { mutableStateOf<Int?>(null) }

@@ -459,10 +459,10 @@ fun NewMomentScreen(
     val written = text.isNotBlank() || photos.isNotEmpty()
     // Nothing written, nothing eaten, but somewhere: a module's own record there (a check-in), while that module is on.
     val composerSettings = LocalSettings.current
-    val aloneOn = Plugins.all.any { it.placeAlone != null && composerSettings.isOn(it.module) }
+    val aloneOn = cc.hyoban.moments.plugins.Plugins.registry.on(cc.hyoban.moments.plugins.Points.placeAlone, composerSettings::isOn).isNotEmpty()
     // The parts written with it, as their modules have them: what it cost, a bill; each asked
     // every composition, the ones before it saying what was spent.
-    val parts = remember { Plugins.all.mapNotNull { it.composerPart } }
+    val parts = remember { cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.Points.composerParts) }
     var spent: Spent? = null
     val drafts = parts.map { part ->
         key(part.key) {

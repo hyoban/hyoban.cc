@@ -38,7 +38,7 @@ class ComposerScope(
 /** What a part says was spent: its amount as typed, and whether on a meal. */
 data class Spent(val amount: String, val meal: Boolean)
 
-/** A part 写动态 can write (`ModulePlugin.composerPart`): offered in 加一项, or written alone. */
+/** A part 写动态 can write (`Points.composerParts`): offered in 加一项, or written alone. */
 interface ComposerPart {
     val key: String
 

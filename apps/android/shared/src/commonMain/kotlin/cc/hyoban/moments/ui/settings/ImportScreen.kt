@@ -41,7 +41,7 @@ fun ImportScreen(container: AppContainer, onBack: () -> Unit) {
             ) {
                 // Each source under the module it feeds, so one turned off (记录项与公开) isn't offered.
                 val settings = LocalSettings.current
-                Plugins.all.filter { settings.isOn(it.module) }.forEach { it.ImportGroup(container) }
+                cc.hyoban.moments.plugins.Plugins.registry.on(cc.hyoban.moments.plugins.Points.imports, settings::isOn).forEach { it.Group(container) }
                 LocalDevice.current.ImportGroups(container)
                 // Opened by a link with every one of them off: why there is nothing here.
                 if (!Plugins.imports(settings) && !LocalDevice.current.importsMore(settings)) Text(

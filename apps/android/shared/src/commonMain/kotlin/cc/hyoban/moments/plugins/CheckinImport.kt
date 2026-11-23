@@ -1,26 +1,19 @@
 package cc.hyoban.moments.plugins
 
-import cc.hyoban.moments.ui.settings.Segment
-import cc.hyoban.moments.ui.settings.SegmentedGroup
-import cc.hyoban.moments.ui.settings.segmentColors
+import cc.hyoban.moments.ui.settings.SettingsGroupSpec
+import cc.hyoban.moments.ui.settings.SettingsGroupView
+import cc.hyoban.moments.ui.settings.SettingsRow
 import cc.hyoban.moments.res.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.data.swarm.SwarmImport
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.AppIcons
-import cc.hyoban.moments.ui.design.Icon
-import cc.hyoban.moments.ui.design.SegmentedListItem
-import cc.hyoban.moments.ui.design.Spinner
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.TextButton
 import cc.hyoban.moments.ui.theme.Space
@@ -33,30 +26,16 @@ fun SwarmGroup(swarm: SwarmImport) {
     val state by swarm.state.collectAsStateWithLifecycle()
     val running = state.running
     val pick = cc.hyoban.moments.ui.LocalDevice.current.rememberFilePicker(SWARM_TYPES) { swarm.start(it) }
-    val row: Segment = { shapes ->
-        SegmentedListItem(
-            onClick = { if (!running) pick() },
-            shapes = shapes,
-            colors = segmentColors(),
-            leadingContent = { Icon(AppIcons.Timeline, contentDescription = null) },
-            supportingContent = {
-                Text(
-                    when (val now = state) {
-                        SwarmImport.State.Reading -> stringResource(Res.string.swarm_reading)
-                        is SwarmImport.State.Copying -> stringResource(Res.string.swarm_copying, now.done, now.total)
-                        else -> stringResource(Res.string.swarm_import_note)
-                    },
-                )
-            },
-            trailingContent = if (running) {
-                { Spinner(Modifier.size(24.dp)) }
-            } else {
-                null
-            },
-            modifier = Modifier.testTag("import_swarm"),
-        ) { Text(stringResource(Res.string.swarm_import)) }
-    }
-    SegmentedGroup(stringResource(Res.string.import_moments), stringResource(Res.string.swarm_import_explain), listOf(row))
+    val row = SettingsRow.Action(
+        AppIcons.Timeline, stringResource(Res.string.swarm_import), "import_swarm",
+        supporting = when (val now = state) {
+            SwarmImport.State.Reading -> stringResource(Res.string.swarm_reading)
+            is SwarmImport.State.Copying -> stringResource(Res.string.swarm_copying, now.done, now.total)
+            else -> stringResource(Res.string.swarm_import_note)
+        },
+        busy = running,
+    ) { if (!running) pick() }
+    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.import_moments), stringResource(Res.string.swarm_import_explain), listOf(row)))
 
     when (val now = state) {
         is SwarmImport.State.Done -> AlertDialog(

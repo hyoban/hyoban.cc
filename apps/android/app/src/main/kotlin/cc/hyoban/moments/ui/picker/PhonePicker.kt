@@ -15,31 +15,42 @@ import cc.hyoban.moments.ui.viewer.VideoWaiting
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
-/** 相册 on the phone: its gallery and the paired camera before the NAS, its videos played by Media3, and the system's share sheet. */
+/** 相册 on the phone: the system's share sheet, and its gallery as where photos are kept. */
 class PhonePicker(private val context: Context) : PickerDevice {
-    private val container get() = (context.applicationContext as cc.hyoban.moments.MomentsApplication).container
-
-    /** The gallery, one for 相册, 选照片 and 地图's photos alike. */
-    private val gallery by lazy { GallerySource(context.applicationContext, container.settings) }
-
-    @Composable
-    override fun sources(deletion: Deletion, onFallback: () -> Unit, onRefused: () -> Unit): List<PhotoSource> {
-        val gallery = rememberGallery(gallery, deletion, onFallback)
-        val camera = rememberCamera(deletion, onRefused)
-        return listOf(gallery, camera)
-    }
-
-    /** The gallery's photos by where they were taken, read once each and kept (09 地图的照片). */
-    @Composable
-    override fun places(deletion: Deletion): List<Places> {
-        val gallery = rememberGallery(gallery, deletion, onFallback = {})
-        val locations = container.galleryLocations
-        return listOf(remember(gallery) { GalleryPlaces(gallery, locations) })
-    }
-
     override val share: (List<Uri>) -> Unit = { shareMedia(context, it) }
 
     override val saveWords = Res.string.album_save
+}
+
+/** The gallery, one for 相册, 选照片 and 地图's photos alike, listed first. */
+object GalleryPhotoSources : PhotoSources {
+    override val order = 0
+
+    @Volatile private var made: GallerySource? = null
+
+    private fun gallery(container: cc.hyoban.moments.AppContainer): GallerySource =
+        made ?: synchronized(this) { made ?: GallerySource(cc.hyoban.moments.AndroidApp.context, container.settings).also { made = it } }
+
+    @Composable
+    override fun sources(container: cc.hyoban.moments.AppContainer, deletion: Deletion, onFallback: () -> Unit, onRefused: () -> Unit): List<PhotoSource> =
+        listOf(rememberGallery(gallery(container), deletion, onFallback))
+
+    /** The gallery's photos by where they were taken, read once each and kept (09 地图的照片). */
+    @Composable
+    override fun places(container: cc.hyoban.moments.AppContainer, deletion: Deletion, listed: List<PhotoSource>?): List<Places> {
+        val gallery = rememberGallery(gallery(container), deletion, onFallback = {})
+        val locations = (container as cc.hyoban.moments.PhoneContainer).galleryLocations
+        return listOf(remember(gallery) { GalleryPlaces(gallery, locations) })
+    }
+}
+
+/** The paired camera's photos, after the gallery and the published ones. */
+object CameraPhotoSources : PhotoSources {
+    override val order = 10
+
+    @Composable
+    override fun sources(container: cc.hyoban.moments.AppContainer, deletion: Deletion, onFallback: () -> Unit, onRefused: () -> Unit): List<PhotoSource> =
+        listOf(rememberCamera(deletion, onRefused))
 }
 
 /**

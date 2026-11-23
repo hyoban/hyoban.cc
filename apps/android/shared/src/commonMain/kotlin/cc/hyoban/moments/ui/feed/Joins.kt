@@ -99,7 +99,7 @@ class JoinBuilder {
     }
 }
 
-/** How a module joins its records to a page's Moments ([cc.hyoban.moments.plugins.ModulePlugin.join]). */
+/** How a module joins its records to a page's Moments ([cc.hyoban.moments.plugins.Points.joins]). */
 interface TimelineJoin {
     /** Where it comes among the joins: what it goes with joins first. */
     val order: Int
@@ -116,8 +116,8 @@ interface TimelineJoin {
 fun rememberJoinInputs(container: AppContainer): List<Pair<TimelineJoin, Any?>> {
     val settings = LocalSettings.current
     // Every module's input is read, on or off, so turning one on or off keeps the composition's shape.
-    val all = Plugins.joins.map { (plugin, join) -> Triple(plugin, join, join.input(container)) }
-    return all.filter { (plugin) -> settings.isOn(plugin.module) }.map { (_, join, input) -> join to input }
+    val all = Plugins.joins.map { c -> Triple(c, c.item, c.item.input(container)) }
+    return all.filter { (c) -> c.shownWith(settings::isOn) }.map { (_, join, input) -> join to input }
 }
 
 /** The modules' records over [scope], joined from [inputs]. */

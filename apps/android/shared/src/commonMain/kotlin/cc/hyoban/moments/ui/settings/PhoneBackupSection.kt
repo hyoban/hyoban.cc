@@ -9,7 +9,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.backup.BackupRead
@@ -18,7 +17,6 @@ import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.SegmentedListItem
-import cc.hyoban.moments.ui.design.Spinner
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.format.formatDate
 import kotlinx.coroutines.launch
@@ -34,39 +32,17 @@ fun PhoneBackupSection(backup: PhoneBackup) {
     var editing by rememberSaveable { mutableStateOf(false) }
     val busy by backup.busy.collectAsStateWithLifecycle()
     val read by backup.read.collectAsStateWithLifecycle()
-    val address: Segment = { shapes ->
-        SegmentedListItem(
-            onClick = { editing = true },
-            shapes = shapes,
-            colors = segmentColors(),
-            leadingContent = { Icon(AppIcons.CloudSync, contentDescription = null) },
-            supportingContent = {
-                Text(
-                    if (backup.configured) backup.url.value.substringAfter("://") else stringResource(Res.string.setting_unset),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            },
-            modifier = Modifier.testTag("phone_backup_address"),
-        ) { Text(stringResource(Res.string.webdav_address)) }
-    }
-    val refresh: Segment = { shapes ->
-        SegmentedListItem(
-            onClick = { if (!busy) scope.launch { backup.refresh() } },
-            enabled = backup.configured,
-            shapes = shapes,
-            colors = segmentColors(),
-            leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
-            supportingContent = { Text(readText(read, busy)) },
-            trailingContent = if (busy) {
-                { Spinner(Modifier.size(24.dp)) }
-            } else {
-                null
-            },
-            modifier = Modifier.testTag("phone_backup_read"),
-        ) { Text(stringResource(Res.string.webdav_read)) }
-    }
-    SegmentedGroup(stringResource(Res.string.webdav_title), stringResource(Res.string.webdav_note), listOf(address, refresh))
+    val address = SettingsRow.Value(
+        AppIcons.CloudSync, stringResource(Res.string.webdav_address), "phone_backup_address",
+        if (backup.configured) backup.url.value.substringAfter("://") else stringResource(Res.string.setting_unset),
+    ) { editing = true }
+    val refresh = SettingsRow.Action(
+        AppIcons.Refresh, stringResource(Res.string.webdav_read), "phone_backup_read",
+        supporting = readText(read, busy),
+        enabled = backup.configured,
+        busy = busy,
+    ) { if (!busy) scope.launch { backup.refresh() } }
+    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.webdav_title), stringResource(Res.string.webdav_note), listOf(address, refresh)))
 
     if (editing) {
         WebDavDialog(

@@ -11,6 +11,9 @@ import kotlin.test.assertEquals
 
 /** The heatmap widget lays its days out by weeks, by months or in a row, and shades them by quartile. */
 class WidgetHeatTest {
+    // The phone's plugins, as the app installs them when it starts.
+    init { cc.hyoban.moments.plugins.Plugins.install(cc.hyoban.moments.plugins.PhonePlugins.all) }
+
     // A Monday.
     private val today = LocalDate.parse("2026-11-02")
 

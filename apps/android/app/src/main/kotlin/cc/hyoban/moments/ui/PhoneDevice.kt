@@ -96,8 +96,8 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
         actions: cc.hyoban.moments.ui.map.MapOverlayActions,
         content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
     ) {
-        val plugin = cc.hyoban.moments.plugins.PhonePlugins.all.firstOrNull { it.drawsOnMap }
-        if (plugin == null) content(null) else plugin.MapOverlay(container as PhoneContainer, actions, content)
+        val overlay = cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.PhonePoints.mapOverlays).firstOrNull()
+        if (overlay == null) content(null) else overlay.Overlay(container as PhoneContainer, actions, content)
     }
 
     override fun canLocate(): Boolean = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
@@ -139,8 +139,9 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
     override fun importsMore(settings: cc.hyoban.moments.Settings) =
         cc.hyoban.moments.plugins.PhonePlugins.imports(settings)
 
-    override val moduleSteps = cc.hyoban.moments.plugins.PhonePlugins.all.mapNotNull { plugin ->
-        if (!plugin.onboards) null else cc.hyoban.moments.ui.ModuleStep(plugin.module) { container, onBack, onDone -> plugin.OnboardingStep(container as PhoneContainer, onBack, onDone) }
+    override val moduleSteps = cc.hyoban.moments.plugins.Plugins.registry.contributions(cc.hyoban.moments.plugins.PhonePoints.onboarding).mapNotNull { step ->
+        val module = step.module ?: return@mapNotNull null
+        cc.hyoban.moments.ui.ModuleStep(module) { container, onBack, onDone -> step.item.Step(container as PhoneContainer, onBack, onDone) }
     }
 
     override fun viewerMotion(type: cc.hyoban.moments.data.spec.MediaType) = cc.hyoban.moments.ui.viewer.phoneViewerMotion(type)

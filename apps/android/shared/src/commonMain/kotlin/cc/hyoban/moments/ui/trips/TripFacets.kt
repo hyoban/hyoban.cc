@@ -10,7 +10,7 @@ class TripFacetScope(val container: AppContainer, val trip: TripRecord, val onBi
 /** A figure at the head of a trip, its [value] over its [label], and what a tap opens. */
 class TripFigure(val value: String, val label: String, val onClick: (() -> Unit)? = null)
 
-/** A figure a module adds at the head of a trip (`ModulePlugin.tripFacets`), after its distance, by [order]. */
+/** A figure a module adds at the head of a trip (`Points.tripFacets`), after its distance, by [order]. */
 interface TripFacet {
     val order: Int
 

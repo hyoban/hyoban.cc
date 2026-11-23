@@ -41,9 +41,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   content address or a file on the Mac), taking the application's context from `AndroidApp`
   where no caller has one; the Mac's is in `jvmMain`. The Mac takes pictures from the system's
   file dialog and not yet videos.
-- 相册 and 选照片 (`ui/picker`) and the NAS's client (`nas/`) are shared: a device adds its own
-  sources, videos, sharing and where it keeps photos through `Device.picker` (`PickerDevice`), the
-  phone its gallery and paired camera (`PhonePicker`, in `:app`), the Mac nothing but the NAS.
+- 相册 and 选照片 (`ui/picker`) and the NAS's client (`nas/`) are shared. Their sources are plugins'
+  (`Points.photoSources`, each `PhotoSources` by its `order`): the NAS's on every device, the
+  phone's gallery and paired camera in `:app`; a device adds only its sharing and where it keeps
+  photos through `Device.picker` (`PickerDevice`).
 - The ledger and the footprints on a desktop or a tablet are the phone's latest WebDAV backup,
   read by `backup/PhoneBackup` in `:shared` and only shown (`LedgerSource.writable` false): no bill
   is written, edited or deleted there and the ledger's settings stay on the phone, as the canvas's
@@ -65,25 +66,35 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - A declaration `:app` uses from `:shared` is public, and its tests stay in `:app` until they
   move too. A string resource is held as a `StringResource`, never an `Int`. The generators write into `:shared` (`Tokens.kt`, `AppIcons.kt`, `CopyTables.kt`,
   `Modules.kt`); the paths below are packages, in whichever module holds them.
-- A module (记录项与公开's switch, `Module`) reaches the pages every module shares through its plugin:
-  `ModulePlugin` in `:shared`'s `plugins/` (its name and icon, pages and `moments://` links, search
-  kinds, import sources, its group on 记录项与公开, its section on a Moment's page and its line on a
+- Every part of the app reaches the pages through plugins (`plugins/`): a `Plugin` adds to
+  points (`Point`) in its `contribute()` and gives the others services (`Service`), and the host pages
+  read the points from `Plugins.registry`, never naming a plugin. A point is the host's: `Points` in
+  `:shared` (a module's name and icon, pages and `moments://` links, the photos' sources, search
+  kinds, import groups, its group on 记录项与公开, its section on a Moment's page and its line on a
   Moment's card and at its bubble's foot, its part in 写动态, its figures at a trip's head, its map
-  layer and its stops at places there (`MapStop`), each day's movement, the stops ways lead to and
-  those a trip's plan keeps (`KeptStop`), what 写动态 keeps a place alone as (`PlaceAlone`), its
-  section on 待发布 (`ChangeSection`), and its `TimelineJoin`: the records, stops, day figures and
-  day-map marks it joins to the timeline's, a trip's, a place's and a day's Moments, check-ins
-  first, then bills, then charges taking the bill at their time), `PhonePlugin` in `:app` (its row
-  on 我, its pages in the navigation, its import groups, its side key actions, its heatmap widget
-  sources, its step in 初次打开, what it draws over the map, its background work on and off) and
-  `DesktopPlugin` in `:desktop` (its sidebar section and its pages), each registered once in
-  `Plugins.all`, `PhonePlugins.all` or `DesktopPlugins.all`, whose order is the order the pages list
-  them in. A module's record (`DayRecord`) and stop (`DayAnchor`) draw themselves wherever they are
-  shown; the host pages lay them out by time and never name a module, nor does `Device`: what a
-  module's own pages need of the device goes through a local of the module's (`LocalLedgerDevice`).
-  The movement contract (`Footprints`, `TrackPoint`, how a track is drawn) and money formatting
-  (`data.money`) are shared by every page. Only a module's own pages, stores and services, and the
-  containers that wire them, read its switch directly.
+  layer and its stops at places there (`MapStop`), the stops ways lead to and those a trip's plan
+  keeps (`KeptStop`), what 写动态 keeps a place alone as (`PlaceAlone`), its section on 待发布
+  (`ChangeSection`), and its `TimelineJoin`: the records, stops, day figures and day-map marks it joins
+  to the timeline's, a trip's, a place's and a day's Moments, check-ins first, then bills, then charges
+  taking the bill at their time), `PhonePoints` in `:app` (its row on 我, its pages in the navigation,
+  its import groups, its side key actions, its heatmap widget sources, its step in 初次打开, what it
+  draws over the map, its background work on and off) and `DesktopPoints` in `:desktop` (its sidebar
+  section and its pages). Add a point only once two plugins bring to it. Every device's plugins are
+  `Plugins.shared`; the phone and the Mac install their own beside them as they start
+  (`Plugins.install`, from `MomentsApplication` and `main`, and in a test that reads the phone's
+  points). The registry keeps the plugins' order, which is the order the pages list what they bring
+  unless a point's things carry an `order`. A plugin with a `module` follows that module's switch:
+  `registry.on` lists only what the modules that are on bring, and a service asked for is null while
+  its plugin's module is off. One no module holds may have a switch of its own on this device
+  (`switchKey`, `Settings.isPluginOn`): the NAS's and the camera's 在相册里显示, the first row of their
+  settings group, which takes only their photos out of 相册, 选照片 and 地图's photos, and a device
+  left with none of its sources still lists them; a point read on or off for a composition's shape is read whole with
+  `contributions` and filtered with `shownWith`. A module's record (`DayRecord`) and stop
+  (`DayAnchor`) draw themselves wherever they are shown; the host pages lay them out by time and never
+  name a module, nor does `Device`: what a module's own pages need of the device goes through a local
+  of the module's (`LocalLedgerDevice`). The movement contract (`Footprints`, `TrackPoint`, how a track
+  is drawn, `Services.dayTracks`) and money formatting (`data.money`) are shared by every page. Only a
+  module's own pages, stores and services, and the containers that wire them, read its switch directly.
 - Check the Mac app where it runs: `./gradlew :desktop:run` opens its window; look at it,
   light and dark, before saying a change to it works.
 
@@ -217,7 +228,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   `SegmentedGroup` does.
 - Top bars switch between what the page is one of with `TitleMenu` and put a control over the
   subtitle's figures in `subtitleAction`. Settings are `SegmentedGroup` with `SwitchRow` and
-  `ActionRow`, switches `AppSwitch`. What floats over a photo or the map is `FloatingButton`.
+  `ActionRow`, switches `AppSwitch`. A settings group is declared, not drawn: its rows are
+  `SettingsRow`s of the design's kinds (switch, value, action, page, external, status) in a
+  `SettingsGroupSpec` that `SettingsGroupView` draws; what those can't draw opens the plugin's own
+  dialog or panel from a value or action row, never a new kind. What floats over a photo or the map is `FloatingButton`.
 - An action the system confirms itself (a gallery photo to its bin) goes straight to the
   system's prompt; the app doesn't ask first too.
 - Haptics are the design's roles (lift, tick, armed/disarmed, toggle, key, confirm/reject) from

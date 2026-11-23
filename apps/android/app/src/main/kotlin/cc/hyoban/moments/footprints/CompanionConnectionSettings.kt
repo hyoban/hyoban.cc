@@ -15,9 +15,9 @@ import androidx.compose.ui.platform.LocalContext
 import org.jetbrains.compose.resources.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import cc.hyoban.moments.ui.settings.Segment
-import cc.hyoban.moments.ui.settings.SegmentedGroup
-import cc.hyoban.moments.ui.settings.SwitchRow
+import cc.hyoban.moments.ui.settings.SettingsGroupSpec
+import cc.hyoban.moments.ui.settings.SettingsGroupView
+import cc.hyoban.moments.ui.settings.SettingsRow
 
 @Composable
 internal fun CompanionConnectionSettings(rules: ConnectionRules) {
@@ -40,12 +40,12 @@ internal fun CompanionConnectionSettings(rules: ConnectionRules) {
     }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { refresh() }
     // One switch per chosen device, on while the system has it linked to the app.
-    SegmentedGroup(
-        stringResource(Res.string.footprints_companion_title),
-        stringResource(if (error) Res.string.footprints_companion_failed else Res.string.footprints_companion_note),
-        rules.bluetooth.map<String, String, Segment> { (address, name) ->
-            { shapes ->
-                SwitchRow(address in associations, AppIcons.BluetoothOn, name, "footprints_companion_associate", shapes,
+    SettingsGroupView(
+        SettingsGroupSpec(
+            stringResource(Res.string.footprints_companion_title),
+            stringResource(if (error) Res.string.footprints_companion_failed else Res.string.footprints_companion_note),
+            rules.bluetooth.map { (address, name) ->
+                SettingsRow.Switch(AppIcons.BluetoothOn, name, "footprints_companion_associate", address in associations,
                     enabled = !busy && context.bluetoothAllowed()) {
                     error = false
                     val id = associations[address]
@@ -67,7 +67,7 @@ internal fun CompanionConnectionSettings(rules: ConnectionRules) {
                         } catch (_: Exception) { busy = false; error = true }
                     }
                 }
-            }
-        },
+            },
+        ),
     )
 }

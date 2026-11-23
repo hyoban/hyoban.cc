@@ -17,7 +17,7 @@ class MomentPageScope(
     val onNewBill: (String) -> Unit,
 )
 
-/** What a module adds to a Moment's page (`ModulePlugin.momentSection`), while it is on. */
+/** What a module adds to a Moment's page (`Points.momentSections`), while it is on. */
 interface MomentSection {
     /** Its rows on the page, after the Moment's places and before its trip. */
     @Composable fun rows(scope: MomentPageScope): List<@Composable (ListItemShapes) -> Unit> = emptyList()

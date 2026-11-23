@@ -30,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
@@ -37,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.ui.settings.ActionRow
 import cc.hyoban.moments.footprints.BackgroundAllowances
 import cc.hyoban.moments.ui.components.PermissionAsk
 import cc.hyoban.moments.ui.components.openAppSettings
@@ -52,14 +52,12 @@ import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Button
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.PermissionFact
-import cc.hyoban.moments.ui.design.SegmentedListItem
-import cc.hyoban.moments.ui.design.Spinner
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.TextButton
-import cc.hyoban.moments.ui.settings.SegmentedGroup
-import cc.hyoban.moments.ui.settings.SwitchRow
-import cc.hyoban.moments.ui.settings.segmentColors
+import cc.hyoban.moments.ui.settings.SettingsGroupSpec
+import cc.hyoban.moments.ui.settings.SettingsGroupView
+import cc.hyoban.moments.ui.settings.SettingsRow
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
 import kotlinx.coroutines.launch
@@ -116,14 +114,11 @@ fun CameraSettingsScreen(onBack: () -> Unit) {
                 val paired = camera
                 when {
                     paired != null -> Paired(paired, status, needs, onUnpair = { unpairing = true })
-                    pairing -> SegmentedGroup(stringResource(Res.string.camera_title), stringResource(Res.string.camera_pairing_note), listOf { shapes ->
-                        SegmentedListItem(
-                            onClick = {}, shapes = shapes, colors = segmentColors(),
-                            leadingContent = { Icon(AppIcons.CameraBody, contentDescription = null) },
-                            supportingContent = { Text(stringResource(Res.string.camera_pairing)) },
-                            trailingContent = { Spinner() },
-                        ) { Text(stringResource(Res.string.camera_model)) }
-                    })
+                    pairing -> SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.camera_title), stringResource(Res.string.camera_pairing_note), listOf(
+                        inAlbumRow(),
+                        SettingsRow.Status(AppIcons.CameraBody, stringResource(Res.string.camera_model), null,
+                            supporting = stringResource(Res.string.camera_pairing), busy = true),
+                    )))
                     else -> Unpaired(supported = CameraLink.supported(context), failed = failed) { ask() }
                 }
             }
@@ -179,33 +174,32 @@ private fun Paired(camera: PairedCamera, status: CameraStatus, needs: Needs, onU
         status.near -> stringResource(Res.string.camera_near)
         else -> listOfNotNull(stringResource(Res.string.camera_away), last).joinToString(" · ")
     }
-    SegmentedGroup(stringResource(Res.string.camera_title), null, listOf { shapes ->
-        SegmentedListItem(
-            onClick = {}, shapes = shapes, colors = segmentColors(),
-            leadingContent = { Icon(AppIcons.CameraBody, contentDescription = null) },
-            supportingContent = { Text(state) },
-        ) { Text(camera.name) }
-    })
-    SegmentedGroup(stringResource(Res.string.camera_location), stringResource(Res.string.camera_location_note), listOf { shapes ->
-        SwitchRow(camera.sendLocation, AppIcons.Pin, stringResource(Res.string.camera_send_location), "camera_send_location", shapes,
+    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.camera_title), null, listOf(
+        inAlbumRow(),
+        SettingsRow.Status(AppIcons.CameraBody, camera.name, null, supporting = state),
+    )))
+    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.camera_location), stringResource(Res.string.camera_location_note), listOf(
+        SettingsRow.Switch(AppIcons.Pin, stringResource(Res.string.camera_send_location), "camera_send_location", camera.sendLocation,
             supporting = stringResource(if (camera.sendLocation) Res.string.camera_send_location_on else Res.string.camera_send_location_off)) {
             CameraLink.setSendLocation(context, !camera.sendLocation)
-        }
-    })
+        },
+    )))
     val (bluetooth, background, battery) = needs
-    SegmentedGroup(stringResource(Res.string.camera_needs), null, listOf(
-        { shapes -> ActionRow(AppIcons.Bluetooth, stringResource(Res.string.camera_need_bluetooth), shapes,
-            supporting = stringResource(if (bluetooth) Res.string.camera_allowed else Res.string.camera_need_bluetooth_off),
-            tag = "camera_need_bluetooth", external = !bluetooth) { if (!bluetooth) context.openAppSettings() } },
-        { shapes -> ActionRow(AppIcons.Pin, stringResource(Res.string.camera_need_location), shapes,
-            supporting = stringResource(if (background) Res.string.camera_allowed else Res.string.camera_need_location_off),
-            tag = "camera_need_location", external = !background) { if (!background) context.openAppSettings() } },
-        { shapes -> ActionRow(AppIcons.Refresh, stringResource(Res.string.camera_need_battery), shapes,
-            supporting = stringResource(if (battery) Res.string.camera_allowed else Res.string.camera_need_battery_off),
-            tag = "camera_need_battery", external = !battery) {
-            if (!battery) BackgroundAllowances.requestUnrestrictedBattery(context)
-        } },
-    ))
+    // Given, a need only says so; not yet, it opens the system's settings for it.
+    fun need(given: Boolean, icon: ImageVector, title: String, supporting: String, tag: String, onClick: () -> Unit) =
+        if (given) SettingsRow.Action(icon, title, tag, supporting = supporting, onClick = onClick)
+        else SettingsRow.External(icon, title, tag, supporting = supporting, onClick = onClick)
+    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.camera_needs), null, listOf(
+        need(bluetooth, AppIcons.Bluetooth, stringResource(Res.string.camera_need_bluetooth),
+            stringResource(if (bluetooth) Res.string.camera_allowed else Res.string.camera_need_bluetooth_off),
+            "camera_need_bluetooth") { if (!bluetooth) context.openAppSettings() },
+        need(background, AppIcons.Pin, stringResource(Res.string.camera_need_location),
+            stringResource(if (background) Res.string.camera_allowed else Res.string.camera_need_location_off),
+            "camera_need_location") { if (!background) context.openAppSettings() },
+        need(battery, AppIcons.Refresh, stringResource(Res.string.camera_need_battery),
+            stringResource(if (battery) Res.string.camera_allowed else Res.string.camera_need_battery_off),
+            "camera_need_battery") { if (!battery) BackgroundAllowances.requestUnrestrictedBattery(context) },
+    )))
     Box(Modifier.padding(start = Space.gutter, top = Space.xl)) {
         TextButton(onClick = onUnpair, modifier = Modifier.testTag("camera_unpair")) {
             Text(stringResource(Res.string.camera_unpair), color = tokens.danger)
@@ -247,3 +241,14 @@ internal fun rememberCameraPermissionAsk(
     onDecline = onDecline,
     onResult = onResult,
 )
+
+/** 在相册里显示: the camera's photos in 相册 and 选照片, its pairing and location kept either way. */
+@Composable
+private fun inAlbumRow(): SettingsRow.Switch {
+    val settings = cc.hyoban.moments.ui.LocalSettings.current
+    val key = cc.hyoban.moments.plugins.CameraPlugin.KEY
+    val shown = settings.isPluginOn(key)
+    return SettingsRow.Switch(AppIcons.Photos, stringResource(Res.string.source_in_album), "camera_in_album", shown) {
+        settings.changePlugin(key, !shown)
+    }
+}

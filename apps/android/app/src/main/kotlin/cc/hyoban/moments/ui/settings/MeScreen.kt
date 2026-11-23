@@ -1,7 +1,9 @@
 package cc.hyoban.moments.ui.settings
 
 import cc.hyoban.moments.plugins.MeNav
-import cc.hyoban.moments.plugins.PhonePlugins
+import cc.hyoban.moments.plugins.PhonePoints
+import cc.hyoban.moments.plugins.Plugins
+import cc.hyoban.moments.plugins.Points
 
 import cc.hyoban.moments.res.*
 import androidx.compose.foundation.Image
@@ -77,7 +79,7 @@ import kotlinx.coroutines.launch
 class MeRoutes(
     val changes: () -> Unit,
     /** The ledger on its tab: 0 the bills, 1 the sums, 2 the accounts. */
-    /** Where the modules' rows go (`PhonePlugin.MeRow`). */
+    /** Where the modules' rows go (`PhonePoints.meRows`). */
     val modules: MeNav,
     val items: () -> Unit,
     val homes: () -> Unit,
@@ -115,7 +117,7 @@ fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
         if (pending.size > 0 && container.canPublish) PublishCard(pending.size, routes.changes)
         // A row for each module that is on (记录项与公开), as its plugin draws it.
         PageRows(Modifier.padding(top = Space.s)) { shapes ->
-            PhonePlugins.all.forEach { it.MeRow(container, routes.modules, shapes) }
+            Plugins.registry.all(PhonePoints.meRows).forEach { it.Row(container, routes.modules, shapes) }
         }
     }
     val second: @Composable () -> Unit = {

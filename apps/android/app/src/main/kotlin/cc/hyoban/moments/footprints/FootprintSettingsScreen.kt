@@ -1,7 +1,5 @@
 package cc.hyoban.moments.footprints
 
-import cc.hyoban.moments.ui.settings.ActionRow
-
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
 import android.content.ActivityNotFoundException
@@ -45,7 +43,9 @@ import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
-import cc.hyoban.moments.ui.settings.SegmentedGroup
+import cc.hyoban.moments.ui.settings.SettingsGroupSpec
+import cc.hyoban.moments.ui.settings.SettingsGroupView
+import cc.hyoban.moments.ui.settings.SettingsRow
 import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.Space
 import java.time.LocalDate
@@ -102,39 +102,39 @@ private fun NeedsSettings() {
     var state by androidx.compose.runtime.remember { mutableStateOf(read()) }
     androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { state = read() }
     val (notifying, background, activity, live, battery) = state
-    val rows = buildList<cc.hyoban.moments.ui.settings.Segment> {
-        if (!notifying) add { shapes ->
-            ActionRow(AppIcons.Bell, stringResource(Res.string.onboarding_notifications), shapes,
-                supporting = stringResource(Res.string.footprints_needs_notifications), tag = "footprints_needs_notifications", external = true) {
+    val rows = buildList<SettingsRow> {
+        if (!notifying) add(
+            SettingsRow.External(AppIcons.Bell, stringResource(Res.string.onboarding_notifications), "footprints_needs_notifications",
+                supporting = stringResource(Res.string.footprints_needs_notifications)) {
                 BackgroundAllowances.openNotifications(context)
-            }
-        }
-        if (!live) add { shapes ->
-            ActionRow(AppIcons.Stream, stringResource(Res.string.footprints_needs_live), shapes,
-                supporting = stringResource(Res.string.footprints_needs_live_note), tag = "footprints_needs_live", external = true) {
+            },
+        )
+        if (!live) add(
+            SettingsRow.External(AppIcons.Stream, stringResource(Res.string.footprints_needs_live), "footprints_needs_live",
+                supporting = stringResource(Res.string.footprints_needs_live_note)) {
                 BackgroundAllowances.openLiveUpdates(context)
-            }
-        }
-        if (!battery) add { shapes ->
-            ActionRow(AppIcons.BatteryCharging, stringResource(Res.string.footprints_needs_battery), shapes,
-                supporting = stringResource(Res.string.footprints_needs_battery_note), tag = "footprints_needs_battery", external = true) {
+            },
+        )
+        if (!battery) add(
+            SettingsRow.External(AppIcons.BatteryCharging, stringResource(Res.string.footprints_needs_battery), "footprints_needs_battery",
+                supporting = stringResource(Res.string.footprints_needs_battery_note)) {
                 BackgroundAllowances.requestUnrestrictedBattery(context)
-            }
-        }
-        if (!background) add { shapes ->
-            ActionRow(AppIcons.Locate, stringResource(Res.string.footprints_needs_location), shapes,
-                supporting = stringResource(Res.string.footprints_needs_location_note), tag = "footprints_needs_location", external = true) {
+            },
+        )
+        if (!background) add(
+            SettingsRow.External(AppIcons.Locate, stringResource(Res.string.footprints_needs_location), "footprints_needs_location",
+                supporting = stringResource(Res.string.footprints_needs_location_note)) {
                 context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
-            }
-        }
-        if (!activity) add { shapes ->
-            ActionRow(AppIcons.Walk, stringResource(Res.string.footprints_needs_activity), shapes,
-                supporting = stringResource(Res.string.footprints_needs_activity_note), tag = "footprints_needs_activity", external = true) {
+            },
+        )
+        if (!activity) add(
+            SettingsRow.External(AppIcons.Walk, stringResource(Res.string.footprints_needs_activity), "footprints_needs_activity",
+                supporting = stringResource(Res.string.footprints_needs_activity_note)) {
                 context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
-            }
-        }
+            },
+        )
     }
-    if (rows.isNotEmpty()) SegmentedGroup(stringResource(Res.string.footprints_needs), null, rows)
+    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.footprints_needs), null, rows))
 }
 
 /** The live update the recording notification may become, the notification's own settings, and what its icons mean. */
@@ -144,35 +144,32 @@ private fun StatusBarSettings() {
     val status by RecordingService.status.collectAsStateWithLifecycle()
     val promotion = rememberNotificationPromotion(status)
     var explaining by rememberSaveable { mutableStateOf(false) }
-    SegmentedGroup(
-        stringResource(Res.string.footprints_status_icons),
-        null,
-        listOfNotNull(
-            if (Build.VERSION.SDK_INT >= 36) { shapes ->
-                ActionRow(AppIcons.Stream, stringResource(Res.string.footprints_live_status_settings), shapes,
-                    supporting = promotion?.let { stringResource(it) }, tag = "footprints_live_status_settings", external = true) {
-                    try {
-                        context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS)
-                            .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName))
-                    } catch (_: ActivityNotFoundException) {
-                        context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
+    SettingsGroupView(
+        SettingsGroupSpec(
+            stringResource(Res.string.footprints_status_icons),
+            null,
+            listOfNotNull(
+                if (Build.VERSION.SDK_INT >= 36) {
+                    SettingsRow.External(AppIcons.Stream, stringResource(Res.string.footprints_live_status_settings), "footprints_live_status_settings",
+                        supporting = promotion?.let { stringResource(it) }) {
+                        try {
+                            context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS)
+                                .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName))
+                        } catch (_: ActivityNotFoundException) {
+                            context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
+                        }
                     }
-                }
-            } else null,
-            { shapes ->
-                ActionRow(AppIcons.Bell, stringResource(Res.string.footprints_notification_settings), shapes,
-                    supporting = if (Build.VERSION.SDK_INT < 36) promotion?.let { stringResource(it) } else null,
-                    tag = "footprints_notification_settings", external = true) {
+                } else null,
+                SettingsRow.External(AppIcons.Bell, stringResource(Res.string.footprints_notification_settings), "footprints_notification_settings",
+                    supporting = if (Build.VERSION.SDK_INT < 36) promotion?.let { stringResource(it) } else null) {
                     context.startActivity(Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
                         .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
                         .putExtra(Settings.EXTRA_CHANNEL_ID, RecordingNotifications.CHANNEL))
-                }
-            },
-            { shapes ->
-                ActionRow(AppIcons.Info, stringResource(Res.string.footprints_status_icons_help), shapes, tag = "footprints_status_icons") {
+                },
+                SettingsRow.Action(AppIcons.Info, stringResource(Res.string.footprints_status_icons_help), "footprints_status_icons") {
                     explaining = true
-                }
-            },
+                },
+            ),
         ),
     )
     if (explaining) InfoDialog(
@@ -188,20 +185,22 @@ private fun StatusBarSettings() {
 @Composable
 private fun BackgroundSettings() {
     val context = LocalContext.current
-    SegmentedGroup(
-        stringResource(Res.string.footprints_background_options),
-        stringResource(Res.string.footprints_background_note),
-        listOf(
-            if (BackgroundAllowances.autoStartSettings) { shapes ->
-                ActionRow(AppIcons.Refresh, stringResource(Res.string.footprints_auto_start), shapes,
-                    supporting = stringResource(Res.string.footprints_auto_start_path), tag = "footprints_auto_start", external = true) {
-                    BackgroundAllowances.openAutoStart(context)
-                }
-            } else { shapes ->
-                ActionRow(AppIcons.BatteryCharging, stringResource(Res.string.footprints_settings), shapes, external = true) {
-                    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
-                }
-            },
+    SettingsGroupView(
+        SettingsGroupSpec(
+            stringResource(Res.string.footprints_background_options),
+            stringResource(Res.string.footprints_background_note),
+            listOf(
+                if (BackgroundAllowances.autoStartSettings) {
+                    SettingsRow.External(AppIcons.Refresh, stringResource(Res.string.footprints_auto_start), "footprints_auto_start",
+                        supporting = stringResource(Res.string.footprints_auto_start_path)) {
+                        BackgroundAllowances.openAutoStart(context)
+                    }
+                } else {
+                    SettingsRow.External(AppIcons.BatteryCharging, stringResource(Res.string.footprints_settings), null) {
+                        context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
+                    }
+                },
+            ),
         ),
     )
 }
@@ -228,15 +227,17 @@ private fun DiagnosticsSettings(container: PhoneContainer) {
             } catch (e: CancellationException) { throw e } catch (_: Exception) { failed = true } finally { busy = false }
         }
     }
-    SegmentedGroup(
-        stringResource(Res.string.footprints_diagnostics_section),
-        stringResource(if (failed) Res.string.footprints_error else Res.string.footprints_diagnostics_note),
-        listOf { shapes ->
-            ActionRow(AppIcons.Download, stringResource(Res.string.footprints_export_diagnostics), shapes,
-                tag = "footprints_export_diagnostics", enabled = !busy) {
-                export.launch("footprint-diagnostics-${LocalDate.now()}.jsonl")
-            }
-        },
+    SettingsGroupView(
+        SettingsGroupSpec(
+            stringResource(Res.string.footprints_diagnostics_section),
+            stringResource(if (failed) Res.string.footprints_error else Res.string.footprints_diagnostics_note),
+            listOf(
+                SettingsRow.Action(AppIcons.Download, stringResource(Res.string.footprints_export_diagnostics), "footprints_export_diagnostics",
+                    enabled = !busy) {
+                    export.launch("footprint-diagnostics-${LocalDate.now()}.jsonl")
+                },
+            ),
+        ),
     )
 }
 

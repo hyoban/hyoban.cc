@@ -37,7 +37,7 @@ class RoutesTest {
     }
 
     @Test fun `every module has one plugin`() {
-        assertEquals(Module.entries.size, Plugins.all.size)
+        assertEquals(Module.entries.size, Plugins.registry.all(cc.hyoban.moments.plugins.Points.modules).size)
         assertEquals(Module.entries.toList(), Plugins.inSpecOrder.map { it.module })
     }
 }

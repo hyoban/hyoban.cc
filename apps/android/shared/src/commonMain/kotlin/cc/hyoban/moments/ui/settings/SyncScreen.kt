@@ -27,8 +27,6 @@ import cc.hyoban.moments.ui.design.IconButtonDefaults
 import cc.hyoban.moments.ui.design.ButtonDefaults
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.IconButton
-import cc.hyoban.moments.ui.design.ListItemShapes
-import cc.hyoban.moments.ui.design.SegmentedListItem
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.OutlinedSecureTextField
 import cc.hyoban.moments.ui.design.OutlinedTextField
@@ -58,10 +56,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.CHINA_PLACES_AMAP
 import cc.hyoban.moments.CHINA_PLACES_TENCENT
-import cc.hyoban.moments.ui.design.DropdownMenu
-import cc.hyoban.moments.ui.design.DropdownMenuItem
-import androidx.compose.foundation.layout.Box
-import androidx.compose.ui.unit.DpOffset
 import cc.hyoban.moments.Setting
 import cc.hyoban.moments.Token
 import cc.hyoban.moments.ui.components.AppColors
@@ -107,141 +101,63 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit, onNoteSignIn: (() ->
                     .padding(bottom = Space.xl),
             ) {
                 // The token publishing takes; the changes themselves wait at the top of 我.
-                val token: Segment = { shapes ->
-                    SegmentedListItem(
-                        onClick = { editingToken = true },
-                        shapes = shapes,
-                        colors = segmentColors(),
-                        leadingContent = { Icon(AppIcons.Key, contentDescription = null) },
-                        supportingContent = { Text(stringResource(if (settings.apiToken.isSet) Res.string.token_set else Res.string.token_unset)) },
-                        modifier = Modifier.testTag("api_token"),
-                    ) { Text(stringResource(Res.string.setting_api_token)) }
-                }
+                val token = SettingsRow.Value(
+                    AppIcons.Key, stringResource(Res.string.setting_api_token), "api_token",
+                    stringResource(if (settings.apiToken.isSet) Res.string.token_set else Res.string.token_unset),
+                    maxLines = Int.MAX_VALUE,
+                ) { editingToken = true }
                 // Reading from the API again with a tap, as a refresh pulled for on the tabs is had without the gesture too.
                 val syncing by container.repository.syncing.collectAsStateWithLifecycle()
                 val connected = settings.connected
-                val refresh: Segment = { shapes ->
-                    SegmentedListItem(
-                        onClick = { if (!syncing) container.refresh() },
-                        enabled = connected,
-                        shapes = shapes,
-                        colors = segmentColors(),
-                        leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
-                        supportingContent = if (connected && !syncing) null else {
-                            { Text(stringResource(if (syncing) Res.string.refreshing else Res.string.refresh_needs_api)) }
-                        },
-                        trailingContent = if (syncing) {
-                            { Spinner(Modifier.size(24.dp)) }
-                        } else {
-                            null
-                        },
-                        modifier = Modifier.testTag("refresh"),
-                    ) { Text(stringResource(Res.string.action_refresh)) }
-                }
+                val refresh = SettingsRow.Action(
+                    AppIcons.Refresh, stringResource(Res.string.action_refresh), "refresh",
+                    supporting = if (connected && !syncing) null else stringResource(if (syncing) Res.string.refreshing else Res.string.refresh_needs_api),
+                    enabled = connected,
+                    busy = syncing,
+                ) { if (!syncing) container.refresh() }
                 Section(stringResource(Res.string.section_site), rows.subList(0, 1), 0, stringResource(Res.string.settings_api_note), extra = listOf(token, refresh)) { editing = it }
                 device.StorageSettings(container)
                 // The keys the place picker asks AMap and Tencent with in China, kept beside the map's styles, and,
                 // with both, which it asks first: a menu under the row.
-                val chinaPlaces: Segment = { shapes ->
-                    var open by remember { mutableStateOf(false) }
-                    val tencentFirst = settings.chinaPlaces.value == CHINA_PLACES_TENCENT
-                    Box {
-                        SegmentedListItem(
-                            onClick = { open = true },
-                            shapes = shapes,
-                            colors = segmentColors(),
-                            leadingContent = { Icon(AppIcons.Pin, contentDescription = null) },
-                            supportingContent = { Text(stringResource(if (tencentFirst) Res.string.setting_tencent_maps else Res.string.setting_amap)) },
-                            trailingContent = { Icon(AppIcons.CaretDown, contentDescription = null) },
-                            modifier = Modifier.testTag("china_places"),
-                        ) { Text(stringResource(Res.string.setting_china_places)) }
-                        DropdownMenu(open, onDismissRequest = { open = false }, offset = DpOffset(Space.l, 0.dp)) {
-                            listOf(CHINA_PLACES_AMAP to Res.string.setting_amap, CHINA_PLACES_TENCENT to Res.string.setting_tencent_maps).forEach { (value, words) ->
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(words)) },
-                                    onClick = { settings.chinaPlaces.set(value); open = false },
-                                    trailingIcon = if (settings.chinaPlaces.value == value) {
-                                        { Icon(AppIcons.Check, contentDescription = null) }
-                                    } else {
-                                        null
-                                    },
-                                )
-                            }
-                        }
-                    }
-                }
-                val amapKey: Segment = { shapes ->
-                    SegmentedListItem(
-                        onClick = { editingAmapKey = true },
-                        shapes = shapes,
-                        colors = segmentColors(),
-                        leadingContent = { Icon(AppIcons.Key, contentDescription = null) },
-                        supportingContent = { Text(stringResource(if (settings.amapKey.isSet) Res.string.token_set else Res.string.token_unset)) },
-                        modifier = Modifier.testTag("amap_key"),
-                    ) { Text(stringResource(Res.string.setting_amap_key)) }
-                }
-                val tencentKey: Segment = { shapes ->
-                    SegmentedListItem(
-                        onClick = { editingTencentKey = true },
-                        shapes = shapes,
-                        colors = segmentColors(),
-                        leadingContent = { Icon(AppIcons.Key, contentDescription = null) },
-                        supportingContent = { Text(stringResource(if (settings.tencentMapKey.isSet) Res.string.token_set else Res.string.token_unset)) },
-                        modifier = Modifier.testTag("tencent_key"),
-                    ) { Text(stringResource(Res.string.setting_tencent_key)) }
-                }
+                val chinaPlaces = SettingsRow.Choice(
+                    AppIcons.Pin, stringResource(Res.string.setting_china_places), "china_places",
+                    listOf(CHINA_PLACES_AMAP to stringResource(Res.string.setting_amap), CHINA_PLACES_TENCENT to stringResource(Res.string.setting_tencent_maps)),
+                    settings.chinaPlaces.value,
+                ) { settings.chinaPlaces.set(it) }
+                val amapKey = SettingsRow.Value(
+                    AppIcons.Key, stringResource(Res.string.setting_amap_key), "amap_key",
+                    stringResource(if (settings.amapKey.isSet) Res.string.token_set else Res.string.token_unset),
+                    maxLines = Int.MAX_VALUE,
+                ) { editingAmapKey = true }
+                val tencentKey = SettingsRow.Value(
+                    AppIcons.Key, stringResource(Res.string.setting_tencent_key), "tencent_key",
+                    stringResource(if (settings.tencentMapKey.isSet) Res.string.token_set else Res.string.token_unset),
+                    maxLines = Int.MAX_VALUE,
+                ) { editingTencentKey = true }
                 Section(stringResource(Res.string.section_map), emptyList(), 0, stringResource(Res.string.settings_map_note), extra = listOfNotNull(amapKey, tencentKey, chinaPlaces.takeIf { settings.amapKey.isSet && settings.tencentMapKey.isSet })) { editing = it }
                 // The model a plan is talked over with: its address, the owner's key and the model's name.
-                val aiKey: Segment = { shapes ->
-                    SegmentedListItem(
-                        onClick = { editingAiKey = true },
-                        shapes = shapes,
-                        colors = segmentColors(),
-                        leadingContent = { Icon(AppIcons.Key, contentDescription = null) },
-                        supportingContent = { Text(stringResource(if (settings.aiKey.isSet) Res.string.token_set else Res.string.token_unset)) },
-                        modifier = Modifier.testTag("ai_key"),
-                    ) { Text(stringResource(Res.string.setting_ai_key)) }
-                }
-                val aiModel: Segment = { shapes ->
-                    SegmentedListItem(
-                        onClick = { editingAiModel = true },
-                        shapes = shapes,
-                        colors = segmentColors(),
-                        leadingContent = { Icon(AppIcons.Sliders, contentDescription = null) },
-                        supportingContent = {
-                            Text(settings.aiModel.value.ifEmpty { stringResource(Res.string.setting_unset) }, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        },
-                        modifier = Modifier.testTag("ai_model"),
-                    ) { Text(stringResource(Res.string.setting_ai_model)) }
-                }
+                val aiKey = SettingsRow.Value(
+                    AppIcons.Key, stringResource(Res.string.setting_ai_key), "ai_key",
+                    stringResource(if (settings.aiKey.isSet) Res.string.token_set else Res.string.token_unset),
+                    maxLines = Int.MAX_VALUE,
+                ) { editingAiKey = true }
+                val aiModel = SettingsRow.Value(
+                    AppIcons.Sliders, stringResource(Res.string.setting_ai_model), "ai_model",
+                    settings.aiModel.value.ifEmpty { stringResource(Res.string.setting_unset) },
+                ) { editingAiModel = true }
                 // What the owner tells the model besides, its first line shown.
-                val aiNotes: Segment = { shapes ->
-                    SegmentedListItem(
-                        onClick = { editingAiNotes = true },
-                        shapes = shapes,
-                        colors = segmentColors(),
-                        leadingContent = { Icon(AppIcons.Notes, contentDescription = null) },
-                        supportingContent = {
-                            val notes = settings.aiNotes.value.trim()
-                            Text(notes.lineSequence().first().ifEmpty { stringResource(Res.string.ai_notes_unset) }, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        },
-                        modifier = Modifier.testTag("ai_notes"),
-                    ) { Text(stringResource(Res.string.setting_ai_notes)) }
-                }
+                val aiNotes = SettingsRow.Value(
+                    AppIcons.Notes, stringResource(Res.string.setting_ai_notes), "ai_notes",
+                    settings.aiNotes.value.trim().lineSequence().first().ifEmpty { stringResource(Res.string.ai_notes_unset) },
+                ) { editingAiNotes = true }
                 // Xiaohongshu, for the model to search its notes: signed in to on its own page.
                 val noteSearch = container.noteSearch
-                val xiaohongshu: Segment? = if (noteSearch != null && onNoteSignIn != null) {
-                    { shapes ->
-                        SegmentedListItem(
-                            onClick = onNoteSignIn,
-                            shapes = shapes,
-                            colors = segmentColors(),
-                            leadingContent = { Icon(AppIcons.Xiaohongshu, contentDescription = null) },
-                            supportingContent = { Text(stringResource(if (noteSearch.signedIn.value) Res.string.xiaohongshu_signed_in else Res.string.xiaohongshu_signed_out)) },
-                            trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                            modifier = Modifier.testTag("xiaohongshu"),
-                        ) { Text(stringResource(Res.string.setting_xiaohongshu)) }
-                    }
+                val xiaohongshu = if (noteSearch != null && onNoteSignIn != null) {
+                    SettingsRow.Page(
+                        AppIcons.Xiaohongshu, stringResource(Res.string.setting_xiaohongshu), "xiaohongshu",
+                        supporting = stringResource(if (noteSearch.signedIn.value) Res.string.xiaohongshu_signed_in else Res.string.xiaohongshu_signed_out),
+                        onClick = onNoteSignIn,
+                    )
                 } else {
                     null
                 }
@@ -308,30 +224,24 @@ fun SyncScreen(container: AppContainer, onBack: () -> Unit, onNoteSignIn: (() ->
 /** A setting as a row: its name, its icon, and what saving it does. */
 private class Row(val setting: Setting, val title: StringResource, val icon: ImageVector, val save: (String) -> Unit)
 
-/** Rows as one segmented group under a caption, and a note under them; [extra] segments after them. */
+/** Rows as one segmented group under a caption, and a note under them; [extra] rows after them. */
 @Composable
-private fun Section(title: String, rows: List<Row>, first: Int, note: String?, extra: List<Segment> = emptyList(), onEdit: (Int) -> Unit) {
-    SegmentedGroup(title, note, rows.mapIndexed<Row, Segment> { index, row -> { shapes -> SettingRow(row, shapes) { onEdit(first + index) } } } + extra)
+private fun Section(title: String, rows: List<Row>, first: Int, note: String?, extra: List<SettingsRow> = emptyList(), onEdit: (Int) -> Unit) {
+    SettingsGroupView(SettingsGroupSpec(title, note, rows.mapIndexed { index, row -> settingRow(row) { onEdit(first + index) } } + extra))
 }
 
+/** An address as a row: where it points, and 默认 at its end while it is the build's own. */
 @Composable
-private fun SettingRow(row: Row, shapes: ListItemShapes, onClick: () -> Unit) {
+private fun settingRow(row: Row, onClick: () -> Unit): SettingsRow {
     val setting = row.setting
-    SegmentedListItem(
+    return SettingsRow.Action(
+        row.icon, stringResource(row.title), null,
+        // The scheme said by the dialog; the row has room only for where it points.
+        supporting = if (setting.isSet) setting.value.substringAfter("://") else stringResource(Res.string.setting_unset),
+        trailing = if (setting.isDefault && setting.isSet) stringResource(Res.string.setting_is_default) else null,
+        maxLines = 1,
         onClick = onClick,
-        shapes = shapes,
-        colors = segmentColors(),
-        supportingContent = {
-            // The scheme said by the dialog; the row has room only for where it points.
-            Text(if (setting.isSet) setting.value.substringAfter("://") else stringResource(Res.string.setting_unset), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        },
-        leadingContent = { Icon(row.icon, contentDescription = null) },
-        trailingContent = if (setting.isDefault && setting.isSet) {
-            { Text(stringResource(Res.string.setting_is_default), style = AppTheme.typography.caption) }
-        } else {
-            null
-        },
-    ) { Text(stringResource(row.title)) }
+    )
 }
 
 /** Blank is the build's own, or none; anything else an http or https address. */

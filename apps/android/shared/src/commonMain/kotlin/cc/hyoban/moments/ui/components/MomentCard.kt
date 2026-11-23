@@ -120,7 +120,7 @@ fun MomentCard(
             }
             // What the modules that are on add under the words, as the site has it: what it cost.
             val settings = LocalSettings.current
-            cc.hyoban.moments.plugins.Plugins.all.filter { settings.isOn(it.module) }.forEach { it.CardLine(moment) }
+            cc.hyoban.moments.plugins.Plugins.registry.on(cc.hyoban.moments.plugins.Points.cardLines, settings::isOn).forEach { it.Line(moment) }
         }
         // What goes with it in its card, at its foot, each opening itself.
         val inCard = attached.filter { it.inCard }
@@ -152,7 +152,7 @@ private fun MomentBubble(
     // What of its own the modules that are on put at its foot (what it cost, with its amount)
     // leads what goes with it there.
     val settings = LocalSettings.current
-    val footRecords = cc.hyoban.moments.plugins.Plugins.all.filter { settings.isOn(it.module) }.mapNotNull { it.footOf(moment) } + attached
+    val footRecords = cc.hyoban.moments.plugins.Plugins.registry.on(cc.hyoban.moments.plugins.Points.feet, settings::isOn).mapNotNull { it.footOf(moment) } + attached
     val withBills = footRecords.isNotEmpty()
     val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
     var menu by remember { mutableStateOf<DpOffset?>(null) }

@@ -76,8 +76,8 @@ fun rememberTimelineRecords(container: AppContainer, moments: List<MomentRecord>
     val off = LocalSettings.current.modulesOff
     val make: () -> TimelineRecords = {
         val span = JoinSpan.Days(filter)
-        val own = cc.hyoban.moments.plugins.Plugins.all.filter { it.module.key !in off }
-            .flatMap { it.dayRecords(DayRecordsScope(entries.values) { day -> span.keep(day) }) }.groupBy { it.first }.mapValues { (_, day) -> day.map { it.second } }
+        val own = cc.hyoban.moments.plugins.Plugins.registry.contributions(cc.hyoban.moments.plugins.Points.dayRecords).filter { c -> c.module?.let { it.key !in off } ?: true }
+            .flatMap { it.item.records(DayRecordsScope(entries.values) { day -> span.keep(day) }) }.groupBy { it.first }.mapValues { (_, day) -> day.map { it.second } }
         joinRecords(JoinScope(span, moments), joins).build(own)
     }
     // Worked out in the frame for the first time and for a change of what is shown, so the page never

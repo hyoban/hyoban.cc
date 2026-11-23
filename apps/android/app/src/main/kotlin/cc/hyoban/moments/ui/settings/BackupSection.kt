@@ -30,7 +30,6 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.Setting
@@ -48,7 +47,6 @@ import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.ui.design.ListItem
 import cc.hyoban.moments.ui.design.OutlinedSecureTextField
 import cc.hyoban.moments.ui.design.OutlinedTextField
-import cc.hyoban.moments.ui.design.SegmentedListItem
 import cc.hyoban.moments.ui.design.Spinner
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.TextButton
@@ -72,65 +70,33 @@ fun BackupSection(backup: Backup, onEdit: () -> Unit, onRestore: () -> Unit) {
     val running by backup.running.collectAsStateWithLifecycle()
     val status by backup.status.collectAsStateWithLifecycle()
     val configured = backup.configured
-    val directory: Segment = { shapes ->
-        SegmentedListItem(
-            onClick = onEdit,
-            shapes = shapes,
-            colors = segmentColors(),
-            leadingContent = { Icon(AppIcons.Cloud, contentDescription = null) },
-            supportingContent = {
-                Text(if (configured) backup.url.value.substringAfter("://") else stringResource(Res.string.setting_unset), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            },
-            modifier = Modifier.testTag("backup_webdav"),
-        ) { Text(stringResource(Res.string.setting_webdav)) }
-    }
-    val auto: Segment = { shapes ->
-        SwitchRow(
-            checked = configured && backup.auto,
-            icon = AppIcons.Clock,
-            title = stringResource(Res.string.backup_auto),
-            tag = "backup_auto",
-            shapes = shapes,
-            supporting = stringResource(Res.string.backup_auto_note),
-            enabled = configured,
-        ) { backup.changeAuto(!backup.auto) }
-    }
     val context = LocalContext.current
-    val now: Segment = { shapes ->
-        SegmentedListItem(
-            onClick = { if (!running) backup.backUpNow() },
-            enabled = configured,
-            shapes = shapes,
-            colors = segmentColors(),
-            leadingContent = { Icon(AppIcons.CloudUpload, contentDescription = null) },
-            supportingContent = {
-                Text(
-                    when {
-                        running -> stringResource(Res.string.backup_running)
-                        !configured -> stringResource(Res.string.backup_needs_webdav)
-                        else -> status?.let { statusText(context, it) } ?: stringResource(Res.string.backup_never)
-                    },
-                )
-            },
-            trailingContent = if (running) {
-                { Spinner(Modifier.size(24.dp)) }
-            } else {
-                null
-            },
-            modifier = Modifier.testTag("backup_now"),
-        ) { Text(stringResource(Res.string.action_backup_now)) }
-    }
-    val restore: Segment = { shapes ->
-        SegmentedListItem(
-            onClick = onRestore,
-            enabled = configured && !running,
-            shapes = shapes,
-            colors = segmentColors(),
-            leadingContent = { Icon(AppIcons.Download, contentDescription = null) },
-            modifier = Modifier.testTag("backup_restore"),
-        ) { Text(stringResource(Res.string.action_restore_backup)) }
-    }
-    SegmentedGroup(stringResource(Res.string.section_backup), stringResource(Res.string.settings_backup_note), listOf(directory, auto, now, restore))
+    val directory = SettingsRow.Value(
+        AppIcons.Cloud, stringResource(Res.string.setting_webdav), "backup_webdav",
+        if (configured) backup.url.value.substringAfter("://") else stringResource(Res.string.setting_unset),
+        onClick = onEdit,
+    )
+    val auto = SettingsRow.Switch(
+        AppIcons.Clock, stringResource(Res.string.backup_auto), "backup_auto", configured && backup.auto,
+        supporting = stringResource(Res.string.backup_auto_note),
+        enabled = configured,
+    ) { backup.changeAuto(!backup.auto) }
+    val now = SettingsRow.Action(
+        AppIcons.CloudUpload, stringResource(Res.string.action_backup_now), "backup_now",
+        supporting = when {
+            running -> stringResource(Res.string.backup_running)
+            !configured -> stringResource(Res.string.backup_needs_webdav)
+            else -> status?.let { statusText(context, it) } ?: stringResource(Res.string.backup_never)
+        },
+        enabled = configured,
+        busy = running,
+    ) { if (!running) backup.backUpNow() }
+    val restore = SettingsRow.Action(
+        AppIcons.Download, stringResource(Res.string.action_restore_backup), "backup_restore",
+        enabled = configured && !running,
+        onClick = onRestore,
+    )
+    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.section_backup), stringResource(Res.string.settings_backup_note), listOf(directory, auto, now, restore)))
 }
 
 private val TIME = DateTimeFormatter.ofPattern("HH:mm")

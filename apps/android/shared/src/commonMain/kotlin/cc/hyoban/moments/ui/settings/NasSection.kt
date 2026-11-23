@@ -48,53 +48,43 @@ import cc.hyoban.moments.ui.theme.tokens
 // address, and who signs in.
 
 @Composable
-fun NasSection(nas: Nas, linking: NasLinking?, onEdit: () -> Unit) {
-    val row: Segment = { shapes ->
-        SegmentedListItem(
-            onClick = onEdit,
-            shapes = shapes,
-            colors = segmentColors(),
-            leadingContent = { Icon(AppIcons.Nas, contentDescription = null) },
-            supportingContent = {
-                Text(
-                    if (nas.configured) stringResource(Res.string.nas_as, nas.link.value, nas.user.value) else stringResource(Res.string.setting_unset),
-                    maxLines = 1, overflow = TextOverflow.Ellipsis,
-                )
-            },
-            modifier = Modifier.testTag("nas_setting"),
-        ) { Text(stringResource(Res.string.nas_photos)) }
-    }
+fun NasSection(nas: Nas, linking: NasLinking?, onEdit: () -> Unit) = SettingsGroupView(nasGroup(nas, linking, onEdit))
+
+/** 绿联 NAS as its rows: 在相册里显示, who signs in where, and 关联已发布的照片 once it is set. */
+@Composable
+fun nasGroup(nas: Nas, linking: NasLinking?, onEdit: () -> Unit): SettingsGroupSpec {
+    // 在相册里显示 first: the NAS's photos in 相册, 选照片 and 地图's photos, its sign-in kept either way.
+    val settings = cc.hyoban.moments.ui.LocalSettings.current
+    val key = cc.hyoban.moments.plugins.NasPlugin.KEY
+    val shown = settings.isPluginOn(key)
+    val switch = SettingsRow.Switch(AppIcons.Photos, stringResource(Res.string.source_in_album), "nas_in_album", shown) { settings.changePlugin(key, !shown) }
+    val account = SettingsRow.Value(
+        AppIcons.Nas, stringResource(Res.string.nas_photos), "nas_setting",
+        if (nas.configured) stringResource(Res.string.nas_as, nas.link.value, nas.user.value) else stringResource(Res.string.setting_unset),
+        onClick = onEdit,
+    )
     // 关联已发布的照片: the Moments' photos written before they were linked, found on the NAS.
-    val link: Segment? = linking?.takeIf { nas.configured }?.let { linking ->
-        { shapes ->
-            SegmentedListItem(
-                onClick = linking::start,
-                enabled = !linking.running,
-                shapes = shapes,
-                colors = segmentColors(),
-                leadingContent = { Icon(AppIcons.Cloud, contentDescription = null) },
-                supportingContent = {
-                    val state = linking.state
-                    Text(
-                        when (state) {
-                            is NasLinking.State.Reading -> when {
-                                state.stage == NasMatch.Stage.SAVING -> stringResource(Res.string.nas_match_saving, state.total)
-                                state.total == 0 -> stringResource(Res.string.nas_match_starting)
-                                state.stage == NasMatch.Stage.DAYS -> stringResource(Res.string.nas_match_reading, state.done + 1, state.total)
-                                else -> stringResource(Res.string.nas_match_comparing, state.done, state.total)
-                            }
-                            is NasLinking.State.Done -> stringResource(Res.string.nas_match_done, state.linked)
-                            NasLinking.State.Failed -> stringResource(Res.string.nas_match_failed)
-                            null -> stringResource(Res.string.nas_match_note)
-                        },
-                        maxLines = 2, overflow = TextOverflow.Ellipsis,
-                    )
-                },
-                modifier = Modifier.testTag("nas_match"),
-            ) { Text(stringResource(Res.string.nas_match)) }
-        }
+    val link = linking?.takeIf { nas.configured }?.let { linking ->
+        val state = linking.state
+        SettingsRow.Action(
+            AppIcons.Cloud, stringResource(Res.string.nas_match), "nas_match",
+            supporting = when (state) {
+                is NasLinking.State.Reading -> when {
+                    state.stage == NasMatch.Stage.SAVING -> stringResource(Res.string.nas_match_saving, state.total)
+                    state.total == 0 -> stringResource(Res.string.nas_match_starting)
+                    state.stage == NasMatch.Stage.DAYS -> stringResource(Res.string.nas_match_reading, state.done + 1, state.total)
+                    else -> stringResource(Res.string.nas_match_comparing, state.done, state.total)
+                }
+                is NasLinking.State.Done -> stringResource(Res.string.nas_match_done, state.linked)
+                NasLinking.State.Failed -> stringResource(Res.string.nas_match_failed)
+                null -> stringResource(Res.string.nas_match_note)
+            },
+            maxLines = 2,
+            enabled = !linking.running,
+            onClick = linking::start,
+        )
     }
-    SegmentedGroup(stringResource(Res.string.section_nas), stringResource(Res.string.settings_nas_note), listOfNotNull(row, link))
+    return SettingsGroupSpec(stringResource(Res.string.section_nas), stringResource(Res.string.settings_nas_note), listOfNotNull(switch, account, link))
 }
 
 /** 关联已发布的照片 under way, or how it went: the Moments' photos linked to the NAS's ([AppContainer.linkNas]). */

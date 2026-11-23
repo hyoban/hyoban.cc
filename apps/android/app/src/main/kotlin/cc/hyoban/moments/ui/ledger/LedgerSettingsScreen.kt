@@ -75,6 +75,9 @@ import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.rememberShowMessage
 import cc.hyoban.moments.ui.settings.Segment
 import cc.hyoban.moments.ui.settings.SegmentedGroup
+import cc.hyoban.moments.ui.settings.SettingsGroupSpec
+import cc.hyoban.moments.ui.settings.SettingsGroupView
+import cc.hyoban.moments.ui.settings.SettingsRow
 import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.Space
 import java.time.LocalDate
@@ -169,44 +172,36 @@ fun LedgerSettingsScreen(container: PhoneContainer, nav: LedgerNav, startImport:
                         ) { Text(stringResource(Res.string.ledger_add_book)) }
                     },
                 )
-                SegmentedGroup(
-                    stringResource(Res.string.ledger_rates),
-                    null,
-                    listOf { shapes ->
-                        val latest = ledger.rates.currencies.filter { it != "CNY" }.mapNotNull { ledger.rates.latest(it)?.first }.maxOrNull()
-                        SegmentedListItem(
-                            onClick = { rates = true },
-                            shapes = shapes,
-                            colors = segmentColors(),
-                            leadingContent = { Icon(AppIcons.Exchange, contentDescription = null) },
-                            supportingContent = latest?.let { { Text(stringResource(Res.string.ledger_rates_until, it.toString())) } },
-                            modifier = Modifier.testTag("ledger_rates"),
-                        ) { Text(stringResource(Res.string.ledger_rates)) }
-                    },
+                val latest = ledger.rates.currencies.filter { it != "CNY" }.mapNotNull { ledger.rates.latest(it)?.first }.maxOrNull()
+                SettingsGroupView(
+                    SettingsGroupSpec(
+                        stringResource(Res.string.ledger_rates),
+                        null,
+                        listOf(
+                            SettingsRow.Value(
+                                AppIcons.Exchange, stringResource(Res.string.ledger_rates), "ledger_rates",
+                                latest?.let { stringResource(Res.string.ledger_rates_until, it.toString()) },
+                                maxLines = Int.MAX_VALUE,
+                            ) { rates = true },
+                        ),
+                    ),
                 )
                 AutoBillGroup()
-                SegmentedGroup(
-                    stringResource(Res.string.ledger_data),
-                    stringResource(Res.string.ledger_data_note),
-                    listOf(
-                        { shapes ->
-                            SegmentedListItem(
-                                onClick = { backup.launch("ledger-${LocalDate.now()}.json") }, shapes = shapes, colors = segmentColors(),
-                                leadingContent = { Icon(AppIcons.CloudUpload, contentDescription = null) },
-                            ) { Text(stringResource(Res.string.ledger_backup)) }
-                        },
-                        { shapes ->
-                            SegmentedListItem(
-                                onClick = { restore.launch(arrayOf("application/json", "application/octet-stream", "text/plain")) }, shapes = shapes, colors = segmentColors(),
-                                leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
-                            ) { Text(stringResource(Res.string.ledger_restore)) }
-                        },
-                        { shapes ->
-                            SegmentedListItem(
-                                onClick = { csv.launch("ledger-${LocalDate.now()}.csv") }, shapes = shapes, colors = segmentColors(),
-                                leadingContent = { Icon(AppIcons.Table, contentDescription = null) },
-                            ) { Text(stringResource(Res.string.ledger_export_csv)) }
-                        },
+                SettingsGroupView(
+                    SettingsGroupSpec(
+                        stringResource(Res.string.ledger_data),
+                        stringResource(Res.string.ledger_data_note),
+                        listOf(
+                            SettingsRow.Action(AppIcons.CloudUpload, stringResource(Res.string.ledger_backup), null) {
+                                backup.launch("ledger-${LocalDate.now()}.json")
+                            },
+                            SettingsRow.Action(AppIcons.Refresh, stringResource(Res.string.ledger_restore), null) {
+                                restore.launch(arrayOf("application/json", "application/octet-stream", "text/plain"))
+                            },
+                            SettingsRow.Action(AppIcons.Table, stringResource(Res.string.ledger_export_csv), null) {
+                                csv.launch("ledger-${LocalDate.now()}.csv")
+                            },
+                        ),
                     ),
                 )
             }

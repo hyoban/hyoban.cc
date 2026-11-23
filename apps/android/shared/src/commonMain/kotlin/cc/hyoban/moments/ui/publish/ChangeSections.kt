@@ -47,7 +47,7 @@ interface ChangeSection {
 
 /** Every module's section, in their order. */
 internal val changeSections: List<ChangeSection> by lazy {
-    cc.hyoban.moments.plugins.Plugins.all.mapNotNull { it.changeSection }.sortedBy { it.order }
+    cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.Points.changes).sortedBy { it.order }
 }
 
 /** What a change to an entry said by its section changed, then what any entry's change does: who sees it, how it is reached, planned or locked. */

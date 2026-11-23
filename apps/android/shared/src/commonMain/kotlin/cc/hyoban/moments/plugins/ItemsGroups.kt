@@ -20,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import cc.hyoban.moments.ui.settings.ActionRow
 import cc.hyoban.moments.ui.design.DateDialog
 import cc.hyoban.moments.ui.format.formatDate
 import java.time.LocalDate
@@ -42,9 +41,10 @@ import cc.hyoban.moments.ui.theme.Space
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import cc.hyoban.moments.ui.settings.Segment
 import cc.hyoban.moments.ui.settings.SegmentedGroup
-import cc.hyoban.moments.ui.settings.SwitchRow
+import cc.hyoban.moments.ui.settings.SettingsGroupSpec
+import cc.hyoban.moments.ui.settings.SettingsGroupView
+import cc.hyoban.moments.ui.settings.SettingsRow
 
 /**
  * The ledger's books on 记录项与公开: whether each one's bills are public, from the day picked
@@ -58,19 +58,18 @@ internal fun BooksGroup(container: AppContainer) {
         // The book whose first public day is being picked, as it is switched on or after.
         var picking by rememberSaveable { mutableStateOf<String?>(null) }
         if (books.isNotEmpty() && container.ledger.writable) {
-            SegmentedGroup(
-                stringResource(Res.string.items_books),
-                stringResource(Res.string.items_book_note),
-                books.flatMap { book ->
-                    val public = book.visibility == "public"
-                    listOfNotNull<Segment>(
-                        { shapes ->
-                            SwitchRow(
-                                public,
+            SettingsGroupView(
+                SettingsGroupSpec(
+                    stringResource(Res.string.items_books),
+                    stringResource(Res.string.items_book_note),
+                    books.flatMap { book ->
+                        val public = book.visibility == "public"
+                        listOfNotNull(
+                            SettingsRow.Switch(
                                 AppIcons.Receipt,
                                 book.name,
                                 "book_public_${book.id}",
-                                shapes,
+                                public,
                                 supporting = stringResource(Res.string.items_book_public),
                             ) {
                                 if (public) {
@@ -78,21 +77,21 @@ internal fun BooksGroup(container: AppContainer) {
                                 } else {
                                     picking = book.id
                                 }
-                            }
-                        },
-                        if (public) { shapes ->
-                            ActionRow(
-                                AppIcons.Calendar,
-                                stringResource(Res.string.items_book_public_from),
-                                shapes,
-                                supporting = book.publicFrom?.let { formatDate(it) } ?: stringResource(Res.string.items_book_public_all),
-                                tag = "book_public_from_${book.id}",
-                            ) { picking = book.id }
-                        } else {
-                            null
-                        },
-                    )
-                },
+                            },
+                            if (public) {
+                                SettingsRow.Value(
+                                    AppIcons.Calendar,
+                                    stringResource(Res.string.items_book_public_from),
+                                    "book_public_from_${book.id}",
+                                    book.publicFrom?.let { formatDate(it) } ?: stringResource(Res.string.items_book_public_all),
+                                    maxLines = Int.MAX_VALUE,
+                                ) { picking = book.id }
+                            } else {
+                                null
+                            },
+                        )
+                    },
+                ),
             )
         }
         books.firstOrNull { it.id == picking }?.let { book ->

@@ -1577,6 +1577,7 @@
     <string name="album_save_pictures">存到「图片」</string>
     <string name="section_nas">绿联 NAS</string>
     <string name="nas_photos">相册</string>
+    <string name="source_in_album">在相册里显示</string>
     <string name="nas_as">%1$s · %2$s</string>
     <string name="nas_link">UGREENlink ID 或地址</string>
     <string name="nas_link_note">在 NAS 的 控制面板 › 远程访问 里</string>

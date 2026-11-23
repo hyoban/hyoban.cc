@@ -61,7 +61,7 @@ enum class LayerSlot { AFTER_PLACES, AFTER_PHOTOS }
  * which [toggleFog] sweeps on and off.
  */
 fun atlasLayers(settings: Settings, footprints: Boolean, toggleFog: () -> Unit): List<MapLayer> {
-    val own = cc.hyoban.moments.plugins.Plugins.all.filter { settings.isOn(it.module) }.mapNotNull { it.mapLayer(settings, footprints) }
+    val own = cc.hyoban.moments.plugins.Plugins.registry.on(cc.hyoban.moments.plugins.Points.mapLayers, settings::isOn).mapNotNull { it.layer(settings, footprints) }
     fun at(slot: LayerSlot) = own.filter { it.first == slot }.map { it.second }
     return listOf(
         MapLayer(Res.string.map_layer_places, AppIcons.Map, settings.mapPlaces, "layer_places", TimedLayer.PLACES) { settings.changeMapPlaces(!settings.mapPlaces) },

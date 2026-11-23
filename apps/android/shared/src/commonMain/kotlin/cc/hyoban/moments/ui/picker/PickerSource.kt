@@ -68,6 +68,9 @@ interface PhotoSource {
 
     /** What it asks before deleting, where the system doesn't. */
     @Composable fun Dialogs()
+
+    /** What it lists for the menu's [tag] last picked, where its menu no longer offers it (a NAS album gone from it). */
+    fun rememberedListing(tag: String): Listing? = null
 }
 
 /** What the page lists, one of [source]'s: the whole gallery or an album, the camera's card, the NAS or one of its albums. */
@@ -215,20 +218,8 @@ interface Pick : cc.hyoban.moments.ui.viewer.ViewedMedia {
     @Composable override fun rememberDetails(): PhotoDetails?
 }
 
-/**
- * The device's own for 相册: the sources it has besides the NAS (the phone's gallery and paired
- * camera, none on a computer), its videos, and what it does with photos kept on it.
- */
+/** The device's own for 相册: sharing, and where it keeps photos. */
 interface PickerDevice {
-    /**
-     * Its sources, in the title's menu before the NAS, the first listed first. [onFallback] is the
-     * gallery refused, and [onRefused] a source given up on, back to the first.
-     */
-    @Composable fun sources(deletion: Deletion, onFallback: () -> Unit, onRefused: () -> Unit): List<PhotoSource>
-
-    /** Its sources that know where their photos were taken without reading each, for 地图's photos: the phone's gallery, once read. */
-    @Composable fun places(deletion: Deletion): List<Places> = emptyList()
-
     /** Hands [refs] to another app, where the device has a way to; null where it has none. */
     val share: ((List<PhotoRef>) -> Unit)?
 
@@ -238,7 +229,6 @@ interface PickerDevice {
 
 /** A computer's: the NAS alone and no share sheet, its photos kept in the Pictures folder's Here. */
 object NasOnly : PickerDevice {
-    @Composable override fun sources(deletion: Deletion, onFallback: () -> Unit, onRefused: () -> Unit) = emptyList<PhotoSource>()
     override val share: ((List<PhotoRef>) -> Unit)? = null
     override val saveWords = Res.string.album_save_pictures
 }

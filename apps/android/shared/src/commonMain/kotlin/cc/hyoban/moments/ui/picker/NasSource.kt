@@ -111,6 +111,9 @@ class NasSource(
     /** Each album's days seen so far, whatever the time chosen, for the filter's years: an album has no days to ask for. */
     val albumDays = mutableMapOf<String, MutableSet<LocalDate>>()
     override val home = NasListing(this, null)
+
+    /** An album last picked opens the whole NAS when the menu no longer lists it. */
+    override fun rememberedListing(tag: String): Listing? = home.takeIf { tag.startsWith("picker_nas_") && nas.configured }
     /** Where the photos were taken, for the map of them all. */
     val places = NasPlaces(this, scope)
 

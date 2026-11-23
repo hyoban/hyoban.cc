@@ -15,11 +15,11 @@ import cc.hyoban.moments.ui.design.AppIcons
 import org.jetbrains.compose.resources.StringResource
 
 /**
- * What a module brings to the Mac alone, beside its `ModulePlugin`: its section in the sidebar, by
- * [key] (as `HERE_OPEN` and 启动时 name it), a destination among the others or, [mine], under 我的.
- * Listed while the module is on.
+ * What a module brings to the Mac alone, beside what it brings every device: its section in the
+ * sidebar, by [key] (as `HERE_OPEN` and 启动时 name it), a destination among the others or, [mine],
+ * under 我的. Listed while the module is on.
  */
-internal class DesktopPlugin(
+internal class ModuleSection(
     val module: Module,
     val key: String,
     val label: StringResource,
@@ -41,14 +41,33 @@ internal class DesktopPages(
     val source: @Composable () -> String?,
 )
 
-/** The Mac's plugins, in the sidebar's order. */
+/** The point the Mac's sidebar reads. */
+internal object DesktopPoints {
+    val sections = cc.hyoban.moments.plugins.Point<ModuleSection>("desktop-sections")
+}
+
+/** A module's part on the Mac alone: its sidebar section. */
+private class DesktopModule(val section: ModuleSection) : cc.hyoban.moments.plugins.Plugin {
+    override val module get() = section.module
+
+    override fun cc.hyoban.moments.plugins.Contributions.contribute() {
+        add(DesktopPoints.sections, section)
+    }
+}
+
+/** The Mac's own plugins, installed beside every device's as it starts, in the sidebar's order. */
 internal object DesktopPlugins {
-    val all = listOf(
-        DesktopPlugin(
+    val all: List<cc.hyoban.moments.plugins.Plugin> get() = modules.map(::DesktopModule)
+
+    /** The modules' sections, in the sidebar's order. */
+    val sections: List<ModuleSection> get() = cc.hyoban.moments.plugins.Plugins.registry.all(DesktopPoints.sections)
+
+    private val modules = listOf(
+        ModuleSection(
             Module.FOOTPRINTS, "footprints", Res.string.footprints_title, AppIcons.Footprints, FootprintDays,
             shows = { it == FootprintDays },
         ) { pages, _ -> cc.hyoban.moments.ui.footprints.FootprintDaysScreen(pages.container, pages.source(), onDay = pages.openDay, onBack = pages.back) },
-        DesktopPlugin(
+        ModuleSection(
             Module.LEDGER, "ledger", Res.string.me_ledger, AppIcons.Wallet, LedgerHome(), mine = true,
             shows = { it is LedgerHome || it is cc.hyoban.moments.ui.LedgerBill || it is cc.hyoban.moments.ui.LedgerAccount || it is cc.hyoban.moments.ui.ledger.LedgerFilter },
         ) { pages, route ->
@@ -59,8 +78,8 @@ internal object DesktopPlugins {
                 is cc.hyoban.moments.ui.ledger.LedgerFilter -> cc.hyoban.moments.ui.ledger.LedgerListScreen(pages.container, route, pages.ledgerNav)
             }
         },
-        DesktopPlugin(Module.THINGS, "things", Res.string.me_things, AppIcons.Laptop, Things(), mine = true),
-        DesktopPlugin(
+        ModuleSection(Module.THINGS, "things", Res.string.me_things, AppIcons.Laptop, Things(), mine = true),
+        ModuleSection(
             Module.OCCASIONS, "occasions", Res.string.occasions_title, AppIcons.Gift, Occasions(), mine = true,
             shows = { it is Occasions },
         ) { pages, route -> cc.hyoban.moments.ui.occasions.OccasionsScreen(pages.container, onBack = pages.back, open = (route as Occasions).open) },

@@ -174,15 +174,14 @@ class PhotoLayer internal constructor(val places: Places, val choice: PhotoChoic
 @Composable
 fun rememberPhotoLayer(container: AppContainer, onWrite: () -> Unit): PhotoLayer {
     val choice = rememberPhotoChoice(Int.MAX_VALUE, alwaysChoosing = false, onWrite = { refs -> container.offerPhotos(refs); onWrite() })
-    val places = rememberPhotoPlaces(container, choice, rememberNas(container, choice.deletion))
+    val places = rememberPhotoPlaces(container, choice, listed = null)
     return remember(places) { PhotoLayer(places, choice) }
 }
 
-/** The places of the device's sources that know them and of [nas], as one, for 地图's photos and 选照片's map. */
+/** The places of the plugins' sources that know them, as one, for 地图's photos and 选照片's map; [listed] the page's own sources, where it has them. */
 @Composable
-internal fun rememberPhotoPlaces(container: AppContainer, choice: PhotoChoice, nas: NasSource): MergedPlaces {
-    val own = choice.device.places(choice.deletion)
-    val all = own + listOfNotNull(nas.places.takeIf { container.nas.configured })
+internal fun rememberPhotoPlaces(container: AppContainer, choice: PhotoChoice, listed: List<PhotoSource>?): MergedPlaces {
+    val all = photoSources(container.settings).flatMap { it.places(container, choice.deletion, listed) }
     return remember(all) {
         MergedPlaces(all) { cc.hyoban.moments.plugins.Plugins.dayTracks(container) { container.settings.isOn(it) } }
     }

@@ -12,7 +12,7 @@ import kotlin.math.roundToInt
 
 /**
  * What the heatmap counts each day, chosen when the widget is added and changed by long press: the
- * Moments, or what a module brings (`PhonePlugin.heatSources`), each kept by its [key].
+ * Moments, or what a module brings (`PhonePoints.heat`), each kept by its [key].
  */
 interface HeatSource {
     val key: String
@@ -38,7 +38,7 @@ interface HeatSource {
 
     companion object {
         /** Every source, the Moments first, then the modules', in their order. */
-        val all: List<HeatSource> get() = listOf(MomentsHeat) + cc.hyoban.moments.plugins.PhonePlugins.all.flatMap { it.heatSources }
+        val all: List<HeatSource> get() = listOf(MomentsHeat) + cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.PhonePoints.heat)
 
         fun of(key: String?): HeatSource = all.firstOrNull { it.key == key } ?: MomentsHeat
     }

@@ -116,19 +116,20 @@ fun GeneralSettingsScreen(container: AppContainer, onBack: () -> Unit, about: St
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                     .padding(top = LocalTopClearance.current).padding(horizontal = columns.margin).padding(bottom = Space.xl),
             ) {
-                SegmentedGroup(
-                    null,
-                    null,
-                    listOf { shapes ->
-                        SwitchRow(
-                            settings.demo,
-                            AppIcons.Eye,
-                            stringResource(Res.string.demo_on),
-                            "general_demo",
-                            shapes,
-                            supporting = stringResource(Res.string.settings_demo_note) + "　⌘⇧D",
-                        ) { settings.changeDemo(!settings.demo) }
-                    },
+                SettingsGroupView(
+                    SettingsGroupSpec(
+                        null,
+                        null,
+                        listOf(
+                            SettingsRow.Switch(
+                                AppIcons.Eye,
+                                stringResource(Res.string.demo_on),
+                                "general_demo",
+                                settings.demo,
+                                supporting = stringResource(Res.string.settings_demo_note) + "　⌘⇧D",
+                            ) { settings.changeDemo(!settings.demo) },
+                        ),
+                    ),
                 )
                 Group(stringResource(Res.string.settings_start), null) {
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(Space.m)) {

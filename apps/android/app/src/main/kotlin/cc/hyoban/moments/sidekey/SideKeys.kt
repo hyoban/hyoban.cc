@@ -363,9 +363,9 @@ internal object SideKeys {
                 }
                 cc.hyoban.moments.plugins.PhonePlugins.sideKeyOwner(action) != null -> {
                     // A module's own, bound still while it is off, so it is there again when it is turned back on.
-                    val plugin = cc.hyoban.moments.plugins.PhonePlugins.sideKeyOwner(action)!!
-                    val on = (context.applicationContext as cc.hyoban.moments.MomentsApplication).container.settings.isOn(plugin.module)
-                    val (message, toast) = plugin.sideKey(action, on)
+                    val owner = cc.hyoban.moments.plugins.PhonePlugins.sideKeyOwner(action)!!
+                    val settings = (context.applicationContext as cc.hyoban.moments.MomentsApplication).container.settings
+                    val (message, toast) = owner.item.run(action, owner.shownWith(settings::isOn))
                     report(message, toast)
                 }
                 action.startsWith("media:") -> {

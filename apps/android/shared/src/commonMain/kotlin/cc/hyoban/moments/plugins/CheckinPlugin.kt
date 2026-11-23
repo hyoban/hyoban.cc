@@ -8,51 +8,36 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.spec.Module
 import cc.hyoban.moments.res.import_source_swarm
-import cc.hyoban.moments.ui.feed.SearchKind
 import cc.hyoban.moments.res.Res
 import cc.hyoban.moments.res.module_checkin
 import cc.hyoban.moments.ui.design.AppIcons
 
 /** 签到: check-ins, from Swarm or a stay kept as one. */
-object CheckinPlugin : ModulePlugin {
+object CheckinPlugin : Plugin {
     override val module = Module.CHECKIN
-    override val title = Res.string.module_checkin
-    override val searchKinds: List<SearchKind> = listOf(CheckinsSearch)
-    override val icon = AppIcons.Pin
-    override val placeAlone: cc.hyoban.moments.ui.compose.PlaceAlone = CheckinPlaceAlone
-    override val changeSection: cc.hyoban.moments.ui.publish.ChangeSection = CheckinChanges
-    override val join: cc.hyoban.moments.ui.feed.TimelineJoin = CheckinJoin
 
-    override val importSources = listOf(Res.string.import_source_swarm)
-
-    @Composable override fun ImportGroup(container: AppContainer) = SwarmGroup(container.swarm)
-
-    override fun mapLayer(settings: cc.hyoban.moments.Settings, footprints: Boolean) = cc.hyoban.moments.ui.map.LayerSlot.AFTER_PLACES to
-        cc.hyoban.moments.ui.map.MapLayer(Res.string.module_checkin, AppIcons.Pin, settings.mapCheckins, "layer_checkins", cc.hyoban.moments.ui.map.TimedLayer.STOPS) {
-            settings.changeMapCheckins(!settings.mapCheckins)
-        }
-
-    /** On the timeline every check-in shown; in a trip those on its days. */
-    @Composable override fun legStops(container: AppContainer, trip: cc.hyoban.moments.data.spec.TripRecord?): List<cc.hyoban.moments.ui.trips.LegStop> {
-        val shown by container.shownCheckins.collectAsStateWithLifecycle()
-        val all by container.repository.checkins.collectAsStateWithLifecycle()
-        return androidx.compose.runtime.remember(shown, all, trip) {
-            val checkins = if (trip == null) shown.all else all.byDay.filterKeys { it in trip.start..trip.end }.values.flatten()
-            checkins.map { cc.hyoban.moments.ui.trips.LegStop("checkin-${it.uid}", it.uid, it.at, it.place, it.reachedBy) }
-        }
+    override fun Contributions.contribute() {
+        add(Points.modules, ModuleCard(Module.CHECKIN, Res.string.module_checkin, AppIcons.Pin))
+        add(Points.searchKinds, CheckinsSearch)
+        add(Points.placeAlone, CheckinPlaceAlone)
+        add(Points.changes, CheckinChanges)
+        add(Points.joins, CheckinJoin)
+        add(Points.imports, object : ImportGroup {
+            override val sources = listOf(Res.string.import_source_swarm)
+            @Composable override fun Group(container: AppContainer) = SwarmGroup(container.swarm)
+        })
+        add(Points.mapLayers, MapLayers { settings, _ ->
+            cc.hyoban.moments.ui.map.LayerSlot.AFTER_PLACES to
+                cc.hyoban.moments.ui.map.MapLayer(Res.string.module_checkin, AppIcons.Pin, settings.mapCheckins, "layer_checkins", cc.hyoban.moments.ui.map.TimedLayer.STOPS) {
+                    settings.changeMapCheckins(!settings.mapCheckins)
+                }
+        })
+        add(Points.legStops, CheckinLegStops)
+        add(Points.keptStops, CheckinKeptStops)
+        add(Points.mapStops, MapStops(::mapStops))
     }
 
-    override fun keptStops(container: AppContainer) = container.repository.checkins.value.all.map { it.keptStop() }
-
-    @Composable override fun rememberKeptStops(container: AppContainer): List<cc.hyoban.moments.ui.trips.KeptStop> {
-        val all by container.repository.checkins.collectAsStateWithLifecycle()
-        return androidx.compose.runtime.remember(all) { all.all.map { it.keptStop() } }
-    }
-
-    override fun stopAsMoment(container: AppContainer, uid: String) =
-        container.repository.entries.value[uid]?.let { cc.hyoban.moments.data.things.checkinAsMoment(it) }
-
-    override fun mapStops(container: AppContainer) = synchronized(stops) {
+    private fun mapStops(container: AppContainer) = synchronized(stops) {
         stops.getOrPut(container) {
             container.shownCheckins.map { shown -> shown.all.map(::CheckinMapStop) }
                 .stateIn(container.scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, container.shownCheckins.value.all.map(::CheckinMapStop))
@@ -60,6 +45,30 @@ object CheckinPlugin : ModulePlugin {
     }
 
     private val stops = java.util.WeakHashMap<AppContainer, kotlinx.coroutines.flow.StateFlow<List<cc.hyoban.moments.ui.map.MapStop>>>()
+}
+
+/** On the timeline every check-in shown; in a trip those on its days. */
+private object CheckinLegStops : LegStops {
+    @Composable override fun stops(container: AppContainer, trip: cc.hyoban.moments.data.spec.TripRecord?): List<cc.hyoban.moments.ui.trips.LegStop> {
+        val shown by container.shownCheckins.collectAsStateWithLifecycle()
+        val all by container.repository.checkins.collectAsStateWithLifecycle()
+        return androidx.compose.runtime.remember(shown, all, trip) {
+            val checkins = if (trip == null) shown.all else all.byDay.filterKeys { it in trip.start..trip.end }.values.flatten()
+            checkins.map { cc.hyoban.moments.ui.trips.LegStop("checkin-${it.uid}", it.uid, it.at, it.place, it.reachedBy) }
+        }
+    }
+}
+
+private object CheckinKeptStops : KeptStops {
+    override fun all(container: AppContainer) = container.repository.checkins.value.all.map { it.keptStop() }
+
+    @Composable override fun remember(container: AppContainer): List<cc.hyoban.moments.ui.trips.KeptStop> {
+        val all by container.repository.checkins.collectAsStateWithLifecycle()
+        return androidx.compose.runtime.remember(all) { all.all.map { it.keptStop() } }
+    }
+
+    override fun asMoment(container: AppContainer, uid: String) =
+        container.repository.entries.value[uid]?.let { cc.hyoban.moments.data.things.checkinAsMoment(it) }
 }
 
 /** A check-in as a trip's plan reads it, a stop named by its venue, told to the planner as a check-in. */

@@ -4,8 +4,9 @@ import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.LocalSettings
-import cc.hyoban.moments.plugins.PhonePlugins
+import cc.hyoban.moments.plugins.PhonePoints
 import cc.hyoban.moments.plugins.Plugins
+import cc.hyoban.moments.plugins.Points
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -22,11 +22,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.unit.dp
 import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.footprints.TrackImportResult
 import cc.hyoban.moments.footprints.TrackPoint
@@ -38,10 +35,6 @@ import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.AppIcons
-import cc.hyoban.moments.ui.design.Icon
-import cc.hyoban.moments.ui.design.ListItemShapes
-import cc.hyoban.moments.ui.design.SegmentedListItem
-import cc.hyoban.moments.ui.design.Spinner
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.TextButton
 import cc.hyoban.moments.ui.ledger.rememberICostImport
@@ -62,8 +55,8 @@ import java.io.InputStream
 @Composable
 fun importSources(): List<String> {
     val settings = LocalSettings.current
-    val on = Plugins.all.filter { settings.isOn(it.module) }.flatMap { it.importSources } +
-        PhonePlugins.all.filter { settings.isOn(it.module) }.flatMap { it.importSources }
+    val on = Plugins.registry.on(Points.imports, settings::isOn).flatMap { it.sources } +
+        Plugins.registry.on(PhonePoints.imports, settings::isOn).flatMap { it.sources }
     return on.map { stringResource(it) }
 }
 
@@ -71,19 +64,18 @@ fun importSources(): List<String> {
 @Composable
 internal fun ICostGroup(container: PhoneContainer) {
     val importer = rememberICostImport(container)
-    SegmentedGroup(
-        stringResource(Res.string.import_ledger),
-        stringResource(Res.string.import_ledger_note),
-        listOf { shapes ->
-            SegmentedListItem(
-                onClick = importer.pick,
-                shapes = shapes,
-                colors = segmentColors(),
-                leadingContent = { Icon(AppIcons.Receipt, contentDescription = null) },
-                supportingContent = { Text(stringResource(Res.string.ledger_import_icost_note)) },
-                modifier = Modifier.testTag("import_icost"),
-            ) { Text(stringResource(Res.string.ledger_import_icost)) }
-        },
+    SettingsGroupView(
+        SettingsGroupSpec(
+            stringResource(Res.string.import_ledger),
+            stringResource(Res.string.import_ledger_note),
+            listOf(
+                SettingsRow.Action(
+                    AppIcons.Receipt, stringResource(Res.string.ledger_import_icost), "import_icost",
+                    supporting = stringResource(Res.string.ledger_import_icost_note),
+                    onClick = importer.pick,
+                ),
+            ),
+        ),
     )
     importer.Dialog()
 }
@@ -132,34 +124,25 @@ internal fun TrackGroup(container: PhoneContainer) {
     val csv = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         import(uris, ::readFootprintCsv)
     }
-    @Composable
-    fun Row(shapes: ListItemShapes, onClick: () -> Unit, tag: String, title: String, note: String) =
-        SegmentedListItem(
-            // Files apps call a .gpx or a .csv by several types, or none.
-            onClick = { if (!reading) onClick() },
-            shapes = shapes,
-            colors = segmentColors(),
-            leadingContent = { Icon(AppIcons.Footprints, contentDescription = null) },
-            supportingContent = { Text(if (reading) stringResource(Res.string.ledger_importing) else note) },
-            trailingContent = if (reading) {
-                { Spinner(Modifier.size(24.dp)) }
-            } else {
-                null
-            },
-            modifier = Modifier.testTag(tag),
-        ) { Text(title) }
-    SegmentedGroup(
-        stringResource(Res.string.footprints_title),
-        stringResource(Res.string.import_footprints_note),
-        listOf(
-            { shapes ->
-                Row(shapes, { gpx.launch(arrayOf("*/*")) }, "footprints_import",
-                    stringResource(Res.string.footprints_import), stringResource(Res.string.footprints_import_note))
-            },
-            { shapes ->
-                Row(shapes, { csv.launch(arrayOf("*/*")) }, "footprints_import_csv",
-                    stringResource(Res.string.footprints_import_csv), stringResource(Res.string.footprints_import_csv_note))
-            },
+    val importing = stringResource(Res.string.ledger_importing)
+    // Files apps call a .gpx or a .csv by several types, or none.
+    fun row(tag: String, title: String, note: String, onClick: () -> Unit) = SettingsRow.Action(
+        AppIcons.Footprints, title, tag,
+        supporting = if (reading) importing else note,
+        busy = reading,
+    ) { if (!reading) onClick() }
+    SettingsGroupView(
+        SettingsGroupSpec(
+            stringResource(Res.string.footprints_title),
+            stringResource(Res.string.import_footprints_note),
+            listOf(
+                row("footprints_import", stringResource(Res.string.footprints_import), stringResource(Res.string.footprints_import_note)) {
+                    gpx.launch(arrayOf("*/*"))
+                },
+                row("footprints_import_csv", stringResource(Res.string.footprints_import_csv), stringResource(Res.string.footprints_import_csv_note)) {
+                    csv.launch(arrayOf("*/*"))
+                },
+            ),
         ),
     )
 
@@ -188,5 +171,5 @@ internal fun TrackGroup(container: PhoneContainer) {
 @Composable
 fun PhoneImportGroups(container: PhoneContainer) {
     val settings = LocalSettings.current
-    PhonePlugins.all.filter { settings.isOn(it.module) }.forEach { it.ImportGroup(container) }
+    Plugins.registry.on(PhonePoints.imports, settings::isOn).forEach { it.Group(container) }
 }

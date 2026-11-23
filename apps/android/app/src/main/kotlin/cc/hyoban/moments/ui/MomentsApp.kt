@@ -776,7 +776,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                 }
                                 // The modules' own pages, each registered by its plugin.
                                 val modulePages = cc.hyoban.moments.plugins.PhonePages(container, back, ledgerNav, openDay)
-                                cc.hyoban.moments.plugins.PhonePlugins.all.forEach { plugin -> with(plugin) { pages(modulePages) } }
+                                cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.PhonePoints.pages).forEach { set -> with(set) { pages(modulePages) } }
                             }
                         }
                         val viewModelStore = checkNotNull(LocalViewModelStoreOwner.current).viewModelStore

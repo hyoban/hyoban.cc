@@ -46,7 +46,7 @@ import kotlinx.coroutines.withContext
 /**
  * 记录项与公开: what is recorded, and who sees it by default. First the modules the spec defines
  * (`Module`), each on or off as one: off, its rows, pages and records are put away everywhere,
- * its background work stops (`PhonePlugin.applied`) and its data stays. Then each book says whether its
+ * its background work stops (`PhonePoints.background`) and its data stays. Then each book says whether its
  * bills are public, from the day picked as it is switched on (or all of them, for a book made
  * public before there was a day), a public one publishing its amount, category and note alone;
  * the footprints are private and never leave the phone. Every bill can still say otherwise. Nothing here opens a page further down.
@@ -67,22 +67,22 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
                     .padding(horizontal = columns.margin)
                     .padding(bottom = Space.xl),
             ) {
-                SegmentedGroup(
-                    stringResource(Res.string.items_modules),
-                    stringResource(Res.string.items_modules_note),
-                    Plugins.inSpecOrder.map { plugin ->
-                        { shapes ->
+                SettingsGroupView(
+                    SettingsGroupSpec(
+                        stringResource(Res.string.items_modules),
+                        stringResource(Res.string.items_modules_note),
+                        Plugins.inSpecOrder.map { plugin ->
                             val module = plugin.module
                             val on = settings.isOn(module)
-                            SwitchRow(on, plugin.icon, stringResource(plugin.title), "module_${module.key}", shapes) {
+                            SettingsRow.Switch(plugin.icon, stringResource(plugin.title), "module_${module.key}", on) {
                                 settings.changeModule(module, !on)
                                 scope.launch { device.moduleChanged(module) }
                             }
-                        }
-                    },
+                        },
+                    ),
                 )
                 // Then who sees each module's own, as its plugin says: the books' bills, the footprints.
-                Plugins.all.filter { settings.isOn(it.module) }.forEach { it.ItemsGroup(container) }
+                cc.hyoban.moments.plugins.Plugins.registry.on(cc.hyoban.moments.plugins.Points.itemsGroups, settings::isOn).forEach { it.Group(container) }
             }
         }
     }

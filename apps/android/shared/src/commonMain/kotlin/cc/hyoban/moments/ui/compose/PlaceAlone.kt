@@ -39,7 +39,7 @@ interface PlaceAlone {
 }
 
 /** The module that keeps a place alone as its own record, on or off: its own records open and keep so either way. */
-val placeAlone: PlaceAlone? get() = Plugins.all.firstNotNullOfOrNull { it.placeAlone }
+val placeAlone: PlaceAlone? get() = cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.Points.placeAlone).firstOrNull()
 
 /** What the editor keeps of [moment]: as the module that keeps a place alone has it, else the Moment as it is. */
 fun keptEntry(moment: MomentRecord, venue: String?, placeChanged: Boolean): JsonObject =

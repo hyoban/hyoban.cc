@@ -1,7 +1,5 @@
 package cc.hyoban.moments.footprints
 
-import cc.hyoban.moments.ui.settings.ActionRow
-
 import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.Checkbox
@@ -34,8 +32,9 @@ import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import cc.hyoban.moments.PhoneContainer
-import cc.hyoban.moments.ui.settings.SegmentedGroup
-import cc.hyoban.moments.ui.settings.SwitchRow
+import cc.hyoban.moments.ui.settings.SettingsGroupSpec
+import cc.hyoban.moments.ui.settings.SettingsGroupView
+import cc.hyoban.moments.ui.settings.SettingsRow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -144,17 +143,16 @@ fun ConnectionAutomationSettings(container: PhoneContainer) {
     }
     val names = { set: Collection<String> -> set.sorted().joinToString("、") }
     val none = stringResource(Res.string.connection_automation_none)
-    SegmentedGroup(
-        stringResource(Res.string.connection_automation_title),
-        error?.let { stringResource(it) },
-        listOf(
-            { shapes ->
-                SwitchRow(
-                    rules.enabled,
+    SettingsGroupView(
+        SettingsGroupSpec(
+            stringResource(Res.string.connection_automation_title),
+            error?.let { stringResource(it) },
+            listOf(
+                SettingsRow.Switch(
                     AppIcons.Link,
                     stringResource(Res.string.connection_automation_switch),
                     "connection_automation_enabled",
-                    shapes,
+                    rules.enabled,
                     // Off, the switch says so.
                     supporting = when {
                         !rules.hasTargets -> Res.string.connection_automation_choose_first
@@ -162,39 +160,31 @@ fun ConnectionAutomationSettings(container: PhoneContainer) {
                         else -> null
                     }?.let { stringResource(it) },
                     enabled = loaded && !busy && rules.hasTargets,
-                ) { if (!rules.enabled) request("enable") else save(rules.copy(enabled = false)) }
-            },
-            { shapes ->
-                ActionRow(AppIcons.Wifi, stringResource(Res.string.connection_automation_wifi_row), shapes,
-                    supporting = rules.wifi.takeIf { it.isNotEmpty() }?.let(names) ?: none, tag = "connection_automation_wifi", enabled = !busy) { request("wifi") }
-            },
-            { shapes ->
-                ActionRow(AppIcons.Bluetooth, stringResource(Res.string.connection_automation_bluetooth_row), shapes,
-                    supporting = rules.bluetooth.values.takeIf { it.isNotEmpty() }?.let(names) ?: none, tag = "connection_automation_bluetooth", enabled = !busy) { request("bluetooth") }
-            },
-            { shapes ->
-                ActionRow(AppIcons.Info, stringResource(Res.string.connection_automation_how), shapes, tag = "connection_automation_settings") {
+                ) { if (!rules.enabled) request("enable") else save(rules.copy(enabled = false)) },
+                SettingsRow.Value(AppIcons.Wifi, stringResource(Res.string.connection_automation_wifi_row), "connection_automation_wifi",
+                    rules.wifi.takeIf { it.isNotEmpty() }?.let(names) ?: none, maxLines = Int.MAX_VALUE, enabled = !busy) { request("wifi") },
+                SettingsRow.Value(AppIcons.Bluetooth, stringResource(Res.string.connection_automation_bluetooth_row), "connection_automation_bluetooth",
+                    rules.bluetooth.values.takeIf { it.isNotEmpty() }?.let(names) ?: none, maxLines = Int.MAX_VALUE, enabled = !busy) { request("bluetooth") },
+                SettingsRow.Action(AppIcons.Info, stringResource(Res.string.connection_automation_how), "connection_automation_settings") {
                     explaining = true
-                }
-            },
+                },
+            ),
         ),
     )
     CompanionConnectionSettings(rules)
     if (permissionHelp || (rules.enabled && status == Res.string.connection_automation_permissions)) {
-        SegmentedGroup(
-            stringResource(Res.string.connection_automation_permission_title),
-            stringResource(Res.string.connection_automation_permission_help),
-            listOf(
-                { shapes ->
-                    ActionRow(AppIcons.Settings, stringResource(Res.string.footprints_settings), shapes, external = true) {
+        SettingsGroupView(
+            SettingsGroupSpec(
+                stringResource(Res.string.connection_automation_permission_title),
+                stringResource(Res.string.connection_automation_permission_help),
+                listOf(
+                    SettingsRow.External(AppIcons.Settings, stringResource(Res.string.footprints_settings), null) {
                         context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
-                    }
-                },
-                { shapes ->
-                    ActionRow(AppIcons.Pin, stringResource(Res.string.connection_automation_location_settings), shapes, external = true) {
+                    },
+                    SettingsRow.External(AppIcons.Pin, stringResource(Res.string.connection_automation_location_settings), null) {
                         context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-                    }
-                },
+                    },
+                ),
             ),
         )
     }

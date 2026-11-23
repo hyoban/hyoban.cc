@@ -285,4 +285,15 @@ class Settings(private val prefs: Prefs, secrets: File) {
         modulesOff = if (on) modulesOff - module.key else modulesOff + module.key
         prefs.edit { putStringSet("modules_off", modulesOff) }
     }
+
+    /** The plugins no module holds turned off on this device by their own switch (a source not in 相册), by their key. */
+    var pluginsOff: Set<String> by mutableStateOf(prefs.getStringSet("plugins_off", null).orEmpty().toSet())
+        private set
+
+    fun isPluginOn(key: String): Boolean = key !in pluginsOff
+
+    fun changePlugin(key: String, on: Boolean) {
+        pluginsOff = if (on) pluginsOff - key else pluginsOff + key
+        prefs.edit { putStringSet("plugins_off", pluginsOff) }
+    }
 }

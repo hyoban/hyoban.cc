@@ -173,7 +173,7 @@ fun TripScreen(
     // Its figures, what the modules that are on add after its distance (the charging, what it cost,
     // leading to its bills), while any of them adds one.
     val settings = LocalSettings.current
-    val figuresOn = Plugins.all.any { settings.isOn(it.module) && it.tripFacets.isNotEmpty() }
+    val figuresOn = cc.hyoban.moments.plugins.Plugins.registry.on(cc.hyoban.moments.plugins.Points.tripFacets, settings::isOn).isNotEmpty()
     val ledgerNav = LocalLedgerNav.current
     val spending: @Composable () -> Unit = {
         TripFacets(container, trip, routes[trip.id].orEmpty(), onBills = { ledgerNav?.list(LedgerFilter(trip = trip.id)) })
@@ -351,7 +351,7 @@ private fun TripFacets(
     // The distance, then what the modules that are on add: the charging, what was spent.
     val settings = LocalSettings.current
     val scope = TripFacetScope(container, trip, onBills)
-    val own = Plugins.all.filter { settings.isOn(it.module) }.flatMap { it.tripFacets }.sortedBy { it.order }.mapNotNull { it.figure(scope) }
+    val own = cc.hyoban.moments.plugins.Plugins.registry.on(cc.hyoban.moments.plugins.Points.tripFacets, settings::isOn).sortedBy { it.order }.mapNotNull { it.figure(scope) }
     val figures = listOfNotNull(
         (km.takeIf { it >= 1 }?.let { "%,d".format(it.roundToInt()) to stringResource(Res.string.facet_km) })?.let { it to null },
     ) + own.map { (it.value to it.label) to it.onClick }

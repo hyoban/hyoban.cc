@@ -7,13 +7,16 @@ import cc.hyoban.moments.ui.Occasions
 import cc.hyoban.moments.ui.design.AppIcons
 
 /** 纪念日: the days that matter. */
-object OccasionsPlugin : ModulePlugin {
+object OccasionsPlugin : Plugin {
     override val module = Module.OCCASIONS
-    override val title = Res.string.occasions_title
-    override val icon = AppIcons.Calendar
-    override val changeSection: cc.hyoban.moments.ui.publish.ChangeSection = OccasionChanges
+    val icon = AppIcons.Calendar
 
-    override fun owns(route: Any) = route is Occasions
-
-    override fun routeOf(link: AppLink): Any? = if (link.host == "occasions") Occasions(link.id) else null
+    override fun Contributions.contribute() {
+        add(Points.modules, ModuleCard(Module.OCCASIONS, Res.string.occasions_title, icon))
+        add(Points.changes, OccasionChanges)
+        add(Points.pages, object : PageSet {
+            override fun owns(route: Any) = route is Occasions
+            override fun routeOf(link: AppLink): Any? = if (link.host == "occasions") Occasions(link.id) else null
+        })
+    }
 }

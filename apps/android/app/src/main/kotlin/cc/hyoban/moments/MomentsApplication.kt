@@ -20,6 +20,8 @@ class MomentsApplication : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
         AndroidApp.context = this
+        // The phone's own plugins beside every device's, before anything asks for them.
+        cc.hyoban.moments.plugins.Plugins.install(cc.hyoban.moments.plugins.PhonePlugins.all)
         // A backup fetched to restore goes in place before anything opens the databases.
         runCatching { cc.hyoban.moments.backup.BackupArchive.restoreStaged(this) }
             .onFailure { android.util.Log.e("Backup", "Restore failed", it) }

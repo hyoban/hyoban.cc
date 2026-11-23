@@ -102,10 +102,10 @@ fun AlbumScreen(container: AppContainer, onNew: () -> Unit, onWrite: () -> Unit,
  * the NAS can't be reached, is the NAS's timeline meanwhile, which reads its albums or says why not.
  */
 @Composable
-private fun rememberedListing(tag: String, sources: List<PhotoSource>, nas: NasSource): Listing? {
+private fun rememberedListing(tag: String, sources: List<PhotoSource>): Listing? {
     if (tag.isEmpty()) return null
     sources.forEach { source -> source.choices().firstOrNull { it.tag == tag }?.let { return it.listing } }
-    return if (tag.startsWith("picker_nas_") && nas in sources && nas.nas.configured) nas.home else null
+    return sources.firstNotNullOfOrNull { it.rememberedListing(tag) }
 }
 
 /** What 相册 does that 选照片 doesn't: its tab's button, a published photo's Moment and its editor, and a new Moment with the photos given. */
@@ -121,21 +121,18 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
     val choice = rememberPhotoChoice(limit, alwaysChoosing = album == null, onWrite = album?.onWrite)
     val device = choice.device
 
-    // The device's own sources (the phone's gallery and paired camera), the published photos after
-    // the gallery, then the NAS. Opened, it lists what was last picked in either page, kept on the
-    // phone, even where that can't be reached and says so; else the first, gone back to when
-    // another is given up on.
+    // The plugins' sources in their order (the phone's gallery and paired camera, then the NAS),
+    // the published photos after the first. Opened, it lists what was last picked in either page,
+    // kept on the phone, even where that can't be reached and says so; else the first, gone back
+    // to when another is given up on.
     val settings = container.settings
     var picked by remember { mutableStateOf<Listing?>(null) }
-    val own = device.sources(choice.deletion, onFallback, onRefused = { picked = null; settings.changePhotoSource("") })
-    val nas = rememberNas(container, choice.deletion)
+    val onRefused = { picked = null; settings.changePhotoSource("") }
+    val own = photoSources(settings).flatMap { it.sources(container, choice.deletion, onFallback, onRefused) }
     val published = if (album != null) rememberPublished(container) else null
-    val sources = when {
-        own.isEmpty() -> listOfNotNull(nas, published)
-        else -> listOfNotNull(own.first(), published) + own.drop(1) + nas
-    }
+    val sources = listOfNotNull(own.first(), published) + own.drop(1)
     choice.sources = sources
-    val remembered = if (picked == null) rememberedListing(settings.photoSource, sources, nas) else null
+    val remembered = if (picked == null) rememberedListing(settings.photoSource, sources) else null
     val listing = picked ?: remembered ?: sources.first().home
     // A remembered listing opens as one picked from the menu does: the camera asks to connect.
     LaunchedEffect(remembered) { remembered?.opened() }
@@ -154,7 +151,7 @@ private fun PhotoBrowser(container: AppContainer, limit: Int, album: AlbumAction
     // source's at once; a heap opened rises as the grid does, chosen into the same choice. Kept on
     // while the page is.
     var onMap by rememberSaveable { mutableStateOf(false) }
-    val mapPlaces = if (album == null && onMap) rememberPhotoPlaces(container, choice, nas) else null
+    val mapPlaces = if (album == null && onMap) rememberPhotoPlaces(container, choice, own) else null
     val heap = mapPlaces?.opened
     val heapShown = if (mapPlaces != null && heap != null) key(heap.first()) { mapPlaces.picks() } else emptyList()
     BackHandler(enabled = heap != null) { mapPlaces?.open(null) }

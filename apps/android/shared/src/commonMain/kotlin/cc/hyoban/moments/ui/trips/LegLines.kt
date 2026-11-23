@@ -63,7 +63,7 @@ class LegLines internal constructor(private val legs: Map<String, TripLeg>, priv
     }
 }
 
-/** A stop of a module's own a way can lead to (a check-in), as `ModulePlugin.legStops` gives it: its key among the day's items, its own uid. */
+/** A stop of a module's own a way can lead to (a check-in), as `Points.legStops` gives it: its key among the day's items, its own uid. */
 class LegStop(val key: String, val uid: String, val at: String, val place: String?, val reachedBy: String?)
 
 /**

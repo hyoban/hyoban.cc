@@ -4,17 +4,13 @@ import cc.hyoban.moments.res.*
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -25,11 +21,8 @@ import cc.hyoban.moments.update.UpdateFailure
 import cc.hyoban.moments.update.UpdateState
 import cc.hyoban.moments.update.Updates
 import cc.hyoban.moments.ui.design.AppIcons
-import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.PermissionFact
 import cc.hyoban.moments.ui.design.PermissionSheet
-import cc.hyoban.moments.ui.design.SegmentedListItem
-import cc.hyoban.moments.ui.design.Spinner
 import cc.hyoban.moments.ui.design.Text
 import java.time.Instant
 import java.time.ZoneId
@@ -55,52 +48,30 @@ fun UpdateSection(updates: Updates, scope: CoroutineScope) {
             if (updates.canInstall) latest?.let(install)
         }
     }
-    val daily: Segment = { shapes ->
-        SwitchRow(auto, AppIcons.Clock, stringResource(Res.string.update_auto), "update_auto", shapes, stringResource(Res.string.update_auto_note)) {
-            auto = !auto
-            updates.changeAuto(auto)
+    val daily = SettingsRow.Switch(AppIcons.Clock, stringResource(Res.string.update_auto), "update_auto", auto, stringResource(Res.string.update_auto_note)) {
+        auto = !auto
+        updates.changeAuto(auto)
+    }
+    val check = SettingsRow.Action(
+        AppIcons.Refresh, stringResource(Res.string.action_check_update), "update_check",
+        supporting = checkText(context, state),
+        busy = state.checking,
+    ) { if (!state.checking) scope.launch { updates.check() } }
+    val installRow = latest?.let { release ->
+        val downloading = state.downloading
+        SettingsRow.Action(
+            AppIcons.Download, stringResource(Res.string.action_install_update, release.version), "update_install",
+            supporting = installText(context, state),
+            busy = downloading != null,
+        ) {
+            when {
+                downloading != null -> Unit
+                updates.canInstall -> install(release)
+                else -> explaining = true
+            }
         }
     }
-    val check: Segment = { shapes ->
-        SegmentedListItem(
-            onClick = { if (!state.checking) scope.launch { updates.check() } },
-            shapes = shapes,
-            colors = segmentColors(),
-            leadingContent = { Icon(AppIcons.Refresh, contentDescription = null) },
-            supportingContent = { Text(checkText(context, state)) },
-            trailingContent = if (state.checking) {
-                { Spinner(Modifier.size(24.dp)) }
-            } else {
-                null
-            },
-            modifier = Modifier.testTag("update_check"),
-        ) { Text(stringResource(Res.string.action_check_update)) }
-    }
-    val installRow: Segment? = latest?.let { release ->
-        { shapes ->
-            val downloading = state.downloading
-            SegmentedListItem(
-                onClick = {
-                    when {
-                        downloading != null -> Unit
-                        updates.canInstall -> install(release)
-                        else -> explaining = true
-                    }
-                },
-                shapes = shapes,
-                colors = segmentColors(),
-                leadingContent = { Icon(AppIcons.Download, contentDescription = null) },
-                supportingContent = { Text(installText(context, state)) },
-                trailingContent = if (downloading != null) {
-                    { Spinner(Modifier.size(24.dp)) }
-                } else {
-                    null
-                },
-                modifier = Modifier.testTag("update_install"),
-            ) { Text(stringResource(Res.string.action_install_update, release.version)) }
-        }
-    }
-    SegmentedGroup(stringResource(Res.string.section_update), stringResource(Res.string.settings_update_note), listOfNotNull(daily, check, installRow))
+    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.section_update), stringResource(Res.string.settings_update_note), listOfNotNull(daily, check, installRow)))
     if (explaining) PermissionSheet(
         icon = AppIcons.Download,
         title = stringResource(Res.string.permission_install_title),

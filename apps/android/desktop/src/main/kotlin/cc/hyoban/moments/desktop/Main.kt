@@ -143,6 +143,8 @@ import org.maplibre.compose.desktop.rememberAwtComposeMapPresentationHost
 fun main() {
     // A trial run's language (`HERE_LANGUAGE=zh`), in place of the Mac's own.
     System.getenv("HERE_LANGUAGE")?.takeIf { it.isNotBlank() }?.let { java.util.Locale.setDefault(java.util.Locale.forLanguageTag(it)) }
+    // The Mac's own plugins beside every device's, before anything asks for them.
+    cc.hyoban.moments.plugins.Plugins.install(DesktopPlugins.all)
     app()
 }
 
@@ -282,7 +284,7 @@ private class Section(
         val Settings = Section("settings", Res.string.me_settings, AppIcons.Settings, null, "⌘,")
 
         /** The modules' sections, as their plugins give them: a destination among the others, or one of 我的. */
-        private val modules = DesktopPlugins.all.map {
+        private val modules = DesktopPlugins.sections.map {
             Section(it.key, it.label, it.icon, it.route, module = it.module, mine = it.mine)
         }
 
@@ -623,7 +625,7 @@ private fun Route(
     openMedia: (String, Int) -> Unit,
 ) {
     // A module's own page, drawn by its plugin.
-    DesktopPlugins.all.firstOrNull { it.shows(route) }?.let { plugin ->
+    DesktopPlugins.sections.firstOrNull { it.shows(route) }?.let { plugin ->
         plugin.Page(DesktopPages(container, back, ledgerNav, openDay) { backupSubtitle(container) }, route)
         return
     }

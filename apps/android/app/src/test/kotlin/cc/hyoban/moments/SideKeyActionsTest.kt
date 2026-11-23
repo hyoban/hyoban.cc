@@ -7,6 +7,9 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class SideKeyActionsTest {
+    // The phone's plugins, as the app installs them when it starts.
+    init { cc.hyoban.moments.plugins.Plugins.install(cc.hyoban.moments.plugins.PhonePlugins.all) }
+
     @Test fun acceptsOnlyExecutableActions() {
         listOf("none", "ledger:capture", "device:torch", "media:85", "nav:8", "app:org.example.player", "uri:https://example.invalid/path", "uri:moments://ledger")
             .forEach { assertTrue(it, SideKeyActions.valid(it)) }

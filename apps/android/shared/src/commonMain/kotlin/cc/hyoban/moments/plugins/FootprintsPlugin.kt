@@ -10,25 +10,29 @@ import cc.hyoban.moments.ui.FootprintSettings
 import cc.hyoban.moments.ui.design.AppIcons
 
 /** 足迹: the phone's GPS track, recorded in the background and never published. */
-object FootprintsPlugin : ModulePlugin {
+object FootprintsPlugin : Plugin {
     override val module = Module.FOOTPRINTS
-    override val title = Res.string.footprints_title
-    override val icon = AppIcons.Footprints
+    val icon = AppIcons.Footprints
 
-    override fun owns(route: Any) = route == FootprintSettings
-
-    override fun routeOf(link: AppLink): Any? = when (link.host) {
-        "footprints" -> Atlas
-        "footprint-settings" -> FootprintSettings
-        else -> null
+    override fun Contributions.contribute() {
+        add(Points.modules, ModuleCard(Module.FOOTPRINTS, Res.string.footprints_title, icon))
+        add(Points.pages, object : PageSet {
+            override fun owns(route: Any) = route == FootprintSettings
+            override fun routeOf(link: AppLink): Any? = when (link.host) {
+                "footprints" -> Atlas
+                "footprint-settings" -> FootprintSettings
+                else -> null
+            }
+        })
+        add(Points.itemsGroups, object : ItemsGroup {
+            @Composable override fun Group(container: AppContainer) = TracksGroup()
+        })
+        provide(Services.dayTracks) { it.footprints }
+        add(Points.mapLayers, MapLayers { settings, footprints ->
+            if (!footprints) null else cc.hyoban.moments.ui.map.LayerSlot.AFTER_PHOTOS to
+                cc.hyoban.moments.ui.map.MapLayer(Res.string.footprints_title, icon, settings.mapFootprints, "layer_footprints", cc.hyoban.moments.ui.map.TimedLayer.TRACK) {
+                    settings.changeMapFootprints(!settings.mapFootprints)
+                }
+        })
     }
-
-    @Composable override fun ItemsGroup(container: AppContainer) = TracksGroup()
-
-    override fun dayTracks(container: cc.hyoban.moments.AppContainer) = container.footprints
-
-    override fun mapLayer(settings: cc.hyoban.moments.Settings, footprints: Boolean) = if (!footprints) null else cc.hyoban.moments.ui.map.LayerSlot.AFTER_PHOTOS to
-        cc.hyoban.moments.ui.map.MapLayer(Res.string.footprints_title, AppIcons.Footprints, settings.mapFootprints, "layer_footprints", cc.hyoban.moments.ui.map.TimedLayer.TRACK) {
-            settings.changeMapFootprints(!settings.mapFootprints)
-        }
 }
