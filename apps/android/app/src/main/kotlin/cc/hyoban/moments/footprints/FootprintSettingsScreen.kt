@@ -1,5 +1,6 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.plugins.footprints
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
 import android.content.ActivityNotFoundException

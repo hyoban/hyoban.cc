@@ -14,6 +14,7 @@ object FoodPlugin : Plugin {
     override fun Contributions.contribute() {
         add(Points.modules, ModuleCard(Module.FOOD, Res.string.section_food, AppIcons.Food))
         add(Points.momentSections, CostSection(meal = true))
+        add(Points.partDiffs, CostDiff(meal = true))
         add(Points.cardLines, object : CardLine {
             @Composable override fun Line(moment: MomentRecord) {
                 costOf(moment, meal = true)?.let { CostCardLine(it) }

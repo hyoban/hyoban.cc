@@ -21,6 +21,8 @@ import cc.hyoban.moments.ui.map.MapStop
 import cc.hyoban.moments.ui.moment.MomentSection
 import cc.hyoban.moments.ui.picker.PhotoSources
 import cc.hyoban.moments.ui.publish.ChangeSection
+import cc.hyoban.moments.ui.settings.SettingsGroupSpec
+import cc.hyoban.moments.ui.settings.SettingsRow
 import cc.hyoban.moments.ui.trips.KeptStop
 import cc.hyoban.moments.ui.trips.LegStop
 import cc.hyoban.moments.ui.trips.TripFacet
@@ -85,13 +87,50 @@ object Points {
 
     /** Figures at the head of a trip, after its distance. */
     val tripFacets = Point<TripFacet>("trip-facets")
+
+    /** What 发布更改 lists of a part that changed, field by field: one for each part but the words and photos. */
+    val partDiffs = Point<cc.hyoban.moments.ui.publish.PartDiff>("part-diffs")
+
+    /** What 和 AI 规划's model may look up, offered after suggest_plan in their order. */
+    val planTools = Point<cc.hyoban.moments.data.ai.PlanTool>("plan-tools")
+
+    /** A group on a settings page after the page's own, by its order there. */
+    val settingsGroups = Point<SettingsGroup>("settings-groups")
+
+    /** A way to start in 初次打开 beside a site, an import and nothing (a computer's: the phone's backup). */
+    val onboardingStarts = Point<OnboardingStart>("onboarding-starts")
+
+    /** A module's step of its own in 初次打开, after where to start, shown while its module is on. */
+    val onboardingSteps = Point<OnboardingStep>("onboarding-steps")
+
+    /** What draws over 地图's atlas and its panel (the phone's footprints). */
+    val mapOverlays = Point<MapOverlay>("map-overlays")
 }
 
-/** The services plugins give each other, every device's. */
+/** The services plugins give themselves and each other, every device's; which plugin gives each is the device's. */
 object Services {
     /** Where each day's movement is kept (the footprints), which the pages that draw a day's way read. */
     val dayTracks = Service<Footprints>("day-tracks")
+
+    /** The ledger: the phone's own store, written there; the phone backup's on the Mac, only read. */
+    val ledger = Service<cc.hyoban.moments.ledger.LedgerSource>("ledger")
+
+    /** The footprints: the phone's own store; the phone backup's on the Mac. */
+    val footprints = Service<Footprints>("footprints")
+
+    /** The owner's UGREEN NAS, whose photos 相册 lists, kept as the device keeps its settings. */
+    val nas = Service<cc.hyoban.moments.nas.Nas>("nas")
+
+    /** Swarm's check-ins brought in from its export, their photos beside the device's own Moments'. */
+    val swarm = Service<cc.hyoban.moments.data.swarm.SwarmImport>("swarm")
+
+    /** Where planning with AI searches Xiaohongshu's notes: the phone's website session; none on the Mac. */
+    val noteSearch = Service<cc.hyoban.moments.data.ai.NoteSearch>("note-search")
 }
+
+/** Where planning with AI searches Xiaohongshu's notes on this device, or null where none is given. */
+val AppContainer.noteSearch: cc.hyoban.moments.data.ai.NoteSearch?
+    get() = Plugins.registry.service(Services.noteSearch, this, settings::isOn)
 
 /** A module as 记录项与公开 and the rows naming it show it. */
 class ModuleCard(val module: Module, val title: StringResource, val icon: ImageVector)
@@ -121,7 +160,7 @@ fun interface DayRecords {
 
 /** A group on 导入. */
 interface ImportGroup {
-    /** The names of the sources it offers on every device, said under 导入 on 我. */
+    /** The names of the sources it offers, said under 导入 on 我. */
     val sources: List<StringResource>
 
     @Composable fun Group(container: AppContainer)
@@ -167,4 +206,47 @@ interface KeptStops {
 
     /** One of them, [uid], as the Moment the editor opens it as, to change it; null for one not its own. */
     fun asMoment(container: AppContainer, uid: String): MomentRecord?
+}
+
+/** The settings pages plugins bring groups to. */
+enum class SettingsPage {
+    /** 同步与来源. */
+    SYNC,
+
+    /** The ledger's 设置. */
+    LEDGER,
+}
+
+/** What a settings group can lead to from its page: [navigate] opens a page, null where the device has none to open. */
+class SettingsPageNav(val navigate: ((Any) -> Unit)? = null)
+
+/** A group on a settings page, drawn while its module is on, whatever its plugin's own switch says (its first row may be that switch). */
+interface SettingsGroup {
+    /** The page it is on. */
+    val page: SettingsPage
+
+    /** Where it stands among the page's other plugins' groups. */
+    val order: Int
+
+    /** Its group as declared, null while it shows nothing; any dialog it opens it draws itself. */
+    @Composable fun group(container: AppContainer, nav: SettingsPageNav): SettingsGroupSpec?
+}
+
+/** A way to start in 初次打开: its row, [next] going on to the modules' steps. */
+interface OnboardingStart {
+    @Composable fun row(container: AppContainer, next: () -> Unit): SettingsRow?
+}
+
+/** A module's step in 初次打开, going [onBack] to where to start or on with [onDone]. */
+interface OnboardingStep {
+    @Composable fun Step(container: AppContainer, onBack: () -> Unit, onDone: () -> Unit)
+}
+
+/** What draws over the atlas and its panel, given to [content]; its settings and what it leads to by [actions]. */
+interface MapOverlay {
+    @Composable fun Overlay(
+        container: AppContainer,
+        actions: cc.hyoban.moments.ui.map.MapOverlayActions,
+        content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
+    )
 }

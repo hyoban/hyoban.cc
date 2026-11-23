@@ -12,8 +12,8 @@ import cc.hyoban.moments.data.store.BillChange
 import cc.hyoban.moments.data.store.PhoneOutside
 import cc.hyoban.moments.data.store.readoptions
 import cc.hyoban.moments.data.store.undo
-import cc.hyoban.moments.footprints.FootprintStore
-import cc.hyoban.moments.ledger.LedgerStore
+import cc.hyoban.moments.plugins.footprints
+import cc.hyoban.moments.plugins.ledger
 import cc.hyoban.moments.publish.PublishWorker
 import cc.hyoban.moments.ui.viewer.MotionCache
 import cc.hyoban.moments.widget.Widgets
@@ -31,25 +31,29 @@ import kotlinx.coroutines.withContext
 import org.maplibre.nativeffi.loadNativeLibrary
 
 /**
- * The phone's container: what every device shares, and over it what only the phone has, its
- * ledger and footprints, the widgets, and the work it leaves running. Built once by the Application.
+ * The phone's container: what every device shares, and over it what only the phone has, the
+ * widgets and the work it leaves running; its ledger and footprints are its plugins' services
+ * ([ledger], [footprints]). Built once by the Application.
  */
 class PhoneContainer private constructor(
     context: Context,
-    /** The ledger stays on this phone, outside API sync and Android's backup; only its public bills publish. */
-    override val ledger: LedgerStore,
-    /** GPS tracks stay on this phone, private; none of them publish. */
-    override val footprints: FootprintStore,
+    outside: PhoneOutside,
 ) : AppContainer(
     settings = Settings(SharedPrefs(context.getSharedPreferences("settings", Context.MODE_PRIVATE)), context.noBackupFilesDir),
     files = context.filesDir,
     private = context.noBackupFilesDir,
     driver = androidx.sqlite.driver.AndroidSQLiteDriver(),
-    outside = PhoneOutside(ledger),
+    outside = outside,
 ) {
-    constructor(context: Context) : this(context, LedgerStore(context), FootprintStore(context))
+    constructor(context: Context) : this(context, PhoneOutside())
 
-    private val appContext = context.applicationContext
+    /** The application's context, which the phone's plugins make their services with. */
+    val appContext: Context = context.applicationContext
+
+    init {
+        // The public bills publish beside the Moments from the ledger the ledger's plugin gives.
+        outside.ledger = { ledger }
+    }
 
     override fun openCities(): Reader = appContext.assets.open(cc.hyoban.moments.ui.map.FOG_REGIONS_ASSET).bufferedReader()
 
@@ -60,17 +64,9 @@ class PhoneContainer private constructor(
     /** The databases backed up to the owner's WebDAV directory, when one is set. */
     val backup = cc.hyoban.moments.backup.Backup(context)
 
-    /** The owner's UGREEN NAS, whose photo app 选照片 reads; nothing is asked of it until it is set up. */
     /** Where the gallery's photos were taken, read once each for 地图's photos and kept on the phone. */
     val galleryLocations by lazy { cc.hyoban.moments.ui.picker.GalleryLocations(context) }
 
-    override val nas = cc.hyoban.moments.nas.Nas(
-        cc.hyoban.moments.SharedPrefs(context.getSharedPreferences("nas", Context.MODE_PRIVATE)),
-        cc.hyoban.moments.Token(java.io.File(context.noBackupFilesDir, "nas-password")),
-        context.cacheDir,
-        cc.hyoban.moments.nas.GalleryKeep(context),
-        clientId = "here-android",
-    )
     /** The app's own updates, from its GitHub releases. */
     val updates = cc.hyoban.moments.update.Updates(context)
 
@@ -78,8 +74,6 @@ class PhoneContainer private constructor(
         appContext.contentResolver.openInputStream(android.net.Uri.parse(source)) ?: error("Can't read $source")
 
     /** Places by name and around a point, for a new Moment's place. */
-    override val noteSearch = cc.hyoban.moments.xiaohongshu.Xiaohongshu(context)
-
     override val placeSearch = PlaceSearch(BuildConfig.PLACE_SEARCH_URL, tencentKey = { settings.tencentMapKey.value },
         amapKey = { settings.amapKey.value },
         tencentFirst = { settings.chinaPlaces.value == CHINA_PLACES_TENCENT },
@@ -109,8 +103,6 @@ class PhoneContainer private constructor(
         }
         // The widgets show only what the public sees in demo mode, so they are drawn again as it turns.
         scope.launch { snapshotFlow { settings.demo }.drop(1).collect { Widgets.update(appContext) } }
-        cc.hyoban.moments.backup.BackupWorker.schedule(appContext, backup, replace = false)
-        cc.hyoban.moments.update.UpdateWorker.schedule(appContext, updates.auto)
         // A bill or a span going public, or private again, is a change to publish too.
         scope.launch {
             kotlinx.coroutines.flow.combine(ledger.ledger, footprints.revision) { _, _ -> }.collect {

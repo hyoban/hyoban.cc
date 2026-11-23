@@ -9,6 +9,8 @@ import cc.hyoban.moments.data.copy.CopyStore
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.nas.matchMoments
+import cc.hyoban.moments.plugins.footprints
+import cc.hyoban.moments.plugins.nas
 import org.jetbrains.compose.resources.decodeToImageBitmap
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.store.BillChange
@@ -47,8 +49,9 @@ import kotlinx.coroutines.launch
 
 /**
  * What the app shares on every device: built once when it starts, handed to the screens. The
- * records, their copy and their publishing are here; what only a phone has (the ledger's and
- * the footprints' stores, the widgets, the work it leaves running) is its own container's, over this.
+ * records, their copy and their publishing are here; a module's stores and clients (the ledger,
+ * the footprints, the NAS) are services its plugins give, kept here once made; what only a phone
+ * has besides (the widgets, the work it leaves running) is its own container's, over this.
  *
  * [files] holds what the device keeps, [private] what must not leave it nor be backed up, and
  * [outside] what publishes beside the Moments.
@@ -62,8 +65,17 @@ abstract class AppContainer(
 ) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    /** The ledger the pages read; the phone's own, or none. */
-    abstract val ledger: cc.hyoban.moments.ledger.LedgerSource
+    private val services = HashMap<cc.hyoban.moments.plugins.Service<*>, Any>()
+
+    /**
+     * The plugins' [service] as this container keeps it, [make] building it the first time it is
+     * asked for: one of each for as long as the container lives ([cc.hyoban.moments.plugins.Registry.own]).
+     */
+    @Suppress("UNCHECKED_CAST")
+    internal fun <T : Any> kept(service: cc.hyoban.moments.plugins.Service<T>, make: () -> Any): T = synchronized(services) {
+        // A service made from others asks for them as it is made, under the same lock.
+        (services[service] ?: make().also { services[service] = it }) as T
+    }
 
     private val _sharedPhotos = MutableStateFlow<List<cc.hyoban.moments.data.local.PhotoRef>>(emptyList())
 
@@ -78,20 +90,11 @@ abstract class AppContainer(
     /** The photos shared into the app, taken so they are used once. */
     fun takeSharedPhotos(): List<cc.hyoban.moments.data.local.PhotoRef> = _sharedPhotos.getAndUpdate { emptyList() }
 
-    /** The owner's UGREEN NAS, whose photos 相册 lists, kept as the device keeps its settings. */
-    abstract val nas: cc.hyoban.moments.nas.Nas
-
     /** Where the device's own records put a bill paid at [time], or null where it keeps none. */
     open suspend fun billPointAt(time: Long): cc.hyoban.moments.data.local.Fix? = null
 
     /** Places by name and around a point, for a new Moment's place. */
     abstract val placeSearch: cc.hyoban.moments.data.local.PlaceSearch
-
-    /** Where planning with AI searches Xiaohongshu's notes: the phone's website session, or none. */
-    open val noteSearch: cc.hyoban.moments.data.ai.NoteSearch? get() = null
-
-    /** The footprints the pages read; the phone's own, or none. */
-    abstract val footprints: cc.hyoban.moments.footprints.Footprints
 
     private var cities: List<cc.hyoban.moments.ui.map.FogRegion>? = null
 
@@ -119,16 +122,6 @@ abstract class AppContainer(
     }
     protected val api = MomentsApi(baseUrl = { settings.apiUrl.value }, token = { settings.apiToken.value })
     val repository = MomentsRepository(CopyStore(File(private, "copy.db"), driver), api, local = localStore, writer = api, outside = outside)
-
-    /** Swarm's check-ins brought in from its export, their photos beside the device's own Moments'. */
-    val swarm by lazy {
-        cc.hyoban.moments.data.swarm.SwarmImport(
-            open = ::openSource,
-            repository = repository,
-            mediaDirectory = File(localStore.root, "media"),
-            scope = scope,
-        )
-    }
 
     /** Opens what the device's file picker chose: a file's path or `file:` URI here, the phone's content address there. */
     open fun openSource(source: String): java.io.InputStream =

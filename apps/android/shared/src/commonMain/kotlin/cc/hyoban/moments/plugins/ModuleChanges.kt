@@ -25,6 +25,7 @@ import cc.hyoban.moments.ui.publish.ChangeSection
 import cc.hyoban.moments.ui.publish.ChangesScope
 import cc.hyoban.moments.ui.publish.EntryDiff
 import cc.hyoban.moments.ui.publish.EntryFace
+import cc.hyoban.moments.ui.publish.PartDiff
 import cc.hyoban.moments.ui.publish.entryDiffsOf
 import cc.hyoban.moments.ui.publish.entrySection
 import cc.hyoban.moments.ui.publish.flagName
@@ -33,7 +34,8 @@ import cc.hyoban.moments.ui.things.yuan
 import kotlinx.serialization.json.JsonObject
 import org.jetbrains.compose.resources.stringResource
 
-// What each module lists on 待发布: its check-ins, occasions, devices and subscriptions, and bills.
+// What each module lists on 待发布: its check-ins, occasions, devices and subscriptions, and bills;
+// and what changed of each of their parts, field by field ([PartDiff]).
 
 /** The check-ins, Swarm's or the footprints' stays, and the check-in a Moment carries. */
 internal object CheckinChanges : ChangeSection {
@@ -51,10 +53,17 @@ internal object CheckinChanges : ChangeSection {
             )
         }
 
+    override fun nameOf(entry: JsonObject): String? = checkinOf(entry)?.venue
+}
+
+/** What changed of a check-in, one alone or the one a Moment carries. */
+internal object CheckinDiff : PartDiff {
+    override val part = "checkin"
+
     @Composable
     override fun entryDiffs(before: JsonObject, after: JsonObject, places: Map<String, Place>): List<EntryDiff> = entryDiffsOf {
-        val was = checkinOf(before)!!
-        val now = checkinOf(after)!!
+        val was = checkinOf(before) ?: return@entryDiffsOf
+        val now = checkinOf(after) ?: return@entryDiffsOf
         val span = { c: Checkin ->
             listOfNotNull(formatDate(c.at.take(10)), listOfNotNull(formatTime(c.at), c.end?.let(::formatTime)).joinToString("–").ifEmpty { null }).joinToString(" ")
         }
@@ -73,8 +82,6 @@ internal object CheckinChanges : ChangeSection {
         val now = venueOf(after)
         return if (was == now) emptyList() else listOf(EntryDiff(Res.string.change_checkin, was, now ?: stringResource(Res.string.change_none), AppIcons.Flag))
     }
-
-    override fun nameOf(entry: JsonObject): String? = checkinOf(entry)?.venue
 }
 
 /** The occasions written, changed or deleted. */
@@ -92,6 +99,11 @@ internal object OccasionChanges : ChangeSection {
                 stringResource(if (occasion.repeat) Res.string.occasion_each_year else Res.string.occasion_once),
             )
         }
+}
+
+/** What changed of an occasion. */
+internal object OccasionDiff : PartDiff {
+    override val part = "occasion"
 
     @Composable
     override fun entryDiffs(before: JsonObject, after: JsonObject, places: Map<String, Place>): List<EntryDiff> {
@@ -104,8 +116,8 @@ internal object OccasionChanges : ChangeSection {
             Count.NONE to stringResource(Res.string.occasion_count_none),
         )
         return entryDiffsOf {
-            val was = Occasions.occasion(before)!!
-            val now = Occasions.occasion(after)!!
+            val was = Occasions.occasion(before) ?: return@entryDiffsOf
+            val now = Occasions.occasion(after) ?: return@entryDiffsOf
             val repeat = { repeat: Boolean, lunar: Boolean -> if (!repeat) once else if (lunar) lunarly else yearly }
             val day = { value: Any? -> value?.toString()?.let(::formatDate) }
             add(Res.string.occasion_name, was.name, now.name, AppIcons.Pen)
@@ -135,10 +147,43 @@ internal object ThingChanges : ChangeSection {
             )
         }
 
+}
+
+/** What changed of a device. */
+internal object DeviceDiff : PartDiff {
+    override val part = "device"
+
     @Composable
     override fun entryDiffs(before: JsonObject, after: JsonObject, places: Map<String, Place>): List<EntryDiff> {
         val none = stringResource(Res.string.change_none)
         val replaced = stringResource(Res.string.change_replaced)
+        val yes = flagName(true)
+        val no = flagName(false)
+        return entryDiffsOf {
+            val flag = { value: Boolean -> if (value) yes else no }
+            val day = { value: Any? -> value?.toString()?.let(::formatDate) }
+            val was = Things.device(before) ?: return@entryDiffsOf
+            val now = Things.device(after) ?: return@entryDiffsOf
+            add(Res.string.device_name, was.name, now.name, AppIcons.Pen)
+            add(Res.string.device_category, was.category, now.category, AppIcons.Category)
+            add(Res.string.device_bought, day(was.bought), day(now.bought), AppIcons.Calendar)
+            add(Res.string.device_price, yuan(was.price), yuan(now.price), AppIcons.Cash)
+            add(Res.string.device_sold_on, day(was.soldOn), day(now.soldOn), AppIcons.Calendar)
+            add(Res.string.device_sold_price, was.soldPrice?.let(::yuan), now.soldPrice?.let(::yuan), AppIcons.Cash)
+            add(Res.string.device_idle, flag(was.idle), flag(now.idle), AppIcons.Pause)
+            words(Res.string.device_note, was.note, now.note, AppIcons.Notes)
+            // Its photo, another or none.
+            if (was.image != now.image) this += EntryDiff(Res.string.change_photos, null, if (now.image == null) none else replaced, AppIcons.Image)
+        }
+    }
+}
+
+/** What changed of a subscription, on an entry that isn't a device's. */
+internal object SubscriptionDiff : PartDiff {
+    override val part = "subscription"
+
+    @Composable
+    override fun entryDiffs(before: JsonObject, after: JsonObject, places: Map<String, Place>): List<EntryDiff> {
         val periods = mapOf(
             Period.YEAR to stringResource(Res.string.subscription_period_year),
             Period.MONTH to stringResource(Res.string.subscription_period_month),
@@ -147,35 +192,22 @@ internal object ThingChanges : ChangeSection {
         val yes = flagName(true)
         val no = flagName(false)
         return entryDiffsOf {
+            // A device's entry says what changed of the device alone, as its sheet does.
+            if (Things.device(before) != null && Things.device(after) != null) return@entryDiffsOf
             val flag = { value: Boolean -> if (value) yes else no }
             val day = { value: Any? -> value?.toString()?.let(::formatDate) }
-            val devices = Things.device(before) to Things.device(after)
-            val subscriptions = Things.subscription(before) to Things.subscription(after)
-            if (devices.first != null && devices.second != null) {
-                val (was, now) = devices.first!! to devices.second!!
-                add(Res.string.device_name, was.name, now.name, AppIcons.Pen)
-                add(Res.string.device_category, was.category, now.category, AppIcons.Category)
-                add(Res.string.device_bought, day(was.bought), day(now.bought), AppIcons.Calendar)
-                add(Res.string.device_price, yuan(was.price), yuan(now.price), AppIcons.Cash)
-                add(Res.string.device_sold_on, day(was.soldOn), day(now.soldOn), AppIcons.Calendar)
-                add(Res.string.device_sold_price, was.soldPrice?.let(::yuan), now.soldPrice?.let(::yuan), AppIcons.Cash)
-                add(Res.string.device_idle, flag(was.idle), flag(now.idle), AppIcons.Pause)
-                words(Res.string.device_note, was.note, now.note, AppIcons.Notes)
-                // Its photo, another or none.
-                if (was.image != now.image) this += EntryDiff(Res.string.change_photos, null, if (now.image == null) none else replaced, AppIcons.Image)
-            } else if (subscriptions.first != null && subscriptions.second != null) {
-                val (was, now) = subscriptions.first!! to subscriptions.second!!
-                val period = { period: Period -> periods.getValue(period) }
-                add(Res.string.subscription_name, was.name, now.name, AppIcons.Pen)
-                add(Res.string.subscription_price, priceOf(was.price, was.currency) + " " + period(was.period), priceOf(now.price, now.currency) + " " + period(now.period), AppIcons.Cash)
-                add(Res.string.subscription_paid, day(was.paid), day(now.paid), AppIcons.Calendar)
-                add(Res.string.subscription_renews_on, day(was.renews), day(now.renews), AppIcons.Calendar)
-                add(Res.string.subscription_auto_renew, flag(was.autoRenew), flag(now.autoRenew), AppIcons.Refresh)
-                add(Res.string.subscription_paid_with, was.paidWith, now.paidWith, AppIcons.Card)
-                add(Res.string.subscription_ended, day(was.ended), day(now.ended), AppIcons.Calendar)
-                words(Res.string.subscription_note, was.note, now.note, AppIcons.Notes)
-                add(Res.string.change_link, was.link, now.link, AppIcons.Link)
-            }
+            val was = Things.subscription(before) ?: return@entryDiffsOf
+            val now = Things.subscription(after) ?: return@entryDiffsOf
+            val period = { period: Period -> periods.getValue(period) }
+            add(Res.string.subscription_name, was.name, now.name, AppIcons.Pen)
+            add(Res.string.subscription_price, priceOf(was.price, was.currency) + " " + period(was.period), priceOf(now.price, now.currency) + " " + period(now.period), AppIcons.Cash)
+            add(Res.string.subscription_paid, day(was.paid), day(now.paid), AppIcons.Calendar)
+            add(Res.string.subscription_renews_on, day(was.renews), day(now.renews), AppIcons.Calendar)
+            add(Res.string.subscription_auto_renew, flag(was.autoRenew), flag(now.autoRenew), AppIcons.Refresh)
+            add(Res.string.subscription_paid_with, was.paidWith, now.paidWith, AppIcons.Card)
+            add(Res.string.subscription_ended, day(was.ended), day(now.ended), AppIcons.Calendar)
+            words(Res.string.subscription_note, was.note, now.note, AppIcons.Notes)
+            add(Res.string.change_link, was.link, now.link, AppIcons.Link)
         }
     }
 }

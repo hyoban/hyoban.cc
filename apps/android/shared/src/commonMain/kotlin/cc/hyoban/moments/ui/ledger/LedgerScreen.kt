@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.plugins.ledger
 import cc.hyoban.moments.res.*
 import org.jetbrains.compose.resources.StringResource
 import androidx.compose.ui.text.style.TextOverflow

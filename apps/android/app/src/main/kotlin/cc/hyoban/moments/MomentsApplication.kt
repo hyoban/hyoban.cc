@@ -26,9 +26,8 @@ class MomentsApplication : Application(), SingletonImageLoader.Factory {
         runCatching { cc.hyoban.moments.backup.BackupArchive.restoreStaged(this) }
             .onFailure { android.util.Log.e("Backup", "Restore failed", it) }
         container = PhoneContainer(this)
-        cc.hyoban.moments.sidekey.SideKeys.initialize(this)
-        // The paired camera, read once for 我, 记录 and the camera's own pages and services.
-        container.scope.launch(Dispatchers.IO) { CameraStore.load(this@MomentsApplication) }
+        // What the plugins start with the app: the backups' and updates' daily work, the side key, the paired camera.
+        cc.hyoban.moments.plugins.PhonePlugins.started(this, container)
         lastLocales = resources.configuration.locales.toLanguageTags()
     }
 

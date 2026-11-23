@@ -14,6 +14,7 @@ object ThingsPlugin : Plugin {
     override fun Contributions.contribute() {
         add(Points.modules, ModuleCard(Module.THINGS, Res.string.me_things, icon))
         add(Points.changes, ThingChanges)
+        add(Points.partDiffs, DeviceDiff, SubscriptionDiff)
         add(Points.dayRecords, DayRecords(::thingRecords))
         add(Points.pages, object : PageSet {
             /** The things' page showing one of its own; with no kind it is every module's. */

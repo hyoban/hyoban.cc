@@ -29,6 +29,8 @@ import kotlin.test.assertNull
 
 /** What a model's answer suggests, and what of the owner's places it is told. */
 class PlanAssistantTest {
+    init { cc.hyoban.moments.plugins.Plugins.install(cc.hyoban.moments.plugins.PhonePlugins.all) }
+
     private fun message(text: String): JsonObject = Json.parseToJsonElement(text).jsonObject
 
     @Test
@@ -192,19 +194,22 @@ class PlanAssistantTest {
             message("""{"role":"assistant","content":"","tool_calls":[{"id":"n","type":"function","function":{"name":"search_notes","arguments":$search}}]}"""),
         )
         assertEquals(listOf(PlanLookup.Notes("n", "东京 拉面 推荐")), read.lookups)
+        // Read only where a plugin brings the tool: every device's alone don't.
+        val shared = cc.hyoban.moments.plugins.Registry(cc.hyoban.moments.plugins.Plugins.shared).all(cc.hyoban.moments.plugins.Points.planTools)
+        assertEquals(emptyList(), PlanAssistant.read(
+            message("""{"role":"assistant","content":"x","tool_calls":[{"id":"n","type":"function","function":{"name":"search_notes","arguments":$search}}]}"""),
+            shared,
+        ).lookups)
     }
 
     @Test
     fun searchesNotesOnlyWhereTheDeviceCan() = kotlinx.coroutines.runBlocking {
         val answer = """{"choices":[{"message":{"role":"assistant","content":"好。"}}]}"""
         val without = mutableListOf<String>()
-        scripted(without) { answer }.ask("规划", PlanContext("东京", "2026-12-24", "2026-12-29"), counting)
+        scripted(without, notes(signedIn = false)) { answer }.ask("规划", PlanContext("东京", "2026-12-24", "2026-12-29"), counting)
         assertEquals(false, without.single().contains("search_notes"))
         val with = mutableListOf<String>()
-        val reading = object : PlanLookups by counting {
-            override val searchesNotes = true
-        }
-        scripted(with) { answer }.ask("规划", PlanContext("东京", "2026-12-24", "2026-12-29"), reading)
+        scripted(with, notes()) { answer }.ask("规划", PlanContext("东京", "2026-12-24", "2026-12-29"), counting)
         assertEquals(true, with.single().contains("\"search_notes\",\"description"))
         // Told how to tell an ad from a note, only where it reads them.
         assertEquals(true, with.single().contains("广告"))
@@ -217,18 +222,17 @@ class PlanAssistantTest {
     fun tellsTheModelTheNotesRead() = kotlinx.coroutines.runBlocking {
         val sent = mutableListOf<String>()
         val search = JsonPrimitive("""{"query":"东京 拉面"}""")
-        val reading = object : PlanLookups by counting {
-            override val searchesNotes = true
-            override suspend fun notes(query: String) = listOf(
+        val reading = notes {
+            listOf(
                 cc.hyoban.moments.data.ai.FoundNote("一兰真的好吃", author = "某人", likes = "1.2万", text = "排了半小时".repeat(400), posted = "2026-10-01"),
                 cc.hyoban.moments.data.ai.FoundNote("别去这家"),
             )
         }
         val progress = mutableListOf<cc.hyoban.moments.data.ai.PlanProgress>()
-        scripted(sent) { index ->
+        scripted(sent, reading) { index ->
             if (index == 0) """{"choices":[{"message":{"role":"assistant","content":"","tool_calls":[{"id":"n","type":"function","function":{"name":"search_notes","arguments":$search}}]}}]}"""
             else """{"choices":[{"message":{"role":"assistant","content":"去一兰。"}}]}"""
-        }.ask("想吃拉面", PlanContext("东京", "2026-12-24", "2026-12-29"), reading) { progress += it }
+        }.ask("想吃拉面", PlanContext("东京", "2026-12-24", "2026-12-29"), counting) { progress += it }
         val told = Json.parseToJsonElement(sent[1]).jsonObject["messages"]!!.let { it as kotlinx.serialization.json.JsonArray }
             .last().jsonObject["content"]!!.let { (it as JsonPrimitive).content }
         val notes = Json.parseToJsonElement(told) as kotlinx.serialization.json.JsonArray
@@ -243,22 +247,32 @@ class PlanAssistantTest {
     fun aSearchSignedOutSaysSo() = kotlinx.coroutines.runBlocking {
         val sent = mutableListOf<String>()
         val search = JsonPrimitive("""{"query":"东京 拉面"}""")
-        val signedOut = object : PlanLookups by counting {
-            override val searchesNotes = true
-            override suspend fun notes(query: String): List<cc.hyoban.moments.data.ai.FoundNote> = throw cc.hyoban.moments.data.ai.NoteSignInNeeded()
-        }
+        val signedOut = notes { throw cc.hyoban.moments.data.ai.NoteSignInNeeded() }
         val progress = mutableListOf<cc.hyoban.moments.data.ai.PlanProgress>()
-        scripted(sent) { index ->
+        scripted(sent, signedOut) { index ->
             if (index == 0) """{"choices":[{"message":{"role":"assistant","content":"","tool_calls":[{"id":"n","type":"function","function":{"name":"search_notes","arguments":$search}}]}}]}"""
             else """{"choices":[{"message":{"role":"assistant","content":"先这样。"}}]}"""
-        }.ask("想吃拉面", PlanContext("东京", "2026-12-24", "2026-12-29"), signedOut) { progress += it }
+        }.ask("想吃拉面", PlanContext("东京", "2026-12-24", "2026-12-29"), counting) { progress += it }
         val done = (progress.last { it is cc.hyoban.moments.data.ai.PlanProgress.Looked } as cc.hyoban.moments.data.ai.PlanProgress.Looked).lookup as PlanLookup.Notes
         assertEquals(true, done.signedOut)
         assertEquals(true, sent[1].contains("sign in again"))
     }
 
-    /** An assistant whose model answers [reply] to the request with each index, the requests' bodies kept in [sent]. */
-    private fun scripted(sent: MutableList<String>, reply: (Int) -> String) = PlanAssistant(
+    /** Xiaohongshu as the phone reads it, [signedIn] or not, its searches finding what [found] gives. */
+    private fun notes(signedIn: Boolean = true, found: suspend (String) -> List<cc.hyoban.moments.data.ai.FoundNote> = { emptyList() }) =
+        object : cc.hyoban.moments.data.ai.NoteSearch {
+            override val signedIn = androidx.compose.runtime.mutableStateOf(signedIn)
+            override suspend fun search(query: String) = found(query)
+        }
+
+    /** The phone's planning tools, its note search [search] where given. */
+    private fun phoneTools(search: cc.hyoban.moments.data.ai.NoteSearch?): () -> List<cc.hyoban.moments.data.ai.PlanTool> = {
+        cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.Points.planTools)
+            .map { if (it.name == "search_notes") cc.hyoban.moments.plugins.NoteSearchTool { search } else it }
+    }
+
+    /** An assistant whose model answers [reply] to the request with each index, the requests' bodies kept in [sent], Xiaohongshu read through [search]. */
+    private fun scripted(sent: MutableList<String>, search: cc.hyoban.moments.data.ai.NoteSearch? = null, reply: (Int) -> String) = PlanAssistant(
         "https://example.test/v1",
         "key",
         "model",
@@ -269,6 +283,7 @@ class PlanAssistantTest {
             okhttp3.Response.Builder().request(chain.request()).protocol(okhttp3.Protocol.HTTP_1_1).code(200).message("OK")
                 .body(reply(sent.size - 1).toResponseBody("application/json".toMediaType())).build()
         }.build(),
+        tools = phoneTools(search),
     )
 
     private val stillLooking = JsonPrimitive("""{"name":"充电站","lat":35.66,"lng":139.75}""").let { place ->

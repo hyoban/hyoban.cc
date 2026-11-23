@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.plugins.nas
 import androidx.compose.runtime.Composable
 import cc.hyoban.moments.AppContainer
 

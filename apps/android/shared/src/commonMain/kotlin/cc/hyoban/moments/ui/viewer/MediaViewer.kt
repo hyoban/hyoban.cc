@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.viewer
 
+import cc.hyoban.moments.plugins.nas
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.rememberHaptics
 import cc.hyoban.moments.ui.design.AppIcons

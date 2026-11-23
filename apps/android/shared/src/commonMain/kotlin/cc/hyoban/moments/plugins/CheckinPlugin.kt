@@ -12,15 +12,27 @@ import cc.hyoban.moments.res.Res
 import cc.hyoban.moments.res.module_checkin
 import cc.hyoban.moments.ui.design.AppIcons
 
+/** Swarm's check-ins brought in from its export, on or off. */
+val AppContainer.swarm: cc.hyoban.moments.data.swarm.SwarmImport get() = Plugins.registry.own(Services.swarm, this)
+
 /** 签到: check-ins, from Swarm or a stay kept as one. */
 object CheckinPlugin : Plugin {
     override val module = Module.CHECKIN
 
     override fun Contributions.contribute() {
         add(Points.modules, ModuleCard(Module.CHECKIN, Res.string.module_checkin, AppIcons.Pin))
+        provide(Services.swarm) { container ->
+            cc.hyoban.moments.data.swarm.SwarmImport(
+                open = container::openSource,
+                repository = container.repository,
+                mediaDirectory = java.io.File(container.localStore.root, "media"),
+                scope = container.scope,
+            )
+        }
         add(Points.searchKinds, CheckinsSearch)
         add(Points.placeAlone, CheckinPlaceAlone)
         add(Points.changes, CheckinChanges)
+        add(Points.partDiffs, CheckinDiff)
         add(Points.joins, CheckinJoin)
         add(Points.imports, object : ImportGroup {
             override val sources = listOf(Res.string.import_source_swarm)

@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ledger
 
+import cc.hyoban.moments.plugins.ledger
 import cc.hyoban.moments.data.money.formatCents
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module

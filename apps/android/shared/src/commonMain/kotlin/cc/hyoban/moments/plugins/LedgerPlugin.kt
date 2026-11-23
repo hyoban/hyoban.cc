@@ -30,6 +30,7 @@ object LedgerPlugin : Plugin {
         add(Points.composerParts, BillComposer)
         add(Points.tripFacets, SpendingFacet)
         add(Points.changes, LedgerChangeSection)
+        add(Points.partDiffs, BillDiff)
         add(Points.joins, LedgerJoin)
         add(Points.itemsGroups, object : ItemsGroup {
             @Composable override fun Group(container: AppContainer) = BooksGroup(container)
@@ -37,6 +38,9 @@ object LedgerPlugin : Plugin {
         add(Points.pages, LedgerPages)
     }
 }
+
+/** The ledger the pages read, whichever device's ledger plugin gives it, on or off. */
+val AppContainer.ledger: cc.hyoban.moments.ledger.LedgerSource get() = Plugins.registry.own(Services.ledger, this)
 
 private object LedgerPages : PageSet {
     override fun owns(route: Any) = route is LedgerHome || route is LedgerEntry || route is LedgerBill ||

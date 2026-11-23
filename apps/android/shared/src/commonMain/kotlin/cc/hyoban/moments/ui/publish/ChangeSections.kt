@@ -3,7 +3,6 @@ package cc.hyoban.moments.ui.publish
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.store.EntryChange
 import cc.hyoban.moments.data.store.PendingChanges
@@ -19,7 +18,8 @@ class ChangesScope(val container: AppContainer, val pending: PendingChanges, val
 
 /**
  * What a module lists on 待发布 of its own changes waiting there (its check-ins, its bills), a
- * section of its own after the Moments, places and trips; and what of a Moment's own it changed.
+ * section of its own after the Moments, places and trips. What each change changed of a part is
+ * the part's own plugin's to say ([PartDiff]).
  * Every module's is listed, on or off, as publishing sends them all.
  */
 interface ChangeSection {
@@ -35,12 +35,6 @@ interface ChangeSection {
     /** Its section, from the changed entries that are its own ([own]). */
     fun LazyListScope.section(scope: ChangesScope, own: List<EntryChange>, state: Any?)
 
-    /** What a change to an entry of its own changed, field by field, in the order its sheet lists them. */
-    @Composable fun entryDiffs(before: JsonObject, after: JsonObject, places: Map<String, Place>): List<EntryDiff> = emptyList()
-
-    /** What of a Moment's own it changed (the check-in it carries), beside the Moment's fields. */
-    @Composable fun momentDiffs(before: MomentRecord, after: MomentRecord): List<EntryDiff> = emptyList()
-
     /** The name of an entry of its own, as a trip running from or to it names it. */
     fun nameOf(entry: JsonObject): String? = null
 }
@@ -50,12 +44,10 @@ internal val changeSections: List<ChangeSection> by lazy {
     cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.Points.changes).sortedBy { it.order }
 }
 
-/** What a change to an entry said by its section changed, then what any entry's change does: who sees it, how it is reached, planned or locked. */
+/** What a change to an entry changed of each part it has, as the part's plugin says, then what any entry's change does: who sees it, how it is reached, planned or locked. */
 @Composable
-fun entryDiffs(before: JsonObject, after: JsonObject, places: Map<String, Place>): List<EntryDiff> {
-    val own = changeSections.firstOrNull { it.owns(after) && it.owns(before) }
-    return own?.entryDiffs(before, after, places).orEmpty() + commonEntryDiffs(before, after)
-}
+fun entryDiffs(before: JsonObject, after: JsonObject, places: Map<String, Place>): List<EntryDiff> =
+    entryPartDiffs(before, after, places) + commonEntryDiffs(before, after)
 
 /**
  * The changed entries of a module's under [title], each a card saying what it is ([title] of it),

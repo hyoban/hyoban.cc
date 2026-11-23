@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.viewer
 
+import cc.hyoban.moments.plugins.nas
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.local.Photos
 import cc.hyoban.moments.data.local.toPhotoRef

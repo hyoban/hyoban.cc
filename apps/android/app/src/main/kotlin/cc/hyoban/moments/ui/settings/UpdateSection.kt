@@ -32,8 +32,9 @@ import kotlinx.coroutines.launch
 // 更新 on 同步与来源: checking once a day, checking now with how the last one went, and, with a
 // newer release, installing it.
 
+/** 更新 as its rows, drawing the sheet it opens before the system's 安装未知应用. */
 @Composable
-fun UpdateSection(updates: Updates, scope: CoroutineScope) {
+fun updateGroup(updates: Updates, scope: CoroutineScope): SettingsGroupSpec {
     val state by updates.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var auto by rememberSaveable { mutableStateOf(updates.auto) }
@@ -71,7 +72,6 @@ fun UpdateSection(updates: Updates, scope: CoroutineScope) {
             }
         }
     }
-    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.section_update), stringResource(Res.string.settings_update_note), listOfNotNull(daily, check, installRow)))
     if (explaining) PermissionSheet(
         icon = AppIcons.Download,
         title = stringResource(Res.string.permission_install_title),
@@ -92,6 +92,7 @@ fun UpdateSection(updates: Updates, scope: CoroutineScope) {
         onDismiss = { explaining = false },
         tag = "permission_install",
     )
+    return SettingsGroupSpec(stringResource(Res.string.section_update), stringResource(Res.string.settings_update_note), listOfNotNull(daily, check, installRow))
 }
 
 private fun checkedText(context: Context, at: Long) =

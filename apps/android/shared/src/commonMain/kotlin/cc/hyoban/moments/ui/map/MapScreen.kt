@@ -237,9 +237,12 @@ fun MapScreen(
     // Read only where it is needed, so the map covered by another tab is not composed again.
     active: () -> Boolean = { true },
 ) {
-    LocalDevice.current.MapOverlay(container, overlay) { footprints ->
+    // What a plugin draws over the atlas and its panel (the phone's footprints), or nothing.
+    val content: @Composable (AtlasFootprintsOnMap?) -> Unit = { footprints ->
         MapContent(container, onMoment, onPlace, onTrip, onPlay, onSearch, focus, onFocused, footprints, onNewTrip, onSuggestedTrip, onWrite, modifier, active)
     }
+    val drawn = cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.Points.mapOverlays).firstOrNull()
+    if (drawn == null) content(null) else drawn.Overlay(container, overlay, content)
 }
 
 @Composable

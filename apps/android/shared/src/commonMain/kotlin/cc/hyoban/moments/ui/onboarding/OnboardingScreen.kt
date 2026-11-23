@@ -83,7 +83,6 @@ private enum class Step { Welcome, Start, Connect, Import, Module }
  */
 @Composable
 fun OnboardingScreen(container: AppContainer, onDone: () -> Unit) {
-    val device = LocalDevice.current
     val desktop = LocalDesktop.current
     var step by rememberSaveable { mutableStateOf(Step.Welcome) }
     val back = {
@@ -94,9 +93,9 @@ fun OnboardingScreen(container: AppContainer, onDone: () -> Unit) {
     }
     // Then the modules' own steps on this device (the phone's footprints), each only while its module is on (记录项与公开).
     var moduleStep by rememberSaveable { mutableStateOf(0) }
-    val steps = device.moduleSteps
+    val steps = remember { cc.hyoban.moments.plugins.Plugins.registry.contributions(cc.hyoban.moments.plugins.Points.onboardingSteps).filter { it.module != null } }
     val nextFrom = { from: Int ->
-        val next = (from until steps.size).firstOrNull { container.settings.isOn(steps[it].module) }
+        val next = (from until steps.size).firstOrNull { container.settings.isOn(steps[it].module!!) }
         if (next != null) {
             moduleStep = next
             step = Step.Module
@@ -107,7 +106,7 @@ fun OnboardingScreen(container: AppContainer, onDone: () -> Unit) {
     Box(Modifier.fillMaxSize().background(AppColors.page).testTag("onboarding")) {
         when (step) {
             Step.Welcome -> Welcome { step = Step.Start }
-            Step.Start -> Start(back, onSite = { step = Step.Connect }, onImport = { step = Step.Import }, onBlank = toModules, desktop = desktop, more = device.onboardingStarts(container, toModules))
+            Step.Start -> Start(back, onSite = { step = Step.Connect }, onImport = { step = Step.Import }, onBlank = toModules, desktop = desktop, more = cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.Points.onboardingStarts).mapNotNull { it.row(container, toModules) })
             Step.Connect -> Connect(container, back, toModules)
             // The 导入 page as it is in 我, with the way on at its foot; back is back to where to start.
             Step.Import -> Column(Modifier.fillMaxSize()) {
@@ -118,7 +117,7 @@ fun OnboardingScreen(container: AppContainer, onDone: () -> Unit) {
                 ) { Text(stringResource(Res.string.onboarding_continue)) }
             }
             // A module's own, with what it asks of the system (recording the footprints, the phone's).
-            Step.Module -> steps.getOrNull(moduleStep)?.let { it.Page(container, back) { nextFrom(moduleStep + 1) } }
+            Step.Module -> steps.getOrNull(moduleStep)?.let { it.item.Step(container, back) { nextFrom(moduleStep + 1) } }
         }
     }
 }
@@ -215,9 +214,8 @@ private fun Start(onBack: () -> Unit, onSite: () -> Unit, onImport: () -> Unit, 
         }
         // Importing only while a source's module is on (记录项与公开).
         // A computer keeps what is written on itself, and reads the phone's ledger and footprints from its backup.
-        val device = LocalDevice.current
         val settings = LocalSettings.current
-        val imports = cc.hyoban.moments.plugins.Plugins.imports(settings) || device.importsMore(settings)
+        val imports = cc.hyoban.moments.plugins.Plugins.imports(settings)
         val rows = listOf(row(AppIcons.Link, Res.string.onboarding_site, Res.string.onboarding_site_note, "onboarding_site", onSite)) + more + listOfNotNull(
             if (imports) row(AppIcons.Download, Res.string.onboarding_import, if (desktop) Res.string.onboarding_import_note_desktop else Res.string.onboarding_import_note, "onboarding_import", onImport) else null,
             row(if (desktop) AppIcons.Laptop else AppIcons.Phone, Res.string.onboarding_blank, if (desktop) Res.string.onboarding_blank_note_desktop else Res.string.onboarding_blank_note, "onboarding_blank", onBlank),

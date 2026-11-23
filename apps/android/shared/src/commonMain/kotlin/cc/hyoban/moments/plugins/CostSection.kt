@@ -6,8 +6,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import cc.hyoban.moments.data.spec.FoodVerdict
 import cc.hyoban.moments.data.spec.MomentCost
+import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.res.Res
+import cc.hyoban.moments.res.food_none
 import cc.hyoban.moments.res.separator_list
+import cc.hyoban.moments.ui.publish.EntryDiff
+import cc.hyoban.moments.ui.publish.PartDiff
+import cc.hyoban.moments.ui.format.costLine
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.Icon
 import cc.hyoban.moments.ui.design.ListItem
@@ -51,4 +56,22 @@ internal class CostSection(private val meal: Boolean) : MomentSection {
     @Composable override fun publishes(scope: MomentPageScope): String? = scope.cost()?.let { stringResource(costTitle(it)) }
 
     override fun privatePart(scope: MomentPageScope) = scope.cost()?.let { "cost" to costTitle(it) }
+}
+
+/**
+ * What 发布更改 lists of a Moment's cost that changed, a meal's ([meal], the `food` part, 美食's)
+ * or any other (the `cost` part, 花费's): one line, from what it said to what it says, named for
+ * what it is now, or was when it is gone.
+ */
+internal class CostDiff(private val meal: Boolean) : PartDiff {
+    override val part = if (meal) "food" else "cost"
+
+    @Composable
+    override fun momentDiffs(before: MomentRecord, after: MomentRecord): List<EntryDiff> {
+        if (before.cost == after.cost) return emptyList()
+        val cost = after.cost ?: before.cost!!
+        if (cost.meal != meal) return emptyList()
+        val none = stringResource(Res.string.food_none)
+        return listOf(EntryDiff(costTitle(cost), costLine(before.cost), costLine(after.cost) ?: none, if (cost.meal) AppIcons.Food else AppIcons.Cash))
+    }
 }

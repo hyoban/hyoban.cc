@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.plugins.ledger
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.design.AppIcons
@@ -185,7 +186,8 @@ fun LedgerSettingsScreen(container: PhoneContainer, nav: LedgerNav, startImport:
                         ),
                     ),
                 )
-                AutoBillGroup()
+                // The groups the plugins bring (自动记账).
+                cc.hyoban.moments.ui.settings.PluginGroups(container, cc.hyoban.moments.plugins.SettingsPage.LEDGER)
                 SettingsGroupView(
                     SettingsGroupSpec(
                         stringResource(Res.string.ledger_data),

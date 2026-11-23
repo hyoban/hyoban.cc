@@ -1,5 +1,7 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.plugins.ledger
+import cc.hyoban.moments.plugins.MeGroup
 import cc.hyoban.moments.plugins.MeNav
 import cc.hyoban.moments.plugins.PhonePoints
 import cc.hyoban.moments.plugins.Plugins
@@ -36,7 +38,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.BuildConfig
 import cc.hyoban.moments.R
-import cc.hyoban.moments.sidekey.SideKeys
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.ui.Preferences
@@ -52,8 +53,6 @@ import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.ledger.DemoButton
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
-import cc.hyoban.moments.camera.CameraStore
-import cc.hyoban.moments.camera.CameraLink
 import androidx.compose.ui.platform.LocalContext
 import android.provider.MediaStore
 import android.widget.Toast
@@ -81,9 +80,6 @@ class MeRoutes(
     val homes: () -> Unit,
     val sync: () -> Unit,
     val imports: () -> Unit,
-    val sideKey: () -> Unit,
-    val camera: () -> Unit,
-    val albums: () -> Unit,
 )
 
 /**
@@ -98,12 +94,6 @@ class MeRoutes(
 fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val sideKey by SideKeys.state.collectAsStateWithLifecycle()
-    val camera by CameraStore.camera.collectAsStateWithLifecycle()
-    val cameraStatus by CameraStore.status.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val cameraSupported = remember { CameraLink.supported(context) }
-    val settings = LocalSettings.current
     val books = ledger.books.filter { !it.archived }
     // On its side, one scroll in two columns: what is waiting and what is kept here at the start,
     // the settings beside them (H15).
@@ -113,7 +103,7 @@ fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
         if (pending.size > 0 && container.canPublish) PublishCard(pending.size, routes.changes)
         // A row for each module that is on (记录项与公开), as its plugin gives it.
         SettingsRowsOnPage(
-            Plugins.registry.all(PhonePoints.meRows).mapNotNull { it.row(container, routes.modules) },
+            Plugins.registry.all(PhonePoints.meRows).filter { it.group == MeGroup.KEPT }.mapNotNull { it.row(container, routes.modules) },
             Modifier.padding(top = Space.s),
         )
     }
@@ -121,18 +111,18 @@ fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
         PageCaption(stringResource(Res.string.me_settings))
         // The sources of the modules that are on; with none, nothing to import into.
         val sources = importSources()
-        val rows = listOfNotNull(
-            SettingsRow.Page(
+        val own = listOf(
+            0 to SettingsRow.Page(
                 AppIcons.Eye, stringResource(Res.string.me_items), "settings_items",
                 supporting = stringResource(Res.string.me_items_public, books.count { it.visibility == "public" }),
                 onClick = routes.items,
             ),
-            SettingsRow.Page(
+            10 to SettingsRow.Page(
                 AppIcons.Home, stringResource(Res.string.homes_title), "settings_homes",
                 supporting = homesSummary(container),
                 onClick = routes.homes,
             ),
-            SettingsRow.Page(
+            20 to SettingsRow.Page(
                 AppIcons.CloudSync, stringResource(Res.string.sync_title), "settings_sync",
                 supporting = stringResource(
                     when {
@@ -143,32 +133,15 @@ fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
                 ),
                 onClick = routes.sync,
             ),
-            if (sources.isNotEmpty()) SettingsRow.Page(
+            30 to if (sources.isNotEmpty()) SettingsRow.Page(
                 AppIcons.FileOpen, stringResource(Res.string.import_title), "settings_import",
                 supporting = sources.joinToString(stringResource(Res.string.separator_list)),
                 onClick = routes.imports,
             ) else null,
-            // While the gallery may be read.
-            if (remember { LocalMedia.access(context) } != GalleryAccess.NONE) SettingsRow.Page(
-                AppIcons.Folder, stringResource(Res.string.albums_title), "settings_albums",
-                supporting = galleryAlbumsSummary().takeIf { it.isNotEmpty() },
-                onClick = routes.albums,
-            ) else null,
-            // On the phones that can keep a camera's location going in the background.
-            if (cameraSupported) SettingsRow.Page(
-                AppIcons.CameraBody, stringResource(Res.string.camera_title), "settings_camera",
-                supporting = camera?.let { listOfNotNull(it.name, stringResource(Res.string.me_camera_sending).takeIf { cameraStatus.sending }).joinToString(" · ") }
-                    ?: stringResource(Res.string.me_camera_unpaired),
-                onClick = routes.camera,
-            ) else null,
-            // Only on the phone whose key it is.
-            if (SideKeys.supported) SettingsRow.Page(
-                AppIcons.Phone, stringResource(Res.string.side_key_title), "settings_sidekey",
-                supporting = stringResource(sideKey.phase.label),
-                onClick = routes.sideKey,
-            ) else null,
-            shareAlbumsRow(),
         )
+        // The plugins' rows among them by their order, each only where it applies.
+        val brought = Plugins.registry.all(PhonePoints.meRows).filter { it.group == MeGroup.SETTINGS }.map { it.order to it.row(container, routes.modules) }
+        val rows = (own + brought).sortedBy { it.first }.mapNotNull { it.second }
         SettingsRowsOnPage(rows)
         Credits()
     }
@@ -223,34 +196,6 @@ private fun PublishCard(count: Int, onChanges: () -> Unit) {
         Button(onClick = onChanges, modifier = Modifier.padding(top = Space.m).testTag("review_publish")) {
             Text(stringResource(Res.string.action_review_publish))
         }
-    }
-}
-
-/**
- * 清理分享相册, while 准备图文 has left any Here Share album: the photos in them are copies, so one
- * tap hands them all to the system's delete prompt, which asks itself.
- */
-@Composable
-private fun shareAlbumsRow(): SettingsRow? {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var albums by remember { mutableStateOf<ShareAlbums?>(null) }
-    val refresh: () -> Unit = { scope.launch { albums = runCatching { shareAlbums(context) }.getOrNull() } }
-    // Back from 准备图文 or the gallery, the albums may have changed.
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { refresh() }
-    val delete = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { refresh() }
-    val shown = albums?.takeIf { it.uris.isNotEmpty() } ?: return null
-    return SettingsRow.Action(
-        AppIcons.Photos, stringResource(Res.string.share_albums_clean), "settings_share_albums",
-        supporting = pluralStringResource(
-            Res.plurals.share_albums_photos, shown.uris.size,
-            pluralStringResource(Res.plurals.share_albums, shown.albums, shown.albums), shown.uris.size,
-        ),
-    ) {
-        runCatching {
-            val request = MediaStore.createDeleteRequest(context.contentResolver, shown.uris)
-            delete.launch(IntentSenderRequest.Builder(request.intentSender).build())
-        }.onFailure { Toast.makeText(context, textOf(Res.string.share_albums_clean_failed), Toast.LENGTH_SHORT).show() }
     }
 }
 

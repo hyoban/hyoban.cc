@@ -178,11 +178,6 @@ object DesktopDevice : Device {
         }
     }
 
-    // The phone's backup as a way to start: its WebDAV directory asked for, then read.
-    @Composable
-    override fun onboardingStarts(container: AppContainer, next: () -> Unit): List<cc.hyoban.moments.ui.settings.SettingsRow> =
-        listOf(cc.hyoban.moments.ui.settings.phoneBackupStart((container as DesktopContainer).phoneBackup, next))
-
     /** A folder chosen in the system's dialog, or null when it was left. */
     private suspend fun chooseFolder(): File? = withContext(Dispatchers.IO) {
         System.setProperty("apple.awt.fileDialogForDirectories", "true")
@@ -234,18 +229,6 @@ object DesktopDevice : Device {
 
     @Composable
     override fun EditPlace(container: AppContainer, id: String, onDismiss: () -> Unit) = cc.hyoban.moments.ui.compose.EditPlace(container, id, onDismiss)
-
-    // Where the phone backs up to, read here for its ledger and footprints.
-    @Composable
-    override fun StorageSettings(container: AppContainer) {
-        cc.hyoban.moments.ui.settings.PhoneBackupSection((container as DesktopContainer).phoneBackup)
-        // The NAS whose photos 相册 lists, set up here as on the phone.
-        cc.hyoban.moments.ui.settings.NasSettings(container)
-    }
-
-    @Composable
-    override fun UpdateSettings(container: AppContainer) {
-    }
 
     @Composable
     override fun beforePublishing(publish: () -> Unit): () -> Unit = publish

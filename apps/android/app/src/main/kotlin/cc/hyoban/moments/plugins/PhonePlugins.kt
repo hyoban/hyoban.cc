@@ -34,6 +34,14 @@ import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.stringResource
 import java.time.LocalDate
 
+/** The phone's own ledger, which it writes, as its ledger plugin gives it, on or off. */
+val PhoneContainer.ledger: cc.hyoban.moments.ledger.LedgerStore
+    get() = Plugins.registry.own(Services.ledger, this) as cc.hyoban.moments.ledger.LedgerStore
+
+/** The phone's own footprints, which it records, as its footprints plugin gives them, on or off. */
+val PhoneContainer.footprints: cc.hyoban.moments.footprints.FootprintStore
+    get() = Plugins.registry.own(Services.footprints, this) as cc.hyoban.moments.footprints.FootprintStore
+
 /** Where a module's row on 我 goes: a page, a page gone back to if it is the one under, or the map's footprints. */
 class MeNav(val navigate: (Any) -> Unit, val goTo: (Any) -> Unit, val showOverlay: () -> Unit)
 
@@ -47,14 +55,14 @@ class PhonePages(
 
 /** The points the phone's own pages read. */
 object PhonePoints {
-    /** A row among what is kept here on 我, each given only while it should be shown. */
+    /** A row on 我, among what is kept here or among the settings, each given only while it should be shown. */
     val meRows = Point<MeRowItem>("me-rows")
 
     /** Background work brought in line with its module's switch, just turned on or off. */
     val background = Point<BackgroundWork>("background")
 
-    /** A group on 导入 of the phone's alone. */
-    val imports = Point<PhoneImportGroup>("phone-imports")
+    /** Work started with the app, once, as it starts. */
+    val starts = Point<StartWork>("starts")
 
     /** The side keys' actions, by their value, offered while their module is on. */
     val sideKeys = Point<SideKeyActions>("side-keys")
@@ -64,16 +72,19 @@ object PhonePoints {
 
     /** Pages in the phone's navigation, each by its route. */
     val pages = Point<PhonePageSet>("phone-pages")
-
-    /** What draws over the atlas and its panel. */
-    val mapOverlays = Point<MapOverlay>("map-overlays")
-
-    /** A step of its own in 初次打开, shown while its module is on. */
-    val onboarding = Point<OnboardingStep>("onboarding")
 }
 
+/** Where a row on 我 goes: among what is kept here, under the changes, or among the settings under 设置. */
+enum class MeGroup { KEPT, SETTINGS }
+
 interface MeRowItem {
-    /** Its row on 我, a page it opens; null while it shows nothing. */
+    /** The part of 我 its row is in. */
+    val group: MeGroup get() = MeGroup.KEPT
+
+    /** Where its row stands among the settings, beside the page's own (记录项与公开 0, 家 10, 同步与来源 20, 导入 30); what is kept here keeps the plugins' order. */
+    val order: Int get() = 0
+
+    /** Its row on 我, a page it opens; null while it shows nothing (its module off, or the phone without what it needs). */
     @Composable fun row(container: PhoneContainer, nav: MeNav): SettingsRow?
 }
 
@@ -81,11 +92,9 @@ fun interface BackgroundWork {
     suspend fun applied(context: Context)
 }
 
-interface PhoneImportGroup {
-    /** The names of the sources 导入 offers on the phone alone. */
-    val sources: List<StringResource>
-
-    @Composable fun Group(container: PhoneContainer)
+fun interface StartWork {
+    /** Starts its work as the app starts, [container] just made. */
+    fun started(context: Context, container: PhoneContainer)
 }
 
 interface SideKeyActions {
@@ -99,23 +108,15 @@ interface PhonePageSet {
     fun androidx.navigation.NavGraphBuilder.pages(pages: PhonePages)
 }
 
-interface MapOverlay {
-    /** What it draws over the atlas and its panel, given to [content]; its settings and what it leads to by [actions]. */
-    @Composable fun Overlay(
-        container: PhoneContainer,
-        actions: cc.hyoban.moments.ui.map.MapOverlayActions,
-        content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
-    )
-}
-
-interface OnboardingStep {
-    /** Its step in 初次打开, going [onBack] to where to start or on with [onDone]. */
-    @Composable fun Step(container: PhoneContainer, onBack: () -> Unit, onDone: () -> Unit)
-}
-
-/** The phone's own plugins, installed beside every device's as the app starts; their order is their rows' on 我. */
+/**
+ * The phone's own plugins, installed beside every device's as the app starts; their order is
+ * their rows' among what is kept on 我, and the gallery's photos before the camera's.
+ */
 object PhonePlugins {
-    val all: List<Plugin> = listOf(LedgerPhone, FootprintsPhone, ThingsPhone, OccasionsPhone, GalleryPlugin, CameraPlugin)
+    val all: List<Plugin> = listOf(
+        LedgerPhone, AutoBillPlugin, FootprintsPhone, ThingsPhone, OccasionsPhone, NasPhone,
+        BackupPlugin, UpdatePlugin, GalleryPlugin, SideKeyPlugin, CameraPlugin, SharePlugin, XiaohongshuPlugin,
+    )
 
     private val registry get() = Plugins.registry
 
@@ -128,38 +129,21 @@ object PhonePlugins {
     fun sideKeyOwner(action: String?): Contribution<SideKeyActions>? =
         registry.contributions(PhonePoints.sideKeys).firstOrNull { action != null && action in it.item.actions }
 
-    /** Whether 导入 has a source of the phone's own with these modules on. */
-    fun imports(settings: Settings): Boolean = registry.on(PhonePoints.imports, settings::isOn).any { it.sources.isNotEmpty() }
-}
-
-/** The phone's gallery in 相册, 选照片 and 地图's photos. */
-private object GalleryPlugin : Plugin {
-    override fun Contributions.contribute() {
-        add(Points.photoSources, cc.hyoban.moments.ui.picker.GalleryPhotoSources)
+    /** Every plugin's work started with the app, in their order, [container] just made. */
+    fun started(context: Context, container: PhoneContainer) {
+        registry.all(PhonePoints.starts).forEach { it.started(context, container) }
     }
 }
 
-/** The paired camera's photos in 相册 and 选照片, while 在相册里显示 on its page is on. */
-object CameraPlugin : Plugin {
-    /** Its switch, 在相册里显示 at the top of 相机's group. */
-    const val KEY = "camera"
-
-    override val switchKey = KEY
-
-    override fun Contributions.contribute() {
-        add(Points.photoSources, cc.hyoban.moments.ui.picker.CameraPhotoSources)
-    }
-}
-
-private object LedgerPhone : Plugin, MeRowItem, PhoneImportGroup, BackgroundWork, PhonePageSet, SideKeyActions {
+private object LedgerPhone : Plugin, MeRowItem, ImportGroup, PhonePageSet {
     override val module = Module.LEDGER
 
     override fun Contributions.contribute() {
+        // The ledger stays on this phone, outside API sync and Android's backup; only its public bills publish.
+        provide(Services.ledger) { cc.hyoban.moments.ledger.LedgerStore((it as PhoneContainer).appContext) }
         add(PhonePoints.meRows, this@LedgerPhone)
-        add(PhonePoints.imports, this@LedgerPhone)
-        add(PhonePoints.background, this@LedgerPhone)
+        add(Points.imports, this@LedgerPhone)
         add(PhonePoints.pages, this@LedgerPhone)
-        add(PhonePoints.sideKeys, this@LedgerPhone)
         add(PhonePoints.heat, SpendingHeat)
     }
 
@@ -176,10 +160,7 @@ private object LedgerPhone : Plugin, MeRowItem, PhoneImportGroup, BackgroundWork
 
     override val sources = listOf(Res.string.import_source_icost)
 
-    @Composable override fun Group(container: PhoneContainer) = ICostGroup(container)
-
-    /** The payment reader listens for 自动记账 only while the ledger is on. */
-    override suspend fun applied(context: Context) = ShareAccessibilityService.listenIdle()
+    @Composable override fun Group(container: cc.hyoban.moments.AppContainer) = ICostGroup(container as PhoneContainer)
 
     override fun androidx.navigation.NavGraphBuilder.pages(pages: PhonePages) {
         val container = pages.container
@@ -220,15 +201,6 @@ private object LedgerPhone : Plugin, MeRowItem, PhoneImportGroup, BackgroundWork
             )
         }
     }
-
-    override val actions = mapOf("ledger:capture" to Res.string.side_key_payment)
-
-    /** Reads the payment on screen into a bill, or says the ledger is off. */
-    override fun run(action: String, on: Boolean): Pair<String, Boolean> {
-        if (!on) return cc.hyoban.moments.res.textOf(Res.string.side_key_ledger_off) to true
-        val result = ShareAccessibilityService.capturePayment()
-        return cc.hyoban.moments.res.textOf(result.message) to (result != cc.hyoban.moments.accessibility.PaymentCapture.OPENED)
-    }
 }
 
 /** The ledger's pages on the phone, which keeps the ledger to write: iCost's import, and where a bill was. */
@@ -255,16 +227,18 @@ private fun monthExpense(ledger: Ledger): Pair<Long, String>? {
     return spent
 }
 
-private object FootprintsPhone : Plugin, MeRowItem, PhoneImportGroup, BackgroundWork, PhonePageSet, MapOverlay, OnboardingStep {
+private object FootprintsPhone : Plugin, MeRowItem, ImportGroup, BackgroundWork, PhonePageSet, MapOverlay, OnboardingStep {
     override val module = Module.FOOTPRINTS
 
     override fun Contributions.contribute() {
+        // GPS tracks stay on this phone, private; none of them publish.
+        provide(Services.footprints) { cc.hyoban.moments.footprints.FootprintStore((it as PhoneContainer).appContext) }
         add(PhonePoints.meRows, this@FootprintsPhone)
-        add(PhonePoints.imports, this@FootprintsPhone)
+        add(Points.imports, this@FootprintsPhone)
         add(PhonePoints.heat, FootprintsHeat)
         add(PhonePoints.pages, this@FootprintsPhone)
-        add(PhonePoints.mapOverlays, this@FootprintsPhone)
-        add(PhonePoints.onboarding, this@FootprintsPhone)
+        add(Points.mapOverlays, this@FootprintsPhone)
+        add(Points.onboardingSteps, this@FootprintsPhone)
         add(PhonePoints.background, this@FootprintsPhone)
     }
 
@@ -284,7 +258,7 @@ private object FootprintsPhone : Plugin, MeRowItem, PhoneImportGroup, Background
 
     override val sources = listOf(Res.string.import_source_gpx, Res.string.import_source_footprint_csv)
 
-    @Composable override fun Group(container: PhoneContainer) = TrackGroup(container)
+    @Composable override fun Group(container: cc.hyoban.moments.AppContainer) = TrackGroup(container as PhoneContainer)
 
     override fun androidx.navigation.NavGraphBuilder.pages(pages: PhonePages) {
         screen<cc.hyoban.moments.ui.FootprintSettings> { cc.hyoban.moments.footprints.FootprintSettingsScreen(pages.container, onBack = pages.back) }
@@ -293,10 +267,10 @@ private object FootprintsPhone : Plugin, MeRowItem, PhoneImportGroup, Background
     // Its own store and panel, drawn on the atlas as the shared map takes them.
     @Composable
     override fun Overlay(
-        container: PhoneContainer,
+        container: cc.hyoban.moments.AppContainer,
         actions: cc.hyoban.moments.ui.map.MapOverlayActions,
         content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
-    ) = cc.hyoban.moments.footprints.FootprintsOnMap(container, { actions.navigate(cc.hyoban.moments.ui.FootprintSettings) }, actions.writeAt, actions.openStop) { state ->
+    ) = cc.hyoban.moments.footprints.FootprintsOnMap(container as PhoneContainer, { actions.navigate(cc.hyoban.moments.ui.FootprintSettings) }, actions.writeAt, actions.openStop) { state ->
         val drawing = remember(state.drawing) {
             cc.hyoban.moments.ui.map.AtlasFootprints(
                 lines = state.drawing.lines.map { (mode, points) ->
@@ -321,8 +295,8 @@ private object FootprintsPhone : Plugin, MeRowItem, PhoneImportGroup, Background
     }
 
     /** Recording them, asked for in 初次打开 with what it asks of the system. */
-    @Composable override fun Step(container: PhoneContainer, onBack: () -> Unit, onDone: () -> Unit) =
-        cc.hyoban.moments.ui.onboarding.PhoneOnboardingFootprints(container, onBack, onDone)
+    @Composable override fun Step(container: cc.hyoban.moments.AppContainer, onBack: () -> Unit, onDone: () -> Unit) =
+        cc.hyoban.moments.ui.onboarding.PhoneOnboardingFootprints(container as PhoneContainer, onBack, onDone)
 
     /**
      * The footprints' recording and connection reminders stop while their module is off and come

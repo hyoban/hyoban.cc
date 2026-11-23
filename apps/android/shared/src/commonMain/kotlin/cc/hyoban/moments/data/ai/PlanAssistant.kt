@@ -1,9 +1,12 @@
 package cc.hyoban.moments.data.ai
 
+import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.HttpException
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.trips.Routers
+import cc.hyoban.moments.plugins.Plugins
+import cc.hyoban.moments.plugins.Points
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
@@ -18,7 +21,6 @@ import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -106,15 +108,10 @@ sealed interface PlanLookup {
     ) : PlanLookup
 }
 
-/** What the device looks up for the model: places by name, how long a way takes, and, where it can, notes on Xiaohongshu. */
+/** What the device looks up for the model: places by name, and how long a way takes. */
 interface PlanLookups {
     suspend fun places(name: String, near: Fix): List<FoundPlace>
     suspend fun travel(from: Fix, to: Fix, by: Routers.By): Routers.Travel?
-
-    /** Whether [notes] may be asked: the device reads Xiaohongshu and the owner is signed in. */
-    val searchesNotes: Boolean get() = false
-
-    suspend fun notes(query: String): List<FoundNote> = emptyList()
 }
 
 /** Where a suggestion is, as the model names it: [name], about [near]. */
@@ -252,6 +249,8 @@ class PlanAssistant(
     client: OkHttpClient = Http.client,
     /** What the model remembers: each answered turn's messages, the question and all that answered it; kept by whoever keeps the conversation. */
     private val turns: MutableList<List<JsonObject>> = mutableListOf(),
+    /** What the model may look up besides suggest_plan, in order: the plugins' (`Points.planTools`). */
+    private val tools: () -> List<PlanTool> = { Plugins.registry.all(Points.planTools) },
 ) {
     // A model may think for a while before it answers.
     private val client = client.newBuilder().readTimeout(150, TimeUnit.SECONDS).build()
@@ -259,11 +258,18 @@ class PlanAssistant(
     /**
      * Asks [text] of the model, with [context], and gives what it answered, telling [onProgress]
      * on the caller's thread of its thoughts, words, lookups and suggestions as they come. Before
-     * it answers the model may look places and ways up through [lookups], a round each, at most
+     * it answers the model may look things up with the tools offered it, through [lookups] and the
+     * [container] asked from, a round each, at most
      * [MAX_LOOKUP_ROUNDS] rounds, past which it is told to answer with what it has. A service that won't stream is asked for whole answers. On
      * failure or when cancelled the conversation is as it was.
      */
-    suspend fun ask(text: String, context: PlanContext, lookups: PlanLookups, onProgress: (PlanProgress) -> Unit = {}): PlanAnswer {
+    suspend fun ask(
+        text: String,
+        context: PlanContext,
+        lookups: PlanLookups,
+        container: AppContainer? = null,
+        onProgress: (PlanProgress) -> Unit = {},
+    ): PlanAnswer {
         val caller = currentCoroutineContext()[ContinuationInterceptor] ?: Dispatchers.Default
         val tell: suspend (PlanProgress) -> Unit = { progress -> withContext(caller) { onProgress(progress) } }
         val asked = buildJsonObject {
@@ -275,16 +281,16 @@ class PlanAssistant(
         var said = ""
         var thought = ""
         val items = mutableListOf<PlanItem>()
+        val needs = PlanNeeds(lookups, container)
+        val all = tools()
         // Rounds of lookups, then up to two to answer in: a model still asking for more is told it can't, and asked again.
         for (round in 0..MAX_LOOKUP_ROUNDS + 1) {
-            val conversation = JsonArray(listOf(system(context, text, lookups.searchesNotes)) + synchronized(turns) { recalled(turns) } + asked + turn)
+            // The lookups offered this round, as things stand now.
+            val offered = all.filter { it.offered(needs) }
+            val conversation = JsonArray(listOf(system(context, text, offered)) + synchronized(turns) { recalled(turns) } + asked + turn)
             // The last rounds may only answer.
             val answering = round >= MAX_LOOKUP_ROUNDS
-            val tools = when {
-                answering -> listOf(SUGGEST_TOOL)
-                lookups.searchesNotes -> listOf(SUGGEST_TOOL, PLACE_TOOL, WAY_TOOL, NOTES_TOOL)
-                else -> listOf(SUGGEST_TOOL, PLACE_TOOL, WAY_TOOL)
-            }
+            val tools = if (answering) listOf(SUGGEST_TOOL) else listOf(SUGGEST_TOOL) + offered.map { it.function }
             // A list in a later round stands for the whole answer's: the earlier one goes.
             var listed = false
             val message = withContext(Dispatchers.IO) {
@@ -307,7 +313,7 @@ class PlanAssistant(
                     whole(conversation, tools)
                 }
             }
-            val read = read(message)
+            val read = read(message, all)
             // Words said on the way to a lookup are this round's working, beside its thinking, not the answer.
             val working = if (read.lookups.isEmpty()) read.answer.thinking else joined(read.answer.thinking, read.answer.text)
             thought = joined(thought, working)
@@ -340,7 +346,7 @@ class PlanAssistant(
             // Each lookup asked for, its result in place of the tool call's answer.
             val results = read.lookups.associate { lookup ->
                 tell(PlanProgress.Looked(lookup))
-                val (done, result) = look(lookup, lookups)
+                val (done, result) = look(lookup, all, needs)
                 tell(PlanProgress.Looked(done))
                 lookup.id to result
             }
@@ -355,49 +361,15 @@ class PlanAssistant(
         return PlanAnswer(said, items, thought)
     }
 
-    /** [lookup] done through [lookups], and what the model is told of it. */
-    private suspend fun look(lookup: PlanLookup, lookups: PlanLookups): Pair<PlanLookup, String> = try {
-        when (lookup) {
-            is PlanLookup.Place -> {
-                val found = lookups.places(lookup.name, lookup.near).take(FOUND_PLACES)
-                lookup.copy(found = found) to if (found.isEmpty()) {
-                    "No place called that was found near there."
-                } else {
-                    JsonArray(
-                        found.map { place ->
-                            buildJsonObject {
-                                put("name", place.name)
-                                place.address?.let { put("address", it) }
-                                put("lat", place.fix.latitude)
-                                put("lng", place.fix.longitude)
-                            }
-                        },
-                    ).toString()
-                }
-            }
-            is PlanLookup.Way -> {
-                val travel = lookups.travel(lookup.from.fix, lookup.to.fix, lookup.by)
-                lookup.copy(travel = travel, done = true) to if (travel == null) {
-                    "There is no way there by that mode."
-                } else {
-                    buildJsonObject {
-                        put("minutes", (travel.seconds + 30) / 60)
-                        put("km", Math.round(travel.metres / 100.0) / 10.0)
-                    }.toString()
-                }
-            }
-            is PlanLookup.Notes -> {
-                val found = lookups.notes(lookup.query).take(FOUND_NOTES)
-                lookup.copy(found = found) to if (found.isEmpty()) "No notes were found for that." else notesJson(found)
-            }
+    /** [lookup] done by the tool it is of, through [needs], and what the model is told of it. */
+    private suspend fun look(lookup: PlanLookup, tools: List<PlanTool>, needs: PlanNeeds): Pair<PlanLookup, String> {
+        val tool = tools.first { it.handles(lookup) }
+        return try {
+            tool.look(lookup, needs)
+        } catch (error: Exception) {
+            if (error is kotlinx.coroutines.CancellationException) throw error
+            tool.failed(lookup, error)
         }
-    } catch (error: Exception) {
-        if (error is kotlinx.coroutines.CancellationException) throw error
-        when (lookup) {
-            is PlanLookup.Place -> lookup.copy(failed = true)
-            is PlanLookup.Way -> lookup.copy(done = true, failed = true)
-            is PlanLookup.Notes -> lookup.copy(failed = true, signedOut = error is NoteSignInNeeded)
-        } to if (error is NoteSignInNeeded) "Xiaohongshu wants the owner to sign in again; go on without it." else "The lookup failed; go on without it."
     }
 
     private fun request(conversation: JsonArray, tools: List<JsonObject>, stream: Boolean): Request {
@@ -550,16 +522,6 @@ class PlanAssistant(
             return turn.toMutableList().also { it[at] = JsonObject(it[at] + ("content" to JsonPrimitive("$SHOWN $outcome"))) }
         }
 
-        /** How many places a place's lookup tells of. */
-        private const val FOUND_PLACES = 5
-
-        /** How many notes a search tells of, and how much of each one's text. */
-        private const val FOUND_NOTES = 8
-        private const val NOTE_TEXT = 1200
-
-        /** The longest search the model may ask for. */
-        private const val MAX_NOTE_QUERY = 40
-
         /** Two pieces of an answer, one after the other. */
         private fun joined(before: String, after: String) = listOf(before, after).filter { it.isNotBlank() }.joinToString("\n\n")
 
@@ -633,25 +595,8 @@ class PlanAssistant(
             return data.mapNotNull { (it as? JsonObject)?.let { model -> text(model["id"]) } }.distinct().sorted()
         }
 
-        /**
-         * The notes as the model reads them: each one's title, author and likes, and the text of
-         * those read through, cut to [NOTE_TEXT] characters.
-         */
-        fun notesJson(notes: List<FoundNote>): String = JsonArray(
-            notes.map { note ->
-                buildJsonObject {
-                    put("title", note.title)
-                    note.author?.let { put("author", it) }
-                    note.likes?.let { put("likes", it) }
-                    note.posted?.let { put("posted", it) }
-                    note.ip?.let { put("from", it) }
-                    note.text?.let { put("text", if (it.length > NOTE_TEXT) it.take(NOTE_TEXT) + "…" else it) }
-                }
-            },
-        ).toString()
-
         /** What the model is told it is doing, and of the plan; in English, the model answering in the owner's words. */
-        private fun system(context: PlanContext, asked: String, notes: Boolean = false): JsonObject {
+        private fun system(context: PlanContext, asked: String, tools: List<PlanTool>): JsonObject {
             val prompt = buildString {
                 append("You help the owner of a travel journal plan a trip they have not taken yet. ")
                 append("The plan is called \"${context.title}\" and runs from ${context.start} to ${context.end}. ")
@@ -663,19 +608,9 @@ class PlanAssistant(
                 append("Answer in the language the owner writes in. When you suggest changes, keep what you say short; the items carry the plan. ")
                 append("The owner may also only want to talk: to ask about a place, weigh options or think aloud. Then just answer, as fully as the question needs, and suggest nothing.")
                 if (context.now.isNotEmpty()) append("\n\nNow, where the owner is: ${context.now}. ")
-                append("\n\nBefore suggesting, check what you are unsure of: find_place tells whether a place is there and where, ")
-                append("and route_time how long a way takes by road, on foot, by bike or by train, so each day fits. ")
-                append("route_time knows no timetables: by train it gives the line's running time, and within a city public transport takes about as long as driving, with waiting. ")
-                append("Use the coordinates find_place gives for the places you suggest. ")
-                if (notes) {
-                    append("search_notes searches Xiaohongshu, where people write up places they went, and reads the top notes: ")
-                    append("use it, in Chinese words as people there search, for what a place is like, what to eat, when to go or what to skip, then check the places it names with find_place. ")
-                    append("Many notes are ads, paid or a shop's own, without saying so: treat a note as likely one when it reads like copy, praises without a flaw, ")
-                    append("gives a discount, a group-buy, a code or a way to book through the author, tells readers to message or comment for details, is tagged 合作, 赞助 or 广告, ")
-                    append("is written by the shop or brand itself, or matches other notes word for word. Trust notes with a person's own details, prices paid, ")
-                    append("waits and complaints, and what several unrelated authors agree on; never lean on one note alone, leave out what only likely ads praise, ")
-                    append("and when a place is mostly promoted, say so. ")
-                }
+                append("\n\n")
+                // What each lookup offered is for, in the tools' order.
+                tools.forEach { append(it.instructions) }
                 append("Ask for all the lookups a step needs at once, as several calls in one message, not one at a time: you have $MAX_LOOKUP_ROUNDS rounds of them, then must answer.")
                 append("\n\nThe entries below with an id are part of the plan, and you may change or remove them through suggest_plan too: ")
                 append("to change one, give its id as edit with the whole entry as it should become (date, time, text, and place unless it stays); ")
@@ -726,93 +661,6 @@ class PlanAssistant(
             return buildJsonObject {
                 put("role", "system")
                 put("content", told)
-            }
-        }
-
-        /** A way's end, as the model names it. */
-        private fun endSchema(what: String) = buildJsonObject {
-            put("type", "object")
-            put("description", what)
-            putJsonObject("properties") {
-                putJsonObject("name") { put("type", "string") }
-                putJsonObject("lat") { put("type", "number") }
-                putJsonObject("lng") { put("type", "number") }
-            }
-            putJsonArray("required") {
-                add("name")
-                add("lat")
-                add("lng")
-            }
-        }
-
-        /** Searching Xiaohongshu's notes. */
-        private val NOTES_TOOL: JsonObject = buildJsonObject {
-            put("type", "function")
-            putJsonObject("function") {
-                put("name", "search_notes")
-                put("description", "Search Xiaohongshu for people's notes: the top results' titles, authors and likes, and the text of the first few.")
-                putJsonObject("parameters") {
-                    put("type", "object")
-                    putJsonObject("properties") {
-                        putJsonObject("query") {
-                            put("type", "string")
-                            put("description", "What to search, as people search Xiaohongshu, such as 东京 拉面 推荐.")
-                        }
-                    }
-                    putJsonArray("required") { add("query") }
-                }
-            }
-        }
-
-        /** Looking a place up by its name about where it should be. */
-        private val PLACE_TOOL: JsonObject = buildJsonObject {
-            put("type", "function")
-            putJsonObject("function") {
-                put("name", "find_place")
-                put("description", "Look a place up by name near where it should be: what map services call it there, with addresses and coordinates.")
-                putJsonObject("parameters") {
-                    put("type", "object")
-                    putJsonObject("properties") {
-                        putJsonObject("name") { put("type", "string") }
-                        putJsonObject("lat") {
-                            put("type", "number")
-                            put("description", "About where it should be.")
-                        }
-                        putJsonObject("lng") { put("type", "number") }
-                    }
-                    putJsonArray("required") {
-                        add("name")
-                        add("lat")
-                        add("lng")
-                    }
-                }
-            }
-        }
-
-        /** How long a way takes, by a mode. */
-        private val WAY_TOOL: JsonObject = buildJsonObject {
-            put("type", "function")
-            putJsonObject("function") {
-                put("name", "route_time")
-                put("description", "How long and how far it is from one place to another by road, on foot, by bike or by train, without timetables.")
-                putJsonObject("parameters") {
-                    put("type", "object")
-                    putJsonObject("properties") {
-                        put("from", endSchema("Where the way starts."))
-                        put("to", endSchema("Where it ends."))
-                        putJsonObject("by") {
-                            put("type", "string")
-                            putJsonArray("enum") {
-                                Routers.By.entries.forEach { add(it.name.lowercase()) }
-                            }
-                        }
-                    }
-                    putJsonArray("required") {
-                        add("from")
-                        add("to")
-                        add("by")
-                    }
-                }
             }
         }
 
@@ -880,7 +728,7 @@ class PlanAssistant(
          * message as sent back (its words and tool calls, nothing a service adds of its own),
          * and an answer to each tool call so the next turn may follow it.
          */
-        fun read(message: JsonObject): PlanRead {
+        fun read(message: JsonObject, tools: List<PlanTool> = Plugins.registry.all(Points.planTools)): PlanRead {
             val said = (message["content"] as? JsonPrimitive)?.contentOrNull.orEmpty().trim()
             val calls = (message["tool_calls"] as? JsonArray).orEmpty().mapNotNull { it as? JsonObject }
             val items = mutableListOf<PlanItem>()
@@ -891,25 +739,14 @@ class PlanAssistant(
                 val arguments = (function["arguments"] as? JsonPrimitive)?.contentOrNull ?: continue
                 val parsed = runCatching { json.parseToJsonElement(arguments).jsonObject }.getOrNull() ?: continue
                 val id = (call["id"] as? JsonPrimitive)?.contentOrNull.orEmpty()
-                when ((function["name"] as? JsonPrimitive)?.contentOrNull) {
+                when (val name = (function["name"] as? JsonPrimitive)?.contentOrNull) {
                     "suggest_plan" -> {
                         text(parsed["reply"])?.let(replies::add)
                         (parsed["items"] as? JsonArray).orEmpty().mapNotNullTo(items) { item(it) }
                     }
-                    "find_place" -> {
-                        val name = text(parsed["name"]) ?: continue
-                        val near = fixOf(parsed) ?: continue
-                        lookups += PlanLookup.Place(id, name, near)
-                    }
-                    "route_time" -> {
-                        val from = endOf(parsed["from"]) ?: continue
-                        val to = endOf(parsed["to"]) ?: continue
-                        val by = byOf(text(parsed["by"])) ?: Routers.By.DRIVE
-                        lookups += PlanLookup.Way(id, from, to, by)
-                    }
-                    "search_notes" -> {
-                        val query = text(parsed["query"]) ?: continue
-                        lookups += PlanLookup.Notes(id, query.take(MAX_NOTE_QUERY))
+                    else -> {
+                        val tool = tools.firstOrNull { it.name == name } ?: continue
+                        lookups += tool.read(id, parsed) ?: continue
                     }
                 }
             }
@@ -940,18 +777,9 @@ class PlanAssistant(
         /** A way's mode as the model names it, `drive`, `walk`, `bike` or `train`; null for anything else. */
         fun byOf(name: String?): Routers.By? = Routers.By.entries.firstOrNull { it.name.equals(name, ignoreCase = true) }
 
-        private fun text(element: JsonElement?): String? = (element as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf { it.isNotEmpty() }
+        private fun text(element: JsonElement?): String? = PlanArgs.text(element)
 
-        private fun fixOf(place: JsonObject): Fix? {
-            val lat = (place["lat"] as? JsonPrimitive)?.doubleOrNull ?: return null
-            val lng = (place["lng"] as? JsonPrimitive)?.doubleOrNull ?: return null
-            return if (lat in -90.0..90.0 && lng in -180.0..180.0) Fix(lat, lng) else null
-        }
-
-        private fun endOf(element: JsonElement?): WayEnd? {
-            val end = element as? JsonObject ?: return null
-            return WayEnd(text(end["name"]) ?: return null, fixOf(end) ?: return null)
-        }
+        private fun fixOf(place: JsonObject): Fix? = PlanArgs.fix(place)
 
         private fun item(element: JsonElement): PlanItem? {
             val item = element as? JsonObject ?: return null

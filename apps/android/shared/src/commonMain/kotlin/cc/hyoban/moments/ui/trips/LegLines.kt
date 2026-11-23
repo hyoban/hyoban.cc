@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.trips
 
+import cc.hyoban.moments.plugins.footprints
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue

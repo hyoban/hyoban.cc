@@ -65,8 +65,9 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 // 备份 on 同步与来源: the WebDAV directory, backing up once a day, backing up now with
 // how the last one went, and restoring one of the backups there.
 
+/** 备份 as its rows, [onEdit] opening the WebDAV directory's dialog and [onRestore] restoring's. */
 @Composable
-fun BackupSection(backup: Backup, onEdit: () -> Unit, onRestore: () -> Unit) {
+fun backupGroup(backup: Backup, onEdit: () -> Unit, onRestore: () -> Unit): SettingsGroupSpec {
     val running by backup.running.collectAsStateWithLifecycle()
     val status by backup.status.collectAsStateWithLifecycle()
     val configured = backup.configured
@@ -96,7 +97,7 @@ fun BackupSection(backup: Backup, onEdit: () -> Unit, onRestore: () -> Unit) {
         enabled = configured && !running,
         onClick = onRestore,
     )
-    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.section_backup), stringResource(Res.string.settings_backup_note), listOf(directory, auto, now, restore)))
+    return SettingsGroupSpec(stringResource(Res.string.section_backup), stringResource(Res.string.settings_backup_note), listOf(directory, auto, now, restore))
 }
 
 private val TIME = DateTimeFormatter.ofPattern("HH:mm")

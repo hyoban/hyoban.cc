@@ -15,9 +15,10 @@ import kotlinx.coroutines.launch
 /**
  * The Mac's container: what every device shares, kept under [root], the app's folder in the
  * user's Application Support. Its ledger and footprints are the phone's, read from the phone's
- * latest WebDAV backup and only shown, so nothing publishes beside the Moments.
+ * latest WebDAV backup and only shown, so nothing publishes beside the Moments; the Mac's plugins
+ * give them, and its NAS client, as services.
  */
-class DesktopContainer(private val root: File) : AppContainer(
+class DesktopContainer(val root: File) : AppContainer(
     settings = Settings(FilePrefs(File(root, "settings.json")), File(root, "private").apply { mkdirs() }),
     files = root,
     private = File(root, "private"),
@@ -34,26 +35,12 @@ class DesktopContainer(private val root: File) : AppContainer(
         )
     }
 
-    // Read lazily: the shared container asks for them while it is being made.
-    override val ledger: cc.hyoban.moments.ledger.LedgerSource get() = phoneBackup.ledger
     override val placeSearch = cc.hyoban.moments.data.local.PlaceSearch(
         cc.hyoban.moments.data.local.PHOTON_URL,
         tencentKey = { settings.tencentMapKey.value },
         amapKey = { settings.amapKey.value },
         tencentFirst = { settings.chinaPlaces.value == cc.hyoban.moments.CHINA_PLACES_TENCENT },
     )
-    override val footprints: cc.hyoban.moments.footprints.Footprints get() = phoneBackup.footprints
-
-    /** The NAS 相册 lists: its settings beside the app's, its password with the other secrets, what is read off it in the user's caches and its originals kept in the Pictures folder's Here. */
-    override val nas by lazy {
-        cc.hyoban.moments.nas.Nas(
-            FilePrefs(File(root, "nas.json")),
-            cc.hyoban.moments.Token(File(root, "private/nas-password")),
-            File(System.getProperty("user.home"), "Library/Caches/Here"),
-            cc.hyoban.moments.nas.FolderKeep(File(System.getProperty("user.home"), "Pictures/Here")),
-            clientId = "here-mac",
-        )
-    }
 
     private var publish: Job? = null
 

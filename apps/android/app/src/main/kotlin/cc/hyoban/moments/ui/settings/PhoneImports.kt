@@ -1,10 +1,10 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.plugins.footprints
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.LocalSettings
-import cc.hyoban.moments.plugins.PhonePoints
 import cc.hyoban.moments.plugins.Plugins
 import cc.hyoban.moments.plugins.Points
 import android.net.Uri
@@ -55,8 +55,7 @@ import java.io.InputStream
 @Composable
 fun importSources(): List<String> {
     val settings = LocalSettings.current
-    val on = Plugins.registry.on(Points.imports, settings::isOn).flatMap { it.sources } +
-        Plugins.registry.on(PhonePoints.imports, settings::isOn).flatMap { it.sources }
+    val on = Plugins.registry.on(Points.imports, settings::isOn).flatMap { it.sources }
     return on.map { stringResource(it) }
 }
 
@@ -165,11 +164,4 @@ internal fun TrackGroup(container: PhoneContainer) {
             confirmButton = { TextButton(onClick = { state = null }) { Text(stringResource(Res.string.action_confirm)) } },
         )
     }
-}
-
-/** 导入's groups the phone has beyond Swarm's: iCost into its ledger and track files into its footprints, each while its module is on. */
-@Composable
-fun PhoneImportGroups(container: PhoneContainer) {
-    val settings = LocalSettings.current
-    Plugins.registry.on(PhonePoints.imports, settings::isOn).forEach { it.Group(container) }
 }

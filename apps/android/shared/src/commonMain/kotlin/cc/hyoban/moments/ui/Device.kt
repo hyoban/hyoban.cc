@@ -74,16 +74,6 @@ interface Device {
     /** Asking for where the device is, as it asks: [onResult] hears whether it may be read. */
     @Composable fun rememberLocationAsk(onResult: (Boolean) -> Unit): LocationAsk
 
-    /**
-     * What a module of the device's own draws over the atlas (the phone's footprints) and its
-     * panel, given to [content]; null on a device with none, or with its module off.
-     */
-    @Composable fun MapOverlay(
-        container: AppContainer,
-        actions: cc.hyoban.moments.ui.map.MapOverlayActions,
-        content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
-    ) = content(null)
-
     /** Whether the device can tell where it is at all; a computer isn't asked. */
     val hasLocation: Boolean
 
@@ -126,32 +116,11 @@ interface Device {
     /** Shares the one item [media] shown in the viewer, fetched first when it is the site's, with its Moment's [text] where the device can send words with it. */
     suspend fun shareMedia(media: cc.hyoban.moments.data.spec.MomentMedia, urls: MediaUrls, text: String)
 
-
-    /** What [media] says of itself, in the panel under the viewer. */
-
     /** Choosing a file of [types] (media types, or a name's ending): what the returned call opens, its address told to [onPicked]. */
     @Composable fun rememberFilePicker(types: List<String>, onPicked: (String) -> Unit): () -> Unit
 
-    /** 导入's groups beyond Swarm's, for what the device keeps itself (the phone's ledger and footprints). */
-    @Composable fun ImportGroups(container: AppContainer) {}
-
-    /** Whether [ImportGroups] has anything to offer with these modules on. */
-    fun importsMore(settings: cc.hyoban.moments.Settings): Boolean = false
-
-    /** The modules' own steps in 初次打开 on this device, after where to start (the phone's footprints), each shown while its module is on. */
-    val moduleSteps: List<ModuleStep> get() = emptyList()
-
-    /** More ways to start in 初次打开, beside a site, an import and nothing (a computer's: the phone's backup); [next] goes on. */
-    @Composable fun onboardingStarts(container: AppContainer, next: () -> Unit): List<cc.hyoban.moments.ui.settings.SettingsRow> = emptyList()
-
     /** A place's name, point and kind, to change. */
     @Composable fun EditPlace(container: AppContainer, id: String, onDismiss: () -> Unit)
-
-    /** 同步与来源's sections for where the device keeps things beside the API (the phone's backup and NAS), with their dialogs. */
-    @Composable fun StorageSettings(container: AppContainer)
-
-    /** 同步与来源's section for the app's own updates, where the device takes them itself. */
-    @Composable fun UpdateSettings(container: AppContainer)
 
     /** What starts publishing: [publish] itself, after whatever the device asks first (the phone, to show its progress). */
     @Composable fun beforePublishing(publish: () -> Unit): () -> Unit
@@ -170,9 +139,6 @@ interface Device {
 }
 
 val LocalDevice = staticCompositionLocalOf<Device> { error("No device provided") }
-
-/** A module's step in 初次打开 on a device: its page, going [onBack] to where to start or on with [onDone]. */
-class ModuleStep(val module: cc.hyoban.moments.data.spec.Module, val Page: @Composable (container: AppContainer, onBack: () -> Unit, onDone: () -> Unit) -> Unit)
 
 /** A photo or video the camera app kept, [bytes] its size as now written. */
 data class CameraShot(val ref: cc.hyoban.moments.data.local.PhotoRef, val bytes: Long)

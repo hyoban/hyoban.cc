@@ -89,17 +89,6 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
 
     override val hasLocation: Boolean = true
 
-    // What a module of the phone's own draws over the atlas (the footprints), while it is on.
-    @Composable
-    override fun MapOverlay(
-        container: AppContainer,
-        actions: cc.hyoban.moments.ui.map.MapOverlayActions,
-        content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
-    ) {
-        val overlay = cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.PhonePoints.mapOverlays).firstOrNull()
-        if (overlay == null) content(null) else overlay.Overlay(container as PhoneContainer, actions, content)
-    }
-
     override fun canLocate(): Boolean = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
 
     override suspend fun currentFix(): cc.hyoban.moments.data.local.Fix? =
@@ -133,17 +122,6 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
         return { launcher.launch(mimes) }
     }
 
-    @Composable
-    override fun ImportGroups(container: AppContainer) = cc.hyoban.moments.ui.settings.PhoneImportGroups(container as PhoneContainer)
-
-    override fun importsMore(settings: cc.hyoban.moments.Settings) =
-        cc.hyoban.moments.plugins.PhonePlugins.imports(settings)
-
-    override val moduleSteps = cc.hyoban.moments.plugins.Plugins.registry.contributions(cc.hyoban.moments.plugins.PhonePoints.onboarding).mapNotNull { step ->
-        val module = step.module ?: return@mapNotNull null
-        cc.hyoban.moments.ui.ModuleStep(module) { container, onBack, onDone -> step.item.Step(container as PhoneContainer, onBack, onDone) }
-    }
-
     override fun viewerMotion(type: cc.hyoban.moments.data.spec.MediaType) = cc.hyoban.moments.ui.viewer.phoneViewerMotion(type)
     override fun viewerMotion(type: cc.hyoban.moments.data.spec.MediaType, inDialog: Boolean) = cc.hyoban.moments.ui.viewer.phoneViewerMotion(type, window = !inDialog)
 
@@ -153,15 +131,6 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
     @Composable
     override fun EditPlace(container: AppContainer, id: String, onDismiss: () -> Unit) =
         cc.hyoban.moments.ui.compose.EditPlace(container, id, onDismiss)
-
-    @Composable
-    override fun StorageSettings(container: AppContainer) = cc.hyoban.moments.ui.settings.PhoneStorageSettings(container as PhoneContainer)
-
-    @Composable
-    override fun UpdateSettings(container: AppContainer) {
-        val phone = container as PhoneContainer
-        cc.hyoban.moments.ui.settings.UpdateSection(phone.updates, phone.scope)
-    }
 
     // The notification that keeps publishing going in the background asks once, on Android 13
     // and later; it publishes whatever the answer.

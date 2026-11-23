@@ -1,5 +1,6 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.plugins.footprints
 import cc.hyoban.moments.res.*
 import android.Manifest
 import android.app.PendingIntent

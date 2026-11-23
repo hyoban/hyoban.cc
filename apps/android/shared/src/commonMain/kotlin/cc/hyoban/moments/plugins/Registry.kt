@@ -43,16 +43,19 @@ class Contributions internal constructor() {
         added.getOrPut(point) { mutableListOf() }.addAll(items)
     }
 
-    /** Gives [service], which [make] reads from the container it is asked with. */
+    /** Gives [service], which [make] builds from the container it is first asked with; the container keeps it. */
     fun <T : Any> provide(service: Service<T>, make: (cc.hyoban.moments.AppContainer) -> T) {
         provided[service] = make
     }
 }
 
 /**
- * What one plugin gives the others, asked for by its key rather than by naming the plugin: the
- * ledger, the footprints. Asked for, it is there only while the module of the plugin giving it is
- * on, so each plugin that uses it says what it does without it.
+ * What one plugin gives itself and the others, asked for by its key rather than by naming the
+ * plugin: a module's stores and clients (the ledger, the footprints, the NAS). Each is made once
+ * per container, the first time it is asked for, and kept. Its own plugin, and what works whether
+ * its module is on or off, asks with [Registry.own]; the other plugins and the host with
+ * [Registry.service], which gives it only while the module of the plugin giving it is on, so each
+ * says what it does without it.
  */
 class Service<T : Any>(val name: String) {
     override fun toString() = name
@@ -106,11 +109,19 @@ class Registry(val plugins: List<Plugin>) {
     fun <T : Any> on(point: Point<T>, settings: cc.hyoban.moments.Settings): List<T> =
         contributions(point).filter { it.shownWith(settings::isOn, settings::isPluginOn) }.map { it.item }
 
-    /** [service] read from [container], or null while the module of the plugin giving it is off, or no plugin here gives it. */
-    @Suppress("UNCHECKED_CAST")
+    /**
+     * [service] as [container] keeps it, made by the plugin giving it the first time it is asked
+     * for, whatever modules are on: for that plugin's own code and what must work with its module off.
+     */
+    fun <T : Any> own(service: Service<T>, container: cc.hyoban.moments.AppContainer): T {
+        val (_, make) = services[service] ?: error("No plugin here gives $service")
+        return container.kept(service) { make(container) }
+    }
+
+    /** [service] as [container] keeps it, or null while the module of the plugin giving it is off, or no plugin here gives it. */
     fun <T : Any> service(service: Service<T>, container: cc.hyoban.moments.AppContainer, isOn: (Module) -> Boolean): T? {
-        val (plugin, make) = services[service] ?: return null
+        val (plugin, _) = services[service] ?: return null
         if (plugin.module?.let(isOn) == false) return null
-        return make(container) as T
+        return own(service, container)
     }
 }

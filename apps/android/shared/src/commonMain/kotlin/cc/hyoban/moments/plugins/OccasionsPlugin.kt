@@ -14,6 +14,7 @@ object OccasionsPlugin : Plugin {
     override fun Contributions.contribute() {
         add(Points.modules, ModuleCard(Module.OCCASIONS, Res.string.occasions_title, icon))
         add(Points.changes, OccasionChanges)
+        add(Points.partDiffs, OccasionDiff)
         add(Points.pages, object : PageSet {
             override fun owns(route: Any) = route is Occasions
             override fun routeOf(link: AppLink): Any? = if (link.host == "occasions") Occasions(link.id) else null

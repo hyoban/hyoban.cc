@@ -36,3 +36,6 @@ object FootprintsPlugin : Plugin {
         })
     }
 }
+
+/** The footprints the pages read, whichever device's footprints plugin gives them, on or off. */
+val AppContainer.footprints: cc.hyoban.moments.footprints.Footprints get() = Plugins.registry.own(Services.footprints, this)

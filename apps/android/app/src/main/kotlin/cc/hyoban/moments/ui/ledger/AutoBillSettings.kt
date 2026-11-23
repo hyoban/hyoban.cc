@@ -32,7 +32,7 @@ import cc.hyoban.moments.ui.settings.SettingsRow
  * the system's settings, and notifications, which it offers each payment in.
  */
 @Composable
-internal fun AutoBillGroup() {
+internal fun autoBillGroup(): SettingsGroupSpec {
     val context = LocalContext.current
     val enabled by AutoBill.enabledFlow(context).collectAsStateWithLifecycle()
     val connected by ShareAccessibilityService.connected.collectAsStateWithLifecycle()
@@ -89,5 +89,5 @@ internal fun AutoBillGroup() {
             },
         )
     }
-    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.auto_bill_title_group), null, rows))
+    return SettingsGroupSpec(stringResource(Res.string.auto_bill_title_group), null, rows)
 }

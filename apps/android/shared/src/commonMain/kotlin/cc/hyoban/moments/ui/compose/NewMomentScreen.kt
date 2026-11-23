@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.compose
 
+import cc.hyoban.moments.plugins.nas
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.Key

@@ -24,16 +24,20 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   `jvmMain` each give theirs, the phone's being what it already did.
 - `AppContainer` in `:shared` is what every device shares (the settings, the records, their copy
   and publishing); `PhoneContainer` in `:app` and `DesktopContainer` in `:desktop` are it with
-  what the device has. A screen takes `AppContainer` unless it needs the phone's own (the ledger's
-  and the footprints' stores, the widgets). Where the base needs something of the device, it is an
-  abstract or open member the device's container gives, not a `Context`. Settings are kept
+  what the device has. A module's stores and clients are not the container's but its plugins'
+  services (see the plugins below). A screen takes `AppContainer` unless it needs the phone's own
+  (the ledger's and the footprints' writable stores, the widgets). Where the base needs something of
+  the device that no module owns (the place search, the cities, publishing's work), it is an abstract
+  or open member the device's container gives, not a `Context`. Settings are kept
   through `Prefs`: the phone's shared preferences, a JSON file on the Mac.
 - A page in `:shared` asks its device for what the phone and the Mac each do their own way
   through `LocalDevice` (`ui/Device.kt`): a Moment's menu, sharing, choosing photos, where the
-  device is, what it asks before publishing, and the atlas's footprints. Both devices draw the
+  device is, what it asks before publishing (only what differs by device: maps, sharing, location,
+  windows, the picker's device, viewer motion; what a plugin brings goes through a point, never
+  `Device`). Both devices draw the
   shared MapLibre Compose maps: the phone with the OpenGL runtime, the Mac with the Metal one
   in a presentation host its window (`Main.kt`) provides. A page that needs something only the
-  phone has takes it that way, or as a read-only interface on `AppContainer` (`LedgerSource`,
+  phone has takes it that way, or as the read-only interface of a plugin's service (`LedgerSource`,
   `Footprints`), rather than staying in `:app`. Small differences (the language shown, back,
   the keyboard, a dialog's window) are `expect` functions in `ui/components/Platform.kt`.
 - Android's own code that shared code calls sits in `:shared`'s `androidMain` as the `actual`
@@ -46,7 +50,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   phone's gallery and paired camera in `:app`; a device adds only its sharing and where it keeps
   photos through `Device.picker` (`PickerDevice`).
 - The ledger and the footprints on a desktop or a tablet are the phone's latest WebDAV backup,
-  read by `backup/PhoneBackup` in `:shared` and only shown (`LedgerSource.writable` false): no bill
+  read by `backup/PhoneBackup` in `:shared`, which the Mac's ledger and footprints sections give as
+  their services, and only shown (`LedgerSource.writable` false): no bill
   is written, edited or deleted there and the ledger's settings stay on the phone, as the canvas's
   D17–D20 and T17–T20 draw; a page gates each write on `writable`.
 - Share code first: the Mac's version of anything goes into `:shared`, a page's desktop layout
@@ -67,19 +72,41 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   move too. A string resource is held as a `StringResource`, never an `Int`. The generators write into `:shared` (`Tokens.kt`, `AppIcons.kt`, `CopyTables.kt`,
   `Modules.kt`); the paths below are packages, in whichever module holds them.
 - Every part of the app reaches the pages through plugins (`plugins/`): a `Plugin` adds to
-  points (`Point`) in its `contribute()` and gives the others services (`Service`), and the host pages
-  read the points from `Plugins.registry`, never naming a plugin. A point is the host's: `Points` in
+  points (`Point`) in its `contribute()` and gives itself and the others services (`Service`), and the host pages
+  read the points from `Plugins.registry`, never naming a plugin. A module's stores and clients are
+  services its plugin provides, by their keys in `Services`: the ledger (`ledger`, the phone's
+  `LedgerPhone` its writable store, the Mac's ledger section the backup's), the footprints
+  (`footprints`, `FootprintsPhone`'s store, the Mac's footprints section the backup's), the NAS's
+  client (`nas`, the device's NAS part, `NasPhone` and `NasMac`), Swarm's import (`swarm`,
+  `CheckinPlugin`'s) and Xiaohongshu's notes (`noteSearch`, the phone's `XiaohongshuPlugin`'s, none on
+  the Mac). Each is made once per container, by its provider from the container, the first time
+  it is asked for, and kept there. Its own plugin, and what must work with its module off, asks
+  with `registry.own`; the others and the host ask with `registry.service`, null while the
+  provider's module is off. Each has an extension property beside its plugin
+  (`AppContainer.ledger`, and the phone's typed ones, `PhoneContainer.ledger`), so the host reads
+  `container.ledger` without naming the plugin. The place search stays the container's: a
+  Moment's place is the host's own, no module's. A point is the host's: `Points` in
   `:shared` (a module's name and icon, pages and `moments://` links, the photos' sources, search
   kinds, import groups, its group on 记录项与公开, its section on a Moment's page and its line on a
   Moment's card and at its bubble's foot, its part in 写动态, its figures at a trip's head, its map
   layer and its stops at places there (`MapStop`), the stops ways lead to and those a trip's plan
   keeps (`KeptStop`), what 写动态 keeps a place alone as (`PlaceAlone`), its section on 待发布
-  (`ChangeSection`), and its `TimelineJoin`: the records, stops, day figures and day-map marks it joins
+  (`ChangeSection`) and the lines on 发布更改 of each part it owns (`PartDiff`, by the part's key; one it
+  never changes on the phone still brings one, saying nothing), the tools 和 AI 规划's model may look things up
+  with (`PlanTool`: each as it is sent, what the instructions say of it, whether it is offered now, and
+  how it reads and does a call), its group on a settings page (`SettingsGroup`, by `SettingsPage` and
+  `order`: 同步与来源's after the API's own, the ledger's settings), its way to start and its step in
+  初次打开, what it draws over the map, and its `TimelineJoin`: the records, stops, day figures and day-map marks it joins
   to the timeline's, a trip's, a place's and a day's Moments, check-ins first, then bills, then charges
-  taking the bill at their time), `PhonePoints` in `:app` (its row on 我, its pages in the navigation,
-  its import groups, its side key actions, its heatmap widget sources, its step in 初次打开, what it
-  draws over the map, its background work on and off) and `DesktopPoints` in `:desktop` (its sidebar
-  section and its pages). Add a point only once two plugins bring to it. Every device's plugins are
+  taking the bill at their time), `PhonePoints` in `:app` (its row on 我, among what is kept here or, by its `order`, among the settings,
+  its pages in the navigation, its side key actions, its heatmap widget sources, its background work on
+  and off, and what it starts with the app) and `DesktopPoints` in `:desktop` (its sidebar
+  section and its pages). Add a point only once two plugins bring to it. Device features are phone plugins with no module
+  (the gallery, 相机, 侧键, 准备图文's albums, the WebDAV backup, updates; 自动记账 the ledger's): each
+  returns null for its row where the phone lacks what it needs, so 我 checks nothing itself. A settings
+  group is read by its module alone, never its plugin's own switch, which may be its first row. `suggest_plan` is the planner's own; every lookup it offers is a
+  plugin's, in the registry's order: `find_place` and `route_time` `PlanningPlugin`'s on every device,
+  `search_notes` the phone's `XiaohongshuPlugin`'s, offered only while the owner is signed in. Every device's plugins are
   `Plugins.shared`; the phone and the Mac install their own beside them as they start
   (`Plugins.install`, from `MomentsApplication` and `main`, and in a test that reads the phone's
   points). The registry keeps the plugins' order, which is the order the pages list what they bring
@@ -228,7 +255,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   `SegmentedGroup` does.
 - Top bars switch between what the page is one of with `TitleMenu` and put a control over the
   subtitle's figures in `subtitleAction`. Settings are `SegmentedGroup` with `SwitchRow` and
-  `ActionRow`, switches `AppSwitch`. A settings group is declared, not drawn: its rows are
+  `ActionRow`, switches `AppSwitch`. A settings group is declared, not drawn (a plugin's group is a `SettingsGroup` contribution
+  whose `group()` returns its `SettingsGroupSpec` and draws its own dialogs): its rows are
   `SettingsRow`s of the design's kinds (switch, value, choice, action, page, external, status, and in
   a panel radio and lines) in a `SettingsGroupSpec` that `SettingsGroupView` draws, 我's rows on the
   page itself (`SettingsRowsOnPage`); what those can't draw opens the plugin's own dialog or panel
@@ -322,11 +350,12 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   reviewed: one change set, like a commit, sent as entries to `POST /v2/changes`. Don't add
   writes that bypass it.
 - 发布更改 says what each change changes, field by field (`ui/publish/ChangesScreen.kt`,
-  `EntryDiffs.kt`, `BillChanges.kt`): whatever a record, trip, place, check-in, occasion, device,
+  `EntryDiffs.kt`, `PartDiffs.kt`, and each part's plugin): whatever a record, trip, place, check-in, occasion, device,
   subscription or bill can have changed on the phone is listed there against the site's copy,
   old beside new and writing marked letter by letter. A new field, or a new way to change one,
   comes with its line there in the same change, so no change is published unseen or shows as
-  没有改动.
+  没有改动. A record's words and photos and the entry's own fields are the host's lines;
+  every other part's are its plugin's `PartDiff`, and `PartDiffsTest` fails for a part of the spec with none.
 - The phone keeps every record it writes or changes as the entry it will be published as
   (`changedEntries`, a Moment, a check-in and a device alike), and a Moment is only worked out
   from one, so a record changes shape by being saved as it now is. Don't bring back a store of
@@ -389,7 +418,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   those can't be reached, they and `route_time` ask AMap's or Tencent's routing with the owner's own keys instead
   (in China, never by train), no faster than each key allows. On the phone, once the owner signs in to
   Xiaohongshu's website in 同步与来源 (the owner's choice, its automated reading against the site's rules
-  and their account at risk), `search_notes` searches it for what the model names in a WebView no one sees,
+  and their account at risk), `search_notes` searches it (offered, with what the instructions say of it, only while signed in) for what the model names in a WebView no one sees,
   reads only (no taps, typing or posting), a few pages a search and never faster than one a second and a
   half, and sends the model what the notes say; its session stays out of Android's backups. Don't send it more, or apply its
   suggestions without that tap. Its conversations stay on the device, in its WebDAV backup (`plan-chats.json`,

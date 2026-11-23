@@ -32,6 +32,9 @@ object Plugins {
         FootprintsPlugin,
         OccasionsPlugin,
         NasPlugin,
+        MapKeysPlugin,
+        AiPlanPlugin,
+        PlanningPlugin,
     )
 
     private val sharedOnly by lazy { Registry(shared) }
@@ -67,6 +70,10 @@ object Plugins {
 
     /** Whether 导入 has a source on every device with these modules on. */
     fun imports(settings: Settings): Boolean = registry.on(Points.imports, settings::isOn).any { it.sources.isNotEmpty() }
+
+    /** The groups the plugins bring to [page] with the modules [isOn] says are on, in their order there. */
+    fun settingsGroups(page: SettingsPage, isOn: (Module) -> Boolean): List<SettingsGroup> =
+        registry.contributions(Points.settingsGroups).filter { it.item.page == page && it.shownWith(isOn) }.map { it.item }.sortedBy { it.order }
 
     /** The joins, each with whose it is, in the joins' order. */
     val joins: List<Contribution<TimelineJoin>> get() = registry.contributions(Points.joins).sortedBy { it.item.order }

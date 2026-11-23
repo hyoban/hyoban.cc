@@ -47,9 +47,6 @@ import cc.hyoban.moments.ui.theme.tokens
 // 绿联 NAS on 同步与来源: the NAS whose photo app 选照片 reads, by its UGREENlink ID or an
 // address, and who signs in.
 
-@Composable
-fun NasSection(nas: Nas, linking: NasLinking?, onEdit: () -> Unit) = SettingsGroupView(nasGroup(nas, linking, onEdit))
-
 /** 绿联 NAS as its rows: 在相册里显示, who signs in where, and 关联已发布的照片 once it is set. */
 @Composable
 fun nasGroup(nas: Nas, linking: NasLinking?, onEdit: () -> Unit): SettingsGroupSpec {
@@ -186,25 +183,4 @@ fun NasDialog(nas: Nas, onDismiss: () -> Unit, onForget: () -> Unit, onSave: (St
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
-}
-
-/** 同步与来源's NAS section with the dialog it opens: the phone's and the computer's alike. */
-@Composable
-fun NasSettings(container: AppContainer) {
-    val nas = container.nas
-    var editing by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    val scope = androidx.compose.runtime.rememberCoroutineScope()
-    val linking = remember { NasLinking(container, scope) }
-    NasSection(nas, linking) { editing = true }
-    if (editing) NasDialog(
-        nas,
-        onDismiss = { editing = false },
-        onForget = {
-            nas.forget()
-            editing = false
-        },
-    ) { link, user, password ->
-        nas.change(link, user, password)
-        editing = false
-    }
 }

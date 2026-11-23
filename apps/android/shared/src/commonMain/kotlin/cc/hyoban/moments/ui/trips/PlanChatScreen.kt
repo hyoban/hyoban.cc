@@ -75,7 +75,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.data.ai.NoteSearch
 import cc.hyoban.moments.data.ai.PlanAssistant
 import cc.hyoban.moments.data.ai.PlanContext
 import cc.hyoban.moments.data.ai.FoundPlace
@@ -631,7 +630,7 @@ fun PlanChatScreen(container: AppContainer, id: String, onBack: () -> Unit, onMo
             try {
                 // Each day's driving as the plan stands, the days worked out in time, for the model to see a day too full.
                 val driving = drivingByDay(days, looked, container.placeSearch)
-                val answer = assistant.ask(text, context.copy(driving = driving), PhoneLookups(container.placeSearch, container.noteSearch)) { progress ->
+                val answer = assistant.ask(text, context.copy(driving = driving), PhoneLookups(container.placeSearch), container) { progress ->
                     chat.changed()
                     when (progress) {
                         is PlanProgress.Thought -> {
@@ -1355,16 +1354,12 @@ suspend fun travelBetween(search: PlaceSearch, from: Fix, to: Fix, by: Routers.B
     return travel
 }
 
-/** The device's lookups for the model: its place search, the routers, and Xiaohongshu where the device reads it. */
-private class PhoneLookups(private val search: PlaceSearch, private val noteSearch: NoteSearch?) : PlanLookups {
+/** The device's lookups for the model: its place search and the routers. */
+private class PhoneLookups(private val search: PlaceSearch) : PlanLookups {
     override suspend fun places(name: String, near: Fix): List<FoundPlace> =
         search.search(name, near).filter { distance(it.fix, near) <= FOUND_WITHIN_METRES }.map { FoundPlace(it.name, it.address, it.fix) }
 
     override suspend fun travel(from: Fix, to: Fix, by: Routers.By) = travelBetween(search, from, to, by)
-
-    override val searchesNotes get() = noteSearch?.signedIn?.value == true
-
-    override suspend fun notes(query: String) = noteSearch?.search(query).orEmpty()
 }
 
 /** How many of each change [suggestions] hold, and how many took effect, apart by full-width spaces. */

@@ -16,11 +16,11 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * 同步与来源's WebDAV backup on a desktop or a tablet (D25): where the phone backs up to, and
+ * 同步与来源's WebDAV backup on a desktop or a tablet (D25), drawing the dialog it opens: where the phone backs up to, and
  * reading its latest backup again, the ledger and the footprints shown here coming from it alone.
  */
 @Composable
-fun PhoneBackupSection(backup: PhoneBackup) {
+fun phoneBackupGroup(backup: PhoneBackup): SettingsGroupSpec {
     val scope = rememberCoroutineScope()
     var editing by rememberSaveable { mutableStateOf(false) }
     val busy by backup.busy.collectAsStateWithLifecycle()
@@ -35,8 +35,6 @@ fun PhoneBackupSection(backup: PhoneBackup) {
         enabled = backup.configured,
         busy = busy,
     ) { if (!busy) scope.launch { backup.refresh() } }
-    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.webdav_title), stringResource(Res.string.webdav_note), listOf(address, refresh)))
-
     if (editing) {
         WebDavDialog(
             backup.url.value,
@@ -56,6 +54,7 @@ fun PhoneBackupSection(backup: PhoneBackup) {
             scope.launch { backup.refresh() }
         }
     }
+    return SettingsGroupSpec(stringResource(Res.string.webdav_title), stringResource(Res.string.webdav_note), listOf(address, refresh))
 }
 
 /** What the last read of the backup came to, said under its row. */

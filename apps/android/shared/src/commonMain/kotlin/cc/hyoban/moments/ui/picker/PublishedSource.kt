@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.picker
 
+import cc.hyoban.moments.plugins.nas
 import cc.hyoban.moments.ui.components.BadgeKind
 import cc.hyoban.moments.ui.components.badge
 import cc.hyoban.moments.ui.components.readStill

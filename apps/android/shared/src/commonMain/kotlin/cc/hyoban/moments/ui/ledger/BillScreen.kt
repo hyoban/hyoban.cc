@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.plugins.ledger
 import cc.hyoban.moments.res.*
 import androidx.compose.foundation.layout.Box
 import cc.hyoban.moments.ui.components.SIDE_COLUMN

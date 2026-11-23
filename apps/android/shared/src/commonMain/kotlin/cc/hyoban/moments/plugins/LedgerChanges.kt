@@ -45,6 +45,14 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import org.jetbrains.compose.resources.stringResource
 
+/**
+ * A bill's part on 发布更改: it has no entry's lines, as the ledger publishes its bills itself and
+ * [billSection]'s rows mark what changed of each, its category, amount, refunds, note, time and place.
+ */
+internal object BillDiff : cc.hyoban.moments.ui.publish.PartDiff {
+    override val part = LedgerPlugin.BILL_PART
+}
+
 /** What publishing does to a bill on the site: put it there, change it there, or take it off. */
 enum class BillGroup { NEW, CHANGED, OFF }
 

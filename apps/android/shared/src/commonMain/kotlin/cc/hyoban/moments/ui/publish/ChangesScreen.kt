@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.publish
 
+import cc.hyoban.moments.plugins.nas
 import cc.hyoban.moments.res.*
 import org.jetbrains.compose.resources.StringResource
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -114,8 +115,6 @@ import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.components.Thumbnail
 import cc.hyoban.moments.ui.compose.label
-import cc.hyoban.moments.ui.format.costLine
-import cc.hyoban.moments.ui.format.costTitle
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.settings.Caption
@@ -583,7 +582,7 @@ internal fun OutsideCard(title: String, date: String?, figure: String?, note: St
         if (diffs != null) {
             Column(Modifier.padding(top = Space.s), verticalArrangement = Arrangement.spacedBy(Space.m)) {
                 if (diffs.isEmpty()) Text(stringResource(Res.string.note_change_nothing), style = AppTheme.typography.body, color = tokens.tx2)
-                diffs.forEach { diff -> Field(diff.label) { if (diff.words) TextChange(diff.from.orEmpty(), diff.to) else FromTo(diff.from, diff.to, diff.icon) } }
+                diffs.forEach { diff -> DiffField(diff) }
             }
         }
         CardActions(onRevert?.let { revert -> { RevertButton(revert) } })
@@ -731,13 +730,10 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
         val names = { ids: List<String> -> ids.joinToString(separator) { places[it]?.name ?: it }.ifEmpty { none } }
         Field(Res.string.change_place) { FromTo(names(before.places), names(after.places), AppIcons.Pin) }
     }
-    if (before.cost != after.cost) {
+    // What it cost, a meal's or another's, as the part's own plugin says.
+    momentCostDiffs(before, after).forEach { diff ->
         any = true
-        val none = stringResource(Res.string.food_none)
-        val cost = after.cost ?: before.cost!!
-        Field(costTitle(cost)) {
-            FromTo(costLine(before.cost), costLine(after.cost) ?: none, if (cost.meal) AppIcons.Food else AppIcons.Cash)
-        }
+        DiffField(diff)
     }
     // Public or private, a change of its own: one made private leaves the site.
     if (before.hidden != after.hidden) {
@@ -798,10 +794,10 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
         any = true
         Field(Res.string.change_order) { FromTo(null, stringResource(Res.string.change_order_moved), AppIcons.Refresh) }
     }
-    // What of the Moment's own each module changed (the check-in it carries).
-    changeSections.flatMap { it.momentDiffs(before, after) }.forEach { diff ->
+    // What of the parts it carries beside its own fields changed (the check-in), as each part's plugin says.
+    momentOtherPartDiffs(before, after).forEach { diff ->
         any = true
-        Field(diff.label) { FromTo(diff.from, diff.to, diff.icon) }
+        DiffField(diff)
     }
     // How a planned one is reached from the place before it.
     if ((before.reachedBy ?: "drive") != (after.reachedBy ?: "drive")) {
@@ -862,6 +858,12 @@ private fun CoverChange(icon: androidx.compose.ui.graphics.vector.ImageVector, l
         }
         PhotoRow(photos.map { it to null }, urls, badges = false)
     }
+}
+
+/** A field a diff says changed, under its name: writing letter by letter, anything else from what it was. */
+@Composable
+private fun DiffField(diff: EntryDiff) {
+    Field(diff.label) { if (diff.words) TextChange(diff.from.orEmpty(), diff.to) else FromTo(diff.from, diff.to, diff.icon) }
 }
 
 /** A field that changed, under its name. */

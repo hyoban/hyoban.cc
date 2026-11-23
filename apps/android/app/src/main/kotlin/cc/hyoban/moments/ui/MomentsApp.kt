@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui
 
+import cc.hyoban.moments.plugins.noteSearch
 import cc.hyoban.moments.res.*
 import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.design.edgeBlur
@@ -698,14 +699,11 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                             homes = { navController.navigate(Homes) },
                                             sync = { navController.navigate(SyncSettings) },
                                             imports = { navController.navigate(Imports) },
-                                            sideKey = { navController.navigate(SideKeySettings) },
-                                            camera = { navController.navigate(CameraSettings) },
-                                            albums = { navController.navigate(GalleryAlbums) },
                                         ),
                                     )
                                 }
                                 screen<SyncSettings> {
-                                    SyncScreen(container, onBack = back, onNoteSignIn = { navController.navigate(NoteSignIn) })
+                                    SyncScreen(container, onBack = back, navigate = { navController.navigate(it) })
                                 }
                                 screen<NoteSignIn> {
                                     cc.hyoban.moments.xiaohongshu.XiaohongshuSignInScreen(container.noteSearch, onBack = back)
@@ -713,17 +711,8 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                 screen<Imports> {
                                     cc.hyoban.moments.ui.settings.ImportScreen(container, onBack = back)
                                 }
-                                screen<SideKeySettings> {
-                                    cc.hyoban.moments.sidekey.SideKeySettingsScreen(onBack = back)
-                                }
-                                screen<CameraSettings> {
-                                    cc.hyoban.moments.camera.CameraSettingsScreen(onBack = back)
-                                }
                                 screen<Items> {
                                     cc.hyoban.moments.ui.settings.ItemsScreen(container, onBack = back)
-                                }
-                                screen<GalleryAlbums> {
-                                    cc.hyoban.moments.ui.settings.GalleryAlbumsScreen(onBack = back)
                                 }
                                 screen<Homes> {
                                     cc.hyoban.moments.ui.settings.HomesScreen(container, onBack = back)

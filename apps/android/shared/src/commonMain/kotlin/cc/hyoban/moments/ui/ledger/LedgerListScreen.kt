@@ -1,5 +1,6 @@
 package cc.hyoban.moments.ui.ledger
 
+import cc.hyoban.moments.plugins.ledger
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.design.AppIcons
