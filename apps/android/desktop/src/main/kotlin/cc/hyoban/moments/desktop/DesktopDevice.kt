@@ -23,6 +23,8 @@ import kotlinx.coroutines.withContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.size
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.media.MediaUrls
 import cc.hyoban.moments.data.media.Outgoing
@@ -178,7 +180,7 @@ object DesktopDevice : Device {
 
     // The phone's backup as a way to start: its WebDAV directory asked for, then read.
     @Composable
-    override fun onboardingStarts(container: AppContainer, next: () -> Unit) =
+    override fun onboardingStarts(container: AppContainer, next: () -> Unit): List<cc.hyoban.moments.ui.settings.SettingsRow> =
         listOf(cc.hyoban.moments.ui.settings.phoneBackupStart((container as DesktopContainer).phoneBackup, next))
 
     /** A folder chosen in the system's dialog, or null when it was left. */

@@ -49,9 +49,8 @@ fun GalleryAlbumsScreen(onBack: () -> Unit) {
                     .padding(bottom = Space.xl),
             ) {
                 val note = stringResource(if (albums.isEmpty()) Res.string.albums_none else Res.string.albums_note)
-                // With no album, the card stays, empty, over what says so: the group view draws nothing without rows.
-                if (albums.isEmpty()) SegmentedGroup(null, note, emptyList())
-                else SettingsGroupView(
+                // With no album, only what says so.
+                SettingsGroupView(
                     SettingsGroupSpec(
                         null,
                         note,

@@ -208,33 +208,23 @@ private fun Record(time: String, icon: ImageVector, words: String, amount: Strin
 }
 
 @Composable
-private fun Start(onBack: () -> Unit, onSite: () -> Unit, onImport: () -> Unit, onBlank: () -> Unit, desktop: Boolean, more: List<Segment>) {
+private fun Start(onBack: () -> Unit, onSite: () -> Unit, onImport: () -> Unit, onBlank: () -> Unit, desktop: Boolean, more: List<cc.hyoban.moments.ui.settings.SettingsRow>) {
     StepPage(stringResource(Res.string.onboarding_where), onBack, actions = {}) {
-        val row = { icon: ImageVector, title: StringResource, note: StringResource, tag: String, onClick: () -> Unit ->
-            val segment: Segment = { shapes ->
-                SegmentedListItem(
-                    onClick = onClick,
-                    shapes = shapes,
-                    colors = segmentColors(),
-                    leadingContent = { Icon(icon, contentDescription = null) },
-                    supportingContent = { Text(stringResource(note)) },
-                    trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                    modifier = Modifier.testTag(tag),
-                ) { Text(stringResource(title)) }
-            }
-            segment
+        val row = @Composable { icon: ImageVector, title: StringResource, note: StringResource, tag: String, onClick: () -> Unit ->
+            cc.hyoban.moments.ui.settings.SettingsRow.Page(icon, stringResource(title), tag, stringResource(note), onClick)
         }
         // Importing only while a source's module is on (记录项与公开).
         // A computer keeps what is written on itself, and reads the phone's ledger and footprints from its backup.
         val device = LocalDevice.current
         val settings = LocalSettings.current
         val imports = cc.hyoban.moments.plugins.Plugins.imports(settings) || device.importsMore(settings)
-        SegmentedGroup(null, stringResource(if (desktop) Res.string.onboarding_where_note_desktop else Res.string.onboarding_where_note), listOfNotNull(
-            row(AppIcons.Link, Res.string.onboarding_site, Res.string.onboarding_site_note, "onboarding_site", onSite),
-        ) + more + listOfNotNull(
-            row(AppIcons.Download, Res.string.onboarding_import, if (desktop) Res.string.onboarding_import_note_desktop else Res.string.onboarding_import_note, "onboarding_import", onImport).takeIf { imports },
+        val rows = listOf(row(AppIcons.Link, Res.string.onboarding_site, Res.string.onboarding_site_note, "onboarding_site", onSite)) + more + listOfNotNull(
+            if (imports) row(AppIcons.Download, Res.string.onboarding_import, if (desktop) Res.string.onboarding_import_note_desktop else Res.string.onboarding_import_note, "onboarding_import", onImport) else null,
             row(if (desktop) AppIcons.Laptop else AppIcons.Phone, Res.string.onboarding_blank, if (desktop) Res.string.onboarding_blank_note_desktop else Res.string.onboarding_blank_note, "onboarding_blank", onBlank),
-        ))
+        )
+        cc.hyoban.moments.ui.settings.SettingsGroupView(
+            cc.hyoban.moments.ui.settings.SettingsGroupSpec(null, stringResource(if (desktop) Res.string.onboarding_where_note_desktop else Res.string.onboarding_where_note), rows),
+        )
     }
 }
 

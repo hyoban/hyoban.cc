@@ -229,9 +229,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - Top bars switch between what the page is one of with `TitleMenu` and put a control over the
   subtitle's figures in `subtitleAction`. Settings are `SegmentedGroup` with `SwitchRow` and
   `ActionRow`, switches `AppSwitch`. A settings group is declared, not drawn: its rows are
-  `SettingsRow`s of the design's kinds (switch, value, action, page, external, status) in a
-  `SettingsGroupSpec` that `SettingsGroupView` draws; what those can't draw opens the plugin's own
-  dialog or panel from a value or action row, never a new kind. What floats over a photo or the map is `FloatingButton`.
+  `SettingsRow`s of the design's kinds (switch, value, choice, action, page, external, status, and in
+  a panel radio and lines) in a `SettingsGroupSpec` that `SettingsGroupView` draws, 我's rows on the
+  page itself (`SettingsRowsOnPage`); what those can't draw opens the plugin's own dialog or panel
+  from a value or action row, and a new kind goes into the SettingsGroup card first. What floats over a photo or the map is `FloatingButton`.
 - An action the system confirms itself (a gallery photo to its bin) goes straight to the
   system's prompt; the app doesn't ask first too.
 - Haptics are the design's roles (lift, tick, armed/disarmed, toggle, key, confirm/reject) from

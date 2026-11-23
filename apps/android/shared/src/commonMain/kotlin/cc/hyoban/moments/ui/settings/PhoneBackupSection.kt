@@ -1,23 +1,16 @@
 package cc.hyoban.moments.ui.settings
 
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.backup.BackupRead
 import cc.hyoban.moments.backup.PhoneBackup
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
-import cc.hyoban.moments.ui.design.Icon
-import cc.hyoban.moments.ui.design.SegmentedListItem
-import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.format.formatDate
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -76,7 +69,7 @@ private fun readText(read: BackupRead?, busy: Boolean): String = when {
 
 /** 初次打开's way to start from the phone's backup: its WebDAV directory asked for, then read, and [next] on. */
 @Composable
-fun phoneBackupStart(backup: PhoneBackup, next: () -> Unit): Segment {
+fun phoneBackupStart(backup: PhoneBackup, next: () -> Unit): SettingsRow.Page {
     var editing by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     if (editing) {
@@ -99,15 +92,8 @@ fun phoneBackupStart(backup: PhoneBackup, next: () -> Unit): Segment {
             next()
         }
     }
-    return { shapes ->
-        SegmentedListItem(
-            onClick = { editing = true },
-            shapes = shapes,
-            colors = segmentColors(),
-            leadingContent = { Icon(AppIcons.CloudSync, contentDescription = null) },
-            supportingContent = { Text(stringResource(Res.string.onboarding_backup_note)) },
-            trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp)) },
-            modifier = Modifier.testTag("onboarding_backup"),
-        ) { Text(stringResource(Res.string.onboarding_backup)) }
-    }
+    return SettingsRow.Page(
+        AppIcons.CloudSync, stringResource(Res.string.onboarding_backup), "onboarding_backup",
+        supporting = stringResource(Res.string.onboarding_backup_note),
+    ) { editing = true }
 }

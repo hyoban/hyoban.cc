@@ -41,7 +41,6 @@ import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.Icon
-import cc.hyoban.moments.ui.design.IconButton
 import cc.hyoban.moments.ui.design.ListItemShapes
 import cc.hyoban.moments.ui.design.SearchField
 import cc.hyoban.moments.ui.design.SegmentedListItem
@@ -104,23 +103,17 @@ fun HomesScreen(container: AppContainer, onBack: () -> Unit) {
                         .padding(horizontal = columns.margin)
                         .padding(bottom = Space.xl),
                 ) {
-                    SegmentedGroup(
-                        null,
-                        stringResource(Res.string.homes_note),
-                        settings.homes.mapNotNull { id -> places[id]?.let { id to it } }.sortedBy { it.second.name }.map<Pair<String, Place>, Segment> { (id, place) ->
-                            { shapes ->
-                                HomeRow(AppIcons.Home, place.name, shapes, supporting = place.division?.label(), tag = "home_$id") {
-                                    IconButton(onClick = { toggle(id) }, modifier = Modifier.testTag("home_remove_$id")) {
-                                        Icon(AppIcons.Close, contentDescription = stringResource(Res.string.homes_remove, place.name), tint = tokens.tx2, modifier = Modifier.size(20.dp))
-                                    }
-                                }
-                            }
-                        } + { shapes ->
-                            HomeRow(AppIcons.Plus, stringResource(Res.string.homes_add), shapes, tag = "home_add", onClick = { query.clearText(); picking = true }) {
-                                Icon(AppIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp))
-                            }
-                        },
-                    )
+                    val homes = settings.homes.mapNotNull { id -> places[id]?.let { id to it } }.sortedBy { it.second.name }.map { (id, place) ->
+                        SettingsRow.Status(
+                            AppIcons.Home, place.name, "home_$id",
+                            supporting = place.division?.label(),
+                            onRemove = { toggle(id) },
+                            removeLabel = stringResource(Res.string.homes_remove, place.name),
+                            removeTag = "home_remove_$id",
+                        )
+                    }
+                    val add = SettingsRow.Page(AppIcons.Plus, stringResource(Res.string.homes_add), "home_add") { query.clearText(); picking = true }
+                    SettingsGroupView(SettingsGroupSpec(null, stringResource(Res.string.homes_note), homes + add))
                 }
             } else {
                 val words = query.text.toString().trim()
@@ -176,7 +169,7 @@ fun HomesScreen(container: AppContainer, onBack: () -> Unit) {
     }
 }
 
-/** A row of the homes and of choosing them: what it is, and [trailing] at its end. */
+/** A row of choosing the homes: what it is, and [trailing] at its end. */
 @Composable
 private fun HomeRow(
     icon: ImageVector,

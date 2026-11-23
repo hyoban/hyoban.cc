@@ -25,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
@@ -48,9 +47,6 @@ import cc.hyoban.moments.ui.components.isPhoneLandscape
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Button
-import cc.hyoban.moments.ui.design.Icon
-import cc.hyoban.moments.ui.design.ListItemShapes
-import cc.hyoban.moments.ui.design.SegmentedListItem
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.ledger.DemoButton
@@ -115,26 +111,29 @@ fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
     val first: @Composable () -> Unit = {
         // With no API to publish to, what is kept here is simply the phone's.
         if (pending.size > 0 && container.canPublish) PublishCard(pending.size, routes.changes)
-        // A row for each module that is on (记录项与公开), as its plugin draws it.
-        PageRows(Modifier.padding(top = Space.s)) { shapes ->
-            Plugins.registry.all(PhonePoints.meRows).forEach { it.Row(container, routes.modules, shapes) }
-        }
+        // A row for each module that is on (记录项与公开), as its plugin gives it.
+        SettingsRowsOnPage(
+            Plugins.registry.all(PhonePoints.meRows).mapNotNull { it.row(container, routes.modules) },
+            Modifier.padding(top = Space.s),
+        )
     }
     val second: @Composable () -> Unit = {
         PageCaption(stringResource(Res.string.me_settings))
-        PageRows { shapes ->
-            MeRow(
-                AppIcons.Eye, stringResource(Res.string.me_items), "settings_items", shapes,
+        // The sources of the modules that are on; with none, nothing to import into.
+        val sources = importSources()
+        val rows = listOfNotNull(
+            SettingsRow.Page(
+                AppIcons.Eye, stringResource(Res.string.me_items), "settings_items",
                 supporting = stringResource(Res.string.me_items_public, books.count { it.visibility == "public" }),
                 onClick = routes.items,
-            )
-            MeRow(
-                AppIcons.Home, stringResource(Res.string.homes_title), "settings_homes", shapes,
+            ),
+            SettingsRow.Page(
+                AppIcons.Home, stringResource(Res.string.homes_title), "settings_homes",
                 supporting = homesSummary(container),
                 onClick = routes.homes,
-            )
-            MeRow(
-                AppIcons.CloudSync, stringResource(Res.string.sync_title), "settings_sync", shapes,
+            ),
+            SettingsRow.Page(
+                AppIcons.CloudSync, stringResource(Res.string.sync_title), "settings_sync",
                 supporting = stringResource(
                     when {
                         !container.settings.apiUrl.isSet -> Res.string.me_sync_no_api
@@ -143,35 +142,34 @@ fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
                     },
                 ),
                 onClick = routes.sync,
-            )
-            // The sources of the modules that are on; with none, nothing to import into.
-            val sources = importSources()
-            if (sources.isNotEmpty()) MeRow(
-                AppIcons.FileOpen, stringResource(Res.string.import_title), "settings_import", shapes,
+            ),
+            if (sources.isNotEmpty()) SettingsRow.Page(
+                AppIcons.FileOpen, stringResource(Res.string.import_title), "settings_import",
                 supporting = sources.joinToString(stringResource(Res.string.separator_list)),
                 onClick = routes.imports,
-            )
+            ) else null,
             // While the gallery may be read.
-            if (remember { LocalMedia.access(context) } != GalleryAccess.NONE) MeRow(
-                AppIcons.Folder, stringResource(Res.string.albums_title), "settings_albums", shapes,
-                supporting = galleryAlbumsSummary(),
+            if (remember { LocalMedia.access(context) } != GalleryAccess.NONE) SettingsRow.Page(
+                AppIcons.Folder, stringResource(Res.string.albums_title), "settings_albums",
+                supporting = galleryAlbumsSummary().takeIf { it.isNotEmpty() },
                 onClick = routes.albums,
-            )
+            ) else null,
             // On the phones that can keep a camera's location going in the background.
-            if (cameraSupported) MeRow(
-                AppIcons.CameraBody, stringResource(Res.string.camera_title), "settings_camera", shapes,
+            if (cameraSupported) SettingsRow.Page(
+                AppIcons.CameraBody, stringResource(Res.string.camera_title), "settings_camera",
                 supporting = camera?.let { listOfNotNull(it.name, stringResource(Res.string.me_camera_sending).takeIf { cameraStatus.sending }).joinToString(" · ") }
                     ?: stringResource(Res.string.me_camera_unpaired),
                 onClick = routes.camera,
-            )
+            ) else null,
             // Only on the phone whose key it is.
-            if (SideKeys.supported) MeRow(
-                AppIcons.Phone, stringResource(Res.string.side_key_title), "settings_sidekey", shapes,
+            if (SideKeys.supported) SettingsRow.Page(
+                AppIcons.Phone, stringResource(Res.string.side_key_title), "settings_sidekey",
                 supporting = stringResource(sideKey.phase.label),
                 onClick = routes.sideKey,
-            )
-            ShareAlbumsRow(shapes)
-        }
+            ) else null,
+            shareAlbumsRow(),
+        )
+        SettingsRowsOnPage(rows)
         Credits()
     }
     // Demo mode at the top, where it is there with or without a ledger.
@@ -228,26 +226,12 @@ private fun PublishCard(count: Int, onChanges: () -> Unit) {
     }
 }
 
-/** A row of 我 opening a page: its icon on the gutter, its name, what it is set to under it, an arrow. */
-@Composable
-internal fun MeRow(icon: ImageVector, title: String, tag: String, shapes: ListItemShapes, supporting: String? = null, opens: Boolean = true, onClick: () -> Unit) {
-    SegmentedListItem(
-        onClick = onClick,
-        shapes = shapes,
-        colors = segmentColors(),
-        leadingContent = { Icon(icon, contentDescription = null) },
-        supportingContent = supporting?.takeIf { it.isNotEmpty() }?.let { { Text(it) } },
-        trailingContent = if (opens) ({ Icon(AppIcons.ChevronRight, contentDescription = null, tint = tokens.tx3) }) else null,
-        modifier = Modifier.testTag(tag),
-    ) { Text(title) }
-}
-
 /**
  * 清理分享相册, while 准备图文 has left any Here Share album: the photos in them are copies, so one
  * tap hands them all to the system's delete prompt, which asks itself.
  */
 @Composable
-private fun ShareAlbumsRow(shapes: ListItemShapes) {
+private fun shareAlbumsRow(): SettingsRow? {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var albums by remember { mutableStateOf<ShareAlbums?>(null) }
@@ -255,14 +239,13 @@ private fun ShareAlbumsRow(shapes: ListItemShapes) {
     // Back from 准备图文 or the gallery, the albums may have changed.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { refresh() }
     val delete = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { refresh() }
-    val shown = albums?.takeIf { it.uris.isNotEmpty() } ?: return
-    MeRow(
-        AppIcons.Photos, stringResource(Res.string.share_albums_clean), "settings_share_albums", shapes,
+    val shown = albums?.takeIf { it.uris.isNotEmpty() } ?: return null
+    return SettingsRow.Action(
+        AppIcons.Photos, stringResource(Res.string.share_albums_clean), "settings_share_albums",
         supporting = pluralStringResource(
             Res.plurals.share_albums_photos, shown.uris.size,
             pluralStringResource(Res.plurals.share_albums, shown.albums, shown.albums), shown.uris.size,
         ),
-        opens = false,
     ) {
         runCatching {
             val request = MediaStore.createDeleteRequest(context.contentResolver, shown.uris)

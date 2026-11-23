@@ -142,7 +142,7 @@ interface Device {
     val moduleSteps: List<ModuleStep> get() = emptyList()
 
     /** More ways to start in 初次打开, beside a site, an import and nothing (a computer's: the phone's backup); [next] goes on. */
-    @Composable fun onboardingStarts(container: AppContainer, next: () -> Unit): List<cc.hyoban.moments.ui.settings.Segment> = emptyList()
+    @Composable fun onboardingStarts(container: AppContainer, next: () -> Unit): List<cc.hyoban.moments.ui.settings.SettingsRow> = emptyList()
 
     /** A place's name, point and kind, to change. */
     @Composable fun EditPlace(container: AppContainer, id: String, onDismiss: () -> Unit)

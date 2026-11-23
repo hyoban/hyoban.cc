@@ -57,7 +57,6 @@ import androidx.compose.ui.semantics.heading
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.design.Button
 import cc.hyoban.moments.ui.design.ModalBottomSheet
-import cc.hyoban.moments.ui.settings.SwitchRow
 import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.ledger.Book
@@ -279,23 +278,17 @@ private fun BookSheet(container: PhoneContainer, book: Book, canDelete: Boolean,
                 SheetCaption(stringResource(Res.string.ledger_categories))
                 BookCategories(container, book.id)
             }
-            SegmentedGroup(
-                null,
-                null,
-                listOfNotNull<Segment>(
-                    { shapes ->
-                        SwitchRow(archived, AppIcons.Archive, stringResource(Res.string.ledger_archive), "book_archive", shapes,
-                            supporting = stringResource(Res.string.ledger_archive_note)) { archived = !archived }
-                    },
-                    if (canDelete) { shapes ->
-                        SegmentedListItem(
-                            onClick = { confirming = true },
-                            shapes = shapes,
-                            colors = segmentColors(),
-                            leadingContent = { Icon(AppIcons.Trash, contentDescription = null, tint = tokens.danger) },
-                            modifier = Modifier.testTag("book_delete"),
-                        ) { Text(stringResource(Res.string.ledger_delete_book), color = tokens.danger) }
-                    } else null,
+            SettingsGroupView(
+                SettingsGroupSpec(
+                    null,
+                    null,
+                    listOfNotNull(
+                        SettingsRow.Switch(AppIcons.Archive, stringResource(Res.string.ledger_archive), "book_archive", archived,
+                            supporting = stringResource(Res.string.ledger_archive_note)) { archived = !archived },
+                        if (canDelete) SettingsRow.Action(AppIcons.Trash, stringResource(Res.string.ledger_delete_book), "book_delete", danger = true) {
+                            confirming = true
+                        } else null,
+                    ),
                 ),
             )
             Button(

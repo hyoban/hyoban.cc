@@ -37,9 +37,6 @@ import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.design.Button
 import cc.hyoban.moments.ui.design.ListItem
 import cc.hyoban.moments.ui.design.ModalBottomSheet
-import cc.hyoban.moments.ui.design.RadioButton
-import cc.hyoban.moments.ui.design.SegmentedListItem
-import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.accessibility.ShareAccessibilityService
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.LocalTopClearance
@@ -50,12 +47,10 @@ import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.OutlinedTextField
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.TextButton
-import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.SettingsGroupSpec
 import cc.hyoban.moments.ui.settings.SettingsGroupView
 import cc.hyoban.moments.ui.settings.SettingsRow
 import cc.hyoban.moments.ui.theme.Space
-import cc.hyoban.moments.ui.theme.tokens
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
@@ -150,20 +145,21 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
                     SettingsRow.Value(AppIcons.Clock, stringResource(Res.string.side_key_timing), "sidekey_timing",
                         stringResource(Res.string.side_key_timing_value, config.doubleMs, config.longMs), maxLines = Int.MAX_VALUE) { timing = true },
                 )))
-                SegmentedGroup(stringResource(Res.string.side_key_last), null, listOf { _ ->
-                    Column(Modifier.padding(Space.l), verticalArrangement = Arrangement.spacedBy(Space.s)) {
-                        val gesture = state.lastGesture
-                        Text(if (gesture != null) stringResource(SideKeyActions.gestureLabel(gesture)) else stringResource(Res.string.side_key_no_last),
-                            style = AppTheme.typography.body)
-                        if (gesture != null && state.lastTime != null) Text(listOfNotNull(
-                            DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(state.lastTime!!)),
-                            config.scenes.firstOrNull { it.id == state.lastScene }?.let { sceneName(it) },
-                            state.lastAction?.let { actionLabel(it, state.lastLabel) },
-                        ).joinToString(" "), style = AppTheme.typography.caption, color = tokens.tx2)
-                        state.message?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx2) }
-                        if (state.restorePending) Text(stringResource(Res.string.side_key_restore_pending), style = AppTheme.typography.caption, color = tokens.tx2)
-                    }
-                })
+                val gesture = state.lastGesture
+                SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.side_key_last), null, listOf(
+                    SettingsRow.Lines(
+                        if (gesture != null) stringResource(SideKeyActions.gestureLabel(gesture)) else stringResource(Res.string.side_key_no_last),
+                        listOfNotNull(
+                            if (gesture != null && state.lastTime != null) listOfNotNull(
+                                DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(state.lastTime!!)),
+                                config.scenes.firstOrNull { it.id == state.lastScene }?.let { sceneName(it) },
+                                state.lastAction?.let { actionLabel(it, state.lastLabel) },
+                            ).joinToString(" ") else null,
+                            state.message,
+                            if (state.restorePending) stringResource(Res.string.side_key_restore_pending) else null,
+                        ),
+                    ),
+                )))
             }
         }
     }
@@ -226,18 +222,12 @@ private fun ColumnScope.ActionChoices(current: String?, follow: String?, onPick:
                 cc.hyoban.moments.plugins.PhonePlugins.sideKeyOwner(value)?.shownWith(settings::isOn) ?: true
             }.map { (value, label) -> value to stringResource(label) }
             val items = if (follow != null) listOf(null to stringResource(Res.string.side_key_follow_value, follow)) + choices else choices
-            SegmentedGroup(null, null, items.map { (value, label) ->
-                { shapes ->
-                    val chosen = current == value || value != null && current?.startsWith("$value:") == true && (value == "app" || value == "uri")
-                    SegmentedListItem(
-                        onClick = { if (value == "app" || value == "uri") mode = value else onPick(value, null) },
-                        shapes = shapes,
-                        colors = segmentColors(),
-                        trailingContent = { RadioButton(chosen, onClick = null) },
-                        modifier = Modifier.testTag("sidekey_action_${value ?: "follow"}"),
-                    ) { Text(label) }
+            SettingsGroupView(SettingsGroupSpec(null, null, items.map { (value, label) ->
+                val chosen = current == value || value != null && current?.startsWith("$value:") == true && (value == "app" || value == "uri")
+                SettingsRow.Radio(label, "sidekey_action_${value ?: "follow"}", chosen) {
+                    if (value == "app" || value == "uri") mode = value else onPick(value, null)
                 }
-            })
+            }))
         }
         "app" -> AppList(Modifier.weight(1f, fill = false)) { pkg, label -> onPick("app:$pkg", label) }
         else -> LinkField(current?.takeIf { it.startsWith("uri:") }?.substringAfter(':').orEmpty()) { link -> onPick("uri:$link", null) }
@@ -263,17 +253,15 @@ private fun SceneSheet(config: SideKeyConfig, id: String?, onDismiss: () -> Unit
         when {
             scene == null -> AppList(Modifier.weight(1f, fill = false)) { pkg, label -> onAdded(SideKeys.addAppScene(pkg, label)) }
             current == null -> Column(Modifier.padding(bottom = Space.l)) {
-                SegmentedGroup(null, null, SideKeys.gestures.map { item -> { shapes ->
+                SettingsGroupView(SettingsGroupSpec(null, null, SideKeys.gestures.map { item ->
                     val default = actionLabel(config.actions[item] ?: "none", config.labels[item].orEmpty())
-                    SegmentedListItem(
-                        onClick = { gesture = item },
-                        shapes = shapes,
-                        colors = segmentColors(),
-                        supportingContent = { Text(scene.actions[item]?.let { actionLabel(it, scene.labels[item].orEmpty()) }
-                            ?: stringResource(Res.string.side_key_follow_value, default)) },
-                        modifier = Modifier.testTag("sidekey_scene_$item"),
-                    ) { Text(stringResource(SideKeyActions.gestureLabel(item))) }
-                } })
+                    SettingsRow.Value(
+                        null, stringResource(SideKeyActions.gestureLabel(item)), "sidekey_scene_$item",
+                        scene.actions[item]?.let { actionLabel(it, scene.labels[item].orEmpty()) }
+                            ?: stringResource(Res.string.side_key_follow_value, default),
+                        maxLines = Int.MAX_VALUE,
+                    ) { gesture = item }
+                }))
                 if (scene.id != SideKeyScene.PAYMENT) TextButton(onClick = { SideKeys.removeAppScene(scene.id); onDismiss() },
                     modifier = Modifier.padding(horizontal = Space.gutter - 12.dp).testTag("sidekey_remove_scene")) {
                     Text(stringResource(Res.string.side_key_remove_scene))

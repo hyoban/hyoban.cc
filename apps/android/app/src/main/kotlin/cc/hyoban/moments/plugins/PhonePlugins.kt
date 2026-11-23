@@ -25,9 +25,8 @@ import cc.hyoban.moments.ui.screen
 import androidx.navigation.toRoute
 import cc.hyoban.moments.ui.Occasions
 import cc.hyoban.moments.ui.Things
-import cc.hyoban.moments.ui.design.ListItemShapes
 import cc.hyoban.moments.ui.ledger.money
-import cc.hyoban.moments.ui.settings.MeRow
+import cc.hyoban.moments.ui.settings.SettingsRow
 import cc.hyoban.moments.ui.things.APART
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +47,7 @@ class PhonePages(
 
 /** The points the phone's own pages read. */
 object PhonePoints {
-    /** A row among what is kept here on 我, each drawing itself only while it should be shown. */
+    /** A row among what is kept here on 我, each given only while it should be shown. */
     val meRows = Point<MeRowItem>("me-rows")
 
     /** Background work brought in line with its module's switch, just turned on or off. */
@@ -74,7 +73,8 @@ object PhonePoints {
 }
 
 interface MeRowItem {
-    @Composable fun Row(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes)
+    /** Its row on 我, a page it opens; null while it shows nothing. */
+    @Composable fun row(container: PhoneContainer, nav: MeNav): SettingsRow?
 }
 
 fun interface BackgroundWork {
@@ -163,13 +163,13 @@ private object LedgerPhone : Plugin, MeRowItem, PhoneImportGroup, BackgroundWork
         add(PhonePoints.heat, SpendingHeat)
     }
 
-    @Composable override fun Row(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes) {
-        if (!LocalSettings.current.isOn(module)) return
+    @Composable override fun row(container: PhoneContainer, nav: MeNav): SettingsRow? {
+        if (!LocalSettings.current.isOn(module)) return null
         val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
         // This month's spending in the shown books, in the book's currency, under the ledger's name.
         val month = remember(ledger) { monthExpense(ledger) }
-        MeRow(
-            LedgerPlugin.icon, stringResource(Res.string.me_ledger), "me_ledger", shapes,
+        return SettingsRow.Page(
+            LedgerPlugin.icon, stringResource(Res.string.me_ledger), "me_ledger",
             supporting = month?.let { (expense, currency) -> stringResource(Res.string.me_month_expense) + APART + money(expense, currency) },
         ) { nav.goTo(LedgerHome(0)) }
     }
@@ -268,15 +268,15 @@ private object FootprintsPhone : Plugin, MeRowItem, PhoneImportGroup, Background
         add(PhonePoints.background, this@FootprintsPhone)
     }
 
-    @Composable override fun Row(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes) {
-        if (!LocalSettings.current.isOn(module)) return
+    @Composable override fun row(container: PhoneContainer, nav: MeNav): SettingsRow? {
+        if (!LocalSettings.current.isOn(module)) return null
         val revision by container.footprints.revision.collectAsStateWithLifecycle()
         // Whether the footprints are being recorded now.
         val recording by produceState(false, revision) {
             value = withContext(Dispatchers.IO) { container.footprints.state().recording }
         }
-        MeRow(
-            FootprintsPlugin.icon, stringResource(Res.string.footprints_title), "me_footprints", shapes,
+        return SettingsRow.Page(
+            FootprintsPlugin.icon, stringResource(Res.string.footprints_title), "me_footprints",
             supporting = stringResource(Res.string.me_footprints_recording).takeIf { recording },
             onClick = nav.showOverlay,
         )
@@ -348,7 +348,7 @@ private object ThingsPhone : Plugin, MeRowItem {
         add(PhonePoints.meRows, this@ThingsPhone)
     }
 
-    @Composable override fun Row(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes) {
+    @Composable override fun row(container: PhoneContainer, nav: MeNav): SettingsRow? {
         val settings = LocalSettings.current
         val things = listOfNotNull(
             stringResource(Res.string.devices_title).takeIf { settings.isOn(Module.THINGS) },
@@ -356,8 +356,9 @@ private object ThingsPhone : Plugin, MeRowItem {
             // The car's data comes only from an import into the API, so without one there is none.
             stringResource(Res.string.car_title).takeIf { settings.connected && settings.isOn(Module.CAR) },
         )
-        if (things.isNotEmpty()) MeRow(
-            ThingsPlugin.icon, stringResource(Res.string.me_things), "me_things", shapes,
+        if (things.isEmpty()) return null
+        return SettingsRow.Page(
+            ThingsPlugin.icon, stringResource(Res.string.me_things), "me_things",
             supporting = things.joinToString(stringResource(Res.string.separator_list)),
         ) { nav.navigate(Things()) }
     }
@@ -377,11 +378,11 @@ private object OccasionsPhone : Plugin, MeRowItem, PhonePageSet {
         }
     }
 
-    @Composable override fun Row(container: PhoneContainer, nav: MeNav, shapes: ListItemShapes) {
-        if (!LocalSettings.current.isOn(module)) return
-        MeRow(
-            OccasionsPlugin.icon, stringResource(Res.string.occasions_title), "me_occasions", shapes,
-            supporting = cc.hyoban.moments.ui.occasions.nextOccasionSummary(container),
+    @Composable override fun row(container: PhoneContainer, nav: MeNav): SettingsRow? {
+        if (!LocalSettings.current.isOn(module)) return null
+        return SettingsRow.Page(
+            OccasionsPlugin.icon, stringResource(Res.string.occasions_title), "me_occasions",
+            supporting = cc.hyoban.moments.ui.occasions.nextOccasionSummary(container)?.takeIf { it.isNotEmpty() },
         ) { nav.navigate(Occasions()) }
     }
 }

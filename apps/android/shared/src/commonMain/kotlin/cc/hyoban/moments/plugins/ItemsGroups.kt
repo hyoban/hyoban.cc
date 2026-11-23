@@ -25,8 +25,6 @@ import cc.hyoban.moments.ui.format.formatDate
 import java.time.LocalDate
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
@@ -34,14 +32,10 @@ import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.design.AppIcons
-import cc.hyoban.moments.ui.design.Icon
-import cc.hyoban.moments.ui.design.ListItem
-import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.theme.Space
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.SettingsGroupSpec
 import cc.hyoban.moments.ui.settings.SettingsGroupView
 import cc.hyoban.moments.ui.settings.SettingsRow
@@ -109,16 +103,13 @@ internal fun BooksGroup(container: AppContainer) {
 /** The footprints on 记录项与公开: private, and never leaving the phone. */
 @Composable
 internal fun TracksGroup() {
-        SegmentedGroup(
-            stringResource(Res.string.items_tracks),
-            stringResource(Res.string.items_tracks_note),
-            listOf { _ ->
-                ListItem(
-                    headlineContent = { Text(stringResource(Res.string.footprints_title)) },
-                    leadingContent = { Icon(AppIcons.Footprints, contentDescription = null) },
-                    trailingContent = { Text(stringResource(Res.string.visibility_private)) },
-                    modifier = Modifier.testTag("items_tracks"),
-                )
-            },
+        SettingsGroupView(
+            SettingsGroupSpec(
+                stringResource(Res.string.items_tracks),
+                stringResource(Res.string.items_tracks_note),
+                listOf(
+                    SettingsRow.Status(AppIcons.Footprints, stringResource(Res.string.footprints_title), "items_tracks", trailing = stringResource(Res.string.visibility_private)),
+                ),
+            ),
         )
 }

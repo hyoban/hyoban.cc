@@ -312,35 +312,28 @@ fun FootprintsOnMap(
                 }
             }
             item {
-                SegmentedGroup(
+                cc.hyoban.moments.ui.settings.SettingsGroupView(cc.hyoban.moments.ui.settings.SettingsGroupSpec(
                     stringResource(Res.string.footprints_section_recording),
                     error?.let { stringResource(it) } ?: stringResource(Res.string.footprints_local_note),
                     listOfNotNull(
-                        { shapes ->
-                            SwitchRow(state.daily, AppIcons.Refresh, stringResource(Res.string.footprints_daily), "footprints_daily", shapes,
-                                supporting = stringResource(Res.string.footprints_daily_note), enabled = loaded && !busy) {
-                                if (!state.daily) enable("daily_on") else control("daily_off")
-                            }
+                        cc.hyoban.moments.ui.settings.SettingsRow.Switch(AppIcons.Refresh, stringResource(Res.string.footprints_daily), "footprints_daily", state.daily,
+                            supporting = stringResource(Res.string.footprints_daily_note), enabled = loaded && !busy) {
+                            if (!state.daily) enable("daily_on") else control("daily_off")
                         },
-                        { shapes ->
-                            SwitchRow(state.session != null, AppIcons.Flag, stringResource(Res.string.footprints_trip), "footprints_trip", shapes,
-                                supporting = stringResource(if (state.session != null) Res.string.footprints_trip_note else Res.string.footprints_trip_off_note),
-                                enabled = loaded && !busy) {
-                                if (state.session == null) enable("start_trip") else control("end_trip")
-                            }
+                        cc.hyoban.moments.ui.settings.SettingsRow.Switch(AppIcons.Flag, stringResource(Res.string.footprints_trip), "footprints_trip", state.session != null,
+                            supporting = stringResource(if (state.session != null) Res.string.footprints_trip_note else Res.string.footprints_trip_off_note),
+                            enabled = loaded && !busy) {
+                            if (state.session == null) enable("start_trip") else control("end_trip")
                         },
-                        if (state.requested) { shapes ->
-                            ActionRow(
-                                if (resumable) AppIcons.Play else AppIcons.Pause,
-                                stringResource(if (resumable) Res.string.footprints_resume else Res.string.footprints_pause),
-                                shapes,
-                                supporting = stringResource(if (state.paused) Res.string.footprints_paused else status ?: Res.string.footprints_interrupted),
-                                tag = "footprints_pause",
-                                enabled = !busy,
-                            ) { if (resumable) enable("resume") else control("pause") }
-                        } else null,
+                        if (state.requested) cc.hyoban.moments.ui.settings.SettingsRow.Action(
+                            if (resumable) AppIcons.Play else AppIcons.Pause,
+                            stringResource(if (resumable) Res.string.footprints_resume else Res.string.footprints_pause),
+                            "footprints_pause",
+                            supporting = stringResource(if (state.paused) Res.string.footprints_paused else status ?: Res.string.footprints_interrupted),
+                            enabled = !busy,
+                        ) { if (resumable) enable("resume") else control("pause") } else null,
                     ),
-                )
+                ))
             }
             item {
                 val selectedTrip = view.history.sessions.firstOrNull { it.id == session }

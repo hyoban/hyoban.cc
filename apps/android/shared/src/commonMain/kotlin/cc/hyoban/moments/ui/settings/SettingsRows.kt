@@ -1,6 +1,7 @@
 package cc.hyoban.moments.ui.settings
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,7 +27,8 @@ import cc.hyoban.moments.ui.design.Text
  * plugin's own dialog or panel from a [Value] or [Action] row.
  */
 sealed interface SettingsRow {
-    val icon: ImageVector
+    /** Every row in a group has one; a panel's list of options may go without. */
+    val icon: ImageVector?
     val title: String
     val tag: String?
 
@@ -43,7 +45,7 @@ sealed interface SettingsRow {
 
     /** What it is set to under its name; a tap opens a dialog to change it. */
     class Value(
-        override val icon: ImageVector,
+        override val icon: ImageVector?,
         override val title: String,
         override val tag: String?,
         val value: String?,
@@ -63,8 +65,30 @@ sealed interface SettingsRow {
         val enabled: Boolean = true,
         /** Under way: a spinner at its end in place of [trailing]. */
         val busy: Boolean = false,
+        /** Destructive (deleting a book): its icon and name in the danger colour, asked about in a dialog first. */
+        val danger: Boolean = false,
         val onClick: () -> Unit,
     ) : SettingsRow
+
+    /** One of a panel's options that exclude each other, a radio at its end; no icon. */
+    class Radio(
+        override val title: String,
+        override val tag: String?,
+        val chosen: Boolean,
+        val onClick: () -> Unit,
+    ) : SettingsRow {
+        override val icon: ImageVector? get() = null
+    }
+
+    /** A few lines only read (what the side key did last): [headline] in body, [lines] under it in caption. */
+    class Lines(
+        val headline: String,
+        val lines: List<String>,
+    ) : SettingsRow {
+        override val icon: ImageVector? get() = null
+        override val title: String get() = headline
+        override val tag: String? get() = null
+    }
 
     /** Which of [options] (by key, with its words) is chosen, under its name; a tap opens a menu of them. */
     class Choice(
@@ -104,7 +128,22 @@ sealed interface SettingsRow {
         val trailing: String? = null,
         /** Under way: a spinner at its end in place of [trailing]. */
         val busy: Boolean = false,
+        /** One the list can lose (a home): a close button at its end, read as [removeLabel]. */
+        val onRemove: (() -> Unit)? = null,
+        val removeLabel: String? = null,
+        val removeTag: String? = null,
     ) : SettingsRow
+}
+
+/** Whether rows are drawn on the page itself (我) rather than in a group's card: a page row's chevron is then in the third grey. */
+private val LocalOnPage = androidx.compose.runtime.staticCompositionLocalOf { false }
+
+/** [rows] on the page itself, as 我 lists them: space between them rather than a card and lines. */
+@Composable
+fun SettingsRowsOnPage(rows: List<SettingsRow>, modifier: Modifier = Modifier) {
+    androidx.compose.runtime.CompositionLocalProvider(LocalOnPage provides true) {
+        PageRows(modifier) { shapes -> rows.forEach { SettingsRowView(it, shapes) } }
+    }
 }
 
 /** A settings group as declared: its caption, its rows and its note. */
@@ -113,12 +152,25 @@ class SettingsGroupSpec(val title: String?, val note: String?, val rows: List<Se
 /** Draws [group], each row by its kind. */
 @Composable
 fun SettingsGroupView(group: SettingsGroupSpec) {
-    if (group.rows.isEmpty()) return
+    if (group.rows.isEmpty()) {
+        // No rows yet (no albums): its caption and note, no empty card.
+        if (group.title == null && group.note == null) return
+        if (group.title != null) Caption(group.title) else androidx.compose.foundation.layout.Spacer(Modifier.size(Space.xl))
+        group.note?.let {
+            Text(
+                it,
+                style = AppTheme.typography.caption,
+                color = cc.hyoban.moments.ui.theme.tokens.tx2,
+                modifier = Modifier.padding(start = Space.gutter + Space.l, end = Space.gutter + Space.l, top = Space.s),
+            )
+        }
+        return
+    }
     SegmentedGroup(group.title, group.note, group.rows.map { row -> { shapes -> SettingsRowView(row, shapes) } })
 }
 
 @Composable
-private fun SettingsRowView(row: SettingsRow, shapes: cc.hyoban.moments.ui.design.ListItemShapes) {
+internal fun SettingsRowView(row: SettingsRow, shapes: cc.hyoban.moments.ui.design.ListItemShapes) {
     val tagged = row.tag?.let { Modifier.testTag(it) } ?: Modifier
     when (row) {
         is SettingsRow.Switch -> SwitchRow(row.checked, row.icon, row.title, row.tag, shapes, row.supporting, row.enabled, row.onToggle)
@@ -127,7 +179,7 @@ private fun SettingsRowView(row: SettingsRow, shapes: cc.hyoban.moments.ui.desig
             shapes = shapes,
             enabled = row.enabled,
             colors = segmentColors(),
-            leadingContent = { Icon(row.icon, contentDescription = null) },
+            leadingContent = row.icon?.let { icon -> { Icon(icon, contentDescription = null) } },
             supportingContent = row.value?.let { { Text(it, maxLines = row.maxLines, overflow = TextOverflow.Ellipsis) } },
             modifier = tagged,
         ) { Text(row.title) }
@@ -136,14 +188,18 @@ private fun SettingsRowView(row: SettingsRow, shapes: cc.hyoban.moments.ui.desig
             shapes = shapes,
             enabled = row.enabled,
             colors = segmentColors(),
-            leadingContent = { Icon(row.icon, contentDescription = null) },
+            leadingContent = if (row.danger) {
+                { Icon(row.icon, contentDescription = null, tint = cc.hyoban.moments.ui.theme.tokens.danger) }
+            } else {
+                { Icon(row.icon, contentDescription = null) }
+            },
             supportingContent = row.supporting?.let { { Text(it, maxLines = row.maxLines, overflow = TextOverflow.Ellipsis) } },
             trailingContent = when {
                 row.busy -> { { cc.hyoban.moments.ui.design.Spinner(Modifier.size(24.dp)) } }
                 else -> row.trailing?.let { { Text(it, style = AppTheme.typography.caption) } }
             },
             modifier = tagged,
-        ) { Text(row.title) }
+        ) { if (row.danger) Text(row.title, color = cc.hyoban.moments.ui.theme.tokens.danger) else Text(row.title) }
         is SettingsRow.Choice -> {
             var open by remember { mutableStateOf(false) }
             Box {
@@ -177,7 +233,13 @@ private fun SettingsRowView(row: SettingsRow, shapes: cc.hyoban.moments.ui.desig
             colors = segmentColors(),
             leadingContent = { Icon(row.icon, contentDescription = null) },
             supportingContent = row.supporting?.let { { Text(it) } },
-            trailingContent = { Icon(AppIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp)) },
+            trailingContent = {
+                if (LocalOnPage.current) {
+                    Icon(AppIcons.ChevronRight, contentDescription = null, tint = cc.hyoban.moments.ui.theme.tokens.tx3)
+                } else {
+                    Icon(AppIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp))
+                }
+            },
             modifier = tagged,
         ) { Text(row.title) }
         is SettingsRow.External -> ActionRow(row.icon, row.title, shapes, row.supporting, row.tag, row.enabled, external = true, onClick = row.onClick)
@@ -190,9 +252,28 @@ private fun SettingsRowView(row: SettingsRow, shapes: cc.hyoban.moments.ui.desig
             supportingContent = row.supporting?.let { { Text(it) } },
             trailingContent = when {
                 row.busy -> { { cc.hyoban.moments.ui.design.Spinner(Modifier.size(24.dp)) } }
+                row.onRemove != null -> { {
+                    cc.hyoban.moments.ui.design.IconButton(onClick = row.onRemove, modifier = row.removeTag?.let { Modifier.testTag(it) } ?: Modifier) {
+                        Icon(AppIcons.Close, contentDescription = row.removeLabel, tint = cc.hyoban.moments.ui.theme.tokens.tx2, modifier = Modifier.size(20.dp))
+                    }
+                } }
                 else -> row.trailing?.let { { Text(it, style = AppTheme.typography.caption) } }
             },
             modifier = tagged,
         ) { Text(row.title) }
+        is SettingsRow.Radio -> SegmentedListItem(
+            onClick = row.onClick,
+            shapes = shapes,
+            colors = segmentColors(),
+            trailingContent = { cc.hyoban.moments.ui.design.RadioButton(row.chosen, onClick = null) },
+            modifier = tagged,
+        ) { Text(row.title) }
+        is SettingsRow.Lines -> androidx.compose.foundation.layout.Column(
+            Modifier.padding(Space.l),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(Space.s),
+        ) {
+            Text(row.headline, style = AppTheme.typography.body)
+            row.lines.forEach { Text(it, style = AppTheme.typography.caption, color = cc.hyoban.moments.ui.theme.tokens.tx2) }
+        }
     }
 }
