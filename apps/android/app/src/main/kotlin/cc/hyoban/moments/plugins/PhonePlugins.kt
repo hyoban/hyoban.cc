@@ -240,19 +240,20 @@ private fun monthExpense(ledger: Ledger): Pair<Long, String>? {
     return spent
 }
 
-internal object FootprintsPhone : Plugin, MeRowItem, ImportGroup, BackgroundWork, PhonePageSet, MapOverlay, OnboardingStep {
+internal object FootprintsPhone : Plugin, MeRowItem, ImportGroup, BackgroundWork, PhonePageSet, OnboardingStep {
     override val module = Module.FOOTPRINTS
 
     override fun Contributions.contribute() {
         // GPS tracks stay on this phone, private; none of them publish.
         provide(Services.footprints) { cc.hyoban.moments.footprints.FootprintStore((it as PhoneContainer).appContext) }
+        // Recording them, and exporting or deleting what the store keeps, from their panel on the map.
+        provide(Services.footprintRecording) { cc.hyoban.moments.footprints.PhoneFootprintRecording((it as PhoneContainer).appContext, it.footprints) }
         add(PhonePoints.meRows, this@FootprintsPhone)
         // Its diagnostics stay on the phone, out of the backup.
         add(Points.kept, KeptFiles(left = listOf("footprint-diagnostics")))
         add(Points.imports, this@FootprintsPhone)
         add(PhonePoints.heat, FootprintsHeat)
         add(PhonePoints.pages, this@FootprintsPhone)
-        add(Points.mapOverlays, this@FootprintsPhone)
         add(Points.onboardingSteps, this@FootprintsPhone)
         add(PhonePoints.background, this@FootprintsPhone)
         add(PhonePoints.needs, *FootprintNeeds.all.toTypedArray())
@@ -279,36 +280,6 @@ internal object FootprintsPhone : Plugin, MeRowItem, ImportGroup, BackgroundWork
 
     override fun androidx.navigation.NavGraphBuilder.pages(pages: PhonePages) {
         screen<cc.hyoban.moments.ui.FootprintSettings> { cc.hyoban.moments.footprints.FootprintSettingsScreen(pages.container, onBack = pages.back) }
-    }
-
-    // Its own store and panel, drawn on the atlas as the shared map takes them.
-    @Composable
-    override fun Overlay(
-        container: cc.hyoban.moments.AppContainer,
-        actions: cc.hyoban.moments.ui.map.MapOverlayActions,
-        content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
-    ) = cc.hyoban.moments.footprints.FootprintsOnMap(container as PhoneContainer, { actions.navigate(cc.hyoban.moments.ui.FootprintSettings) }, actions.writeAt, actions.openStop) { state ->
-        val drawing = remember(state.drawing) {
-            cc.hyoban.moments.ui.map.AtlasFootprints(
-                lines = state.drawing.lines.map { (mode, points) ->
-                    cc.hyoban.moments.ui.map.AtlasFootprintLine(
-                        mode = when (mode) {
-                            cc.hyoban.moments.footprints.TravelMode.WALK -> cc.hyoban.moments.ui.map.AtlasFootprintMode.WALK
-                            cc.hyoban.moments.footprints.TravelMode.CYCLE -> cc.hyoban.moments.ui.map.AtlasFootprintMode.CYCLE
-                            cc.hyoban.moments.footprints.TravelMode.DRIVE -> cc.hyoban.moments.ui.map.AtlasFootprintMode.DRIVE
-                        },
-                        points = points,
-                    )
-                },
-                ends = state.drawing.ends,
-                stays = state.drawing.stays,
-                tail = state.drawing.tail,
-            )
-        }
-        content(cc.hyoban.moments.ui.map.AtlasFootprintsOnMap(
-            drawing.copy(focus = state.focus), state.frame, state.frameRequested, state.onFramed, state.open, state.recording, state.openStay,
-            looking = state.looking, stopLooking = state.stopLooking, days = state.days, trips = state.trips,
-        ))
     }
 
     /** Recording them, asked for in 初次打开 with what it asks of the system. */

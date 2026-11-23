@@ -231,7 +231,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
         buildList { while (c.moveToNext()) add(c.getString(0)) }
     }
 
-    @Synchronized fun history(): FootprintHistory {
+    @Synchronized override fun history(): FootprintHistory {
         val days = days()
         val sessions = readableDatabase.rawQuery("SELECT id,started,ended FROM sessions ORDER BY started DESC", null).use { c ->
             buildList { while (c.moveToNext()) add(TrackSession(c.getString(0), c.getLong(1), if (c.isNull(2)) null else c.getLong(2))) }
@@ -260,7 +260,7 @@ class FootprintStore(context: Context) : SQLiteOpenHelper(
     }
 
     /** [points] and the unconfirmed end after them, for the map while recording. */
-    @Synchronized fun pointsWithTail(selection: TrackSelection): Pair<List<TrackPoint>, List<TrackPoint>> = cursor(selection).use { c ->
+    @Synchronized override fun pointsWithTail(selection: TrackSelection): Pair<List<TrackPoint>, List<TrackPoint>> = cursor(selection).use { c ->
         refinedTrackWithTail(sequence { while (c.moveToNext()) yield(c.point()) })
     }
 

@@ -8,6 +8,8 @@ import cc.hyoban.moments.Setting
 import cc.hyoban.moments.Token
 import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.footprints.FixExtras
+import cc.hyoban.moments.footprints.FootprintHistory
+import cc.hyoban.moments.footprints.TrackSession
 import cc.hyoban.moments.footprints.Footprints
 import cc.hyoban.moments.footprints.RecordingState
 import cc.hyoban.moments.footprints.TrackPoint
@@ -174,6 +176,15 @@ class PhoneBackup(prefs: Prefs, secrets: File, private val folder: File, private
         override fun days(): List<String> = read(FOOTPRINTS, emptyList()) {
             prepare("SELECT DISTINCT day FROM points ORDER BY day DESC").use { buildList { while (it.step()) add(it.getText(0)) } }
         }
+
+        override fun history(): FootprintHistory = FootprintHistory(
+            days(),
+            read(FOOTPRINTS, emptyList()) {
+                prepare("SELECT id, started, ended FROM sessions ORDER BY started DESC").use {
+                    buildList { while (it.step()) add(TrackSession(it.getText(0), it.getLong(1), it.longOrNull(2))) }
+                }
+            },
+        )
 
         override fun points(selection: TrackSelection): List<TrackPoint> = read(FOOTPRINTS, emptyList()) {
             val (where, args) = when {

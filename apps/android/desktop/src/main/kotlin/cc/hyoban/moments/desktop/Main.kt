@@ -646,7 +646,7 @@ private fun Route(
             container, route.uid, onMedia = openMedia, onPlace = openPlace, onTrip = openTrip, onBack = back,
             onEdit = { shell.open(EditMoment(it)) }, onDay = openDay, onChanges = { shell.show(Section.Publish) },
         )
-        is NewMoment -> NewMomentScreen(container, onBack = back, onSaved = back, plan = route.plan)
+        is NewMoment -> NewMomentScreen(container, onBack = back, onSaved = back, stay = cc.hyoban.moments.ui.StayAt.of(route.stay), plan = route.plan)
         is EditMoment -> NewMomentScreen(container, onBack = back, onSaved = back, edit = route.uid, onDeleted = { shell.back(); shell.back() })
         is Day -> DayScreen(container, route.date, onMoment = openMoment, onBack = back, onTrip = openTrip)
         is PlaceMoments -> PlaceScreen(
@@ -679,6 +679,11 @@ private fun Route(
             onFocused = { shell.mapFocus = null },
             onNewTrip = { shell.open(TripEdit()) },
             onSuggestedTrip = { shell.open(TripEdit(start = it.startAt, end = it.endAt, title = it.name, from = it.from, to = it.to)) },
+            // A stay on the footprints is written at, or its check-in opened.
+            overlay = cc.hyoban.moments.ui.map.MapOverlayActions(
+                writeAt = { shell.open(NewMoment(stay = it.encoded)) },
+                openStop = { shell.open(EditMoment(it)) },
+            ),
         )
         is TripPlay -> TripPlayerScreen(container, route.id, onMoment = openMoment, onBack = back)
         Search -> SearchScreen(container, onMoment = openMoment, onBack = back)

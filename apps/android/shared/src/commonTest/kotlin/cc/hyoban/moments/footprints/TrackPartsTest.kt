@@ -1,7 +1,8 @@
 package cc.hyoban.moments.footprints
 
-import org.junit.Assert.*
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class TrackPartsTest {
     /** A straight eastward track, a fix every five seconds at [kmh], from [metres] along it. */

@@ -76,7 +76,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   read the points from `Plugins.registry`, never naming a plugin. A module's stores and clients are
   services its plugin provides, by their keys in `Services`: the ledger (`ledger`, the phone's
   `LedgerPhone` its writable store, the Mac's ledger section the backup's), the footprints
-  (`footprints`, `FootprintsPhone`'s store, the Mac's footprints section the backup's), the NAS's
+  (`footprints`, `FootprintsPhone`'s store, the Mac's footprints section the backup's), recording them and exporting or deleting what is kept (`footprintRecording`, `FootprintsPhone`'s alone: the
+  footprints' panel on the map is shared and leaves those rows out without it), the NAS's
   client (`nas`, the device's NAS part, `NasPhone` and `NasMac`), Swarm's import (`swarm`,
   `CheckinPlugin`'s) and Xiaohongshu's notes (`noteSearch`, the phone's `XiaohongshuPlugin`'s, none on
   the Mac), and the check-ins 演示模式 leaves shown (`shownCheckins`, `CheckinPlugin`'s, read with `own`

@@ -7,14 +7,11 @@ import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.data.spec.Module
-import cc.hyoban.moments.ui.components.openAppSettings
 
 import cc.hyoban.moments.ui.design.ModalBottomSheet
 import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.FilterChip
 import cc.hyoban.moments.ui.design.TextButton
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -26,16 +23,19 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.AppContainer
+import cc.hyoban.moments.plugins.Plugins
+import cc.hyoban.moments.plugins.Services
+import cc.hyoban.moments.ui.LocalDevice
+import cc.hyoban.moments.ui.components.testTagsAsResources
+import kotlinx.coroutines.flow.MutableStateFlow
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.settings.SwitchRow
@@ -48,7 +48,6 @@ import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.entryUid
 import cc.hyoban.moments.ui.compose.KeepPlace
 import cc.hyoban.moments.ui.theme.tokens
-import android.widget.Toast
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -78,7 +77,7 @@ data class FootprintsMapState(
     val frameRequested: Boolean,
     val onFramed: () -> Unit,
     val open: () -> Unit,
-    /** Whether the phone is recording now, which the map's footprints button shows. */
+    /** Whether the device is recording now, which the map's footprints button shows. */
     val recording: Boolean = false,
     /** A stay on the map tapped, by its start. */
     val openStay: (Long) -> Unit = {},
@@ -93,9 +92,15 @@ data class FootprintsMapState(
     val trips: List<Pair<String, String>> = emptyList(),
 )
 
+/**
+ * The footprints over the map and their panel: the chosen time's track, told as stays and moves.
+ * Where the device records them ([FootprintRecording], the phone's), the panel also turns the
+ * recording and exports or deletes what it keeps; elsewhere (the Mac, from the phone's backup) it
+ * only shows them.
+ */
 @Composable
 fun FootprintsOnMap(
-    container: PhoneContainer,
+    container: AppContainer,
     onSettings: () -> Unit,
     onWriteAtStay: (cc.hyoban.moments.ui.StayAt) -> Unit,
     onCheckin: (String) -> Unit,
@@ -114,11 +119,12 @@ fun FootprintsOnMap(
     // the panel framed them, until the map's own places or trips are tapped.
     var focus by remember { mutableStateOf<LongRange?>(null) }
     var framed by rememberSaveable { mutableStateOf(false) }
-    val context = LocalContext.current
+    val device = LocalDevice.current
     val scope = rememberCoroutineScope()
     val store = container.footprints
+    val recording = Plugins.registry.service(Services.footprintRecording, container, settings::isOn)
     val revision by store.revision.collectAsStateWithLifecycle()
-    val status by RecordingService.status.collectAsStateWithLifecycle()
+    val status by (recording?.status ?: NoStatus).collectAsStateWithLifecycle()
     // What they show is the 足迹 layer's time, chosen in the map's layers menu with every other layer's.
     val times = remember(settings) { cc.hyoban.moments.ui.map.MapTimes(settings) }
     val time = times.of(cc.hyoban.moments.ui.map.TimedLayer.TRACK)
@@ -131,10 +137,6 @@ fun FootprintsOnMap(
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<StringResource?>(null) }
     var deleting by remember { mutableStateOf<TrackSelection?>(null) }
-    var exportDay by rememberSaveable { mutableStateOf<String?>(null) }
-    var exportSession by rememberSaveable { mutableStateOf<String?>(null) }
-    var exportRaw by rememberSaveable { mutableStateOf(false) }
-    var pendingAction by rememberSaveable { mutableStateOf<String?>(null) }
 
     fun work(block: suspend () -> Unit) {
         scope.launch {
@@ -146,7 +148,8 @@ fun FootprintsOnMap(
         }
     }
     fun control(action: String) = work {
-        RecordingService.control(context, action)
+        val recording = recording ?: return@work
+        recording.control(action)
         if (action == "start_trip") withContext(Dispatchers.IO) { store.state().session }?.let { times.setOwn(cc.hyoban.moments.ui.map.TimedLayer.TRACK, cc.hyoban.moments.ui.map.MapTime.Trip(it)) }
     }
 
@@ -166,7 +169,7 @@ fun FootprintsOnMap(
                 }
                 val tail = unconfirmed.takeIf { live && it.isNotEmpty() && System.currentTimeMillis() - it.last().time <= TRACK_GAP_MS }.orEmpty()
                 val parts = trackParts(points, if (points.isEmpty()) emptyList() else store.activities(points.first().time - ACTIVITY_LOOKBACK_MS, points.last().time))
-                TrackView(state, store.history(), points, trackStats(points), parts, footprintDrawing(points, parts, tail), store.deletable(selection))
+                TrackView(state, store.history(), points, trackStats(points), parts, footprintDrawing(points, parts, tail), recording?.deletable(selection) == true)
             }
             loaded = true
         } catch (e: CancellationException) { throw e } catch (_: Exception) {
@@ -197,7 +200,7 @@ fun FootprintsOnMap(
             // A check-in already there over the stay, Swarm's or one kept before, is that visit,
             // whichever day it started on.
             val other = container.repository.checkins.value.overlapping(stay.start, stay.end).any { it.uid != entry.entryUid }
-            if (other) Toast.makeText(context, textOf(Res.string.message_checkin_known), Toast.LENGTH_SHORT).show()
+            if (other) device.toast(textOf(Res.string.message_checkin_known))
             else {
                 container.repository.saveEntry(entry)
                 // The bills paid while there, with no place, may take this one.
@@ -207,65 +210,13 @@ fun FootprintsOnMap(
         // Kept as a check-in only while check-ins are on (记录项与公开).
         KeepPlace(container, Fix(stay.latitude, stay.longitude), "", onDismiss = { keeping = null }, alternative = keepCheckin.takeIf { LocalSettings.current.isOn(Module.CHECKIN) }?.let { org.jetbrains.compose.resources.stringResource(Res.string.action_save_checkin) to it })
     }
-    // Recording in the background needs location 始终允许, which only the system's settings give:
-    // said once, after recording first starts without it (35).
-    var askBackground by rememberSaveable { mutableStateOf(false) }
-    val prefs = remember { context.getSharedPreferences("permissions", android.content.Context.MODE_PRIVATE) }
-    val requested = remember {
-        cc.hyoban.moments.plugins.FootprintNeeds.location.permissions + cc.hyoban.moments.plugins.FootprintNeeds.notifications.permissions
-    }
-    val permissions = cc.hyoban.moments.ui.components.rememberPermissionAsk(
-        requested,
-        cc.hyoban.moments.ui.components.PermissionWords(
-            AppIcons.Footprints,
-            stringResource(Res.string.onboarding_footprints),
-            stringResource(Res.string.onboarding_footprints_line),
-            stringResource(Res.string.permission_not_now),
-            listOf(
-                cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Shield, stringResource(Res.string.onboarding_fp_local)),
-                cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Bell, stringResource(Res.string.onboarding_fp_notification)),
-            ),
-        ),
-        isGranted = { cc.hyoban.moments.plugins.FootprintNeeds.location.given(it) },
-        onDecline = { pendingAction = null },
-    ) { granted ->
-        val action = pendingAction
-        pendingAction = null
-        if (granted && action != null) {
-            control(action)
-            if (!cc.hyoban.moments.plugins.FootprintNeeds.background.given(context) && !prefs.getBoolean("told_background", false)) {
-                prefs.edit().putBoolean("told_background", true).apply()
-                askBackground = true
-            }
-        } else if (!granted) error = Res.string.footprints_permission_needed
-    }
-    fun enable(action: String) {
-        pendingAction = action
-        permissions()
-    }
-    if (askBackground) cc.hyoban.moments.ui.design.PermissionSheet(
-        icon = AppIcons.Footprints,
-        title = stringResource(Res.string.permission_background_title),
-        body = stringResource(Res.string.permission_background_body),
-        facts = listOf(cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Bell, stringResource(Res.string.onboarding_fp_notification))),
-        path = stringResource(Res.string.permission_background_path),
-        primary = stringResource(Res.string.permission_open_settings),
-        external = true,
-        secondary = stringResource(Res.string.permission_background_secondary),
-        onPrimary = { askBackground = false; context.openAppSettings() },
-        onDismiss = { askBackground = false },
-        tag = "permission_background",
-    )
-    // ColorOS's file manager names the file from the type: application/gpx+xml became ".gpx+xml"
-    // and octet-stream ".bin". Only a wildcard keeps the ".gpx" name as given.
-    val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
-        if (uri != null) work {
-            withContext(Dispatchers.IO) {
-                val output = context.contentResolver.openOutputStream(uri, "wt") ?: error("Cannot open document")
-                output.bufferedWriter(Charsets.UTF_8).use { store.export(TrackSelection(exportDay, exportSession), it, raw = exportRaw) }
-            }
-        }
-    }
+    // Recording asks first for what it needs; exporting saves to a file the owner names. Both are the recording device's.
+    val enable = recording?.rememberEnable(
+        onGranted = ::control,
+        onDeclined = {},
+        onDenied = { error = Res.string.footprints_permission_needed },
+    ) ?: {}
+    val export = recording?.rememberExport(::work) ?: { _, _, _ -> }
     val state = view.state
     content(FootprintsMapState(
         drawing = if (showTracks) view.drawing else FootprintDrawing(),
@@ -294,19 +245,20 @@ fun FootprintsOnMap(
     if (expanded) ModalBottomSheet(
         onDismissRequest = { expanded = false },
         containerColor = AppColors.sheet,
-        modifier = Modifier.semantics { testTagsAsResourceId = true }.testTag("footprints_panel"),
+        modifier = Modifier.testTagsAsResources().testTag("footprints_panel"),
     ) {
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = Space.xl)) {
             // Its name, and the way to how it records, as the place sheet has its name and the way there.
             item {
                 Row(Modifier.fillMaxWidth().padding(start = Space.gutter + Space.l, end = Space.gutter), verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(Res.string.footprints_title), Modifier.weight(1f).semantics { heading() }, style = AppTheme.typography.title)
-                    IconButton(onClick = { expanded = false; reopen = true; onSettings() }, modifier = Modifier.testTag("footprint_settings")) {
+                    // How it records is the recording device's to set.
+                    if (recording != null) IconButton(onClick = { expanded = false; reopen = true; onSettings() }, modifier = Modifier.testTag("footprint_settings")) {
                         Icon(AppIcons.Settings, contentDescription = stringResource(Res.string.footprint_settings_title))
                     }
                 }
             }
-            item {
+            if (recording != null) item {
                 cc.hyoban.moments.ui.settings.SettingsGroupView(cc.hyoban.moments.ui.settings.SettingsGroupSpec(
                     stringResource(Res.string.footprints_section_recording),
                     error?.let { stringResource(it) } ?: stringResource(Res.string.footprints_local_note),
@@ -335,7 +287,7 @@ fun FootprintsOnMap(
                 SegmentedGroup(
                     stringResource(Res.string.footprints_section_tracks),
                     stringResource(Res.string.footprints_quality_note),
-                    listOf(
+                    listOf<cc.hyoban.moments.ui.settings.Segment>(
                         { shapes ->
                             // What is chosen, and a tap shows the whole of it on the map.
                             SegmentedListItem(
@@ -358,32 +310,24 @@ fun FootprintsOnMap(
                                 Text(if (selectedTrip == null) cc.hyoban.moments.ui.map.timeWords(time) else stamp(selectedTrip.started) + " – " + (selectedTrip.ended?.let(::stamp) ?: stringResource(Res.string.footprints_active_trip)))
                             }
                         },
+                    ) + if (recording == null) emptyList() else listOf<cc.hyoban.moments.ui.settings.Segment>(
                         { shapes ->
                             ActionRow(AppIcons.Download, stringResource(Res.string.footprints_export), shapes,
                                 enabled = loaded && !busy && view.points.isNotEmpty()) {
-                                exportDay = selection.day
-                                exportSession = selection.session
-                                exportRaw = false
-                                export.launch("footprints-${session ?: day ?: time.encode().replace(':', '-')}.gpx")
+                                export(TrackSelection(selection.day, selection.session), false, "footprints-${session ?: day ?: time.encode().replace(':', '-')}.gpx")
                             }
                         },
                         { shapes ->
                             ActionRow(AppIcons.Download, stringResource(Res.string.footprints_export_all), shapes,
                                 enabled = loaded && !busy && view.history.days.isNotEmpty()) {
-                                exportDay = null
-                                exportSession = null
-                                exportRaw = false
-                                export.launch("footprints-all.gpx")
+                                export(TrackSelection(), false, "footprints-all.gpx")
                             }
                         },
                         { shapes ->
                             ActionRow(AppIcons.Download, stringResource(Res.string.footprints_export_raw), shapes,
                                 supporting = stringResource(Res.string.footprints_export_raw_note),
                                 enabled = loaded && !busy && (selection.day in view.history.days || session != null)) {
-                                exportDay = selection.day
-                                exportSession = selection.session
-                                exportRaw = true
-                                export.launch("footprints-raw-${session ?: day ?: time.encode().replace(':', '-')}.gpx")
+                                export(TrackSelection(selection.day, selection.session), true, "footprints-raw-${session ?: day ?: time.encode().replace(':', '-')}.gpx")
                             }
                         },
                         { shapes ->
@@ -391,10 +335,7 @@ fun FootprintsOnMap(
                             ActionRow(AppIcons.Download, stringResource(Res.string.footprints_export_all_raw), shapes,
                                 supporting = stringResource(Res.string.footprints_export_all_raw_note),
                                 tag = "footprints_export_all_raw", enabled = loaded && !busy && view.history.days.isNotEmpty()) {
-                                exportDay = null
-                                exportSession = null
-                                exportRaw = true
-                                export.launch("footprints-raw-all.gpx")
+                                export(TrackSelection(), true, "footprints-raw-all.gpx")
                             }
                         },
                         { shapes ->
@@ -467,7 +408,7 @@ fun FootprintsOnMap(
             confirmButton = { TextButton(onClick = {
                 deleting = null
                 work {
-                    withContext(Dispatchers.IO) { store.delete(target) }
+                    withContext(Dispatchers.IO) { recording?.delete(target) }
                     if (target.session != null) times.reset(cc.hyoban.moments.ui.map.TimedLayer.TRACK)
                 }
             }) { Text(stringResource(Res.string.footprints_delete)) } },
@@ -475,6 +416,9 @@ fun FootprintsOnMap(
         )
     }
 }
+
+/** No recording here to say anything of itself. */
+private val NoStatus = MutableStateFlow<StringResource?>(null)
 
 /** An activity entered before the first point may still say how it went. */
 private const val ACTIVITY_LOOKBACK_MS = 30 * 60_000L

@@ -9,8 +9,11 @@ import cc.hyoban.moments.ui.Atlas
 import cc.hyoban.moments.ui.FootprintSettings
 import cc.hyoban.moments.ui.design.AppIcons
 
-/** 足迹: the phone's GPS track, recorded in the background and never published. */
-object FootprintsPlugin : Plugin {
+/**
+ * 足迹: the phone's GPS track, recorded in the background and never published; drawn over the
+ * map, with its panel, on every device that has them (the Mac's from the phone's backup).
+ */
+object FootprintsPlugin : Plugin, MapOverlay {
     override val module = Module.FOOTPRINTS
     val icon = AppIcons.Footprints
 
@@ -36,6 +39,37 @@ object FootprintsPlugin : Plugin {
                     settings.changeMapFootprints(!settings.mapFootprints)
                 }
         })
+        add(Points.mapOverlays, this@FootprintsPlugin)
+    }
+
+    // The chosen time's track and its panel, drawn on the atlas as the shared map takes them.
+    @Composable
+    override fun Overlay(
+        container: AppContainer,
+        actions: cc.hyoban.moments.ui.map.MapOverlayActions,
+        content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
+    ) = cc.hyoban.moments.footprints.FootprintsOnMap(container, { actions.navigate(FootprintSettings) }, actions.writeAt, actions.openStop) { state ->
+        val drawing = androidx.compose.runtime.remember(state.drawing) {
+            cc.hyoban.moments.ui.map.AtlasFootprints(
+                lines = state.drawing.lines.map { (mode, points) ->
+                    cc.hyoban.moments.ui.map.AtlasFootprintLine(
+                        mode = when (mode) {
+                            cc.hyoban.moments.footprints.TravelMode.WALK -> cc.hyoban.moments.ui.map.AtlasFootprintMode.WALK
+                            cc.hyoban.moments.footprints.TravelMode.CYCLE -> cc.hyoban.moments.ui.map.AtlasFootprintMode.CYCLE
+                            cc.hyoban.moments.footprints.TravelMode.DRIVE -> cc.hyoban.moments.ui.map.AtlasFootprintMode.DRIVE
+                        },
+                        points = points,
+                    )
+                },
+                ends = state.drawing.ends,
+                stays = state.drawing.stays,
+                tail = state.drawing.tail,
+            )
+        }
+        content(cc.hyoban.moments.ui.map.AtlasFootprintsOnMap(
+            drawing.copy(focus = state.focus), state.frame, state.frameRequested, state.onFramed, state.open, state.recording, state.openStay,
+            looking = state.looking, stopLooking = state.stopLooking, days = state.days, trips = state.trips,
+        ))
     }
 }
 

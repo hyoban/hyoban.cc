@@ -121,6 +121,9 @@ object Services {
     /** The footprints: the phone's own store; the phone backup's on the Mac. */
     val footprints = Service<Footprints>("footprints")
 
+    /** Recording the footprints, and exporting or deleting them: the phone's; none on the Mac, which only shows them. */
+    val footprintRecording = Service<cc.hyoban.moments.footprints.FootprintRecording>("footprint-recording")
+
     /** The owner's UGREEN NAS, whose photos 相册 lists, kept as the device keeps its settings. */
     val nas = Service<cc.hyoban.moments.nas.Nas>("nas")
 
