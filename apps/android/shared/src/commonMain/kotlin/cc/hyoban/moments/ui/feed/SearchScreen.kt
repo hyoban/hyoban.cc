@@ -2,7 +2,7 @@ package cc.hyoban.moments.ui.feed
 
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.LocalSettings
-import cc.hyoban.moments.data.spec.Module
+import cc.hyoban.moments.plugins.Plugins
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.WindowInsets
@@ -23,7 +23,6 @@ import cc.hyoban.moments.ui.theme.tokens
 import androidx.compose.ui.draw.clip
 import cc.hyoban.moments.ui.ledger.incoming
 import androidx.compose.foundation.clickable
-import cc.hyoban.moments.data.store.categoryLabel
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -103,64 +102,41 @@ import cc.hyoban.moments.ui.theme.fill
  */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit, onBill: (String) -> Unit = {}) {
+fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit) {
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.shownTrips.collectAsStateWithLifecycle()
     val query = rememberTextFieldState()
     val text = query.text.toString().trim()
-    var kind by rememberSaveable { mutableStateOf(FeedKind.ALL) }
-    // The kinds to choose from: bills and charges only while their modules are on (记录项与公开).
+    var kind by rememberSaveable { mutableStateOf(KIND_ALL) }
+    // The kinds to choose from: everything, the Moments, and those of the modules that are on (记录项与公开).
     val settings = LocalSettings.current
-    val kinds = FeedKind.entries.filter {
-        when (it) {
-            FeedKind.BILLS -> settings.isOn(Module.LEDGER)
-            FeedKind.CHARGES -> settings.isOn(Module.CAR)
-            FeedKind.CHECKINS -> settings.isOn(Module.CHECKIN)
-            else -> true
-        }
-    }
-    LaunchedEffect(kinds) { if (kind !in kinds) kind = FeedKind.ALL }
+    val moduleKinds = Plugins.all.filter { settings.isOn(it.module) }.flatMap { it.searchKinds }
+    val kinds = listOf(KIND_ALL, KIND_MOMENTS) + moduleKinds.map { it.key }
+    LaunchedEffect(kinds) { if (kind !in kinds) kind = KIND_ALL }
     var year by rememberSaveable { mutableStateOf<Int?>(null) }
     var month by rememberSaveable { mutableStateOf<Int?>(null) }
     val filter = TimeFilter(year, month)
     val years = remember(moments) { yearsOf(moments) }
     val months = remember(moments, year) { year?.let { monthsOf(moments, it) }.orEmpty() }
-    val filtering = kind != FeedKind.ALL || filter != TimeFilter()
+    val filtering = kind != KIND_ALL || filter != TimeFilter()
     val searching = text.isNotEmpty() || filtering
     val inTime = remember(moments, filter) { moments.filtered(filter) }
-    val records = rememberTimelineBills(container, moments, filter)
-    val ledger = records.ledger
+    val records = rememberTimelineRecords(container, moments, filter)
     // Each kind's matches, for its chip's count and, chosen, the list.
     val matchedMoments = remember(inTime, places, trips, text) { if (text.isEmpty()) inTime else inTime.filter { it.matches(text, places, trips) } }
-    val matchedBills = remember(records, text) {
-        (records.linked.values.flatten() + records.loose.values.flatten()).filter { txn ->
-            text.isEmpty() || txn.note.contains(text, ignoreCase = true) ||
-                ledger.categoryLabel(txn)?.contains(text, ignoreCase = true) == true
-        }
-    }
-    val matchedCharges = remember(records, text) { if (text.isEmpty()) records.charges.values.flatten() else emptyList() }
-    val matchedCheckins = remember(records, places, text) {
-        records.checkins.values.flatten().filter { checkin ->
-            text.isEmpty() || checkin.venue.contains(text, ignoreCase = true) ||
-                checkin.place?.let { places[it] }?.name?.contains(text, ignoreCase = true) == true
-        }
-    }
-    val found = remember(kind, matchedMoments, matchedBills, matchedCharges, matchedCheckins, searching) {
+    val scope = SearchScope(text, records, places)
+    val matchedByKind = remember(moduleKinds, records, places, text) { moduleKinds.associate { it.key to it.matches(scope) } }
+    val found = remember(kind, matchedMoments, matchedByKind, searching) {
         if (!searching) emptyList() else buildList<Found> {
-            if (kind == FeedKind.ALL || kind == FeedKind.MOMENTS) matchedMoments.forEach { add(Found.Moment(it)) }
-            if (kind == FeedKind.ALL || kind == FeedKind.BILLS) matchedBills.forEach { add(Found.Bill(it)) }
-            if (kind == FeedKind.ALL || kind == FeedKind.CHARGES) matchedCharges.forEach { add(Found.ChargeFound(it)) }
-            if (kind == FeedKind.ALL || kind == FeedKind.CHECKINS) matchedCheckins.forEach { add(Found.CheckinFound(it)) }
+            if (kind == KIND_ALL || kind == KIND_MOMENTS) matchedMoments.forEach { add(Found.Moment(it)) }
+            matchedByKind.forEach { (key, matched) -> if (kind == KIND_ALL || kind == key) matched.forEach { add(Found.Module(it)) } }
         }.sortedByDescending { it.at }
     }
     val counts = mapOf(
-        FeedKind.ALL to matchedMoments.size + matchedBills.size + matchedCharges.size + matchedCheckins.size,
-        FeedKind.MOMENTS to matchedMoments.size,
-        FeedKind.BILLS to matchedBills.size,
-        FeedKind.CHARGES to matchedCharges.size,
-        FeedKind.CHECKINS to matchedCheckins.size,
-    )
+        KIND_ALL to matchedMoments.size + matchedByKind.values.sumOf { it.size },
+        KIND_MOMENTS to matchedMoments.size,
+    ) + matchedByKind.mapValues { it.value.size }
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { focus.requestFocus() }
@@ -201,7 +177,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
             )
         }
         // One kind's chip: its name and, searching, how many it found.
-        val kindChip: @Composable (FeedKind) -> Unit = { option ->
+        val kindChip: @Composable (String) -> Unit = { option ->
             val count = counts.getValue(option)
             cc.hyoban.moments.ui.design.FilterChip(
                 selected = option == kind,
@@ -210,11 +186,9 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                 label = {
                     val name = stringResource(
                         when (option) {
-                            FeedKind.ALL -> Res.string.filter_all
-                            FeedKind.MOMENTS -> Res.string.filter_moments
-                            FeedKind.BILLS -> Res.string.section_bill
-                            FeedKind.CHARGES -> Res.string.part_charge
-                            FeedKind.CHECKINS -> Res.string.filter_checkins
+                            KIND_ALL -> Res.string.filter_all
+                            KIND_MOMENTS -> Res.string.filter_moments
+                            else -> moduleKinds.first { it.key == option }.label
                         },
                     )
                     val figures = AppTheme.typography.caption.fontFamily
@@ -226,7 +200,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                     )
                 },
                 leadingIcon = if (option == kind) ({ SelectedCheck() }) else null,
-                modifier = Modifier.testTag("kind_${option.name.lowercase()}"),
+                modifier = Modifier.testTag("kind_$option"),
             )
         }
         val time: @Composable () -> Unit = {
@@ -297,9 +271,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                             val row = Modifier.padding(horizontal = Space.gutter)
                             when (item) {
                                 is Found.Moment -> SearchResult(item.moment, text, places, trips, container.mediaUrls, row) { onMoment(item.moment.uid) }
-                                is Found.Bill -> SearchBill(item.txn, ledger, row) { onBill(item.txn.id) }
-                                is Found.ChargeFound -> SearchCharge(item.charge, row)
-                                is Found.CheckinFound -> SearchCheckin(item.checkin, text, places, row)
+                                is Found.Module -> item.found.Row(scope, row)
                             }
                         }
                     }
@@ -324,7 +296,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
                 horizontalArrangement = Arrangement.spacedBy(Space.s),
                 modifier = Modifier.padding(vertical = Space.xs),
             ) {
-                items(kinds, key = { it.name }) { kindChip(it) }
+                items(kinds, key = { it }) { kindChip(it) }
             }
             time()
             results()
@@ -332,7 +304,7 @@ fun SearchScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: ()
     }
 }
 
-/** One thing the search found: a Moment, a bill, a charge or a check-in, newest first by [at]. */
+/** One thing the search found: a Moment, or what a module's kind found, newest first by [at]. */
 private sealed interface Found {
     val key: String
     val at: String
@@ -342,19 +314,9 @@ private sealed interface Found {
         override val at get() = moment.occurredAt
     }
 
-    data class Bill(val txn: cc.hyoban.moments.ledger.Txn) : Found {
-        override val key get() = "bill-${txn.id}"
-        override val at get() = txn.local.toString()
-    }
-
-    data class ChargeFound(val charge: Charge) : Found {
-        override val key get() = "charge-${charge.uid}"
-        override val at get() = charge.at
-    }
-
-    data class CheckinFound(val checkin: cc.hyoban.moments.data.things.Checkin) : Found {
-        override val key get() = "checkin-${checkin.uid}"
-        override val at get() = checkin.at
+    data class Module(val found: SearchFound) : Found {
+        override val key get() = found.key
+        override val at get() = found.at
     }
 }
 
@@ -414,17 +376,17 @@ private fun SearchResult(
 }
 
 /** A day in its own year, for a date said without its year: the year's caption above it says that. */
-private fun ownYear(at: String): java.time.LocalDate = java.time.LocalDate.parse(at.take(10))
+fun ownYear(at: String): java.time.LocalDate = java.time.LocalDate.parse(at.take(10))
 
 /** How wide what leads a result is: a Moment's photo, or an icon in the middle of the same room, so every result's words start on one edge. */
-private val LEAD = 56.dp
+val LEAD = 56.dp
 
 /**
  * A result, a row on the page: what leads it in [LEAD]'s room, its lines, and [trailing] at the
  * end; pressed, its wash reaches a little past the gutter.
  */
 @Composable
-private fun SearchRow(
+fun SearchRow(
     lead: @Composable () -> Unit,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
@@ -446,85 +408,12 @@ private fun SearchRow(
     }
 }
 
-/** A bill found, as the timeline lists one, its category's icon in a photo's room and its day in the line under it, since the list spans days. */
-@Composable
-private fun SearchBill(txn: cc.hyoban.moments.ledger.Txn, ledger: cc.hyoban.moments.ledger.Ledger, modifier: Modifier, onClick: () -> Unit) {
-    SearchRow(
-        lead = { Icon(cc.hyoban.moments.ui.ledger.txnIcon(txn, ledger), contentDescription = null, tint = tokens.tx2) },
-        onClick = onClick,
-        modifier = modifier.testTag("bill_${txn.id}"),
-        trailing = {
-            Text(cc.hyoban.moments.ui.ledger.billAmount(txn, ledger), style = AppTheme.typography.body, color = cc.hyoban.moments.ui.ledger.amountColor(txn))
-            Text(txn.local.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")), style = AppTheme.typography.caption, color = tokens.tx3)
-        },
-    ) {
-        Text(cc.hyoban.moments.ui.ledger.txnTitle(txn, ledger), style = AppTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(
-            listOf(
-                cc.hyoban.moments.ui.format.formatDay(txn.dateKey, ownYear(txn.dateKey)),
-                cc.hyoban.moments.ui.ledger.txnSupporting(txn, ledger, withTime = false, place = cc.hyoban.moments.footprints.footprintPlace(txn)),
-            ).filter { it.isNotEmpty() }.joinToString(" "),
-            style = AppTheme.typography.caption,
-            color = tokens.tx2,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
 
-/** A charge found, as the timeline lists one, with its day, since the list spans days. */
-@Composable
-private fun SearchCharge(charge: Charge, modifier: Modifier) {
-    SearchRow(
-        lead = { Icon(AppIcons.Ev, contentDescription = null, tint = tokens.tx2) },
-        onClick = null,
-        modifier = modifier.testTag("charge_${charge.uid}"),
-        trailing = { charge.at.drop(11).take(5).ifEmpty { null }?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx3) } },
-    ) {
-        Text(stringResource(Res.string.timeline_charge), style = AppTheme.typography.body)
-        Text(
-            listOfNotNull(
-                formatDate(charge.at, ownYear(charge.at)),
-                stringResource(if (charge.dc) Res.string.charge_dc else Res.string.charge_ac),
-                charge.kwh?.let { "%.1f kWh".format(it) },
-                charge.minutes?.let { pluralStringResource(Res.plurals.charge_minutes, it, it) },
-            ).joinToString(" "),
-            style = AppTheme.typography.caption,
-            color = tokens.tx2,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
 
-/**
- * A check-in found: its venue, what was searched for marked, and under it its day and its place
- * when that is named otherwise, 私有 when kept off the site; a tap opens its sheet.
- */
-@Composable
-private fun SearchCheckin(checkin: cc.hyoban.moments.data.things.Checkin, text: String, places: Map<String, Place>, modifier: Modifier) {
-    val open = LocalCheckinNav.current
-    val mark = SpanStyle(background = tokens.accentSoft)
-    SearchRow(
-        lead = { Icon(AppIcons.Pin, contentDescription = null, tint = tokens.tx2) },
-        onClick = open?.let { { it(checkin.uid) } },
-        modifier = modifier.testTag("checkin_${checkin.uid}"),
-        trailing = { checkinTime(checkin)?.let { Text(it, style = AppTheme.typography.caption, color = tokens.tx3) } },
-    ) {
-        Text(marked(checkin.venue, text, mark), style = AppTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(
-            listOfNotNull(
-                formatDate(checkin.at, ownYear(checkin.at)),
-                checkin.place?.let { places[it]?.name }?.takeIf { it != checkin.venue },
-                if (checkin.private) stringResource(Res.string.visibility_private) else null,
-            ).joinToString(" "),
-            style = AppTheme.typography.caption,
-            color = tokens.tx2,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
+
+/** The kinds that are no module's: everything, and the Moments. */
+private const val KIND_ALL = "all"
+private const val KIND_MOMENTS = "moments"
 
 /** [words] from a little before where [text] first is, when that is further in than the start shows. */
 private fun around(words: String, text: String): String {
@@ -536,7 +425,7 @@ private fun around(words: String, text: String): String {
 private const val LEAD_IN = 24
 
 /** [words] with every [text] in them, case aside, in [style]. */
-private fun marked(words: String, text: String, style: SpanStyle): AnnotatedString = buildAnnotatedString {
+fun marked(words: String, text: String, style: SpanStyle): AnnotatedString = buildAnnotatedString {
     append(words)
     if (text.isEmpty()) return@buildAnnotatedString
     var from = 0

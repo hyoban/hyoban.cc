@@ -136,7 +136,7 @@ import cc.hyoban.moments.ui.theme.fill
  * of it, the only way the app writes to the site.
  */
 @Composable
-fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit, onBill: (String) -> Unit = {}) {
+fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: () -> Unit) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val publishing by container.publishing.collectAsStateWithLifecycle()
@@ -144,8 +144,9 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
     val busy = publishing != null
     val publish = cc.hyoban.moments.ui.LocalDevice.current.beforePublishing { container.publishPending() }
 
-    // The groups of bills opened past their first few.
-    var openBills by remember { mutableStateOf(emptySet<BillGroup>()) }
+    // What each module's section keeps while the page is open, and what they are drawn from.
+    val sectionStates = changeSections.map { it.state() }
+    val changesScope = ChangesScope(container, pending, places, busy)
     // Asked first, as clearing deletes what was written on the phone.
     var clearing by rememberSaveable { mutableStateOf(false) }
     // Back to where it was opened from once everything is published.
@@ -270,88 +271,19 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
                             revert,
                             // A changed one, field by field against the site's; one made here is as it is.
                             diffs = change.site?.let { site ->
-                                tripDiffs(site, after) { uid -> container.repository.entries.value[uid]?.let { cc.hyoban.moments.data.things.checkinOf(it) }?.venue }
+                                tripDiffs(site, after) { uid -> container.repository.entries.value[uid]?.let { entry -> changeSections.firstNotNullOfOrNull { it.nameOf(entry) } } }
                             },
                         )
                     }
                 }
-                // Check-ins, Swarm's or the footprints' stays, and the occasions, apart from the devices and subscriptions.
-                val (checkins, rest) = pending.entries.partition { cc.hyoban.moments.data.things.checkinOf((it.after ?: it.before)!!) != null }
-                val (occasions, things) = rest.partition { cc.hyoban.moments.data.occasions.Occasions.occasion((it.after ?: it.before)!!) != null }
-                section(Res.string.section_changed_checkins, checkins, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
-                    val entry = (change.after ?: change.before)!!
-                    val revert = { container.scope.launch { container.repository.revertEntry(entry.entryUid) }; Unit }.takeUnless { busy }
-                    val checkin = cc.hyoban.moments.data.things.checkinOf(entry)!!
-                    val end = (entry["end"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.let(::formatTime)
-                    SwipeToRevert(revert) {
-                        OutsideCard(
-                            stringResource(Res.string.timeline_checkin, checkin.venue),
-                            listOfNotNull(formatDate(checkin.at), listOfNotNull(formatTime(checkin.at), end).joinToString("–").ifEmpty { null }).joinToString(" "),
-                            null,
-                            stringResource(
-                                when {
-                                    change.after == null -> Res.string.thing_deleted
-                                    change.before == null -> Res.string.thing_new
-                                    else -> Res.string.thing_changed
-                                },
-                            ),
-                            revert,
-                            diffs = change.before?.let { before -> change.after?.let { after -> entryDiffs(before, after, places) } },
-                        )
-                    }
+                // Each module's own, its check-ins, occasions, devices and bills; then what none says is its own.
+                var rest = pending.entries
+                changeSections.forEachIndexed { i, changes ->
+                    val (own, others) = rest.partition { changes.owns((it.after ?: it.before)!!) }
+                    rest = others
+                    with(changes) { section(changesScope, own, sectionStates[i]) }
                 }
-                section(Res.string.section_changed_occasions, occasions, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
-                    val entry = (change.after ?: change.before)!!
-                    val revert = { container.scope.launch { container.repository.revertEntry(entry.entryUid) }; Unit }.takeUnless { busy }
-                    val occasion = cc.hyoban.moments.data.occasions.Occasions.occasion(entry)!!
-                    SwipeToRevert(revert) {
-                        OutsideCard(
-                            occasion.name,
-                            formatDate(occasion.first.toString()),
-                            stringResource(if (occasion.repeat) Res.string.occasion_each_year else Res.string.occasion_once),
-                            stringResource(
-                                when {
-                                    change.after == null -> Res.string.thing_deleted
-                                    change.before == null -> Res.string.thing_new
-                                    else -> Res.string.thing_changed
-                                },
-                            ),
-                            revert,
-                            diffs = change.before?.let { before -> change.after?.let { after -> entryDiffs(before, after, places) } },
-                        )
-                    }
-                }
-                section(Res.string.section_changed_things, things, key = { "entry-${(it.after ?: it.before)!!.entryUid}" }) { change ->
-                    val entry = (change.after ?: change.before)!!
-                    val revert = { container.scope.launch { container.repository.revertEntry(entry.entryUid) }; Unit }.takeUnless { busy }
-                    val device = cc.hyoban.moments.data.things.Things.device(entry)
-                    val subscription = cc.hyoban.moments.data.things.Things.subscription(entry)
-                    SwipeToRevert(revert) {
-                        OutsideCard(
-                            device?.name ?: subscription?.name ?: entry.entryUid,
-                            null,
-                            device?.let { cc.hyoban.moments.ui.things.yuan(it.price) }
-                                ?: subscription?.let { cc.hyoban.moments.ui.things.priceOf(it.price, it.currency) },
-                            stringResource(
-                                when {
-                                    change.after == null -> Res.string.thing_deleted
-                                    change.before == null -> Res.string.thing_new
-                                    else -> Res.string.thing_changed
-                                },
-                            ),
-                            revert,
-                            diffs = change.before?.let { before -> change.after?.let { after -> entryDiffs(before, after, places) } },
-                        )
-                    }
-                }
-                billSection(
-                    pending.outside.bills,
-                    openBills,
-                    onFold = { group -> openBills = if (group in openBills) openBills - group else openBills + group },
-                    onRevert = container::revertBill.takeUnless { busy },
-                    onOpen = onBill,
-                    placeName = { id -> places[id]?.name },
-                )
+                otherEntries(rest, changesScope)
                 section(Res.string.section_removed, pending.removed, key = { it.uid }) { moment ->
                     val revert = { container.revert(moment.uid) }.takeUnless { busy }
                     SwipeToRevert(revert) {
@@ -453,7 +385,7 @@ fun ChangesScreen(container: AppContainer, onMoment: (String) -> Unit, onBack: (
  * A group of the changes under [title], each of [items] a card of its own that folds away
  * when taken back and opens out when brought back; the caption goes with the last of them.
  */
-private fun <T> LazyListScope.section(title: StringResource, items: List<T>, key: (T) -> Any, card: @Composable (T) -> Unit) {
+internal fun <T> LazyListScope.section(title: StringResource, items: List<T>, key: (T) -> Any, card: @Composable (T) -> Unit) {
     if (items.isEmpty()) return
     item(key = "caption-$title") { Box(Modifier.animateItem()) { Caption(stringResource(title)) } }
     itemsIndexed(items, key = { _, it -> key(it) }) { index, item ->
@@ -632,7 +564,7 @@ private fun RevertButton(onRevert: () -> Unit, modifier: Modifier = Modifier) {
  * changed, each field from what it was ([diffs], null for one new or deleted).
  */
 @Composable
-private fun OutsideCard(title: String, date: String?, figure: String?, note: String, onRevert: (() -> Unit)?, diffs: List<EntryDiff>? = null) {
+internal fun OutsideCard(title: String, date: String?, figure: String?, note: String, onRevert: (() -> Unit)?, diffs: List<EntryDiff>? = null) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -866,14 +798,10 @@ private fun ChangedFields(change: Change, places: Map<String, Place>, urls: Medi
         any = true
         Field(Res.string.change_order) { FromTo(null, stringResource(Res.string.change_order_moved), AppIcons.Refresh) }
     }
-    // The check-in it carries, renamed with its place.
-    val venueOf = { moment: MomentRecord ->
-        ((moment.extra[cc.hyoban.moments.data.spec.Entries.OTHER_PARTS] as? kotlinx.serialization.json.JsonObject)?.get("checkin") as? kotlinx.serialization.json.JsonObject)
-            ?.let { cc.hyoban.moments.data.spec.Entries.checkinName(it) }
-    }
-    if (venueOf(before) != venueOf(after)) {
+    // What of the Moment's own each module changed (the check-in it carries).
+    changeSections.flatMap { it.momentDiffs(before, after) }.forEach { diff ->
         any = true
-        Field(Res.string.change_checkin) { FromTo(venueOf(before), venueOf(after) ?: stringResource(Res.string.change_none), AppIcons.Flag) }
+        Field(diff.label) { FromTo(diff.from, diff.to, diff.icon) }
     }
     // How a planned one is reached from the place before it.
     if ((before.reachedBy ?: "drive") != (after.reachedBy ?: "drive")) {

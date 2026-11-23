@@ -43,7 +43,8 @@ import kotlin.coroutines.ContinuationInterceptor
  */
 data class PlanRecord(
     val at: String,
-    val checkin: Boolean,
+    /** The word the planner is told a module's own stop by (a check-in), or null for a Moment. */
+    val stop: String?,
     val text: String,
     val place: String?,
     val planned: Boolean,
@@ -696,8 +697,8 @@ class PlanAssistant(
                     append(
                         context.records.joinToString("\n") { record ->
                             val kind = when {
-                                record.checkin && record.id != null -> "check-in still to come"
-                                record.checkin -> "check-in"
+                                record.stop != null && record.id != null -> "${record.stop} still to come"
+                                record.stop != null -> record.stop
                                 record.locked -> "planned, settled by the owner"
                                 record.planned -> "planned"
                                 else -> "moment"

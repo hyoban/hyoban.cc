@@ -61,7 +61,7 @@ import cc.hyoban.moments.ui.settings.SwitchRow
 import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.data.local.Ulid
 import cc.hyoban.moments.ledger.Book
-import cc.hyoban.moments.ledger.COMMON_CURRENCIES
+import cc.hyoban.moments.data.money.COMMON_CURRENCIES
 import cc.hyoban.moments.ledger.ICostBackup
 import cc.hyoban.moments.ledger.ICostImport
 import cc.hyoban.moments.ledger.ICostRow

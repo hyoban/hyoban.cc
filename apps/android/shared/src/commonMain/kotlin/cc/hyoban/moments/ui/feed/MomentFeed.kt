@@ -146,10 +146,8 @@ fun MomentFeed(
     dayNote: (String) -> String? = { null },
     /** The place the page is of, which its cards needn't name. */
     hidePlace: String? = null,
-    /** The ledger's bills on these days, in the Moments' cards and between them, and each day's spending. */
-    bills: TimelineBills = TimelineBills.EMPTY,
-    /** Opens a bill's page. */
-    onBill: (String) -> Unit = {},
+    /** What the modules put on these days, in the Moments' cards and between them, as their plugins join them. */
+    bills: TimelineRecords = TimelineRecords.EMPTY,
     /** Opens a trip's page from the banner where it begins; without it, no banners. */
     onTrip: ((String) -> Unit)? = null,
     /** The footprints, each day's cut at its records into rows between them; they open the day. */
@@ -175,14 +173,15 @@ fun MomentFeed(
     leading: FeedLeading.() -> Unit = {},
 ) {
     val days = remember(moments) { keptDays.get(moments) { moments.groupBy { it.dateKey }.toList() } }
-    // The single column's days: those with Moments and those with bills alone, newest first.
-    // Footprints join a day that is there, never make one of their own.
+    // The single column's days: those with Moments and those with the modules' records alone,
+    // newest first. Footprints and what ends a day (its driving) join a day that is there, never
+    // make one of their own.
     // Each day's footprints as read so far, the day laid out again as its own are read.
     val read = tracks.days.associateWith { tracks.cached(it) }
     val timeline = remember(days, bills, read, oldestFirst, chat, chronological) { keptTimeline.get(days, bills, read, oldestFirst, chat, chronological) {
         val byDay = days.toMap()
-        (byDay.keys + bills.loose.keys + bills.charges.keys + bills.things.keys + bills.checkins.keys).sortedDescending().let { if (chronological) it.reversed() else it }.map { day ->
-            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.charges[day].orEmpty(), bills.things[day].orEmpty(), bills.checkins[day].orEmpty(), oldestFirst = oldestFirst || chat, day = day, track = read[day], drive = bills.drives[day])
+        (byDay.keys + bills.loose.filterValues { day -> day.any { !it.endsDay } }.keys + bills.anchors.keys).sortedDescending().let { if (chronological) it.reversed() else it }.map { day ->
+            val items = dayItems(byDay[day].orEmpty(), bills.loose[day].orEmpty(), bills.anchors[day].orEmpty(), oldestFirst = oldestFirst || chat, day = day, track = read[day])
             Triple(day, byDay[day].orEmpty(), items)
         }
     } }
@@ -205,9 +204,7 @@ fun MomentFeed(
             showDate = showDate,
             selected = moment.uid == selected,
             hidePlace = hidePlace,
-            bills = bills.linked[moment.uid].orEmpty(),
-            ledger = bills.ledger,
-            onBill = onBill,
+            attached = bills.attached[moment.uid].orEmpty(),
         )
     }
 
@@ -370,22 +367,15 @@ fun MomentFeed(
                                         bubble = true,
                                         joinedAbove = joinedAbove,
                                         joinedBelow = joinedBelow,
-                                        bills = bills.linked[item.moment.uid].orEmpty(),
-                                        ledger = bills.ledger,
-                                        onBill = onBill,
-                                        charges = bills.linkedCharges[item.moment.uid].orEmpty(),
+                                        attached = bills.attached[item.moment.uid].orEmpty(),
                                     )
-                                    is ChatItem.CheckinStop -> CheckinBubble(
-                                        item.checkin, joinedAbove, joinedBelow, itemModifier,
-                                        bills.linked[item.checkin.uid].orEmpty(), bills.ledger, onBill,
-                                        charges = bills.linkedCharges[item.checkin.uid].orEmpty(),
-                                    )
+                                    is ChatItem.Anchor -> item.anchor.Bubble(joinedAbove, joinedBelow, itemModifier, bills.attached[item.anchor.uid].orEmpty())
                                     is ChatItem.Records -> {
                                         // Its footprints' lines say how the way to the stop after them was gone.
                                         val next = chats.getOrNull(index + 1)?.key
                                         val openDay = onDay?.let { { it(day) } }
                                         RecordsBubble(
-                                            item.lines, bills.ledger, onBill,
+                                            item.lines,
                                             onDay = openDay,
                                             modifier = itemModifier,
                                             trackRow = next?.takeIf { legs?.has(it) == true }?.let { key -> { line -> legs!!.Track(key, line, openDay) } },
@@ -428,22 +418,16 @@ fun MomentFeed(
                             bottom = if (item.key == last) Space.s else 0.dp,
                         )
                         when (item) {
-                            is DayItem.Moment -> bills.linkedCharges[item.moment.uid]?.takeIf { it.isNotEmpty() }?.let { charges ->
+                            // What goes with a Moment outside its card (a charge at its time) comes under it.
+                            is DayItem.Moment -> bills.attached[item.moment.uid]?.filterNot { it.inCard }?.takeIf { it.isNotEmpty() }?.let { under ->
                                 Column(itemModifier) {
                                     card(item.moment, Modifier, false)
-                                    charges.forEach { ChargeRow(it, ledger = bills.ledger) }
+                                    under.forEach { it.AttachedRow() }
                                 }
                             } ?: card(item.moment, itemModifier, false)
-                            is DayItem.Bills -> BillGroup(item.txns, bills.ledger, onBill, itemModifier)
-                            is DayItem.ChargeItem -> ChargeRow(item.charge, itemModifier, bills.ledger)
-                            is DayItem.ThingItem -> ThingRow(item.thing, itemModifier)
-                            is DayItem.CheckinItem -> Column(itemModifier) {
-                                CheckinRow(item.checkin, hideVenue = hidePlace != null && item.checkin.place == hidePlace)
-                                bills.linkedCharges[item.checkin.uid]?.forEach { ChargeRow(it, ledger = bills.ledger) }
-                                bills.linked[item.checkin.uid]?.takeIf { it.isNotEmpty() }?.let { BillGroup(it, bills.ledger, onBill) }
-                            }
+                            is DayItem.Record -> item.record.Row(itemModifier)
+                            is DayItem.Anchor -> item.anchor.Row(itemModifier, hidePlace, bills.attached[item.anchor.uid].orEmpty())
                             is DayItem.Track -> TrackRow(item.day, item.piece, onClick = { onDay?.invoke(item.day) }, itemModifier)
-                            is DayItem.Drive -> DriveRow(item.drive, itemModifier)
                         }
                     }
                     if (day == today) todayEnd.index = count - 1

@@ -6,8 +6,6 @@ import cc.hyoban.moments.data.spec.MomentMedia
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
-import cc.hyoban.moments.data.things.Checkin
-import cc.hyoban.moments.data.things.Checkins
 import cc.hyoban.moments.data.trips.RouteSegment
 import cc.hyoban.moments.ui.trips.haversineKm
 import kotlinx.coroutines.CoroutineScope
@@ -23,7 +21,8 @@ import kotlinx.coroutines.withContext
 data class AtlasInputs(
     val moments: List<MomentRecord>,
     val places: Map<String, Place>,
-    val checkins: Checkins,
+    /** The modules' stops at places (the check-ins), as [mapStops] gives them. */
+    val stops: List<MapStop>,
     val trips: List<TripRecord>,
     val routes: Map<String, List<RouteSegment>>,
 )
@@ -32,20 +31,20 @@ data class AtlasInputs(
 data class AtlasPrepared(
     private val inputs: AtlasInputs,
     val byPlace: Map<String, List<MomentRecord>>,
-    val checkinsByPlace: Map<String, List<Checkin>>,
-    val placesWithCheckins: List<MapPlace>,
-    val placesWithoutCheckins: List<MapPlace>,
-    val colorsWithCheckins: Map<Int, Color>,
-    val colorsWithoutCheckins: Map<Int, Color>,
+    val stopsByPlace: Map<String, List<MapStop>>,
+    val placesWithStops: List<MapPlace>,
+    val placesWithoutStops: List<MapPlace>,
+    val colorsWithStops: Map<Int, Color>,
+    val colorsWithoutStops: Map<Int, Color>,
     val routes: List<MapRoute>,
     val kilometres: Map<String, Double>,
-    val mapDataWithCheckins: AtlasMapData,
-    val mapDataWithoutCheckins: AtlasMapData,
+    val mapDataWithStops: AtlasMapData,
+    val mapDataWithoutStops: AtlasMapData,
 ) {
     fun matches(other: AtlasInputs): Boolean =
         inputs.moments === other.moments &&
             inputs.places === other.places &&
-            inputs.checkins === other.checkins &&
+            inputs.stops === other.stops &&
             inputs.trips === other.trips &&
             inputs.routes === other.routes
 }
@@ -64,7 +63,7 @@ class AtlasPreparedStore(container: AppContainer, scope: CoroutineScope) {
             combine(
                 container.shownMoments,
                 container.repository.places,
-                container.shownCheckins,
+                mapStops(container),
                 container.shownTrips,
                 container.tripRoutes,
                 ::AtlasInputs,
@@ -79,9 +78,9 @@ fun prepareAtlas(inputs: AtlasInputs): AtlasPrepared {
     val byPlace = inputs.moments
         .flatMap { moment -> moment.places.distinct().map { it to moment } }
         .groupBy({ it.first }, { it.second })
-    val checkinsByPlace = inputs.checkins.byPlace
-    val placesWithCheckins = mapPlaces(byPlace, checkinsByPlace, inputs.places)
-    val placesWithoutCheckins = mapPlaces(byPlace, emptyMap(), inputs.places)
+    val stopsByPlace = inputs.stops.filter { it.place != null }.groupBy { it.place!! }
+    val placesWithStops = mapPlaces(byPlace, stopsByPlace, inputs.places)
+    val placesWithoutStops = mapPlaces(byPlace, emptyMap(), inputs.places)
     val routes = inputs.trips
         .sortedByDescending { it.start }
         .mapNotNull { trip -> inputs.routes[trip.id]?.let { MapRoute(trip.id, it, yearOf(trip.start), yearOf(trip.end)) } }
@@ -92,36 +91,36 @@ fun prepareAtlas(inputs: AtlasInputs): AtlasPrepared {
             }.sum()
         }
     }
-    val colorsWithCheckins = yearColors(placesWithCheckins.map(MapPlace::firstYear))
-    val colorsWithoutCheckins = yearColors(placesWithoutCheckins.map(MapPlace::firstYear))
+    val colorsWithStops = yearColors(placesWithStops.map(MapPlace::firstYear))
+    val colorsWithoutStops = yearColors(placesWithoutStops.map(MapPlace::firstYear))
     return AtlasPrepared(
         inputs = inputs,
         byPlace = byPlace,
-        checkinsByPlace = checkinsByPlace,
-        placesWithCheckins = placesWithCheckins,
-        placesWithoutCheckins = placesWithoutCheckins,
-        colorsWithCheckins = colorsWithCheckins,
-        colorsWithoutCheckins = colorsWithoutCheckins,
+        stopsByPlace = stopsByPlace,
+        placesWithStops = placesWithStops,
+        placesWithoutStops = placesWithoutStops,
+        colorsWithStops = colorsWithStops,
+        colorsWithoutStops = colorsWithoutStops,
         routes = routes,
         kilometres = kilometres,
-        mapDataWithCheckins = prepareAtlasMapData(placesWithCheckins, routes, colorsWithCheckins),
-        mapDataWithoutCheckins = prepareAtlasMapData(placesWithoutCheckins, routes, colorsWithoutCheckins),
+        mapDataWithStops = prepareAtlasMapData(placesWithStops, routes, colorsWithStops),
+        mapDataWithoutStops = prepareAtlasMapData(placesWithoutStops, routes, colorsWithoutStops),
     )
 }
 
 private fun mapPlaces(
     moments: Map<String, List<MomentRecord>>,
-    checkins: Map<String, List<Checkin>>,
+    stops: Map<String, List<MapStop>>,
     places: Map<String, Place>,
-): List<MapPlace> = (moments.keys + checkins.keys).mapNotNull { id ->
+): List<MapPlace> = (moments.keys + stops.keys).mapNotNull { id ->
     val here = moments[id].orEmpty()
-    val visits = checkins[id].orEmpty()
+    val visits = stops[id].orEmpty()
     val years = here.map { yearOf(it.occurredAt) } + visits.map { yearOf(it.at) }
     places[id]?.let {
         MapPlace(
             id, it, here.size + visits.size, years.min(), newestPhoto(here), years.toSet(),
             momentDays = here.map { moment -> dayOf(moment.occurredAt) },
-            checkinDays = visits.map { visit -> dayOf(visit.at) },
+            stopDays = visits.map { visit -> dayOf(visit.at) },
         )
     }
 }

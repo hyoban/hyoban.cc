@@ -95,7 +95,7 @@ fun BillScreen(container: AppContainer, id: String, nav: LedgerNav) {
     val placeId = txn.place ?: moment?.places?.firstOrNull() ?: checkin?.place
     val tripId = tripOfTxn(txn, trips).takeIf { txn.kind != TxnKind.TRANSFER }
     val writable = container.ledger.writable
-    val spot = if (writable) cc.hyoban.moments.ui.LocalDevice.current.billSpot(txn) else null
+    val spot = if (writable) cc.hyoban.moments.ui.ledger.LocalLedgerDevice.current?.billSpot(txn) else null
     // The footprints' spot and its name, while it is being kept as a place in the place picker.
     var keeping by remember { mutableStateOf<Pair<cc.hyoban.moments.data.local.Fix, String>?>(null) }
     keeping?.let { (point, name) ->

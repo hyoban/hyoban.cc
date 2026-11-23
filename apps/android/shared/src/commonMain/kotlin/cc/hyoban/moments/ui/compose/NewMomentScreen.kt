@@ -24,14 +24,10 @@ import cc.hyoban.moments.ui.design.Button
 import cc.hyoban.moments.ui.design.ChipDefaults
 import cc.hyoban.moments.ui.design.ListItem
 import cc.hyoban.moments.ui.design.LocalContentColor
-import cc.hyoban.moments.ui.design.LocalTextStyle
 import cc.hyoban.moments.ui.theme.tokens
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import cc.hyoban.moments.ui.design.PressIndication
 import cc.hyoban.moments.ui.design.DateTimeDialog
@@ -115,14 +111,11 @@ import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.local.Around
-import cc.hyoban.moments.data.things.checkinAsMoment
-import cc.hyoban.moments.data.things.editedEntry
 import cc.hyoban.moments.data.local.Masking
 import cc.hyoban.moments.data.local.Fix
 import cc.hyoban.moments.data.local.Mask
@@ -137,8 +130,6 @@ import cc.hyoban.moments.data.local.newPlaceId
 import cc.hyoban.moments.data.local.parseStamp
 import cc.hyoban.moments.data.local.recordTime
 import cc.hyoban.moments.data.local.stamp
-import cc.hyoban.moments.data.spec.MomentCost
-import cc.hyoban.moments.data.spec.FoodVerdict
 import androidx.compose.foundation.layout.FlowRow
 import cc.hyoban.moments.ui.design.FilterChip
 import cc.hyoban.moments.ui.design.FilterChipDefaults
@@ -157,28 +148,15 @@ import cc.hyoban.moments.data.spec.PlaceKind
 import cc.hyoban.moments.data.spec.showcase
 import cc.hyoban.moments.ui.components.BadgeKind
 import cc.hyoban.moments.ui.components.MediaBadge
-import cc.hyoban.moments.ui.ledger.BillFields
-import cc.hyoban.moments.ui.ledger.BillKeypad
-import cc.hyoban.moments.ui.ledger.keypadFits
-import cc.hyoban.moments.ui.ledger.EnsureBook
-import cc.hyoban.moments.ui.ledger.LedgerEntryArgs
-import cc.hyoban.moments.ui.ledger.mealCategory
-import cc.hyoban.moments.ui.ledger.rememberBillDraft
-import cc.hyoban.moments.ledger.TxnKind
-import cc.hyoban.moments.ui.design.MultiChoiceSegmentedButtonRow
-import cc.hyoban.moments.ui.design.SegmentedButton
+import cc.hyoban.moments.plugins.Plugins
+import androidx.compose.runtime.key
 import cc.hyoban.moments.ui.components.isCompactHeight
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
 import cc.hyoban.moments.ui.format.failureReason
-import cc.hyoban.moments.ui.format.formatAmount
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.format.formatTime
-import cc.hyoban.moments.ui.format.verdictLabel
-import cc.hyoban.moments.ui.format.worthLabel
-import cc.hyoban.moments.ledger.COMMON_CURRENCIES
-import cc.hyoban.moments.ledger.currencySymbol
 import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.ui.theme.ShadowElevation
 import cc.hyoban.moments.ui.theme.MediaOverlay
@@ -211,7 +189,7 @@ import kotlinx.coroutines.withContext
  * One being changed can be deleted here too, at the foot of the page, and then [onDeleted].
  *
  * A new one can have a bill written with it, kept in the ledger at the Moment's time and place
- * and linked to it, or the bill alone, as the ledger's 记一笔 opens it ([startWithBill]).
+ * and linked to it, or the bill alone, as the ledger's 记一笔 opens it ([alone], the part written alone).
  *
  * At a [stay] of the footprints, tapped on the map, it starts at the stay's start and at its place,
  * the phone's own within reach or a new one named after what is around it; saved with nothing
@@ -224,7 +202,7 @@ fun NewMomentScreen(
     onSaved: () -> Unit,
     edit: String? = null,
     onDeleted: () -> Unit = onBack,
-    startWithBill: Boolean = false,
+    alone: String? = null,
     stay: cc.hyoban.moments.ui.StayAt? = null,
     /** The trip whose plan a new Moment is written into: planned, at its first day's morning. */
     plan: String? = null,
@@ -235,13 +213,15 @@ fun NewMomentScreen(
 
     // The Moment being changed, and its photos, time and place as it was saved.
     val canPublish = container.canPublish
-    // A check-in opens as a Moment with nothing but its place, and is kept as one while it has nothing more.
-    val checkinEntry = remember(edit) { edit?.takeIf { container.repository.moment(it) == null }?.let { container.repository.entries.value[it] } }
+    // A module's own record kept by its place alone (a check-in) opens as a Moment with nothing
+    // but its place, and is kept as one while it has nothing more.
+    val ownStop = remember(edit) { edit?.takeIf { container.repository.moment(it) == null }?.let { Plugins.stopAsMoment(container, it) } }
     val original = remember(edit) {
-        (edit?.let { container.repository.moment(it) } ?: checkinEntry?.let(::checkinAsMoment))
+        (edit?.let { container.repository.moment(it) } ?: ownStop)
             ?.takeIf { container.repository.isLocal(it.uid) || canPublish }
     }
-    val openedAsCheckin = original != null && checkinEntry != null
+    val openedAsStop = original != null && ownStop != null
+    val keeper = placeAlone
     val published = original?.published != null
     // Each photo it had by where it is shown from: the phone's copy, or the site's still.
     val originalMedia = remember(original) {
@@ -298,18 +278,6 @@ fun NewMomentScreen(
     }
     val showMessage = rememberShowMessage()
     var askedMotion by remember { mutableStateOf(emptySet<PhotoRef>()) }
-    // What it cost, as typed: a meal or anything else, what it went on (a meal's dishes), how it
-    // was, the amount in its currency and how many.
-    val originalCost = original?.cost
-    var meal by rememberSaveable { mutableStateOf(originalCost?.meal ?: false) }
-    var costItems by rememberSaveable { mutableStateOf(originalCost?.items.orEmpty().joinToString("、")) }
-    var verdict by rememberSaveable { mutableStateOf(originalCost?.verdict) }
-    var amount by rememberSaveable { mutableStateOf(originalCost?.amount?.let(::formatAmount).orEmpty()) }
-    var currency by rememberSaveable { mutableStateOf(originalCost?.currency ?: "CNY") }
-    var people by rememberSaveable { mutableStateOf(originalCost?.people?.toString().orEmpty()) }
-    /** Whether 美食 or 花费 was added from the 加一项 row: open for a Moment that has a cost. */
-    var withCost by rememberSaveable { mutableStateOf(originalCost != null) }
-    val cost = costOf(meal, costItems, verdict, amount, currency, people, originalCost)
     /** Private: kept on the phone and in the API for its owner, never on the site. */
     var private by rememberSaveable { mutableStateOf(original?.hidden ?: false) }
     val openedAt = remember { OffsetDateTime.now() }
@@ -359,12 +327,8 @@ fun NewMomentScreen(
     var saveError by remember { mutableStateOf<String?>(null) }
     val publishing by container.publishing.collectAsStateWithLifecycle()
 
-    // What a new one writes: the Moment, a bill, or both, never neither.
-    val withMoment = original != null || !startWithBill
-    var withBill by rememberSaveable { mutableStateOf(original == null && startWithBill) }
-    val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val bill = rememberBillDraft(ledger, null, null, null, LedgerEntryArgs())
-    EnsureBook(container, enabled = withBill)
+    // What a new one writes: the Moment, the part it was opened for alone (a bill), or both, never neither.
+    val withMoment = original != null || alone == null
 
     LaunchedEffect(photos) {
         photos.filter { it !in infos && it !in originalMedia }.forEach { ref ->
@@ -493,51 +457,48 @@ fun NewMomentScreen(
     }
 
     val written = text.isNotBlank() || photos.isNotEmpty()
-    // Nothing written, nothing eaten, but somewhere: a check-in there, while check-ins are on.
-    val checkinsOn = LocalSettings.current.isOn(Module.CHECKIN)
-    val asCheckin = withMoment && checkinsOn && !written && cost == null && place != PlaceChoice.None
-    // What may be locked: a planned one, or any check-in; no longer either, it is unlocked.
-    val lockable = planned || asCheckin
-    val keptLocked = locked && lockable
-    val billWritten = withBill && (bill.amount.isNotBlank() || bill.note.isNotBlank())
-    // The bill's time is the Moment's, while there is one.
-    val billAt = if (withMoment) time else OffsetDateTime.parse(bill.time)
-    // The cost's amount and a meal's category go to its bill, until the bill's own are chosen.
-    var mirroredAmount by rememberSaveable { mutableStateOf("") }
-    LaunchedEffect(amount) {
-        if (bill.amount == mirroredAmount) {
-            bill.amount = amount.trim()
-            mirroredAmount = bill.amount
+    // Nothing written, nothing eaten, but somewhere: a module's own record there (a check-in), while that module is on.
+    val composerSettings = LocalSettings.current
+    val aloneOn = Plugins.all.any { it.placeAlone != null && composerSettings.isOn(it.module) }
+    // The parts written with it, as their modules have them: what it cost, a bill; each asked
+    // every composition, the ones before it saying what was spent.
+    val parts = remember { Plugins.all.mapNotNull { it.composerPart } }
+    var spent: Spent? = null
+    val drafts = parts.map { part ->
+        key(part.key) {
+            part.draft(ComposerScope(container, original, withMoment, alone, time, spent)).also { draft -> draft.spent?.let { spent = it } }
         }
     }
-    LaunchedEffect(cost?.meal, withBill, ledger) {
-        if (cost?.meal == true && withBill && bill.kind == TxnKind.EXPENSE && bill.category == null) bill.category = mealCategory(ledger)
-    }
+    val keptAlone = withMoment && aloneOn && !written && drafts.none { it.holds } && place != PlaceChoice.None
+    // What may be locked: a planned one, or any check-in; no longer either, it is unlocked.
+    val lockable = planned || keptAlone
+    val keptLocked = locked && lockable
     // A known place's kind is the place's to change, not the Moment's.
     val newKind = (chosenPlace as? PlaceChoice.Known)?.kind
     val momentChanged = original == null ||
         text != original.text || photos != originalMedia.keys.toList() || utility.intersect(photos.toSet()) != originalUtility ||
         masks.filter { (ref, laid) -> ref in photos && laid.isNotEmpty() } != originalMasks.filterKeys { it in photos } ||
-        chosenTime != originalTime || end != originalEnd || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || cost != originalCost ||
+        chosenTime != originalTime || end != originalEnd || ((chosenPlace as? PlaceChoice.Known)?.copy(kind = null) ?: chosenPlace) != originalPlace || drafts.any { it.changed } ||
         private != original.hidden || planned != (original.planned == true) || keptLocked != (original.locked == true) || reachedBy.takeIf { planned } != original.reachedBy
     // What leaving would lose: anything written, or, for a Moment being changed, any change.
-    val changed = if (original == null) (withMoment && (written || cost != null)) || billWritten else momentChanged || newKind != null
+    val changed = if (original == null) (withMoment && (written || drafts.any { it.holds })) || drafts.any { it.written } else momentChanged || newKind != null
     val leave = { if (changed) confirmingDiscard = true else onBack() }
     BackHandler(enabled = changed && !saving) { confirmingDiscard = true }
 
     // Kept on the phone, one of the site's as changed too; none of it goes to the API until
     // the changes are published.
-    // The bill is only the phone's, saved straight to the ledger, linked to the Moment written with it.
+    // A part kept elsewhere (a bill, only the phone's, saved straight to the ledger) is kept after the Moment, linked to it.
     val save: () -> Unit = save@{
         if (saving) return@save
-        // The bill is checked first, so that nothing is kept while it can't be.
-        val txn = if (withBill) bill.toTxn(ledger, billAt, null, null, null) { saveError = textOf(it) } ?: return@save else null
-        // A stay's check-in has its uid made from the stay's start, as 保存为签到 makes it, so
-        // keeping it again changes that one; another check-in over the stay is that visit.
-        val stayCheckin = stay?.takeIf { original == null && asCheckin }
-        val stayUid = stayCheckin?.let { Entries.stableUlid(stamp(OffsetDateTime.ofInstant(Instant.ofEpochMilli(it.start), java.time.ZoneId.systemDefault())), "stay:${it.start}") }
-        if (stayCheckin != null && container.repository.checkins.value.overlapping(stayCheckin.start, stayCheckin.end).any { it.uid != stayUid }) {
-            saveError = textOf(Res.string.message_checkin_known)
+        // The parts are checked first, so that nothing is kept while one can't be.
+        if (!drafts.all { it.prepare { error -> saveError = error } }) return@save
+        // One kept at a stay has its uid made from the stay, so keeping it again changes that one;
+        // the module may refuse it (another over the stay is that visit).
+        val stayKept = stay?.takeIf { original == null && keptAlone && keeper != null }
+        val stayUid = stayKept?.let { keeper!!.stayUid(it) }
+        val refused = stayKept?.let { keeper!!.stayRefused(container, it, stayUid!!) }
+        if (refused != null) {
+            saveError = textOf(refused)
             return@save
         }
         saving = true
@@ -547,9 +508,9 @@ fun NewMomentScreen(
                     // No new photo goes in before its faces and plates have been looked for.
                     if (withMoment) coverFound(unscanned)
                     val moment = if (withMoment) {
-                        val (built, newPlace) = buildMoment(container, text, photos, utility, stills, masks, infos, time, end, place, cost, private, original, originalMedia, stayUid, replaced)
-                        // Planned or lived, as the bar's menu says.
-                        val moment = built.copy(planned = true.takeIf { planned }, locked = true.takeIf { keptLocked }, reachedBy = reachedBy.takeIf { planned })
+                        val (built, newPlace) = buildMoment(container, text, photos, utility, stills, masks, infos, time, end, place, private, original, originalMedia, stayUid, replaced)
+                        // Planned or lived, as the bar's menu says; with what its parts hold.
+                        val moment = drafts.fold(built) { into, draft -> draft.into(into) }.copy(planned = true.takeIf { planned }, locked = true.takeIf { keptLocked }, reachedBy = reachedBy.takeIf { planned })
                         // Kept as what it now is, a Moment or a check-in, named after its place when that moved.
                         if (original == null || momentChanged) {
                             val venue = when (place) {
@@ -558,16 +519,16 @@ fun NewMomentScreen(
                                 PlaceChoice.None -> null
                             }
                             val moved = (place as? PlaceChoice.Known)?.id != (originalPlace as? PlaceChoice.Known)?.id || place is PlaceChoice.New
-                            val entry = editedEntry(moment, venue, moved)
-                            container.saveEntry(if (stayCheckin == null) entry else stayEntry(entry, stayCheckin), newPlace)
-                            // The bills paid while there, with no place, may take this one.
-                            if (stayCheckin != null) moment.places.firstOrNull()?.let { container.offerPlaceToBills(it, stayCheckin.start, stayCheckin.end) }
+                            val entry = keptEntry(moment, venue, moved)
+                            container.saveEntry(if (stayKept == null) entry else keeper!!.atStay(entry, stayKept), newPlace)
+                            // What follows keeping it at the stay (the bills paid there, with no place, may take this one).
+                            if (stayKept != null) moment.places.firstOrNull()?.let { keeper!!.keptAtStay(container, it, stayKept) }
                         }
                         // A known place's kind changed in the picker, kept as a change of its own.
                         (place as? PlaceChoice.Known)?.kind?.let { container.repository.setPlaceKind(place.id, it.value) }
                         moment
                     } else null
-                    txn?.let { container.ledger.saveTxn(if (moment != null) it.copy(moment = moment.uid, place = moment.places.firstOrNull()) else it) }
+                    drafts.forEach { it.saved(moment) }
                 }
                 onSaved()
             } catch (error: Exception) {
@@ -577,20 +538,21 @@ fun NewMomentScreen(
         }
     }
 
-    LaunchedEffect(written, asCheckin) { if (written || asCheckin) emptyError = false }
+    LaunchedEffect(written, keptAlone) { if (written || keptAlone) emptyError = false }
     // A full-screen dialog: an X to leave, whether it is public in the middle of the bar, and
     // the ink 保存, never greyed out, telling what is missing rather than refusing to be tapped.
     // A bill alone is typed on the keypad, pinned under its fields, as iCost has it.
-    val keypad = withBill && !withMoment && keypadFits()
+    val aloneDraft = drafts.firstOrNull { it.keypad }
+    val keypad = aloneDraft != null
     val sideways = isPhoneLandscape()
     Box(Modifier.fillMaxSize()) {
         SubPage(
             stringResource(
                 when {
-                    !withMoment -> Res.string.ledger_new_bill
-                    original != null && asCheckin -> Res.string.title_edit_checkin
+                    !withMoment -> drafts.firstNotNullOfOrNull { it.aloneTitle } ?: Res.string.title_new_moment
+                    original != null && keptAlone && keeper != null -> keeper.editTitle
                     original != null -> Res.string.title_edit_moment
-                    asCheckin -> Res.string.title_new_checkin
+                    keptAlone && keeper != null -> keeper.newTitle
                     else -> Res.string.title_new_moment
                 },
             ),
@@ -603,7 +565,7 @@ fun NewMomentScreen(
                     when (event.key) {
                         Key.Enter -> {
                             if (!saving && !keypad) when {
-                                withMoment && !written && !asCheckin -> emptyError = true
+                                withMoment && !written && !keptAlone -> emptyError = true
                                 original != null && !changed -> onBack()
                                 else -> save()
                             }
@@ -629,7 +591,7 @@ fun NewMomentScreen(
                 if (!keypad) Button(
                     onClick = {
                         when {
-                            withMoment && !written && !asCheckin -> emptyError = true
+                            withMoment && !written && !keptAlone -> emptyError = true
                             original != null && !changed -> onBack()
                             else -> save()
                         }
@@ -658,7 +620,7 @@ fun NewMomentScreen(
                         null
                     },
                     supportingText = if (emptyError) {
-                        { Text(stringResource(if (checkinsOn) Res.string.error_empty_entry else Res.string.error_empty_moment)) }
+                        { Text(stringResource(if (aloneOn && keeper != null) keeper.emptyError else Res.string.error_empty_moment)) }
                     } else {
                         null
                     },
@@ -778,59 +740,27 @@ fun NewMomentScreen(
                         ) { Text(cc.hyoban.moments.ui.publish.reachedByName(reachedBy)) }
                     }
                 }
-                // 加一项: the plugins in a row, each opening its fields when chosen, a tick in place of
-                // its icon; only those of modules that are on (记录项与公开), a meal already written
-                // staying as it is while meals are off.
-                val foodOn = LocalSettings.current.isOn(Module.FOOD)
-                val costOn = LocalSettings.current.isOn(Module.COST)
-                val billOn = LocalSettings.current.isOn(Module.LEDGER) && container.ledger.writable
-                if (foodOn || costOn || billOn) {
+                // 加一项: the parts in a row, each opening its fields when chosen, a tick in place of
+                // its icon; only those of modules that are on (记录项与公开).
+                if (drafts.any { it.offered }) {
                     PageCaption(stringResource(Res.string.section_add_item))
                     FlowRow(
                         Modifier.fillMaxWidth().padding(horizontal = Space.gutter),
                         horizontalArrangement = Arrangement.spacedBy(Space.s),
                         verticalArrangement = Arrangement.spacedBy(Space.s),
                     ) {
-                        // A meal and any other cost are one cost, so choosing one takes the other's place
-                        // with what was typed; choosing the chosen one again takes it away.
-                        val pick = { asMeal: Boolean ->
-                            if (withCost && meal == asMeal) {
-                                withCost = false
-                                costItems = ""; verdict = null; amount = ""; people = ""
-                            } else {
-                                withCost = true
-                                meal = asMeal
-                            }
-                        }
-                        if (foodOn) AddChip(withCost && meal, AppIcons.Food, stringResource(Res.string.section_food), "add_food") { pick(true) }
-                        if (costOn) AddChip(withCost && !meal, AppIcons.Cash, stringResource(Res.string.section_cost), "add_cost") { pick(false) }
-                        if (billOn) AddChip(withBill, AppIcons.Receipt, stringResource(Res.string.section_bill), "add_bill") { withBill = !withBill }
+                        drafts.forEach { it.Chips() }
                     }
                 }
-                if (withCost && (if (meal) foodOn else costOn)) CostGroup(
-                    meal = meal,
-                    items = costItems,
-                    onItems = { costItems = it },
-                    verdict = verdict,
-                    onVerdict = { verdict = it },
-                    amount = amount,
-                    onAmount = { amount = it },
-                    currency = currency,
-                    onCurrency = { currency = it },
-                    people = people,
-                    onPeople = { people = it },
-                )
                 }
-                if (withBill) {
-                    if (withMoment) PageCaption(stringResource(Res.string.section_bill))
-                    BillFields(container, ledger, bill, billAt, null, null, withMoment = withMoment, keypad = keypad)
-                }
+                // Each part's fields: what it cost under the Moment, a bill's after it or alone.
+                drafts.forEach { it.Fields(keypad) }
                 // Deleting is rare, so it waits down here rather than over the Moment; its snackbar can undo it.
                 if (original != null && publishing == null) {
                     PageRows(Modifier.padding(top = Space.xl)) { shapes ->
                         SegmentedListItem(
                             onClick = {
-                                container.delete(original.uid, if (openedAsCheckin) Res.string.message_checkin_deleted else Res.string.message_moment_deleted)
+                                container.delete(original.uid, if (openedAsStop && keeper != null) keeper.deleted else Res.string.message_moment_deleted)
                                 onDeleted()
                             },
                             shapes = shapes,
@@ -841,7 +771,7 @@ fun NewMomentScreen(
                             ),
                             leadingContent = { Icon(AppIcons.Trash, contentDescription = null) },
                             modifier = Modifier.testTag("delete"),
-                        ) { Text(stringResource(if (openedAsCheckin) Res.string.action_delete_checkin else Res.string.action_delete_moment)) }
+                        ) { Text(stringResource(if (openedAsStop && keeper != null) keeper.deleteAction else Res.string.action_delete_moment)) }
                     }
                 }
             }
@@ -869,7 +799,7 @@ fun NewMomentScreen(
                             if (withMoment) words()
                             details()
                         }
-                        if (keypad) BillKeypad(container, ledger, bill, billAt, null, onSave = { if (!saving) save() })
+                        aloneDraft?.Keypad(onSave = { if (!saving) save() })
                     }
                 }
             }
@@ -1423,18 +1353,6 @@ private fun PhotoStrip(
     }
 }
 
-/** One of 加一项's plugins: its icon, a tick once added. */
-@Composable
-private fun AddChip(added: Boolean, icon: ImageVector, label: String, tag: String, onClick: () -> Unit) {
-    FilterChip(
-        selected = added,
-        onClick = onClick,
-        label = { Text(label) },
-        leadingIcon = { Icon(if (added) AppIcons.Check else icon, contentDescription = null, Modifier.size(FilterChipDefaults.IconSize)) },
-        modifier = Modifier.testTag(tag),
-    )
-}
-
 /**
  * Whether the Moment is public, in the middle of the bar, a tap opening the two to choose from;
  * under a hairline, whether it is [planned], a check of its own, which the bar then says too.
@@ -1513,153 +1431,6 @@ private fun Visibility(private: Boolean, planned: Boolean, onPlanned: (Boolean) 
     }
 }
 
-/**
- * What it cost, rows on the page: what it went on, or for a [meal] what was eaten; how it was
- * (how a meal tasted, else whether it was worth it), one of three that a second tap clears; and
- * the amount in its currency, chosen at its symbol, and how many it was for, with each one's share.
- */
-@Composable
-private fun CostGroup(
-    meal: Boolean,
-    items: String,
-    onItems: (String) -> Unit,
-    verdict: String?,
-    onVerdict: (String?) -> Unit,
-    amount: String,
-    onAmount: (String) -> Unit,
-    currency: String,
-    onCurrency: (String) -> Unit,
-    people: String,
-    onPeople: (String) -> Unit,
-) {
-    PageCaption(stringResource(if (meal) Res.string.section_food else Res.string.section_cost))
-    PageRows { _ ->
-        ListItem(
-            leadingContent = { Icon(if (meal) AppIcons.Food else AppIcons.Cash, contentDescription = null) },
-            headlineContent = {
-                RowField(
-                    items,
-                    onItems,
-                    stringResource(if (meal) Res.string.hint_food_dishes else Res.string.hint_cost_items),
-                    AppTheme.typography.body,
-                    KeyboardOptions(imeAction = ImeAction.Next),
-                    Modifier.fillMaxWidth().testTag("cost_items"),
-                )
-            },
-        )
-        VerdictRow(verdict, onVerdict, "cost", if (meal) ::verdictLabel else ::worthLabel)
-        // Each one's share once both are known, after how many.
-        val share = amount.toDoubleOrNull()?.let { total -> people.toIntOrNull()?.takeIf { it > 1 }?.let { total / it } }
-        var currencies by remember { mutableStateOf(false) }
-        val symbol = currencySymbol(currency).trim()
-        ListItem(
-            leadingContent = { Icon(AppIcons.Receipt, contentDescription = null) },
-            headlineContent = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box {
-                        Text(
-                            symbol,
-                            style = AppTheme.typography.body,
-                            modifier = Modifier.clickable { currencies = true }.testTag("cost_currency"),
-                        )
-                        DropdownMenu(currencies, onDismissRequest = { currencies = false }) {
-                            COMMON_CURRENCIES.forEach { code ->
-                                DropdownMenuItem(text = { Text("$code  ${currencySymbol(code).trim()}") }, onClick = { onCurrency(code); currencies = false })
-                            }
-                        }
-                    }
-                    RowField(
-                        amount,
-                        { typed -> onAmount(typed.filter { it.isDigit() || it == '.' }) },
-                        stringResource(Res.string.label_food_amount),
-                        AppTheme.typography.body,
-                        KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
-                        Modifier.weight(1f).padding(start = Space.xs).testTag("cost_amount"),
-                    )
-                }
-            },
-            supportingContent = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RowField(
-                        people,
-                        { typed -> onPeople(typed.filter { it.isDigit() }.take(3)) },
-                        stringResource(Res.string.label_food_people),
-                        LocalTextStyle.current.copy(fontFamily = AppTheme.typography.body.fontFamily),
-                        KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                        Modifier.testTag("cost_people"),
-                        fit = true,
-                    )
-                    if (people.isNotEmpty()) Text(" " + stringResource(Res.string.unit_food_people))
-                    if (share != null) Text(" " + stringResource(Res.string.cost_share, symbol + formatAmount(share)))
-                }
-            },
-        )
-    }
-}
-
-/** How it was, one of three in a segmented control that a second tap on the chosen one clears. */
-@Composable
-private fun VerdictRow(verdict: String?, onVerdict: (String?) -> Unit, tag: String, label: (FoodVerdict) -> StringResource) {
-    ListItem(
-        leadingContent = { Icon(AppIcons.FaceGood, contentDescription = null) },
-        headlineContent = {
-            MultiChoiceSegmentedButtonRow(Modifier.fillMaxWidth().height(ChipDefaults.Height)) {
-                FoodVerdict.entries.forEach { choice ->
-                    SegmentedButton(
-                        checked = choice.value == verdict,
-                        onCheckedChange = { onVerdict(if (it) choice.value else null) },
-                        modifier = Modifier.testTag("${tag}_${choice.value}"),
-                    ) { Text(stringResource(label(choice)), maxLines = 1) }
-                }
-            }
-        },
-    )
-}
-
-/**
- * A field that is a row's words alone, its hint in the third grey while empty; one that [fit]s
- * is as wide as what it holds, with room for the cursor, so words can follow it on its line.
- */
-@Composable
-private fun RowField(value: String, onValueChange: (String) -> Unit, hint: String, style: TextStyle, keyboardOptions: KeyboardOptions, modifier: Modifier, fit: Boolean = false) {
-    val color = LocalContentColor.current
-    val measurer = rememberTextMeasurer()
-    val width = if (fit) with(LocalDensity.current) { measurer.measure(value.ifEmpty { hint }, style).size.width.toDp() + CURSOR_ROOM } else null
-    BasicTextField(
-        value,
-        onValueChange,
-        if (width != null) modifier.width(width) else modifier,
-        textStyle = style.merge(TextStyle(color = color)),
-        singleLine = true,
-        keyboardOptions = keyboardOptions,
-        cursorBrush = SolidColor(tokens.tx),
-        decorationBox = { inner ->
-            Box {
-                if (value.isEmpty()) Text(hint, style = style, color = tokens.tx3, maxLines = 1)
-                inner()
-            }
-        },
-    )
-}
-
-/**
- * The cost as typed, kept with whatever else [original] said: a [meal] or not; what it went on
- * split at commas, enumeration commas and new lines; the amount only when it reads as one, with
- * how many it was for and its currency, yuan written as none; and nothing when nothing is said.
- */
-fun costOf(meal: Boolean, items: String, verdict: String?, amount: String, currency: String, people: String, original: MomentCost?): MomentCost? {
-    val names = items.split(DISH_SEPARATORS).map { it.trim() }.filter { it.isNotEmpty() }
-    val total = amount.toDoubleOrNull()?.takeIf { it >= 0 }
-    if (names.isEmpty() && verdict == null && total == null) return null
-    // How many it was for, and its currency, only beside an amount.
-    val fed = people.toIntOrNull()?.takeIf { it > 0 && total != null }
-    val code = currency.takeIf { total != null && (it != "CNY" || original?.currency != null) }
-    val kind = if (meal) MomentCost.FOOD else null
-    return original?.copy(amount = total, items = names, verdict = verdict, currency = code, people = fed, kind = kind)
-        ?: MomentCost(total, names, verdict, code, fed, kind)
-}
-
-private val DISH_SEPARATORS = Regex("[,，、;；\\n]")
 
 /** A tile at the end of the photos that adds more to them. */
 @Composable
@@ -1753,7 +1524,6 @@ private suspend fun buildMoment(
     time: OffsetDateTime,
     end: OffsetDateTime?,
     place: PlaceChoice,
-    cost: MomentCost?,
     private: Boolean,
     original: MomentRecord? = null,
     originalMedia: Map<PhotoRef, MomentMedia> = emptyMap(),
@@ -1852,7 +1622,7 @@ private suspend fun buildMoment(
         is PlaceChoice.New -> listOfNotNull(newPlace?.first)
         PlaceChoice.None -> emptyList()
     }
-    val moment = original?.copy(occurredAt = stamp(time), end = end?.let(::stamp), places = placeIds, text = text.trim(), media = media, cost = cost, hidden = private, updatedAt = now)
+    val moment = original?.copy(occurredAt = stamp(time), end = end?.let(::stamp), places = placeIds, text = text.trim(), media = media, hidden = private, updatedAt = now)
         ?: MomentRecord(
             uid = uid ?: Ulid.next(),
             occurredAt = stamp(time),
@@ -1860,23 +1630,12 @@ private suspend fun buildMoment(
             places = placeIds,
             text = text.trim(),
             media = media,
-            cost = cost,
             hidden = private,
             createdAt = now,
             updatedAt = now,
         )
     return moment to newPlace
 }
-
-/** A check-in kept at [stay]: at its middle as the footprints have it, until the end its editor says. */
-private fun stayEntry(entry: kotlinx.serialization.json.JsonObject, stay: cc.hyoban.moments.ui.StayAt) =
-    kotlinx.serialization.json.JsonObject(
-        entry + ("point" to kotlinx.serialization.json.buildJsonObject {
-            put("lat", kotlinx.serialization.json.JsonPrimitive(stay.latitude))
-            put("lng", kotlinx.serialization.json.JsonPrimitive(stay.longitude))
-            put("from", kotlinx.serialization.json.JsonPrimitive("track"))
-        }),
-    )
 
 /** What says why a picked file was left out. */
 private fun refusalText(refusal: Refusal): StringResource = when (refusal) {
@@ -1893,7 +1652,6 @@ const val MAX_PHOTOS = 9
 /** How long, back from the camera app, what it is still saving is waited for. */
 private const val CAMERA_SETTLE_MILLIS = 15_000L
 
-private val CURSOR_ROOM = 2.dp
 /** How wide the site's photos are fetched for the strip: its tiles, at a phone's density. */
 private const val PHOTO_WIDTH = 480
 private val PHOTO_SIZE = 88.dp

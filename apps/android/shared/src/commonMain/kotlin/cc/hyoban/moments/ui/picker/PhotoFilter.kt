@@ -30,7 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import cc.hyoban.moments.footprints.ActionRow
+import cc.hyoban.moments.ui.settings.ActionRow
 import cc.hyoban.moments.nas.NasKind
 import cc.hyoban.moments.nas.NasOption
 import cc.hyoban.moments.nas.NasProtocol

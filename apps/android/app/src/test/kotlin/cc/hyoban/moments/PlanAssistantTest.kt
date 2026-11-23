@@ -1,5 +1,6 @@
 package cc.hyoban.moments
 
+import cc.hyoban.moments.plugins.keptStop
 import cc.hyoban.moments.data.ai.PlanAnswerException
 import cc.hyoban.moments.data.ai.FoundPlace
 import cc.hyoban.moments.data.ai.PlanAssistant
@@ -442,10 +443,10 @@ class PlanAssistantTest {
             moment("3", "2026-11-01T10:00:00+08:00", "station"),
         )
         val checkins = listOf(Checkin("c1", "2026-12-24T06:30:00+08:00", "车站", place = "station", private = true))
-        val records = planRecords(plan, moments, checkins, listOf(plan), places, now = java.time.Instant.parse("2026-11-20T00:00:00Z"))
+        val records = planRecords(plan, moments, checkins.map { it.keptStop() }, listOf(plan), places, now = java.time.Instant.parse("2026-11-20T00:00:00Z"))
         // Private ones too, oldest first; nothing from outside the plan.
         assertEquals(listOf("车站", "车站", "寺"), records.map { it.place })
-        assertEquals(listOf(true, false, false), records.map { it.checkin })
+        assertEquals(listOf(true, false, false), records.map { it.stop != null })
         assertEquals(listOf(false, false, true), records.map { it.planned })
         assertEquals("出发", records[1].text)
         // A planned one has an id, to be changed or deleted by, and so has the check-in still to come.

@@ -1,5 +1,8 @@
-package cc.hyoban.moments.ui.settings
+package cc.hyoban.moments.plugins
 
+import cc.hyoban.moments.ui.settings.Segment
+import cc.hyoban.moments.ui.settings.SegmentedGroup
+import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.res.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

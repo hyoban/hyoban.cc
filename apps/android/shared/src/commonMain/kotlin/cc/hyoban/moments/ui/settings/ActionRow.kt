@@ -1,4 +1,4 @@
-package cc.hyoban.moments.footprints
+package cc.hyoban.moments.ui.settings
 
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons

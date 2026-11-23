@@ -1,5 +1,6 @@
 package cc.hyoban.moments.widget
 
+import cc.hyoban.moments.res.*
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -9,17 +10,37 @@ import kotlin.math.roundToInt
 // The heatmap widget's days, apart from how they are drawn: which days stand where in each of
 // its shapes, and how deep each is.
 
-/** What the heatmap counts each day, chosen when the widget is added and changed by long press. */
-enum class HeatSource(val key: String, val link: String) {
-    /** The Moments the public sees. */
-    MOMENTS("moments", "moments"),
-    /** What the ledger's bills spent, drawn only as deep or light. */
-    SPENDING("spending", "ledger"),
-    /** How far the footprints went, in metres. */
-    FOOTPRINTS("footprints", "footprints");
+/**
+ * What the heatmap counts each day, chosen when the widget is added and changed by long press: the
+ * Moments, or what a module brings (`PhonePlugin.heatSources`), each kept by its [key].
+ */
+interface HeatSource {
+    val key: String
+
+    /** The page of the app the widget opens, a `moments://` host. */
+    val link: String
+    val icon: androidx.compose.ui.graphics.vector.ImageVector
+
+    /** Its name on the widget. */
+    fun name(context: android.content.Context): String
+
+    /** Its name and what it counts, on the page that chooses it. */
+    @androidx.compose.runtime.Composable fun title(): String
+    @androidx.compose.runtime.Composable fun note(): String
+
+    /** What each day from [from] through [to] had of it. */
+    suspend fun days(context: android.content.Context, from: LocalDate, to: LocalDate): Map<LocalDate, Double>
+
+    /** What the widget says the days [shown] came to: how many days had any. */
+    fun amount(shown: Collection<Double>): String = shown.count { it > 0 }.let {
+        pluralTextOf(Res.plurals.widget_heatmap_days, it, it)
+    }
 
     companion object {
-        fun of(key: String?): HeatSource = entries.firstOrNull { it.key == key } ?: MOMENTS
+        /** Every source, the Moments first, then the modules', in their order. */
+        val all: List<HeatSource> get() = listOf(MomentsHeat) + cc.hyoban.moments.plugins.PhonePlugins.all.flatMap { it.heatSources }
+
+        fun of(key: String?): HeatSource = all.firstOrNull { it.key == key } ?: MomentsHeat
     }
 }
 

@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.footprints.ActionRow
+import cc.hyoban.moments.ui.settings.ActionRow
 import cc.hyoban.moments.footprints.BackgroundAllowances
 import cc.hyoban.moments.ui.components.PermissionAsk
 import cc.hyoban.moments.ui.components.openAppSettings

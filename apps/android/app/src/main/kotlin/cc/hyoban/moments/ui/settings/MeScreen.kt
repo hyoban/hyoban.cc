@@ -1,7 +1,9 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.plugins.MeNav
+import cc.hyoban.moments.plugins.PhonePlugins
+
 import cc.hyoban.moments.res.*
-import cc.hyoban.moments.data.spec.Module
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,7 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,8 +35,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.BuildConfig
 import cc.hyoban.moments.R
-import cc.hyoban.moments.ledger.Ledger
-import cc.hyoban.moments.ledger.summarize
 import cc.hyoban.moments.sidekey.SideKeys
 import cc.hyoban.moments.ui.LocalBottomClearance
 import cc.hyoban.moments.ui.LocalSettings
@@ -53,13 +52,8 @@ import cc.hyoban.moments.ui.design.SegmentedListItem
 import cc.hyoban.moments.ui.design.Text
 import cc.hyoban.moments.ui.design.strong
 import cc.hyoban.moments.ui.ledger.DemoButton
-import cc.hyoban.moments.ui.ledger.money
-import cc.hyoban.moments.ui.things.APART
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
-import java.time.LocalDate
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import cc.hyoban.moments.camera.CameraStore
 import cc.hyoban.moments.camera.CameraLink
 import androidx.compose.ui.platform.LocalContext
@@ -83,10 +77,8 @@ import kotlinx.coroutines.launch
 class MeRoutes(
     val changes: () -> Unit,
     /** The ledger on its tab: 0 the bills, 1 the sums, 2 the accounts. */
-    val ledger: (Int) -> Unit,
-    val footprints: () -> Unit,
-    val things: () -> Unit,
-    val occasions: () -> Unit,
+    /** Where the modules' rows go (`PhonePlugin.MeRow`). */
+    val modules: MeNav,
     val items: () -> Unit,
     val homes: () -> Unit,
     val sync: () -> Unit,
@@ -108,54 +100,22 @@ class MeRoutes(
 fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
     val pending by container.repository.pending.collectAsStateWithLifecycle()
     val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val revision by container.footprints.revision.collectAsStateWithLifecycle()
-    // Whether the footprints are being recorded now.
-    val recording by produceState(false, revision) {
-        value = withContext(Dispatchers.IO) { container.footprints.state().recording }
-    }
     val sideKey by SideKeys.state.collectAsStateWithLifecycle()
     val camera by CameraStore.camera.collectAsStateWithLifecycle()
     val cameraStatus by CameraStore.status.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val cameraSupported = remember { CameraLink.supported(context) }
     val settings = LocalSettings.current
-    val connected = settings.connected
     val books = ledger.books.filter { !it.archived }
-    // This month's spending in the shown books, in the book's currency, under the ledger's name.
-    val month = remember(ledger) { monthExpense(ledger) }
     // On its side, one scroll in two columns: what is waiting and what is kept here at the start,
     // the settings beside them (H15).
     val sideways = isPhoneLandscape()
     val first: @Composable () -> Unit = {
         // With no API to publish to, what is kept here is simply the phone's.
         if (pending.size > 0 && container.canPublish) PublishCard(pending.size, routes.changes)
-        // A row for each module that is on (记录项与公开); the things' row names what of it is.
-        val things = listOfNotNull(
-            stringResource(Res.string.devices_title).takeIf { settings.isOn(Module.THINGS) },
-            stringResource(Res.string.subscriptions_title).takeIf { settings.isOn(Module.THINGS) },
-            // The car's data comes only from an import into the API, so without one there is none.
-            stringResource(Res.string.car_title).takeIf { connected && settings.isOn(Module.CAR) },
-        )
+        // A row for each module that is on (记录项与公开), as its plugin draws it.
         PageRows(Modifier.padding(top = Space.s)) { shapes ->
-            if (settings.isOn(Module.LEDGER)) MeRow(
-                AppIcons.Wallet, stringResource(Res.string.me_ledger), "me_ledger", shapes,
-                supporting = month?.let { (expense, currency) -> stringResource(Res.string.me_month_expense) + APART + money(expense, currency) },
-            ) { routes.ledger(0) }
-            if (settings.isOn(Module.FOOTPRINTS)) MeRow(
-                AppIcons.Footprints, stringResource(Res.string.footprints_title), "me_footprints", shapes,
-                supporting = stringResource(Res.string.me_footprints_recording).takeIf { recording },
-                onClick = routes.footprints,
-            )
-            if (things.isNotEmpty()) MeRow(
-                AppIcons.Package, stringResource(Res.string.me_things), "me_things", shapes,
-                supporting = things.joinToString(stringResource(Res.string.separator_list)),
-                onClick = routes.things,
-            )
-            if (settings.isOn(Module.OCCASIONS)) MeRow(
-                AppIcons.Calendar, stringResource(Res.string.occasions_title), "me_occasions", shapes,
-                supporting = cc.hyoban.moments.ui.occasions.nextOccasionSummary(container),
-                onClick = routes.occasions,
-            )
+            PhonePlugins.all.forEach { it.MeRow(container, routes.modules, shapes) }
         }
     }
     val second: @Composable () -> Unit = {
@@ -268,7 +228,7 @@ private fun PublishCard(count: Int, onChanges: () -> Unit) {
 
 /** A row of 我 opening a page: its icon on the gutter, its name, what it is set to under it, an arrow. */
 @Composable
-private fun MeRow(icon: ImageVector, title: String, tag: String, shapes: ListItemShapes, supporting: String? = null, opens: Boolean = true, onClick: () -> Unit) {
+internal fun MeRow(icon: ImageVector, title: String, tag: String, shapes: ListItemShapes, supporting: String? = null, opens: Boolean = true, onClick: () -> Unit) {
     SegmentedListItem(
         onClick = onClick,
         shapes = shapes,
@@ -335,16 +295,3 @@ private fun Credits() {
     }
 }
 
-// This month's spending, kept with the ledger it was summed from: the tab's page is made again
-// each time the tab is chosen, and summing every bill then held up the change of tab.
-private var monthSpent: Triple<Ledger, LocalDate, Pair<Long, String>?>? = null
-
-private fun monthExpense(ledger: Ledger): Pair<Long, String>? {
-    val start = LocalDate.now().withDayOfMonth(1)
-    monthSpent?.let { (from, month, spent) -> if (from === ledger && month == start) return spent }
-    val spent = ledger.book?.let { book ->
-        summarize(ledger.entries.filter { it.txn.book in ledger.shownBooks }, ledger.rates, book.currency, start, start.plusMonths(1)).expense to book.currency
-    }
-    monthSpent = Triple(ledger, start, spent)
-    return spent
-}

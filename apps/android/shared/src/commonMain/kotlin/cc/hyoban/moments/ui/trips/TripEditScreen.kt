@@ -415,20 +415,21 @@ private fun stampOf(day: LocalDate, hour: Int, minute: Int): String =
 /** A record a trip's end can follow: its uid, its time, what it is called, where, and its icon. */
 private data class EndRecord(val uid: String, val at: String, val name: String, val place: String?, val icon: androidx.compose.ui.graphics.vector.ImageVector)
 
-/** Every Moment and check-in, as records an end can follow. */
+/** Every Moment and the modules' own stops (the check-ins), as records an end can follow. */
 @Composable
 private fun endRecords(container: AppContainer): List<EndRecord> {
     val moments by container.shownMoments.collectAsStateWithLifecycle()
-    val checkins by container.repository.checkins.collectAsStateWithLifecycle()
+    val settings = cc.hyoban.moments.ui.LocalSettings.current
+    val stops = cc.hyoban.moments.plugins.Plugins.rememberKeptStops(container) { settings.isOn(it) }
     val places by container.repository.places.collectAsStateWithLifecycle()
     val photos = pluralStringResource(Res.plurals.count_photos, 1, 1)
-    return remember(moments, checkins, places) {
+    return remember(moments, stops, places) {
         val kindOf = { place: String? -> place?.let(places::get)?.let { cc.hyoban.moments.data.spec.PlaceKind.of(it.kind) }?.icon }
         moments.map { moment ->
             val place = moment.places.firstNotNullOfOrNull { places[it]?.name }
             val name = moment.text.lines().firstOrNull()?.take(24)?.ifBlank { null } ?: place ?: if (moment.media.isNotEmpty()) photos else formatDay(moment.dateKey)
             EndRecord(moment.uid, moment.occurredAt, name, place, AppIcons.Timeline)
-        } + checkins.byDay.values.flatten().map { EndRecord(it.uid, it.at, it.venue, it.place?.let(places::get)?.name, kindOf(it.place) ?: AppIcons.Pin) }
+        } + stops.map { EndRecord(it.uid, it.at, it.name, it.place?.let(places::get)?.name, kindOf(it.place) ?: AppIcons.Pin) }
     }
 }
 

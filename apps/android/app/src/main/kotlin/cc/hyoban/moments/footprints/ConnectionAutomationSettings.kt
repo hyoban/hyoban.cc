@@ -1,5 +1,7 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.ui.settings.ActionRow
+
 import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.Checkbox

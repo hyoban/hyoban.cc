@@ -1,5 +1,7 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.ui.settings.ActionRow
+
 import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.LocalSettings
@@ -120,7 +122,7 @@ fun FootprintsOnMap(
     val status by RecordingService.status.collectAsStateWithLifecycle()
     // What they show is the 足迹 layer's time, chosen in the map's layers menu with every other layer's.
     val times = remember(settings) { cc.hyoban.moments.ui.map.MapTimes(settings) }
-    val time = times.of(cc.hyoban.moments.ui.map.TimedLayer.FOOTPRINTS)
+    val time = times.of(cc.hyoban.moments.ui.map.TimedLayer.TRACK)
     val selection = remember(time, LocalDate.now()) { cc.hyoban.moments.ui.map.footprintSelection(time) }
     val day = selection.day
     val session = selection.session
@@ -146,7 +148,7 @@ fun FootprintsOnMap(
     }
     fun control(action: String) = work {
         RecordingService.control(context, action)
-        if (action == "start_trip") withContext(Dispatchers.IO) { store.state().session }?.let { times.setOwn(cc.hyoban.moments.ui.map.TimedLayer.FOOTPRINTS, cc.hyoban.moments.ui.map.MapTime.Trip(it)) }
+        if (action == "start_trip") withContext(Dispatchers.IO) { store.state().session }?.let { times.setOwn(cc.hyoban.moments.ui.map.TimedLayer.TRACK, cc.hyoban.moments.ui.map.MapTime.Trip(it)) }
     }
 
     LaunchedEffect(revision, selection) {
@@ -204,7 +206,7 @@ fun FootprintsOnMap(
             }
         }
         // Kept as a check-in only while check-ins are on (记录项与公开).
-        KeepPlace(container, Fix(stay.latitude, stay.longitude), "", onDismiss = { keeping = null }, onCheckin = keepCheckin.takeIf { LocalSettings.current.isOn(Module.CHECKIN) })
+        KeepPlace(container, Fix(stay.latitude, stay.longitude), "", onDismiss = { keeping = null }, alternative = keepCheckin.takeIf { LocalSettings.current.isOn(Module.CHECKIN) }?.let { org.jetbrains.compose.resources.stringResource(Res.string.action_save_checkin) to it })
     }
     // Recording in the background needs location 始终允许, which only the system's settings give:
     // said once, after recording first starts without it (35).
@@ -478,7 +480,7 @@ fun FootprintsOnMap(
                 deleting = null
                 work {
                     withContext(Dispatchers.IO) { store.delete(target) }
-                    if (target.session != null) times.reset(cc.hyoban.moments.ui.map.TimedLayer.FOOTPRINTS)
+                    if (target.session != null) times.reset(cc.hyoban.moments.ui.map.TimedLayer.TRACK)
                 }
             }) { Text(stringResource(Res.string.footprints_delete)) } },
             dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(Res.string.footprints_cancel)) } },

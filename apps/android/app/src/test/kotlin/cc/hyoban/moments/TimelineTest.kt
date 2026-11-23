@@ -4,17 +4,22 @@ import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.things.Checkin
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
-import cc.hyoban.moments.ui.feed.Charge
+import cc.hyoban.moments.plugins.Charge
+import cc.hyoban.moments.plugins.BillRecord
+import cc.hyoban.moments.plugins.ChargeRecord
+import cc.hyoban.moments.plugins.CheckinAnchor
+import cc.hyoban.moments.plugins.DriveRecord
+import cc.hyoban.moments.ledger.Ledger
 import cc.hyoban.moments.footprints.TrackPoint
 import cc.hyoban.moments.ui.feed.DayItem
 import cc.hyoban.moments.ui.feed.DayTrack
 import cc.hyoban.moments.ui.feed.dayItems
-import cc.hyoban.moments.ui.feed.DriveDay
+import cc.hyoban.moments.plugins.DriveDay
 import cc.hyoban.moments.ui.feed.chatItems
 import cc.hyoban.moments.ui.feed.ChatItem
 import cc.hyoban.moments.ui.feed.RecordLine
-import cc.hyoban.moments.ui.feed.drivesOf
-import cc.hyoban.moments.ui.feed.placeCharges
+import cc.hyoban.moments.plugins.drivesOf
+import cc.hyoban.moments.plugins.placeCharges
 import kotlin.test.Test
 import kotlin.math.roundToInt
 import kotlin.test.assertEquals
@@ -32,9 +37,9 @@ class TimelineTest {
 
         for (moments in listOf(listOf(morning, afternoon, evening), listOf(evening, afternoon, morning), listOf(afternoon, morning, evening))) {
             for (charges in listOf(emptyList(), listOf(charge))) {
-                val chronological = dayItems(moments, emptyList(), charges).reversed()
+                val chronological = dayItems(moments, charges.map { ChargeRecord(it, null) }).reversed()
                 assertEquals(expected, chronological.filterIsInstance<DayItem.Moment>().map { it.moment.uid })
-                if (charges.isNotEmpty()) assertEquals(charge, (chronological[1] as DayItem.ChargeItem).charge)
+                if (charges.isNotEmpty()) assertEquals(charge, ((chronological[1] as DayItem.Record).record as ChargeRecord).charge)
             }
         }
     }
@@ -46,14 +51,14 @@ class TimelineTest {
         val checkin = Checkin("checkin", "2026-01-02T19:43:00+08:00", "古茗")
         val items = dayItems(
             emptyList(),
-            listOf(bill("red-packet", "16:52:00"), bill("battery", "20:09:00"), bill("tea", "19:46:00")),
-            checkins = listOf(checkin),
+            listOf(bill("red-packet", "16:52:00"), bill("battery", "20:09:00"), bill("tea", "19:46:00")).map { BillRecord(it, Ledger()) },
+            anchors = listOf(CheckinAnchor(checkin)),
             oldestFirst = true,
         )
         val order = items.flatMap { item ->
             when (item) {
-                is DayItem.Bills -> item.txns.map { it.id }
-                is DayItem.CheckinItem -> listOf(item.checkin.uid)
+                is DayItem.Record -> listOf((item.record as BillRecord).txn.id)
+                is DayItem.Anchor -> listOf(item.anchor.uid)
                 else -> emptyList()
             }
         }
@@ -70,7 +75,7 @@ class TimelineTest {
         val items = dayItems(
             listOf(moment("walk", "10:00:00")),
             emptyList(),
-            checkins = listOf(Checkin("cafe", "2026-01-02T10:30:00+08:00", "Cafe")),
+            anchors = listOf(CheckinAnchor(Checkin("cafe", "2026-01-02T10:30:00+08:00", "Cafe"))),
             oldestFirst = true,
             day = "2026-01-02",
             track = track,
@@ -79,7 +84,7 @@ class TimelineTest {
             when (it) {
                 is DayItem.Track -> "track"
                 is DayItem.Moment -> it.moment.uid
-                is DayItem.CheckinItem -> it.checkin.uid
+                is DayItem.Anchor -> it.anchor.uid
                 else -> "?"
             }
         })
@@ -137,10 +142,10 @@ class TimelineTest {
         assertEquals(listOf("2026-11-14"), drives.keys.toList(), "a day only parked has no line")
         val drive = drives.getValue("2026-11-14")
         assertEquals(DriveDay("2026-11-14", 381.0, 325, 74.5), drive)
-        val items = dayItems(listOf(moment("lunch", "12:00:00")), emptyList(), oldestFirst = true, day = "2026-11-14", drive = drive)
-        assertIs<DayItem.Drive>(items.last())
+        val items = dayItems(listOf(moment("lunch", "12:00:00")), listOf(DriveRecord(drive)), oldestFirst = true, day = "2026-11-14")
+        assertIs<DriveRecord>((items.last() as DayItem.Record).record)
         val chats = chatItems(items)
         assertIs<ChatItem.Moment>(chats.first())
-        assertEquals(RecordLine.Drive(drive), (chats.last() as ChatItem.Records).lines.single())
+        assertEquals("drive-2026-11-14", (chats.last() as ChatItem.Records).lines.single().key)
     }
 }

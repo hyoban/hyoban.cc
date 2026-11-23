@@ -2,12 +2,12 @@ package cc.hyoban.moments.ui.trips
 
 
 import cc.hyoban.moments.data.local.fix
-import cc.hyoban.moments.data.store.isPublic
 
 import cc.hyoban.moments.ui.ledger.SpendingOf
 import cc.hyoban.moments.ui.ledger.billsOf
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module
+import cc.hyoban.moments.plugins.Plugins
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.CompositionLocalProvider
 import cc.hyoban.moments.ui.LocalSettings
@@ -105,66 +105,18 @@ fun TripScreen(
     val places by container.repository.places.collectAsStateWithLifecycle()
     val routes by container.tripRoutes.collectAsStateWithLifecycle()
     val trip = remember(trips, id) { trips.firstOrNull { it.id == id } } ?: return
-    val ledgerOn = LocalSettings.current.isOn(Module.LEDGER)
-    // Its check-ins and its bills, in its time, read down among its Moments as the timeline has
-    // them: a bill written with one of its Moments under that Moment, the rest by their time,
-    // each day's spending on its header; the private check-ins out of sight in 演示模式.
-    val allCheckins by container.repository.checkins.collectAsStateWithLifecycle()
-    val checkinsOn = LocalSettings.current.isOn(Module.CHECKIN)
+    // Its check-ins, bills and the car's charges, in its time, read down among its Moments as the
+    // timeline has them, each module joining its own; the private check-ins out of sight in 演示模式.
     val demo = LocalSettings.current.demo
-    val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val moments = remember(trip, all) { momentsOf(trip, all, trips) }
-    // The car's charges in its time and what it drove each of its days, as the timeline has them.
-    val records by container.repository.records.collectAsStateWithLifecycle()
-    val carOn = LocalSettings.current.isOn(Module.CAR)
-    val tripRecords = remember(allCheckins, trip, checkinsOn, demo, ledger, ledgerOn, moments, records, carOn) {
-        val checkins = if (!checkinsOn) emptyMap() else allCheckins.byDay.filterKeys { it in trip.start..trip.end }
-            .mapValues { (_, day) -> day.filter { cc.hyoban.moments.data.trips.isInTrip(trip, it.at) && !(demo && it.private) } }
-            .filterValues { it.isNotEmpty() }
-        val currency = ledger.book?.currency ?: "CNY"
-        val shown = ledger.books.filterNot { it.archived }.mapTo(HashSet()) { it.id }
-        val uids = moments.mapTo(HashSet()) { it.uid } + checkins.values.flatten().map { it.uid }
-        val links = cc.hyoban.moments.ledger.AutoLinks(moments, checkins.values.flatten())
-        val inSpan = if (!ledgerOn) emptyList() else {
-            cc.hyoban.moments.ledger.txnsOfTrip(ledger, trip).filter { it.book in shown && it.kind in cc.hyoban.moments.ui.feed.SHOWN_KINDS }
-        }
-        // A public bill linked to one of its Moments or check-ins goes in that bubble whenever it
-        // was paid; the trip's spending stays what was paid in its span.
-        val bills = if (!ledgerOn) emptyList() else inSpan + run {
-            val ids = inSpan.mapTo(HashSet()) { it.id }
-            ledger.txns.filter {
-                it.id !in ids && it.book in shown && it.kind in cc.hyoban.moments.ui.feed.SHOWN_KINDS &&
-                    it.moment in uids && ledger.isPublic(it)
-            }
-        }
-        val inTripDay = { day: String -> day in trip.start..trip.end }
-        val charges = if (!carOn) emptyList() else cc.hyoban.moments.ui.feed.chargesOf(records.entries.values, inTripDay)
-            .filter { cc.hyoban.moments.data.trips.isInTrip(trip, it.at) }
-        val drives = if (!carOn) emptyMap() else cc.hyoban.moments.ui.feed.drivesOf(records.vehicleMonths.values, inTripDay)
-        // A charge and the bill paid for it at its very time are one line, where that bill would go.
-        val (looseCharges, linkedCharges, paid) = cc.hyoban.moments.ui.feed.placeCharges(
-            charges, bills, { txn -> links.of(txn)?.takeIf { it in uids } },
-            cc.hyoban.moments.ui.feed.momentTimes(moments, checkins.values.flatten()),
-        )
-        val (withMoment, without) = bills.filterNot { it.id in paid }.partition { links.of(it) in uids }
-        cc.hyoban.moments.ui.feed.TimelineBills(
-            ledger,
-            linked = withMoment.groupBy { links.of(it)!! }.mapValues { (_, txns) -> txns.sortedBy { it.time } },
-            loose = without.groupBy { it.dateKey },
-            spent = inSpan.groupBy { it.dateKey }.mapValues { (_, txns) -> cc.hyoban.moments.ledger.spendingOf(ledger, txns, currency).expense },
-            currency = currency,
-            checkins = checkins,
-            charges = looseCharges,
-            linkedCharges = linkedCharges,
-            drives = drives,
-        )
+    val joins = cc.hyoban.moments.ui.feed.rememberJoinInputs(container)
+    val tripRecords = remember(trip, moments, demo, joins) {
+        cc.hyoban.moments.ui.feed.joinRecords(cc.hyoban.moments.ui.feed.JoinScope(cc.hyoban.moments.ui.feed.JoinSpan.Trip(trip), moments, demo = demo), joins).build()
     }
     val stops = remember(trip, all, places) { stopsOf(trip, all, trips, places) }
     // Each stop's way from the one before, across days too, as the timeline draws them.
-    val tripCheckins = remember(allCheckins, trip, checkinsOn) {
-        if (!checkinsOn) emptyList() else allCheckins.byDay.filterKeys { it in trip.start..trip.end }.values.flatten()
-    }
-    val legLines = rememberLegLines(container, moments, tripCheckins, listOf(trip))
+    val legSettings = LocalSettings.current
+    val legLines = rememberLegLines(container, moments, Plugins.legStops(container, trip) { legSettings.isOn(it) }, listOf(trip))
     // The footprints between its records, as the timeline has them, each saying how the way was gone.
     val tracks = cc.hyoban.moments.ui.feed.rememberTimelineTracks(container)
 
@@ -218,7 +170,10 @@ fun TripScreen(
             }
         }
     }
-    // What it cost, from the ledger kept on the phone, leading to its bills.
+    // Its figures, what the modules that are on add after its distance (the charging, what it cost,
+    // leading to its bills), while any of them adds one.
+    val settings = LocalSettings.current
+    val figuresOn = Plugins.all.any { settings.isOn(it.module) && it.tripFacets.isNotEmpty() }
     val ledgerNav = LocalLedgerNav.current
     val spending: @Composable () -> Unit = {
         TripFacets(container, trip, routes[trip.id].orEmpty(), onBills = { ledgerNav?.list(LedgerFilter(trip = trip.id)) })
@@ -331,7 +286,7 @@ fun TripScreen(
                         tracks = tracks,
                     ) {
                         item(key = "summary") { summary() }
-                        if (ledgerOn) item(key = "spending") { spending() }
+                        if (figuresOn) item(key = "spending") { spending() }
                         if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(3) }
                     }
                     }
@@ -357,7 +312,7 @@ fun TripScreen(
                         tracks = tracks,
                 ) {
                     item(key = "summary") { summary() }
-                    if (ledgerOn) item(key = "spending") { spending() }
+                    if (figuresOn) item(key = "spending") { spending() }
                     if (photos.isNotEmpty()) item(key = "photos") { photoCarousel(5) }
                     item(key = "map") { routeCard(Modifier, Modifier.height(240.dp)) }
                     item(key = "gap") { Spacer(Modifier.height(Space.s)) }
@@ -388,36 +343,18 @@ private fun TripFacets(
     route: List<cc.hyoban.moments.data.trips.RouteSegment>,
     onBills: () -> Unit,
 ) {
-    val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val moments by container.shownMoments.collectAsStateWithLifecycle()
-    val trips by container.shownTrips.collectAsStateWithLifecycle()
-    val records by container.repository.records.collectAsStateWithLifecycle()
-    val carOn = LocalSettings.current.isOn(Module.CAR)
-    val spendingOn = LocalSettings.current.isOn(Module.LEDGER)
     val km = remember(route) {
         route.sumOf { segment ->
             segment.line.zipWithNext { (lng1, lat1), (lng2, lat2) -> haversineKm(lat1, lng1, lat2, lng2) }.sum()
         }
     }
-    val charges = remember(records, trip, carOn) {
-        if (!carOn) emptyList() else records.entries.values.mapNotNull { entry ->
-            val at = (entry["at"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
-            val charge = (entry["parts"] as? kotlinx.serialization.json.JsonObject)?.get("charge") as? kotlinx.serialization.json.JsonObject
-            if (charge == null || !cc.hyoban.moments.data.trips.isInTrip(trip, at)) null
-            else (charge["energyWh"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull() ?: 0.0
-        }
-    }
-    val currency = ledger.book?.currency ?: "CNY"
-    val spent = remember(ledger, moments, trips, trip, spendingOn) {
-        if (!spendingOn) return@remember null
-        val bills = cc.hyoban.moments.ui.ledger.billsOf(SpendingOf.Trip(trip.id), ledger, moments.associateBy { it.uid }, trips)
-        if (bills.isEmpty()) null else cc.hyoban.moments.ledger.spendingOf(ledger, bills, currency).expense
-    }
+    // The distance, then what the modules that are on add: the charging, what was spent.
+    val settings = LocalSettings.current
+    val scope = TripFacetScope(container, trip, onBills)
+    val own = Plugins.all.filter { settings.isOn(it.module) }.flatMap { it.tripFacets }.sortedBy { it.order }.mapNotNull { it.figure(scope) }
     val figures = listOfNotNull(
         (km.takeIf { it >= 1 }?.let { "%,d".format(it.roundToInt()) to stringResource(Res.string.facet_km) })?.let { it to null },
-        (charges.takeIf { it.isNotEmpty() }?.let { "%.0f".format(it.sum() / 1000) to pluralStringResource(Res.plurals.facet_charging, it.size, it.size) })?.let { it to null },
-        (spent?.let { cc.hyoban.moments.ui.ledger.money(it, currency) to stringResource(Res.string.facet_spent) })?.let { it to onBills },
-    )
+    ) + own.map { (it.value to it.label) to it.onClick }
     if (figures.isEmpty()) return
     Row(
         Modifier.fillMaxWidth().padding(horizontal = Space.gutter).padding(bottom = Space.l).testTag("trip_facets"),

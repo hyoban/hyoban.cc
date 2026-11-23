@@ -31,21 +31,21 @@ fun PhotoAtlas(container: AppContainer, photos: Places, modifier: Modifier = Mod
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.shownTrips.collectAsStateWithLifecycle()
     val routes by container.tripRoutes.collectAsStateWithLifecycle()
-    val checkins by container.shownCheckins.collectAsStateWithLifecycle()
+    val stops by mapStops(container).collectAsStateWithLifecycle()
     val prepared by container.atlasPrepared.value.collectAsStateWithLifecycle()
-    val inputs = remember(moments, places, checkins, trips, routes) { AtlasInputs(moments, places, checkins, trips, routes) }
+    val inputs = remember(moments, places, stops, trips, routes) { AtlasInputs(moments, places, stops, trips, routes) }
     val atlas = remember(prepared, inputs) { prepared?.takeIf { it.matches(inputs) } ?: prepareAtlas(inputs) }
     val settings = LocalSettings.current
-    val checkinsOn = settings.isOn(Module.CHECKIN)
-    val mapPlaces = if (checkinsOn) atlas.placesWithCheckins else atlas.placesWithoutCheckins
-    val colors = if (checkinsOn) atlas.colorsWithCheckins else atlas.colorsWithoutCheckins
-    val mapData = if (checkinsOn) atlas.mapDataWithCheckins else atlas.mapDataWithoutCheckins
+    val stopsOn = cc.hyoban.moments.plugins.Plugins.hasLayer(settings, TimedLayer.STOPS)
+    val mapPlaces = if (stopsOn) atlas.placesWithStops else atlas.placesWithoutStops
+    val colors = if (stopsOn) atlas.colorsWithStops else atlas.colorsWithoutStops
+    val mapData = if (stopsOn) atlas.mapDataWithStops else atlas.mapDataWithoutStops
     val times = remember(settings) { MapTimes(settings) }
     val sharedTime = times.shared
-    val kept = remember(mapPlaces, trips, checkinsOn, sharedTime, TimedLayer.entries.map { times.own(it) }) { keptIn(times::of, mapPlaces, trips, checkinsOn, moments = settings.mapPlaces) }
+    val kept = remember(mapPlaces, trips, stopsOn, sharedTime, TimedLayer.entries.map { times.own(it) }) { keptIn(times::of, mapPlaces, trips, stopsOn, moments = settings.mapPlaces) }
     Box(modifier.fillMaxSize().testTag("picker_map")) {
         SharedAtlasMap(
-            layerPlaces(mapPlaces, settings.mapPlaces, checkinsOn, null) ?: mapPlaces,
+            layerPlaces(mapPlaces, settings.mapPlaces, stopsOn, null) ?: mapPlaces,
             colors,
             atlas.routes,
             selected = null,

@@ -1,4 +1,4 @@
-package cc.hyoban.moments.ui.feed
+package cc.hyoban.moments.ui.footprints
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

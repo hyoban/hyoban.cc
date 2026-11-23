@@ -49,8 +49,8 @@ import cc.hyoban.moments.data.things.Period
 import cc.hyoban.moments.data.things.Subscription
 import cc.hyoban.moments.data.things.SubscriptionEdit
 import cc.hyoban.moments.data.things.Things
-import cc.hyoban.moments.ledger.currencySymbol
-import cc.hyoban.moments.ledger.formatMoney
+import cc.hyoban.moments.data.money.currencySymbol
+import cc.hyoban.moments.data.money.formatMoney
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage

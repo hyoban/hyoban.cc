@@ -1,5 +1,6 @@
 package cc.hyoban.moments
 
+import cc.hyoban.moments.plugins.keptStop
 import cc.hyoban.moments.data.ai.FoundPlace
 import cc.hyoban.moments.data.ai.PlanItem
 import cc.hyoban.moments.data.ai.PlanLookup
@@ -162,7 +163,7 @@ class PlanChatsTest {
         assertEquals(false, isAhead("2026-11-01T08:00:00+08:00", now))
         val trip = TripRecord("t-1", "香港", "2026-12-21", "2026-12-26", planned = true, createdAt = "2026-11-01T00:00:00Z", updatedAt = "2026-11-01T00:00:00Z")
         val checkins = listOf(Checkin("c-ahead", "2026-12-21T08:00:00+08:00", "老家", place = "p-1"))
-        val records = planRecords(trip, emptyList(), checkins, listOf(trip), mapOf("p-1" to Place("老家", 35.68, 139.77)), now)
+        val records = planRecords(trip, emptyList(), checkins.map { it.keptStop() }, listOf(trip), mapOf("p-1" to Place("老家", 35.68, 139.77)), now)
         // One still to come has an id, to be changed by.
         assertEquals("c-ahead", records.single().id)
     }
@@ -180,7 +181,7 @@ class PlanChatsTest {
         assertEquals(true, (editedEntry(opened, "老家", placeChanged = false)["locked"] as JsonPrimitive).content.toBoolean())
         // Sent as settled, without its id.
         val trip = TripRecord("t-1", "香港", "2026-12-21", "2026-12-26", planned = true, createdAt = "2026-11-01T00:00:00Z", updatedAt = "2026-11-01T00:00:00Z")
-        val records = planRecords(trip, emptyList(), listOf(checkin), listOf(trip), mapOf("p-1" to Place("老家", 35.68, 139.77)), java.time.Instant.parse("2026-11-20T00:00:00Z"))
+        val records = planRecords(trip, emptyList(), listOf(checkin.keptStop()), listOf(trip), mapOf("p-1" to Place("老家", 35.68, 139.77)), java.time.Instant.parse("2026-11-20T00:00:00Z"))
         assertNull(records.single().id)
         assertEquals(true, records.single().locked)
     }
@@ -213,7 +214,7 @@ class PlanChatsTest {
         val plan = listOf(
             PlanTarget("m-1", "2026-12-24", "09:00", "退房出门", "新宿的酒店", hotel),
             PlanTarget("m-2", "2026-12-24", "22:50", "回酒店拿行李", "新宿的酒店", hotel),
-            PlanTarget("c-1", "2026-12-21", "08:00", "", "老家", Fix(35.68, 139.77), checkin = true),
+            PlanTarget("c-1", "2026-12-21", "08:00", "", "老家", Fix(35.68, 139.77), stop = true),
         )
         // Listed again as it is: nothing to do.
         assertEquals(PlanMatch.Same("m-2"), matchPlan(PlanItem("2026-12-24", "22:50", "回酒店拿行李", PlanPlace("新宿的酒店", hotel)), plan))

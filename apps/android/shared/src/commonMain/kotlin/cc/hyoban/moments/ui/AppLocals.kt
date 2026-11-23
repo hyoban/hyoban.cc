@@ -136,7 +136,6 @@ import cc.hyoban.moments.ui.feed.FeedScreen
 import cc.hyoban.moments.ui.feed.PlaceScreen
 import cc.hyoban.moments.ui.feed.SearchScreen
 import cc.hyoban.moments.ui.moment.MomentScreen
-import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ui.ledger.LedgerEntryArgs
 import cc.hyoban.moments.ui.ledger.LedgerFilter
 import cc.hyoban.moments.ui.ledger.LedgerNav

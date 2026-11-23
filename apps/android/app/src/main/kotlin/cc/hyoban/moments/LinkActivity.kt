@@ -3,7 +3,7 @@ package cc.hyoban.moments
 import android.content.Intent
 import android.os.Bundle
 import cc.hyoban.moments.ui.Feed
-import cc.hyoban.moments.ui.allowedRoute
+import cc.hyoban.moments.plugins.Plugins
 import cc.hyoban.moments.ui.routeOf
 
 /**
@@ -33,7 +33,7 @@ class LinkActivity : MainActivity() {
     /** The link's page alone, over the app (or the Moments, for a page of a module that is off): back, the top bar's or the system's, closes it onto the app. */
     override fun startPages(restored: Boolean): List<Any> {
         val settings = (application as MomentsApplication).container.settings
-        return listOf(intent.data?.let(::routeOf)?.let { allowedRoute(it, settings::isOn) } ?: Feed)
+        return listOf(intent.data?.let(::routeOf)?.let { Plugins.allowedRoute(it, settings::isOn) } ?: Feed)
     }
 
     companion object {

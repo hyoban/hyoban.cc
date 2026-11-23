@@ -1,4 +1,4 @@
-package cc.hyoban.moments.ui.publish
+package cc.hyoban.moments.plugins
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +34,7 @@ import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatDay
 import cc.hyoban.moments.ui.ledger.money
 import cc.hyoban.moments.ui.settings.Caption
+import cc.hyoban.moments.ui.publish.SwipeToRevert
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
 import java.time.format.DateTimeFormatter

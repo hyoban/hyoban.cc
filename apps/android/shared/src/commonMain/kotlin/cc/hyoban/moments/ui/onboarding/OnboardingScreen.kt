@@ -74,7 +74,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
-private enum class Step { Welcome, Start, Connect, Import, Footprints, Background }
+private enum class Step { Welcome, Start, Connect, Import, Module }
 
 /**
  * 初次打开 (34): shown once, the first time the app opens with nothing set up. Where to start
@@ -89,28 +89,36 @@ fun OnboardingScreen(container: AppContainer, onDone: () -> Unit) {
     val back = {
         step = when (step) {
             Step.Welcome, Step.Start -> Step.Welcome
-            Step.Connect, Step.Import, Step.Footprints -> Step.Start
-            Step.Background -> Step.Footprints
+            Step.Connect, Step.Import, Step.Module -> Step.Start
         }
     }
-    // The footprints step only while the footprints are on (记录项与公开).
-    val toFootprints: () -> Unit = { if (device.recordsFootprints && container.settings.isOn(Module.FOOTPRINTS)) step = Step.Footprints else onDone() }
+    // Then the modules' own steps on this device (the phone's footprints), each only while its module is on (记录项与公开).
+    var moduleStep by rememberSaveable { mutableStateOf(0) }
+    val steps = device.moduleSteps
+    val nextFrom = { from: Int ->
+        val next = (from until steps.size).firstOrNull { container.settings.isOn(steps[it].module) }
+        if (next != null) {
+            moduleStep = next
+            step = Step.Module
+        } else onDone()
+    }
+    val toModules: () -> Unit = { nextFrom(0) }
     BackHandler(enabled = step != Step.Welcome, onBack = back)
     Box(Modifier.fillMaxSize().background(AppColors.page).testTag("onboarding")) {
         when (step) {
             Step.Welcome -> Welcome { step = Step.Start }
-            Step.Start -> Start(back, onSite = { step = Step.Connect }, onImport = { step = Step.Import }, onBlank = toFootprints, desktop = desktop, more = device.onboardingStarts(container, toFootprints))
-            Step.Connect -> Connect(container, back, toFootprints)
+            Step.Start -> Start(back, onSite = { step = Step.Connect }, onImport = { step = Step.Import }, onBlank = toModules, desktop = desktop, more = device.onboardingStarts(container, toModules))
+            Step.Connect -> Connect(container, back, toModules)
             // The 导入 page as it is in 我, with the way on at its foot; back is back to where to start.
             Step.Import -> Column(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(1f).fillMaxWidth()) { ImportScreen(container, onBack = back) }
                 Button(
-                    onClick = toFootprints,
+                    onClick = toModules,
                     modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = Space.gutter).padding(top = Space.s, bottom = Space.xl).testTag("onboarding_import_next"),
                 ) { Text(stringResource(Res.string.onboarding_continue)) }
             }
-            // Recording the footprints is the phone's own, with what it asks of the system.
-            Step.Footprints, Step.Background -> device.OnboardingFootprints(container, back, onDone)
+            // A module's own, with what it asks of the system (recording the footprints, the phone's).
+            Step.Module -> steps.getOrNull(moduleStep)?.let { it.Page(container, back) { nextFrom(moduleStep + 1) } }
         }
     }
 }
@@ -220,7 +228,7 @@ private fun Start(onBack: () -> Unit, onSite: () -> Unit, onImport: () -> Unit, 
         // A computer keeps what is written on itself, and reads the phone's ledger and footprints from its backup.
         val device = LocalDevice.current
         val settings = LocalSettings.current
-        val imports = settings.isOn(Module.CHECKIN) || device.importsMore(settings)
+        val imports = cc.hyoban.moments.plugins.Plugins.imports(settings) || device.importsMore(settings)
         SegmentedGroup(null, stringResource(if (desktop) Res.string.onboarding_where_note_desktop else Res.string.onboarding_where_note), listOfNotNull(
             row(AppIcons.Link, Res.string.onboarding_site, Res.string.onboarding_site_note, "onboarding_site", onSite),
         ) + more + listOfNotNull(

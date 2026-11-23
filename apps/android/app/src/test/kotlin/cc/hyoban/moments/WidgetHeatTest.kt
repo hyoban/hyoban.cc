@@ -57,8 +57,8 @@ class WidgetHeatTest {
 
     @Test
     fun anUnknownSourceIsMoments() {
-        assertEquals(HeatSource.MOMENTS, HeatSource.of(null))
-        assertEquals(HeatSource.MOMENTS, HeatSource.of("gone"))
-        assertEquals(HeatSource.FOOTPRINTS, HeatSource.of("footprints"))
+        assertEquals(cc.hyoban.moments.widget.MomentsHeat, HeatSource.of(null))
+        assertEquals(cc.hyoban.moments.widget.MomentsHeat, HeatSource.of("gone"))
+        assertEquals("footprints", HeatSource.of("footprints").key)
     }
 }

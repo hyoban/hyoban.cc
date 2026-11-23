@@ -5,18 +5,10 @@ import org.jetbrains.compose.resources.StringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import org.jetbrains.compose.resources.stringResource
-import cc.hyoban.moments.data.occasions.Count
-import cc.hyoban.moments.data.occasions.Occasions
 import cc.hyoban.moments.data.spec.Entries
-import cc.hyoban.moments.data.spec.Place
-import cc.hyoban.moments.data.things.Period
-import cc.hyoban.moments.data.things.Things
-import cc.hyoban.moments.data.things.checkinOf
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
-import cc.hyoban.moments.ui.things.priceOf
-import cc.hyoban.moments.ui.things.yuan
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 
@@ -26,92 +18,44 @@ import kotlinx.serialization.json.contentOrNull
  */
 data class EntryDiff(val label: StringResource, val from: String?, val to: String, val icon: ImageVector, val words: Boolean = false)
 
-/**
- * What a change to a check-in, an occasion, a device or a subscription changed, field by field,
- * in the order its sheet lists them; empty when nothing it shows differs.
- */
-@Composable
-fun entryDiffs(before: JsonObject, after: JsonObject, places: Map<String, Place>): List<EntryDiff> {
-    val none = stringResource(Res.string.change_none)
-    val yes = stringResource(Res.string.change_yes)
-    val no = stringResource(Res.string.change_no)
-    val public = stringResource(Res.string.visibility_public)
-    val private = stringResource(Res.string.visibility_private)
-    val diffs = mutableListOf<EntryDiff>()
+/** A diff builder for an entry's fields: [add] a value changed, [words] writing changed letter by letter. */
+class EntryDiffs internal constructor(private val none: String) {
+    internal val diffs = mutableListOf<EntryDiff>()
+
     fun words(label: StringResource, from: String?, to: String?, icon: ImageVector) {
         if (from.orEmpty() != to.orEmpty()) diffs += EntryDiff(label, from.orEmpty(), to.orEmpty(), icon, words = true)
     }
+
     fun add(label: StringResource, from: String?, to: String?, icon: ImageVector) {
         if (from != to) diffs += EntryDiff(label, from, to ?: none, icon)
     }
-    val once = stringResource(Res.string.occasion_once)
-    val lunarly = stringResource(Res.string.occasion_lunar)
-    val yearly = stringResource(Res.string.occasion_each_year)
-    val counts = mapOf(
-        Count.YEARS to stringResource(Res.string.occasion_count_years),
-        Count.AGE to stringResource(Res.string.occasion_count_age),
-        Count.NONE to stringResource(Res.string.occasion_count_none),
-    )
-    val periods = mapOf(
-        Period.YEAR to stringResource(Res.string.subscription_period_year),
-        Period.MONTH to stringResource(Res.string.subscription_period_month),
-        Period.ONCE to stringResource(Res.string.subscription_period_once),
-    )
-    fun flag(value: Boolean) = if (value) yes else no
-    fun day(value: Any?) = value?.toString()?.let(::formatDate)
 
-    val checkins = checkinOf(before) to checkinOf(after)
-    val occasions = Occasions.occasion(before) to Occasions.occasion(after)
-    val devices = Things.device(before) to Things.device(after)
-    val subscriptions = Things.subscription(before) to Things.subscription(after)
-    when {
-        checkins.first != null && checkins.second != null -> {
-            val (was, now) = checkins.first!! to checkins.second!!
-            val span = { c: cc.hyoban.moments.data.things.Checkin ->
-                listOfNotNull(formatDate(c.at.take(10)), listOfNotNull(formatTime(c.at), c.end?.let(::formatTime)).joinToString("–").ifEmpty { null }).joinToString(" ")
-            }
-            add(Res.string.change_place_name, was.venue, now.venue, AppIcons.Pen)
-            add(Res.string.change_time, span(was), span(now), AppIcons.Clock)
-            add(Res.string.change_place, was.place?.let { places[it]?.name ?: it }, now.place?.let { places[it]?.name ?: it }, AppIcons.Pin)
-        }
-        occasions.first != null && occasions.second != null -> {
-            val (was, now) = occasions.first!! to occasions.second!!
-            val repeat = { repeat: Boolean, lunar: Boolean -> if (!repeat) once else if (lunar) lunarly else yearly }
-            val count = { count: Count -> counts.getValue(count) }
-            add(Res.string.occasion_name, was.name, now.name, AppIcons.Pen)
-            add(Res.string.occasion_date, day(was.first), day(now.first), AppIcons.Calendar)
-            add(Res.string.change_repeat, repeat(was.repeat, was.lunar), repeat(now.repeat, now.lunar), AppIcons.Refresh)
-            add(Res.string.change_count, count(was.count), count(now.count), AppIcons.Tag)
-            add(Res.string.occasion_first_label, was.firstLabel, now.firstLabel, AppIcons.Flag)
-            words(Res.string.occasion_note, was.note, now.note, AppIcons.Notes)
-        }
-        devices.first != null && devices.second != null -> {
-            val (was, now) = devices.first!! to devices.second!!
-            add(Res.string.device_name, was.name, now.name, AppIcons.Pen)
-            add(Res.string.device_category, was.category, now.category, AppIcons.Category)
-            add(Res.string.device_bought, day(was.bought), day(now.bought), AppIcons.Calendar)
-            add(Res.string.device_price, yuan(was.price), yuan(now.price), AppIcons.Cash)
-            add(Res.string.device_sold_on, day(was.soldOn), day(now.soldOn), AppIcons.Calendar)
-            add(Res.string.device_sold_price, was.soldPrice?.let(::yuan), now.soldPrice?.let(::yuan), AppIcons.Cash)
-            add(Res.string.device_idle, flag(was.idle), flag(now.idle), AppIcons.Pause)
-            words(Res.string.device_note, was.note, now.note, AppIcons.Notes)
-            // Its photo, another or none.
-            if (was.image != now.image) diffs += EntryDiff(Res.string.change_photos, null, if (now.image == null) none else stringResource(Res.string.change_replaced), AppIcons.Image)
-        }
-        subscriptions.first != null && subscriptions.second != null -> {
-            val (was, now) = subscriptions.first!! to subscriptions.second!!
-            val period = { period: Period -> periods.getValue(period) }
-            add(Res.string.subscription_name, was.name, now.name, AppIcons.Pen)
-            add(Res.string.subscription_price, priceOf(was.price, was.currency) + " " + period(was.period), priceOf(now.price, now.currency) + " " + period(now.period), AppIcons.Cash)
-            add(Res.string.subscription_paid, day(was.paid), day(now.paid), AppIcons.Calendar)
-            add(Res.string.subscription_renews_on, day(was.renews), day(now.renews), AppIcons.Calendar)
-            add(Res.string.subscription_auto_renew, flag(was.autoRenew), flag(now.autoRenew), AppIcons.Refresh)
-            add(Res.string.subscription_paid_with, was.paidWith, now.paidWith, AppIcons.Card)
-            add(Res.string.subscription_ended, day(was.ended), day(now.ended), AppIcons.Calendar)
-            words(Res.string.subscription_note, was.note, now.note, AppIcons.Notes)
-            add(Res.string.change_link, was.link, now.link, AppIcons.Link)
-        }
+    operator fun plusAssign(diff: EntryDiff) {
+        diffs += diff
     }
+}
+
+/** The fields an entry's change changed, as [build] adds them. */
+@Composable
+fun entryDiffsOf(build: @Composable EntryDiffs.() -> Unit): List<EntryDiff> {
+    val diffs = EntryDiffs(stringResource(Res.string.change_none))
+    diffs.build()
+    return diffs.diffs
+}
+
+/** A yes or no, as a change says it. */
+@Composable
+fun flagName(value: Boolean): String = stringResource(if (value) Res.string.change_yes else Res.string.change_no)
+
+/** What any entry's change changes beside its own fields: who sees it, how it is reached, planned or locked. */
+@Composable
+internal fun commonEntryDiffs(before: JsonObject, after: JsonObject): List<EntryDiff> {
+    val public = stringResource(Res.string.visibility_public)
+    val private = stringResource(Res.string.visibility_private)
+    val yes = flagName(true)
+    val no = flagName(false)
+    fun flag(value: Boolean) = if (value) yes else no
+    val diffs = mutableListOf<EntryDiff>()
     // Public or private, a change of its own: one made private leaves the site.
     val wasPrivate = Entries.isPrivate(before)
     val nowPrivate = Entries.isPrivate(after)
@@ -131,6 +75,7 @@ fun entryDiffs(before: JsonObject, after: JsonObject, places: Map<String, Place>
     }
     return diffs
 }
+
 
 /** How a planned record is reached, by name: driving when it doesn't say. */
 @Composable

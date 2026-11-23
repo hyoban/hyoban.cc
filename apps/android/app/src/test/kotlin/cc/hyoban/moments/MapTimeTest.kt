@@ -21,7 +21,7 @@ class MapTimeTest {
 
     private fun place(id: String, moments: List<String> = emptyList(), checkins: List<String> = emptyList()) =
         MapPlace(id, Place(id, 0.0, 0.0), moments.size + checkins.size, 2020,
-            momentDays = moments.map { LocalDate.parse(it) }, checkinDays = checkins.map { LocalDate.parse(it) })
+            momentDays = moments.map { LocalDate.parse(it) }, stopDays = checkins.map { LocalDate.parse(it) })
 
     private val places = listOf(
         place("lake", moments = listOf("2024-05-01")),
@@ -48,7 +48,7 @@ class MapTimeTest {
 
     @Test
     fun everyTimeKeepsEverything() {
-        val kept = keptIn({ MapTime.All }, places, trips, checkins = true, today)
+        val kept = keptIn({ MapTime.All }, places, trips, stops = true, today)
         assertNull(kept.places)
         assertNull(kept.trips)
         assertEquals(places, kept.fogPlaces)
@@ -56,8 +56,8 @@ class MapTimeTest {
 
     @Test
     fun eachLayerKeepsByItsOwnTime() {
-        val times = mapOf(TimedLayer.PLACES to MapTime.Year(2024), TimedLayer.CHECKINS to MapTime.ThisYear, TimedLayer.ROUTES to MapTime.Year(2026))
-        val kept = keptIn({ times[it] ?: MapTime.All }, places, trips, checkins = true, today)
+        val times = mapOf(TimedLayer.PLACES to MapTime.Year(2024), TimedLayer.STOPS to MapTime.ThisYear, TimedLayer.ROUTES to MapTime.Year(2026))
+        val kept = keptIn({ times[it] ?: MapTime.All }, places, trips, stops = true, today)
         // A Moment in 2024 keeps the lake; a check-in this year the cafe; the hill's are neither.
         assertEquals(setOf("lake", "cafe"), kept.places)
         // A trip under way at any time in 2026, the one across the new year among them.
@@ -67,18 +67,18 @@ class MapTimeTest {
 
     @Test
     fun checkinsNotCountedKeepNothingByThem() {
-        val kept = keptIn({ if (it == TimedLayer.PLACES) MapTime.Year(2024) else MapTime.All }, places, trips, checkins = false, today)
+        val kept = keptIn({ if (it == TimedLayer.PLACES) MapTime.Year(2024) else MapTime.All }, places, trips, stops = false, today)
         assertEquals(setOf("lake"), kept.places)
     }
 
     @Test
     fun checkinsAloneDrawTheirPlaces() {
         // 地点 off: the places with a check-in, and the one open, are drawn; the lake has only Moments.
-        assertEquals(listOf("cafe", "hill"), layerPlaces(places, moments = false, checkins = true, open = null)!!.map { it.id })
-        assertEquals(listOf("lake"), layerPlaces(places, moments = false, checkins = false, open = "lake")!!.map { it.id })
-        assertNull(layerPlaces(places, moments = true, checkins = true, open = null))
+        assertEquals(listOf("cafe", "hill"), layerPlaces(places, moments = false, stops = true, open = null)!!.map { it.id })
+        assertEquals(listOf("lake"), layerPlaces(places, moments = false, stops = false, open = "lake")!!.map { it.id })
+        assertNull(layerPlaces(places, moments = true, stops = true, open = null))
         // In 2024 by check-ins alone, the hill's; a Moment then keeps nothing while 地点 is off.
-        val kept = keptIn({ MapTime.Year(2024) }, places, trips, checkins = true, today, moments = false)
+        val kept = keptIn({ MapTime.Year(2024) }, places, trips, stops = true, today, moments = false)
         assertEquals(setOf("hill"), kept.places)
     }
 

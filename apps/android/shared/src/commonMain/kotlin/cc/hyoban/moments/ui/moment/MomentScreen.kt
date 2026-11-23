@@ -1,9 +1,8 @@
 package cc.hyoban.moments.ui.moment
 
 import cc.hyoban.moments.ui.compose.label
-import cc.hyoban.moments.ui.ledger.momentBillRows
 import cc.hyoban.moments.res.*
-import cc.hyoban.moments.data.spec.Module
+import cc.hyoban.moments.plugins.Plugins
 import androidx.compose.ui.AbsoluteAlignment
 import cc.hyoban.moments.data.store.isPublic
 
@@ -104,7 +103,6 @@ import cc.hyoban.moments.ui.format.verdictLabel
 import cc.hyoban.moments.ui.format.costAmountLine
 import cc.hyoban.moments.ui.format.costTitle
 import cc.hyoban.moments.ui.format.costVerdictLabel
-import cc.hyoban.moments.ui.format.module
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.data.trips.countOf
 import cc.hyoban.moments.data.trips.tripOf
@@ -157,7 +155,6 @@ fun MomentScreen(
     onBill: (String) -> Unit = LocalLedgerNav.current?.bill ?: {},
     onNewBill: (String) -> Unit = LocalLedgerNav.current?.let { nav -> { uid -> nav.entry(LedgerEntryArgs(moment = uid)) } } ?: {},
 ) {
-    val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val moments by container.shownMoments.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.shownTrips.collectAsStateWithLifecycle()
@@ -182,8 +179,7 @@ fun MomentScreen(
             MomentDetails(
                 moment, places, trip, moments, trips, urls, pager, onPlace, onTrip, onDay,
                 changed = container.repository.isChanged(moment.uid),
-                bills = momentBillRows(ledger, moment, onBill, onNewBill),
-                parts = records.entries[moment.uid]?.get("parts") as? kotlinx.serialization.json.JsonObject,
+                sections = MomentPageScope(container, moment, records.entries[moment.uid]?.get("parts") as? kotlinx.serialization.json.JsonObject, onBill, onNewBill),
                 onPartPrivate = { plugin: String, private: Boolean ->
                     val own = (moment.extra[cc.hyoban.moments.data.spec.Entries.PART_VISIBILITY] as? kotlinx.serialization.json.JsonObject).orEmpty()
                     val next = if (private) own + (plugin to kotlinx.serialization.json.JsonPrimitive("private")) else own - plugin
@@ -192,7 +188,6 @@ fun MomentScreen(
                     container.scope.launch { container.updateLocal(moment.copy(extra = extra), null) }
                     Unit
                 }.takeIf { container.canPublish },
-                billPublic = cc.hyoban.moments.ledger.txnsOfMoment(ledger, moment).any { ledger.isPublic(it) },
                 // The way to publish, only when the app can.
                 onChanges = onChanges.takeIf { container.canPublish },
             )
@@ -376,20 +371,15 @@ private fun MomentDetails(
     onDay: (String) -> Unit,
     changed: Boolean = false,
     onChanges: (() -> Unit)? = null,
-    /** Its bills in the ledger, kept on the phone, as rows after what was eaten. */
-    bills: List<@Composable (ListItemShapes) -> Unit> = emptyList(),
-    /** Its parts the first shape doesn't hold, as the API has them: a charge. */
-    parts: kotlinx.serialization.json.JsonObject? = null,
-    /** Whether a bill of it would publish. */
-    billPublic: Boolean = false,
+    /** What the modules' sections on it draw from: its parts, its bills. */
+    sections: MomentPageScope,
     /** Makes one of its parts private, or public again; null where it can't be changed here. */
     onPartPrivate: ((String, Boolean) -> Unit)? = null,
 ) {
     val sameDay = remember(moments, moment.dateKey) { moments.count { it.dateKey == moment.dateKey } }
     // Its parts of modules turned off (记录项与公开) go unshown, kept as they are.
     val settings = LocalSettings.current
-    val ledgerOn = settings.isOn(Module.LEDGER)
-    val carOn = settings.isOn(Module.CAR)
+    val shown = Plugins.all.filter { settings.isOn(it.module) }.mapNotNull { it.momentSection }
     Column(Modifier.padding(top = Space.xl, bottom = Space.xl)) {
         // When, in the second grey over the words, as the timeline's line over a Moment has it.
         // A planned one says so after it, and a locked one that it is settled.
@@ -438,37 +428,8 @@ private fun MomentDetails(
                     ) { Text(place?.name ?: id, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
-            // What it cost: a meal's dishes or what it went on, how it was, the amount, how many
-            // and each one's share. Not a link, so a row that doesn't answer a tap.
-            moment.cost?.takeIf { settings.isOn(it.module) }?.let { cost ->
-                val verdict = FoodVerdict.of(cost.verdict)
-                add {
-                    ListItem(
-                        headlineContent = {
-                            Text(
-                                cost.items.joinToString(stringResource(Res.string.separator_list)).ifEmpty { stringResource(costTitle(cost)) },
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        },
-                        supportingContent = listOfNotNull(verdict?.let { stringResource(costVerdictLabel(cost, it)) }, costAmountLine(cost))
-                            .joinToString(" ").takeIf { it.isNotEmpty() }?.let { { Text(it) } },
-                        leadingContent = { Icon(if (cost.meal) AppIcons.Food else AppIcons.Cash, contentDescription = null) },
-                        modifier = Modifier.testTag("cost"),
-                    )
-                }
-            }
-            if (ledgerOn) addAll(bills)
-            (parts?.get("charge") as? kotlinx.serialization.json.JsonObject)?.takeIf { carOn }?.let { charge ->
-                add {
-                    ListItem(
-                        headlineContent = { Text(chargeTitle(charge)) },
-                        supportingContent = chargeLine(charge)?.let { line -> { Text(line, style = AppTheme.typography.caption) } },
-                        leadingContent = { Icon(AppIcons.Ev, contentDescription = null) },
-                        modifier = Modifier.testTag("charge"),
-                    )
-                }
-            }
+            // Then its parts, as their modules draw them: what it cost, its bills, a charge.
+            shown.forEach { addAll(it.rows(sections)) }
             trip?.let { trip ->
                 add { shapes ->
                     val count = remember(trip, moments) { countOf(trip, moments, trips) }
@@ -504,10 +465,7 @@ private fun MomentDetails(
                 val published = listOfNotNull(
                     stringResource(Res.string.part_text).takeIf { moment.text.isNotBlank() },
                     stringResource(Res.string.part_photos).takeIf { moment.media.isNotEmpty() },
-                    moment.cost?.takeIf { settings.isOn(it.module) }?.let { stringResource(costTitle(it)) },
-                    stringResource(Res.string.part_bill).takeIf { billPublic && ledgerOn },
-                    stringResource(Res.string.part_charge).takeIf { parts?.containsKey("charge") == true && carOn },
-                )
+                ) + shown.mapNotNull { it.publishes(sections) }
                 ListItem(
                     headlineContent = { Text(stringResource(if (private) Res.string.visibility_private else Res.string.visibility_public)) },
                     supportingContent = {
@@ -523,10 +481,10 @@ private fun MomentDetails(
             // Each part said private on its own, while the record itself is public.
             val own = moment.extra[cc.hyoban.moments.data.spec.Entries.PART_VISIBILITY] as? kotlinx.serialization.json.JsonObject
             if (onPartPrivate != null && !moment.hidden) {
-                listOfNotNull(
-                    moment.cost?.takeIf { settings.isOn(it.module) }?.let { "cost" to costTitle(it) },
-                    ("media" to Res.string.part_photos).takeIf { moment.media.isNotEmpty() },
-                ).forEach { (plugin, label) ->
+                (
+                    shown.mapNotNull { it.privatePart(sections) } +
+                        listOfNotNull(("media" to Res.string.part_photos).takeIf { moment.media.isNotEmpty() })
+                    ).forEach { (plugin, label) ->
                     val private = (own?.get(plugin) as? kotlinx.serialization.json.JsonPrimitive)?.content == "private"
                     add { shapes ->
                         cc.hyoban.moments.ui.settings.SwitchRow(
@@ -580,24 +538,6 @@ private fun MomentDetails(
         Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
         Spacer(Modifier.height(TOOLBAR_CLEARANCE))
     }
-}
-
-/** A charge as its row heads it: AC or DC, and how much went in. */
-@Composable
-private fun chargeTitle(charge: kotlinx.serialization.json.JsonObject): String {
-    val type = (charge["type"] as? kotlinx.serialization.json.JsonPrimitive)?.content
-    val kwh = (charge["energyWh"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()?.div(1000)
-    return listOfNotNull(
-        stringResource(if (type == "DC") Res.string.charge_dc else Res.string.charge_ac),
-        kwh?.let { "%.1f kWh".format(it) },
-    ).joinToString(" ")
-}
-
-/** How long it charged and what it cost, in figures. */
-private fun chargeLine(charge: kotlinx.serialization.json.JsonObject): String? {
-    val minutes = cc.hyoban.moments.data.spec.Entries.chargeMinutes(charge)
-    val cost = (charge["cost"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull()
-    return listOfNotNull(minutes?.let { "${it.toInt()} min" }, cost?.let { "¥%.2f".format(it) }).joinToString(" ").ifEmpty { null }
 }
 
 /** Room under the page's words for the floating toolbar over them: its height and margin. */

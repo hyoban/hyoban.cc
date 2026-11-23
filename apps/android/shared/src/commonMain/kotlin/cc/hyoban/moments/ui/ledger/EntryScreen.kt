@@ -107,7 +107,7 @@ import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.trips.epochOf
 import cc.hyoban.moments.ledger.Account
 import cc.hyoban.moments.ledger.AccountKind
-import cc.hyoban.moments.ledger.COMMON_CURRENCIES
+import cc.hyoban.moments.data.money.COMMON_CURRENCIES
 import cc.hyoban.moments.ledger.Category
 import cc.hyoban.moments.ledger.CategoryType
 import cc.hyoban.moments.ledger.Ledger
@@ -116,9 +116,9 @@ import cc.hyoban.moments.ledger.Split
 import cc.hyoban.moments.ledger.TransferType
 import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ledger.TxnKind
-import cc.hyoban.moments.ledger.currencySymbol
-import cc.hyoban.moments.ledger.formatCents
-import cc.hyoban.moments.ledger.formatMoney
+import cc.hyoban.moments.data.money.currencySymbol
+import cc.hyoban.moments.data.money.formatCents
+import cc.hyoban.moments.data.money.formatMoney
 import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
@@ -653,7 +653,7 @@ fun BillFields(
                 .filter { !(demo && it.private) }
                 .sortedBy { checkin -> checkin.span?.let { kotlin.math.abs((it.first + it.last) / 2 - time) } ?: Long.MAX_VALUE }
             ChoiceSheet(
-                near.map { it.uid to listOfNotNull(formatDay(it.at.take(10)), cc.hyoban.moments.ui.feed.checkinTime(it), it.venue).joinToString(" ") },
+                near.map { it.uid to listOfNotNull(formatDay(it.at.take(10)), cc.hyoban.moments.plugins.checkinTime(it), it.venue).joinToString(" ") },
                 onDismiss = { sheet = null },
                 empty = stringResource(Res.string.ledger_no_checkins_near),
             ) { uid ->

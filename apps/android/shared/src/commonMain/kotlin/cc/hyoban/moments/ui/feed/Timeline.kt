@@ -36,11 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.TripRecord
-import cc.hyoban.moments.ledger.Ledger
-import cc.hyoban.moments.ledger.Txn
-import cc.hyoban.moments.ledger.TxnKind
 import kotlin.math.roundToInt
-import cc.hyoban.moments.ledger.summarize
 import cc.hyoban.moments.ui.ledger.TIME
 import cc.hyoban.moments.ui.ledger.amountColor
 import cc.hyoban.moments.ui.ledger.incoming
@@ -59,221 +55,44 @@ import cc.hyoban.moments.ui.trips.tripSummary
 import androidx.compose.ui.text.AnnotatedString
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
-import cc.hyoban.moments.data.things.Checkin
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.format.daysBetween
 import cc.hyoban.moments.ui.format.formatDate
 import java.time.LocalDate
 
-// The ledger on the timeline: the bills of the books shown, those written with a Moment in its
-// card and the rest in groups between the Moments of their day, and each day's spending beside
-// its date. Only what was spent and earned; transfers and the like stay in the ledger's pages.
-
-/** The bills the timeline shows, by where they go, and what each day spent, in the book's currency. */
-class TimelineBills(
-    val ledger: Ledger = Ledger(),
-    /** Bills linked to a Moment or a check-in, by its uid, oldest first as it lists them. */
-    val linked: Map<String, List<Txn>> = emptyMap(),
-    /** The rest, by day, newest first. */
-    val loose: Map<String, List<Txn>> = emptyMap(),
-    /** What each day spent, `YYYY-MM-DD` to cents, in [currency]. */
-    val spent: Map<String, Long> = emptyMap(),
-    val currency: String = "CNY",
-    /** The car's charges, from the API's entries, by day. */
-    val charges: Map<String, List<Charge>> = emptyMap(),
-    /** The devices bought and the subscriptions paid, by day. */
-    val things: Map<String, List<ThingRecord>> = emptyMap(),
-    /** The check-ins with neither words nor photos, by day. */
-    val checkins: Map<String, List<Checkin>> = emptyMap(),
-    /** Charges that go with a Moment or a check-in, by its uid, as [linked] bills do; [charges] holds the rest. */
-    val linkedCharges: Map<String, List<Charge>> = emptyMap(),
-    /** What the car drove each day it moved, by day. */
-    val drives: Map<String, DriveDay> = emptyMap(),
-) {
-    /** What of it falls on [date] alone, as a day's page shows it; the linked bills stay whole. */
-    fun onDay(date: String) = TimelineBills(
-        ledger, linked, loose.filterKeys { it == date }, spent.filterKeys { it == date }, currency,
-        charges.filterKeys { it == date }, things.filterKeys { it == date }, checkins.filterKeys { it == date },
-        linkedCharges, drives.filterKeys { it == date },
-    )
-
-    companion object {
-        val EMPTY = TimelineBills()
-    }
-}
-
-/**
- * A charge on the timeline: when it started, AC or DC, how much went in and for how long, and
- * the [bill] paid for it, the ledger's bill at its very time, shown with it as one line.
- */
-data class Charge(val uid: String, val at: String, val dc: Boolean, val kwh: Double?, val minutes: Int?, val bill: Txn? = null)
-
-/** A day the car moved, from its statistics: how far, how long it drove and the energy it used. */
-data class DriveDay(val date: String, val km: Double, val minutes: Int?, val kwh: Double?)
-
-/** The car's charges among the API's [entries], on the days [keep] takes. */
-fun chargesOf(entries: Collection<kotlinx.serialization.json.JsonObject>, keep: (String) -> Boolean): List<Charge> = entries.mapNotNull { entry ->
-    val charge = (entry["parts"] as? kotlinx.serialization.json.JsonObject)?.get("charge") as? kotlinx.serialization.json.JsonObject
-        ?: return@mapNotNull null
-    val at = (entry["at"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@mapNotNull null
-    if (!keep(at.take(10))) return@mapNotNull null
-    val text = { key: String -> (charge[key] as? kotlinx.serialization.json.JsonPrimitive)?.content }
-    Charge(
-        (entry["uid"] as kotlinx.serialization.json.JsonPrimitive).content,
-        at,
-        text("type") == "DC",
-        text("energyWh")?.toDoubleOrNull()?.div(1000),
-        cc.hyoban.moments.data.spec.Entries.chargeMinutes(charge)?.toInt(),
-    )
-}
-
-/**
- * The days the car moved among its monthly statistics ([months], the copy's `vehicle_months`), on
- * the days [keep] takes: each day's distance, driving time and energy, every car's summed. A day
- * only parked, using energy standing, isn't one.
- */
-fun drivesOf(months: Collection<kotlinx.serialization.json.JsonObject>, keep: (String) -> Boolean): Map<String, DriveDay> {
-    val days = mutableMapOf<String, DriveDay>()
-    for (month in months) {
-        for (day in (month["days"] as? kotlinx.serialization.json.JsonArray).orEmpty()) {
-            val fields = day as? kotlinx.serialization.json.JsonObject ?: continue
-            val number = { key: String -> (fields[key] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toDoubleOrNull() }
-            val date = (fields["date"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: continue
-            val metres = number("distanceMeters") ?: 0.0
-            if (metres <= 0 || !keep(date)) continue
-            val seconds = number("durationSeconds")
-            val wh = number("energyWh")
-            val before = days[date]
-            days[date] = DriveDay(
-                date,
-                (before?.km ?: 0.0) + metres / 1000,
-                listOfNotNull(before?.minutes, seconds?.let { (it / 60).roundToInt() }).takeIf { it.isNotEmpty() }?.sum(),
-                listOfNotNull(before?.kwh, wh?.div(1000)).takeIf { it.isNotEmpty() }?.sum(),
-            )
-        }
-    }
-    return days
-}
-
-/**
- * Where [charges] go on the timeline, as bills do: each paired with the bill paid at its very time
- * among [bills] (that bill then shown with it, not on its own), and with the Moment or check-in
- * that bill goes with ([linkOf]), else the one at the charge's own time ([at], uids by epoch
- * milliseconds), else loose on its day. What comes back: the charges loose by day, those linked by
- * uid, and the ids of the bills taken.
- */
-fun placeCharges(
-    charges: List<Charge>,
-    bills: List<Txn>,
-    linkOf: (Txn) -> String?,
-    at: Map<Long, String>,
-): Triple<Map<String, List<Charge>>, Map<String, List<Charge>>, Set<String>> {
-    val byTime = bills.filter { it.kind == TxnKind.EXPENSE }.groupBy { it.time }.mapValues { it.value.toMutableList() }
-    val taken = mutableSetOf<String>()
-    val loose = mutableListOf<Charge>()
-    val linked = mutableMapOf<String, MutableList<Charge>>()
-    for (charge in charges.sortedBy { it.at }) {
-        val time = instantOf(charge.at)
-        val bill = time?.let { byTime[it]?.removeFirstOrNull() }
-        bill?.let { taken += it.id }
-        val paired = charge.copy(bill = bill)
-        val uid = bill?.let(linkOf) ?: time?.let(at::get)
-        if (uid != null) linked.getOrPut(uid) { mutableListOf() } += paired else loose += paired
-    }
-    return Triple(loose.groupBy { it.at.take(10) }, linked, taken)
-}
-
-/**
- * A device bought or a subscription paid on the timeline: known by its day alone, so it has no
- * time; its name and price, and whether it was [bought] (a device, software bought once) or
- * renewed.
- */
-data class ThingRecord(val uid: String, val day: String, val device: Boolean, val bought: Boolean, val name: String, val price: Double, val currency: String)
 
 /** Opens a device's or a subscription's sheet on its page, by its entry's uid. */
 val LocalThingNav = androidx.compose.runtime.staticCompositionLocalOf<((String) -> Unit)?> { null }
-
-/** What the timeline shows, as its filter row chooses: everything, or one plugin's records. */
-enum class FeedKind { ALL, MOMENTS, BILLS, CHARGES, CHECKINS }
 
 /**
  * The bills to show beside [moments], of every book the ledger keeps open (all but the archived),
  * whichever the ledger's pages have chosen, on the days [filter] keeps.
  */
 @Composable
-fun rememberTimelineBills(container: AppContainer, moments: List<MomentRecord>, filter: TimeFilter, kind: FeedKind = FeedKind.ALL): TimelineBills {
-    val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val records by container.repository.records.collectAsStateWithLifecycle()
+fun rememberTimelineRecords(container: AppContainer, moments: List<MomentRecord>, filter: TimeFilter): TimelineRecords {
     val entries by container.repository.entries.collectAsStateWithLifecycle()
-    val allCheckins by container.repository.checkins.collectAsStateWithLifecycle()
-    // Only the records of modules that are on (记录项与公开).
+    // Only the records of modules that are on (记录项与公开), each joined by its plugin.
+    val joins = rememberJoinInputs(container)
     val off = LocalSettings.current.modulesOff
-    val make: () -> TimelineBills = make@{
-        val inFilter = { day: String ->
-            (filter.year == null || day.take(4).toInt() == filter.year) && (filter.month == null || day.substring(5, 7).toInt() == filter.month)
-        }
-        val things = if (kind != FeedKind.ALL || Module.THINGS.key in off) emptyMap() else (
-            cc.hyoban.moments.data.things.Things.devices(entries.values).map { ThingRecord(it.uid, it.bought.toString(), true, true, it.name, it.price, "CNY") } +
-                cc.hyoban.moments.data.things.Things.subscriptions(entries.values).map {
-                    ThingRecord(it.uid, it.paid.toString(), false, it.period == cc.hyoban.moments.data.things.Period.ONCE, it.name, it.price, it.currency)
-                }
-            ).filter { inFilter(it.day) }.groupBy { it.day }
-        val carOn = Module.CAR.key !in off
-        val charges = if ((kind != FeedKind.ALL && kind != FeedKind.CHARGES) || !carOn) emptyList() else chargesOf(records.entries.values, inFilter)
-        // What the car drove each day, as the last line of the day, on the whole timeline only.
-        val drives = if (kind != FeedKind.ALL || !carOn) emptyMap() else drivesOf(records.vehicleMonths.values, inFilter)
-        // The phone's own too, an import's waiting to be published among them.
-        val checkins = if ((kind != FeedKind.ALL && kind != FeedKind.CHECKINS) || Module.CHECKIN.key in off) emptyMap() else allCheckins.byDay.filterKeys(inFilter)
-        // A charge goes with the Moment or check-in at its very time, as a bill does.
-        val at = momentTimes(moments, checkins.values.flatten())
-        val book = ledger.book
-        if (book == null || (kind != FeedKind.ALL && kind != FeedKind.BILLS) || Module.LEDGER.key in off) {
-            val (looseCharges, linkedCharges, _) = placeCharges(charges, emptyList(), { null }, at)
-            return@make TimelineBills(ledger, emptyMap(), emptyMap(), emptyMap(), book?.currency ?: "CNY", looseCharges, things, checkins, linkedCharges, drives)
-        }
-        val shown = ledger.books.filterNot { it.archived }.mapTo(HashSet()) { it.id }
-        // A bill linked to a Moment or a check-in shown here goes with it.
-        val uids = moments.mapTo(HashSet()) { it.uid }.apply { checkins.values.forEach { day -> day.forEach { add(it.uid) } } }
-        val links = cc.hyoban.moments.ledger.AutoLinks(moments, checkins.values.flatten())
-        val inDays = { txn: Txn ->
-            (filter.year == null || txn.date.year == filter.year) && (filter.month == null || txn.date.monthValue == filter.month)
-        }
-        // A bill linked to a Moment or a check-in shown goes in its bubble whenever it was paid.
-        val bills = ledger.txns.filter { txn ->
-            txn.book in shown && txn.kind in SHOWN_KINDS && (inDays(txn) || links.of(txn) in uids)
-        }
-        // A charge and the bill paid for it at its very time are one line, where that bill would go.
-        val (looseCharges, linkedCharges, paid) = placeCharges(charges, bills, { txn -> links.of(txn)?.takeIf { it in uids } }, at)
-        val (withMoment, without) = bills.filterNot { it.id in paid }.partition { links.of(it) in uids }
-        // Each day's spending is the bills paid on the days shown alone.
-        val ids = bills.filter(inDays).mapTo(HashSet()) { it.id }
-        val sums = summarize(ledger.entries.filter { it.txn.id in ids }, ledger.rates, book.currency, null, null)
-        TimelineBills(
-            ledger,
-            linked = withMoment.groupBy { links.of(it)!! }.mapValues { (_, txns) -> txns.sortedBy { it.time } },
-            loose = without.groupBy { it.dateKey },
-            spent = sums.expenseByDay.mapKeys { it.key.toString() },
-            currency = book.currency,
-            charges = looseCharges,
-            things = things,
-            checkins = checkins,
-            linkedCharges = linkedCharges,
-            drives = drives,
-        )
+    val make: () -> TimelineRecords = {
+        val span = JoinSpan.Days(filter)
+        val own = cc.hyoban.moments.plugins.Plugins.all.filter { it.module.key !in off }
+            .flatMap { it.dayRecords(DayRecordsScope(entries.values) { day -> span.keep(day) }) }.groupBy { it.first }.mapValues { (_, day) -> day.map { it.second } }
+        joinRecords(JoinScope(span, moments), joins).build(own)
     }
     // Worked out in the frame for the first time and for a change of what is shown, so the page never
     // shows another's bills; when the records or the ledger change under it (each arriving on its own
     // as the app opens), off the main thread, the bills worked out last shown until then.
-    val inputs = arrayOf<Any?>(ledger, records, entries, allCheckins, moments, filter, kind, off)
+    val inputs = arrayOf<Any?>(*joins.map { it.second }.toTypedArray(), entries, moments, filter, off)
     val kept = remember(*inputs) { keptBills.find(*inputs) }
-    val shown = remember(filter, kind, off) { mutableStateOf(kept ?: keptBills.get(*inputs, make = make)) }
+    val shown = remember(filter, off) { mutableStateOf(kept ?: keptBills.get(*inputs, make = make)) }
     LaunchedEffect(*inputs) {
         shown.value = kept ?: keptBills.find(*inputs) ?: withContext(Dispatchers.Default) { make() }.also { keptBills.put(it, *inputs) }
     }
     return kept ?: shown.value
 }
 
-private val keptBills = Kept<TimelineBills>(4)
+private val keptBills = Kept<TimelineRecords>(4)
 
 /**
  * The last few results worked out from the same inputs, kept past the composition that made them.
@@ -297,101 +116,6 @@ internal class Kept<T>(private val size: Int) {
     }
 }
 
-/** What the timeline lists of the ledger: money out and in, and money back. */
-val SHOWN_KINDS = setOf(TxnKind.EXPENSE, TxnKind.INCOME, TxnKind.REFUND, TxnKind.REIMBURSEMENT)
-
-/** One day's spending, for its pill; null when it spent nothing. */
-@Composable
-fun daySpent(bills: TimelineBills, date: String): String? = bills.spent[date]?.takeIf { it > 0 }?.let { money(it, bills.currency) }
-
-/** What a day holds, in the order the timeline shows it: newest first, the bills between them gathered. */
-sealed interface DayItem {
-    val key: String
-
-    data class Moment(val moment: MomentRecord) : DayItem {
-        override val key get() = moment.uid
-    }
-
-    data class Bills(val txns: List<Txn>) : DayItem {
-        override val key get() = "bills-${txns.first().id}"
-    }
-
-    data class ChargeItem(val charge: Charge) : DayItem {
-        override val key get() = "charge-${charge.uid}"
-    }
-
-    data class ThingItem(val thing: ThingRecord) : DayItem {
-        override val key get() = "thing-${thing.uid}"
-    }
-
-    data class CheckinItem(val checkin: Checkin) : DayItem {
-        override val key get() = "checkin-${checkin.uid}"
-    }
-
-    /** A piece of the day's footprints, between the records it moved between. */
-    data class Track(val day: String, val piece: TrackPiece) : DayItem {
-        override val key get() = "track-$day-${piece.start}"
-    }
-
-    /** What the car drove that day, the day's last line. */
-    data class Drive(val drive: DriveDay) : DayItem {
-        override val key get() = "drive-${drive.date}"
-    }
-}
-
-/**
- * A charge as a row on the page, as a bill is: its time first, then AC or DC with how much and how
- * long under it; with the bill paid for it, that bill's category and amount.
- */
-@Composable
-fun ChargeRow(charge: Charge, modifier: Modifier = Modifier, ledger: Ledger? = null) {
-    val bill = charge.bill?.takeIf { ledger != null }
-    PageRow(
-        leading = { Icon(AppIcons.Ev, contentDescription = null) },
-        title = if (bill != null) cc.hyoban.moments.ui.ledger.txnTitle(bill, ledger!!) else org.jetbrains.compose.resources.stringResource(Res.string.timeline_charge),
-        supporting = listOfNotNull(
-            org.jetbrains.compose.resources.stringResource(if (charge.dc) Res.string.charge_dc else Res.string.charge_ac),
-            charge.kwh?.let { "%.1f kWh".format(it) },
-            charge.minutes?.let { org.jetbrains.compose.resources.pluralStringResource(Res.plurals.charge_minutes, it, it) },
-        ).joinToString(" "),
-        onClick = null,
-        modifier = modifier.testTag("charge_${charge.uid}"),
-        time = charge.at.drop(11).take(5),
-        trailing = { if (bill != null) Text(cc.hyoban.moments.ui.ledger.billAmount(bill, ledger!!), style = AppTheme.typography.body, color = cc.hyoban.moments.ui.ledger.amountColor(bill)) },
-    )
-}
-
-/** What the car drove on a day, as a row on the page: how far, and how long and the energy under it. */
-@Composable
-fun DriveRow(drive: DriveDay, modifier: Modifier = Modifier) {
-    PageRow(
-        leading = { Icon(AppIcons.Car, contentDescription = null) },
-        title = org.jetbrains.compose.resources.stringResource(Res.string.timeline_drive) + " " +
-            org.jetbrains.compose.resources.stringResource(Res.string.distance_kilometres, decimals(drive.km, if (drive.km < 10) 1 else 0)),
-        supporting = driveNote(drive).ifEmpty { null },
-        onClick = null,
-        modifier = modifier.testTag("drive_${drive.date}"),
-    )
-}
-
-/** A check-in as a row on the page: its time, and the venue it was at, or on a page of that place its day; a tap opens its sheet. */
-@Composable
-fun CheckinRow(checkin: Checkin, modifier: Modifier = Modifier, withDate: Boolean = false, hideVenue: Boolean = false) {
-    val open = LocalCheckinNav.current
-    PageRow(
-        leading = { Icon(AppIcons.Pin, contentDescription = null) },
-        // On its place's own page the venue is the page's title.
-        title = if (hideVenue && !withDate) stringResource(Res.string.change_checkin) else checkinTitle(checkin, withDate),
-        supporting = if (checkin.private) stringResource(Res.string.visibility_private) else null,
-        onClick = open?.let { { it(checkin.uid) } },
-        modifier = modifier.testTag("checkin_${checkin.uid}"),
-        time = checkinTime(checkin).orEmpty(),
-    )
-}
-
-/** When a check-in was, `15:04`, or the stay it was kept from, `15:04–16:30`. */
-fun checkinTime(checkin: Checkin): String? = timeSpan(checkin.at, checkin.end)
-
 /** When a Moment was, `15:04`, or the while it lasted, `15:04–16:30`. */
 fun momentTime(moment: cc.hyoban.moments.data.spec.MomentRecord): String? = timeSpan(moment.occurredAt, moment.end)
 
@@ -399,35 +123,9 @@ fun momentTime(moment: cc.hyoban.moments.data.spec.MomentRecord): String? = time
 fun timeSpan(at: String, end: String?): String? =
     formatTime(at)?.let { start -> end?.let(::formatTime)?.let { "$start–$it" } ?: start }
 
-/** `签到 面馆`, or on its place's own list `10月12日 签到`. */
+/** How many records a place has, its Moments and the modules' stops there (check-ins) counted as one. */
 @Composable
-fun checkinTitle(checkin: Checkin, withDate: Boolean = false): String =
-    if (withDate) stringResource(Res.string.timeline_checkin_on, formatDate(checkin.at.take(10))) else stringResource(Res.string.timeline_checkin, checkin.venue)
-
-/** How many records a place has, its Moments and check-ins counted as one. */
-@Composable
-fun placeCounts(moments: Int, checkins: Int): List<String> =
-    // A check-in is a record there as a Moment is: one count of both.
-    listOf(pluralStringResource(Res.plurals.count_records, moments + checkins, moments + checkins))
-
-/** A device bought or a subscription paid as a row on the page: no time, its name, its price at the end. */
-@Composable
-fun ThingRow(thing: ThingRecord, modifier: Modifier = Modifier) {
-    val open = LocalThingNav.current
-    PageRow(
-        leading = { Icon(if (thing.device) AppIcons.Laptop else AppIcons.Subscription, contentDescription = null) },
-        title = thingTitle(thing),
-        supporting = cc.hyoban.moments.ui.things.priceOf(thing.price, thing.currency),
-        onClick = open?.let { { it(thing.uid) } },
-        modifier = modifier.testTag("thing_${thing.uid}"),
-        time = "",
-    )
-}
-
-/** `买了 OPPO Find X10`, `续费 ChatGPT Plus`. */
-@Composable
-fun thingTitle(thing: ThingRecord): String =
-    org.jetbrains.compose.resources.stringResource(if (thing.bought) Res.string.timeline_bought else Res.string.timeline_renewed, thing.name)
+fun placeCounts(records: Int): List<String> = listOf(pluralStringResource(Res.plurals.count_records, records, records))
 
 /**
  * A row on the timeline's page, for what has no words of its own: an icon at the Moments' edge,
@@ -484,91 +182,9 @@ fun PageRow(
     }
 }
 
-/** A bill as a row on the timeline's page: its time, its category's icon, its name and what sets it apart, and its amount. */
-@Composable
-fun BillRow(txn: Txn, ledger: Ledger, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    PageRow(
-        leading = { Icon(txnIcon(txn, ledger), contentDescription = null) },
-        title = txnTitle(txn, ledger),
-        supporting = txnSupporting(txn, ledger, withTime = false, place = cc.hyoban.moments.footprints.footprintPlace(txn)),
-        onClick = onClick,
-        modifier = modifier.testTag("bill_${txn.id}"),
-        time = txn.local.format(TIME),
-        below = { cc.hyoban.moments.ui.ledger.RefundTag(txn, ledger) },
-    ) {
-        Text(cc.hyoban.moments.ui.ledger.billAmount(txn, ledger), style = AppTheme.typography.body, color = amountColor(txn))
-    }
-}
-
-/**
- * [moments], [bills] and [charges] of one day merged by the time of day, newest first or, with
- * [oldestFirst], from the morning, bills next to each other in one group read the same way. The
- * day's footprints ([track]) are cut at every record with a time, each piece between the two it
- * moved between, so a run of bills is parted where the phone moved.
- */
-fun dayItems(
-    moments: List<MomentRecord>,
-    bills: List<Txn>,
-    charges: List<Charge> = emptyList(),
-    things: List<ThingRecord> = emptyList(),
-    checkins: List<Checkin> = emptyList(),
-    oldestFirst: Boolean = false,
-    day: String = "",
-    track: DayTrack? = null,
-    drive: DriveDay? = null,
-): List<DayItem> {
-    // A device or a subscription has its day alone, so it comes first in the day.
-    val timed = moments.map { Triple(it.occurredAt.drop(11).take(8), instantOf(it.occurredAt), DayItem.Moment(it) as Any) } +
-        bills.map { Triple(it.local.toLocalTime().toString().take(8), it.time, it as Any) } +
-        charges.map { Triple(it.at.drop(11).take(8), instantOf(it.at), DayItem.ChargeItem(it) as Any) } +
-        checkins.map { Triple(it.at.drop(11).take(8), instantOf(it.at), DayItem.CheckinItem(it) as Any) } +
-        things.map { Triple("", null, DayItem.ThingItem(it) as Any) }
-    // From the morning: each record with a time cuts the footprints, and the piece before it goes in ahead of it.
-    val morning = timed.sortedByDescending { it.first }.asReversed()
-    val cuts = morning.mapNotNull { it.second }
-    val pieces = track?.pieces(cuts).orEmpty()
-    val read = mutableListOf<Any>()
-    var p = 0
-    for ((_, at, item) in morning) {
-        if (at != null) while (p < pieces.size && pieces[p].start < at) read += DayItem.Track(day, pieces[p++])
-        read += item
-    }
-    while (p < pieces.size) read += DayItem.Track(day, pieces[p++])
-    val out = mutableListOf<DayItem>()
-    var group = mutableListOf<Txn>()
-    for (item in read.asReversed()) {
-        if (item is Txn) {
-            group += item
-        } else {
-            if (group.isNotEmpty()) out += DayItem.Bills(group).also { group = mutableListOf() }
-            out += item as DayItem
-        }
-    }
-    if (group.isNotEmpty()) out += DayItem.Bills(group)
-    // What the car drove ends the day, after all of it.
-    if (drive != null) out.add(0, DayItem.Drive(drive))
-    return if (!oldestFirst) out else out.asReversed().map { if (it is DayItem.Bills) DayItem.Bills(it.txns.asReversed()) else it }
-}
-
 /** When an ISO date and time was, in epoch milliseconds; one written without an offset is read in this device's zone. */
 internal fun instantOf(at: String): Long? = runCatching { java.time.OffsetDateTime.parse(at).toInstant().toEpochMilli() }.getOrNull()
     ?: runCatching { java.time.LocalDateTime.parse(at).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() }.getOrNull()
-
-/** Bills next to each other on the timeline: rows on the page, one under another, lined up with the Moments' words. */
-@Composable
-fun BillGroup(txns: List<Txn>, ledger: Ledger, onBill: (String) -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth()) {
-        txns.forEach { txn -> BillRow(txn, ledger, onClick = { onBill(txn.id) }) }
-    }
-}
-
-/** The bills written with a Moment, at its foot. */
-@Composable
-fun LinkedBills(txns: List<Txn>, ledger: Ledger, onBill: (String) -> Unit) {
-    Column(Modifier.padding(top = Space.s)) {
-        txns.forEach { txn -> BillRow(txn, ledger, onClick = { onBill(txn.id) }) }
-    }
-}
 
 /** Out past its edges by [by] each side, so a list row's own inset lines its content up with what is around it. */
 private fun Modifier.bleed(by: Dp): Modifier = layout { measurable, constraints ->
@@ -786,9 +402,9 @@ fun knownDayTrack(day: String): DayTrack? = TrackMemory.cache[day]
 
 @Composable
 fun rememberTimelineTracks(container: AppContainer): TimelineTracks {
-    // With the footprints turned off (记录项与公开), no day has any.
-    if (!LocalSettings.current.isOn(Module.FOOTPRINTS)) return TimelineTracks.EMPTY
-    val store = container.footprints
+    // Each day's movement as the modules that are on keep it (记录项与公开); with none, no day has any.
+    val settings = LocalSettings.current
+    val store = cc.hyoban.moments.plugins.Plugins.dayTracks(container) { settings.isOn(it) } ?: return TimelineTracks.EMPTY
     val revision by store.revision.collectAsStateWithLifecycle()
     val read: (String) -> DayTrack? = remember(store) {
         { day ->
@@ -877,9 +493,4 @@ fun TrackGlyph(stretches: List<List<Pair<Double, Double>>>, modifier: Modifier, 
             )
         }
     }
-}
-/** The Moments' and check-ins' uids by when they were, in epoch milliseconds, as a bill finds the one at its very time. */
-fun momentTimes(moments: Collection<MomentRecord>, checkins: Collection<Checkin>): Map<Long, String> = buildMap {
-    checkins.forEach { checkin -> instantOf(checkin.at)?.let { put(it, checkin.uid) } }
-    moments.forEach { moment -> instantOf(moment.occurredAt)?.let { put(it, moment.uid) } }
 }

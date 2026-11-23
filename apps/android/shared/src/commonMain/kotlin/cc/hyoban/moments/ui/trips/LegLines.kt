@@ -11,7 +11,6 @@ import cc.hyoban.moments.AppContainer
 import cc.hyoban.moments.data.local.fix
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.TripRecord
-import cc.hyoban.moments.data.things.Checkin
 import cc.hyoban.moments.data.trips.Way
 import cc.hyoban.moments.data.trips.inferWay
 import cc.hyoban.moments.data.trips.isInTrip
@@ -64,8 +63,18 @@ class LegLines internal constructor(private val legs: Map<String, TripLeg>, priv
     }
 }
 
+/** A stop of a module's own a way can lead to (a check-in), as `ModulePlugin.legStops` gives it: its key among the day's items, its own uid. */
+class LegStop(val key: String, val uid: String, val at: String, val place: String?, val reachedBy: String?)
+
 /**
- * The ways between the stops of [moments] and [checkins]; on the timeline only from a stop the same
+ * A stop of a module's own kept by its place alone (a check-in), as a trip's plan reads it: when,
+ * the name it goes by, its place's id, whether its owner settled it, how it is reached, and the
+ * word the planner is told its kind by.
+ */
+class KeptStop(val uid: String, val at: String, val name: String, val place: String?, val locked: Boolean, val reachedBy: String?, val kind: String)
+
+/**
+ * The ways between the stops of [moments] and the modules' [stops]; on the timeline only from a stop the same
  * day or the day before ([nextDayOnly]). A way in one of [trips] takes that trip's note of a leg not
  * driven, and changes it.
  */
@@ -73,16 +82,16 @@ class LegLines internal constructor(private val legs: Map<String, TripLeg>, priv
 fun rememberLegLines(
     container: AppContainer,
     moments: List<MomentRecord>,
-    checkins: List<Checkin>,
+    stops: List<LegStop>,
     trips: List<TripRecord>,
     nextDayOnly: Boolean = false,
 ): LegLines {
     val places by container.repository.places.collectAsStateWithLifecycle()
-    val legs = remember(moments, checkins, places, nextDayOnly) {
+    val legs = remember(moments, stops, places, nextDayOnly) {
         val placeOf = { id: String? -> id?.let(places::get)?.fix() }
         tripLegs(
             moments.map { PlanStop(it.uid, it.occurredAt, placeOf(it.places.firstOrNull()), it.reachedBy, place = it.places.firstOrNull(), planned = it.planned == true) } +
-                checkins.map { PlanStop("checkin-${it.uid}", it.at, placeOf(it.place), it.reachedBy, uid = it.uid, place = it.place, checkin = true) },
+                stops.map { PlanStop(it.key, it.at, placeOf(it.place), it.reachedBy, uid = it.uid, place = it.place, stop = true) },
             nextDayOnly,
         )
     }
@@ -209,9 +218,9 @@ internal fun wayIcon(way: Way): androidx.compose.ui.graphics.vector.ImageVector 
 private suspend fun chooseWay(container: AppContainer, trip: TripRecord?, leg: TripLeg, way: Way, noted: Way?) {
     val reachedBy = way.value.takeIf { way == Way.WALK || way == Way.BIKE || way == Way.TRAIN }
     if (reachedBy != leg.stop.reachedBy) {
-        if (leg.stop.checkin) {
-            val opened = container.repository.entries.value[leg.stop.uid]?.let { cc.hyoban.moments.data.things.checkinAsMoment(it) }
-            if (opened != null) container.saveEntry(cc.hyoban.moments.data.things.editedEntry(opened.copy(reachedBy = reachedBy), null, placeChanged = false), null)
+        if (leg.stop.stop) {
+            val opened = cc.hyoban.moments.plugins.Plugins.stopAsMoment(container, leg.stop.uid)
+            if (opened != null) container.saveEntry(cc.hyoban.moments.ui.compose.keptEntry(opened.copy(reachedBy = reachedBy), null, placeChanged = false), null)
         } else {
             container.repository.moments.value.firstOrNull { it.uid == leg.stop.uid }?.let { container.updateLocal(it.copy(reachedBy = reachedBy), null) }
         }

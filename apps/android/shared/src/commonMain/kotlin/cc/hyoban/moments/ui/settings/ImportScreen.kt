@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import cc.hyoban.moments.AppContainer
-import cc.hyoban.moments.data.spec.Module
+import cc.hyoban.moments.plugins.Plugins
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.LocalDevice
 import cc.hyoban.moments.ui.LocalSettings
@@ -41,10 +41,10 @@ fun ImportScreen(container: AppContainer, onBack: () -> Unit) {
             ) {
                 // Each source under the module it feeds, so one turned off (记录项与公开) isn't offered.
                 val settings = LocalSettings.current
-                if (settings.isOn(Module.CHECKIN)) SwarmGroup(container.swarm)
+                Plugins.all.filter { settings.isOn(it.module) }.forEach { it.ImportGroup(container) }
                 LocalDevice.current.ImportGroups(container)
                 // Opened by a link with every one of them off: why there is nothing here.
-                if (!settings.isOn(Module.CHECKIN) && !LocalDevice.current.importsMore(settings)) Text(
+                if (!Plugins.imports(settings) && !LocalDevice.current.importsMore(settings)) Text(
                     stringResource(Res.string.import_none),
                     style = AppTheme.typography.body,
                     color = tokens.tx2,

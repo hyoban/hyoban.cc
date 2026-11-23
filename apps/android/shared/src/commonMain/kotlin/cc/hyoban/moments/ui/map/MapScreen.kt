@@ -134,8 +134,6 @@ import cc.hyoban.moments.ui.components.isMediumWidth
 import cc.hyoban.moments.ui.components.landscape
 import cc.hyoban.moments.ui.components.sharedCard
 import cc.hyoban.moments.ui.components.sideInsetsPadding
-import cc.hyoban.moments.data.things.Checkin
-import cc.hyoban.moments.ui.feed.CheckinRow
 import cc.hyoban.moments.ui.feed.placeCounts
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
@@ -194,13 +192,24 @@ data class AtlasFootprintsOnMap(
 
 private val NoFootprints = AtlasFootprints()
 
+/**
+ * Where what a module draws over the atlas leads: to a page ([navigate], its settings), to write
+ * at a stay tapped ([writeAt]), or to a stop of a module's own kept over it ([openStop]).
+ */
+class MapOverlayActions(
+    val navigate: (Any) -> Unit = {},
+    val writeAt: (cc.hyoban.moments.ui.StayAt) -> Unit = {},
+    val openStop: (String) -> Unit = {},
+)
+
 /** What another page shows on the map tab: a place, with its panel up, or a trip's route, lifted with its card. */
 sealed interface MapFocus {
     data class Place(val id: String) : MapFocus
 
     data class Trip(val id: String) : MapFocus
 
-    data object Footprints : MapFocus
+    /** What a module draws over it (the footprints), its panel opened. */
+    data object Overlay : MapFocus
 }
 
 /**
@@ -219,9 +228,7 @@ fun MapScreen(
     onSearch: () -> Unit = {},
     focus: MapFocus? = null,
     onFocused: () -> Unit = {},
-    onFootprintSettings: () -> Unit = {},
-    onWriteAtStay: (cc.hyoban.moments.ui.StayAt) -> Unit = {},
-    onCheckin: (String) -> Unit = {},
+    overlay: MapOverlayActions = MapOverlayActions(),
     onNewTrip: () -> Unit = {},
     onSuggestedTrip: (TripSuggestion) -> Unit = {},
     /** A new Moment with the photos chosen on the map, which the container offers it. */
@@ -230,7 +237,7 @@ fun MapScreen(
     // Read only where it is needed, so the map covered by another tab is not composed again.
     active: () -> Boolean = { true },
 ) {
-    LocalDevice.current.FootprintsOnMap(container, onFootprintSettings, onWriteAtStay, onCheckin) { footprints ->
+    LocalDevice.current.MapOverlay(container, overlay) { footprints ->
         MapContent(container, onMoment, onPlace, onTrip, onPlay, onSearch, focus, onFocused, footprints, onNewTrip, onSuggestedTrip, onWrite, modifier, active)
     }
 }
@@ -257,36 +264,36 @@ private fun MapContent(
     val trips by container.shownTrips.collectAsStateWithLifecycle()
     val routes by container.tripRoutes.collectAsStateWithLifecycle()
     // The check-ins alone at each place, an import's waiting to be published among them.
-    val checkins by container.shownCheckins.collectAsStateWithLifecycle()
+    val stops by mapStops(container).collectAsStateWithLifecycle()
     val prepared by container.atlasPrepared.value.collectAsStateWithLifecycle()
-    val inputs = remember(moments, places, checkins, trips, routes) { AtlasInputs(moments, places, checkins, trips, routes) }
+    val inputs = remember(moments, places, stops, trips, routes) { AtlasInputs(moments, places, stops, trips, routes) }
     val atlas = remember(prepared, inputs) {
         prepared?.takeIf { it.matches(inputs) } ?: prepareAtlas(inputs)
     }
     val settings = LocalSettings.current
     // The check-ins' places among the places while 签到 is on and the layers menu keeps them.
-    val checkinsOn = settings.isOn(Module.CHECKIN) && settings.mapCheckins
+    val stopsOn = cc.hyoban.moments.plugins.Plugins.hasLayer(settings, TimedLayer.STOPS, shown = true)
     val byPlace = atlas.byPlace
-    val checkinsByPlace = if (checkinsOn) atlas.checkinsByPlace else emptyMap()
-    val footprintsOn = footprints != null && settings.isOn(Module.FOOTPRINTS)
+    val stopsByPlace = if (stopsOn) atlas.stopsByPlace else emptyMap()
+    val footprintsOn = footprints != null && cc.hyoban.moments.plugins.Plugins.dayTracks(container) { settings.isOn(it) } != null
     // 地图's photos (09 地图的照片): the gallery's and the NAS's that know where they were taken,
     // read only while they are shown.
     val photoLayer = if (settings.mapPhotos) cc.hyoban.moments.ui.picker.rememberPhotoLayer(container, onWrite) else null
-    val mapPlaces = if (checkinsOn) atlas.placesWithCheckins else atlas.placesWithoutCheckins
-    val colors = if (checkinsOn) atlas.colorsWithCheckins else atlas.colorsWithoutCheckins
+    val mapPlaces = if (stopsOn) atlas.placesWithStops else atlas.placesWithoutStops
+    val colors = if (stopsOn) atlas.colorsWithStops else atlas.colorsWithoutStops
     val mapRoutes = atlas.routes
     val kilometres = atlas.kilometres
-    val mapData = if (checkinsOn) atlas.mapDataWithCheckins else atlas.mapDataWithoutCheckins
+    val mapData = if (stopsOn) atlas.mapDataWithStops else atlas.mapDataWithoutStops
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var highlighted by rememberSaveable { mutableStateOf<String?>(null) }
     // Each layer's time (09 地图的时间), and what it keeps on the map: the places, the trips and
     // their list, the photos, the cities the fog lights.
     val times = remember(settings) { MapTimes(settings) }
     val sharedTime = times.shared
-    val kept = remember(mapPlaces, trips, checkinsOn, sharedTime, TimedLayer.entries.map { times.own(it) }) {
-        keptIn(times::of, mapPlaces, trips, checkinsOn, moments = settings.mapPlaces)
+    val kept = remember(mapPlaces, trips, stopsOn, sharedTime, TimedLayer.entries.map { times.own(it) }) {
+        keptIn(times::of, mapPlaces, trips, stopsOn, moments = settings.mapPlaces)
     }
-    val recordDays = remember(mapPlaces) { mapPlaces.flatMapTo(HashSet()) { it.momentDays + it.checkinDays } }
+    val recordDays = remember(mapPlaces) { mapPlaces.flatMapTo(HashSet()) { it.momentDays + it.stopDays } }
     val inTime: (String) -> Boolean = { id -> kept.trips == null || id in kept.trips }
     // What the time leaves off the map lets go: a place open, a route lifted.
     LaunchedEffect(kept) {
@@ -344,14 +351,14 @@ private fun MapContent(
     // the page to shrink into, as going back from the trip into its card does.
     val lifted = (focus as? MapFocus.Trip)?.id ?: highlighted
     // A trip lifted keeps only its own places beside its route, as the site's does: those of its
-    // Moments, and of its check-ins while they're on.
-    val tripPlaces = remember(lifted, trips, moments, checkins, checkinsOn) {
+    // Moments, and of the modules' stops (its check-ins) while their layer is on.
+    val tripPlaces = remember(lifted, trips, moments, stops, stopsOn) {
         trips.firstOrNull { it.id == lifted }?.let { trip ->
             val fromMoments = momentsOf(trip, moments, trips).flatMap { it.places }
-            // A check-in is the trip's as a Moment with no trip named is: the first whose time it falls in.
-            val fromCheckins = if (checkinsOn) checkins.byDay.filterKeys { it in trip.start..trip.end }.values.flatten()
-                .filter { checkin -> trips.firstOrNull { isInTrip(it, checkin.at) }?.id == trip.id }.mapNotNull { it.place } else emptyList()
-            (fromMoments + fromCheckins).toSet()
+            // A stop is the trip's as a Moment with no trip named is: the first whose time it falls in.
+            val fromStops = if (stopsOn) stops.filter { it.at.take(10) in trip.start..trip.end }
+                .filter { stop -> trips.firstOrNull { isInTrip(it, stop.at) }?.id == trip.id }.mapNotNull { it.place } else emptyList()
+            (fromMoments + fromStops).toSet()
         }
     }
     MapBack({ active() && lifted != null }) { highlighted = null }
@@ -364,7 +371,7 @@ private fun MapContent(
                 if (kept.places?.contains(focus.id) == false) {
                     times.setShared(MapTime.All)
                     times.setOwn(TimedLayer.PLACES, null)
-                    times.setOwn(TimedLayer.CHECKINS, null)
+                    times.setOwn(TimedLayer.STOPS, null)
                 }
             }
             is MapFocus.Trip -> {
@@ -375,7 +382,7 @@ private fun MapContent(
                     times.setOwn(TimedLayer.ROUTES, null)
                 }
             }
-            MapFocus.Footprints -> {
+            MapFocus.Overlay -> {
                 selected = null
                 highlighted = null
                 if (footprintsOn) footprints?.open?.invoke()
@@ -424,7 +431,7 @@ private fun MapContent(
     val layers = atlasLayers(settings, footprints = footprintsOn, toggleFog = toggleFog)
 
     // With 地点 off, only the check-ins' places, and the one open.
-    val drawnPlaces = remember(mapPlaces, settings.mapPlaces, checkinsOn, selected) { layerPlaces(mapPlaces, settings.mapPlaces, checkinsOn, selected) }
+    val drawnPlaces = remember(mapPlaces, settings.mapPlaces, stopsOn, selected) { layerPlaces(mapPlaces, settings.mapPlaces, stopsOn, selected) }
     val sheetState = rememberStandardBottomSheetState(initialValue = SheetValue.PartiallyExpanded, skipHiddenState = false)
     var screenHeight by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
@@ -618,10 +625,10 @@ private fun MapContent(
             )
         } else {
             val here = byPlace[id].orEmpty()
-            val checkins = checkinsByPlace[id].orEmpty()
-            val years = remember(here, checkins) { (here.map { yearOf(it.occurredAt) } + checkins.map { yearOf(it.at) }).distinct().sortedDescending() }
+            val visits = stopsByPlace[id].orEmpty()
+            val years = remember(here, visits) { (here.map { yearOf(it.occurredAt) } + visits.map { yearOf(it.at) }).distinct().sortedDescending() }
             PlaceSheet(
-                place, id, here, checkins, years, colors, places, container.mediaUrls,
+                place, id, here, visits, years, colors, places, container.mediaUrls,
                 bottom = if (wide) Space.l else clearance,
                 onNavigate = { if (!device.navigateTo(place)) show(textOf(Res.string.no_map_app)) },
                 onAll = { selected = null; onPlace(id) },
@@ -686,7 +693,7 @@ private fun PlaceSheet(
     place: Place,
     id: String,
     here: List<MomentRecord>,
-    checkins: List<Checkin>,
+    stops: List<MapStop>,
     years: List<Int>,
     colors: Map<Int, Color>,
     places: Map<String, Place>,
@@ -706,7 +713,7 @@ private fun PlaceSheet(
             Column(Modifier.weight(1f)) {
                 Text(place.name, style = AppTheme.typography.title, modifier = Modifier.semantics { heading() })
                 Text(
-                    (placeCounts(here.size, checkins.size) + years.joinToString(textOf(Res.string.separator_list)) { textOf(Res.string.year_item, it) }).joinToString(" "),
+                    (placeCounts(here.size + stops.size) + years.joinToString(textOf(Res.string.separator_list)) { textOf(Res.string.year_item, it) }).joinToString(" "),
                     style = AppTheme.typography.caption,
                     color = tokens.tx2,
                     maxLines = 1,
@@ -725,12 +732,12 @@ private fun PlaceSheet(
             Modifier.weight(1f),
             contentPadding = PaddingValues(top = Space.l, bottom = Space.l + bottom),
         ) {
-            // Its Moments and check-ins as one, newest first, each its own row.
-            val records = (here.map { epochOf(it.occurredAt) to (it as Any) } + checkins.map { epochOf(it.at) to (it as Any) })
+            // Its Moments and the modules' stops (its check-ins) as one, newest first, each its own row.
+            val records = (here.map { epochOf(it.occurredAt) to (it as Any) } + stops.map { epochOf(it.at) to (it as Any) })
                 .sortedByDescending { it.first }.map { it.second }
-            items(records, key = { (it as? MomentRecord)?.uid ?: "checkin-${(it as Checkin).uid}" }) { record ->
-                if (record is Checkin) {
-                    CheckinRow(record, Modifier.padding(horizontal = Space.gutter), withDate = true)
+            items(records, key = { (it as? MomentRecord)?.uid ?: (it as MapStop).key }) { record ->
+                if (record is MapStop) {
+                    record.Row(Modifier.padding(horizontal = Space.gutter))
                     return@items
                 }
                 val moment = record as MomentRecord

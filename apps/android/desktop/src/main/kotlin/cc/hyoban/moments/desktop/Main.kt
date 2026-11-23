@@ -262,7 +262,7 @@ private val DESKTOP_PANES = SettingsPane.entries
  * Where the sidebar leads, as the design's Sidebar has them: the destinations, then 我的 under
  * its own heading, and 发布更改 and 设置 at its foot. A module turned off isn't listed.
  */
-private enum class Section(
+private class Section(
     val key: String,
     val label: StringResource,
     val icon: ImageVector,
@@ -271,23 +271,31 @@ private enum class Section(
     val module: Module? = null,
     val mine: Boolean = false,
 ) {
-    Timeline("timeline", Res.string.tab_moments, AppIcons.Timeline, Feed, "⌘1"),
-    Map("map", Res.string.tab_map, AppIcons.Map, Atlas, "⌘2"),
-    Trips("trips", Res.string.title_trips, AppIcons.Route, TripsList, "⌘3"),
-    Footprints("footprints", Res.string.footprints_title, AppIcons.Footprints, FootprintDays, module = Module.FOOTPRINTS),
-    Photos("album", Res.string.tab_album, AppIcons.Photos, Album, "⌘4"),
-    Ledger("ledger", Res.string.me_ledger, AppIcons.Wallet, LedgerHome(), module = Module.LEDGER, mine = true),
-    ThingsOwned("things", Res.string.me_things, AppIcons.Laptop, Things(), module = Module.THINGS, mine = true),
-    Days("occasions", Res.string.occasions_title, AppIcons.Gift, Occasions(), module = Module.OCCASIONS, mine = true),
-    Publish("changes", Res.string.title_changes, AppIcons.CloudUpload, Changes),
-    Settings("settings", Res.string.me_settings, AppIcons.Settings, null, "⌘,"),
+    override fun toString() = key
+
+    companion object {
+        val Timeline = Section("timeline", Res.string.tab_moments, AppIcons.Timeline, Feed, "⌘1")
+        val Map = Section("map", Res.string.tab_map, AppIcons.Map, Atlas, "⌘2")
+        val Trips = Section("trips", Res.string.title_trips, AppIcons.Route, TripsList, "⌘3")
+        val Photos = Section("album", Res.string.tab_album, AppIcons.Photos, Album, "⌘4")
+        val Publish = Section("changes", Res.string.title_changes, AppIcons.CloudUpload, Changes)
+        val Settings = Section("settings", Res.string.me_settings, AppIcons.Settings, null, "⌘,")
+
+        /** The modules' sections, as their plugins give them: a destination among the others, or one of 我的. */
+        private val modules = DesktopPlugins.all.map {
+            Section(it.key, it.label, it.icon, it.route, module = it.module, mine = it.mine)
+        }
+
+        /** In the sidebar's order: the destinations, a module's among them before 相册, then 我的, then the foot. */
+        val entries: List<Section> = listOf(Timeline, Map, Trips) + modules.filterNot { it.mine } + Photos + modules.filter { it.mine } + listOf(Publish, Settings)
+    }
 }
 
 /** The trips, each as its card: the Mac's own page, which on the phone is the map's panel. */
 private object TripsList
 
 /** The days of the phone's footprints, read from its backup (D14). */
-private object FootprintDays
+internal object FootprintDays
 
 /** The routes a desktop shows as a dialog over the page it was opened from, and how wide. */
 private fun dialogWidth(route: Any): Dp? = when (route) {
@@ -614,6 +622,11 @@ private fun Route(
     back: () -> Unit,
     openMedia: (String, Int) -> Unit,
 ) {
+    // A module's own page, drawn by its plugin.
+    DesktopPlugins.all.firstOrNull { it.shows(route) }?.let { plugin ->
+        plugin.Page(DesktopPages(container, back, ledgerNav, openDay) { backupSubtitle(container) }, route)
+        return
+    }
     when (route) {
         Feed -> FeedScreen(
             container,
@@ -671,13 +684,7 @@ private fun Route(
         // 相册 (D40): the NAS's photos, written into a new Moment in its dialog.
         Album -> cc.hyoban.moments.ui.picker.AlbumScreen(container, onNew = { shell.open(NewMoment()) }, onWrite = { shell.open(NewMoment()) }, onMoment = openMoment, onEdit = { shell.open(EditMoment(it)) })
         is Things -> ThingsScreen(container, onBack = back, onDay = openDay, kind = ThingKind.of(route.kind), open = route.open)
-        is Occasions -> OccasionsScreen(container, onBack = back, open = route.open)
-        Changes -> ChangesScreen(container, onMoment = openMoment, onBack = back, onBill = { shell.open(LedgerBill(it)) })
-        is LedgerHome -> LedgerScreen(container, ledgerNav, route.tab, source = backupSubtitle(container))
-        FootprintDays -> cc.hyoban.moments.ui.feed.FootprintDaysScreen(container, backupSubtitle(container), onDay = openDay, onBack = back)
-        is LedgerBill -> BillScreen(container, route.id, ledgerNav)
-        is LedgerAccount -> AccountScreen(container, route.id, ledgerNav)
-        is LedgerFilter -> LedgerListScreen(container, route, ledgerNav)
+        Changes -> ChangesScreen(container, onMoment = openMoment, onBack = back)
     }
 }
 
@@ -703,7 +710,7 @@ private fun Trips(container: DesktopContainer, onTrip: (String) -> Unit) {
 
 /** Where the ledger and the footprints shown came from: the phone's backup, and when it was made. */
 @Composable
-private fun backupSubtitle(container: DesktopContainer): String? {
+internal fun backupSubtitle(container: DesktopContainer): String? {
     val read by container.phoneBackup.read.collectAsState()
     val made = read?.madeAt ?: return null
     return stringResource(Res.string.desktop_backup_at, cc.hyoban.moments.ui.format.formatDate(made.toLocalDate().toString()) + " " + made.toLocalTime().toString().take(5))

@@ -149,9 +149,9 @@ data class MapPlace(
     val photo: MomentMedia? = null,
     /** The years it has records in. */
     val years: Set<Int> = emptySet(),
-    /** The days of its Moments and of its check-ins, which keep it on the map in a time chosen. */
+    /** The days of its Moments and of the modules' stops there (its check-ins), which keep it on the map in a time chosen. */
     val momentDays: List<java.time.LocalDate> = emptyList(),
-    val checkinDays: List<java.time.LocalDate> = emptyList(),
+    val stopDays: List<java.time.LocalDate> = emptyList(),
 )
 
 /**

@@ -6,6 +6,7 @@ import kotlinx.coroutines.CancellationException
 import androidx.compose.ui.graphics.vector.ImageVector
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.data.spec.Module
+import cc.hyoban.moments.plugins.Plugins
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -19,7 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import cc.hyoban.moments.footprints.ActionRow
+import cc.hyoban.moments.ui.settings.ActionRow
 import cc.hyoban.moments.ui.design.DateDialog
 import cc.hyoban.moments.ui.format.formatDate
 import java.time.LocalDate
@@ -45,14 +46,13 @@ import kotlinx.coroutines.withContext
 /**
  * 记录项与公开: what is recorded, and who sees it by default. First the modules the spec defines
  * (`Module`), each on or off as one: off, its rows, pages and records are put away everywhere,
- * its background work stops ([applyModule]) and its data stays. Then each book says whether its
+ * its background work stops (`PhonePlugin.applied`) and its data stays. Then each book says whether its
  * bills are public, from the day picked as it is switched on (or all of them, for a book made
  * public before there was a day), a public one publishing its amount, category and note alone;
  * the footprints are private and never leave the phone. Every bill can still say otherwise. Nothing here opens a page further down.
  */
 @Composable
 fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
-    val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val settings = LocalSettings.current
     val device = cc.hyoban.moments.ui.LocalDevice.current
@@ -70,104 +70,20 @@ fun ItemsScreen(container: AppContainer, onBack: () -> Unit) {
                 SegmentedGroup(
                     stringResource(Res.string.items_modules),
                     stringResource(Res.string.items_modules_note),
-                    Module.entries.map { module ->
+                    Plugins.inSpecOrder.map { plugin ->
                         { shapes ->
+                            val module = plugin.module
                             val on = settings.isOn(module)
-                            SwitchRow(on, moduleIcon(module), stringResource(moduleTitle(module)), "module_${module.key}", shapes) {
+                            SwitchRow(on, plugin.icon, stringResource(plugin.title), "module_${module.key}", shapes) {
                                 settings.changeModule(module, !on)
                                 scope.launch { device.moduleChanged(module) }
                             }
                         }
                     },
                 )
-                val books = ledger.books.filter { !it.archived }
-                // The book whose first public day is being picked, as it is switched on or after.
-                var picking by rememberSaveable { mutableStateOf<String?>(null) }
-                if (books.isNotEmpty() && settings.isOn(Module.LEDGER) && container.ledger.writable) {
-                    SegmentedGroup(
-                        stringResource(Res.string.items_books),
-                        stringResource(Res.string.items_book_note),
-                        books.flatMap { book ->
-                            val public = book.visibility == "public"
-                            listOfNotNull<Segment>(
-                                { shapes ->
-                                    SwitchRow(
-                                        public,
-                                        AppIcons.Receipt,
-                                        book.name,
-                                        "book_public_${book.id}",
-                                        shapes,
-                                        supporting = stringResource(Res.string.items_book_public),
-                                    ) {
-                                        if (public) {
-                                            scope.launch { container.ledger.saveBook(book.copy(visibility = "private", publicFrom = null)) }
-                                        } else {
-                                            picking = book.id
-                                        }
-                                    }
-                                },
-                                if (public) { shapes ->
-                                    ActionRow(
-                                        AppIcons.Calendar,
-                                        stringResource(Res.string.items_book_public_from),
-                                        shapes,
-                                        supporting = book.publicFrom?.let { formatDate(it) } ?: stringResource(Res.string.items_book_public_all),
-                                        tag = "book_public_from_${book.id}",
-                                    ) { picking = book.id }
-                                } else {
-                                    null
-                                },
-                            )
-                        },
-                    )
-                }
-                books.firstOrNull { it.id == picking }?.let { book ->
-                    DateDialog(
-                        book.publicFrom?.let(LocalDate::parse) ?: LocalDate.now(),
-                        stringResource(Res.string.items_book_public_from),
-                        onDismiss = { picking = null },
-                    ) { day ->
-                        picking = null
-                        scope.launch { container.ledger.saveBook(book.copy(visibility = "public", publicFrom = day.toString())) }
-                    }
-                }
-                if (settings.isOn(Module.FOOTPRINTS)) SegmentedGroup(
-                    stringResource(Res.string.items_tracks),
-                    stringResource(Res.string.items_tracks_note),
-                    listOf { _ ->
-                        ListItem(
-                            headlineContent = { Text(stringResource(Res.string.footprints_title)) },
-                            leadingContent = { Icon(AppIcons.Footprints, contentDescription = null) },
-                            trailingContent = { Text(stringResource(Res.string.visibility_private)) },
-                            modifier = Modifier.testTag("items_tracks"),
-                        )
-                    },
-                )
+                // Then who sees each module's own, as its plugin says: the books' bills, the footprints.
+                Plugins.all.filter { settings.isOn(it.module) }.forEach { it.ItemsGroup(container) }
             }
         }
     }
-}
-
-/** A module's name on the page: the app's own word for each. */
-fun moduleTitle(module: Module): StringResource = when (module) {
-    Module.FOOTPRINTS -> Res.string.footprints_title
-    Module.LEDGER -> Res.string.me_ledger
-    Module.THINGS -> Res.string.me_things
-    Module.CAR -> Res.string.car_title
-    Module.FOOD -> Res.string.section_food
-    Module.COST -> Res.string.section_cost
-    Module.CHECKIN -> Res.string.module_checkin
-    Module.OCCASIONS -> Res.string.occasions_title
-}
-
-/** A module's icon, the one its row on 我 or its part has. */
-fun moduleIcon(module: Module): ImageVector = when (module) {
-    Module.FOOTPRINTS -> AppIcons.Footprints
-    Module.LEDGER -> AppIcons.Wallet
-    Module.THINGS -> AppIcons.Package
-    Module.CAR -> AppIcons.Car
-    Module.FOOD -> AppIcons.Food
-    Module.COST -> AppIcons.Cash
-    Module.CHECKIN -> AppIcons.Pin
-    Module.OCCASIONS -> AppIcons.Calendar
 }

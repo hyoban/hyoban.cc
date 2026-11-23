@@ -89,36 +89,15 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
 
     override val hasLocation: Boolean = true
 
-    // The footprints' own store and panel, drawn on the atlas as the shared map takes them.
+    // What a module of the phone's own draws over the atlas (the footprints), while it is on.
     @Composable
-    override fun FootprintsOnMap(
+    override fun MapOverlay(
         container: AppContainer,
-        onSettings: () -> Unit,
-        onWriteAtStay: (StayAt) -> Unit,
-        onCheckin: (String) -> Unit,
+        actions: cc.hyoban.moments.ui.map.MapOverlayActions,
         content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
-    ) = cc.hyoban.moments.footprints.FootprintsOnMap(container as PhoneContainer, onSettings, onWriteAtStay, onCheckin) { state ->
-        val drawing = remember(state.drawing) {
-            cc.hyoban.moments.ui.map.AtlasFootprints(
-                lines = state.drawing.lines.map { (mode, points) ->
-                    cc.hyoban.moments.ui.map.AtlasFootprintLine(
-                        mode = when (mode) {
-                            cc.hyoban.moments.footprints.TravelMode.WALK -> cc.hyoban.moments.ui.map.AtlasFootprintMode.WALK
-                            cc.hyoban.moments.footprints.TravelMode.CYCLE -> cc.hyoban.moments.ui.map.AtlasFootprintMode.CYCLE
-                            cc.hyoban.moments.footprints.TravelMode.DRIVE -> cc.hyoban.moments.ui.map.AtlasFootprintMode.DRIVE
-                        },
-                        points = points,
-                    )
-                },
-                ends = state.drawing.ends,
-                stays = state.drawing.stays,
-                tail = state.drawing.tail,
-            )
-        }
-        content(cc.hyoban.moments.ui.map.AtlasFootprintsOnMap(
-            drawing.copy(focus = state.focus), state.frame, state.frameRequested, state.onFramed, state.open, state.recording, state.openStay,
-            looking = state.looking, stopLooking = state.stopLooking, days = state.days, trips = state.trips,
-        ))
+    ) {
+        val plugin = cc.hyoban.moments.plugins.PhonePlugins.all.firstOrNull { it.drawsOnMap }
+        if (plugin == null) content(null) else plugin.MapOverlay(container as PhoneContainer, actions, content)
     }
 
     override fun canLocate(): Boolean = LOCATION_PERMISSIONS.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
@@ -148,13 +127,6 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
     }
 
     @Composable
-    override fun rememberLedgerImport(container: AppContainer): cc.hyoban.moments.ui.LedgerImport =
-        cc.hyoban.moments.ui.ledger.rememberICostImport(container as PhoneContainer).let { cc.hyoban.moments.ui.LedgerImport(it.pick, it.Dialog) }
-
-    @Composable
-    override fun billSpot(txn: cc.hyoban.moments.ledger.Txn) = cc.hyoban.moments.footprints.billSpot(txn)
-
-    @Composable
     override fun rememberFilePicker(types: List<String>, onPicked: (String) -> Unit): () -> Unit {
         val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) onPicked(uri.toString()) }
         val mimes = types.filter { '/' in it }.toTypedArray()
@@ -165,13 +137,11 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
     override fun ImportGroups(container: AppContainer) = cc.hyoban.moments.ui.settings.PhoneImportGroups(container as PhoneContainer)
 
     override fun importsMore(settings: cc.hyoban.moments.Settings) =
-        settings.isOn(cc.hyoban.moments.data.spec.Module.LEDGER) || settings.isOn(cc.hyoban.moments.data.spec.Module.FOOTPRINTS)
+        cc.hyoban.moments.plugins.PhonePlugins.imports(settings)
 
-    override val recordsFootprints: Boolean get() = true
-
-    @Composable
-    override fun OnboardingFootprints(container: AppContainer, onBack: () -> Unit, onDone: () -> Unit) =
-        cc.hyoban.moments.ui.onboarding.PhoneOnboardingFootprints(container as PhoneContainer, onBack, onDone)
+    override val moduleSteps = cc.hyoban.moments.plugins.PhonePlugins.all.mapNotNull { plugin ->
+        if (!plugin.onboards) null else cc.hyoban.moments.ui.ModuleStep(plugin.module) { container, onBack, onDone -> plugin.OnboardingStep(container as PhoneContainer, onBack, onDone) }
+    }
 
     override fun viewerMotion(type: cc.hyoban.moments.data.spec.MediaType) = cc.hyoban.moments.ui.viewer.phoneViewerMotion(type)
     override fun viewerMotion(type: cc.hyoban.moments.data.spec.MediaType, inDialog: Boolean) = cc.hyoban.moments.ui.viewer.phoneViewerMotion(type, window = !inDialog)
@@ -217,7 +187,7 @@ class PhoneDevice(private val context: Context) : Device, AutoCloseable {
         LaunchedEffect(ready) { if (ready) activity?.showTimeline() }
     }
 
-    override suspend fun moduleChanged(module: cc.hyoban.moments.data.spec.Module) = cc.hyoban.moments.ui.settings.applyModule(context, module)
+    override suspend fun moduleChanged(module: cc.hyoban.moments.data.spec.Module) = cc.hyoban.moments.plugins.PhonePlugins.applied(context, module)
 
     override fun copyText(text: String) {
         context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("", text))

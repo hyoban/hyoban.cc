@@ -147,7 +147,7 @@ private fun SharedPointsMap(
     val ring = tokens.bg
     val solidLines = remember(lines) { lines.filterNot(RouteSegment::straight).map { it.line.map(Pair<Double, Double>::position) } }
     val dashedLines = remember(lines) { lines.filter(RouteSegment::straight).map { it.line.map(Pair<Double, Double>::position) } }
-    val orderedMarks = remember(marks) { marks.sortedBy { it.kind != DayMark.Kind.BILL } }
+    val orderedMarks = remember(marks) { marks.sortedBy { it.kind != DayMark.Kind.RECORD } }
     val badges = orderedMarks.map { it.kind to it.icon }.distinct()
     val painters = badges.map { (kind, icon) -> key(kind, icon) { rememberVectorPainter(icon) } }
     val framed = remember(points, lines, rings, marks) {
@@ -201,8 +201,8 @@ private fun SharedPointsMap(
             val source = rememberGeoJsonSource(pointData(badgeMarks.map { positionOf(it.at.latitude, it.at.longitude) }))
             val (fill, edge, glyph) = when (badge.first) {
                 DayMark.Kind.MOMENT -> Triple(tokens.accent, tokens.bg, tokens.bg)
-                DayMark.Kind.CHECKIN -> Triple(tokens.tx, tokens.bg, tokens.bg)
-                DayMark.Kind.BILL -> Triple(tokens.bg, tokens.tx, tokens.tx)
+                DayMark.Kind.STOP -> Triple(tokens.tx, tokens.bg, tokens.bg)
+                DayMark.Kind.RECORD -> Triple(tokens.bg, tokens.tx, tokens.tx)
             }
             CircleLayer(
                 id = "shared-mark-background-$index",

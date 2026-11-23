@@ -6,8 +6,7 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import cc.hyoban.moments.data.spec.MomentCost
 import cc.hyoban.moments.data.spec.MomentRecord
-import cc.hyoban.moments.data.spec.Module
-import cc.hyoban.moments.ledger.currencySymbol
+import cc.hyoban.moments.data.money.currencySymbol
 import cc.hyoban.moments.data.spec.FoodVerdict
 import kotlin.math.roundToLong
 
@@ -90,6 +89,3 @@ fun shareLine(moment: MomentRecord, place: String?, trip: String? = null): Strin
 @Composable
 fun shareText(moment: MomentRecord, place: String?, trip: String? = null): String =
     listOfNotNull(moment.text.takeIf { it.isNotBlank() }, shareLine(moment, place, trip)).joinToString("\n\n")
-
-/** The module a cost goes with: 美食 for a meal, else 花费. */
-val MomentCost.module: Module get() = if (meal) Module.FOOD else Module.COST

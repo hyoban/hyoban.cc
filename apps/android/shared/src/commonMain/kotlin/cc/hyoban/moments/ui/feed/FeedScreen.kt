@@ -210,7 +210,7 @@ fun FeedScreen(
     ShowRefreshErrors(container)
     // Everything, unfiltered: narrowing by kind and time is the search page's.
     val shown = moments
-    val bills = rememberTimelineBills(container, shown, TimeFilter())
+    val bills = rememberTimelineRecords(container, shown, TimeFilter())
     val ledgerNav = LocalLedgerNav.current
     // A screen ahead and half one behind composed while the list is idle between frames, so a
     // Moment coming into view on a fling is ready rather than composed within the frame it shows.
@@ -321,12 +321,11 @@ fun FeedScreen(
                                     }
                                 }
                                 // The way between each two stops in a row, a day apart at most.
-                                val shownCheckins by container.shownCheckins.collectAsStateWithLifecycle()
-                                val checkinsOn = LocalSettings.current.isOn(Module.CHECKIN)
+                                val legSettings = LocalSettings.current
                                 val legLines = cc.hyoban.moments.ui.trips.rememberLegLines(
                                     container,
                                     shown,
-                                    if (checkinsOn) shownCheckins.all else emptyList(),
+                                    cc.hyoban.moments.plugins.Plugins.legStops(container, null) { legSettings.isOn(it) },
                                     trips,
                                     nextDayOnly = true,
                                 )
@@ -343,7 +342,6 @@ fun FeedScreen(
                                     selected = chosen.takeIf { twoPane },
                                     onDay = onDay,
                                     bills = bills,
-                                    onBill = { ledgerNav?.bill?.invoke(it) },
                                     onTrip = onTrip,
                                     tracks = tracks,
                                     chat = true,
@@ -527,23 +525,24 @@ fun DayScreen(
     val moments = remember(all, date) { all.filter { it.occurredAt.startsWith(date) } }
     val trip = remember(moments, trips, date) { moments.firstNotNullOfOrNull { tripOf(it, trips) } ?: trips.firstOrNull { date >= it.start && date <= it.end } }
     val ledgerNav = LocalLedgerNav.current
-    val footprintsOn = LocalSettings.current.isOn(Module.FOOTPRINTS)
-    // The day's own footprints, private and the phone's, read once for the page; null until read,
-    // and none with the footprints turned off.
-    val track by androidx.compose.runtime.produceState<List<cc.hyoban.moments.footprints.TrackPoint>?>(null, date, footprintsOn) {
-        value = if (!footprintsOn) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            container.footprints.points(cc.hyoban.moments.footprints.TrackSelection(day = date))
+    val settings = LocalSettings.current
+    val footprints = cc.hyoban.moments.plugins.Plugins.dayTracks(container) { settings.isOn(it) }
+    // The day's own movement, private and the phone's, read once for the page; null until read,
+    // and none with no module keeping it on.
+    val track by androidx.compose.runtime.produceState<List<cc.hyoban.moments.footprints.TrackPoint>?>(null, date, footprints) {
+        value = if (footprints == null) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            footprints.points(cc.hyoban.moments.footprints.TrackSelection(day = date))
         }
     }
     // Whether today is still being recorded, said after its figures; read with the footprints.
-    val recording by androidx.compose.runtime.produceState(false, date, footprintsOn) {
-        if (footprintsOn && date == java.time.LocalDate.now().toString()) {
-            value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { container.footprints.state().recording }
+    val recording by androidx.compose.runtime.produceState(false, date, footprints) {
+        if (footprints != null && date == java.time.LocalDate.now().toString()) {
+            value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { footprints.state().recording }
         }
     }
     // The day's bills, as the timeline has them for its month, kept to this day.
     val month = remember(date) { TimeFilter(date.take(4).toInt(), date.substring(5, 7).toInt()) }
-    val monthBills = rememberTimelineBills(container, moments, month)
+    val monthBills = rememberTimelineRecords(container, moments, month)
     val bills = remember(monthBills, date) { monthBills.onDay(date) }
     // The trip goes unsaid on the cards when all of them were on it: its row heads the day.
     val oneTrip = trip != null && moments.all { tripOf(it, trips)?.id == trip.id }
@@ -560,7 +559,6 @@ fun DayScreen(
             showTrip = !oneTrip,
             dayPills = false,
             bills = bills,
-            onBill = { ledgerNav?.bill?.invoke(it) },
             onTrip = onTrip.takeIf { trip != null },
             oldestFirst = true,
             allMoments = all,
@@ -594,7 +592,7 @@ private fun DayHead(
     track: List<cc.hyoban.moments.footprints.TrackPoint>?,
     moments: List<cc.hyoban.moments.data.spec.MomentRecord>,
     places: Map<String, cc.hyoban.moments.data.spec.Place>,
-    bills: TimelineBills,
+    bills: TimelineRecords,
     /** Today, with the footprints still recording: its line ends where the phone is now. */
     recording: Boolean = false,
     /** Whether the map heads it; on a phone on its side the map stands beside the day instead. */
@@ -629,7 +627,7 @@ private fun DayHead(
             val millis = if (track == null) known?.movingMillis else stats.recordedMillis
             val line = listOfNotNull(
                 if (moving && metres != null && millis != null) stringResource(Res.string.day_track_stats, decimals(metres / 1000, 1), millis / 60_000) else null,
-                daySpent(bills, date)?.let { stringResource(Res.string.ledger_expense_short, it) },
+                *bills.figures.map { it.of(date) }.toTypedArray(),
             ).joinToString(" ")
             // Still recording after the figures it keeps growing, in the line's own colour, as the word says it.
             val still = if (recording) stringResource(Res.string.day_still_recording) else null
@@ -655,7 +653,7 @@ private fun DayMap(
     points: List<cc.hyoban.moments.footprints.TrackPoint>,
     moments: List<cc.hyoban.moments.data.spec.MomentRecord>,
     places: Map<String, cc.hyoban.moments.data.spec.Place>,
-    bills: TimelineBills,
+    bills: TimelineRecords,
     modifier: Modifier,
     topInset: Dp,
 ) {
@@ -663,35 +661,20 @@ private fun DayMap(
         cc.hyoban.moments.footprints.trackSegments(points, budget = 2000).filter { it.size > 1 }.map { stretch -> stretch.map { it.longitude to it.latitude } }
     }
     val dayMoments = remember(moments, date) { moments.filter { it.occurredAt.startsWith(date) } }
-    val checkins = bills.checkins[date].orEmpty()
-    val dayBills = remember(bills, dayMoments, date) {
-        (bills.loose[date].orEmpty() + (dayMoments.map { it.uid } + bills.checkins[date].orEmpty().map { it.uid }).flatMap { bills.linked[it].orEmpty() }).distinctBy { it.id }
-    }
-    val marks = remember(points, dayMoments, places, checkins, dayBills) {
+    val marks = remember(points, dayMoments, places, bills, date) {
         fun placed(id: String?) = id?.let(places::get)?.let { cc.hyoban.moments.ui.MapPoint(it.latitude, it.longitude) }
         fun tracked(time: Long?) = time?.let { t ->
             points.minByOrNull { kotlin.math.abs(it.time - t) }?.takeIf { kotlin.math.abs(it.time - t) <= BILL_NEAR_MS }
                 ?.let { cc.hyoban.moments.ui.MapPoint(it.latitude, it.longitude) }
         }
         fun millis(at: String) = runCatching { java.time.OffsetDateTime.parse(at).toInstant().toEpochMilli() }.getOrNull()
-        val byUid = dayMoments.associateBy { it.uid }
-        // A Moment and a check-in show their place's kind, a bill its category, as their rows do.
+        // A Moment shows its place's kind, as its row does; the modules mark their own.
         fun kindIcon(id: String?) = id?.let(places::get)?.let { cc.hyoban.moments.data.spec.PlaceKind.of(it.kind) }?.icon
+        val scope = MarkScope(date, dayMoments, ::placed, ::tracked, ::kindIcon, bills)
         dayMoments.mapNotNull { moment ->
             val at = placed(moment.places.firstOrNull()) ?: tracked(millis(moment.occurredAt)) ?: return@mapNotNull null
             cc.hyoban.moments.ui.DayMark(at, cc.hyoban.moments.ui.DayMark.Kind.MOMENT, kindIcon(moment.places.firstOrNull()) ?: AppIcons.Pin)
-        } + checkins.mapNotNull { checkin ->
-            val at = placed(checkin.place) ?: checkin.span?.let { tracked((it.first + it.last) / 2) } ?: return@mapNotNull null
-            cc.hyoban.moments.ui.DayMark(at, cc.hyoban.moments.ui.DayMark.Kind.CHECKIN, kindIcon(checkin.place) ?: AppIcons.Flag)
-        } + dayBills.mapNotNull { txn ->
-            val at = placed(txn.place)
-                ?: placed(txn.moment?.let(byUid::get)?.places?.firstOrNull())
-                ?: placed(checkins.firstOrNull { it.uid == txn.moment }?.place)
-                ?: placed(checkins.filter { it.place != null && it.span?.contains(txn.time) == true }.minByOrNull { it.span!!.last - it.span!!.first }?.place)
-                ?: tracked(txn.time)
-                ?: return@mapNotNull null
-            cc.hyoban.moments.ui.DayMark(at, cc.hyoban.moments.ui.DayMark.Kind.BILL, cc.hyoban.moments.ui.ledger.txnIcon(txn, bills.ledger))
-        }
+        } + bills.marks.flatMap { it.marks(scope) }
     }
     cc.hyoban.moments.ui.LocalDevice.current.DayTrackMap(stretches, marks, modifier.testTag("day_track"), topInset)
 }
@@ -714,7 +697,7 @@ private fun TimelineDayMap(
     state: androidx.compose.foundation.lazy.LazyListState,
     moments: List<cc.hyoban.moments.data.spec.MomentRecord>,
     places: Map<String, cc.hyoban.moments.data.spec.Place>,
-    bills: TimelineBills,
+    bills: TimelineRecords,
     onDay: (String) -> Unit,
     onSearch: () -> Unit,
     modifier: Modifier,
@@ -744,11 +727,12 @@ private fun TimelineDayMap(
     }
     var mapped by remember { mutableStateOf<MappedDay?>(null) }
     var nowhere by remember { mutableStateOf(false) }
-    val footprintsOn = LocalSettings.current.isOn(Module.FOOTPRINTS)
-    LaunchedEffect(day, moments, footprintsOn) {
+    val settings = LocalSettings.current
+    val footprints = cc.hyoban.moments.plugins.Plugins.dayTracks(container) { settings.isOn(it) }
+    LaunchedEffect(day, moments, footprints) {
         val shown = day ?: return@LaunchedEffect
-        val points = if (!footprintsOn) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            container.footprints.points(cc.hyoban.moments.footprints.TrackSelection(day = shown))
+        val points = if (footprints == null) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            footprints.points(cc.hyoban.moments.footprints.TrackSelection(day = shown))
         }
         val dayMoments = moments.filter { it.occurredAt.startsWith(shown) }
         val somewhere = points.size > 1 || dayMoments.any { moment -> moment.places.any { it in places } }
@@ -776,7 +760,7 @@ private fun TimelineDayMap(
             } else {
                 listOfNotNull(
                     stats?.takeIf { (mapped?.points?.size ?: 0) > 1 }?.let { stringResource(Res.string.day_track_stats, decimals(it.metres / 1000, 1), (it.recordedMillis / 60_000).toInt()) },
-                    daySpent(bills, shown)?.let { stringResource(Res.string.ledger_expense_short, it) },
+                    *bills.figures.map { it.of(shown) }.toTypedArray(),
                 ).joinToString(" ")
             }
             Box(controls) { Surface(
@@ -825,36 +809,11 @@ fun PlaceScreen(
     val places by container.repository.places.collectAsStateWithLifecycle()
     val trips by container.shownTrips.collectAsStateWithLifecycle()
     val moments = remember(all, id) { all.filter { id in it.places } }
-    // Its check-ins alone, among its Moments by their days.
-    val allCheckins by container.shownCheckins.collectAsStateWithLifecycle()
-    val checkins = if (LocalSettings.current.isOn(Module.CHECKIN)) allCheckins.byPlace[id].orEmpty() else emptyList()
-    // Its bills among them, as the timeline has them: a Moment's on its card, the rest by their
-    // days; what was spent there heads the page beside its counts.
-    val ledger by container.ledger.ledger.collectAsStateWithLifecycle()
-    val ledgerOn = LocalSettings.current.isOn(Module.LEDGER)
-    val currency = ledger.book?.currency ?: "CNY"
-    val placeBills = remember(ledger, all, id, ledgerOn) {
-        if (!ledgerOn) emptyList() else {
-            val shown = ledger.books.filterNot { it.archived }.mapTo(HashSet()) { it.id }
-            cc.hyoban.moments.ledger.txnsOfPlace(ledger, id, all.associateBy { it.uid }).filter { it.book in shown && it.kind in SHOWN_KINDS }
-        }
-    }
-    val bills = remember(checkins, placeBills, moments, ledger, currency) {
-        val uids = moments.mapTo(HashSet()) { it.uid } + checkins.map { it.uid }
-        val links = cc.hyoban.moments.ledger.AutoLinks(moments, checkins)
-        val (withMoment, without) = placeBills.partition { links.of(it) in uids }
-        TimelineBills(
-            ledger,
-            linked = withMoment.groupBy { links.of(it)!! }.mapValues { (_, txns) -> txns.sortedBy { it.time } },
-            loose = without.groupBy { it.dateKey },
-            spent = placeBills.groupBy { it.dateKey }.mapValues { (_, txns) -> cc.hyoban.moments.ledger.spendingOf(ledger, txns, currency).expense },
-            currency = currency,
-            checkins = checkins.groupBy { it.at.take(10) },
-        )
-    }
-    val spent = remember(placeBills, ledger, currency) {
-        placeBills.takeIf { it.isNotEmpty() }?.let { cc.hyoban.moments.ledger.spendingOf(ledger, it, currency).expense }?.takeIf { it > 0 }
-    }
+    // Its check-ins and its bills among its Moments, as the timeline has them, each module joining
+    // its own: a Moment's bill on its card, the rest by their days; what was spent there heads the
+    // page beside its counts.
+    val joins = rememberJoinInputs(container)
+    val bills = remember(all, moments, id, joins) { joinRecords(JoinScope(JoinSpan.Place(id), moments, all), joins).build() }
 
     val place = places[id]
     // Its name, point and kind changed in the place picker, every Moment at it staying there.
@@ -866,8 +825,9 @@ fun PlaceScreen(
     val about = listOfNotNull(
         PlaceKind.of(place?.kind)?.let { stringResource(it.label) },
         place?.division?.label(),
-    ).plus(placeCounts(moments.size, checkins.size))
-        .plus(listOfNotNull(spent?.let { stringResource(Res.string.ledger_spent, cc.hyoban.moments.ui.ledger.money(it, currency)) }))
+    ).plus(placeCounts(moments.size + bills.anchorCount))
+        // What the modules say of the whole of it: what was spent there.
+        .plus(bills.totals.mapNotNull { it.text() })
         .joinToString(" ")
     val ledgerNav = LocalLedgerNav.current
     val device = cc.hyoban.moments.ui.LocalDevice.current
@@ -885,7 +845,7 @@ fun PlaceScreen(
     val feed: @Composable (Modifier, FeedLeading.() -> Unit) -> Unit = { feedModifier, head ->
         MomentFeed(
             moments, places, trips, container.mediaUrls, onMoment, feedModifier,
-            onDay = onDay, hidePlace = id, bills = bills, onBill = { ledgerNav?.bill?.invoke(it) },
+            onDay = onDay, hidePlace = id, bills = bills,
             leading = head,
         )
     }

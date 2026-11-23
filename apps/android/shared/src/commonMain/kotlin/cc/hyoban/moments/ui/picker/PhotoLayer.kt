@@ -184,7 +184,7 @@ internal fun rememberPhotoPlaces(container: AppContainer, choice: PhotoChoice, n
     val own = choice.device.places(choice.deletion)
     val all = own + listOfNotNull(nas.places.takeIf { container.nas.configured })
     return remember(all) {
-        MergedPlaces(all) { container.footprints.takeIf { container.settings.isOn(cc.hyoban.moments.data.spec.Module.FOOTPRINTS) } }
+        MergedPlaces(all) { cc.hyoban.moments.plugins.Plugins.dayTracks(container) { container.settings.isOn(it) } }
     }
 }
 

@@ -40,9 +40,6 @@ import androidx.compose.ui.geometry.Size
 import cc.hyoban.moments.data.spec.FoodVerdict
 import cc.hyoban.moments.data.spec.MomentCost
 import cc.hyoban.moments.data.spec.MomentRecord
-import cc.hyoban.moments.data.things.Checkin
-import cc.hyoban.moments.ledger.Ledger
-import cc.hyoban.moments.ledger.Txn
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Icon
@@ -77,8 +74,9 @@ sealed interface ChatItem {
         override val key get() = moment.uid
     }
 
-    data class CheckinStop(val checkin: Checkin) : ChatItem {
-        override val key get() = "checkin-${checkin.uid}"
+    /** A module's own stop, a check-in, sent from the right as a Moment is. */
+    data class Anchor(val anchor: DayAnchor) : ChatItem {
+        override val key get() = anchor.key
     }
 
     data class Records(val lines: List<RecordLine>) : ChatItem {
@@ -90,30 +88,19 @@ sealed interface ChatItem {
 sealed interface RecordLine {
     val key: String
 
-    data class Bill(val txn: Txn) : RecordLine {
-        override val key get() = "bill-${txn.id}"
-    }
-
-    data class ChargeLine(val charge: Charge) : RecordLine {
-        override val key get() = "charge-${charge.uid}"
-    }
-
-    data class ThingLine(val thing: ThingRecord) : RecordLine {
-        override val key get() = "thing-${thing.uid}"
+    /** A module's own record, as its plugin draws it. */
+    data class Record(val record: DayRecord) : RecordLine {
+        override val key get() = record.key
     }
 
     data class Track(val day: String, val piece: TrackPiece) : RecordLine {
         override val key get() = "track-$day-${piece.start}"
     }
-
-    data class Drive(val drive: DriveDay) : RecordLine {
-        override val key get() = "drive-${drive.date}"
-    }
 }
 
 /**
- * [items] of one day, oldest first, as the conversation shows them: each Moment and check-in
- * (its linked bills inside its bubble), and every run of records between them in one bubble,
+ * [items] of one day, oldest first, as the conversation shows them: each Moment and stop
+ * (what goes with it inside its bubble), and every run of records between them in one bubble,
  * a run parted at [breakAt] (epoch milliseconds), where a trip begins, so none straddles it.
  */
 fun chatItems(items: List<DayItem>, breakAt: Long? = null): List<ChatItem> {
@@ -133,15 +120,12 @@ fun chatItems(items: List<DayItem>, breakAt: Long? = null): List<ChatItem> {
                 flush()
                 out += ChatItem.Moment(item.moment)
             }
-            is DayItem.Bills -> item.txns.sortedBy { it.time }.forEach { add(RecordLine.Bill(it)) }
-            is DayItem.ChargeItem -> add(RecordLine.ChargeLine(item.charge))
-            is DayItem.ThingItem -> add(RecordLine.ThingLine(item.thing))
-            is DayItem.CheckinItem -> {
+            is DayItem.Record -> add(RecordLine.Record(item.record))
+            is DayItem.Anchor -> {
                 flush()
-                out += ChatItem.CheckinStop(item.checkin)
+                out += ChatItem.Anchor(item.anchor)
             }
             is DayItem.Track -> add(RecordLine.Track(item.day, item.piece))
-            is DayItem.Drive -> add(RecordLine.Drive(item.drive))
         }
     }
     flush()
@@ -150,17 +134,14 @@ fun chatItems(items: List<DayItem>, breakAt: Long? = null): List<ChatItem> {
 
 /** When a line of a records bubble was, in epoch milliseconds; a device or a subscription has no time. */
 private fun RecordLine.at(): Long? = when (this) {
-    is RecordLine.Bill -> txn.time
-    is RecordLine.ChargeLine -> instantOf(charge.at)
-    is RecordLine.ThingLine -> null
+    is RecordLine.Record -> record.instant
     is RecordLine.Track -> piece.start
-    is RecordLine.Drive -> null
 }
 
 /** When a bubble of the conversation was, in epoch milliseconds: a records bubble by its first line with a time. */
 fun ChatItem.at(): Long? = when (this) {
     is ChatItem.Moment -> instantOf(moment.occurredAt)
-    is ChatItem.CheckinStop -> instantOf(checkin.at)
+    is ChatItem.Anchor -> anchor.instant
     is ChatItem.Records -> lines.firstNotNullOfOrNull { it.at() }
 }
 
@@ -306,8 +287,6 @@ fun DateCapsule(day: String, onClick: (() -> Unit)?, modifier: Modifier = Modifi
 @Composable
 fun RecordsBubble(
     lines: List<RecordLine>,
-    ledger: Ledger,
-    onBill: (String) -> Unit,
     onDay: (() -> Unit)?,
     modifier: Modifier = Modifier,
     /** A footprints' line drawn as the way it was gone, with its own tap; else as 轨迹. */
@@ -315,13 +294,10 @@ fun RecordsBubble(
 ) {
     val shown = lines
     val single = shown.size == 1
-    val openThing = LocalThingNav.current
+    val openRecord = (shown.singleOrNull() as? RecordLine.Record)?.record?.open(onDay)
     val open: (() -> Unit)? = when (val only = shown.singleOrNull()) {
-        is RecordLine.Bill -> ({ onBill(only.txn.id) })
-        is RecordLine.ChargeLine -> only.charge.bill?.let { bill -> { onBill(bill.id) } } ?: onDay
-        is RecordLine.ThingLine -> openThing?.let { { it(only.thing.uid) } }
+        is RecordLine.Record -> openRecord
         is RecordLine.Track -> onDay.takeIf { trackRow == null }
-        is RecordLine.Drive -> onDay
         null -> onDay
     }
     val large = isLargeFont()
@@ -340,46 +316,11 @@ fun RecordsBubble(
                 .padding(horizontal = Space.m, vertical = Space.xs)
                 .testTag("records_${lines.first().key}"),
         ) {
-            // Only a device, a subscription or a day's driving alone has no time, and no column for one.
-            val timed = shown.any { it !is RecordLine.ThingLine && it !is RecordLine.Drive }
+            // Only a record known by its day alone (a device, a subscription) or a day's driving alone has no time, and no column for one.
+            val timed = shown.any { !(it is RecordLine.Record && it.record.time.isEmpty()) }
             shown.forEach { line ->
                 when (line) {
-                    is RecordLine.Bill -> RecordRow(
-                        icon = { Icon(txnIcon(line.txn, ledger), contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
-                        title = txnTitle(line.txn, ledger),
-                        time = line.txn.local.format(TIME),
-                        end = billAmount(line.txn, ledger),
-                        endColor = amountColor(line.txn),
-                        large = large,
-                        timed = timed,
-                        tag = "bill_${line.txn.id}",
-                    )
-                    is RecordLine.ChargeLine -> ChargeRecordRow(line.charge, ledger, large, timed, timeAtEnd = false, noteColor = tokens.tx3)
-                    is RecordLine.Drive -> RecordRow(
-                        icon = { Icon(AppIcons.Car, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
-                        title = stringResource(Res.string.timeline_drive),
-                        note = driveNote(line.drive),
-                        noteColor = tokens.tx3,
-                        noteBelow = true,
-                        // Known by its day alone: the time's column stays, empty.
-                        time = null,
-                        end = androidx.compose.ui.text.AnnotatedString(stringResource(Res.string.distance_kilometres, decimals(line.drive.km, if (line.drive.km < 10) 1 else 0))),
-                        endColor = tokens.tx,
-                        large = large,
-                        timed = timed,
-                        tag = "drive_${line.drive.date}",
-                    )
-                    is RecordLine.ThingLine -> RecordRow(
-                        icon = { Icon(if (line.thing.device) AppIcons.Laptop else AppIcons.Subscription, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
-                        title = thingTitle(line.thing),
-                        // Known by its day alone: the time's column stays, empty.
-                        time = null,
-                        end = androidx.compose.ui.text.AnnotatedString(cc.hyoban.moments.ui.things.priceOf(line.thing.price, line.thing.currency)),
-                        endColor = tokens.tx,
-                        large = large,
-                        timed = timed,
-                        tag = "thing_${line.thing.uid}",
-                    )
+                    is RecordLine.Record -> line.record.Line(large, timed)
                     is RecordLine.Track -> if (trackRow != null) trackRow(line) else RecordRow(
                         icon = { Icon(AppIcons.Footprints, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
                         title = stringResource(Res.string.timeline_track),
@@ -397,70 +338,22 @@ fun RecordsBubble(
 }
 
 /**
- * The bills linked to a Moment or a check-in, at the foot of its bubble under a hairline: a line
- * each as a records bubble draws them, each opening its bill; a bill at the bubble's own [time]
- * leaves the time out, its amount at the edge. A Moment's own [cost] leads them, drawn the same,
- * its amount at the edge: a meal's dishes or what it went on, how it was and how many it was
- * for; it opens the Moment as the rest of its bubble does.
+ * What goes with a Moment or a stop, at the foot of its bubble under a hairline, each drawn by
+ * its module: a Moment's own cost, the charges at its time, the bills linked to it; one at the
+ * bubble's own [time] leaves the time out.
  */
 @Composable
-fun BubbleBills(
-    txns: List<Txn>,
-    ledger: Ledger?,
-    onBill: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    time: String? = null,
-    cost: MomentCost? = null,
-    /** The charges at its time, each one line with the bill paid for it. */
-    charges: List<Charge> = emptyList(),
-) {
+fun BubbleFoot(records: List<DayRecord>, modifier: Modifier = Modifier, time: String? = null) {
     val large = isLargeFont()
     Column(modifier.fillMaxWidth()) {
         cc.hyoban.moments.ui.design.HorizontalDivider(Modifier.padding(bottom = Space.xs))
-        cost?.amount?.let { amount ->
-            RecordRow(
-                icon = { Icon(if (cost.meal) AppIcons.Food else AppIcons.Cash, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
-                title = listOfNotNull(
-                    cost.items.takeIf { it.isNotEmpty() }?.joinToString(stringResource(Res.string.separator_list))
-                        ?: stringResource(costTitle(cost)),
-                    FoodVerdict.of(cost.verdict)?.let { stringResource(costVerdictLabel(cost, it)) },
-                    cost.people?.takeIf { it > 1 }?.let { pluralStringResource(Res.plurals.count_food_people, it, it) },
-                ).joinToString(" "),
-                time = null,
-                end = androidx.compose.ui.text.AnnotatedString(costMoney(amount, cost.currency)),
-                endColor = tokens.tx,
-                large = large,
-                timed = false,
-                tag = "moment_cost",
-                timeAtEnd = true,
-            )
-        }
-        charges.forEach { charge ->
-            val open = charge.bill?.let { bill -> Modifier.clickable { onBill(bill.id) } } ?: Modifier
-            Box(open) { ChargeRecordRow(charge, ledger, large, timed = charge.at.drop(11).take(5) != time, timeAtEnd = true, noteColor = tokens.tx2) }
-        }
-        if (ledger != null) txns.forEach { txn ->
-            val at = txn.local.format(TIME)
-            Box(Modifier.clickable { onBill(txn.id) }) {
-                RecordRow(
-                    icon = { Icon(txnIcon(txn, ledger), contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
-                    title = txnTitle(txn, ledger),
-                    time = at,
-                    end = billAmount(txn, ledger),
-                    endColor = amountColor(txn),
-                    large = large,
-                    timed = at != time,
-                    tag = "bill_${txn.id}",
-                    timeAtEnd = true,
-                )
-            }
-        }
+        records.forEach { it.Attached(large, time) }
     }
 }
 
 /** One line of a records bubble; with the font set large, the figure goes under the words. */
 @Composable
-private fun RecordRow(
+internal fun RecordRow(
     icon: @Composable () -> Unit,
     title: String,
     time: String?,
@@ -576,85 +469,3 @@ fun WayBubble(modifier: Modifier = Modifier, row: @Composable () -> Unit) {
     }
 }
 
-/**
- * A check-in as the conversation has it: sent from the right as a Moment is, on the pressed fill
- * and drawn with the Moments beside it, only as wide as it needs; the place's pin, its venue on
- * one line and, faint at the end, whether it is private and when. It sets the records around it
- * apart, and a tap opens its sheet.
- */
-@Composable
-fun CheckinBubble(
-    checkin: Checkin,
-    joinedAbove: Boolean,
-    joinedBelow: Boolean,
-    modifier: Modifier = Modifier,
-    bills: List<Txn> = emptyList(),
-    ledger: Ledger? = null,
-    onBill: (String) -> Unit = {},
-    charges: List<Charge> = emptyList(),
-) {
-    val open = LocalCheckinNav.current
-    val shape = androidx.compose.runtime.remember(joinedAbove, joinedBelow) { BubbleShape(sent = true, joinedAbove, joinedBelow) }
-    val title = checkinTitle(checkin)
-    val withBills = (bills.isNotEmpty() && ledger != null) || charges.isNotEmpty()
-    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
-        // With its bills it is as wide as a records bubble, they at its foot.
-        Column(
-            Modifier
-                .bubbleWidth(fill = withBills) { column -> minOf(column * 0.88f, 420.dp) }
-                .clip(shape)
-                .background(tokens.fill)
-                .then(if (open != null) Modifier.clickable { open(checkin.uid) } else Modifier)
-                .padding(end = TAIL)
-                .padding(horizontal = Space.m, vertical = Space.s)
-                .testTag("checkin_${checkin.uid}"),
-        ) {
-            // With bills under it, its time ends the line as theirs do, at the bubble's right edge.
-            Row(
-                (if (withBills) Modifier.fillMaxWidth() else Modifier).semantics(mergeDescendants = true) { contentDescription = title },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Space.s),
-            ) {
-                Icon(AppIcons.Pin, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
-                Text(checkin.venue, style = AppTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = withBills))
-                val meta = listOfNotNull(stringResource(Res.string.visibility_private).takeIf { checkin.private }, checkinTime(checkin)).joinToString(" ")
-                // A locked one says so before its time, with a lock.
-                if (checkin.locked) Icon(AppIcons.Lock, contentDescription = stringResource(Res.string.plan_locked), tint = tokens.tx3, modifier = Modifier.size(12.dp))
-                if (meta.isNotEmpty()) Text(meta, style = AppTheme.typography.caption, color = tokens.tx3, maxLines = 1)
-            }
-            if (withBills) BubbleBills(bills, ledger, onBill, Modifier.padding(top = Space.s), time = formatTime(checkin.at), charges = charges)
-        }
-    }
-}
-
-/**
- * A charge as one line of a bubble: with the bill paid for it, that bill's category, the energy
- * faint after it and what it cost at the end; alone, 充电 and its energy at the end.
- */
-@Composable
-private fun ChargeRecordRow(charge: Charge, ledger: Ledger?, large: Boolean, timed: Boolean, timeAtEnd: Boolean, noteColor: androidx.compose.ui.graphics.Color) {
-    val energy = charge.kwh?.let { "%.1f kWh".format(it) } ?: charge.minutes?.let { pluralStringResource(Res.plurals.charge_minutes, it, it) }.orEmpty()
-    val bill = charge.bill?.takeIf { ledger != null }
-    RecordRow(
-        icon = { Icon(AppIcons.Ev, contentDescription = null, tint = tokens.tx3, modifier = Modifier.size(18.dp)) },
-        title = if (bill != null) txnTitle(bill, ledger!!) else stringResource(Res.string.timeline_charge),
-        note = energy.takeIf { bill != null },
-        noteColor = noteColor,
-        time = charge.at.drop(11).take(5).ifEmpty { null },
-        end = if (bill != null) billAmount(bill, ledger!!) else androidx.compose.ui.text.AnnotatedString(energy),
-        endColor = if (bill != null) amountColor(bill) else tokens.tx,
-        large = large,
-        timed = timed,
-        tag = "charge_${charge.uid}",
-        timeAtEnd = timeAtEnd,
-    )
-}
-
-/** A day's driving time and energy, as its line says them after 用车. */
-@Composable
-fun driveNote(drive: DriveDay): String = listOfNotNull(
-    drive.minutes?.let { minutes ->
-        if (minutes >= 60) stringResource(Res.string.footprints_hours_minutes, minutes / 60, minutes % 60) else stringResource(Res.string.footprints_minutes, minutes)
-    },
-    drive.kwh?.let { "%.1f kWh".format(it) },
-).joinToString(" · ")

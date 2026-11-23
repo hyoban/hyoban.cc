@@ -19,8 +19,8 @@ import kotlinx.coroutines.launch
  * as a new place called [name], or named after what is around it when [name] is blank, which
  * can be moved, renamed or traded for a known place. What is chosen goes to [onKept], a new
  * place kept first; choosing none leaves as dismissing does.
- * With [onCheckin], the picker also offers to keep it as a check-in there, given the place's id
- * and name, in place of choosing none.
+ * With [alternative], the picker also offers another way to keep it there (as a check-in), its
+ * words and what it does with the place's id and name, in place of choosing none.
  */
 @Composable
 fun KeepPlace(
@@ -28,16 +28,15 @@ fun KeepPlace(
     at: Fix,
     name: String,
     onDismiss: () -> Unit,
-    onCheckin: (suspend (place: String, name: String) -> Unit)? = null,
+    alternative: Pair<String, suspend (place: String, name: String) -> Unit>? = null,
     onKept: suspend (String) -> Unit = {},
 ) {
-    val checkinLabel = stringResource(Res.string.action_save_checkin)
     ChoosePlace(
         container,
         PlaceChoice.New(name, at),
         at,
         onDismiss,
-        alternative = onCheckin?.let { checkinLabel to it },
+        alternative = alternative,
     ) { id, _ -> id?.let { onKept(it) } }
 }
 

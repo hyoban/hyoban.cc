@@ -130,7 +130,7 @@ class HeatmapWidget : GlanceAppWidget() {
             // The Moments, which demo mode narrows, are counted again as they change.
             val moments by (context.applicationContext as MomentsApplication).container.shownMoments.collectAsState()
             val shown by produceState(first to firstDays, chosen, moments) {
-                if (value.first != chosen || chosen == HeatSource.MOMENTS) value = chosen to heatDays(context, chosen, from, today)
+                if (value.first != chosen || chosen == MomentsHeat) value = chosen to heatDays(context, chosen, from, today)
             }
             WidgetTheme(context) { HeatCard(shown.first, shown.second, today, choose = choose) }
         }
@@ -138,8 +138,8 @@ class HeatmapWidget : GlanceAppWidget() {
 
     override suspend fun providePreview(context: Context, widgetCategory: Int) {
         val today = LocalDate.now()
-        val days = heatDays(context, HeatSource.MOMENTS, layoutFor(WIDE, today).grid.start, today)
-        provideContent { WidgetTheme(context) { HeatCard(HeatSource.MOMENTS, days, today) } }
+        val days = heatDays(context, MomentsHeat, layoutFor(WIDE, today).grid.start, today)
+        provideContent { WidgetTheme(context) { HeatCard(MomentsHeat, days, today) } }
     }
 
     companion object {
@@ -151,42 +151,29 @@ class HeatmapWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = HeatmapWidget()
 }
 
-/** What each day from [from] through [to] had of [source]: Moments, money in the book's currency, or metres. */
-private suspend fun heatDays(context: Context, source: HeatSource, from: LocalDate, to: LocalDate): Map<LocalDate, Double> {
-    val container = container(context)
-    return when (source) {
-        HeatSource.MOMENTS -> {
-            shown(container).moments
-                .mapNotNull { runCatching { LocalDate.parse(it.dateKey) }.getOrNull() }
-                .filter { it in from..to }
-                .groupingBy { it }.eachCount()
-                .mapValues { it.value.toDouble() }
-        }
-        HeatSource.SPENDING -> {
-            if (!container.settings.isOn(Module.LEDGER)) return emptyMap()
-            container.ledger.loaded.first { it }
-            val ledger = container.ledger.ledger.value
-            val currency = ledger.book?.currency ?: return emptyMap()
-            val books = ledger.books.filter { !it.archived }.map { it.id }.toSet()
-            summarize(ledger.entries.filter { it.txn.book in books }, ledger.rates, currency, from, to.plusDays(1))
-                .expenseByDay.mapValues { it.value.toDouble() }
-        }
-        HeatSource.FOOTPRINTS -> withContext(Dispatchers.IO) {
-            if (!container.settings.isOn(Module.FOOTPRINTS)) return@withContext emptyMap<LocalDate, Double>()
-            val store = container.footprints
-            store.days().mapNotNull { day -> runCatching { LocalDate.parse(day) }.getOrNull()?.takeIf { it in from..to }?.let { it to day } }
-                .associate { (date, day) ->
-                    // A past day's distance stays as it was, so it is read once while the app runs.
-                    val metres = PastDistances[day]?.takeIf { date < to }
-                        ?: trackStats(store.points(TrackSelection(day = day))).metres.also { if (date < to) PastDistances[day] = it }
-                    // A day the phone only lay still went nowhere, as the timeline counts it.
-                    date to if (metres < 100) 0.0 else metres
-                }
-        }
-    }
+/** What each day from [from] through [to] had of [source]. */
+private suspend fun heatDays(context: Context, source: HeatSource, from: LocalDate, to: LocalDate): Map<LocalDate, Double> = source.days(context, from, to)
+
+/** The Moments the public sees, each day's count. */
+object MomentsHeat : HeatSource {
+    override val key = "moments"
+    override val link = "moments"
+    override val icon get() = AppIcons.Pen
+
+    override fun name(context: Context): String = context.getString(R.string.widget_heatmap_moments)
+
+    @androidx.compose.runtime.Composable override fun title(): String = androidx.compose.ui.res.stringResource(R.string.widget_heatmap_moments)
+
+    @androidx.compose.runtime.Composable override fun note(): String = stringResource(Res.string.widget_heatmap_moments_note)
+
+    override suspend fun days(context: Context, from: LocalDate, to: LocalDate): Map<LocalDate, Double> =
+        shown(container(context)).moments
+            .mapNotNull { runCatching { LocalDate.parse(it.dateKey) }.getOrNull() }
+            .filter { it in from..to }
+            .groupingBy { it }.eachCount()
+            .mapValues { it.value.toDouble() }
 }
 
-private val PastDistances = ConcurrentHashMap<String, Double>()
 
 /** Where the widget puts its squares at [size]: a row of days, the weeks, or a year by months. */
 private data class HeatLayout(val shape: Shape, val grid: HeatGrid, val padding: Dp, val gridWidth: Dp, val gridHeight: Dp) {
@@ -225,23 +212,12 @@ private fun HeatCard(source: HeatSource, days: Map<LocalDate, Double>, today: Lo
     val shown = grid.cells.associate { it.date to (days[it.date] ?: 0.0) }
     val level = heatLevels(shown.values)
     val pictures = drawHeat(context, layout, level, shown)
-    val name = when (source) {
-        HeatSource.MOMENTS -> context.getString(R.string.widget_heatmap_moments)
-        HeatSource.SPENDING -> textOf(Res.string.widget_heatmap_spending)
-        HeatSource.FOOTPRINTS -> textOf(Res.string.widget_heatmap_footprints)
-    }
+    val name = source.name(context)
     val range = when (layout.shape) {
         HeatLayout.Shape.YEAR -> textOf(Res.string.widget_heatmap_year)
         else -> ((grid.end.toEpochDay() - grid.start.toEpochDay()) / 7 + 1).toInt().let { pluralTextOf(Res.plurals.widget_heatmap_weeks, it, it) }
     }
-    val amount = when (source) {
-        HeatSource.FOOTPRINTS -> {
-            val km = shown.values.sum() / 1000
-            val format = NumberFormat.getNumberInstance().apply { maximumFractionDigits = if (km < 10) 1 else 0 }
-            textOf(Res.string.widget_heatmap_km, format.format(km))
-        }
-        else -> shown.values.count { it > 0 }.let { pluralTextOf(Res.plurals.widget_heatmap_days, it, it) }
-    }
+    val amount = source.amount(shown.values)
     val summary = textOf(Res.string.widget_heatmap_summary, range, amount)
 
     val base = GlanceModifier.fillMaxSize().appWidgetBackground().cornerRadius(android.R.dimen.system_app_widget_background_radius)
@@ -419,13 +395,11 @@ private fun HeatmapSettings(chosen: HeatSource?, onBack: () -> Unit, onChoose: (
             SegmentedGroup(
                 stringResource(Res.string.widget_heatmap_show),
                 null,
-                HeatSource.entries.map { source ->
+                HeatSource.all.map { source ->
                     { shapes ->
-                        val (icon, title, supporting) = when (source) {
-                            HeatSource.MOMENTS -> Triple(AppIcons.Pen, androidx.compose.ui.res.stringResource(R.string.widget_heatmap_moments), stringResource(Res.string.widget_heatmap_moments_note))
-                            HeatSource.SPENDING -> Triple(AppIcons.Receipt, stringResource(Res.string.widget_heatmap_spending), stringResource(Res.string.widget_heatmap_spending_note))
-                            HeatSource.FOOTPRINTS -> Triple(AppIcons.Footprints, stringResource(Res.string.widget_heatmap_footprints), stringResource(Res.string.widget_heatmap_footprints_note))
-                        }
+                        val icon = source.icon
+                        val title = source.title()
+                        val supporting = source.note()
                         val selected = source == chosen
                         SegmentedListItem(
                             onClick = { onChoose(source) },

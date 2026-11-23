@@ -4,7 +4,8 @@ import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.LocalSettings
-import cc.hyoban.moments.data.spec.Module
+import cc.hyoban.moments.plugins.PhonePlugins
+import cc.hyoban.moments.plugins.Plugins
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -61,17 +62,14 @@ import java.io.InputStream
 @Composable
 fun importSources(): List<String> {
     val settings = LocalSettings.current
-    return listOfNotNull(
-        stringResource(Res.string.import_source_swarm).takeIf { settings.isOn(Module.CHECKIN) },
-        stringResource(Res.string.import_source_icost).takeIf { settings.isOn(Module.LEDGER) },
-        stringResource(Res.string.import_source_gpx).takeIf { settings.isOn(Module.FOOTPRINTS) },
-        stringResource(Res.string.import_source_footprint_csv).takeIf { settings.isOn(Module.FOOTPRINTS) },
-    )
+    val on = Plugins.all.filter { settings.isOn(it.module) }.flatMap { it.importSources } +
+        PhonePlugins.all.filter { settings.isOn(it.module) }.flatMap { it.importSources }
+    return on.map { stringResource(it) }
 }
 
 /** iCost's backup or bill export into the ledger, what it found shown before it is written. */
 @Composable
-private fun ICostGroup(container: PhoneContainer) {
+internal fun ICostGroup(container: PhoneContainer) {
     val importer = rememberICostImport(container)
     SegmentedGroup(
         stringResource(Res.string.import_ledger),
@@ -102,7 +100,7 @@ private sealed interface TrackState {
  * this app exported, or Footprint's (一生足迹) CSVs, several years' files at once.
  */
 @Composable
-private fun TrackGroup(container: PhoneContainer) {
+internal fun TrackGroup(container: PhoneContainer) {
     val context = LocalContext.current
     var state by remember { mutableStateOf<TrackState?>(null) }
     val reading = state == TrackState.Reading
@@ -190,6 +188,5 @@ private fun TrackGroup(container: PhoneContainer) {
 @Composable
 fun PhoneImportGroups(container: PhoneContainer) {
     val settings = LocalSettings.current
-    if (settings.isOn(Module.LEDGER)) ICostGroup(container)
-    if (settings.isOn(Module.FOOTPRINTS)) TrackGroup(container)
+    PhonePlugins.all.filter { settings.isOn(it.module) }.forEach { it.ImportGroup(container) }
 }

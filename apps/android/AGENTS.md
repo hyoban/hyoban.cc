@@ -65,6 +65,25 @@ SDK configured in `local.properties` (`sdk.dir=…`).
 - A declaration `:app` uses from `:shared` is public, and its tests stay in `:app` until they
   move too. A string resource is held as a `StringResource`, never an `Int`. The generators write into `:shared` (`Tokens.kt`, `AppIcons.kt`, `CopyTables.kt`,
   `Modules.kt`); the paths below are packages, in whichever module holds them.
+- A module (记录项与公开's switch, `Module`) reaches the pages every module shares through its plugin:
+  `ModulePlugin` in `:shared`'s `plugins/` (its name and icon, pages and `moments://` links, search
+  kinds, import sources, its group on 记录项与公开, its section on a Moment's page and its line on a
+  Moment's card and at its bubble's foot, its part in 写动态, its figures at a trip's head, its map
+  layer and its stops at places there (`MapStop`), each day's movement, the stops ways lead to and
+  those a trip's plan keeps (`KeptStop`), what 写动态 keeps a place alone as (`PlaceAlone`), its
+  section on 待发布 (`ChangeSection`), and its `TimelineJoin`: the records, stops, day figures and
+  day-map marks it joins to the timeline's, a trip's, a place's and a day's Moments, check-ins
+  first, then bills, then charges taking the bill at their time), `PhonePlugin` in `:app` (its row
+  on 我, its pages in the navigation, its import groups, its side key actions, its heatmap widget
+  sources, its step in 初次打开, what it draws over the map, its background work on and off) and
+  `DesktopPlugin` in `:desktop` (its sidebar section and its pages), each registered once in
+  `Plugins.all`, `PhonePlugins.all` or `DesktopPlugins.all`, whose order is the order the pages list
+  them in. A module's record (`DayRecord`) and stop (`DayAnchor`) draw themselves wherever they are
+  shown; the host pages lay them out by time and never name a module, nor does `Device`: what a
+  module's own pages need of the device goes through a local of the module's (`LocalLedgerDevice`).
+  The movement contract (`Footprints`, `TrackPoint`, how a track is drawn) and money formatting
+  (`data.money`) are shared by every page. Only a module's own pages, stores and services, and the
+  containers that wire them, read its switch directly.
 - Check the Mac app where it runs: `./gradlew :desktop:run` opens its window; look at it,
   light and dark, before saying a change to it works.
 

@@ -1,6 +1,9 @@
 package cc.hyoban.moments
 
 import cc.hyoban.moments.data.spec.Module
+import cc.hyoban.moments.plugins.Plugins
+import cc.hyoban.moments.plugins.Plugins.allowedRoute
+import cc.hyoban.moments.plugins.Plugins.moduleOf
 import cc.hyoban.moments.ui.Feed
 import cc.hyoban.moments.ui.FootprintSettings
 import cc.hyoban.moments.ui.LedgerBill
@@ -8,8 +11,6 @@ import cc.hyoban.moments.ui.LedgerHome
 import cc.hyoban.moments.ui.Moment
 import cc.hyoban.moments.ui.NewMoment
 import cc.hyoban.moments.ui.Things
-import cc.hyoban.moments.ui.allowedRoute
-import cc.hyoban.moments.ui.moduleOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -33,5 +34,10 @@ class RoutesTest {
         assertEquals(Things("car"), allowedRoute(Things("car"), isOn))
         assertEquals(Moment("x"), allowedRoute(Moment("x"), isOn))
         assertEquals(LedgerHome(1), allowedRoute(LedgerHome(1)) { true })
+    }
+
+    @Test fun `every module has one plugin`() {
+        assertEquals(Module.entries.size, Plugins.all.size)
+        assertEquals(Module.entries.toList(), Plugins.inSpecOrder.map { it.module })
     }
 }

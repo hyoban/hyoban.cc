@@ -2,7 +2,7 @@ package cc.hyoban.moments
 
 import cc.hyoban.moments.data.spec.Entries
 import cc.hyoban.moments.data.spec.MomentCost
-import cc.hyoban.moments.ui.compose.costOf
+import cc.hyoban.moments.plugins.costOf
 import cc.hyoban.moments.ui.format.formatAmount
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive

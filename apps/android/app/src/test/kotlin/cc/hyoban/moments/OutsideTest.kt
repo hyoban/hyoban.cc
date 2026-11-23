@@ -13,9 +13,9 @@ import cc.hyoban.moments.data.store.asKept
 import cc.hyoban.moments.data.store.samePart
 import cc.hyoban.moments.data.store.undo
 import cc.hyoban.moments.data.spec.Entries
-import cc.hyoban.moments.ui.publish.after
-import cc.hyoban.moments.ui.publish.before
-import cc.hyoban.moments.ui.publish.group
+import cc.hyoban.moments.plugins.after
+import cc.hyoban.moments.plugins.before
+import cc.hyoban.moments.plugins.group
 import cc.hyoban.moments.ledger.Book
 import cc.hyoban.moments.ledger.Category
 import cc.hyoban.moments.ledger.CategoryType
@@ -67,14 +67,14 @@ class OutsideTest {
     fun `a bill waiting is new, changed or going off, the site's part read back`() {
         val public = ledger(txn, public = true)
         val new = public.pendingBills().single()
-        assertEquals(cc.hyoban.moments.ui.publish.BillGroup.NEW, new.group)
+        assertEquals(cc.hyoban.moments.plugins.BillGroup.NEW, new.group)
         val published = txn.copy(published = new.part.toString(), amount = 1300)
         val changed = ledger(published, public = true).pendingBills().single()
-        assertEquals(cc.hyoban.moments.ui.publish.BillGroup.CHANGED, changed.group)
+        assertEquals(cc.hyoban.moments.plugins.BillGroup.CHANGED, changed.group)
         assertEquals(1250L, changed.before?.cents)
         assertEquals(1300L, changed.after?.cents)
         assertEquals("餐饮 › 零食", changed.before?.category)
-        assertEquals(cc.hyoban.moments.ui.publish.BillGroup.OFF, ledger(published).pendingBills().single().group)
+        assertEquals(cc.hyoban.moments.plugins.BillGroup.OFF, ledger(published).pendingBills().single().group)
     }
 
     @Test
@@ -239,7 +239,7 @@ class OutsideTest {
         assertTrue(public(published).pendingBills(mapOf(txn.id to SiteSpot(at, null))).isEmpty())
         // Two minutes later here than there, it waits, the site's time beside it.
         val moved = public(published).pendingBills(mapOf(txn.id to SiteSpot(earlier, null))).single()
-        assertEquals(cc.hyoban.moments.ui.publish.BillGroup.CHANGED, moved.group)
+        assertEquals(cc.hyoban.moments.plugins.BillGroup.CHANGED, moved.group)
         assertEquals(earlier, moved.site?.at)
         // So does one at a place the site doesn't have.
         assertEquals(1, public(published.copy(place = "p-shop")).pendingBills(mapOf(txn.id to SiteSpot(at, null))).size)

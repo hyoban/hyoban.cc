@@ -8,9 +8,6 @@ import androidx.compose.ui.draw.clip
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.theme.cardBorder
 import cc.hyoban.moments.ui.design.Spinner
-import cc.hyoban.moments.ui.feed.LinkedBills
-import cc.hyoban.moments.ledger.Txn
-import cc.hyoban.moments.ledger.Ledger
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.background
@@ -53,7 +50,6 @@ import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
 import cc.hyoban.moments.ui.format.costLine
-import cc.hyoban.moments.ui.format.module
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatTime
 import cc.hyoban.moments.ui.theme.Corners
@@ -83,19 +79,18 @@ fun MomentCard(
     selected: Boolean = false,
     /** A place the page is already of, left out of the subhead. */
     hidePlace: String? = null,
-    /** The bills written with it, listed at its foot, each opening its bill. */
-    bills: List<Txn> = emptyList(),
-    ledger: Ledger? = null,
-    onBill: (String) -> Unit = {},
+    /**
+     * What the modules have go with it (the bills linked to it, the charges at its time), each
+     * drawn by its module: in its card at its foot, or as a bubble at its foot inside it.
+     */
+    attached: List<cc.hyoban.moments.ui.feed.DayRecord> = emptyList(),
     /** As a bubble sent from the right, as the timeline and a trip are a conversation; its bills then at its foot inside it. */
     bubble: Boolean = false,
     /** As a bubble, whether the one above or below it is a Moment too, a run of them drawn together. */
     joinedAbove: Boolean = false,
     joinedBelow: Boolean = false,
-    /** As a bubble, the charges at its time, at its foot with its bills. */
-    charges: List<cc.hyoban.moments.ui.feed.Charge> = emptyList(),
 ) {
-    if (bubble) return MomentBubble(moment, places, trip, urls, onOpen, modifier, selected, hidePlace, joinedAbove, joinedBelow, bills, ledger, onBill, charges)
+    if (bubble) return MomentBubble(moment, places, trip, urls, onOpen, modifier, selected, hidePlace, joinedAbove, joinedBelow, attached)
     // The card grows into the Moment's page when opened; shown in the detail pane beside the
     // list, it is [selected], outlined in the accent, the one colour for state.
     val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
@@ -123,15 +118,13 @@ fun MomentCard(
             if (moment.text.isNotBlank()) {
                 Text(moment.text, style = AppTheme.typography.bodyReading, maxLines = 8, overflow = TextOverflow.Ellipsis)
             }
-            // What it cost, a meal's dishes or what it went on, how it was and what it came to,
-            // under the words as the site has it: a line of secondary text, while its module is
-            // on (记录项与公开: 美食 for a meal, else 花费).
+            // What the modules that are on add under the words, as the site has it: what it cost.
             val settings = LocalSettings.current
-            moment.cost?.takeIf { settings.isOn(it.module) }?.let { cost ->
-                costLine(cost)?.let { line -> QuietLine(if (cost.meal) AppIcons.Food else AppIcons.Cash, line) }
-            }
+            cc.hyoban.moments.plugins.Plugins.all.filter { settings.isOn(it.module) }.forEach { it.CardLine(moment) }
         }
-        if (bills.isNotEmpty() && ledger != null) LinkedBills(bills, ledger, onBill)
+        // What goes with it in its card, at its foot, each opening itself.
+        val inCard = attached.filter { it.inCard }
+        if (inCard.isNotEmpty()) Column(Modifier.padding(top = Space.s)) { inCard.forEach { it.AttachedRow() } }
         cc.hyoban.moments.ui.moment.MomentMenu(moment, urls, menu, onDismiss = { menu = null })
     }
 }
@@ -154,16 +147,13 @@ private fun MomentBubble(
     hidePlace: String?,
     joinedAbove: Boolean,
     joinedBelow: Boolean,
-    bills: List<Txn> = emptyList(),
-    ledger: Ledger? = null,
-    onBill: (String) -> Unit = {},
-    charges: List<cc.hyoban.moments.ui.feed.Charge> = emptyList(),
+    attached: List<cc.hyoban.moments.ui.feed.DayRecord> = emptyList(),
 ) {
-    // What it cost, with its amount, leads its linked bills at its foot, while its module is on
-    // (记录项与公开).
+    // What of its own the modules that are on put at its foot (what it cost, with its amount)
+    // leads what goes with it there.
     val settings = LocalSettings.current
-    val cost = moment.cost?.takeIf { it.amount != null && settings.isOn(it.module) }
-    val withBills = (bills.isNotEmpty() && ledger != null) || cost != null || charges.isNotEmpty()
+    val footRecords = cc.hyoban.moments.plugins.Plugins.all.filter { settings.isOn(it.module) }.mapNotNull { it.footOf(moment) } + attached
+    val withBills = footRecords.isNotEmpty()
     val ring by animateColorAsState(if (selected) tokens.accent else Color.Transparent, AppTheme.motionScheme.fastEffectsSpec(), label = "selected")
     var menu by remember { mutableStateOf<DpOffset?>(null) }
     val density = LocalDensity.current
@@ -242,7 +232,7 @@ private fun MomentBubble(
                     Box(Modifier.align(Alignment.End)) { foot() }
                 }
                 // What the meal cost and its linked bills at its foot, each bill opening its bill.
-                if (withBills) cc.hyoban.moments.ui.feed.BubbleBills(bills, ledger, onBill, Modifier.padding(top = Space.xs), time = time, cost = cost, charges = charges)
+                if (withBills) cc.hyoban.moments.ui.feed.BubbleFoot(footRecords, Modifier.padding(top = Space.xs), time = time)
             }
             cc.hyoban.moments.ui.moment.MomentMenu(moment, urls, menu, onDismiss = { menu = null })
         }
@@ -372,7 +362,7 @@ fun RisingSheet(modifier: Modifier = Modifier, content: @Composable () -> Unit) 
 
 /** A line of secondary text under a Moment's words, behind its icon. */
 @Composable
-private fun QuietLine(icon: androidx.compose.ui.graphics.vector.ImageVector, line: String) {
+internal fun QuietLine(icon: androidx.compose.ui.graphics.vector.ImageVector, line: String) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.s)) {
         Icon(icon, contentDescription = null, tint = tokens.tx2, modifier = Modifier.size(18.dp))
         Text(line, style = AppTheme.typography.body, color = tokens.tx2, maxLines = 1, overflow = TextOverflow.Ellipsis)

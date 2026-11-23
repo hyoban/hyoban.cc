@@ -294,7 +294,7 @@ class PlanChats(private val file: File, private val scope: CoroutineScope) {
             )
             suggestion.target?.let { put("target", Json.encodeToJsonElement(MomentRecord.serializer(), it)) }
             suggestion.targetPlace?.let { put("targetPlace", it) }
-            if (suggestion.checkin) put("checkin", true)
+            if (suggestion.stop) put("checkin", true)
             put("spot", spotJson(suggestion.spot))
             suggestion.added?.let { put("added", it) }
         }

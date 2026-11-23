@@ -1179,6 +1179,7 @@
     <string name="car_next_month">下个月</string>
     <string name="section_changed_checkins">签到</string>
     <string name="section_changed_things">设备与订阅</string>
+    <string name="section_changed_other">其他记录</string>
     <string name="section_changed_occasions">纪念日</string>
     <string name="occasions_title">纪念日</string>
     <string name="occasion_add">添加纪念日</string>

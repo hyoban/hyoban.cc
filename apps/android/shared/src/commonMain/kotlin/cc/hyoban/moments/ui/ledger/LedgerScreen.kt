@@ -121,7 +121,7 @@ fun LedgerScreen(
     val book = ledger.book
     var tab by rememberSaveable { mutableIntStateOf(startTab.coerceIn(0, LedgerTab.entries.lastIndex)) }
     // An empty ledger imports right here, rather than opening 记账 on top of the ledger.
-    val importer = cc.hyoban.moments.ui.LocalDevice.current.rememberLedgerImport(container)
+    val importer = LocalLedgerDevice.current?.rememberImport(container)
     val writable = container.ledger.writable
 
     // The chosen book's bills, or every book's, summed in the chosen book's currency.

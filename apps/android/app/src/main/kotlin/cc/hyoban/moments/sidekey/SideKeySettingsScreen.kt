@@ -41,7 +41,7 @@ import cc.hyoban.moments.ui.design.RadioButton
 import cc.hyoban.moments.ui.design.SegmentedListItem
 import cc.hyoban.moments.ui.settings.segmentColors
 import cc.hyoban.moments.accessibility.ShareAccessibilityService
-import cc.hyoban.moments.footprints.ActionRow
+import cc.hyoban.moments.ui.settings.ActionRow
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.components.SubPage
@@ -225,9 +225,11 @@ private fun ColumnScope.ActionChoices(current: String?, follow: String?, onPick:
     var mode by remember { mutableStateOf("actions") }
     when (mode) {
         "actions" -> Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(bottom = Space.l)) {
-            // The payment action only while the ledger is on (记录项与公开); a gesture bound to it keeps it.
-            val ledgerOn = LocalSettings.current.isOn(Module.LEDGER)
-            val choices = SideKeyActions.choices.filterKeys { it != "ledger:capture" || ledgerOn }.map { (value, label) -> value to stringResource(label) }
+            // A module's actions only while it is on (记录项与公开); a gesture bound to one keeps it.
+            val settings = LocalSettings.current
+            val choices = SideKeyActions.choices.filterKeys { value ->
+                cc.hyoban.moments.plugins.PhonePlugins.sideKeyOwner(value)?.let { settings.isOn(it.module) } ?: true
+            }.map { (value, label) -> value to stringResource(label) }
             val items = if (follow != null) listOf(null to stringResource(Res.string.side_key_follow_value, follow)) + choices else choices
             SegmentedGroup(null, null, items.map { (value, label) ->
                 { shapes ->

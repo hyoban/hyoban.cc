@@ -99,7 +99,6 @@ import cc.hyoban.moments.data.local.stamp
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
-import cc.hyoban.moments.data.things.editedEntry
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.components.SubPage
@@ -161,8 +160,8 @@ class PlanSuggestion(
     val item: PlanItem,
     val target: MomentRecord? = null,
     val targetPlace: String? = null,
-    /** The record it changes or deletes is a check-in still to come: only its time and place change, its name its place's. */
-    val checkin: Boolean = false,
+    /** The record it changes or deletes is a module's own stop still to come (a check-in): only its time and place change, its name its place's. */
+    val stop: Boolean = false,
 ) {
     var spot: PlanSpot by mutableStateOf(PlanSpot.Finding)
 
@@ -183,7 +182,7 @@ class PlanSuggestion(
     val day: String get() = if (kind == PlanChange.Delete) target!!.occurredAt.take(10) else item.day
     val time: String? get() = if (kind == PlanChange.Delete) formatTime(target!!.occurredAt) else item.time
     val text: String get() = when {
-        checkin -> (spot as? PlanSpot.At)?.name?.takeIf { kind != PlanChange.Delete } ?: targetPlace ?: item.place?.name ?: item.text
+        stop -> (spot as? PlanSpot.At)?.name?.takeIf { kind != PlanChange.Delete } ?: targetPlace ?: item.place?.name ?: item.text
         kind == PlanChange.Delete -> target!!.text.trim()
         else -> item.text
     }
@@ -351,7 +350,7 @@ fun isAhead(at: String, now: java.time.Instant = java.time.Instant.now()): Boole
     else runCatching { LocalDate.parse(at).isAfter(now.atZone(ZoneId.systemDefault()).toLocalDate()) }.getOrDefault(false)
 
 /** A record the model may change, as what it lists is matched against it: its day, time, words and place. */
-data class PlanTarget(val uid: String, val day: String, val time: String?, val text: String, val place: String?, val fix: Fix?, val checkin: Boolean = false, val locked: Boolean = false)
+data class PlanTarget(val uid: String, val day: String, val time: String?, val text: String, val place: String?, val fix: Fix?, val stop: Boolean = false, val locked: Boolean = false)
 
 /** What a listed item is to the plan as it stands. */
 sealed interface PlanMatch {
@@ -384,7 +383,7 @@ private fun minutesOf(time: String?): Int? = time?.let { runCatching { it.take(2
 fun matchPlan(item: PlanItem, plan: List<PlanTarget>, claimed: Set<String> = emptySet()): PlanMatch {
     if (item.delete) return PlanMatch.AsWritten
     val unchanged = { target: PlanTarget ->
-        target.day == item.day && target.time == item.time && (target.checkin || target.text.trim() == item.text.trim()) &&
+        target.day == item.day && target.time == item.time && (target.stop || target.text.trim() == item.text.trim()) &&
             (item.place == null || target.at(item.place))
     }
     item.edits?.let { uid ->
@@ -411,7 +410,7 @@ fun changesNothing(suggestion: PlanSuggestion): Boolean {
         else -> false
     }
     return samePlace && suggestion.item.day == target.occurredAt.take(10) && suggestion.item.time == formatTime(target.occurredAt) &&
-        (suggestion.checkin || suggestion.item.text.trim() == target.text.trim())
+        (suggestion.stop || suggestion.item.text.trim() == target.text.trim())
 }
 
 /** What came of [suggestions], an answer's list, as the model is told it; null when it listed nothing. */
@@ -432,13 +431,13 @@ fun outcomeOf(suggestions: List<PlanSuggestion>): String? {
 }
 
 /**
- * Everything [trip] holds, oldest first: its Moments, planned or lived, and its check-ins,
- * private ones too, each with its words and its place's name.
+ * Everything [trip] holds, oldest first: its Moments, planned or lived, and the modules' own
+ * [stops] (the check-ins), private ones too, each with its words and its place's name.
  */
 fun planRecords(
     trip: TripRecord,
     moments: List<MomentRecord>,
-    checkins: List<cc.hyoban.moments.data.things.Checkin>,
+    stops: List<KeptStop>,
     trips: List<TripRecord>,
     places: Map<String, Place>,
     now: java.time.Instant = java.time.Instant.now(),
@@ -450,15 +449,15 @@ fun planRecords(
         val planned = moment.planned == true
         // A locked one goes as settled, without the id it would be changed by.
         val locked = planned && moment.locked == true
-        PlanRecord(moment.occurredAt, checkin = false, moment.text.trim(), place?.name, planned, place?.fix(), id = moment.uid.takeIf { planned && !locked }, locked = locked, by = moment.reachedBy.takeIf { planned })
+        PlanRecord(moment.occurredAt, stop = null, moment.text.trim(), place?.name, planned, place?.fix(), id = moment.uid.takeIf { planned && !locked }, locked = locked, by = moment.reachedBy.takeIf { planned })
     }
-    val checkedIn = checkins.filter { it.uid !in uids && cc.hyoban.moments.data.trips.isInTrip(trip, it.at) }
+    val checkedIn = stops.filter { it.uid !in uids && cc.hyoban.moments.data.trips.isInTrip(trip, it.at) }
         .map { checkin ->
             val place = checkin.place?.let { places[it] }
             // One still to come was written down ahead, as part of the plan, and may be changed.
             // A locked one goes as settled, without its id.
             val ahead = isAhead(checkin.at, now)
-            PlanRecord(checkin.at, checkin = true, "", checkin.venue, planned = false, fix = place?.let { it.fix() }, id = checkin.uid.takeIf { ahead && !checkin.locked }, locked = ahead && checkin.locked)
+            PlanRecord(checkin.at, stop = checkin.kind, "", checkin.name, planned = false, fix = place?.let { it.fix() }, id = checkin.uid.takeIf { ahead && !checkin.locked }, locked = ahead && checkin.locked)
         }
     return (written + checkedIn).sortedBy { it.at }
 }
@@ -538,14 +537,15 @@ fun PlanChatScreen(container: AppContainer, id: String, onBack: () -> Unit, onMo
         val text = chat.draft.trim()
         if (text.isEmpty() || chat.thinking || !settings.aiReady) return@send
         messages.currentSnackbarData?.dismiss()
-        val records = planRecords(trip, container.repository.moments.value, container.repository.checkins.value.all, trips, places)
+        val stops = cc.hyoban.moments.plugins.Plugins.keptStops(container) { settings.isOn(it) }
+        val records = planRecords(trip, container.repository.moments.value, stops, trips, places)
         val now = java.time.ZonedDateTime.now()
         val context = PlanContext(trip.title, trip.start, trip.end, records, now = "${now.toOffsetDateTime().withNano(0)} ${now.zone.id}", notes = settings.aiNotes.value)
         // What came of each earlier list, told to the model in its memory of it.
         chat.noteOutcomes { outcomeOf(it.suggestions.toList()) }
         // The ways the model looked up in this conversation, to reuse for each day's driving.
         val looked = chat.lookedUpWays
-        val days = planDays(emptyList(), trip, container.repository.moments.value, container.repository.checkins.value.all, trips, places)
+        val days = planDays(emptyList(), trip, container.repository.moments.value, stops, trips, places)
         val assistant = chat.assistant(settings.aiUrl.value, settings.aiKey.value, settings.aiModel.value)
         // The question and its answer's bubble come at once, the answer saying it thinks until anything comes.
         val asked = PlanTurn.Asked(text)
@@ -561,11 +561,10 @@ fun PlanChatScreen(container: AppContainer, id: String, onBack: () -> Unit, onMo
         // What the plan holds now that may be changed: its planned Moments, by uid.
         val plannedNow = cc.hyoban.moments.data.trips.momentsOf(trip, container.repository.moments.value, trips)
             .filter { it.planned == true && it.locked != true }.associateBy { it.uid }
-        // And the check-ins still to come, as the Moments the editor opens them as: those to change, and those locked.
-        val ahead = container.repository.entries.value.values.mapNotNull { entry ->
-            val checkin = cc.hyoban.moments.data.things.checkinOf(entry) ?: return@mapNotNull null
-            if (!isAhead(checkin.at) || !cc.hyoban.moments.data.trips.isInTrip(trip, checkin.at)) return@mapNotNull null
-            cc.hyoban.moments.data.things.checkinAsMoment(entry)?.let { checkin.uid to it }
+        // And the modules' own stops still to come (the check-ins), as the Moments the editor opens them as: those to change, and those locked.
+        val ahead = stops.mapNotNull { stop ->
+            if (!isAhead(stop.at) || !cc.hyoban.moments.data.trips.isInTrip(trip, stop.at)) return@mapNotNull null
+            cc.hyoban.moments.plugins.Plugins.stopAsMoment(container, stop.uid)?.let { stop.uid to it }
         }.toMap()
         val checkinsAhead = ahead.filterValues { it.locked != true }
         // Those records as what the model lists is matched against them.
@@ -581,7 +580,7 @@ fun PlanChatScreen(container: AppContainer, id: String, onBack: () -> Unit, onMo
                 moment.text,
                 place?.name,
                 place?.let { it.fix() },
-                checkin = moment.uid in ahead,
+                stop = moment.uid in ahead,
                 locked = moment.uid in lockedNow,
             )
         }
@@ -611,7 +610,7 @@ fun PlanChatScreen(container: AppContainer, id: String, onBack: () -> Unit, onMo
             // A change that leaves the words out keeps the record's.
             if (target != null && !item.delete && item.text.isBlank()) item = item.copy(text = target.text.trim())
             val kept = target?.places?.firstOrNull()
-            val suggestion = PlanSuggestion(item, target, kept?.let { places[it]?.name }, checkin = target != null && target.uid in checkinsAhead)
+            val suggestion = PlanSuggestion(item, target, kept?.let { places[it]?.name }, stop = target != null && target.uid in checkinsAhead)
             // This answer's list stands for every earlier one's.
             if (answered.suggestions.isEmpty()) chat.turns.forEach { if (it is PlanTurn.Answered && it !== answered) it.retired = true }
             answered.suggestions += suggestion
@@ -1429,7 +1428,7 @@ fun planDays(
     suggestions: List<PlanSuggestion>,
     trip: TripRecord,
     moments: List<MomentRecord>,
-    checkins: List<cc.hyoban.moments.data.things.Checkin>,
+    stops: List<KeptStop>,
     trips: List<TripRecord>,
     places: Map<String, Place>,
 ): List<Pair<String, List<DayEntry>>> {
@@ -1453,8 +1452,8 @@ fun planDays(
         val kept = own.filter { it.occurredAt.take(10) == day && it.uid !in handled }.map { moment ->
             val place = moment.places.firstOrNull()
             DayEntry.Kept(formatTime(moment.occurredAt).orEmpty(), moment.text.trim().ifEmpty { places[place]?.name.orEmpty() }, places[place]?.name, fixOf(place), locked = moment.planned == true && moment.locked == true, by = PlanAssistant.byOf(moment.reachedBy))
-        } + checkins.filter { it.uid !in uids && it.uid !in handled && it.at.take(10) == day && cc.hyoban.moments.data.trips.isInTrip(trip, it.at) }.map { checkin ->
-            DayEntry.Kept(formatTime(checkin.at).orEmpty(), checkin.venue, null, fixOf(checkin.place), locked = checkin.locked, by = PlanAssistant.byOf(checkin.reachedBy))
+        } + stops.filter { it.uid !in uids && it.uid !in handled && it.at.take(10) == day && cc.hyoban.moments.data.trips.isInTrip(trip, it.at) }.map { checkin ->
+            DayEntry.Kept(formatTime(checkin.at).orEmpty(), checkin.name, null, fixOf(checkin.place), locked = checkin.locked, by = PlanAssistant.byOf(checkin.reachedBy))
         }
         val changes = suggestions.filter { it.day == day }.map { suggestion ->
             val fix = when (val spot = suggestion.spot) {
@@ -1598,7 +1597,8 @@ data class PlanStop(
     val reachedBy: String?,
     val uid: String = key,
     val place: String? = null,
-    val checkin: Boolean = false,
+    /** A module's own stop (a check-in) rather than a Moment. */
+    val stop: Boolean = false,
     /** Written into a plan rather than lived: its way is worked out by the routers, not the footprints. */
     val planned: Boolean = false,
 )
@@ -1713,13 +1713,14 @@ private fun PlanSheet(
     onDismiss: () -> Unit,
 ) {
     val moments by container.repository.moments.collectAsStateWithLifecycle()
-    val checkins by container.repository.checkins.collectAsStateWithLifecycle()
+    val settings = cc.hyoban.moments.ui.LocalSettings.current
+    val stops = cc.hyoban.moments.plugins.Plugins.rememberKeptStops(container) { settings.isOn(it) }
     val trips by container.repository.trips.collectAsStateWithLifecycle()
     val places by container.repository.places.collectAsStateWithLifecycle()
     // The whole plan, every day, as it would be after this answer's changes.
     // Worked out again only when the plan or this answer's rows change, not with every frame of the page under it.
-    val days by remember(turn, trip, moments, checkins, trips, places) {
-        androidx.compose.runtime.derivedStateOf { planDays(turn.suggestions.toList(), trip, moments, checkins.all, trips, places) }
+    val days by remember(turn, trip, moments, stops, trips, places) {
+        androidx.compose.runtime.derivedStateOf { planDays(turn.suggestions.toList(), trip, moments, stops, trips, places) }
     }
     val window = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height
     val density = androidx.compose.ui.platform.LocalDensity.current
@@ -1837,7 +1838,7 @@ private fun SuggestionRow(suggestion: PlanSuggestion, onAdd: (PlanSuggestion) ->
             if (target != null && !dayMoved && wasTime != null && wasTime != item.time) Text(wasTime, style = strikeCaption, color = tokens.tx3, maxLines = 1)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            if (target != null && !suggestion.checkin) {
+            if (target != null && !suggestion.stop) {
                 // The words as changed, as 发布更改 shows them: what went struck through on the fill, what came on accent-soft.
                 val before = target.text.trim()
                 val after = item.text.trim()
@@ -2061,7 +2062,7 @@ private suspend fun applyToPlan(container: AppContainer, trip: TripRecord, sugge
         occurredAt = stamp(at),
         end = end,
         places = placeIds,
-        text = if (suggestion.checkin) "" else item.text.trim(),
+        text = if (suggestion.stop) "" else item.text.trim(),
         reachedBy = if (item.by != null) by else target.reachedBy,
         updatedAt = now,
     ) ?: MomentRecord(
@@ -2074,6 +2075,6 @@ private suspend fun applyToPlan(container: AppContainer, trip: TripRecord, sugge
         createdAt = now,
         updatedAt = now,
     )
-    container.saveEntry(editedEntry(moment, spot?.name, placeChanged = target == null || placeIds != target.places), newPlace)
+    container.saveEntry(cc.hyoban.moments.ui.compose.keptEntry(moment, spot?.name, placeChanged = target == null || placeIds != target.places), newPlace)
     return moment.uid
 }

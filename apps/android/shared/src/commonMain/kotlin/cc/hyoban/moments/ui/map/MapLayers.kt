@@ -51,23 +51,27 @@ data class MapLayer(
     val toggle: () -> Unit,
 )
 
+/** Where a layer a module brings stands in 地图's layers menu: after which of the map's own. */
+enum class LayerSlot { AFTER_PLACES, AFTER_PHOTOS }
+
 /**
- * Every layer 地图 draws, in the menu's order: the places, the check-ins' places while 签到 is on,
- * the trips' routes, 相册's photos, the footprints while 足迹 is on and the device records
- * [footprints], and the fog, which [toggleFog] sweeps on and off.
+ * Every layer 地图 draws, in the menu's order: the places, then what the modules that are on
+ * bring after them (签到's check-ins), the trips' routes, 相册's photos, then what the modules
+ * bring after those (足迹's footprints, while the device records [footprints]), and the fog,
+ * which [toggleFog] sweeps on and off.
  */
-fun atlasLayers(settings: Settings, footprints: Boolean, toggleFog: () -> Unit): List<MapLayer> = listOfNotNull(
-    MapLayer(Res.string.map_layer_places, AppIcons.Map, settings.mapPlaces, "layer_places", TimedLayer.PLACES) { settings.changeMapPlaces(!settings.mapPlaces) },
-    if (settings.isOn(Module.CHECKIN)) {
-        MapLayer(Res.string.module_checkin, AppIcons.Pin, settings.mapCheckins, "layer_checkins", TimedLayer.CHECKINS) { settings.changeMapCheckins(!settings.mapCheckins) }
-    } else null,
-    MapLayer(Res.string.legend_trips, AppIcons.Route, settings.mapRoutes, "layer_routes", TimedLayer.ROUTES) { settings.changeMapRoutes(!settings.mapRoutes) },
-    MapLayer(Res.string.map_photos, AppIcons.Photos, settings.mapPhotos, "layer_photos", TimedLayer.PHOTOS) { settings.changeMapPhotos(!settings.mapPhotos) },
-    if (footprints) {
-        MapLayer(Res.string.footprints_title, AppIcons.Footprints, settings.mapFootprints, "layer_footprints", TimedLayer.FOOTPRINTS) { settings.changeMapFootprints(!settings.mapFootprints) }
-    } else null,
-    MapLayer(Res.string.map_layer_fog, AppIcons.Fog, settings.mapFog, "layer_fog", TimedLayer.FOG, toggle = toggleFog),
-)
+fun atlasLayers(settings: Settings, footprints: Boolean, toggleFog: () -> Unit): List<MapLayer> {
+    val own = cc.hyoban.moments.plugins.Plugins.all.filter { settings.isOn(it.module) }.mapNotNull { it.mapLayer(settings, footprints) }
+    fun at(slot: LayerSlot) = own.filter { it.first == slot }.map { it.second }
+    return listOf(
+        MapLayer(Res.string.map_layer_places, AppIcons.Map, settings.mapPlaces, "layer_places", TimedLayer.PLACES) { settings.changeMapPlaces(!settings.mapPlaces) },
+    ) + at(LayerSlot.AFTER_PLACES) + listOf(
+        MapLayer(Res.string.legend_trips, AppIcons.Route, settings.mapRoutes, "layer_routes", TimedLayer.ROUTES) { settings.changeMapRoutes(!settings.mapRoutes) },
+        MapLayer(Res.string.map_photos, AppIcons.Photos, settings.mapPhotos, "layer_photos", TimedLayer.PHOTOS) { settings.changeMapPhotos(!settings.mapPhotos) },
+    ) + at(LayerSlot.AFTER_PHOTOS) + listOf(
+        MapLayer(Res.string.map_layer_fog, AppIcons.Fog, settings.mapFog, "layer_fog", TimedLayer.FOG, toggle = toggleFog),
+    )
+}
 
 /** The layers 选照片's map draws besides its photos: the places and the routes, the same switches and times as 地图's. */
 fun pickerLayers(settings: Settings): List<MapLayer> = listOf(
@@ -117,7 +121,7 @@ fun MapLayersMenu(
         TimeTarget.Shared -> MapTimeSheet(stringResource(Res.string.map_time), times.shared, follow = false, remember(days, footprintDays) { days + footprintDays }, onDismiss = { choosing = null }) { times.setShared(it ?: MapTime.All) }
         is TimeTarget.Own -> {
             val layer = target.layer.timed
-            val footprints = layer == TimedLayer.FOOTPRINTS
+            val footprints = layer == TimedLayer.TRACK
             MapTimeSheet(
                 stringResource(Res.string.map_time_of, stringResource(target.layer.name)), times.own(layer), follow = true,
                 if (footprints) footprintDays else days, onDismiss = { choosing = null },

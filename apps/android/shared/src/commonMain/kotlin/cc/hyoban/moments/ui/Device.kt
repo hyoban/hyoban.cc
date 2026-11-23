@@ -18,9 +18,9 @@ import cc.hyoban.moments.ui.map.AtlasMapStateStore
 /** A point on the map, in degrees. */
 data class MapPoint(val latitude: Double, val longitude: Double)
 
-/** Something of a day marked on its track's map, by what it is: a Moment, a check-in or a bill. */
+/** Something of a day marked on its track's map, by what it is: a Moment, a stop of its own (a check-in) or a record (a bill). */
 data class DayMark(val at: MapPoint, val kind: Kind, val icon: ImageVector) {
-    enum class Kind { MOMENT, CHECKIN, BILL }
+    enum class Kind { MOMENT, STOP, RECORD }
 }
 
 /** Starts asking for where the device is; [asked] says whether it has been asked before. */
@@ -75,15 +75,12 @@ interface Device {
     @Composable fun rememberLocationAsk(onResult: (Boolean) -> Unit): LocationAsk
 
     /**
-     * The atlas's footprints and their panel, given to [content]; null on a device that records
-     * none, [onSettings] opening their settings. A stay tapped on the map is written at
-     * ([onWriteAtStay]), or opens the check-in kept over it ([onCheckin]).
+     * What a module of the device's own draws over the atlas (the phone's footprints) and its
+     * panel, given to [content]; null on a device with none, or with its module off.
      */
-    @Composable fun FootprintsOnMap(
+    @Composable fun MapOverlay(
         container: AppContainer,
-        onSettings: () -> Unit,
-        onWriteAtStay: (StayAt) -> Unit,
-        onCheckin: (String) -> Unit,
+        actions: cc.hyoban.moments.ui.map.MapOverlayActions,
         content: @Composable (cc.hyoban.moments.ui.map.AtlasFootprintsOnMap?) -> Unit,
     ) = content(null)
 
@@ -132,12 +129,6 @@ interface Device {
 
     /** What [media] says of itself, in the panel under the viewer. */
 
-    /** Bringing a ledger in from another app, for an empty one; null where the device keeps none to write. */
-    @Composable fun rememberLedgerImport(container: AppContainer): LedgerImport? = null
-
-    /** Where a bill with no place of its own was, from the device's check-ins and footprints; null where it can't tell. */
-    @Composable fun billSpot(txn: cc.hyoban.moments.ledger.Txn): cc.hyoban.moments.footprints.BillSpot? = null
-
     /** Choosing a file of [types] (media types, or a name's ending): what the returned call opens, its address told to [onPicked]. */
     @Composable fun rememberFilePicker(types: List<String>, onPicked: (String) -> Unit): () -> Unit
 
@@ -147,11 +138,8 @@ interface Device {
     /** Whether [ImportGroups] has anything to offer with these modules on. */
     fun importsMore(settings: cc.hyoban.moments.Settings): Boolean = false
 
-    /** Whether the device records footprints itself, 初次打开 then asking about them. */
-    val recordsFootprints: Boolean get() = false
-
-    /** 初次打开's footprints step, where the device records them. */
-    @Composable fun OnboardingFootprints(container: AppContainer, onBack: () -> Unit, onDone: () -> Unit) {}
+    /** The modules' own steps in 初次打开 on this device, after where to start (the phone's footprints), each shown while its module is on. */
+    val moduleSteps: List<ModuleStep> get() = emptyList()
 
     /** More ways to start in 初次打开, beside a site, an import and nothing (a computer's: the phone's backup); [next] goes on. */
     @Composable fun onboardingStarts(container: AppContainer, next: () -> Unit): List<cc.hyoban.moments.ui.settings.Segment> = emptyList()
@@ -183,8 +171,8 @@ interface Device {
 
 val LocalDevice = staticCompositionLocalOf<Device> { error("No device provided") }
 
-/** Bringing a ledger in from a file: [pick] chooses it, [Dialog] asks what to do with what was found. */
-class LedgerImport(val pick: () -> Unit, val Dialog: @Composable () -> Unit)
+/** A module's step in 初次打开 on a device: its page, going [onBack] to where to start or on with [onDone]. */
+class ModuleStep(val module: cc.hyoban.moments.data.spec.Module, val Page: @Composable (container: AppContainer, onBack: () -> Unit, onDone: () -> Unit) -> Unit)
 
 /** A photo or video the camera app kept, [bytes] its size as now written. */
 data class CameraShot(val ref: cc.hyoban.moments.data.local.PhotoRef, val bytes: Long)

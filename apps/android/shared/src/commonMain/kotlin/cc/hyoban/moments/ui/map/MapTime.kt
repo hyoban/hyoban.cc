@@ -33,7 +33,7 @@ import cc.hyoban.moments.ui.feed.SelectedCheck
 import cc.hyoban.moments.ui.format.formatDate
 import cc.hyoban.moments.ui.format.formatMonthOnly
 import cc.hyoban.moments.ui.format.formatYearMonth
-import cc.hyoban.moments.footprints.ActionRow
+import cc.hyoban.moments.ui.settings.ActionRow
 import cc.hyoban.moments.ui.settings.SegmentedGroup
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
@@ -107,7 +107,7 @@ sealed interface MapTime {
 }
 
 /** The layers that take a time of their own, each following every layer's until given one. */
-enum class TimedLayer(val key: String) { PLACES("places"), CHECKINS("checkins"), ROUTES("routes"), PHOTOS("photos"), FOOTPRINTS("footprints"), FOG("fog") }
+enum class TimedLayer(val key: String) { PLACES("places"), STOPS("checkins"), ROUTES("routes"), PHOTOS("photos"), TRACK("footprints"), FOG("fog") }
 
 /** Every layer's time, as the settings keep it. */
 class MapTimes(private val settings: Settings) {
@@ -288,20 +288,20 @@ fun keptIn(
     timeOf: (TimedLayer) -> MapTime,
     places: List<MapPlace>,
     trips: List<cc.hyoban.moments.data.spec.TripRecord>,
-    checkins: Boolean,
+    stops: Boolean,
     today: LocalDate = LocalDate.now(),
-    /** Whether 地点 is drawn: off, the places are kept by their check-ins alone. */
+    /** Whether 地点 is drawn: off, the places are kept by the modules' stops there (their check-ins) alone. */
     moments: Boolean = true,
 ): AtlasKept {
     fun inside(days: List<LocalDate>, range: ClosedRange<LocalDate>?) = days.isNotEmpty() && (range == null || days.any { it in range })
     fun keep(byMoments: Boolean, momentDays: ClosedRange<LocalDate>?, visits: ClosedRange<LocalDate>?) =
-        places.filter { (byMoments && inside(it.momentDays, momentDays)) || (checkins && inside(it.checkinDays, visits)) }
+        places.filter { (byMoments && inside(it.momentDays, momentDays)) || (stops && inside(it.stopDays, visits)) }
     val placeDays = timeOf(TimedLayer.PLACES).days(today)
-    val checkinDays = timeOf(TimedLayer.CHECKINS).days(today)
+    val stopDays = timeOf(TimedLayer.STOPS).days(today)
     val routeDays = timeOf(TimedLayer.ROUTES).days(today)
     val fogDays = timeOf(TimedLayer.FOG).days(today)
     return AtlasKept(
-        places = if ((placeDays == null || !moments) && (checkinDays == null || !checkins)) null else keep(moments, placeDays, checkinDays).mapTo(HashSet()) { it.id },
+        places = if ((placeDays == null || !moments) && (stopDays == null || !stops)) null else keep(moments, placeDays, stopDays).mapTo(HashSet()) { it.id },
         trips = routeDays?.let { range -> trips.filter { dayOf(it.start) <= range.endInclusive && dayOf(it.end) >= range.start }.mapTo(HashSet()) { it.id } },
         routeDays = routeDays,
         photoDays = timeOf(TimedLayer.PHOTOS).days(today),
@@ -322,8 +322,8 @@ fun footprintSelection(time: MapTime, today: LocalDate = LocalDate.now(), zone: 
 
 /**
  * The places of the layers drawn: every place while 地点 is ([moments]), else those with a
- * check-in while 签到 is ([checkins]), and the [open] one whatever is drawn. Null while it is
+ * stop of a module's own (a check-in) while its layer is ([stops]), and the [open] one whatever is drawn. Null while it is
  * every place given, so the prepared data still serves.
  */
-fun layerPlaces(places: List<MapPlace>, moments: Boolean, checkins: Boolean, open: String?): List<MapPlace>? =
-    if (moments) null else places.filter { (checkins && it.checkinDays.isNotEmpty()) || it.id == open }
+fun layerPlaces(places: List<MapPlace>, moments: Boolean, stops: Boolean, open: String?): List<MapPlace>? =
+    if (moments) null else places.filter { (stops && it.stopDays.isNotEmpty()) || it.id == open }

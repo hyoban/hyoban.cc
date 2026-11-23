@@ -5,9 +5,10 @@ import cc.hyoban.moments.res.*
 
 
 internal object SideKeyActions {
-    val choices = linkedMapOf(
+    /** Every action, the modules' own after 无 whether they are on or off, so a gesture bound to one keeps it. */
+    val choices: Map<String, StringResource> = linkedMapOf(
         "none" to Res.string.side_key_none,
-        "ledger:capture" to Res.string.side_key_payment,
+    ) + cc.hyoban.moments.plugins.PhonePlugins.all.flatMap { it.sideKeyActions.entries.map { (key, label) -> key to label } } + linkedMapOf(
         "device:torch" to Res.string.side_key_torch,
         "app" to Res.string.side_key_app,
         "uri" to Res.string.side_key_link,

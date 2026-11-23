@@ -361,14 +361,12 @@ internal object SideKeys {
                         report(textOf(Res.string.side_key_torch_unavailable), true)
                     }
                 }
-                action == "ledger:capture" -> {
-                    // Bound still, so it is there again when the ledger is turned back on.
-                    if (!(context.applicationContext as cc.hyoban.moments.MomentsApplication).container.settings.isOn(Module.LEDGER)) {
-                        report(textOf(Res.string.side_key_ledger_off), true)
-                    } else {
-                        val result = ShareAccessibilityService.capturePayment()
-                        report(textOf(result.message), result != cc.hyoban.moments.accessibility.PaymentCapture.OPENED)
-                    }
+                cc.hyoban.moments.plugins.PhonePlugins.sideKeyOwner(action) != null -> {
+                    // A module's own, bound still while it is off, so it is there again when it is turned back on.
+                    val plugin = cc.hyoban.moments.plugins.PhonePlugins.sideKeyOwner(action)!!
+                    val on = (context.applicationContext as cc.hyoban.moments.MomentsApplication).container.settings.isOn(plugin.module)
+                    val (message, toast) = plugin.sideKey(action, on)
+                    report(message, toast)
                 }
                 action.startsWith("media:") -> {
                     val bridge = checkNotNull(remote)

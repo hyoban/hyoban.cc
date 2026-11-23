@@ -15,9 +15,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import cc.hyoban.moments.ui.feed.Charge
+import cc.hyoban.moments.plugins.Charge
+import cc.hyoban.moments.plugins.ChargeRecord
 import cc.hyoban.moments.ui.feed.DayItem
-import cc.hyoban.moments.ui.feed.ThingRecord
+import cc.hyoban.moments.plugins.ThingRecord
 import cc.hyoban.moments.ui.feed.dayItems
 
 /** The devices, subscriptions and the car's statistics, as the 设备, 订阅 and 车 pages read and write them. */
@@ -123,8 +124,8 @@ class ThingsTest {
     fun `a device or a subscription has its day alone, so it is the earliest of its day`() {
         val charge = Charge("c", "2026-10-05T08:55+08:00", dc = true, kwh = 71.8, minutes = 34)
         val renewal = ThingRecord("s", "2026-10-05", device = false, bought = false, name = "ChatGPT Plus", price = 200.0, currency = "USD")
-        val items = dayItems(emptyList(), emptyList(), listOf(charge), listOf(renewal))
+        val items = dayItems(emptyList(), listOf(ChargeRecord(charge, null), renewal))
         assertEquals(listOf("charge-c", "thing-s"), items.map { it.key })
-        assertTrue(items.last() is DayItem.ThingItem)
+        assertTrue((items.last() as DayItem.Record).record is ThingRecord)
     }
 }

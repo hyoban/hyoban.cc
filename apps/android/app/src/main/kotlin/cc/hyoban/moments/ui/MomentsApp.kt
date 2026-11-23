@@ -139,7 +139,8 @@ import androidx.navigation.toRoute
 import cc.hyoban.moments.PhoneContainer
 import cc.hyoban.moments.MainActivity
 import cc.hyoban.moments.Settings
-import cc.hyoban.moments.data.spec.Module
+import cc.hyoban.moments.plugins.AppLink
+import cc.hyoban.moments.plugins.Plugins
 import cc.hyoban.moments.data.spec.MomentRecord
 import cc.hyoban.moments.data.spec.Place
 import cc.hyoban.moments.data.spec.TripRecord
@@ -168,7 +169,6 @@ import cc.hyoban.moments.ui.moment.MomentScreen
 import cc.hyoban.moments.ui.publish.ChangesScreen
 import cc.hyoban.moments.ui.settings.SyncScreen
 import cc.hyoban.moments.footprints.FootprintSettingsScreen
-import cc.hyoban.moments.ledger.TxnKind
 import cc.hyoban.moments.ui.ledger.AccountEditScreen
 import cc.hyoban.moments.ui.ledger.AccountScreen
 import cc.hyoban.moments.ui.ledger.BillScreen
@@ -479,7 +479,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
             } else if (intent.data?.host == ONBOARDING_HOST) {
                 onboarding = true
             } else {
-                val route = intent.data?.let(::routeOf)?.let { allowedRoute(it, container.settings::isOn) } ?: return@collect
+                val route = intent.data?.let(::routeOf)?.let { Plugins.allowedRoute(it, container.settings::isOn) } ?: return@collect
                 viewer = null
                 val tab = Tab.entries.indexOfFirst { it.route == route }
                 if (tab >= 0) selectTab(tab) else navController.goTo(opened(route))
@@ -523,6 +523,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                         LocalMomentActions provides momentActions,
                         LocalNavController provides navController,
                         LocalLedgerNav provides ledgerNav,
+                        cc.hyoban.moments.ui.ledger.LocalLedgerDevice provides cc.hyoban.moments.plugins.PhoneLedgerDevice,
                         cc.hyoban.moments.ui.feed.LocalThingNav provides thingNav,
                         cc.hyoban.moments.ui.feed.LocalCheckinNav provides checkinNav,
                     ) {
@@ -554,10 +555,12 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                         onSearch = { navController.navigate(Search) },
                                         focus = mapFocus,
                                         onFocused = { mapFocus = null },
-                                        onFootprintSettings = { navController.navigate(FootprintSettings) },
-                                        onWriteAtStay = { navController.navigate(opened(NewMoment(stay = it.encoded))) },
+                                        overlay = cc.hyoban.moments.ui.map.MapOverlayActions(
+                                            navigate = { navController.navigate(it) },
+                                            writeAt = { navController.navigate(opened(NewMoment(stay = it.encoded))) },
+                                            openStop = checkinNav,
+                                        ),
                                         onWrite = { navController.navigate(opened(NewMoment())) },
-                                        onCheckin = checkinNav,
                                         onNewTrip = { navController.navigate(TripEdit()) },
                                         onSuggestedTrip = { navController.navigate(TripEdit(start = it.startAt, end = it.endAt, title = it.name, from = it.from, to = it.to)) },
                                         active = { atlasActive },
@@ -686,8 +689,11 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                         container,
                                         MeRoutes(
                                             changes = { navController.navigate(Changes) },
-                                            ledger = { navController.goTo(LedgerHome(it)) },
-                                            footprints = { showOnMap(MapFocus.Footprints) },
+                                            modules = cc.hyoban.moments.plugins.MeNav(
+                                                navigate = { navController.navigate(it) },
+                                                goTo = { navController.goTo(it) },
+                                                showOverlay = { showOnMap(MapFocus.Overlay) },
+                                            ),
                                             items = { navController.navigate(Items) },
                                             homes = { navController.navigate(Homes) },
                                             sync = { navController.navigate(SyncSettings) },
@@ -695,8 +701,6 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                             sideKey = { navController.navigate(SideKeySettings) },
                                             camera = { navController.navigate(CameraSettings) },
                                             albums = { navController.navigate(GalleryAlbums) },
-                                            things = { navController.navigate(Things()) },
-                                            occasions = { navController.navigate(Occasions()) },
                                         ),
                                     )
                                 }
@@ -728,15 +732,9 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                     val route = entry.toRoute<Things>()
                                     cc.hyoban.moments.ui.things.ThingsScreen(container, onBack = back, onDay = openDay, kind = ThingKind.of(route.kind), open = route.open)
                                 }
-                                screen<Occasions> { entry ->
-                                    cc.hyoban.moments.ui.occasions.OccasionsScreen(container, onBack = back, open = entry.toRoute<Occasions>().open)
-                                }
-                                screen<FootprintSettings> {
-                                    FootprintSettingsScreen(container, onBack = back)
-                                }
                                 screen<NewMoment> { entry ->
                                     val route = entry.toRoute<NewMoment>()
-                                    NewMomentScreen(container, onBack = back, onSaved = back, startWithBill = route.bill, stay = StayAt.of(route.stay), plan = route.plan)
+                                    NewMomentScreen(container, onBack = back, onSaved = back, alone = cc.hyoban.moments.plugins.LedgerPlugin.BILL_PART.takeIf { route.bill }, stay = StayAt.of(route.stay), plan = route.plan)
                                 }
                                 screen<EditMoment> { entry ->
                                     NewMomentScreen(
@@ -763,7 +761,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                                 onSaved = back,
                                                 edit = edit,
                                                 onDeleted = leaveMoment,
-                                                startWithBill = route.bill,
+                                                alone = cc.hyoban.moments.plugins.LedgerPlugin.BILL_PART.takeIf { route.bill },
                                                 stay = StayAt.of(route.stay),
                                                 plan = route.plan,
                                             )
@@ -771,46 +769,14 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                     }
                                 }
                                 screen<Search> {
-                                    SearchScreen(container, onMoment = openMoment, onBack = back, onBill = { ledgerNav.bill(it) })
+                                    SearchScreen(container, onMoment = openMoment, onBack = back)
                                 }
                                 screen<Changes> {
-                                    ChangesScreen(container, onMoment = openMoment, onBack = back, onBill = { ledgerNav.bill(it) })
+                                    ChangesScreen(container, onMoment = openMoment, onBack = back)
                                 }
-                                screen<LedgerHome> { entry ->
-                                    LedgerScreen(container, ledgerNav, startTab = entry.toRoute<LedgerHome>().tab)
-                                }
-                                // A payment's from 自动记账's notification opening the app, with what it read.
-                                screen<LedgerEntry> { entry ->
-                                    val route = entry.toRoute<LedgerEntry>()
-                                    EntryScreen(
-                                        container,
-                                        LedgerEntryArgs(
-                                            route.edit, route.kind?.let(TxnKind::of), route.related, route.moment, route.date, route.account,
-                                            route.amount?.toLongOrNull(), route.time?.toLongOrNull(), route.note, route.category,
-                                        ),
-                                        ledgerNav,
-                                    )
-                                }
-                                screen<LedgerBill> { entry ->
-                                    BillScreen(container, entry.toRoute<LedgerBill>().id, ledgerNav)
-                                }
-                                screen<LedgerAccount> { entry ->
-                                    AccountScreen(container, entry.toRoute<LedgerAccount>().id, ledgerNav)
-                                }
-                                screen<LedgerAccountEdit> { entry ->
-                                    AccountEditScreen(container, entry.toRoute<LedgerAccountEdit>().id, ledgerNav)
-                                }
-                                screen<LedgerSettings> { entry ->
-                                    LedgerSettingsScreen(container, ledgerNav, startImport = entry.toRoute<LedgerSettings>().import)
-                                }
-                                screen<LedgerList> { entry ->
-                                    val route = entry.toRoute<LedgerList>()
-                                    LedgerListScreen(
-                                        container,
-                                        LedgerFilter(route.title, route.book, route.account, route.category, route.categoryName, route.trip, route.place, route.day, route.period, route.search),
-                                        ledgerNav,
-                                    )
-                                }
+                                // The modules' own pages, each registered by its plugin.
+                                val modulePages = cc.hyoban.moments.plugins.PhonePages(container, back, ledgerNav, openDay)
+                                cc.hyoban.moments.plugins.PhonePlugins.all.forEach { plugin -> with(plugin) { pages(modulePages) } }
                             }
                         }
                         val viewModelStore = checkNotNull(LocalViewModelStoreOwner.current).viewModelStore
@@ -1081,42 +1047,13 @@ fun pagesOf(route: Any): List<Any> {
 private fun tabOf(route: Any): Any = when (route) {
     Feed, Atlas, Album, Preferences -> route
     is Trip, is TripEdit, is TripPlay, is PlaceMoments -> Atlas
-    SyncSettings, NoteSignIn, Imports, FootprintSettings, SideKeySettings, CameraSettings, GalleryAlbums, Items, Homes, Changes, is Things, is Occasions,
-    is LedgerHome, is LedgerEntry, is LedgerBill, is LedgerAccount, is LedgerAccountEdit, is LedgerSettings, is LedgerList,
-    -> Preferences
-    else -> Feed
+    SyncSettings, NoteSignIn, Imports, SideKeySettings, CameraSettings, GalleryAlbums, Items, Homes, Changes, is Things -> Preferences
+    // The modules' own pages are 我's.
+    else -> if (cc.hyoban.moments.plugins.Plugins.moduleOf(route) != null) Preferences else Feed
 }
 
 /** The link that opens 初次打开 again. */
 private const val ONBOARDING_HOST = "onboarding"
-
-/**
- * The module a page is of (记录项与公开), or null for one that is every module's: the ledger's
- * pages, the footprints' settings, and the things, the car's page the car's. Every page of a
- * module, however reached, is put away with it ([allowedRoute]); the pages of none stay.
- */
-fun moduleOf(route: Any): Module? = when (route) {
-    is LedgerHome, is LedgerEntry, is LedgerBill, is LedgerAccount, is LedgerAccountEdit, is LedgerSettings, is LedgerList -> Module.LEDGER
-    FootprintSettings -> Module.FOOTPRINTS
-    is Things -> when (route.kind) {
-        "car" -> Module.CAR
-        null -> null
-        else -> Module.THINGS
-    }
-    is Occasions -> Module.OCCASIONS
-    else -> null
-}
-
-/**
- * [route] as the modules allow, [isOn] saying which are: a page of a module that is off is put
- * away with it, so a link to it (a widget's, `moments://ledger`, a notification's) opens the
- * Moments instead, and a bill to write alone with the ledger off opens a Moment to write.
- */
-fun allowedRoute(route: Any, isOn: (Module) -> Boolean): Any = when {
-    route is NewMoment && route.bill && !isOn(Module.LEDGER) -> NewMoment()
-    moduleOf(route)?.let(isOn) == false -> Feed
-    else -> route
-}
 
 /** The page a link opens, `moments://moment/{uid}` and the rest; null for one the app has no page for. */
 
@@ -1132,39 +1069,23 @@ fun routeOf(link: Uri): Any? {
         "settings" -> Preferences
         "sync" -> SyncSettings
         "import" -> Imports
-        "footprints" -> Atlas
-        "footprint-settings" -> FootprintSettings
         "items" -> Items
         "homes" -> Homes
         "side-key" -> SideKeySettings
         "camera" -> CameraSettings
         "albums" -> GalleryAlbums
-        "devices", "subscriptions", "car" -> Things(link.host)
-        "occasions" -> Occasions(id)
         "new" -> NewMoment()
         "edit" -> id?.let(::EditMoment)
         "changes" -> Changes
         "search" -> Search
-        // The ledger's sums, as 我 opens them.
-        "ledger" -> LedgerHome(1)
-        "new-bill" -> NewMoment(bill = true)
-        "payment" -> LedgerEntry(
-            account = link.getQueryParameter("account"),
-            amount = link.getQueryParameter("amount"),
-            time = link.getQueryParameter("time"),
-            note = link.getQueryParameter("note"),
-            category = link.getQueryParameter("category"),
-        )
-        "bill" -> id?.let(::LedgerBill)
-        "account" -> id?.let(::LedgerAccount)
-        "ledger-settings" -> LedgerSettings()
         "moment" -> id?.let(::Moment)
         "trip" -> id?.let(::Trip)
         "play" -> id?.let(::TripPlay)
         "trip-edit" -> TripEdit(id)
         "day" -> id?.let(::Day)
         "place" -> id?.let(::PlaceMoments)
-        else -> null
+        // The modules' own pages, while they are on (Plugins.allowedRoute).
+        else -> Plugins.routeOf(AppLink(link.host ?: return null, id, link::getQueryParameter))
     }
 }
 
@@ -1176,14 +1097,18 @@ private val NavController.backStack: StateFlow<List<NavBackStackEntry>>
     @SuppressLint("RestrictedApi") get() = currentBackStack
 
 /** A page, with what the tabs cover of it when it is a tab's. */
-private inline fun <reified T : Any> NavGraphBuilder.screen(noinline content: @Composable (NavBackStackEntry) -> Unit) {
-    composable<T> { entry ->
-        val tab = Tab.entries.any { entry.destination.hasRoute(it.type) }
-        val room = LocalTabClearance.current
-        CompositionLocalProvider(
-            LocalNavAnimatedScope provides this,
-            LocalBottomClearance provides if (tab) room.bottom else 0.dp,
-            LocalFabClearance provides if (tab) room.fab else 0.dp,
-        ) { content(entry) }
-    }
+internal inline fun <reified T : Any> NavGraphBuilder.screen(noinline content: @Composable (NavBackStackEntry) -> Unit) {
+    composable<T> { entry -> ScreenFrame(this, entry, content) }
+}
+
+/** A page as [screen] draws it: clear of the tabs when it is a tab's, in its navigation's motion. */
+@Composable
+internal fun ScreenFrame(scope: androidx.compose.animation.AnimatedContentScope, entry: NavBackStackEntry, content: @Composable (NavBackStackEntry) -> Unit) {
+    val tab = Tab.entries.any { entry.destination.hasRoute(it.type) }
+    val room = LocalTabClearance.current
+    CompositionLocalProvider(
+        LocalNavAnimatedScope provides scope,
+        LocalBottomClearance provides if (tab) room.bottom else 0.dp,
+        LocalFabClearance provides if (tab) room.fab else 0.dp,
+    ) { content(entry) }
 }
