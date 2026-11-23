@@ -1,10 +1,13 @@
 # Zeekr statistics
 
-Vehicle statistics captured from the owner's Zeekr app. The months, assisted-driving
-observations and captures are kept in the API's D1 too, and `vp run data:export` writes them
-back here; the expenses, sources and validation stay only in the repository. Git keeps this
-directory, unlike the rest of `data/`. Only an import
-changes the statistics, the app included; the expenses are edited by hand. Schemas live in `packages/data-spec/src/vehicle.ts`.
+Vehicle statistics captured from the owner's Zeekr app. Unlike the rest of `data/`, git
+keeps this directory. Schemas live in `packages/data-spec/src/vehicle.ts`.
+
+- The months, assisted-driving observations and captures are also in the API's D1;
+  `vp run data:export` writes them back here.
+- The expenses, sources and validation live only in the repository.
+- Only an import changes the statistics; nothing edits them by hand, the app included. The
+  expenses are edited by hand.
 
 ## Public and private data
 
@@ -75,17 +78,18 @@ fields. The total is preserved without inventing a split.
 
 ## Expenses
 
-`expenses/zeekr-007gt.json` is the car's spending from the iCost bookkeeping
-app, from the car's deposit on, converted once from an export. Each has its time (`+08:00`), `amount` in yuan, an
-English `category` and optional `subcategory`, and a note of what was bought
-or serviced. `refunds` lists what later came back of it, a refund, subsidy or
-cashback, each with its time, so the refund lines themselves are not kept. Neither are the
-workbook, income, how the car was financed (its down payment and loan are one
-购车款 line, its repayments are left out), accounts, tags, discounts, or one
-unexplained USD payment. Like the app's records, the ledger leaves out where
-the car was: parking, toll and charging lines have no note, and no note names
-a shop's city, so payment times stay the only trace. The zeekr conversion does
-not touch this file; edit it by hand.
+`expenses/zeekr-007gt.json` is the car's spending from the iCost bookkeeping app, from the
+deposit on, converted once from an export. The zeekr conversion doesn't touch it; edit it by
+hand.
+
+- Each expense has its time (`+08:00`), `amount` in yuan, an English `category`, an
+  optional `subcategory`, and a note of what was bought or serviced.
+- `refunds` lists what later came back of it (a refund, subsidy or cashback), each with its
+  time. The refund lines themselves are not kept.
+- Also left out: the workbook, income, financing (the down payment and loan are one 购车款
+  line; repayments are dropped), accounts, tags, discounts, and one unexplained USD payment.
+- No location: parking, toll and charging lines have no note, and no note names a shop's
+  city, so payment times are the only trace.
 
 ## Prepare, convert and verify
 
@@ -100,13 +104,16 @@ vp run zeekr:entries --write
 ```
 
 `zeekr:entries` turns each charging session into an entry with a `charge` part under
-`data/entries` (no place, its uid made from when it started, naming the car and its
-source), adding the new ones and bringing the rest up to date; the API turns away any
-other edit of them. A charge whose figures didn't change keeps the capture it was first
-read from. The car's app sometimes lists one session twice, with the same start, energy
-and time: the months keep both rows as captured, and `zeekr:entries` makes one entry of
-them and names them; two rows that start together with different figures stop it. After `vp run data:export`, send the new and changed entries and the
-statistics with `vp run data:push <the files>`.
+`data/entries`: no place, a uid derived from its start time, naming the car and its source.
+It adds new entries and updates the rest; the API rejects any other edit of them. A charge
+whose figures didn't change keeps the capture it was first read from.
+
+The car's app sometimes lists one session twice, with the same start, energy and time. The
+months keep both rows as captured; `zeekr:entries` makes one entry naming both. Two rows
+with the same start and different figures stop it.
+
+After `vp run data:export`, send the new and changed entries and the statistics with
+`vp run data:push <the files>`.
 
 Preparation only retains known statistical fields and screen text; unexpected text
 inside retained fields causes an error. Conversion and checking refuse unredacted

@@ -1,1089 +1,147 @@
-# Here, Moments for Android
+# Here for Android and Mac
 
-The app that keeps the site's Moments, places and trips on the phone, lets new ones be
-written there, and adds what stays the phone's own: a ledger and GPS footprints. Its look
-is the app's design system (the 「Here App 设计系统」 artifact, carried out in `ui/design` and `ui/theme`).
+Here keeps the site's Moments, places and trips on the phone, lets new ones be written there,
+and adds what stays on the phone: a ledger and GPS footprints. Its look is the app's design
+system (the 「Here App 设计系统」 artifact, implemented in `ui/design` and `ui/theme`). The same
+Gradle project builds the Mac app (`:desktop`).
 
-## Reading
+## Data and sync
 
-It works on the phone alone: the build names no API, so until an API's address and its
-token, which every request needs, are set under 我 → 同步与来源, it asks nothing of one and
-everything written stays on the phone. With them it reads the API (`apps/api`) and keeps a
-copy of every row D1 has but the trips' routes, in the same tables (`copy.db`, out of the
-backup, its tables generated from `@hyoban/data-spec/tables` into
-`data/copy/CopyTables.kt`), so it opens at once and works offline. A sync rebuilds what the
-screens show only from the rows it brought, and skips a table the copy doesn't keep. The
-copy only follows the API: each start, each pull down on a list, and 刷新 in 我 → 同步与来源, and
-each publish ask only for the rows changed since, from `/v2/rows`. The screens take the
-entries as Moments when they have words and as they are otherwise (charges, public bills,
-marks), with the places and collections; the trips are worked out from the
-collections and their marks, as the spec's `collectionToTrip` does. It is the platform's
-SQLite, through `androidx.sqlite`'s driver: from Android 12, the oldest the app runs on, it
-has the tables' generated columns. The routes (`GET /v2/routes`) are asked for again only
-when the API's revision has moved on. A new API, set in 同步与来源, drops the copy and reads
-everything again.
-
-A trip the API hasn't routed, every trip without an API and one made on the phone with one,
-is routed on the phone the way the API routes the rest (`data/trips/PhoneRoutes.kt`): its
-drives along the road FOSSGIS's public Valhalla finds, without the spurs it drives on and back at
-a leg's ends to reach a place across the road, its trains along the rail line
-OpenRailRouting finds between the places' stations, its ferries and flights straight. Neither
-asks for a key. The legs are asked for one at a time, a second apart, once a trip's stops have
-stayed put for two seconds, and kept in `phone-routes.json` by the API's keys; a leg with no way
-along it is drawn straight and not asked for again, and one that failed is asked for the next
-time the trips change.
-
-A trip the device kept footprints over, from when it began to when it ended (its whole days
-where those aren't known), is drawn and played along them instead, on the device alone
-(`data/trips/FootprintRoutes.kt`): each recorded stretch a line of its own, simplified as the
-routers' are, read again at most every two seconds while a recording adds to it. The site still
-draws it along the roads.
-
-## First run and permissions
-
-The first time the app opens with no API set, 初次打开 (`ui/onboarding`) goes over it once:
-where to start (连接我的网站 with the API's address and token, which reads everything in the
-background and is forgotten again if it can't be read; 从别的 App 导入, the 导入 page with 继续 at
-its foot; or 从空白开始), then 记录足迹, the only place it asks for location, and only when
-footprints are turned on. Given location only while in use, it says recording stops in the
-background and links to the system's settings. `moments://onboarding` shows it again.
-
-Every other permission is asked where it is used, with a `PermissionSheet` first saying what it
-is for and what stays on the phone (`rememberPermissionAsk` in `ui/components/Permissions.kt`):
-location from the map's locate button and the place picker (which asks on opening only the first
-time, and otherwise lists 定位没有打开 at the top), where photos were taken before the first pick,
-location and notifications for footprints, physical activity for 活动识别增强, Nearby devices for a
-Bluetooth device in 连接自动控制. Refused for good, the sheet's button opens the app's settings
-instead, and coming back carries on. Location 始终允许, the accessibility service for 自动记账 and
-Shizuku for 侧键 are the system's settings to give: their sheets name the way there. 足迹记录 lists
-what recording is missing in 需要 at its top. Notifications for publishing are asked directly.
-
-## Pages
-
-Four tabs float at the foot of the screen (时间线, 地图, 相册 and 我), with 记录 beside them; on a window 840dp wide or
-more, or a phone on its side, the same capsule stands on its end down the side, 记录 under it:
-on a phone on its side, down the side away from the camera, so it reads the same turned
-either way. On a phone on its side the status and navigation bars are put away (a swipe from
-the edge shows them), the timeline is a conversation beside the tabs with the day it has
-scrolled to on a map filling the rest, the map's trips float in a card beside the tabs, and
-sheets slide in from the side. A Moment's photo, a day's footprints, a trip's route and a
-place's map take the half on the camera's side, running under its cutout, as does the
-timeline's map of the day, and the playback's card stands across from the camera, the whole
-height, always open; 记录, 编辑旅程 and 搜索 (its filters) stand in two columns; the ledger, 发布更改, a
-bill, 设备, 订阅 and 车 keep their figures in a column at the left beside their list, the
-ledger's segments in the bar; 我 is two columns; 记一笔's keys take the right half; 记录 is a page
-rather than a dialog. Controls keep clear of the camera's cutout on whichever side it is.
-
-- **时间线** is everything from the oldest down to the newest, as a conversation with
-  oneself, opening at its end, today, and staying there as new records come while it is
-  read there; the tab tapped again goes back to it. Each day opens
-  with its date in a capsule, Moments are bubbles from the right with their photos across
-  the top, and so are check-ins, each a small bubble of its venue and time that opens its
-  sheet; the bills linked to a Moment or a check-in are listed at the foot of its bubble,
-  a Moment's own cost leading them when it has an amount, a meal's dishes or what it went on,
-  how it was and what it came to, as a line drawn the same,
-  and a bill at the bubble's own time showing no time of its own,
-  and the day's other bills, charges and footprints come from the left, those between two
-  Moments or check-ins in one records bubble that lists them all. A charge and the bill paid
-  for it at its very time are one line, the bill's category with the energy faint after it and
-  what it cost, going where that bill would (`placeCharges`); a charge with none goes to the
-  Moment or check-in at its own time like a bill, else among the records. A day the car moved
-  ends with 用车, from the car's statistics: its driving time and energy faint and the distance
-  at the end, after the day's last record. The trip's page does the same over its days. The footprints are cut at every record with a time, a Moment, a check-in, a bill or
-  a charge, each piece where the phone moved between two of them, with when it set off, how
-  far it went and its line; a piece that barely moved shows nothing. A banner marks where each trip begins, among its first day's bubbles at the time it set off when that is known, else above that day; or, for the trip under way, says
-  进行中 and which day it is. Reading back to older days folds the tabs and the title away;
-  heading back to today brings them back.
-- **地图** shows the places, the trips' routes (listed in the sheet at its foot), the
-  photos of 相册 that know where they were taken once its 照片 layer is on (相册, 地图's photos), and the
-  footprints, drawn as the site's map draws them: a place as the newest photo taken there,
-  framed in white with its year's dot, or without one a balloon in its year's colour with its
-  kind's icon and its name under it where there's room; the pins pile up on their spots, the
-  busiest on top, and only a thick crowd gathers into a stack of its busiest places' prints,
-  counted, that opens as the map comes closer. The open place's pin lifts off it, larger, over
-  a dot left on the spot with its name in bold, and each route is drawn in its year's colour,
-  a flight or ferry dotted. The pins' images are drawn as the map asks for them
-  (`ui/map/PlacePins.kt`). Search sits at the top beside 图层 (`ui/map/MapLayers.kt`), the one place what the map draws
-  is switched and its year picked. Its switches, each remembered: 地点 (off, only an open place's pin stays), 签到 (the check-ins'
-  places among the places, while 签到 is on, and with 地点 off the only ones drawn), 旅程 (off, only a lifted route is drawn, as the site's
-  地图设置 does), 照片, 足迹 (while 足迹 is on; looking at a day or a part from its panel turns it on)
-  and 迷雾, the menu staying open as the map changes behind it. Over them 时间 is every layer's
-  time, and each layer's calendar its own (`ui/map/MapTime.kt`): 全部, 今年, 去年, 近 30 天 (as of
-  today, with 今天 and 昨天), a year with records and a month in it, one day (选一天), or any days from one to another; every layer's
-  counts the footprints' days among its records, so a day with footprints can be seen with every layer. Each layer's
-  following every layer's until given its own, and remembered. The places keep those with a
-  Moment in their time, the check-ins those with a check-in in theirs, the rest off the map;
-  the routes, and the trips' list, keep the trips under way in theirs; the photos those
-  taken in theirs; the fog lights only the cities written in in its own. Every layer's time chosen
-  frames what the places keep, and back to 全部 the map returns to where it was unless it was moved
-  since. 足迹's sheet lists the trips it recorded too, and its panel shows its time. A pill under the search
-  says each time chosen, its close bringing every time back, or a layer's own to follow again.
-  选照片's map has the same menu with 地点 and 旅程, the same times. The footprints and the phone's place are buttons down the side. A place tapped fills the
-  sheet with its Moments and check-ins together, newest first and counted as one, and the way
-  there; a route tapped floats its trip's card, which
-  opens the trip or plays it back, and leaves only the trip's own places on the map (those of its
-  Moments, and of its check-ins while they're on), as the site's trip sidebar does. 迷雾 lays a fog over it, as the site's map does, thinner
-  over a city the more Moments it has, from the site's
-  `apps/web/src/data/boundaries/cities.json` shipped as an asset.
-- **我** is one screen: the changes waiting to be published, then four rows, 账本 (with this
-  month's spending under its name), 足迹, 东西 and 纪念日, and one group of 设置: 记录项与公开, 家,
-  同步与来源, 导入, 相簿 (once the gallery may be read), 相机 and 侧键 (and 清理分享相册 while a share album is left), each a page with what it is set to under its name. There is no
-  settings page over them, and under 我 there is one level of pages: what goes deeper, such as
-  a book, the exchange rates or a side key gesture's action, opens over its page as a sheet or
-  a dialog. The ledger's own settings (记账) open from the ledger's top bar and the footprints'
-  (足迹记录) from the footprints panel, beside what they are about. Theme and language have no
-  setting; they follow the phone.
-- **记录项与公开** (`moments://items`) opens on the 记录项, the modules the spec defines
-  (`data/spec/Modules.kt`, generated from `modules` in `@hyoban/data-spec/entry` by
-  `vp run data:tables`): 足迹, 账本, 东西
-  (设备 and 订阅), 车, 美食, 花费, 签到 and 纪念日, each a switch, all on until turned off. One turned off is
-  put away everywhere: its rows on 我, its pages, its records on the timeline, a day, a trip,
-  a Moment, the search's kinds and the map, its chip under 加一项, its sources under 导入, the
-  side key's payment action and the widgets' counts (导入 lists the sources left, and goes
-  from 我 with none), and a link to one of its pages (`moments://ledger`, a widget's, a
-  notification's) opens the timeline instead, `moments://new-bill` a Moment to write; its
-  background work stops (the
-  footprints' recording and connection reminders, 自动记账), and its data stays on the phone,
-  so turning it on again brings everything back as it was, the recording included. Under the
-  modules, each book's and the footprints' publishing defaults (below, Ledger and Footprints).
-- **东西** in 我 is one page that switches between 设备, 订阅 and 车 from its title, 车 only with
-  an API; it opens on the one looked at last. 设备 (`moments://devices`) lists what is
-  owned and what was sold, each with what it costs a day; 订阅 (`moments://subscriptions`)
-  what is paid by the month, by the year and once. Each device and subscription is an entry
-  with its plugin's part, edited in a sheet and published with the rest from 发布更改. 车
-  (`moments://car`) shows a month of the Zeekr import at a time, its days, charges and
-  assisted driving, and is read-only: only an import changes the car's data. On the timeline
-  a device comes as a record on the day it was bought, a subscription on the day it was last
-  paid, first in its day's records bubble; tapped, it opens its sheet.
-- **纪念日** in 我 (`moments://occasions`) lists the days that matter, the one coming soonest
-  first with how far off it is and what it will be (生日 27 岁, 提车 1 周年, or the first day's
-  own name), then the days that have passed. Each is an entry with the `occasion` part on the
-  day it started: it comes round every year by the Gregorian or the lunar calendar (the phone's
-  ICU works the lunar day out from the first day), counted in 岁, 周年 or not at all, or it is
-  the one day. A public one is marked on the site's calendar; the sheet edits it and 发布更改
-  publishes it with the rest.
-
-The pages lead to each other wherever they can: a place or a trip to the map, a day's pill
-to the day, a Moment's menu to its place, trip and day. A day's page opens on that day's
-footprints on a map, its Moments and check-ins marked on it by their place's kind and its bills by
-their category, as icons without words (each at its place, a bill at its Moment's or the check-in it was paid in, else where the
-footprints were within ten minutes), its bills and charges read down by their times, and today's says 还在记录
-while the footprints are recording. A trip's days and each day's Moments read from earliest
-to latest, its check-ins in its time among them as on the timeline (private ones too, but in
-演示模式); its public check-ins' places are stops on its route and in its playback, as on the site.
-A trip's page has 回放旅程, which plays the trip back as the site's player does
-(`packages/trip-map/src/player`): the route never still, a vehicle at its tip, a card per
-Moment stepped through from a toolbar, by a swipe or with a keyboard's arrows and Space.
-编辑旅程 changes its name, its two ends (起止: 出发 and 回来), its public switch, Moments and
-covers, published as a collection. Each end is a record or a time set by hand: chosen on a page
-of its own from every check-in and Moment, searched by words and place, the nearest in time
-first, it shows only that record and is its time, followed when the record is edited; set by
-hand, a day or to the minute, it follows none. A cover follows its photo too: taken out of its
-Moment, picked again (which gives it a new uid) or gone with the Moment, its cover leaves the
-trip, a change published with the rest, so no cover points at a photo the site doesn't have.
-What came before the start on its first day, or
-after the end on its last, is not in the trip, on the site as here;
-its days' Moments are counted in one row that opens them, each with a switch to leave it
-out, and those of the two days either side are listed under it, out until added. The + on
-the map's trips makes one (新建旅程, `moments://trip-edit`) on the phone alone: a collection of
-its own, its id its uid in lowercase as the API will know it, shown and played back as the
-site's are. Until then it can be deleted from its 编辑旅程; once published it is the API's like
-the rest.
-
-A trip not yet taken is a plan: 编辑旅程's 计划 switch, set and cleared by hand whatever its days,
-makes any trip one, and its summary says 计划 before its dates. A plan's page has 写计划 where a
-trip has 回放旅程: a Moment written from it starts on the plan's first day and is planned
-(`planned` on its entry), as any Moment is once 计划 is checked in its editor's 公开/私有 menu, under a
-hairline; it is drawn in the trip's conversation with a dashed outline, no fill and no
-tail, 计划 first among where and when; it is shown wherever any Moment is, its place a stop of
-the route as any other's. Once the
-switch is off the plan is the trip, what happened read among what was planned; a planned Moment's
-page then offers 改成记录, which makes it a Moment like any other, or it is deleted from its editor.
-
-Beside 写计划, 和 AI 规划 talks the plan over with a model (`ui/trips/PlanChatScreen.kt`,
-`data/ai/PlanAssistant.kt`), shown only once 同步与来源's AI group has its address, key and model:
-any service speaking OpenAI's chat completions, asked straight from the device. The model is typed or
-picked from what the service lists (`GET /models`), asked as its dialog opens once the address and key are set. It is told the
-conversation, the plan's name and days, the time and time zone where the device is, and everything the
-plan holds (its Moments, planned or lived, and its check-ins, private ones too, each with its time,
-words, place and the place's coordinates), from which it takes where the trip sets out from; nothing
-else of the owner's places. Before answering it may look things up on the device, several at once in a
-round, up to ten rounds a turn, after which a lookup it still asks for is answered that it must answer
-with what it has, and it is asked once more: `find_place`, the place search's answers for a name near where the model says, and `route_time`,
-how long and how far a way is by road, on foot or by bike (Valhalla) or by train (OpenRailRouting, its
-line's running time, no timetables), each shown in the answer with what came of it, between the thinking of the round that asked for it and the next's.
-On the phone, once the owner has signed in to Xiaohongshu's website from 同步与来源 (its row opens the
-site's own pages, desktop pages as Chrome on a Mac sees them, and goes back by itself once they say the owner is in;
-`xiaohongshu/`), it may also call `search_notes`: a WebView no one sees opens the site's search for the words the model
-names, in the owner's session, and reads the first eight results' titles, authors and likes, opening the first three, a
-second and a half apart, for their words, date and where they were posted from, the results the site marks as ads
-left out; the model is told them, and how to tell the many unmarked ads (copy-like praise, discounts and codes, 私信 or
-comment for details, 合作 tags, the shop's own account, the same words as other notes) from people's own notes, each note's
-words cut to 1,200 characters. The chat keeps each note's title, author, likes and link, not its
-words, and once the answer is in lists them under it, each note once by its id (参考的小红书笔记 and how many, five, then 显示全部), each
-opening in Xiaohongshu's app by its `xhsdiscover://item/` link, else its page in the browser. Nothing is tapped, typed or posted there. A
-search follows the site's redirects to plain http over https; one the site answers with its sign-in wall showing marks the row 未登录 and tells the model to go on without it. The session is
-the WebView's cookies, kept out of Android's backup and device transfer; the Mac has no such search.
-What the owner writes in 补充说明 under 同步与来源 (how they travel, who with, what they eat) goes after the app's own
-instructions in every conversation. Last, it is told to think and answer in the language of the owner's latest message (named when
-it is Chinese or Japanese), its thinking too. The owner may only want to talk, and an answer may then suggest
-nothing; one that suggests ends with its whole list of changes against the plan as it stands, repeating what was
-proposed before and not applied; only an answer's last list counts, an answer with none leaving earlier ones as they were, and once a later answer lists its
-changes an earlier one's untapped rows can't be applied any more (已并入后面的回答). It answers in words and with suggestions through `suggest_plan`, each a day, a time, a note and a place. The place is found on the device: a place
-already kept by that name within 2 km of where the model put it, else what
-AMap, Tencent or Photon call it within 30 km of there, a place already kept when it
-is that one; none found, it is added without one. A
-suggestion's round plus button writes it into the plan as a planned Moment, as it says, kept as one written by
-hand is, public unless the plan is private, until 全部发布. The plan's planned Moments go with their uids, and a
-suggestion may name one to change (its pen, the row saying what it was) or delete (its bin, the row struck through,
-the deletion undone from its message as one by hand is); check-ins still to come (written down ahead, such as
-where the trip sets out from) go with theirs too, only their time and place to change (a change may leave its words out, keeping the entry's); lived Moments and check-ins
-that happened are only read, and so is a planned Moment or a check-in still to come its owner locked (锁定 on a planned Moment's
-page, beside 改成记录, or in the editor's menu under 计划, which offers it for any check-in too: `locked` on the record,
-published with it, and listed on 发布更改 beside 计划 as a change of its own): it goes to the model as settled and without its id, a change the model
-still lists for it is let go, and the sheet marks it with a lock. The answer streams in (`stream: true`, its
-server-sent events read by `PlanStream`): its words grow across the column, in no bubble, set as the model marks them
-(`- ` and `1. ` items hanging from their marker, `#` headings and `**` words strong, the marks taken out; `AnswerText.kt`), and each suggestion shows, and
-its place is looked for, once its item is written in full; a service that refuses to stream is asked
-again for the whole answer. What a model thinks first, where its service shows it (`reasoning_content`, or
-OpenRouter's `reasoning`), heads its answer: open and growing while it thinks, closed to 想了 n 秒 (and 查了 m 次) once
-the answer's first word or suggestion comes, opened again with a tap; it is shown, never sent back. Words a round says before
-it looks things up go with that round's thinking, so the answer itself is what it said last, once; what a `suggest_plan`
-call says besides (`reply`) shows only when the message said nothing. While it answers the send button stops it: what came stays, marked 已停止,
-and the model remembers only the question, told it was stopped unanswered, so what the owner writes next ("我说景德镇") reads
-as about it. A turn that fails before anything came goes, its question back in the field; one that fails after it
-thought or looked things up keeps them, marked 没能得到回答, and is not remembered;
-either way a message over the composer says why, waiting with 重试, which asks the same again. Held, a question offers 复制文字 and 从这里重来, which takes it and everything after it off the page and out of the model's
-memory and puts it back in the field to send again, what was applied staying in the plan; held, an answer copies its words and
-its changes, a line each. Each plan's conversation, and what the model remembers of it, is kept on the device in `plan-chats.json` beside the
-ledger, written moments after anything in it changes and included in the WebDAV backup; an answer the app closed on
-comes back stopped, and a plan deleted takes its conversation with it the next time one is opened. 清空对话 in the bar
-deletes it, after asking. An answer's changes are one line under its words (PlanSummary) opening a sheet (PlanSheet) of the
-whole plan as it would be after them, every day from first to last, its settled records too, with each way between
-two places in a row (a day's first from where the day before ended, and counted in its driving) by how the model says each is reached (`by` in `suggest_plan`, driving when it doesn't), its time
-and length the model's own `route_time` result when it looked that way up (the same mode, both ends within 500 m),
-else worked out on the device by the keyless routers, or, when they can't be reached (as a VPN may cut them off), by AMap's routing and then Tencent's with the owner's own keys, in China and never by train, AMap asked at most three times a second and Tencent five, a key whose calls are used up passed over until the next day (a way already being worked out is waited for, not asked again); each day's line adds up its driving once all of it is worked out,
-and 全部加入 in the sheet's title applies every row still to apply in order of time, each once its place is found.
-What the model lists against what the plan already holds (`matchPlan`): an entry listed again as it is doesn't show, nor a change whose place is found to be the one it has and that changes nothing else,
-and one added again on a planned entry's day at its place (by name, or within 300 m) is a change of that entry, the one
-at its time first, else the nearest. With the next question the model is told, in its memory of each earlier list's
-`suggest_plan` call, which rows the owner applied and the entries they became, and each day's driving as the plan
-stands (by road between its places in order, the model's own lookups reused, a day not worked out in eight seconds
-left out); of turns before the latest two it is sent only the question, the last words and what came of the list,
-not the lookups and lists themselves. A trip's timeline tells the ways between its stops in its records bubbles, a footprints' line before
-a stop saying how the way to it was gone (its way's icon and name, 推断 where the footprints said it), a
-way with no footprints' line a bubble of one line of its own (`WayRow`, `WayBubble`); a day's first from where
-the day before ended (`tripLegs`, `rememberLegLines`), and so does the timeline, a stop joined only to
-one the same day or the day before, the footprints read only for the ways in sight. Only a planned way (a planned trip's or record's,
-or one still to come) asks the routers how long and far it is, each way asked once: their answers,
-that there is no way among them, are kept on the device past a restart (`TravelCache`,
-`travel-times.json` beside the private files, out of the backup, as it is worked out again), by both
-ends to about ten metres and the mode, the sheet's ways, the model's `route_time` and the timeline's
-alike; a way gone is measured by the
-footprints kept between its two stops (`measureWay`: the track's length as it moved, the time from
-when it began to move to when it stopped), and says only how it was gone where none were kept. The way itself: by the trip's leg not driven (train, flight, crossing) where it
-has one, else the record's `reachedBy` (written as the model said when a suggestion is applied, or
-chosen under the place in the editor, 怎么过来, for a planned record), else, on a trip taken, what the
-footprints kept between the two stops say (`inferWay`: a long jump with nothing between a flight, else
-by how fast most of the way went, the device's activities settling slow ways), marked 推断 and never
-written down, else by road. A flight or a crossing shows its distance as the crow flies. Tapping a way opens a menu of the six ways (and 打开这一天 on a footprints' line), picking another where it may change: walking, cycling or a train goes on the record, a train,
-flight or crossing on the trip as a leg not driven, so the site's route draws it, and by road takes
-that away; each waits on 发布更改 as any change. The site's sidebar doesn't draw them. A change to a planned record shows what it changes, its words compared letter by letter as
-发布更改 compares them and its time and place from old to new. Its
-parts are the design system's PlanAnswer, PlanSheet, SuggestionRow and ChatComposer.
-
-Below the trips, after a hairline, 可能的旅程 are the trips the records suggest
-(`data/trips/TripDiscovery.kt`, with `TripNames.kt`): the time between a check-in at home on
-leaving and the next one at home on coming back, when a record in between is more than 50 km
-from every home, or more than 30 km on another day than it left; nothing leaves the phone.
-Home is the saved places chosen in 我 → 家 (`moments://homes`), any number of them, picked from
-the saved places, searched by name or address; without one there are none. One checked in to
-leave and not back yet is 进行中, first, its days counted to today, and can be added once back.
-The best come first, by photos and days with records, each named after the cities visited, with
-the holiday it spans (国庆香港) or 一日 or 周末 (南京一日). Its + adds it as it is, private;
-opened, it is 新建旅程 with its times, its two check-ins and its name filled in; one dismissed
-doesn't come back. A trip made from one keeps its two check-ins as its ends' records.
-The thresholds live in the code and its tests.
-
-No page has a bar: its way back and actions float as circles over it, its title large
-under them. On a wide window the map's trips stand in a column and bottom panels open as
-dialogs.
-
-The search (`moments://search`) filters by kind (Moments, bills, charges, check-ins, each
-while its module is on) and by year and month, and lists what it finds under its years; a
-check-in matches by its venue or its place's name and opens in the editor; with nothing to list it says why and
-what to try next.
-
-## Writing a Moment
-
-记录, or `moments://new`, opens a page of its own, or a dialog on a wide window. A Moment
-has its words, up to nine photos and videos, a time and a place, and under 加一项 what it cost
-and a bill (账单). What it cost is a meal (美食: the dishes, 好吃, 还行 or 踩雷) or anything
-else (花费: what it went on, 值, 还行 or 不值), either with the amount in its currency and how
-many it was for; the two chips are one cost, so choosing one takes the other's place with what
-was typed. A meal shows while 美食 is on, any other cost while 花费 is. It
-is 公开 or 私有; a private one is published for its owner but never shown on the site.
-
-The same page writes a check-in: with no words, photos or cost but a place, it is saved as a
-check-in there (the page says 新签到), named after the place, `source.app` `phone`, public unless
-made private, while 签到 is on in 记录项与公开. A check-in tapped, on the timeline, a day, a place or
-in the search, opens here (编辑签到) as a Moment with nothing but its place, to change its time,
-place or who sees it, or to delete it. Words or photos written into it make it a Moment that keeps
-its check-in, as Swarm's with words are; a Moment cleared of them again is a check-in. Its venue
-is its place's name once the place is another, and the check-in goes with the place when none is left.
-
-- **Media.** Picked in 选照片 (below), or shared in from the gallery (Here (写一个时刻)).
-  Held and dragged in the row, they change places, the first being the cover; a tap opens them in
-  the viewer, the same one a Moment's media and 选照片 open (`ui/viewer/ViewerFrame.kt`), where the
-  bar takes one out, keeps it off covers (不用作封面) or has a motion photo go in as its still alone
-  (只用静态画面), each photo by itself; a photo with patches over it goes in as its still, its switch
-  shown on and not to be turned off, since its clip would show what they cover. A saved photo linked
-  to the NAS has the switch too: the site's copy can't have its clip added or taken away, so switching
-  it brings the NAS's original down in its place, as 换成 NAS 原图 does (an iPhone's clip asked of the
-  NAS beside it, 不是实况 said when there is none), live or a still as chosen, to be uploaded anew
-  with the old one's alt text and 留档, the old object staying in R2; going in live it is covered as
-  a photo picked is, and switched back the photo saved goes back as it was. 打码 is on by default for a photo newly picked: as each comes in, ML Kit (through Google Play
-  services, on the phone alone) finds the faces in it, and reads its text for anything written as a
-  Chinese license plate (粤B·12345; without the province only when the dot is read), and lays a patch
-  over each, and saving waits for any still being looked at, so nothing goes in uncovered by being
-  quick; a photo with nothing found stays as it is, and the switch in the viewer turns it off, or on
-  again to look once more. Plates are read in the photo whole, then in tiles of it at up to 4096
-  pixels, so one a car's length off is still read; one too blurred or slanted to read is missed, and a
-  tap covers it. Each patch is drawn as saving will write it: a mosaic, or one of the design
-  system's stickers, a face's (猫, 狗, 熊, 兔, 笑脸, 花) or a plate's long animals (趴着的猫, 腊肠狗,
-  毛毛虫, 鱼), drawn so its solid part takes in the whole patch. A tap
-  on a patch chooses it, and the bar turns into its styles and 去掉这一块; a tap elsewhere lets go,
-  or lays another patch, as large as the patch nearest it and of its kind, face or plate (a face's,
-  a fifth of the photo, with none). Until a style is chosen there each patch takes a sticker of its
-  kind at random, none twice on a photo while any is left; once one is for a face or a plate, new
-  patches of that kind take it. The photo row marks the photo with the mosaic
-  icon. Which sticker goes where is the owner's choice: nothing is guessed from the face. Saving writes a copy of
-  the app's own as an upright JPEG with the patches drawn in, no HDR gain map and no motion clip,
-  and that is what the app shows, shares and publishes; the photo in the gallery is untouched. The
-  copy as picked and the patches stay beside it until the Moment is published, so opening it again
-  shows the patches to change, and saving draws them again from that copy; publishing lets it go,
-  and a published photo's patches stay as they are. They are copied in whole; a motion
-  photo is split into a live photo's still and video, and an iPhone's live photo from the NAS
-  takes its clip, the MOV the NAS keeps beside it, along as its video. A video over 100 MB, or other than
-  MP4, MOV or WebM, is refused, since the Worker and the site's poster can't take it. A
-  photo marked 不用作封面 never becomes a cover, widget or share card.
-- **Time.** From the earliest photo's EXIF time and offset (else a video's creation time, else
-  the files' dates) to the latest's, else a stay's start to its end, else now. It starts and ends
-  on two rows: the end, the entry's `end`, can be chosen or cleared (不设结束时间), is never before
-  the start, and photos all taken in one minute give none. The timeline, the Moment's page and
-  发布更改 show it as `14:00–16:30`; the site shows only the start. Once a time is chosen by hand, or
-  a saved Moment opens at its saved time and end, the start's dialog's 用照片的时间 goes back to that
-  worked-out time and end (用停留的时间 or 用现在的时间 for a new Moment without photos; a saved one
-  whose photos give no time has none). A start chosen by hand keeps the end, while it is still after it.
-- **Place.** Where the first photo was taken, else none until one is chosen: the page itself
-  never locates the phone. Once another is chosen, or a saved Moment opens at its saved place, the
-  place picker's 用照片的地点 (用停留的地点 at a stay) goes back to it; the photos a Moment was saved
-  with have lost where they were taken, so of those only one linked to the NAS gives a place (and its
-  time), read from the NAS's original on the device, as one put in by 换成 NAS 原图 does. A photo's place is the known place within 2 km, else a new place
-  named after what is nearest: in China, with the owner's AMap or Tencent key (高德地图 Key,
-  腾讯地图 Key, under 同步与来源; with both, the one chosen under 国内地点来源 first and the other when it
-  can't answer), the shops, sights and buildings that service knows, asked from the phone
-  with the pin's point: their place searches first, which know the shops nearest, then, once
-  those calls are used up for the day, their reverse geocoding, whose calls are thirty times
-  as many but which knows mostly sights and buildings (a search by name asks their input
-  tips), else the nearest park, sight, shop or street Photon knows
-  (`BuildConfig.PLACE_SEARCH_URL`), with the system's geocoder as fallback. Tapped, the
-  place opens on a map with a pin at its middle, which finds where the phone is when there
-  is no place yet to open on. Under the map are a search and one list: the choice first and
-  ticked, then the known places close by and what is around the pin, nearest first, or while
-  something is typed what is called that from the same sources. A row tapped is chosen and
-  the pin moves there; a result chosen leaves the search as it was, the choice above the
-  rest, so another is a tap away. The choice tapped again is named by hand, and its kind,
-  which follows where it came from, opens a sheet of every kind by group (餐饮, 购物, 住宿, 景点,
-  娱乐, 交通, 生活, 地区), for a known place too: a café, a metro station or a park rather than only
-  food, transport or a sight, each with its icon in the list. A place picked from AMap or
-  Tencent keeps that service's id as its `source`, so finding it again chooses the place
-  already kept rather than a new one beside it. Their points come in GCJ-02 in the mainland,
-  Hong Kong and Macau, and are shifted back to WGS 84 there; in Taiwan and abroad they are kept
-  as given. Where that is, the city outlines say (`gcj-area.json`, from `vp run map:cities`).
-- A place's page edits it (编辑地点) in the same picker, opened on the place as it is with no
-  other place offered: the pin moved, the choice renamed or given another kind. It keeps its
-  id, so its Moments, check-ins and bills stay at it. One of the phone's changes at once; one
-  of the site's is a change under 改过的地点 until published, which the API takes the name,
-  point and kind of, looking its division up again and routing its trips again when it moved.
-
-New Moments and places live under the app's `local/` directory, every record written or changed
-there kept as the entry it will be published as (`changed-entries.json`), the places with ids of their
-own (`p-<ulid>`), marked 未发布 until published. A place keeps its id
-when it is published, so whatever names it (Moments, check-ins, bills) stays at it.
+- The app works without an API. Once an API address and token are set in 我 → 同步与来源, it
+  keeps a copy of every D1 row except trip routes in `copy.db`, with tables generated from
+  `@hyoban/data-spec/tables` into `data/copy/CopyTables.kt`. It pulls only changed rows from
+  `/v2/rows` on start, pull-to-refresh, 刷新 and after publishing. Changing the API drops the
+  copy.
+- Trips are derived from collections as the spec's `collectionToTrip` does. Trips the API
+  hasn't routed are routed on the phone (`data/trips/PhoneRoutes.kt`) with the same keyless
+  routers: Valhalla for drives, OpenRailRouting for trains, straight lines for ferries and
+  flights. Results are cached in `phone-routes.json`.
+- Where the phone has footprints for a whole trip, it draws and plays the trip along them
+  (`data/trips/FootprintRoutes.kt`); the site still draws it along the roads.
+- New and changed records are kept as the entries they will be published as, under `local/`
+  (`changed-entries.json`). New places get `p-<ulid>` ids that they keep after publishing.
 
 ## Publishing
 
-Publishing needs an API: its address and token, set under 我 → 同步与来源 (the token in a file
-backups leave out). Without them there is nothing to publish to: the card for it stays away,
-and nothing is marked 未发布, on the timeline or on a Moment's page, until they are set. With
-them the site's Moments can be changed and deleted too. Nothing reaches the site as it is
-saved: new, changed and deleted Moments, changed places, public bills, trips,
-check-ins, occasions and things wait on the phone, past a restart. 发布更改, from the card
-at the top of 我, lists them, shows what changed, each field of a changed Moment, trip (against the site's own
-collection: its name, days, who sees it, 计划, the records it takes in or leaves out, covers, the
-check-ins it runs between, its route's hints, music and note), place, check-in, occasion, device or
-subscription struck through beside what it is now, writing (words, a photo's description, a note)
-marked letter by letter, and takes a change back. Bills are a part of their own (`ui/publish/BillChanges.kt`), in three groups by
-what the site gets: new, changed (its category, amount or note marked where it shows, or its time
-or place, told against the site's copy of a bill on its own, the site's struck through) and taken
-off (made private or deleted here, struck through); a group of more than three folds, and opened
-falls under its days. A bill there opens its page. 全部发布 runs as WorkManager work in a foreground
-service with a progress notification, waiting out a dropped link: it uploads the new
-originals a few at a time, each a copy without where it was taken (`data/media/Location`: the
-GPS of a photo's EXIF and XMP and a video's location boxes blanked in place, the phone's own
-file untouched), then sends everything else as one `POST /v2/changes`, which the
-API takes whole or not at all. What is published leaves the phone's store for the site's. A bill
-is noted as published as the API kept it, from its answer: one it kept less of than was sent (an
-API older than the app dropping a field it doesn't know) stays to be published.
-取消发布, on the page or the notification, stops it while it uploads or waits: what was uploaded
-stays for the next try, and a change set already on its way still goes through and is noted.
-清除全部更改 takes back everything waiting, after asking: the Moments written on the phone are
-deleted with their photos' copies, and the site's records, places, trips and bills go back
-to what the site has. A public bill whose words or amount changed stays to be published.
+发布更改 (the card at the top of 我) lists every waiting change with a field-by-field diff and
+lets each be taken back. 全部发布 runs as WorkManager work in a foreground service: it uploads
+new originals with their location blanked (`data/media/Location`; the phone's own file is
+untouched), then sends everything else as one `POST /v2/changes`, which the API applies whole
+or not at all. A bill the API kept less of than was sent (an older API dropping an unknown
+field) stays waiting. 清除全部更改 reverts everything to what the site has.
 
-## Backup
+## Features
 
-备份, under 我 → 同步与来源, puts the phone's databases in a WebDAV directory of the owner's:
-its address, user name and password are set in one dialog (the password in a file Android's
-backup leaves out). `backup/BackupArchive` writes one zip, `here-backup-<yyyyMMdd-HHmmss>.zip`:
-under `databases/` the ledger, the footprints and the copy of the API's records, each a
-consistent copy made by SQLite's `VACUUM INTO`, with the footprints' reminders and companions;
-under `local/` the unpublished Moments and places, without `local/media/`. Photos, videos and
-the tokens stay out. 每天自动备份, off until turned on (setting the directory backs nothing up by itself), backs up once a day as WorkManager's
-periodic work on a network with the battery not low; 立即备份 backs up at once. After each
-backup the directory keeps the newest seven and deletes the rest, leaving other files alone.
-从备份恢复 lists the backups in the directory, newest first, each with its size when the server gives one; restoring the one picked
-downloads it, unpacks only what a backup holds into `noBackupFilesDir/restore/` and starts
-the app again. As the app starts, before anything opens the databases,
-`BackupArchive.restoreStaged` moves the ledger, the footprints, the copy, the footprints'
-JSON and `local/` (its `media/` left in place) aside into `noBackupFilesDir/restore-replaced/`,
-kept until the next restore, and puts the backup's files where they were; cut off halfway, it
-carries on the next time. Settings, tokens and the WebDAV sign-in stay as they are.
+Pages each have a `moments://` link; see `routeOf` in `ui/MomentsApp.kt`.
 
-## Updates
-
-更新, under 我 → 同步与来源, keeps the app current from this repository's GitHub releases. 每天检查更新,
-on until turned off, reads the feed of GitHub's releases (`releases.atom`, GitHub's page
-rather than its API, whose limit without a token is soon used up behind a shared proxy's
-address) once a day as WorkManager's periodic work on a network, and nothing of the phone's
-goes with it; the first time a release is newer than the app, a notification says so and
-opens the page. 检查更新 asks at once and says the version and when it last looked. A newer
-release adds 安装 x.y.z, which downloads its APK, `here-x.y.z.apk` as the release workflow
-names it, into the cache, checks that it is this app, the version it says and newer, signed
-with the same key as the app installed, and hands it to the system's installer, which asks
-before it installs. Until 安装未知应用 is allowed for the app, a sheet says why first and goes to
-the system's settings.
-
-## Importing
-
-导入, under 我 (`moments://import`), is where every file from another app comes in, grouped by
-where it goes: 时刻 (Swarm), 账本 (iCost) and 足迹 (GPX, 一生足迹). A row opens the system's file picker
-and what came in is said in a dialog; Swarm's progress shows on its row while it runs. An empty
-ledger keeps its own button for iCost, and an iCost file shared in still opens 记账.
-
-## Importing from Swarm
-
-从 Swarm 导入, under 我 → 导入, reads the .zip Swarm (Foursquare) exports
-(`data/swarm/Swarm.kt`): its `checkins*.json`, and `photos*.json` with the `pix/` they name;
-the account, friends, devices, visits and comments in it are left alone. Each check-in comes
-in at its time in the offset it was made at and its point as Swarm has it (WGS-84),
-with a `checkin` part naming its venue and Swarm's ids. One with words or photos becomes a
-private Moment of the phone's, its words as written and its photos copied into `local/media/`; the
-rest are entries of their check-in alone, a line 签到 <venue> in the timeline's records, public unless Swarm kept it private. Each
-venue becomes a place of the phone's, kept on its own, named by its local name where Swarm keeps
-one beside the English it exports, at its most accurate check-in's point, with the venue in its
-`source`; a venue imported before keeps the place it has, the site's once published. The map
-counts a place's check-ins with its Moments, and its sheet and page list them. Their
-uids are made from the time and Swarm's id, so importing the same export again adds only what
-is new and copies no photo twice. All of it waits with the other unpublished changes for
-发布更改. Check a change to the importer against a real export with
-`SWARM_EXPORT=<zip> ./gradlew :app:testDebugUnitTest --tests '*SwarmTest*'`, and never commit it.
-
-## Sharing
-
-A Moment's share sheet hands a copy of its words and a choice of photos to another app,
-which leaves the recipient and the final send to the user. It never posts. It lists only
-the apps on the phone; 准备图文 is always there. The sheet stays
-open under each share, so the next one starts from it. The copy
-ends with a line of its place (📍 first), when it was (🕐 11月16日 19:30, the year only in another year),
-the trip it was on (🧳 and the trip's title), each one's share of what it cost and how it was (a meal's 好吃, 还行 or 踩雷, else 值, 还行 or
-不值), each behind an emoji, which can be edited away like the rest. The same line follows the
-words wherever a Moment goes out: a photo shared from the viewer carries them as its text, the
-Mac's 复制文字 copies them, and the Telegram channel posts them, naming the trip only when it isn't private.
-
-| Destination    | How                                                                                     |
-| -------------- | --------------------------------------------------------------------------------------- |
-| 发布到 X       | the X app's composer, up to twenty photos (stills of live photos, no video)            |
-| 发布到 Bluesky | `bluesky://intent/compose?text=…` for text, else its share receiver, text and up to four photos |
-| 发布到 B 站    | Bilibili's dynamic composer (`FollowingPublishActivity`) with text and photos          |
-| 分享到 Telegram | Telegram's share receiver; with several photos the text is copied to paste as caption |
-| 发布到 Threads | `barcelona://create?text=…` for text, else its share receiver with the text copied     |
-| 发布到小红书   | its share receiver, the text copied; text alone opens 写想法                           |
-| 发布到 Instagram | its feed post's `ShareHandlerActivity`, the text copied; needs a photo |
-| 发布到抖音     | `SystemShareActivity` into the photo editor, the text copied; needs a photo            |
-| 微信朋友圈     | `ShareToTimeLineUI` for text or one photo; more go through 准备图文                    |
-| 准备图文       | the photos saved to a `Pictures/Here Share-…` album and the text copied                |
-
-These entries depend on each app's version; when one fails, 准备图文 is offered with the
-edited text and selection kept. Photos go out without where they were taken: the phone's
-own copy while it is there, else the published original, downloaded a few at a time and kept
-for a week so sharing it again needs no download. Each share has its own cache directory,
-cleaned up after a week, and the read grants given to the receiving apps are revoked with it. The
-`Here Share-…` albums stay until 清理分享相册 on 我, shown while any is left, hands all their
-photos to the system's delete prompt at once: they are copies of the Moment's own.
-
-The opt-in 分享与记账助手（试用） is an accessibility service
-(`accessibility/ShareAccessibilityService`) that, for Telegram, Threads and Instagram only,
-fills the composer (Telegram: finds the `@username` given and the caption; Instagram: the
-caption, once the photos are edited and 继续 tapped by hand) and stops before sending. It
-reads only the app of the share it was asked for, gives up after 40 seconds (Instagram: two
-minutes) and keeps nothing. Each destination is an `AssistAdapter` with an `AssistFlow`
-(`share/TelegramShareAdapter`, `share/ThreadsShareAdapter`, `share/InstagramShareAdapter`);
-add an app the same way, with fixtures for its pages. The manifest keeps the
-`share/TelegramShareService` name only so the permission already granted to it stays.
+- **时间线, 地图, 相册, 我** are the four tabs, with 记录 beside them. Wide windows and
+  landscape phones move the tabs to the side, away from the camera cutout.
+- **Modules.** 记录项与公开 (`moments://items`) toggles the modules defined in
+  `data/spec/Modules.kt` (generated by `vp run data:tables`). A module that is off disappears
+  everywhere and stops its background work; its data stays.
+- **Writing.** 记录 writes a Moment (words, up to nine photos or videos, time, place, cost) or,
+  with only a place, a check-in. Time and place come from the first photo's EXIF. Place names
+  come from AMap or Tencent (owner's keys) in China, else Photon, else the system geocoder;
+  GCJ-02 points are converted back to WGS 84 inside the areas in `gcj-area.json`.
+- **打码.** Newly picked photos get faces and Chinese license plates covered by default (ML
+  Kit, on device). Saving writes an upright JPEG with the patches drawn in and no motion clip
+  or gain map; the gallery's original is untouched.
+- **Trips and plans.** 编辑旅程 edits a trip's name, ends, visibility, records and covers.
+  可能的旅程 (`data/trips/TripDiscovery.kt`) suggests trips from leaving and returning home
+  (我 → 家). A `planned` trip is a plan; 和 AI 规划 (`ui/trips/PlanChatScreen.kt`,
+  `data/ai/PlanAssistant.kt`) talks it over with any OpenAI-compatible service configured in
+  同步与来源, with tools `find_place`, `route_time`, `suggest_plan` and, after signing in to
+  Xiaohongshu on the phone, `search_notes` (read-only, in a hidden WebView). Conversations are
+  kept in `plan-chats.json`.
+- **东西 and 纪念日.** Devices, subscriptions and the read-only car data (Zeekr import only);
+  occasions recurring by Gregorian or lunar date.
+- **Sharing.** A Moment's share sheet hands text and photos (location stripped) to another
+  app's composer and never posts. 准备图文 is the fallback for any app. The opt-in
+  分享与记账助手 accessibility service fills Telegram, Threads and Instagram composers and
+  stops before sending; each is an `AssistAdapter` in `share/` with page fixtures.
+- **Widgets** (Glance): 那年今天, 旅程 and 热力图.
+- **Updates.** 更新 reads this repository's GitHub `releases.atom` (not the API, whose
+  unauthenticated limit runs out behind shared proxies), then downloads the APK, checks its
+  package, version and signature, and hands it to the system installer.
+- **Backup.** 备份 writes `here-backup-<timestamp>.zip` to the owner's WebDAV directory: the
+  ledger, footprints and record copy (`VACUUM INTO`) plus `local/` without media. It keeps
+  the newest seven. Restoring stages files and swaps them in on the next start
+  (`BackupArchive.restoreStaged`).
+- **Import** (我 → 导入): Swarm exports (`data/swarm/Swarm.kt`), iCost backups and `.xlsx`
+  exports, GPX, and 一生足迹 CSV. Re-importing the same file adds only what is new.
 
 ## Ledger
 
-记账 is a ledger kept on the phone alone, in place of iCost: books of bills over accounts
-in their own currencies. Its page (`moments://ledger`, from 我) has three tabs:
+`ledger/LedgerStore` keeps books, accounts and bills in `noBackupFilesDir/ledger.sqlite`,
+outside sync and Android's backup. Bills are private unless their book is public from a date
+(记录项与公开) or the bill says otherwise; a public bill publishes only what
+`data/store/Outside.kt` allows. A published bill deleted on the phone waits in the `gone`
+table until the next publish removes it. 演示模式 hides every amount and private record.
 
-- **账单**, the book's bills under their months and days;
-- **统计**, a month, a year or all of it: spending, earning and what is left, and charts
-  drawn on a canvas (`ui/ledger/Charts.kt`) by day, by category and by weekday;
-- **资产**, net assets, a line of the last twelve months, and the accounts by kind.
-
-The book's name switches books or shows 全部账本, which the app opens on each time it
-starts. The eye at the top of 我, and beside the ledger's month, turns on 演示模式 for showing
-the app to others: every amount is hidden, an account goes by its kind alone (no name, no
-bank's mark), and private Moments, check-ins and trips are left out everywhere, the widgets included.
-
-A bill is an expense, an income or a transfer (also a repayment or a loan), or a refund or
-reimbursement written from its expense, which counts with that expense in what a trip, a place or
-a day spent, whenever it came back. `moments://new-bill`, or the ledger's +, opens one
-on a keypad (sums like `12+3.4` add up). It has an amount in any currency, a category, one
-account or several with their shares, its time and book, discounts and fees, whether it is
-to be reimbursed or left out of the sums, and the Moment or check-in (one of them, chosen
-among those of the day before to the day after, a check-in's place becoming the bill's), place
-and trip it belongs to. A public bill of a Moment or a check-in publishes as a part of that
-entry, and a check-in edited on the phone keeps it. A
-bill with no place nor a Moment's is shown where it was: at the place of the check-in whose
-time covers it (one with no end covering a quarter of an hour either side, the shortest when
-several do), shown as 签到位置; else by the footprints nearest its time (within a quarter of an
-hour, good to 100 m), as 足迹位置, which is one of the phone's places within 100 m when there is
-one, else named through Photon from the point alone and kept in `footprints.sqlite`. Both are
-only shown until its + takes them: a known place becomes the bill's at once, and a spot only
-named opens the new Moment's place picker on that point, the place kept or chosen there
-becoming the bill's. The bill's own place is chosen in that picker too,
-opening on its place, else that point, else where the phone is. An account's 校准余额 sets its balance by moving its
-opening balance.
-
-The ledger meets the Moments: a Moment's page lists its bills, a Moment with an amount and no bill offers
-记一笔 of it, a trip's and a day's page show what was spent, a trip's page lists its bills among its Moments and
-check-ins by time (one linked to a Moment or a check-in under it), a place's page, opening on its map, lists its bills by their days
-among its Moments and check-ins with what was spent there beside its counts. A bill not linked by
-hand is taken, as it is shown, to be the Moment's or the check-in's at its very time (a Moment
-first), else the stay's kept as a check-in it was paid during (the shortest, a shop's inside a mall's),
-never kept on the bill; a linked bill goes in its record's bubble whenever it was paid. A trip's bills are its public expenses and incomes paid in its span, as the site counts them, each
-refund with its expense; a bill names no trip. Its list of bills also shows each of its Moments' costs
-by its time, opening the Moment, and what they came to apart, each one's own share where a cost was for
-several.
-
-记账, from the ledger's top bar (`moments://ledger-settings`), manages the books, the exchange rates, 自动记账 and
-the data. A book opens as a sheet with its name, currency and categories (chips, each opening
-a dialog to rename, add a second level, merge or delete it), archiving and deleting it; the
-rates open as a sheet too, with the European Central Bank's brought up to date from its head.
-An empty ledger imports from iCost on its own page.
-
-The data:
-
-- **从 iCost 导入**, in 我 → 导入, reads either iCost's backup (`.backup`, a zip of its SQLite
-  database sealed with the password iCost itself uses) or the .xlsx of its 账单导出, picked,
-  shared in or opened with the app. It shows what it found before writing and skips what is
-  already there, so each newer file brings the ledger up to date; 替换现有数据 writes it in place
-  of the whole ledger instead, yet a book of the same name keeps its id and who sees its bills,
-  and a bill found to be one already here keeps its id, its 公开 say, its Moment and place and
-  what of it the site has, so nothing published needs publishing again. Tags become `#tag` in the
-  note. The backup is the fuller one: `ledger/ICostBackup` takes its accounts with their
-  kinds and balances, ties refunds, reimbursements and a transfer's discount to the bills
-  iCost tied them to, and keeps a bill paid from several accounts as one. Every account
-  iCost has, new or already here, opens where the bills iCost also has leave it at iCost's
-  balance, so balance adjustments need no bill and bills kept only here move it on from
-  there. The export has no balances, so its accounts are calibrated after, and its refunds
-  and reimbursements are matched by amount and time. Accounts are matched by name, spaces at
-  either end aside, and those of one name become one, archived only when all of them are
-  hidden in iCost and counted in net assets when any of them is. Budgets, recurring bills,
-  installments, savings plans, templates, places and photos aren't carried over.
-- **Rates** are the European Central Bank's, bundled in `assets/ledger-rates.json` and
-  refreshed from Frankfurter only when asked.
-- **备份到文件** and **从备份恢复** write and read the whole ledger as JSON; **导出 CSV**
-  writes the bills in iCost's columns.
-
-`ledger/LedgerStore` keeps it in `noBackupFilesDir/ledger.sqlite`, outside sync and
-Android's backup. Bills are private: 记录项与公开 (`moments://items`) makes a book's bills
-public from a day on, by each bill's own date (under the 记录项, while the ledger is on): switching
-a book on asks for the day, today unless another is picked, and 开始日期 under it changes it; a book
-made public before there was a day keeps all its bills public. A bill's 公开 chip says otherwise for one. A public bill publishes only its
-kind, amount, currency, category and note (`data/store/Outside.kt`), and an expense what its
-refunds brought back of it, up to what it cost, as `refunded`: a refund isn't a bill of its own on
-the site, and goes with its expense unless its own 公开 chip says private. The app shows a refunded expense with what
-it cost after its refunds, what was paid struck through before it, and a 退款 ¥5 tag under its line
-where the line has room for one. A published bill deleted here,
-by hand, with its book or by an import in place of the ledger, waits in the ledger's `gone` table
-until the next publish takes it off the site. As the app starts, a bill with nothing published
-that the site has under another id (one of the same kind, amount and currency within ten
-minutes, or the bill its Moment or check-in carries), as an import in place of the ledger once left them,
-takes the site's id and what of it the site has back. `ledger/ICostImport`,
-`ledger/Accounting` and `ledger/Links` are plain Kotlin tested in `LedgerTest`, which also
-reads a real export when `ICOST_EXPORT` names one and a real backup when `ICOST_BACKUP` does.
-
-**自动记账（试用）**, switched on in 记账, has the same accessibility service read WeChat Pay's and
-Alipay's pages. On one that says a payment went through, it offers a 记一笔 notification with
-the amount, time, note and account it read; tapping it opens
-`moments://payment?amount=…&time=…&note=…` with a category guessed from the books' category
-names in the note, which also picks its book. WeChat's note is the payee and the 商品 row.
-Nothing is written until saved, and a payment matching a kept bill within ten minutes isn't
-offered. It never taps, types or keeps the page. `ledger/Payments` reads the page, with
-fixtures in `PaymentsTest`; `ledger/AutoBill` keeps the switch and posts the notification.
-
-**侧键**, in 我 (`moments://side-key`), is for one phone, the OPPO Find X10 Pro Max (model
-`PMX110`, `SideKeys.supported`); any other phone has no 侧键 row. It gives the physical OPPO key's single, double and long
-press each an action: payment capture, the flashlight, an app or a link, media and volume
-keys, or a system action (back, home, recent apps, notifications, quick settings, lock).
-None is set on the user's behalf. The double-press window (300 ms, 150–600) and the long
-press (600 ms, 400–2000) can be changed; a single press waits out the window. The flashlight
-toggles the rear flash without the camera, reading its state each press.
-
-Under 场景 the same gestures can do something else in a scene: 付款页, a completed WeChat Pay or
-Alipay payment page as the payment reader recognizes it, or any app added there, while it is in
-front. A gesture a scene leaves at 跟随默认 runs its default action. Only a press whose gesture
-some scene changes looks at what is in front, and nothing read is kept.
-
-It needs Shizuku started and the share-and-ledger accessibility service on: a small Shizuku
-UserService reads the input device advertising `BTN_TRIGGER_HAPPY32`, hosted by that service,
-with no foreground service of its own. Turned off, it restores the system's own action (once
-Shizuku is back, if it was lost); after a restart Shizuku has to be started again. Stop any
-other side-key remapper first. The payment action reads the page still in front, which needs
-the phone unlocked but not 自动记账, and opens the bill to confirm; one already saved is
-reported instead. The settings and the original action stay out of Android's backup.
-`sidekey/GestureDetector` and `SideKeyActions` have timing and validation tests.
+- **自动记账（试用）** reads WeChat Pay and Alipay success pages through the accessibility
+  service and offers a 记一笔 notification (`ledger/Payments`, `ledger/AutoBill`). It never
+  taps, types or keeps the page.
+- **侧键** (`sidekey/`) remaps the OPPO Find X10 Pro Max's side key (`SideKeys.supported`)
+  through a Shizuku UserService. No gesture is bound by default.
+- Exchange rates are the ECB's, bundled in `assets/ledger-rates.json` and refreshed from
+  Frankfurter on request.
 
 ## Footprints
 
-The footprints are GPS tracks kept on the phone alone, in
-`noBackupFilesDir/footprints.sqlite` (`footprints/FootprintStore`), outside sync and backup.
-地图 → 足迹 opens a panel to record and to look at the footprints of the 足迹 layer's time, chosen in
-地图's 图层 with every layer's (following every layer's until given its own: a day, a span, or a
-trip it recorded, a long time drawn from every so many points), and export GPX and delete a day's or a trip's — while recording,
-anything but today and the running trip (importing is in 我 → 导入); 足迹记录
-(`moments://footprint-settings`), from the panel's settings button, sets how recording
-behaves.
+GPS tracks kept in `noBackupFilesDir/footprints.sqlite` (`footprints/FootprintStore`), never
+synced or published; they leave the phone only in the WebDAV backup.
 
-- **Recording.** 日常自动记录 runs until turned off; 单次行程 marks a trip over the same
-  samples; 暂停所有记录 pauses both. A foreground service with precise location asks for a
-  fix every 5 seconds (a trip: 5 s / 5 m); after a good fix daily recording allows up to 60
-  seconds of batching, falling back when batches stop arriving and retrying with backoff;
-  when they stop because the receiver sees too few satellites (a garage, a tunnel), it
-  searches again unbatched and batches again after the next fix, without the backoff.
-  It resumes when the app opens, and after a reboot when background location is allowed.
-  As it starts, GPS can take most of a minute to its first fix, so a network position in that
-  time, accurate enough for the line, is kept as its first sample.
-- **Resting.** Daily recording rests GPS once several fixes over three minutes show no
-  movement, and wakes on the significant-motion sensor, on passive or low-power network
-  positions showing it moved, or on a probe, two minutes after the rest and then four, eight
-  and ten as each probe finds it unmoved, or as each finds no fix. Until a fix has moved since
-  the rest, a move takes 50 m and two fixes that agree, never a fix that used no satellites,
-  since a probe's first fixes can sit tens of metres off; a passive
-  position that wakes it is kept as the first sample after the rest. While it
-  rests the notification moves to a silent channel and says 省电等待. The optional
-  活动识别增强 uses Play services' activity transitions as an extra wake-up, never as a
-  reason to rest; while they say moving, a search that finds no fix (a garage, a tunnel)
-  keeps going for up to ten minutes since the last movement instead of resting after two.
-- **Storage and refinement.** Every fresh, valid fix is stored raw. `TrackRefiner` derives
-  the map's line and ordinary GPX from them: it drops spikes and stationary clouds, and
-  breaks the line at fixes over 50 m uncertainty, gaps over 45 seconds, pauses and
-  restarts. While today or the running trip records, the map goes on from the line's last
-  point to the newest fix still waiting to confirm it, pale, once that fix has moved past the
-  fixes' uncertainty; nothing else counts it. 导出当前原始采样 GPX exports every stored sample of the chosen day or trip, and
-  导出全部原始采样 GPX those of every day, with accuracy and speed in
-  `https://hyoban.cc/ns/footprints/1` extensions: the full backup to import again.
-- **Import.** 导入 GPX 轨迹, in 我 → 导入, reads a GPX the app exported (`footprints/TrackImport`), a line
-  or raw samples, back into the store as samples of no trip: raw samples keep their
-  segments and extras, each `trkseg` of a line becomes a segment. Where the phone already
-  has samples within 45 seconds, its own are kept and the file's skipped, so importing a
-  file twice adds nothing; a raw export before the line of the same day keeps the most.
-  导入一生足迹 CSV, beside it, reads the .csv files Footprint (一生足迹) exports, several years'
-  at once (`readFootprintCsv`), by their header: `dataTime` (Unix seconds), `latitude` and
-  `longitude` (WGS 84, as its points sit on the phone's places) place each sample, and
-  `accuracy`, `speed` (negative when unknown) and `altitude` come along; the other columns are
-  left. Each file is one segment, the same way kept where the phone has its own. Check a change
-  to it against a real export with `FOOTPRINT_CSV=<file> ./gradlew :app:testDebugUnitTest --tests
-  '*TrackImportTest*'`, and never commit it.
-- **What else is kept.** Beside each sample the store keeps what the fix and the receiver
-  said: heading and its accuracy, vertical accuracy, altitude above sea level, the provider,
-  and the satellites used and seen with their signal (matched by time, so batched fixes
-  get their own); the raw GPX carries them too. With 活动识别增强 on it keeps every activity
-  transition, and it keeps recording events: each command with who gave it (`manual`,
-  `notification`, `wifi`, `bluetooth`), each rest with its reason, each wake with what woke
-  it, and each lost sky. Deleting a day or trip deletes these over its span too.
-- **Moves and stays.** `TrackParts` reads the refined points of the chosen day or trip as
-  stays (five minutes or more within 120 m, a pause or a rest inside one included) and moves
-  between them, each told walking, cycling or driving by the kept activities where there are
-  any, else by its speeds, and never against them (a walk can't go at a drive's pace); slow
-  traffic and a car park's crawl stay part of the drive. The map draws a drive solid, a ride
-  thinner, a walk dotted and a stay as a ring, each stretch shaded from pale to the ink the way
-  it went, so a way gone back along shows which pass was which; while the panel is open, and
-  after it frames the footprints until a place, a route or the map is tapped, the trips' routes
-  and places step back behind them; 足迹 → 行程分段 lists them with distance, average
-  and top speed, names a stay after one of the phone's own places within 300 m (no request
-  leaves for it), and frames one on the map when tapped, the rest of the day stepping back; a stay's + opens the same picker on
-  its middle at once, named after what is around it as a dragged pin is, to keep it as a place of the phone's, or with 保存为签到
-  as a public check-in there too (`source.app` `phone`), from the stay's start to its end,
-  its uid made from the start so keeping it again changes it; a check-in whose time meets the
-  stay's, Swarm's or another, one begun the day before included, is that visit, and none is
-  added. Such a stay is listed with that check-in's venue and a grey flag in place of its +.
-  Kept as a check-in, its bills with no place nor a Moment's, if any, are offered its place in
-  a message, 用这个地点.
-  A stay's ring tapped on the map opens 新签到 at it: the stay's start and end (来自足迹停留) and its place,
-  the phone's own within 300 m or a new one named after what is around it. Saved with nothing
-  written it is the stay's check-in, as 保存为签到 keeps one (its uid, the end its editor shows, its bills
-  offered the place); written in, it is a Moment there. A stay kept already opens its check-in.
-- **Notification.** Its icon shows the state (recording, waiting for a fix, location off).
-  On Android 16 and later it asks to be a Live Update; on ColorOS that also needs
-  流体云显示实时活动, linked from 足迹记录 → 状态栏显示. Once daily recording rests it stays
-  省电等待, without the Live Update, through the stay's probes and wakes that find no fix, until a
-  fix shows it moved: a stay doesn't make it come and go every few minutes.
-- **Background allowances.** 足迹记录's 需要 lists what is missing (notifications, Live
-  Updates, unrestricted battery, background location, physical activity), and the
-  footprints' last onboarding step shows the same; battery opens the system's own dialog.
-  ColorOS's auto-start can't be read, so on OPPO, OnePlus and realme it is a row of its own
-  in 后台记录 and onboarding, opening the app's page.
-- **Diagnostics.** `noBackupFilesDir/footprint-diagnostics/` keeps two rotating JSONL files
-  of 8 MiB, about two days, with each request, fix, filter decision and state change, never
-  a coordinate, network name or token. 足迹记录 → 诊断 → 导出诊断日志 exports them with a replay of the
-  latest day through the current filter.
-- **Never published.** The footprints leave the phone only in the owner's WebDAV backup; the
-  app draws a trip along its footprints where it has them.
-
-### Connection automation
-
-足迹记录 → 连接自动控制 starts and pauses recording by connections the user picks, none by
-default: joining a chosen Wi-Fi pauses and leaving all of them starts; connecting a chosen
-Bluetooth device starts and disconnecting the last pauses, and Bluetooth wins over Wi-Fi.
-Changes settle for five seconds, GNSS warming up meanwhile when leaving a Wi-Fi while
-paused, its position thrown away; a manual choice made since always wins, except that
-starting recording by hand (daily, resuming or a trip) on a chosen Wi-Fi with no chosen
-device connected pauses it again. Turning the automation on or changing what it watches
-starts or pauses once by the connections then, Bluetooth first. A `specialUse`
-foreground service watches the connections without scanning or asking for fixes, and on
-Android 16 a chosen device can be associated through `CompanionDeviceService` to wake it.
-It needs precise and background location, and Nearby devices for Bluetooth. Its settings
-are `noBackupFilesDir/connection-reminders.json` and `companion-connections.json`.
+- A foreground service records with precise location, batches fixes when it can, and rests
+  GPS when stationary, waking on significant motion, network positions or backoff probes.
+  活动识别增强 adds activity transitions as wake-ups.
+- Raw fixes are stored as received. `TrackRefiner` derives the drawn line and GPX, and
+  `TrackParts` splits it into stays and moves (walk, ride, drive). A stay can be kept as a
+  place or a check-in.
+- 连接自动控制 starts and pauses recording by chosen Wi-Fi networks and Bluetooth devices.
+- Diagnostics are rotating JSONL files in `noBackupFilesDir/footprint-diagnostics/`, never
+  holding a coordinate, network name or token.
 
 ## Camera
 
-**相机**, in 我 (`moments://camera`), pairs one camera, a Sony a7C II (ILCE-7CM2), on Android 16
-and later (`CameraLink.supported`, the companion presence the footprints' automation uses too).
-It does two things, both written from Sony's protocol as open projects document it rather than
-from any one app's code: Saschl/alpha-gps (GPL, read for its notes only), rock3r/CameraSync,
-ekutner/camera-gps-link and Asdoos/SonyGpsApp for the Bluetooth side, and
-UbiquitousBear/shutter-bridge's measurements on an a7C II for the Wi‑Fi one.
+相机 (`camera/`) pairs a Sony a7C II on Android 16+ (`CameraLink.supported`). The protocol is
+written from what open projects document (Saschl/alpha-gps, GPL, read for notes only;
+rock3r/CameraSync; ekutner/camera-gps-link; Asdoos/SonyGpsApp; UbiquitousBear/shutter-bridge).
 
-- **Pairing.** The camera's 智能手机连接 and 位置信息链接设置 on, and its Bluetooth 配对 screen
-  open; 配对相机 asks for Nearby devices, location, Nearby Wi‑Fi and, from Android 17, local
-  network access (without it the system silently drops every packet to the camera), then the system's device
-  list (Sony cameras by their advertisement), and bonds, the camera asking to confirm. The
-  association, the camera's address and 给相机发位置 are `noBackupFilesDir/camera.json`, kept
-  out of the footprints' Bluetooth rules. 取消配对 removes the association and the bond.
-- **Location.** While 给相机发位置 is on, the system tells the app when the camera's Bluetooth is
-  seen, and `CameraLocationService`, a location foreground service with its own notification,
-  connects over GATT, takes the camera's location lock (DD30, DD31), reads whether it wants the
-  time zone (DD21) and writes the phone's fix to DD11 every 10 seconds (91 bytes, or 95 with the
-  zone): WGS-84 degrees × 10⁷ and the fix's UTC time, a fix older than 15 seconds sent again with
-  the time now so the camera keeps its link, none older than 10 minutes. It stops when the
-  camera goes, says why when the camera refuses (位置信息链接 off, or another phone holding the
-  lock) and waits for the camera to come back. The camera's clock follows it only if the camera's
-  own 自动校正时间 and 自动调整区域 are on. Nothing of it leaves the phone but to the camera.
-- **From the camera, in 选照片.** With a camera paired, 选照片's title lists it after the albums; chosen, it
-  connects then. Over Bluetooth the camera is told to put its Wi‑Fi up (CC08, after
-  subscribing to its status notifications, without which it puts it straight down) and hands
-  over its network's name and password (CC06, CC07); the phone joins that network for the app
-  alone with `WifiNetworkSpecifier` (the system asks once), other traffic staying where it was,
-  waits for its address (the a7C II hands the phone 192.168.0.1/16 and is itself 192.168.122.1,
-  the network's DHCP server and gateway), and opens PTP/IP (port 15740) to the camera in Sony's
-  remote control with transfer (`SDIO_OpenSession` 0x9210 with mode 2 and its connect
-  handshake), one session kept until the page closes. The card is its contents
-  (`SDIO_GetContentInfoList` 0x923C): a shot with its files, a JPEG and its RAW, each a content
-  ID that stays its own whatever else is deleted, and a new list comes when the camera says the
-  card changed (event 0xC234), a photo taken or deleted. Photos come by day, newest
-  first, with the camera's thumbnails (a JPEG behind four bytes of its length, 3:2 inside a 4:3
-  frame, so cropped). A tap opens one full size, swiped through on black: its thumbnail
-  enlarged, with how much of the original is down and how fast, until the original, fetched
-  for the page it settles on and going on when swiped past, is in the app's cache; once it is
-  down the next one's comes too, so turning to it finds it there. Thumbnails and originals are
-  kept on disk by the photo's name and size (`MediaCache`, Coil's disk cache: 100 MB of
-  thumbnails, 1 GB of originals, the least lately used going first), so one looked at before
-  shows at once, this visit or the next. It zooms as the
-  photo viewer does (two fingers or a double tap), the original read in tiles as it zooms
-  (`ZoomableMedia`, telephoto's subsampling), so its detail holds up. The ring in the corner, or
-  选中 there, chooses it. JPEG and HEIF can be chosen, RAW only looked at. The camera's Wi‑Fi
-  band is the camera's to choose: on 2.4 GHz the a7C II gave about 3 MB/s, on 5 GHz several
-  times that. The viewer's 删除 deletes a photo from the camera's card, after asking, in the
-  same session: `SDIO_DeleteContent` (0x9250) takes the content, a JPEG's RAW too, and the
-  camera confirms with event 0xC240. With photos chosen, the bar's 删除 deletes them all, after
-  asking, one at a time with how far it is and 停止; those it couldn't delete stay chosen. Thumbnails are `SDIO_GetContentCompressedData` (0x923E),
-  and chosen ones download in 4 MiB pieces (`SDIO_GetContentData` 0x923D), or come from the
-  cache when looked
-  at, to the gallery's `Pictures/Here/`,
-  one already there kept, and join the Moment, its time and place from the photo as any
-  other. Leaving the page leaves the camera's network.
+- **Location over Bluetooth.** `CameraLocationService` takes the location lock (DD30, DD31),
+  reads whether the camera wants the time zone (DD21), and writes the fix to DD11 every
+  10 seconds (91 bytes, or 95 with the zone).
+- **Photos over Wi-Fi.** The camera is told to raise its Wi-Fi (CC08) and hands over its
+  credentials (CC06, CC07). The app joins with `WifiNetworkSpecifier` and opens PTP/IP on
+  port 15740: `SDIO_OpenSession` 0x9210 mode 2, content list 0x923C, thumbnails 0x923E, data
+  0x923D in 4 MiB pieces, delete 0x9250, events 0xC234 (card changed) and 0xC240 (deleted).
 
-## 相册
+## NAS
 
-相册 (`moments://album`), the third tab, is 选照片 (below) looked through: the same sources in its
-title, the same grid, calendar, map and viewer, and the same page (`ui/picker/PhotoPicker.kt`), with
-the tab's 记录 beside the tabs. Its bar keeps to two circles under the title in the middle, so the
-NAS's map is switched to from the title's menu. Its photos have no circles until 选择 in the bar, or a photo held,
-starts choosing; held and dragged on, every photo from it to the finger is chosen with it, as the
-system's gallery does (in 选照片 too). Choosing, the circles show, 选择 turns into 不选了 (as does
-back), and the tabs give way to a bar of what to do with those chosen, as many as liked: 分享 hands
-them to the system's share sheet as copies without where they were taken, as a Moment's are shared (`Outgoing`), 存到相册 (once the camera's or the NAS's are chosen) saves those to
-the gallery's Here album and lets the choice go, 删除 deletes those chosen from the source shown as
-选照片's does, and 写时刻, 记录's ink button grown to hold its words, opens a new Moment with them in the order chosen, set back past the nine a
-Moment holds, which the subtitle then says. The camera's and the NAS's are saved to the Here album
-first for all three, with how far it is and 停止 at the foot. Looked through, the viewer opens over the
-tabs and is a Moment's photo viewer's: 删除 and a live photo's button in the bar over it, the icons
-(分享, 存到相册 for the camera's and the NAS's) beside 信息 under it, and the one main action at its
-foot, 用这张写时刻 for the photo shown, or 打开时刻 for one in a Moment already; choosing, it chooses as
-选照片's does, with 写时刻. A live photo plays in every viewer as in a Moment's, once on arriving,
-again from its button or held down with its sound, and Space: the gallery's and the NAS's from the
-motion photo itself, where its clip starts after its still (the NAS's read by range, the start of its
-original kept on the device), an iPhone's on the NAS from the MOV it keeps beside the still (its stream's
-`size_type` 5), a published one's from its clip, and in the editor one picked and not
-yet saved from its own file, unless it goes in as a photo alone or 打码'd. A video plays and pauses with
-Space in every viewer too. Every viewer, resting on one a moment, reads those either side ahead: their
-stills and their info. The viewers are one: each source says what it has of a photo (`ViewedMedia`: its
-still as it comes, its clip or video, its info) and every page is drawn alike (`ui/viewer/MediaPages.kt`),
-zoomed by one component (`ZoomableMedia`) with whatever lies over the photo, a clip, a video or the
-patches being drawn, zooming with it. On a tile, a live photo, a video (with its length where the source
-knows it) and a RAW are marked by the design's MediaBadge alike, in 相册, 选照片, a Moment's photos, the
-editor's row and the trip playback.
+绿联 NAS (`nas/`) reads the owner's UGREEN NAS photo app. Its API is undocumented; this is what
+the app relies on.
 
-**相簿**, under 我, lists the gallery's albums, the largest first, each with a switch: one turned
-off leaves 相册, 选照片 and 地图's photos wholly, the title's menu too, its photos still on the phone.
-The app's own albums, Here and 准备图文's Here Share ones, start off; the others start on. What is
-hidden is kept by the gallery's id for each album, on the phone alone.
+- **Discovery.** A UGREENlink ID resolves through `api.ugnas.com`
+  (`p2p/v2/ta/nodeInfo/byAlias`) to LAN, DDNS and relay addresses, probed with
+  `/ugreen/v1/verify/heartbeat`.
+- **Sign-in.** `verify/check` returns an RSA key in `x-rsa-token`; the password goes to
+  `verify/login` encrypted in 117-character PKCS#1 v1.5 chunks. Requests carry
+  `x-ugreen-token`, its MD5 as `x-ugreen-security-key` and `token_uid`; streams take
+  `static_token` as `ugk`. Only HTTPS is supported (HTTP wraps bodies in AES-GCM).
+- **Photos.** `v5/photo/picture/timeline/list` and `timeline/node`, `album/list`,
+  `album/picture/list`, `picture/stream` (`size_type` 1 grid, 3 viewer, 0 original, 5 an
+  iPhone's MOV), `ai/map/gps/list` and `ai/map/gps/photo` for the map,
+  `v5/photo/picture/option` for filters, `file/remove_operability` then `file/remove` to
+  delete. `create_time_utc` is local time written as UTC.
+- Published photos can be linked to their NAS original (`nas` on the media, matched by
+  timestamp then dHash in `NasMatch`), so viewers show the unredacted original on the device
+  and 换成 NAS 原图 can replace a smaller published copy.
 
-**过滤**, the button beside the subtitle's count (`ui/picker/PhotoFilter.kt`), narrows 相册 and 选照片
-alike, one filter for both kept on the phone (`Settings.photoFilter`) and there the next time. Lit,
-the count is what it leaves and the conditions chosen line up under it, each taken off with its X;
-none left says 没有符合过滤的照片 with 清除过滤. Its sheet, every change at once and 重置 at its top,
-lists only what the source shown can tell of its photos, and a condition it can't tell has no say
-there: 类型 (照片, 视频, 实况) and 时间 everywhere but the camera's card, which has only the time; 时间 as
-the search has it, a year and within it a month, or 自定义, a range of days from 从 to 到 in the
-calendar; 地点 and 时刻 (written into a Moment or not) for the NAS's, 地点 for 已发布 (its Moment's
-place); and for the NAS's timeline alone 设备, 镜头, 焦段, 光圈, 快门 and ISO, the values the NAS
-offers under what is already chosen (`v5/photo/picture/option`, as its web app's 高级筛选 reads
-them), folded after six until 展开. The gallery's 实况 are its photos whose XMP in the media store
-says so, listed in one query once a kind is chosen; the gallery's EXIF isn't read for this. The NAS
-narrows by kind and EXIF itself (`type_option`, `advanced_option`), and its timeline is laid out
-from the days that leaves within the time chosen, read from where they start once they are laid out; what it can't narrow
-by (a place, as its map knows them, a Moment, and an album's time) is read a page after another,
-keeping what passes, until a screenful more is kept.
+## Keys and services
 
-已发布, in 相册's title after the gallery's albums (and in 选照片 not at all), is every photo and video
-of the Moments, the private ones too and in 演示模式 only what is shown, newest Moment first under its
-day, each the site's own (or the phone's, not published yet). They are only looked at: the viewer
-shares one as a Moment's viewer does and 打开时刻 takes it to its Moment; none is chosen or deleted here.
-
-**Linked to the NAS.** A Moment's photo or video keeps which one of the NAS's it is (`nas` in the
-record: its id there, when it was uploaded and its file's name, which the NAS's stream wants): the
-published copy has lost where it was taken, and may be smaller or 打码'd, while the NAS keeps the
-original whole. One added from the NAS is linked as it is written (the NAS remembers which of its
-photos each original it kept came from, the last five hundred); for those written before, 关联已发布的照片
-under 同步与来源's NAS reads the NAS's timeline for only the days they are looked for on (the day taken,
-or for one that doesn't say its Moment's day and those either side) and links each, a photo to a photo
-and a video to a video (`NasMatch`): to the one taken at the same second on the clock, of the same shape
-upright or not, unless the two look plainly else; else, or where two are alike at that second, to the
-one that looks the same, by a 64-bit difference hash (dHash) of the published small still and the NAS's
-small thumbnail, close and clearly closer than the next. What can't be told apart, a burst's frames
-or a photo mostly 打码'd, is left unlinked. Each Moment so changed waits in 发布更改 like any other edit, under NAS 原图 each photo
-beside the NAS's thumbnail and its file's name, to see they are the same. Linked, a published
-photo's info is read from the NAS's original, where it was taken too (only ever on the device), and its
-viewer keeps the NAS's original (存 NAS 原图) as the NAS's own are kept; the NAS's photo marks itself as in a
-Moment in the grid, its viewer opening that Moment, and it leaves 地图's photos, where the Moment's place
-stands for it already. The site never shows the link.
-Looked at in a Moment's viewer or 已发布's, a linked photo (a video stays the site's) is the NAS's own while
-the NAS is set up (`ui/viewer/NasLinked.kt`), so it is whole, not 打码'd: its big thumbnail, its original
-once zoomed into, and its clip if the NAS has one, whatever the site's is, a motion photo's read from its
-original (its size asked once and kept) and an iPhone's from the MOV beside it (whether there is one asked
-once and kept). The site's copy, and its clip, stand in while the NAS isn't reached, and the info panel says
-it is the NAS's original. Only what is looked at changes: 分享 still hands on the site's copy, and the
-editor's viewer shows what will be published.
-In a published Moment's editor, the viewer puts a linked photo back as the NAS's original (换成 NAS 原图),
-offered only where the site's copy is less than it: its long side shorter than the NAS's original's, as the
-original's EXIF says, whether the site kept it as uploaded or optimized it; where the EXIF says nothing, one
-the site optimized is taken to be less and one kept as uploaded not. The original comes down as one picked from the NAS
-does and goes in where the old one was, as the old one went: a live photo with its clip, neither asked
-about nor covered, as it was public so; a still as a still, its faces and plates covered as it comes in;
-uploaded as a new photo (a new uid, so a new key) when the change is published, keeping the old
-one's alt text and 留档; where it was taken moves the Moment nowhere, only offered as 用照片的地点. The old object stays in R2,
-as a photo taken out of a Moment does.
-可换原图, after 已发布 in 相册's title once the NAS is set up, looks at every published photo linked to
-the NAS that way, six at a time and saying how far it is (the originals' starts kept on the device, so
-looking again is quick), and lists those less than the NAS's original
-under their Moments' days; the viewer's 换成 NAS 原图 opens the Moment's editor to put one back.
-
-**地图's photos.** The map's 照片 layer, in 图层 and off at first, lays 相册's
-photos that know where they were taken over the map (`PhotoLayer`, `PhotoHeapLayer`): the gallery's, whose
-places the media store doesn't keep, so each photo's EXIF is read once from its original in the
-background and kept on the phone (`GalleryLocations`, a file in `noBackupFilesDir`, read again only for
-a photo new or changed), and the NAS's (above). A photo that says nowhere stands where it was taken by
-time (`TimePlaces`, on the device alone): at the footprint nearest that time, while 足迹 is on, else at the
-place of the photo of either source nearest it in time, either within two hours, or off the map; its
-heap's grid holds it with the rest. While 地点 is on, published photos aren't among them, nor the NAS's linked to
-one: they are the map's places already; with 地点 off they are. Photos within 64 points of each other on screen stand as one heap, one of them showing with how
-many: a symbol layer of the atlas's own, grouped by its source's clustering at each zoom, so the
-heaps move with the map in the frame it draws; the photos' time in 图层 keeps those taken in it. A heap tapped brings its photos up
-from the foot as 相册's grid, the map staying above: looked at, and chosen (held, or 选择) to write,
-share, save or delete as in 相册, the tabs giving way to the bar. On the Mac they are the NAS's alone.
-
-On the Mac, 相册 is the sidebar's (⌘4), the same page in `:shared` with the NAS as its one source:
-the computer has no gallery of the phone's and pairs no camera, so the phone adds its two
-(`PhonePicker`, the `Device`'s `picker`) and the Mac lists the NAS alone, set up in the settings
-window's 同步与来源 as on the phone, and said not to be set up there until it is. The NAS's videos
-stay stills there and an original is zoomed into whole, not in tiles (telephoto's tiles are
-Android's); there is no share sheet, and 存到「图片」 keeps the originals, as 写时刻 does first, in
-the Pictures folder's Here, one of the same name and size already there kept rather than saved
-twice.
-
-## 选照片
-
-记录's photo row ends with two tiles: 加照片 opens 选照片, 相册 in its choosing look, over the Moment,
-in place of the system's picker, and the other opens the phone's camera app, whose photos and videos join the Moment as
-the gallery keeps them, until a little after coming back. 选照片 reads the gallery itself (`ui/picker`):
-the first time it asks for the photos and videos with the photos' places (`READ_MEDIA_IMAGES`,
-`READ_MEDIA_VIDEO`, `ACCESS_MEDIA_LOCATION`); declined, the system's documents picker opens instead.
-Given only some photos (Android 14 and later), a row at the top says how many and 更改 asks the
-system again. Its title switches between 所有照片, the gallery's albums by size, the paired camera
-(Camera, below) and the UGREEN NAS's photos and albums (NAS, below). What was last switched to, in
-相册 or here, is kept on the phone and opened next time in both, even when it can't be reached (the
-NAS away from home, the camera off), where it says so as it does when switched to; a NAS album
-shows the NAS's timeline until its albums are read, and what isn't offered (the camera unpaired, 已发布
-here) opens the first. What is chosen stays chosen across them, numbered in the order it goes into the
-Moment, up to the nine a Moment holds. The grid is by day, newest first, four across (eight on its
-side), a video with its length and a motion photo marked 实况, its XMP read from the media store.
-Two fingers pinched or spread change how many go across, three, four or six (six, eight or twelve
-on its side), kept for next time: the grid only grows and shrinks with the fingers while they are down,
-and takes the next count, one step at most, when they lift, the photo under them held where it was unless the grid is at its top; at six they are by the month and only looked through, without
-their circles, what is chosen keeping its border and number. While the grid scrolls a handle shows
-at its right: dragged, it takes the grid through what it holds, a bubble beside it saying the
-month, and reaches only what has been read, so a NAS album reads on at the end. The calendar in the
-bar (跳到日期) opens on the month at the top of the grid, the days with photos dotted; a day picked
-takes the grid to it, or to the nearest day before it, a NAS album reading on page by page until it
-is reached, unless the grid is scrolled by hand meanwhile.
-
-**地图**, the bar's map button (选照片's alone; 相册 has 地图's photos), turns the page into the atlas
-(`ui/map/PhotoAtlas.kt`): the places and routes as 地图 draws them, with 图层's times, and over
-them every source's photos that know where they were taken, heaped as 地图's photos are (相册, 地图's
-photos), a year picked narrowing both. A heap tapped rises from the foot as the grid does, its photos'
-circles out and what is chosen there the same choice as the grid's, 加入 at the foot; dragged down, a tap
-on the map or back puts it away, and the button, now 照片格子, goes back to the grid. Its places only show
-where things were: tapped, nothing opens. Its map is its own and goes with the page, leaving 地图's kept
-atlas as it was.
-A tap opens one in the app's one viewer, on black, swiped through and zoomed as a Moment's are, chosen and
-added from there; a photo of the gallery's, the camera's or the NAS's is read from its original in tiles as it
-zooms, so it stays sharp. Under it, upright, the photos before and after are small in a row, the one shown
-in the middle and those chosen dotted: a tap turns to one, and dragging the row turns the viewer
-along. A video of the gallery's or the NAS's (MP4, QuickTime or 3GP) plays where it is, silent until
-asked, with the photo viewer's controls, the NAS's read from its stream as far as it is watched and
-not kept; on the Mac a NAS video is only looked at, as videos aren't added there yet. A live photo of the
-gallery's or the NAS's plays its clip once, and with its sound while held: a motion photo's clip read by
-range from its original, kept on disk with the clips seen before under a key of its own rather than its
-signed-in address, and from the original once that is down on the phone; an iPhone's MOV brought down
-once and kept with the originals, the same way a Moment's photo linked to it is played (`Nas.clipOf`). The camera's videos stay stills. Its 删除 hands one of the gallery's to the system, which asks and moves it to its bin
-(`createTrashRequest`), and deletes one of the camera's off its card, after asking. With
-photos chosen, the bar's 删除 does the same with those chosen from the source shown: the
-gallery's in one request, the system asking once, the camera's one at a time. 加入 adds the gallery's as they are, their
-originals where the app may see where they were taken (`setRequireOriginal`), and the camera's
-saved to the gallery's Here album first, with how far it is and 停止.
-
-**From the NAS.** 绿联 NAS, under 我 → 同步与来源, is the owner's UGREEN NAS (UGOS Pro) whose photo app
-选照片 reads (`nas/`): its UGREENlink ID, or an address of its own, the user and the password, kept as
-the WebDAV backup's is. Nothing is asked of it until the picker's title switches to it. An ID is
-looked up at UGREENlink (`api.ugnas.com`, `p2p/v2/ta/nodeInfo/byAlias`, which needs no sign-in): it
-answers the NAS's names on the home network under `lan.ug.link`, with a certificate of their own,
-its DDNS names and its relay, `<id>.<cluster>.ug.link`. Those at home are tried first, their
-heartbeat (`/ugreen/v1/verify/heartbeat`) together, then the rest; the one that answered is tried
-first next time. The app signs in as the NAS's web app does: `verify/check` gives an RSA key in
-`x-rsa-token`, the password goes to `verify/login` encrypted with it in 117-character chunks (PKCS#1
-v1.5), and the session is the token, a second key to encrypt it with for every request
-(`x-ugreen-token`, its MD5 as `x-ugreen-security-key`, both in the cookie with `token_uid`) and the
-`static_token` the stream wants as `ugk`. Over HTTPS the requests are plain JSON; over plain HTTP
-the web app wraps them in AES-GCM, which the app doesn't speak. The photos are the photo app's
-timeline (`v5/photo/picture/timeline/list`), newest first, two hundred at a time, and its albums (`album/list`, `album/picture/list`) follow in the title's menu once it has
-been read. The timeline is laid out whole first, as the web app lays it out, from its days and how
-many each holds (`timeline/node`, `level` 0, oldest first), a grey tile for each photo under its day,
-so the handle and the calendar reach every day at once; a tile that stays in view a moment reads its
-page of two hundred (`offset` its place), and only those pages are read, a fling past reading nothing.
-Photos are grouped under the day the timeline puts them. An album has no days to read, so it reads
-on as the grid nears its end. Its `create_time_utc` is the clock's reading written as if UTC, so it is read as the
-phone's time. Thumbnails are the stream's (`picture/stream`, `size_type` 1 in the grid, 3 in the
-viewer, 0 the original); a photo's info reads its EXIF from the first 256 KB of the original.
-Zoomed into, a photo's original comes down to the app's cache, the big thumbnail standing in
-meanwhile, and is then read in tiles as it zooms; 加入 copies it rather than fetching it again.
-Thumbnails and originals are kept on disk as the camera's are (`MediaCache`), by the photo's id
-and when it was uploaded, and the viewer fetches the next photo's big thumbnail ahead.
-The rest read off it that doesn't change for a photo is kept too (`MediaCache.nasData`): the start of an
-original, for its EXIF (or that of an original already down), and how a photo looks for 关联已发布的照片
-(a published still's by its object's ETag); a day's list of photos as long as the timeline says the day
-holds as many; and 地图's places, shown at once from last time while they are read again, and kept
-shown without a word when the NAS can't be reached.
-On 地图 (相册, above: 地图's photos) the NAS's photos stand where they were taken: the photo app's own
-list of where its photos were taken (`ai/map/gps/list`, five thousand at a time, read whole the first
-time they show; WGS‑84, as the EXIF has them), so no original is read for it, and a heap opened reads
-its photos by their ids (`ai/map/gps/photo`, two hundred at a time). The list says nothing of when, so
-outside the photos' time in 图层 they step away. For the photos it doesn't list, the timeline is read
-whole too (`Nas.everyPhoto`, each day kept as 相册 keeps it, so only days new or changed are read again),
-its times, the NAS's clock's, read in the device's zone; a heap the timeline holds whole opens from it,
-newest first, without asking the NAS again.
-加入 saves the originals to the gallery's Here album first, as the camera's; an iPhone's live photo
-brings its clip (`size_type` 5) into the app's cache, and which kept originals were live is kept with
-their links, so the editor finds the clip again, read anew if the cache let it go. 删除 asks the NAS first
-what it would do (`file/remove_operability`): to its recycle bin, or for good where there is none,
-and the dialog says which before `file/remove`. Through the relay an original comes at about
-2 MB/s, so a large video is better added at home.
-
-**Photo info.** In every viewer, on the phone and the Mac alike, a swipe up, or 信息 in the bar, makes room
-under the photo for what it says of itself: when, with its offset; the body, lens, focal length (and
-its full-frame equivalent), aperture, shutter, ISO and exposure compensation; where, named as the
-place picker names a point, on a small map; and the file's name, format, size and album. What the
-photo doesn't say is left out. The gallery's are read from the file, a camera's from its original
-once it is down, the NAS's from the start of its original, a Moment's photo not yet published from its file,
-and a published one's from the NAS's original when it is linked, else the first 256 KB of its original
-(`Range`), which keeps its EXIF but not where it was taken; each is read once and kept while the app
-runs (`MediaDetails`). A swipe down puts it away.
-
-## Elsewhere
-
-- **Widgets.** 那年今天 (a Moment from this day in an earlier year) and 旅程 (the trip under
-  way, else the last or next), in ColorOS's card sizes, the owner's own and so showing private Moments and trips too, drawn from the copy after each sync
-  and every three hours. 热力图 is a square a day, as many weeks as fit, a year by months at
-  four by four and a row of days as a strip, of the public Moments, the spending (shades only,
-  never an amount) or how far the footprints went; it is chosen as the widget is added and
-  again by tapping its name, as ColorOS's long press has no way to set a widget up again.
-- **Video.** The viewer goes picture-in-picture when the app is left while a video plays.
-  A photo that can't be fetched there says so, with 重试.
-- **Language and appearance.** Always the phone's: Chinese, or English when the phone speaks
-  it, and light or dark as the system is. The API has no default and is set in 我 → 同步与来源,
-  and the origin the photos and videos are served from is what the API says at `GET /`, asked
-  after each sync and kept. The AMap and Tencent keys and the AI group's address, key and model
-  have no default; the keys stay on the phone, out of the backup.
-- **Maps.** OpenFreeMap's vector tiles drawn by MapLibre, needing no key. The light and dark
-  style documents, with Chinese labels and minor roads quieted, are packaged with the app;
-  `node scripts/update-map-styles.mjs` refreshes both from OpenFreeMap.
-- **Name and icon.** Here, in English whatever the phone speaks: a white cat with a grey cap
-  peeking in from the lower left on blue, an adaptive icon with a monochrome layer.
+The build carries no keys. AMap, Tencent and the AI service take the owner's own keys, typed
+into 同步与来源 and kept out of the backup. Maps are OpenFreeMap vector tiles drawn by MapLibre;
+the bundled light and dark styles are refreshed with `node scripts/update-map-styles.mjs`. The
+media origin is whatever the API reports at `GET /`.
 
 ## Building
 
@@ -1095,63 +153,44 @@ Android Studio opens `apps/android` as a project. From a shell, with the Android
 ./gradlew :app:testDebugUnitTest :app:assembleDebug
 ```
 
-The preparation script downloads the pinned MapLibre Compose and Native FFI fork releases,
-checks their SHA-256 hashes, and unpacks their Android and JVM/macOS Maven variants under
-`.maplibre-maven`. A local fork can override them with `maplibre.repository` and
-`maplibre.nativeFfiRepository` in `local.properties`; CI uses the same pinned release archives.
+The script downloads the pinned MapLibre Compose and Native FFI fork releases, checks their
+SHA-256 hashes and unpacks them under `.maplibre-maven`. Point `maplibre.repository` and
+`maplibre.nativeFfiRepository` in `local.properties` at a local fork to override them.
 
-The same project holds Here on the Mac, a Compose Desktop app in `:desktop` over the code it
-shares with the phone in `:shared`. It takes the design's desktop structure: a sidebar of
-sections, a toolbar over each page in place of the phone's floating circles, its rows denser,
-what is looked at (a bill, a place, a device) in an inspector at the window's end in place of a
-bottom sheet, and what is written or decided (a Moment, a trip, sharing) in a dialog in the middle
-of the window:
-
-```sh
-./gradlew :desktop:run
-```
-
-It keeps its settings, its copy of the records and the token under
-`~/Library/Application Support/Here`, or under `HERE_HOME` when that is set, as a trial run's own
-folder. It speaks the Mac's language; `HERE_LANGUAGE=zh` (or `en`) sets it for a run. The first
-time it opens with nothing set up, 初次打开 asks where to start in a small window of its own: a
-site, the phone's WebDAV backup, an import, or nothing. 设置 (⌘,) is a window of its own, its
-pages down its side: 通用 (demo mode, ⌘⇧D, and the page the window opens on), 记录项与公开, 家,
-同步与来源 (the API and its token, and the WebDAV directory the phone backs up to) and 导入 (Swarm's
-export). The sidebar leads to 时间线 (⌘1), 地图 (⌘2), 旅程 (⌘3) and 足迹, then under 我的 to 账本,
-东西 and 纪念日, with 发布更改 at its foot; a Moment, a day, a place and a trip open over them, and
-⌘[ or Esc goes back. 记录 (⌘N) writes a Moment as the phone does, its pictures chosen from the
-Mac's files, dropped on it or pasted with ⌘V, its place searched for by name or pinned on the
-map, ⌘↩ saving it and Esc asking before a draft is dropped; what is written waits under
-发布更改, which publishes it. On the timeline the arrows go from one Moment to the next beside
-the list and Return opens it as its page; search has its kinds and years in a column on the left.
-A Moment's photos open full window, a video played by whatever the
-Mac opens it with; a Moment's menu (right click) copies its words and shares it, which on a
-computer copies the words and keeps the photos in a folder chosen. The maps are the phone's,
-drawn by MapLibre with Metal; a trip played back has the whole window. A computer isn't asked
-where it is, so the atlas has no locate button. The ledger and the footprints are the phone's,
-read from its latest WebDAV backup each time the app opens (or from 同步与来源) and only shown:
-nothing writes a bill or records a footprint here. `HERE_OPEN` opens it on a page for a trial run:
-`map`, `trips`, `footprints`, `ledger`, `things`, `occasions`, `settings`, `changes`, `search`, `new`,
-or `moment:<uid>`, `photo:<uid>`, `edit:<uid>`, `trip:<id>`, `play:<id>`, `tripedit:<id>`,
-`day:<date>`, `place:<id>`.
-
-The unit tests round-trip the made-up records in `packages/data-spec/test/fixtures/data/`
-through the app's models, so the app and the site can't drift apart unnoticed, and check the media URLs,
-trip membership and the sync against a stand-in API.
-
-The debug build is debuggable, so `run-as` reads the app's files on the phone. A debuggable app runs
-Compose and all in ART's debuggable mode, several times slower than the release, and the phone won't
-compile it ahead of time. `-Pfast` builds it not debuggable, carrying the baseline profile like the
-release, which the phone compiles on install when its `.dm` goes beside it:
+The debug build is debuggable and so several times slower. `-Pfast` builds it non-debuggable
+with the baseline profile:
 
 ```sh
 ./gradlew -Pfast :app:assembleDebug
 adb install-multiple -r app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/baselineProfiles/0/app-debug.dm
 ```
 
-`RecordingRecoveryTest` under `src/androidTest` checks the recorder's recovery and pause
-races with a mock GPS on an emulator (it skips physical devices):
+### Mac app
+
+```sh
+./gradlew :desktop:run
+```
+
+It keeps its data in `~/Library/Application Support/Here`, or `HERE_HOME`. `HERE_LANGUAGE=zh`
+or `en` overrides the language. `HERE_OPEN` opens a page for a trial run: `map`, `trips`,
+`footprints`, `ledger`, `things`, `occasions`, `settings`, `changes`, `search`, `new`, or
+`moment:<uid>`, `photo:<uid>`, `edit:<uid>`, `trip:<id>`, `play:<id>`, `tripedit:<id>`,
+`day:<date>`, `place:<id>`. The ledger and footprints are read-only on the Mac, from the
+phone's latest WebDAV backup.
+
+### Tests
+
+Unit tests round-trip the fixtures in `packages/data-spec/test/fixtures/data/` through the
+app's models and check sync against a stand-in API. Some tests also read a real export when
+given one; never commit it:
+
+```sh
+SWARM_EXPORT=<zip> ./gradlew :app:testDebugUnitTest --tests '*SwarmTest*'
+FOOTPRINT_CSV=<file> ./gradlew :app:testDebugUnitTest --tests '*TrackImportTest*'
+ICOST_EXPORT=<xlsx> ICOST_BACKUP=<backup> ./gradlew :app:testDebugUnitTest --tests '*LedgerTest*'
+```
+
+`RecordingRecoveryTest` checks recorder recovery with a mock GPS on an emulator:
 
 ```sh
 ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
@@ -1162,53 +201,30 @@ adb -s emulator-5554 shell am instrument -w -e class cc.hyoban.moments.footprint
 
 ## Releasing
 
-A release is a tag: pushing `android-v1.2.3` runs `.github/workflows/android-release.yml`,
-which runs the unit tests, builds the release at version 1.2.3 (version code 10203, each
-part kept under 100) and puts `here-1.2.3.apk` in a GitHub release of the same name, its
-notes the commits since the last one. Other builds take their version from the newest such
-tag, so one built here installs over the release on the phone. The app checks for these
-releases itself (Updates), in the repository `site.config.json`'s `github` names; its
-`android.applicationId` there is the app's id, while the code keeps the package
-`cc.hyoban.moments`.
+- **Android.** Pushing a tag `android-v1.2.3` runs `.github/workflows/android-release.yml`:
+  unit tests, a release build (version code 10203, each part under 100), and `here-1.2.3.apk`
+  in a GitHub release of the same name. Other builds take their version from the newest tag,
+  so a local build installs over the release.
+- **Mac.** Pushing `mac-v1.2.3` runs `.github/workflows/mac-release.yml`, which runs
+  `./gradlew :desktop:packageReleaseDmg -PappVersion=1.2.3` (ProGuard with
+  `desktop/rules.pro`, shrinking only) and publishes `Here-1.2.3.dmg`. It packages with
+  Temurin 25, which Gradle fetches if missing. The app is unsigned: open it the first time
+  with right-click › Open, or `xattr -dr com.apple.quarantine /Applications/Here.app`.
+- **Signing.** Every build, debug included, is signed with the release key when present, so
+  builds install over each other. Locally the key is `release.storeFile`,
+  `release.storePassword`, `release.keyAlias` and `release.keyPassword` in
+  `local.properties`; in Actions, the secrets `ANDROID_RELEASE_KEYSTORE` (base64),
+  `ANDROID_RELEASE_STORE_PASSWORD`, `ANDROID_RELEASE_KEY_ALIAS` and
+  `ANDROID_RELEASE_KEY_PASSWORD`. Keep the keystore out of the repository and backed up: a lost
+  key can't sign updates.
+- The application id comes from `site.config.json`'s `android.applicationId`; the code's
+  package stays `cc.hyoban.moments`.
 
-Every build is signed with the release key when there is one, debug builds too, so they install
-over each other and keep the app's data; without it they take the machine's debug key. Locally
-the key is in `local.properties` (`release.storeFile`, `release.storePassword`,
-`release.keyAlias`, `release.keyPassword`); in Actions it is the repository's secrets
-`ANDROID_RELEASE_KEYSTORE` (the keystore in base64), `ANDROID_RELEASE_STORE_PASSWORD`,
-`ANDROID_RELEASE_KEY_ALIAS` and `ANDROID_RELEASE_KEY_PASSWORD`. The keystore itself stays out of
-the repository, kept somewhere safe: a lost key can't sign an update to the app installed with it.
+## From adb
 
-The Mac app is released the same way, by a tag: pushing `mac-v1.2.3` runs
-`.github/workflows/mac-release.yml` on a macOS runner, which packages the app at version 1.2.3
-(`./gradlew :desktop:packageReleaseDmg -PappVersion=1.2.3`, its jars shrunk by ProGuard with
-`desktop/rules.pro`, the build without it being `packageDmg`) and puts `Here-1.2.3.dmg` in a GitHub release
-of the same name. Other builds take their version from the newest such tag, 1.0.0 before there is
-one; a Mac bundle's version can't start at 0. The bundle id is `site.config.json`'s
-`android.applicationId`, its icon the phone's, kept as `desktop/icon/here.svg` and made into an
-`.icns` by `desktop/icon/icns.swift` as it is packaged. It is packaged with Temurin 25, which
-Gradle fetches when it isn't installed (Compose needs a jpackage that Android Studio's JDK lacks,
-and refuses Homebrew's), with the JDK's modules trimmed and compressed, MapLibre's other
-backends and Compose's Material left out, and what the packaged jars carry unread taken out of them
-(Skiko's library, loaded from beside them, SQLite's for other systems, the ICU data the lunar
-calendar doesn't use): a DMG of about 84 MB, about 110 MB installed. ProGuard only takes away
-what nothing reaches, neither renaming nor optimizing, and keeps whole what is reached by name, JNI or
-ServiceLoader; it reads the JDK's classes from a jar the build exports from the JDK's own image, as
-Temurin since 24 carries no jmods for Compose to give it. It isn't signed yet: the first
-time, open it with right-click › Open (or `xattr -dr com.apple.quarantine /Applications/Here.app`).
-
-## On the phone, from adb
-
-Every page has a `moments://` link (`routeOf` in `ui/MomentsApp.kt` lists them: `moments`,
-`map`, `album`, `settings` for 我, `ledger`, `moment/{uid}`, `trip/{id}`, `day/{YYYY-MM-DD}`,
-`place/{id}`, …), which `adb shell am start -d` opens. Opening the app, a link's page comes over the tab it is under (a
-trip or a place over 地图, a setting, the ledger or the changes over 我, the rest over 时间线), so
-back, the top bar's or the system's, leads to that tab and the tabs go on from there; opened
-while the app is on screen, it goes over the page shown. A page a widget opens stands alone
-over the app, and back closes it onto the app as it was. Buttons, tabs and cards carry test
-tags that `uiautomator dump` reports as resource ids (`tab_moments`, `tab_map`, `tab_album`, `tab_me`, `back`,
-`moment_{uid}`, `media_{uid}_{index}`, `trip_{id}`, `day_{date}`, …), and `scripts/ui.py`
-uses both:
+`adb shell am start -d moments://<route>` opens any page. Buttons, tabs and cards carry test
+tags that `uiautomator dump` reports as resource ids (`tab_moments`, `tab_map`, `tab_album`,
+`tab_me`, `back`, `moment_{uid}`, `trip_{id}`, …). `scripts/ui.py` wraps both:
 
 ```sh
 scripts/ui.py open moment/<uid>
@@ -1218,36 +234,20 @@ scripts/ui.py tap tab_map
 
 ## Layout
 
-The packages below are split between `:app` (the phone's own) and `:shared` (what the Mac app
-runs too: the records and their stores under `data`, the ledger's and the footprints' models and
-the reading of the phone's backup (`backup`), the settings and the container every device shares,
-the timeline's, a Moment's, the photo viewer's, the trips', the ledger's, the things' and the
-occasions' pages, writing a Moment with its place picker and bill form, the changes to publish,
-the settings pages, 导入 and 初次打开, with the components they are made of, and the design system
-in `ui/design` and `ui/theme` (its desktop parts in `ui/design/Desktop.kt`), and every page's words
-as Compose resources); `:desktop` is the Mac's window and its device.
+`:app` is the phone's own code, `:shared` what the Mac also runs (records, stores, settings,
+most pages, the design system and the strings as Compose resources), and `:desktop` the Mac's
+window.
 
-- `data/spec`: the records as Kotlin, each keeping the fields it doesn't know.
-- `data/api`: the API's rows and writes.
-- `data/copy`: the copy of the API's rows, in D1's tables.
-- `data/store`: what the screens are given from the copy, and the phone's own notes.
-- `data/local`: the Moments written on the phone, their time and place.
-- `data/media`: photo, poster and video URLs, picked as the site picks them.
-- `data/swarm`, `data/things`, `data/occasions`: Swarm's import, the devices and subscriptions,
-  and the occasions.
-- `data/trips`: which trip a Moment is on, its days and stops, and its playback.
-- `publish`: the publishing work.
-- `ledger`, `footprints`, `share`, `accessibility`: the ledger, the footprints, sharing
-  and the assistant.
-- `widget`: the home screen widgets (Glance).
-- `backup`: the WebDAV backup, and on the Mac the reading of it.
-- `update`: checking this repository's releases and installing them.
-- `sidekey`: 侧键, the side key's gestures.
-- `camera`: the paired camera, its location over Bluetooth and its photos over PTP/IP.
-- `nas`: the UGREEN NAS whose photo app 选照片 reads, found through UGREENlink and signed in to as its web app does.
-- `ui`: the Compose screens; `ui/design` and `ui/theme` the design system.
+- `data/spec`: records as Kotlin, keeping unknown fields.
+- `data/api`, `data/copy`, `data/store`: API rows, the local copy, and what screens read.
+- `data/local`, `data/media`: records written on the phone; media URLs, chosen as the site does.
+- `data/swarm`, `data/things`, `data/occasions`, `data/trips`: imports and domain logic.
+- `publish`, `backup`, `update`: publishing, WebDAV backup, self-update.
+- `ledger`, `footprints`, `share`, `accessibility`, `sidekey`, `camera`, `nas`: the features
+  above.
+- `widget`: Glance widgets.
+- `ui`: Compose screens; `ui/design` and `ui/theme` are the design system.
 
 ## Thanks
 
-The cat on the icon is 馒头 (Mantou), drawn from a photo of the real one. The foot of 我
-says so too, beside a photo of its face and the app's version.
+The cat on the icon is 馒头 (Mantou), drawn from a photo of the real one.

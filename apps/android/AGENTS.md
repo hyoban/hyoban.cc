@@ -1,451 +1,357 @@
 # Working on the Android app
 
-These instructions extend the repository's [shared guide](../../AGENTS.md) for
-`apps/android`. They apply equally to Codex and Claude. Maintain durable Android
-rules here and product behavior in [README.md](README.md).
+These rules extend the [shared guide](../../AGENTS.md) for `apps/android`, for Codex and
+Claude alike. Keep lasting Android rules here and product facts in [README.md](README.md).
 
-Run the commands below from `apps/android`, with JDK 25 or newer and the Android
-SDK configured in `local.properties` (`sdk.dir=…`).
+Run commands from `apps/android` with JDK 25+ and the Android SDK set in `local.properties`
+(`sdk.dir=…`).
 
-## One Gradle project, two apps
+## Modules
 
-- `:app` is the phone's app, `:desktop` the Mac's (Compose Desktop), and `:shared` (Kotlin
-  Multiplatform, for Android and the desktop's JVM) what both run. The Mac app is to do what
-  the phone's does, so code moves from `:app` into `:shared` a part at a time, keeping its
-  package and leaving the phone's behaviour as it was; each step builds and tests `:app`.
-  `:desktop` keeps following the desktop boards (D); the SwiftUI Mac app in `apps/apple` shares no
-  code with it.
-- Shared code may use the JDK and JVM libraries (OkHttp, `java.time`): both targets are JVMs.
-  What it may not touch is Android's own: `android.*`, `R`, `Context`, `BuildConfig`, and
-  the Android-only libraries (Media3, Glance, WorkManager, Capsule). Maps use MapLibre
-  Compose; each app supplies its platform runtime and presentation host. Do not add the classic
-  Android SDK back.
-  Where the platforms differ, `commonMain` declares it `expect` and `androidMain` and
-  `jvmMain` each give theirs, the phone's being what it already did.
-- `AppContainer` in `:shared` is what every device shares (the settings, the records, their copy
-  and publishing); `PhoneContainer` in `:app` and `DesktopContainer` in `:desktop` are it with
-  what the device has. A module's stores and clients are not the container's but its plugins'
-  services (see the plugins below). A screen takes `AppContainer` unless it needs the phone's own
-  (the ledger's and the footprints' writable stores, the widgets). Where the base needs something of
-  the device that no module owns (the place search, the cities, publishing's work), it is an abstract
-  or open member the device's container gives, not a `Context`. Settings are kept
-  through `Prefs`: the phone's shared preferences, a JSON file on the Mac.
-- A page in `:shared` asks its device for what the phone and the Mac each do their own way
-  through `LocalDevice` (`ui/Device.kt`): a Moment's menu, sharing, choosing photos, where the
-  device is, what it asks before publishing (only what differs by device: maps, sharing, location,
-  windows, the picker's device, viewer motion; what a plugin brings goes through a point, never
-  `Device`). Both devices draw the
-  shared MapLibre Compose maps: the phone with the OpenGL runtime, the Mac with the Metal one
-  in a presentation host its window (`Main.kt`) provides. A page that needs something only the
-  phone has takes it that way, or as the read-only interface of a plugin's service (`LedgerSource`,
-  `Footprints`), rather than staying in `:app`. Small differences (the language shown, back,
-  the keyboard, a dialog's window) are `expect` functions in `ui/components/Platform.kt`.
-- Android's own code that shared code calls sits in `:shared`'s `androidMain` as the `actual`
-  of an `expect` (`Photos`, which reads and copies a picked photo, `PhotoRef`, the phone's
-  content address or a file on the Mac), taking the application's context from `AndroidApp`
-  where no caller has one; the Mac's is in `jvmMain`. The Mac takes pictures from the system's
-  file dialog and not yet videos.
-- 相册 and 选照片 (`ui/picker`) and the NAS's client (`nas/`) are shared. Their sources are plugins'
-  (`Points.photoSources`, each `PhotoSources` by its `order`): the NAS's on every device, the
-  phone's gallery and paired camera in `:app`; a device adds only its sharing and where it keeps
-  photos through `Device.picker` (`PickerDevice`).
-- The ledger and the footprints on a desktop or a tablet are the phone's latest WebDAV backup,
-  read by `backup/PhoneBackup` in `:shared`, which the Mac's ledger and footprints sections give as
-  their services, and only shown (`LedgerSource.writable` false): no bill
-  is written, edited or deleted there and the ledger's settings stay on the phone, as the canvas's
-  D17–D20 and T17–T20 draw; a page gates each write on `writable`.
-- Share code first: the Mac's version of anything goes into `:shared`, a page's desktop layout
-  as a branch on `LocalDesktop` in the shared page or a shared component (`ui/design/Desktop.kt`:
-  `Toolbar`, `DesktopDialog`), and what only differs by device as a `Device`
-  member. `:desktop` keeps only the windows (`Main.kt`), the container and `DesktopDevice`.
-- The Mac's shell (`:desktop`'s `Main.kt`) follows the design system's Sidebar card: no title
-  bar of its own (the content runs up under a transparent one, the window's buttons over the
-  sidebar's top, which still drags the window), the sections down a sidebar 232 wide (64, icons
-  alone, under 1024), and beside it the page on top of that section's stack, each a shared page.
-  `SubPage` and `TabPage` draw the design's 52 toolbar there in place of the floating circles; the
-  editors open as `DesktopDialog`s over the page they came from, a bill or a place in the inspector
-  beside its page, and a bottom sheet as the inspector down the window's end; 设置 is a window of
-  its own (`SettingsPanes`); 初次打开 a small window. Esc
-  and ⌘[ go to the pages' own `BackHandler`s first (`DesktopBack`), so a draft is asked about
-  before it goes; a page takes the window's keys with `OnDesktopKey`.
-- A declaration `:app` uses from `:shared` is public, and its tests stay in `:app` until they
-  move too. A string resource is held as a `StringResource`, never an `Int`. The generators write into `:shared` (`Tokens.kt`, `AppIcons.kt`, `CopyTables.kt`,
-  `Modules.kt`); the paths below are packages, in whichever module holds them.
-- Every part of the app reaches the pages through plugins (`plugins/`): a `Plugin` adds to
-  points (`Point`) in its `contribute()` and gives itself and the others services (`Service`), and the host pages
-  read the points from `Plugins.registry`, never naming a plugin. A module's stores and clients are
-  services its plugin provides, by their keys in `Services`: the ledger (`ledger`, the phone's
-  `LedgerPhone` its writable store, the Mac's ledger section the backup's), the footprints
-  (`footprints`, `FootprintsPhone`'s store, the Mac's footprints section the backup's), recording them and exporting or deleting what is kept (`footprintRecording`, `FootprintsPhone`'s alone: the
-  footprints' panel on the map is shared and leaves those rows out without it), the NAS's
-  client (`nas`, the device's NAS part, `NasPhone` and `NasMac`), Swarm's import (`swarm`,
-  `CheckinPlugin`'s) and Xiaohongshu's notes (`noteSearch`, the phone's `XiaohongshuPlugin`'s, none on
-  the Mac), and the check-ins 演示模式 leaves shown (`shownCheckins`, `CheckinPlugin`'s, read with `own`
-  as `container.shownCheckins`). Each is made once per container, by its provider from the container, the first time
-  it is asked for, and kept there. Its own plugin, and what must work with its module off, asks
-  with `registry.own`; the others and the host ask with `registry.service`, null while the
-  provider's module is off. Each has an extension property beside its plugin
-  (`AppContainer.ledger`, and the phone's typed ones, `PhoneContainer.ledger`), so the host reads
-  `container.ledger` without naming the plugin. The place search stays the container's: a
-  Moment's place is the host's own, no module's. A point is the host's: `Points` in
-  `:shared` (a module's name and icon, pages and `moments://` links, the photos' sources, search
-  kinds, import groups, its group on 记录项与公开, its section on a Moment's page and its line on a
-  Moment's card and at its bubble's foot, its part in 写动态, its figures at a trip's head, its map
-  layer and its stops at places there (`MapStop`), the stops ways lead to and those a trip's plan
-  keeps (`KeptStop`), what 写动态 keeps a place alone as (`PlaceAlone`), its section on 待发布
-  (`ChangeSection`) and the lines on 发布更改 of each part it owns (`PartDiff`, by the part's key; one it
-  never changes on the phone still brings one, saying nothing), the tools 和 AI 规划's model may look things up
-  with (`PlanTool`: each as it is sent, what the instructions say of it, whether it is offered now, and
-  how it reads and does a call), what it keeps in the device's private folder and what of it the
-  phone's WebDAV backup carries (`KeptFiles`: its databases and files, and what it leaves out), its group on a settings page (`SettingsGroup`, by `SettingsPage` and
-  `order`: 同步与来源's after the API's own, the ledger's settings), its way to start and its step in
-  初次打开, what it draws over the map, and its `TimelineJoin`: the records, stops, day figures and day-map marks it joins
-  to the timeline's, a trip's, a place's and a day's Moments, check-ins first, then bills, then charges
-  taking the bill at their time), `PhonePoints` in `:app` (its row on 我, among what is kept here or, by its `order`, among the settings,
-  its pages in the navigation, its side key actions, its heatmap widget sources, its background work on
-  and off, and what it starts with the app, what it needs of the phone (`PhoneNeed`: the permissions or system setting, the
-  words that name it and say why, how to check it and where it is given), which its own pages list and
-  ask for by `PhonePlugins.needsOf`, and the notification channels it posts in (`PhoneChannel`)) and `DesktopPoints` in `:desktop` (its sidebar
-  section and its pages). Add a point only once two plugins bring to it. A channel's id, name and importance never change once shipped, and
-  `NotificationChannelsTest` keeps them as they are; each is created just before its first notification,
-  never all at app start, so the system lists only what has posted. The host's own channels (publishing)
-  are `HostChannels`, no plugin's. A page of a plugin with no module (`XiaohongshuPlugin`'s `NoteSignIn`) is still
-  owned through `Points.pages`, so it is one of 我's pages, and registered through `PhonePoints.pages`; the
-  host's navigation names none of the plugins' pages. Device features are phone plugins with no module
-  (the gallery, 相机, 侧键, 准备图文's albums, the WebDAV backup, updates; 自动记账 the ledger's): each
-  returns null for its row where the phone lacks what it needs, so 我 checks nothing itself. A settings
-  group is read by its module alone, never its plugin's own switch, which may be its first row. `suggest_plan` is the planner's own; every lookup it offers is a
-  plugin's, in the registry's order: `find_place` and `route_time` `PlanningPlugin`'s on every device,
-  `search_notes` the phone's `XiaohongshuPlugin`'s, offered only while the owner is signed in. Every device's plugins are
-  `Plugins.shared`; the phone and the Mac install their own beside them as they start
-  (`Plugins.install`, from `MomentsApplication` and `main`, and in a test that reads the phone's
-  points). The registry keeps the plugins' order, which is the order the pages list what they bring
-  unless a point's things carry an `order`. A plugin with a `module` follows that module's switch:
-  `registry.on` lists only what the modules that are on bring, and a service asked for is null while
-  its plugin's module is off. One no module holds may have a switch of its own on this device
-  (`switchKey`, `Settings.isPluginOn`): the NAS's and the camera's 在相册里显示, the first row of their
-  settings group, which takes only their photos out of 相册, 选照片 and 地图's photos, and a device
-  left with none of its sources still lists them; a point read on or off for a composition's shape is read whole with
-  `contributions` and filtered with `shownWith`. A module's record (`DayRecord`) and stop
-  (`DayAnchor`) draw themselves wherever they are shown; the host pages lay them out by time and never
-  name a module, nor does `Device`: what a module's own pages need of the device goes through a local
-  of the module's (`LocalLedgerDevice`). The movement contract (`Footprints`, `TrackPoint`, how a track
-  is drawn, `Services.dayTracks`) and money formatting (`data.money`) are shared by every page. Only a
-  module's own pages, stores and services, and the containers that wire them, read its switch directly.
-- Check the Mac app where it runs: `./gradlew :desktop:run` opens its window; look at it,
-  light and dark, before saying a change to it works.
+- `:app` is the phone, `:desktop` the Mac (Compose Desktop), `:shared` (Kotlin Multiplatform,
+  Android + JVM) what both run. The Mac app is to do what the phone does, so code moves from
+  `:app` into `:shared` one part at a time, keeping its package and the phone's behavior;
+  each step builds and tests `:app`. `:desktop` follows the desktop boards (D). The SwiftUI Mac
+  app in `apps/apple` shares no code with it.
+- Shared code may use the JDK and JVM libraries (OkHttp, `java.time`), but never `android.*`,
+  `R`, `Context`, `BuildConfig` or Android-only libraries (Media3, Glance, WorkManager,
+  Capsule). Platform differences are `expect` in `commonMain` with `actual`s in `androidMain`
+  and `jvmMain`, the phone's keeping what it already did. Android code that shared code calls
+  (`Photos`, `PhotoRef`) is an `actual` in `androidMain`, taking the context from `AndroidApp`
+  when the caller has none. Small differences (language, back, keyboard, dialog windows) are
+  `expect` functions in `ui/components/Platform.kt`.
+- Maps use MapLibre Compose on both: OpenGL on the phone, Metal on the Mac in a presentation
+  host from `Main.kt`. Don't add the classic Android SDK back.
+- Share first. The Mac's version of anything goes in `:shared`: a desktop layout is a branch on
+  `LocalDesktop` or a shared component (`ui/design/Desktop.kt`: `Toolbar`, `DesktopDialog`).
+  `:desktop` keeps only its windows (`Main.kt`), container and `DesktopDevice`.
+- A declaration `:app` uses from `:shared` is public; its tests stay in `:app` until they move.
+  Hold strings as `StringResource`, never `Int`. Generators write into `:shared` (`Tokens.kt`,
+  `AppIcons.kt`, `CopyTables.kt`, `Modules.kt`). Paths below are packages, in whichever module
+  holds them.
 
-## Check every change on the phone
+### Containers and devices
 
-- The phone is the user's, with their real data and a live link to the site. After a
-  runtime or UI change, build the debug build and install it over what is there, without
-  asking: `./gradlew :app:assembleDebug`, then `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
-  The debug build is debuggable, the owner's choice, so the app's data can be read with
-  `adb exec-out run-as cc.hyoban.moments cat <file>` (a plan's chats are `no_backup/plan-chats.json`)
-  instead of scrolling the screen; read it only to answer what the owner asked. Being debuggable it runs
-  several times slower, so judge speed, motion and dropped frames on the release, or on `-Pfast`, the debug
-  build not debuggable with its profile beside it (`adb install-multiple -r …/app-debug.apk
-  …/baselineProfiles/0/app-debug.dm`).
-  The user tests it: don't launch, open, tap or publish on the phone yourself. Say what to
-  try and what to look for, and read logcat (its crash buffer, `Moments:W`) when asked.
-  Build only what the step needs, not the CI set each time.
-- Only when the user asks for a test on the phone run one, and only the steps named, with
-  `scripts/ui.py open|dump|tap|back`, the `moments://` links and screenshots: never tap
-  blind, chain nothing after a step that may have failed, screenshot before each tap by
-  position and tap only what it shows, and stop and say so when anything unexpected starts.
-  When a change touches colour, layout or motion, ask the user to check dark mode, landscape
-  or dropped frames.
-- Install only the debug build, never the release, unless the user asks for the release, not
-  even before pushing. Then: `./gradlew :app:assembleRelease`
-  (half a minute, R8's), then `adb install-multiple -r app/build/outputs/apk/release/app-release.apk
-  app/build/outputs/apk/release/baselineProfiles/0/app-release.dm`: with its profile beside it the
-  phone compiles the app ahead of time on install (`dumpsys package` says `speed-profile`), where
-  the APK alone runs interpreted until the phone next compiles in the background. Judge motion
-  and dropped frames on it then, as the debug build runs slower. Both are signed
-  with the same key, the release key in `local.properties` or else the debug key, so either
-  installs over the other and the app's data stays. The emulator only ever gets the debug
-  build.
-- Release (README, Releasing) only when the user asks. Check a Mac packaging change in the
-  packaged release (`./gradlew :desktop:packageReleaseDmg`), each page by `HERE_OPEN` with its
-  standard error read, not only `:desktop:run`; a library reached by reflection, JNI or
-  ServiceLoader is kept whole in `desktop/rules.pro`. The release key and its passwords are the
-  user's: never create, read, print or commit them, nor set the repository's secrets.
-- Testing never costs the app's data: the ledger and footprints live in `noBackupFilesDir`
-  and have no other copy. Ask before anything that would lose or reset it, and say what
-  would go: `adb uninstall`, `pm clear`, a reinstall after `INSTALL_FAILED_UPDATE_INCOMPATIBLE`
-  (fix the signing instead), a downgrade (`install -d`), deleting or overwriting the app's
-  files, or running a new database migration on the phone before it has passed on a copy.
-- What a plugin keeps in `noBackupFilesDir` it declares in `Points.kept`: the ledger's and the footprints'
-  databases, the footprints' two JSON files and the plans' chats go into the WebDAV backup (`BackupArchive`)
-  and back on restore, in the plugins' order with the host's `copy.db` after them; secrets, caches and the
-  device's own pairing are declared as left out. `BackupTest` fails for a file kept there that no plugin
-  declares.
-- The phone is usually on wireless adb. Take its serial from `adb devices`, leaving out
-  `emulator-*`, and never start the emulator while the phone is there. If the phone is
-  locked or adb has dropped, say so instead of working around it.
-- When `adb devices` is empty, restart the adb server (`adb kill-server`,
-  `adb start-server`): the connect service often shows up in `adb mdns services` then.
-  If only the phone's pairing service shows, scan that address's ports 30000–50000 for
-  the other open one and `adb connect` to it (the phone is already paired); on "No route
-  to host", restart the server and connect again.
-- Publishing, once the user has said yes to it, is tried with a test Moment written on the phone (text "test", 不加地点 so
-  no place of the user's reaches the site), published, then deleted and the deletion
-  published. A new Moment has no place unless a photo gives one; only its place picker,
-  opened with none, locates the phone. The page opens with the keyboard up and `ui.py dump`
-  still lists what is under it: close the keyboard before tapping the place row, or the tap
-  types into the text.
-- A `DropdownMenu` or dialog is a window of its own, where `ui.py` can't see test tags:
-  tap its items by their words.
-- A publish that fails says why only in a toast that soon goes; the exception is in
-  `adb logcat -s Moments:W`, and the API's side in `npx wrangler tail hyoban-cc-api`
-  (read-only) from `apps/api`. The phone's traffic goes through FlClash, whose link
-  drops and stalls now and then, so uploads have to ride that out.
-- Before committing run what CI runs (`.github/workflows/verify.yml`):
+- `AppContainer` (`:shared`) holds what every device shares: settings, records, the copy and
+  publishing. `PhoneContainer` and `DesktopContainer` extend it. A screen takes `AppContainer`
+  unless it needs the phone's own (writable ledger and footprint stores, widgets).
+- What the base needs of a device that no module owns (place search, cities, publishing work)
+  is an abstract or open container member, never a `Context`. Settings go through `Prefs`
+  (shared preferences on the phone, a JSON file on the Mac).
+- Shared pages ask for device-specific behavior through `LocalDevice` (`ui/Device.kt`): a
+  Moment's menu, sharing, picking photos, location, pre-publish questions, windows, viewer
+  motion. Only device differences belong there; a plugin's needs go through a point, never
+  `Device`, and a module's own pages use a local of their own (`LocalLedgerDevice`).
+- A shared page that needs something only the phone has takes it through `Device` or a
+  plugin service's read-only interface (`LedgerSource`, `Footprints`) rather than staying in
+  `:app`.
+- On the Mac and tablets, the ledger and footprints are read from the phone's latest WebDAV
+  backup (`backup/PhoneBackup`) and are read-only (`LedgerSource.writable` false; boards
+  D17–D20, T17–T20). Pages gate every write on `writable`.
+- 相册, 选照片 (`ui/picker`) and the NAS client (`nas/`) are shared. Photo sources are
+  plugins (`Points.photoSources`, by `order`): the NAS on every device, gallery and camera in
+  `:app`. A device adds only sharing and storage through `Device.picker` (`PickerDevice`). The
+  Mac picks pictures from the file dialog, not videos yet.
+
+### Mac shell
+
+`Main.kt` follows the design's Sidebar card: no title bar of its own (content under a
+transparent one, window buttons over the sidebar, which still drags), a 232-wide sidebar (64,
+icons only, under 1024), and the current section's page beside it. `SubPage` and `TabPage`
+draw the 52 toolbar instead of floating circles. Editors are `DesktopDialog`s, a bill or
+place opens in the inspector, a bottom sheet becomes the inspector, 设置 is its own window
+(`SettingsPanes`), and 初次打开 a small window. Esc and ⌘[ go to pages' `BackHandler`s first
+(`DesktopBack`) so drafts are confirmed; pages take keys with `OnDesktopKey`.
+
+Check Mac changes in its window (`./gradlew :desktop:run`), light and dark.
+
+### Plugins
+
+- Every feature reaches the pages through plugins (`plugins/`). A `Plugin` adds to points
+  (`Point`) in `contribute()` and provides services (`Service`). Host pages read points from
+  `Plugins.registry` and never name a plugin; the host's navigation names no plugin's page.
+- Points live in `Points` (`:shared`), `PhonePoints` (`:app`: rows on 我, pages, side-key
+  actions, heatmap sources, background work, `PhoneNeed`, `PhoneChannel`) and `DesktopPoints`
+  (`:desktop`: sidebar sections and pages). Add a point only once two plugins contribute to it.
+- A module's stores and clients are its plugin's services, keyed in `Services`: `ledger`,
+  `footprints`, `footprintRecording` (phone only), `nas`, `swarm`, `noteSearch` (phone only),
+  `shownCheckins`. Each is built once per container on first request. Its own plugin, and
+  anything that must work with the module off, uses `registry.own`; everything else uses
+  `registry.service`, which is null while the module is off. Each has an extension property
+  (`container.ledger`) so the host never names the plugin. The place search stays the
+  container's.
+- A plugin with a `module` follows that module's switch (`registry.on`). A plugin without one
+  may have a per-device switch (`switchKey`, `Settings.isPluginOn`), e.g. the NAS's and camera's
+  在相册里显示. Points read on or off for layout use `contributions` and `shownWith`. Only a
+  module's own pages, stores, services and the containers wiring them read its switch.
+- Device features are phone plugins without a module (gallery, 相机, 侧键, 准备图文 albums,
+  WebDAV backup, updates; 自动记账 belongs to the ledger). Each returns null for its row when
+  the phone lacks what it needs, so 我 checks nothing itself. A settings group is shown by its
+  module alone, never by the plugin's own switch.
+- A page of a plugin without a module (`XiaohongshuPlugin`'s `NoteSignIn`) is still owned
+  through `Points.pages` and registered through `PhonePoints.pages`.
+- `DayRecord` and `DayAnchor` draw themselves; host pages lay them out by time and never name
+  a module. Shared by every page: the movement contract (`Footprints`, `TrackPoint`,
+  `Services.dayTracks`) and money formatting (`data.money`).
+- `Plugins.shared` are every device's; the phone and Mac add theirs with `Plugins.install`
+  (from `MomentsApplication` and `main`, and in tests that read phone points). Registry order
+  is display order unless items carry an `order`.
+- `suggest_plan` belongs to the planner; its lookups are plugins': `find_place` and
+  `route_time` (`PlanningPlugin`, every device) and `search_notes` (`XiaohongshuPlugin`, phone,
+  only while signed in).
+- Notification channels: a channel's id, name and importance never change once shipped
+  (`NotificationChannelsTest`). Create each just before its first notification, never all at
+  start. The host's own channels are `HostChannels`.
+- Files in `noBackupFilesDir` are declared in `Points.kept`. Ledger and footprint databases,
+  the footprints' two JSON files and plan chats go into the WebDAV backup (`BackupArchive`),
+  in plugin order with `copy.db` last; secrets, caches and pairing are declared as excluded.
+  `BackupTest` fails for an undeclared file.
+
+## On the phone
+
+- The phone is the user's, with real data and a live link to the site. After a runtime or UI
+  change, build and install the debug build without asking:
+  `./gradlew :app:assembleDebug`, then `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
+  Build only what the step needs.
+- The user tests it. Don't launch, open, tap or publish yourself; say what to try and what to
+  look for, and read logcat (crash buffer, `Moments:W`) when asked. For colour, layout or
+  motion changes, ask the user to check dark mode, landscape or dropped frames.
+- Run a phone test only when asked, and only the steps named, with
+  `scripts/ui.py open|dump|tap|back`, `moments://` links and screenshots. Screenshot before
+  each tap by position, never tap blind, chain nothing after a step that may have failed, and
+  stop when anything unexpected happens. Menus and dialogs are separate windows where
+  `ui.py` can't see test tags: tap their items by text.
+- The debug build is debuggable (the owner's choice): read app files with
+  `adb exec-out run-as cc.hyoban.moments cat <file>` (plan chats: `no_backup/plan-chats.json`)
+  rather than scrolling, and only to answer what the owner asked. It runs several times
+  slower, so judge speed and motion on `-Pfast` or the release.
+- Install the release only when asked, not even before pushing:
+  `./gradlew :app:assembleRelease`, then `adb install-multiple -r
+  app/build/outputs/apk/release/app-release.apk
+  app/build/outputs/apk/release/baselineProfiles/0/app-release.dm` (with the profile the phone
+  compiles ahead of time; `dumpsys package` says `speed-profile`). Debug and release share a
+  signing key, so either installs over the other. The emulator only gets debug builds.
+- Release (README, Releasing) only when asked. Check Mac packaging changes in the packaged
+  build (`./gradlew :desktop:packageReleaseDmg`), opening each page by `HERE_OPEN` and reading
+  stderr. Keep anything reached by reflection, JNI or ServiceLoader in `desktop/rules.pro`. The
+  release key and passwords are the user's: never create, read, print or commit them, or set
+  repository secrets.
+
+### Never lose the app's data
+
+The ledger and footprints live in `noBackupFilesDir` with no other copy. Ask first, saying
+what would be lost, before `adb uninstall`, `pm clear`, reinstalling after
+`INSTALL_FAILED_UPDATE_INCOMPATIBLE` (fix signing instead), downgrading (`install -d`),
+deleting or overwriting app files, or running a new database migration on the phone before it
+passed on a copy.
+
+### adb
+
+- The phone is usually on wireless adb. Take its serial from `adb devices`, skipping
+  `emulator-*`, and never start the emulator while the phone is connected. If it is locked or
+  adb dropped, say so instead of working around it.
+- If `adb devices` is empty, restart the server (`adb kill-server`, `adb start-server`); the
+  connect service often appears in `adb mdns services`. If only the pairing service shows,
+  scan that host's ports 30000–50000 for the other open one and `adb connect` (it's already
+  paired). On "No route to host", restart and retry.
+- Publishing, once the user agrees, is tested with a Moment written on the phone with text
+  "test" and 不加地点 (so no real place reaches the site), published, deleted, and the deletion
+  published. Close the keyboard before tapping the place row, or the tap types into the text.
+- A failed publish shows only a brief toast; the exception is in `adb logcat -s Moments:W`,
+  the API side in `npx wrangler tail hyoban-cc-api` (read-only, from `apps/api`). Phone traffic
+  goes through FlClash, which drops and stalls at times; uploads must ride that out.
+
+### Before committing
+
+- Run what CI runs (`.github/workflows/verify.yml`):
   `./gradlew :app:testDebugUnitTest :app:assembleDebug :desktop:classes --no-daemon`.
-  Documentation-only changes use the shared guide's documentation checks.
-- After builds and tests finish, close any emulator started for this task and clean up
-  Gradle/Kotlin background processes used by this task once they are confirmed idle.
-  Inspect `./gradlew --status` and the relevant processes first; use orderly shutdown
-  (`adb -s <serial> emu kill`, and `./gradlew --stop` only when all affected daemons are
-  idle and within this task's scope), then verify that the processes exited.
-  Do not close the user's IDE, stop unrelated processes or interrupt another build.
+  Docs-only changes use the shared guide's docs checks.
+- Afterwards, close any emulator you started and stop this task's idle Gradle/Kotlin daemons:
+  check `./gradlew --status` first, use `adb -s <serial> emu kill` and `./gradlew --stop` only
+  when every affected daemon is idle and yours, and confirm they exited. Never close the user's
+  IDE or interrupt unrelated processes or builds.
 
 ## Design
 
-- The app follows its own design system, the 「Here App 设计系统」 artifact, not Material 3:
-  the site's restraint on a phone. The design is platform-neutral, one design for the iOS,
-  Android and web versions to come: keep Android-only conventions out of it (name things by
-  what they are, not by Compose or Material), and record only where Android implements it.
-  Desktops keep its look with a desktop's structure, and tablets stay touch, as the page
-  canvas's D and Pad boards and the design system's Desktop and Pad cards draw them.
-  Its tokens come from `packages/design-tokens`, the one
-  source for every platform: `vp run design:tokens` at the root generates `ui/theme/Tokens.kt`
-  (colours, spacing, corners, shadows, opacities, type, springs), which is never edited by
-  hand; change `tokens.json` there, regenerate, and publish it to the artifact. Text takes
-  the design's six styles by their names (`titlePage`, `title`, `bodyReading`, `body`,
-  `label`, `caption`), all in the system sans with tabular figures; a heading is a style
-  `.strong` (600), never a size larger; the timeline and a trip are `MomentFeed(chat = true)`, and a ledger's day opens with its header row (`DayHeader`). The app
-  has no Material dependency (`androidx.compose.material3`, `glance-material3`): its
-  components are its own, in `ui/design`, on Compose foundation. Don't add Material
-  components or icon packs back.
-- Design first, and the two kept in step: a change to what the app shows or how it behaves
-  goes into the design first, and the code follows it: a page's artboards and its note go in
-  the 「Here App 页面设计稿」 canvas, which holds every page, and the component cards it uses,
-  or a new card for a new part, go in the design system, which holds only components. Where
-  building it shows the design wrong or not workable, change the design in the same task
-  rather than leave the code to differ. Before a task ends, the artboards and cards it touched
-  and the app say the same thing.
-- Icons are the design system's own set (`AppIcons`, 24 grid, 2 stroke, round ends and softened corners),
-  generated into `ui/design/AppIcons.kt` by `python3 packages/design-tokens/icons/kotlin.py`
-  (from the repository root) from `packages/design-tokens/icons/icons.py`. A new icon is drawn there first, in the same hand, then
-  generated; never edit `AppIcons.kt` by hand or reach for another icon library.
-- `ui/design` holds the theme (`AppTheme`: colour roles, type, shapes, springs, the press
-  wash in place of a ripple) and every component: text and icons, surfaces, buttons, chips, the
-  segmented control, fields, list rows, menus, dialogs, sheets, the top bar (no bar: `TopBar` floats its
-  `IconButton`s as circles through `LocalFloatingIconButtons`), messages,
-  pull-to-refresh and swipe-to-revert. Some keep Material's names.
-  A list laid out row by row (a lazy list) draws its group with `groupedRow`.
-- The design rules themselves (layers and hairlines, the accent and the ink, few cards, the
-  tabs, the timeline, top bars, settings groups, touch sizes, words, share targets, the two
-  palette exceptions, motion and back) are the artifact's README and component cards; read
-  them there rather than here. What follows is only where Android carries them out.
-- Colours are `tokens.*` by the design's names alone; there is no layer of roles over them.
-  Layers: the hairline is `cardBorder` and `dividerColor`, the one shadow `ShadowElevation` drawn by
-  `softShadow`, a surface's level `SurfaceLevel`.
-- Keep only what is used: two text buttons (`Button` for the page's one main action, `TextButton`
-  for everything else), one chip look (`FilterChip` to choose, `AssistChip` to act, drawn the
-  same), and no icon that nothing draws.
-- The scroll edges (what passes under the status bar, the top bar's circles and the tab bar) are
-  `edgeBlur`, Haze's progressive blur over a `hazeSource` that draws the page's colour itself, or
-  the blur is only of the text, over the text. Every `SubPage` and `TabPage` runs up under its
-  bar, the large title (`TopBarLargeTitle`) in the page's own layer, and pads its scroll at the
-  top by `LocalTopClearance`; a control that stays under the circles with them (the ledger's
-  segments) is its `accessory`.
-- The continuous corners are paths, which the graphics pipeline draws and clips by a mask made in
-  software every frame: `clip` to one masks every word and photo inside it. Where what a shape
-  holds keeps clear of its corners, draw the shape behind it (`background(colour, shape)`) rather
-  than clipping to it, and a large surface round at its top (a sheet) with `sheetSurface`. A
-  `clip` to their path also tests each touch against it, which misses inside a tall surface (the
-  rows deep in a long group took no taps): where one must clip, clip only what is drawn, as
-  `SegmentedGroup` does.
-- Top bars switch between what the page is one of with `TitleMenu` and put a control over the
-  subtitle's figures in `subtitleAction`. Settings are `SegmentedGroup` with `SwitchRow` and
-  `ActionRow`, switches `AppSwitch`. A settings group is declared, not drawn (a plugin's group is a `SettingsGroup` contribution
-  whose `group()` returns its `SettingsGroupSpec` and draws its own dialogs): its rows are
-  `SettingsRow`s of the design's kinds (switch, value, choice, action, page, external, status, and in
-  a panel radio and lines) in a `SettingsGroupSpec` that `SettingsGroupView` draws, 我's rows on the
-  page itself (`SettingsRowsOnPage`); what those can't draw opens the plugin's own dialog or panel
-  from a value or action row, and a new kind goes into the SettingsGroup card first. What floats over a photo or the map is `FloatingButton`.
-- An action the system confirms itself (a gallery photo to its bin) goes straight to the
-  system's prompt; the app doesn't ask first too.
-- Haptics are the design's roles (lift, tick, armed/disarmed, toggle, key, confirm/reject) from
-  `rememberHaptics()` in `ui/design/Haptics.kt`; call those, never `HapticFeedbackType` directly.
-- A 40dp button keeps its 48dp target in the layout (`minimumInteractiveComponentSize`); a 36dp
-  chip is laid out at its own size, so rows of chips stand 8dp apart, Compose widening its target.
-- Spacing is five steps (`Space.xs` … `Space.xl`): things within a section are `Space.l` apart,
-  groups and days `Space.xl`. Large system fonts are `isLargeFont()` (130% and up), so read it in composition.
-- Words are Compose resources in `:shared` (`composeResources/values`, Chinese, and `values-en`),
-  the same for the phone and the Mac, with TalkBack descriptions for what is shown: `Res.string.*`
-  from `cc.hyoban.moments.res`, read by `stringResource` in composition and by `textOf` and
-  `pluralTextOf` outside it (a notification, a widget, a store's message). A placeholder is
-  `%1$s` or `%1$d`, numbered, and nothing else: a decimal is formatted in code (`decimals`) and a
-  percent sign is written plainly. Only what Android's own XML names (the manifest, the widgets'
-  and the accessibility service's descriptions) stays in `:app`'s `res/values`, as `R.string`.
-- A page explains itself by its layout, headings, icons and states, not by notes or subtitles
-  telling how to use it (what + does, that a tap opens it, what a check means); if it needs
-  one, the design is wrong, so change the design. A note stays only for what the page can't
-  show: what an action costs, what leaves the phone, a rule's threshold, another app's limits.
-  Nor do words repeat what is already shown: a planned bubble's dashed outline, a check, a lock,
-  a switch's own state, the page's title or the caption over a row. Such a state goes to TalkBack
-  (a `stateDescription` or the icon's description) instead.
-- What a map draws, and the time each layer shows, are chosen in one place, its layers menu
-  (`MapLayersMenu`, the times `MapTime`), and nowhere else: a new layer gets its row there, its
-  time following every layer's unless given its own, never a button, legend or panel switch of its
-  own; the map shows only what is chosen (the time pills). The footprints' time is chosen there too,
-  never in their panel. 地图's 照片 row is `MapPhotosPlugin`'s, one for every photo source that knows where its
-  photos were taken (`PhotoSources.placesPhotos`), at `LayerSlot.AFTER_ROUTES`; the places, the routes and
-  the fog are the host's own rows, and a plugin's layer stands by its `LayerSlot`, not by the registry's
-  order. The photos' heaps and their sheet are still drawn by `MapScreen` while the layer is on.
-- The map's year colours are the tokens' `YearColors`, the same as `packages/trip-map/src/theme.ts`, and the
-  fog is the site's `packages/trip-map/src/map/fog-layer.ts`. The ledger's charts are drawn on a
-  Compose `Canvas` (`ui/ledger/Charts.kt`), not with a chart library.
-- Full-screen interactive Android maps use a `Surface` to avoid the extra texture composition;
-  embedded, noninteractive maps use a `Texture` so Compose clipping and transforms still apply.
-  Leave MapLibre's maximum frame rate unset so requested frames follow the display's refresh rate;
-  do not cap a 90 or 120 Hz phone at 60 FPS.
-  Attach the full-screen `Surface` while its style loads, and cover it with the map's load colour
-  until its render loop presents the first frame, so Android's surface traversal and style loading
-  overlap. Its EGL and native frame loop runs on its own Android looper, not the UI thread. Never
-  draw a placeholder into that `Surface`, which prevents EGL from attaching to it.
-- Keep the phone's main atlas `MapState` alive at the app/device scope across tab changes:
-  returning to the map must not reload its style, labels, tiles or
-  markers. After its first visit, also keep its presentation composed behind navigation: cover it
-  and disable its interaction on another tab instead of destroying and rebuilding its Android
-  `Surface`. Preload the FFI native library off main, but do not prewarm its runtime during
-  ordinary app startup: native completion work can compete with tab motion on main. Apply
-  base-layer adjustments to the packaged style document before MapLibre loads it; do not mutate
-  every base layer after the style reports ready. Prepare the atlas's record grouping, route
-  distances and immutable GeoJSON at container scope on a background dispatcher; use a prepared
-  result only while its source snapshots are still the current ones.
-- Keep MapLibre Native's Android local-ideograph rasterizer enabled with the system sans font.
-  Downloading CJK glyph PBF ranges delays labels and fills the 50 MiB ambient cache with fonts,
-  evicting the tiles that make later map entries fast.
-- Keep the local FFI fork's Android Release native code aligned with the classic SDK's size
-  settings: `-Oz`, full LTO, lld and `--icf=all`; its Rust image decoder uses `opt-level = "s"`
-  and aborting panics. Measure changes as stripped, APK-compressed arm64 libraries, and recheck
-  first-map time on the release build before trading these settings for speed.
-- The MapLibre forks come only as the pinned, hash-checked releases (README, Building).
-- Follow what the app should be rather than the web version, except where the shared guide
-  asks it to match.
+- The app follows its own design system, the 「Here App 设计系统」 artifact, not Material 3.
+  It is platform-neutral (for future iOS, Android and web versions): name things by what they
+  are, not by Compose or Material, and record only where Android implements it. Desktops keep
+  its look with a desktop structure; tablets stay touch (D and Pad boards, Desktop and Pad
+  cards). The design rules themselves live in the artifact's README and component cards; this
+  section covers only the Android implementation.
+- Design first. A change to what the app shows or does goes into the design first: page
+  artboards and notes in the 「Here App 页面设计稿」 canvas, component cards (or a new card) in
+  the design system. If building shows the design is wrong, fix the design in the same task.
+  When a task ends, the artboards, cards and app agree.
+- No Material dependency (`androidx.compose.material3`, `glance-material3`) and no icon
+  packs. Components are the app's own in `ui/design` on Compose foundation: `AppTheme` (colour
+  roles, type, shapes, springs, a press wash instead of ripples) and every component. Some keep
+  Material's names. Keep only what is used: `Button` for the page's one main action,
+  `TextButton` for the rest, one chip look (`FilterChip` to choose, `AssistChip` to act), no
+  unused icons.
+- Tokens come from `packages/design-tokens`: `vp run design:tokens` generates
+  `ui/theme/Tokens.kt`; never edit it, change `tokens.json`, regenerate and publish to the
+  artifact. Colours are `tokens.*` by the design's names, with no role layer. Hairlines are
+  `cardBorder` and `dividerColor`, the one shadow `ShadowElevation` via `softShadow`, levels
+  `SurfaceLevel`.
+- Icons are `AppIcons` (24 grid, 2 stroke, round ends, softened corners), generated into
+  `ui/design/AppIcons.kt` by `python3 packages/design-tokens/icons/kotlin.py` (from the repo
+  root) from `icons/icons.py`. Draw new icons there first, in the same hand; never edit
+  `AppIcons.kt` or use another icon library.
+- Text uses the six styles by name (`titlePage`, `title`, `bodyReading`, `body`, `label`,
+  `caption`), system sans with tabular figures. A heading is a style's `.strong` (600), never a
+  bigger size. Timeline and trips are `MomentFeed(chat = true)`; a ledger day starts with
+  `DayHeader`. Lazy-list groups use `groupedRow`.
+- Spacing is `Space.xs` … `Space.xl`: `Space.l` within a section, `Space.xl` between groups
+  and days. Large fonts are `isLargeFont()` (130%+), read in composition.
+- No bars: `TopBar` floats `IconButton`s as circles (`LocalFloatingIconButtons`). Every
+  `SubPage` and `TabPage` runs under its bar with `TopBarLargeTitle` in the page's layer, padding
+  by `LocalTopClearance`; a control that stays under the circles is its `accessory`. Scroll
+  edges use `edgeBlur` (Haze progressive blur over a `hazeSource` that draws the page colour),
+  or blur only the text. `TitleMenu` switches between sibling pages; `subtitleAction` puts a
+  control over the subtitle's figures. Floating controls over photos or maps are
+  `FloatingButton`.
+- Continuous corners are paths, clipped by a software mask every frame. Where content keeps
+  clear of the corners, draw the shape behind it (`background(colour, shape)`, `sheetSurface`
+  for sheets) instead of clipping. Clipping also hit-tests against the path, which drops taps
+  deep in tall surfaces; if you must clip, clip only what is drawn, as `SegmentedGroup` does.
+- Settings are declared, not drawn: a plugin's `SettingsGroup` returns a `SettingsGroupSpec` of
+  `SettingsRow`s (switch, value, choice, action, page, external, status; radio and lines in a
+  panel) drawn by `SettingsGroupView`; 我's rows by `SettingsRowsOnPage`. Anything else opens
+  the plugin's own dialog from a value or action row; a new row kind goes into the
+  SettingsGroup card first. Switches are `AppSwitch`.
+- When the system confirms an action itself (a gallery photo to its bin), don't ask first too.
+- Haptics are the design's roles from `rememberHaptics()` (`ui/design/Haptics.kt`), never
+  `HapticFeedbackType`.
+- Touch targets: a 40dp button keeps a 48dp target (`minimumInteractiveComponentSize`); a 36dp
+  chip is laid out at its own size, so chip rows stand 8dp apart.
+- Strings are Compose resources in `:shared` (`composeResources/values`, Chinese, and
+  `values-en`), shared by phone and Mac, with TalkBack descriptions: `Res.string.*` from
+  `cc.hyoban.moments.res`, via `stringResource` in composition and `textOf`/`pluralTextOf`
+  outside it. Placeholders are only numbered `%1$s`/`%1$d`; format decimals in code
+  (`decimals`) and write percent signs plainly. Only what Android XML names (manifest, widget
+  and accessibility descriptions) stays in `:app`'s `res/values`.
+- A page explains itself by layout, headings, icons and states, not by usage notes. If it needs
+  one, fix the design. Notes are only for what the page can't show: costs, what leaves the
+  phone, thresholds, other apps' limits. Don't put visible state into words (a dashed outline,
+  a check, a lock, a switch's state, the title); give it to TalkBack (`stateDescription`).
+- Follow what the app should be rather than the website, except where the shared guide asks
+  them to match.
 
-## Motion and navigation
+## Maps and motion
 
-- The one shared element is a Moment's card growing into its page and shrinking back
-  (`sharedCard`); other pages slide or fade through, and the photo viewer fades over the
-  page. It must not fight predictive back; check entering and leaving, and the in-between
-  frames, on the phone.
-- Animate map layers a frame at a time with constant paint values, each layer's
-  transition set to 0: MapLibre lays a source out again for a data-driven value, a
-  frame or more late and drawing the default meanwhile, and eases every change over
-  300 ms on its own. Layers set again ahead of an animation get a source of their own.
-- Check an animation frame by frame: `adb shell screenrecord`, every frame out with
-  ffmpeg, and measure each one, rather than judging from a few screenshots.
-- After a change to the map's layers, switch light and dark on the map
-  (`adb shell cmd uimode night yes`, then `no`): the style and its layers are built
-  again, and anything kept outside them, or read before they're added, must start over.
-- MapLibre drops a filter or expression it can't take without throwing, leaving the layer
-  unfiltered; after setting one, look for `Error setting filter` from `Mbgl` in the app's
-  logcat. The regions of the rest of the world in the fog's asset all have the id
-  `outside`, so tell them apart by `cx` and `cy`, never by id.
+- What a map draws, and each layer's time, is chosen only in its layers menu
+  (`MapLayersMenu`, `MapTime`). A new layer gets a row there, following every layer's time
+  unless given its own; never a separate button, legend or panel switch. Footprints' time is
+  chosen there too. 照片 is `MapPhotosPlugin`'s row at `LayerSlot.AFTER_ROUTES` for sources with
+  `PhotoSources.placesPhotos`; places, routes and fog are the host's rows. Plugin layers are
+  placed by `LayerSlot`, not registry order. `MapScreen` still draws photo heaps and their sheet.
+- Year colours are the tokens' `YearColors`, matching `packages/trip-map/src/theme.ts`; the fog
+  is `packages/trip-map/src/map/fog-layer.ts`. Ledger charts are a Compose `Canvas`
+  (`ui/ledger/Charts.kt`), not a chart library.
+- Full-screen interactive maps use a `Surface`; embedded non-interactive maps a `Texture`.
+  Leave MapLibre's max frame rate unset so 90/120 Hz phones aren't capped at 60. Attach the
+  `Surface` while the style loads and cover it with the load colour until the first frame;
+  never draw a placeholder into it (EGL can't attach). Its EGL loop runs on its own looper.
+- Keep the main atlas `MapState` alive at app/device scope across tabs, and after the first
+  visit keep its presentation composed behind navigation (covered, non-interactive) rather
+  than rebuilding the `Surface`. Preload the FFI library off main but don't prewarm its runtime
+  at startup. Adjust base layers in the style document before loading, not after ready. Prepare
+  record grouping, route distances and GeoJSON at container scope on a background dispatcher,
+  used only while their source snapshots are current.
+- Keep MapLibre's local-ideograph rasterizer on with the system sans; downloading CJK glyph
+  ranges delays labels and fills the 50 MiB cache with fonts.
+- Build the FFI fork's Android native code like the classic SDK: `-Oz`, full LTO, lld,
+  `--icf=all`; its Rust image decoder `opt-level = "s"` with aborting panics. Measure as
+  stripped, APK-compressed arm64 libraries and recheck first-map time on release before trading
+  size for speed. The MapLibre forks come only as the pinned, hash-checked releases (README,
+  Building).
+- Animate map layers frame by frame with constant paint values and each layer's transition at
+  0: data-driven values relayout a source a frame or more late, and MapLibre eases every
+  change over 300 ms. Layers reset ahead of an animation get their own source.
+- MapLibre silently drops filters or expressions it can't parse; check logcat for
+  `Error setting filter` from `Mbgl`. Fog regions for the rest of the world all have id
+  `outside`; tell them apart by `cx` and `cy`.
+- After changing map layers, toggle `adb shell cmd uimode night yes`/`no` on the map: the style
+  is rebuilt, and anything kept outside it must start over.
+- The one shared element is a Moment's card growing into its page (`sharedCard`); other pages
+  slide or fade, the photo viewer fades. It must not fight predictive back; check entering,
+  leaving and in-between frames on the phone. Check animations frame by frame
+  (`adb shell screenrecord`, frames extracted with ffmpeg), not from a few screenshots.
 
-## What the app is
+## Product rules
 
-- The app is usable on the phone alone and is not tied to this repository's API: the build
-  carries no API address or media origin (the API names its own), and nothing asks the network for records until
-  both an API and its token are set in 同步与来源. Don't add a default API back. Until then the
-  app is the phone's own: nothing says 未发布 or points to publishing.
-- Nothing reaches the site until 全部发布 on 发布更改, after the changes waiting have been
-  reviewed: one change set, like a commit, sent as entries to `POST /v2/changes`. Don't add
-  writes that bypass it.
-- 发布更改 says what each change changes, field by field (`ui/publish/ChangesScreen.kt`,
-  `EntryDiffs.kt`, `PartDiffs.kt`, and each part's plugin): whatever a record, trip, place, check-in, occasion, device,
-  subscription or bill can have changed on the phone is listed there against the site's copy,
-  old beside new and writing marked letter by letter. A new field, or a new way to change one,
-  comes with its line there in the same change, so no change is published unseen or shows as
-  没有改动. A record's words and photos and the entry's own fields are the host's lines;
-  every other part's are its plugin's `PartDiff`, and `PartDiffsTest` fails for a part of the spec with none.
-- The phone keeps every record it writes or changes as the entry it will be published as
-  (`changedEntries`, a Moment, a check-in and a device alike), and a Moment is only worked out
-  from one, so a record changes shape by being saved as it now is. Don't bring back a store of
-  Moments of their own beside the entries.
-- The ledger and the footprints follow the shared guide's privacy rules and publish only
-  through 全部发布 (`data/store/Outside.kt`). Their only other requests are exchange
-  rates, when asked, Photon naming a bill's footprint point (`footprints/BillPlaces`), the point
-  alone, the place picker naming a stay being kept as a place, and the WebDAV backup the owner sets up (`backup/`). Private and unpublished are two things, said 私有 and 未发布, never 仅本机.
-- The ledger replaces iCost, so what iCost's backup and export hold must keep importing:
-  check a change to the importers against real ones with
+- The app works on the phone alone: the build has no API address or media origin (the API
+  reports its own), and nothing requests records until an API and token are set in 同步与来源.
+  Don't add a default API. Until then nothing says 未发布 or points to publishing.
+- Nothing reaches the site until 全部发布 sends the reviewed changes as one change set to
+  `POST /v2/changes`. Don't add writes that bypass it.
+- 发布更改 shows every change field by field against the site's copy (`ui/publish/`
+  `ChangesScreen.kt`, `EntryDiffs.kt`, `PartDiffs.kt`, and plugins' `PartDiff`). A new field or
+  way to change one comes with its diff line in the same change, so nothing publishes unseen or
+  shows 没有改动. `PartDiffsTest` fails for a spec part without one.
+- The phone stores every record it writes or changes as the entry it will publish
+  (`changedEntries`); Moments are derived from entries. Don't bring back a separate Moment store.
+- Ledger and footprints follow the shared privacy rules and publish only through 全部发布
+  (`data/store/Outside.kt`). Their only other requests: exchange rates on request, Photon naming
+  a footprint point for a bill (`footprints/BillPlaces`, point only), the place picker naming a
+  stay, and the owner's WebDAV backup (`backup/`). Private and unpublished are different words:
+  私有 and 未发布, never 仅本机.
+- The ledger replaces iCost, so iCost backups and exports must keep importing. Check importer
+  changes against real files with
   `ICOST_BACKUP=<backup> ICOST_EXPORT=<xlsx> ./gradlew :app:testDebugUnitTest --tests '*LedgerTest*'`
-  (with both, it also checks that a backup merged over an export-imported ledger adds only
-  what is newer), and never commit either.
-- Automatic payment categorization matches expense category names across all books present
-  in the note before falling back to broad keyword rules. Past bills do not affect it.
-  A matched category also selects its owning book in the bill form.
-- Verify ledger initialization with an isolated database, including entry before loading
-  and concurrent first entries. Opening a test form must not add books to the user's ledger.
-- Sharing hands off to the other app and leaves posting to the user. Never post, pick a
-  recipient or drive another app automatically; the share assistant only fills the composer
-  and stops before sending, and 自动记账 only reads the payment page, never tapping, typing or
-  keeping it; `adb logcat -s AutoBill:I` says whether a page read was offered or already in the
-  ledger. Its amounts are what the page reads out (Alipay's bill: 支出12.5元 for -12.50), not what it
-  draws, so take fixtures from `uiautomator dump`. While debugging it, read its state with
-  `adb shell dumpsys activity service cc.hyoban.moments/.share.TelegramShareService`,
-  not `uiautomator dump`, which interrupts the service. Threads shows a single photo
-  outside any `IgLazyRow`, and repeated shares stack photos into an open composer.
-  Instagram's caption is missing from `uiautomator dump` but reaches the service; its
-  view ids are full names (`com.instagram.android:id/…`), and an empty caption reads out
-  its hint as its text.
-- 演示模式 (`Settings.demo`) hides what is private everywhere, the widgets included: screens read `container.shownMoments` and `shownTrips`, the host's,
-  and `shownCheckins`, the check-in plugin's service, not the repository's, so a new screen keeps to it.
-- Trip discovery marks a trip out by check-ins at the saved places chosen as home (家), leaving
-  and coming back, never by guessing where home is; a check-in at home is public or private as
-  that check-in says, like any other. It uses general distance and time thresholds, never
-  exceptions for a particular export, city or date. Cover its rules with made-up records;
-  private exports are local regression checks, not fixtures.
-- 相机 is for the owner's Sony a7C II alone; don't widen it to other bodies without asking.
-  Its protocol code is written from documented facts (README, Camera), never copied from a
-  GPL project such as alpha-gps; permissive ones may be read for reference. Test the camera
-  only when the owner asks, and only the steps named: pairing, the location lock and the
-  camera's Wi‑Fi act on a real camera.
-- Programmable actions stay configurable: adding an action must not assign or replace the
-  user’s gesture bindings. 侧键 is for the owner's one phone model (`SideKeys.supported`,
-  README); don't show it on others or widen the match without asking.
-- The NAS's photo API is undocumented (README, 选照片): read changes to it off the NAS's own web
-  bundle (`/photo/assets/`) or its traffic, and test deletes only when the owner asks.
-- 打码 finds faces, and license plates by reading a photo's text (Chinese text recognition), with ML
-  Kit through Google Play services, the owner's choice: Play services fetches its models and ML Kit
-  reports its own usage to Google, the one Google request the app makes beyond location; the photos
-  never leave the phone for it. Ask before using ML Kit for anything else.
-- 和 AI 规划 sends the conversation, the owner's 补充说明 (after the app's own instructions), the plan's name and days, and every record the plan holds
-  (private ones too, the owner's choice), with the device's time and zone, and nothing else of the
-  owner's places, to the OpenAI-compatible service the owner set in 同步与来源, straight from
-  the device, and only when asked; what it suggests takes effect one by one, by the owner's tap:
-  planned Moments added, or the plan's planned Moments and its check-ins still to come (never what
-  already happened, nor what its owner locked) changed or deleted, all publishing only through 全部发布. Its lookups (`find_place`, `route_time`) ask
-  the place search and the keyless routers only what the model names. Its sheet's ways, and each day's driving sent with a
-  question, ask the keyless routers for each two of the plan's places in a row, by their coordinates alone; when
-  those can't be reached, they and `route_time` ask AMap's or Tencent's routing with the owner's own keys instead
-  (in China, never by train), no faster than each key allows. On the phone, once the owner signs in to
-  Xiaohongshu's website in 同步与来源 (the owner's choice, its automated reading against the site's rules
-  and their account at risk), `search_notes` searches it (offered, with what the instructions say of it, only while signed in) for what the model names in a WebView no one sees,
-  reads only (no taps, typing or posting), a few pages a search and never faster than one a second and a
-  half, and sends the model what the notes say; its session stays out of Android's backups. Don't send it more, or apply its
-  suggestions without that tap. Its conversations stay on the device, in its WebDAV backup (`plan-chats.json`,
-  declared by `AiPlanPlugin` in `Points.kept`), and nowhere else.
-- Beyond the services named here, the app's one request of its own is for updates: the feed of this
-  repository's GitHub releases (not GitHub's API, whose limit without a token a shared proxy uses up) and the APK it installs (`update/`), with nothing of the phone's.
-- No keys in the build (README, Elsewhere): a service that needs a key takes the owner's own,
-  typed into 同步与来源 and kept beside the API token.
-  APK size matters, so the release is arm64 only; weigh what a new dependency costs.
-- Pin a newer library version only for a reason, and say why in the comment in
-  `gradle/libs.versions.toml`.
-
+  (with both, it also checks merging a backup over an export-imported ledger); never commit them.
+- Payment categorization matches expense category names from every book in the note before
+  broad keyword rules; past bills don't affect it. A matched category also picks its book.
+- Test ledger initialization with an isolated database, including entry before loading and
+  concurrent first entries. Opening a test form must not add books to the user's ledger.
+- Sharing hands off and leaves posting to the user: never post, pick a recipient or drive
+  another app. The share assistant only fills composers and stops before sending; 自动记账 only
+  reads payment pages, never tapping, typing or keeping them.
+- Debugging the accessibility service: `adb logcat -s AutoBill:I` says whether a page was
+  offered or already recorded. Amounts are what the page reads out (Alipay: 支出12.5元 for
+  -12.50), so take fixtures from `uiautomator dump`. Read service state with
+  `adb shell dumpsys activity service cc.hyoban.moments/.share.TelegramShareService`, not
+  `uiautomator dump`, which interrupts it. Threads shows a single photo outside any
+  `IgLazyRow`, and repeated shares stack photos into an open composer. Instagram's caption is
+  missing from dumps but reaches the service; its view ids are full names
+  (`com.instagram.android:id/…`), and an empty caption reads its hint as text.
+- 演示模式 (`Settings.demo`) hides private things everywhere, widgets included: screens read
+  `container.shownMoments`, `shownTrips` and `shownCheckins`, never the repository directly.
+- Trip discovery uses check-ins at the places chosen as 家, leaving and returning, never a
+  guessed home. It uses general distance and time thresholds, never exceptions for an export,
+  city or date. Test with made-up records; private exports are local regression checks only.
+- 相机 is for the owner's Sony a7C II only; don't widen it without asking. Write its protocol
+  from documented facts (README, Camera), never copied from GPL code such as alpha-gps
+  (permissive projects may be read). Test it only when asked and only the steps named.
+- 侧键 is for the owner's phone model only (`SideKeys.supported`); don't widen it without
+  asking. Adding an action must not assign or replace the user's bindings.
+- The NAS photo API is undocumented (README, NAS): learn changes from the NAS's web bundle
+  (`/photo/assets/`) or its traffic, and test deletes only when asked.
+- 打码 uses ML Kit through Play services (the owner's choice) for faces and plates via Chinese
+  text recognition. Play services fetches models and ML Kit reports usage to Google, the only
+  Google request beyond location; photos never leave the phone. Ask before using ML Kit for
+  anything else.
+- 和 AI 规划 sends, only when asked and straight from the device to the owner's
+  OpenAI-compatible service: the conversation, 补充说明 (after the app's instructions), the
+  plan's name and days, every record in the plan (private ones too), and the device's time and
+  zone; nothing else of the owner's places. Suggestions apply one at a time by the owner's
+  tap (adding planned Moments, or changing or deleting planned Moments and future check-ins,
+  never past or `locked` records), and publish only through 全部发布. Don't send more or apply
+  without the tap.
+  - `find_place` and `route_time` send only what the model names. Ways in the sheet and each
+    day's driving ask the keyless routers by coordinates alone; when unreachable, they and
+    `route_time` fall back to AMap or Tencent with the owner's keys (in China, never for
+    trains), within each key's rate.
+  - `search_notes` (phone only, after the owner signs in to Xiaohongshu in 同步与来源, at the
+    owner's own risk to their account) reads search results in a hidden WebView: no taps,
+    typing or posting, a few pages per search, at most one per 1.5 seconds. Its session stays
+    out of Android's backups.
+  - Conversations stay on the device and in its WebDAV backup (`plan-chats.json`, declared by
+    `AiPlanPlugin` in `Points.kept`), nowhere else.
+- Beyond the services above, the app's only request of its own is for updates: this repository's
+  GitHub releases feed (not the API) and the APK (`update/`), carrying nothing from the phone.
+- No keys in the build (README, Keys and services): keyed services take the owner's own keys,
+  typed into 同步与来源 and stored beside the API token.
+- APK size matters: the release is arm64 only; weigh what each new dependency costs. Pin a newer
+  library version only for a reason, given in its comment in `gradle/libs.versions.toml`.

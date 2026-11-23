@@ -1,21 +1,27 @@
 # @hyoban/design-tokens
 
-The design system's values for every platform the app is built on: colours in light and dark,
-the 4dp steps and the gaps, corners, shadows, opacities, the six text styles (`tokens.json`)
-and the springs (`motion.json`, which `tokens.json`'s format can't hold). `icons/icons.py`
-draws the app's icon set on a 24 grid.
+The single source of the design system's values for every platform:
 
-These files are the one source. `vp run design:tokens` at the root writes the Android app's
-`ui/theme/Tokens.kt`, and `python3 packages/design-tokens/icons/kotlin.py` its
-`ui/design/AppIcons.kt`. For the Apple apps the same command writes `apps/apple`'s
-`HereKit/Generated/Tokens.swift`, and `python3 packages/design-tokens/icons/swift.py` its
-`AppIcons.swift` (`icons/svg.py` holds what both icon generators share). `stickers/stickers.py`
-draws 打码's stickers in the icons' hand, in colour (a face's on the 24 grid, a license plate's long
-animals on a 48 by 18 one, each with the box it covers), and `python3 packages/design-tokens/stickers/kotlin.py`
-writes the Android app's `ui/design/Stickers.kt` from it. A web build will get a
-generator of its own beside them. Never edit the generated files by hand.
+- `tokens.json`: colours in light and dark, the 4dp steps and gaps, corners, shadows,
+  opacities and the six text styles.
+- `motion.json`: the springs, which `tokens.json`'s format can't hold.
+- `icons/icons.py`: the app's icon set, drawn on a 24 grid. `icons/svg.py` holds what both
+  icon generators share.
+- `stickers/stickers.py`: 打码's stickers in the icons' hand, in colour. A face's sit on the
+  24 grid, a license plate's long animals on a 48 by 18 one, each with the box it covers.
 
-`tokens.json` is the design-system artifact's `project/tokens.json` too, in the shape that page
-reads: change it here, regenerate, then publish the same file to the artifact. The year colours
-must stay the site's (`packages/trip-map/src/theme.ts`); `vp test` checks that, that the
+Generators, run from the repository root:
+
+| Command                                             | Writes                                                                             |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `vp run design:tokens`                              | Android's `ui/theme/Tokens.kt` and `apps/apple`'s `HereKit/Generated/Tokens.swift` |
+| `python3 packages/design-tokens/icons/kotlin.py`    | Android's `ui/design/AppIcons.kt`                                                  |
+| `python3 packages/design-tokens/icons/swift.py`     | Apple's `AppIcons.swift`                                                           |
+| `python3 packages/design-tokens/stickers/kotlin.py` | Android's `ui/design/Stickers.kt`                                                  |
+
+A web build will get its own generator beside them. Never edit generated files by hand.
+
+`tokens.json` is also the design-system artifact's `project/tokens.json`, in the shape that
+page reads: change it here, regenerate, then publish the same file to the artifact. The year
+colours must match the site's (`packages/trip-map/src/theme.ts`). `vp test` checks that, that
 generated code is current, and the contrast of text and controls in both themes.

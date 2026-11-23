@@ -1,8 +1,8 @@
 # hyoban.cc
 
 The source of [hyoban.cc](https://hyoban.cc): a personal site built with Astro and
-plain CSS, with posts, a calendar and map of Moments and trips, a search over both,
-and the pieces around it that record and serve them.
+plain CSS, with posts, a calendar and map of Moments and trips, and search over both. It
+also holds the API and apps that record and serve them.
 
 ```
 .
@@ -29,23 +29,22 @@ Android app ──POST /v2/changes──▶ API Worker (D1 + R2) ──deploy ho
                                      data/ (local copy, out of git)
 ```
 
-- The **API** (`apps/api`) keeps the records (entries and collections), places, routes and
-  the car's statistics in D1, and the photos and videos in the `blog-images` R2 bucket,
-  served from `https://image.hyoban.cc`. Every request needs a token.
-- The **site** is static. Its build reads the API's export with `MOMENTS_API_TOKEN`; in CI
-  it fails without one, and a local build without one shows made-up records.
-- **`data/`** holds the car's records in git; the rest of it is a local copy of the API's,
-  out of git ([docs/data.md](docs/data.md)).
+- The **API** (`apps/api`) keeps records (entries and collections), places, routes and the
+  car's statistics in D1. Photos and videos are in the `blog-images` R2 bucket, served from
+  `https://image.hyoban.cc`. Every request needs a token.
+- The **site** is static. Its build reads the API's export with `MOMENTS_API_TOKEN`. In CI
+  it fails without one; locally it falls back to made-up records.
+- **`data/`** keeps the car's records in git. The rest is a local copy of the API's, out of
+  git ([docs/data.md](docs/data.md)).
 
 ## Forking
 
-[FORKING.md](FORKING.md) says how to make it your own: who the site belongs to and where it
-lives is all in `site.config.json`, which the site, scripts, API and app read, and a local
-build without a token shows made-up records.
+See [FORKING.md](FORKING.md). Everything about who owns the site and where it lives is in
+`site.config.json`.
 
 ## Development
 
-This is a pnpm workspace driven by [Vite+](https://viteplus.dev) (`vp`); see AGENTS.md.
+A pnpm workspace driven by [Vite+](https://viteplus.dev) (`vp`); see AGENTS.md.
 
 ```sh
 vp install
@@ -62,24 +61,26 @@ vp run build        # the static site into apps/web/dist/
 | `VITE_MAPBOX_TOKEN`   | the map page's Mapbox tiles                                           |
 | `MAPBOX_STATIC_TOKEN` | the map pages' placeholders, if `VITE_MAPBOX_TOKEN` is URL-restricted |
 | `MOMENTS_API_TOKEN`   | building the site from the API, `data:export` and `data:push`         |
-| `CI`                  | set, the build draws every Moment's share card (slow; off locally)    |
+| `CI`                  | if set, the build draws every Moment's share card (slow)              |
 
-The scripts that upload to R2 use Wrangler's login, or `CLOUDFLARE_API_TOKEN`;
+Scripts that upload to R2 use Wrangler's login or `CLOUDFLARE_API_TOKEN`.
 `media:generate` needs `TMDB_API_TOKEN` or `TMDB_API_KEY`.
 
-To run the API locally, see [apps/api](apps/api/README.md); for the app,
-[apps/android](apps/android/README.md), built with its own `./gradlew`; for the native Mac
-app and the Apple apps' shared package, [apps/apple](apps/apple/README.md), built with
-`apps/apple/scripts/mac-app.sh` and checked with `swift test`.
+Other parts have their own guides:
+
+- API, run locally: [apps/api](apps/api/README.md).
+- Android app, built with its own `./gradlew`: [apps/android](apps/android/README.md).
+- Native Mac app and HereKit: [apps/apple](apps/apple/README.md), built with
+  `apps/apple/scripts/mac-app.sh` and checked with `swift test`.
 
 ## Deployment
 
-Workers Builds deploys the site and the API from `main`; GitHub Actions verify every push
+Workers Builds deploys the site and the API from `main`. GitHub Actions verify every push
 and release the Android and Mac apps from tags. See [docs/deploy.md](docs/deploy.md).
 
 ## Thanks
 
-The 3D car's speed mode, held down in the year review and the 20,000 km post, where a line
-credits it (`apps/web/src/car-model-speed.ts`), follows [GameMCU](https://gamemcu.com)'s
-[Xiaomi SU7 showroom](https://gamemcu.com/su7/): its tunnel of streaks, its reflections laid
-crisp over the paint, its glossy floor and its camera.
+The 3D car's speed mode (`apps/web/src/car-model-speed.ts`) follows
+[GameMCU](https://gamemcu.com)'s [Xiaomi SU7 showroom](https://gamemcu.com/su7/): its
+tunnel of streaks, reflections, glossy floor and camera. It appears in the year review and
+the 20,000 km post, where a line credits it.

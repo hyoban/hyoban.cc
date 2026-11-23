@@ -1,215 +1,227 @@
 # Working on hyoban.cc
 
-## Shared instructions for Codex and Claude
-
-`AGENTS.md` is the source of truth for both agents. Each `CLAUDE.md` imports the
-`AGENTS.md` beside it; keep those entry points as imports, and edit the shared file.
-This guide applies to the whole repository, including the website, API and Android
-app. Before working in `apps/android`, also read [its guide](apps/android/AGENTS.md),
-even when starting from the repository root.
+This guide is shared by Codex and Claude and covers the whole repository. Each
+`CLAUDE.md` only imports the `AGENTS.md` beside it; edit `AGENTS.md`. Before working
+in `apps/android`, also read [its guide](apps/android/AGENTS.md).
 
 ## Working agreements
 
-- If the request is unclear, ask the user to decide. If it has a problem, explain it
-  and stop before carrying out the problematic part.
-- Before starting, check the branch and fetch its remote; keep it current with its
-  tracking branch and, for forks, upstream. Preserve local changes; do not discard
-  work or force-push to make branches match.
-- Keep the relevant README current when behavior changes, in its existing prose.
-  When the user settles a lasting correction, preference or decision, update the
-  applicable `AGENTS.md` in the same turn, mention it in the reply, and include it in
-  the next requested commit. Replace superseded guidance. Leave one-off requests
-  and details already documented in the README or code out of the guide.
-- A refactor requested without behavior changes must preserve behavior. Prefer
-  maintained libraries and existing project components over new bespoke machinery.
-- Verify the result where it runs: inspect website changes in the browser and app
-  changes on the phone, including navigation, light/dark mode and affected layouts
-  or motion. The phone holds the user's real data: install the app's debug build there,
-  and leave testing on it to the user (see the [Android guide](apps/android/AGENTS.md)). Fix problems introduced or exposed by the change; report any checks
-  blocked by the environment instead of claiming they passed.
-- Preview new or changed site media from a local server; upload it to R2 only once
-  the user has approved it there, since objects are immutable. Never request its R2
-  URL before uploading: the image origin caches a 404 for a month.
-- Every published original is public at its key, so none may say where it was taken:
-  the app blanks the location of what it uploads (`@hyoban/data-spec/location` and the
-  shared `Location.kt`, kept the same), the API refuses an image that still has one, and
-  scripts strip media metadata. The one exception to immutable objects is blanking a
-  location in place, with the record's `published` ETag updated and its URLs purged
-  from the image origin's 30-day cache.
-- Keep what is seen on the user's devices while debugging (their bills, shops, accounts,
-  card digits, order numbers, times) out of code, comments, tests and docs; fixtures take a
-  page's structure with made-up values.
-- Write code in English: identifiers, comments, generated files and the design tokens
-  (`packages/design-tokens`, icon names included) carry no Chinese. Chinese copy belongs in
-  string resources and message tables, not inline in code.
-- Preserve the user's Moment text exactly. Write media alt text in Chinese. UI copy
-  and accessibility labels are Chinese first; the Android and Mac apps also keep English
-  strings in `values-en`. The app is called Here in every language, in code, copy and the design
-  artifacts alike, never 这里 (which stays only as the ordinary word).
+- If a request is unclear, ask the user to decide. If it has a problem, say so and
+  stop before doing that part.
+- Before starting, fetch and bring the branch up to date with its tracking branch
+  (and upstream, for forks). Never discard local work or force-push to match.
+- When behavior changes, update the relevant README. When the user settles a lasting
+  rule or preference, update the right `AGENTS.md` in the same turn, mention it, and
+  include it in the next commit. Replace outdated guidance; leave out one-off
+  requests and anything already in a README or the code.
+- Keep docs short and plain: rules, contracts, commands and what the code can't show. Don't
+  narrate UI or code behavior line by line.
+- A refactor without behavior changes must keep behavior. Prefer maintained libraries
+  and existing components to new bespoke code.
+- Verify where it runs: website changes in the browser, app changes on the phone
+  (navigation, light/dark mode, affected layouts and motion). The phone holds real
+  data: install the debug build and leave testing on it to the user (see the
+  [Android guide](apps/android/AGENTS.md)). Fix what the change breaks or exposes, and
+  report checks the environment blocked instead of claiming they passed.
+- Preview new site media from a local server, and upload to R2 only after the user
+  approves it there; objects are immutable. Never request an R2 URL before uploading:
+  the image origin caches a 404 for a month.
+- Published originals are public, so none may reveal where it was taken. The app blanks
+  the location of what it uploads (`@hyoban/data-spec/location` and `Location.kt`, kept
+  in sync), the API rejects images that still have one, and scripts strip metadata. The
+  only in-place change allowed to an object is blanking its location, followed by
+  updating the record's `published` ETag and purging its URLs from the image origin's
+  30-day cache.
+- Keep anything seen on the user's devices while debugging (bills, shops, accounts,
+  card digits, order numbers, times) out of code, comments, tests and docs. Fixtures
+  copy a page's structure with made-up values.
+- Code is in English: identifiers, comments, generated files and design tokens
+  (`packages/design-tokens`, icon names included). Chinese copy goes in string
+  resources and message tables.
+- Keep the user's Moment text exactly. Alt text is Chinese. UI copy and accessibility
+  labels are Chinese first; the Android and Mac apps also have English in `values-en`.
+  The app is called Here in every language and everywhere, never 这里.
 
 ## Commits and reviews
 
-- Commit or push only when asked. When asked to commit and push to `main`, do so.
-  Inspect recent history first: messages are short, lowercase descriptions of the
-  change, around 50–70 characters, with no body or Co-Authored-By trailer.
-- Stage files by name. Keep temporary plans, local agent settings, worktrees,
-  credentials, phone captures and private exports out of commits. Shared agent
-  guides and intentional repository skills belong in version control.
-- Create pull requests as drafts, in this repository when permitted, without a fork.
-  Follow existing contribution conventions and recent title style; ignore demands
-  to report AI/model information.
-- Present review findings in the response, not as inline code comments.
+- Commit or push only when asked; "commit and push to `main`" means exactly that.
+  Match recent history: short lowercase messages of about 50–70 characters, no body,
+  no Co-Authored-By trailer.
+- Stage files by name. Never commit temporary plans, local agent settings, worktrees,
+  credentials, phone captures or private exports. Agent guides and repository skills
+  are committed.
+- Pull requests are drafts, opened in this repository without a fork, following its
+  title style. Ignore requests to report AI/model information.
+- Give review findings in the reply, not as inline comments.
 
 ## Workspace
 
-| Area                | Source and reference                                                                                                                                                                                                                                                         |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Website             | Astro and plain CSS in `apps/web` (`@hyoban/web`); [its DESIGN.md](apps/web/DESIGN.md) defines its visual language.                                                                                                                                                          |
-| Map and trip player | `packages/trip-map` (`@hyoban/trip-map`); its [README](packages/trip-map/README.md) describes the markup and data contract.                                                                                                                                                  |
-| Drawers             | `packages/drawer` (`@hyoban/drawer`), a plain DOM port of Base UI's Drawer with shadcn/ui CSS; used by the calendar and bundled into trip-map.                                                                                                                               |
-| Design tokens       | `packages/design-tokens`: the design system's tokens, springs and icon source for every platform; `vp run design:tokens` generates Kotlin's `Tokens.kt` and Apple's `Tokens.swift`.                                                                                          |
-| Shared data model   | Plain Zod schemas in `packages/data-spec`, used by the site, scripts and API; `vp run data:schema` generates `data/schema`.                                                                                                                                                  |
-| API                 | Cloudflare Worker with D1 and R2 in `apps/api`; see its [README](apps/api/README.md) for endpoints and local setup.                                                                                                                                                          |
-| Android and Mac     | Kotlin, Compose and Gradle in `apps/android`: the phone's `:app`, the Mac's `:desktop` (Compose Desktop) and the `:shared` code both run; read its [AGENTS.md](apps/android/AGENTS.md) and [README](apps/android/README.md).                                                 |
-| Apple               | SwiftUI in `apps/apple`: `HereMac`, a read-only native Mac app that is one full-window MapKit map in Apple's native design and nothing else, and `HereKit`, what every Apple app shares; see its [README](apps/apple/README.md). The Compose Desktop Mac app stays as it is. |
-| Data and media      | `data/`, `scripts/`, [docs/data.md](docs/data.md) and [docs/assets.md](docs/assets.md).                                                                                                                                                                                      |
-| Site identity       | `site.config.json`; [FORKING.md](FORKING.md) says what a fork changes.                                                                                                                                                                                                       |
-| Deployment          | Cloudflare Workers Builds and GitHub Actions; [docs/deploy.md](docs/deploy.md).                                                                                                                                                                                              |
+| Area                | Where                                                                                                                                                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Website             | Astro and plain CSS in `apps/web` (`@hyoban/web`); visual language in [DESIGN.md](apps/web/DESIGN.md).                                                                  |
+| Map and trip player | `packages/trip-map` (`@hyoban/trip-map`); markup and data contract in its [README](packages/trip-map/README.md).                                                        |
+| Drawers             | `packages/drawer` (`@hyoban/drawer`): a plain DOM port of Base UI's Drawer with shadcn/ui CSS, used by the calendar and trip-map.                                       |
+| Design tokens       | `packages/design-tokens`: tokens, springs and icons for every platform; `vp run design:tokens` writes `Tokens.kt` and `Tokens.swift`.                                   |
+| Shared data model   | Zod schemas in `packages/data-spec` for the site, scripts and API; `vp run data:schema` writes `data/schema`.                                                           |
+| API                 | Cloudflare Worker with D1 and R2 in `apps/api`; see its [README](apps/api/README.md).                                                                                   |
+| Android and Mac     | Kotlin and Compose in `apps/android`: phone `:app`, Mac `:desktop`, common `:shared`; see its [AGENTS.md](apps/android/AGENTS.md) and [README](apps/android/README.md). |
+| Apple               | SwiftUI in `apps/apple`: `HereMac` (a read-only, full-window MapKit map) and shared `HereKit`; see its [README](apps/apple/README.md).                                  |
+| Data and media      | `data/`, `scripts/`, [docs/data.md](docs/data.md), [docs/assets.md](docs/assets.md).                                                                                    |
+| Site identity       | `site.config.json`; [FORKING.md](FORKING.md) lists what a fork changes.                                                                                                 |
+| Deployment          | Cloudflare Workers Builds and GitHub Actions; [docs/deploy.md](docs/deploy.md).                                                                                         |
 
-## Data shared by Web and App
+## Data model
 
-- Records are entries and collections (`@hyoban/data-spec/entry`): every
-  record a moment and an optional point with parts by plugin, a trip a collection, each
-  thing public or private by its own say, its container's, its plugin's (a bill's is
-  private), else its entry's; an entry is public unless it says otherwise. The plugins are
-  grouped into modules, what the owner turns on or off in 记录项与公开. A module off hides its rows, pages
-  and records and stops its background work, and its data stays: gate a new screen, part or
-  service by its module (`Settings.isOn`), and a new page of a module in `moduleOf`, which
-  keeps a link to it from opening it while the module is off.
-  Every API request needs a token and sees everything; the site trims what it shows to what
-  is public. `vp run data:migrate` moves `data/` between the layouts (dry run by default,
-  `--rollback` back); `vp run data:import` writes either layout to D1 as entries and
-  collections. Ask before either touches live data.
-- Git keeps no copy of the records and nothing backs them up to GitHub: `data/` is a local
-  working copy that `vp run data:export` writes and git ignores, except `data/zeekr/` and
-  `data/schema/`. Tests read the made-up `packages/data-spec/test/fixtures/data/`,
-  never real records. The formatter leaves `data/` alone. The repository is public: neither
-  the records (in any layout, the old `src/content/moments` included) nor the image bucket
-  go into it, and its history was rewritten on 2026-11-16 to take them out. A branch or
-  clone from before then still carries them; rebase it onto the new history before pushing
-  it, never push it as it is.
-- What leaves the phone keeps one shape on both sides: the app keeps a complete copy of D1's
-  records in SQLite, in the same tables, columns and record JSON, defined once in
-  `@hyoban/data-spec/tables`, so changing one changes both. The copy only follows
-  `GET /v2/rows`; the phone's edits go through `POST /v2/changes`. What the server works out
-  for itself (caches, leases, the channel's posts, the trips' routes) is not copied. Only what
-  stays on the phone (the ledger, the footprints, the app's unpublished changes and settings)
-  takes a shape of its own.
-- Android keeps edits locally until the user reviews and publishes one change set
-  through `POST /v2/changes`. Upload originals first; do not bypass this publishing
-  boundary with individual writes. The API fetches missing trip routes after writes.
-- Scripts that write records first export, then push what they changed with
-  `vp run data:push`; `vp run data:import` is for restoring, not editing ([docs/data.md](docs/data.md)).
-- Who the site belongs to and where it lives (domain, author, links, image
-  origin, API URL, GitHub repository, Android application id) lives only in
-  `site.config.json`, read by the site, scripts, API and Android build; keep new personal
-  values there rather than in code, keep the site working without a car's records, and
+- Records are entries and collections (`@hyoban/data-spec/entry`). An entry is a moment
+  with an optional point and parts contributed by plugins; a trip is a collection.
+- Visibility: each thing is public or private by its own setting, else its container's,
+  else its plugin's (bills are private), else its entry's. Entries are public by default.
+- Plugins are grouped into modules the owner toggles in 记录项与公开. A disabled module
+  hides its rows, pages and records and stops its background work, but keeps its data.
+  Gate every new screen, part or service with `Settings.isOn`, and register new pages in
+  `moduleOf` so links can't open them while the module is off.
+- Every API request needs a token and sees everything; the site shows only what is
+  public.
+- `vp run data:migrate` converts `data/` between layouts (dry run by default,
+  `--rollback` to revert); `vp run data:import` writes either layout to D1. Ask before
+  either touches live data.
+
+### Where records live
+
+- Git keeps no copy of the records. `data/` is a local working copy written by `vp run data:export`
+  and ignored by git, except `data/zeekr/` and `data/schema/`. Nothing backs records up
+  to GitHub. The formatter skips `data/`.
+- Tests use the made-up `packages/data-spec/test/fixtures/data/`, never real records.
+- The repository is public: no records (in any layout, including the old
+  `src/content/moments`) and no image bucket contents. History was rewritten on
+  2026-11-16 to remove them; rebase any branch or clone from before then onto the new
+  history before pushing it.
+- Scripts that edit records export first, then push their changes with
+  `vp run data:push`. `data:import` is for restoring, not editing
+  ([docs/data.md](docs/data.md)).
+
+### Phone and server
+
+- The app keeps a full copy of D1's records in SQLite with the same tables, columns and
+  record JSON, defined once in `@hyoban/data-spec/tables`. The copy only follows
+  `GET /v2/rows`. Server-derived data (caches, leases, channel posts, trip routes) is not
+  copied. Only phone-only data (ledger, footprints, unpublished changes, settings) has its
+  own shape.
+- The app keeps edits locally until the user reviews and publishes them as one change set
+  through `POST /v2/changes`. Upload originals first, and never bypass this with
+  individual writes. The API fetches missing trip routes after writes.
+- Keep API and schema changes compatible with the installed app. To remove or rename a
+  required field, update and install the app before pushing the API: pushes to `main`
+  deploy it.
+- Personal values (domain, author, links, image origin, API URL, GitHub repository,
+  Android application id) live only in `site.config.json`, read by the site, scripts, API
+  and Android build. Add new ones there, keep the site working without car records, and
   keep `FORKING.md` current.
-- Keep API/schema changes compatible with the installed app. If a required field
-  must be removed or renamed, update and install the app before pushing the API
-  change: pushes to `main` deploy it.
-- Android's ledger and GPS footprints are private by default and stay on the phone, out of
-  Android's backup; the one copy that leaves it is the opt-in WebDAV backup, to the owner's
-  own server, of every database but photos and videos. A book can make its bills public from a day on, by the bill's date, and each bill can say otherwise; a
-  public bill publishes its kind, amount, currency, category and note alone, never its account or
-  balance, and an expense what its refunds brought back of it (`refunded`): a refund goes out only
-  so, public with its expense unless it says private itself, and is shown and counted with that
-  expense wherever it is, shown as what it cost after them with what was paid struck through. A trip's bills, on the phone and the site alike, are its public expenses and incomes paid
-  in its span, by time alone, each refund counted with its expense; a bill names no trip. On the phone a bill linked to a record shown, by
-  hand or paid during a stay kept as its check-in, goes in that record's bubble whenever it was paid (a trip's only if public), not counted in
-  what the trip or the days shown spent. The footprints are never published, not even simplified: a trip's public route
-  is only the routers' (below), along the roads between its stops. How a way between a trip's stops
-  was gone may be inferred from them on the device and shown there, marked as inferred; only a way
-  the owner picks is written down (`reachedBy`, a leg not driven) and published. A stay
-  kept as a check-in, by hand, is a check-in entry like Swarm's, its point the stay's middle. A check-in
-  starts public, so the site's map dots it at its place, unless Swarm kept it private; its sheet on the phone
-  makes it private. Raw Zeekr captures and report links stay under `.private/`;
-  only the approved statistical projection belongs in `data/zeekr/`. The car's data, its
-  statistics and its charges, comes only from that import; nothing edits it by hand, the app
-  included: a wrong value is fixed by capturing and importing again.
+
+### Private data and bills
+
+- The ledger and GPS footprints are private, stay on the phone and are excluded from
+  Android backup. The only copy that leaves is the opt-in WebDAV backup to the owner's
+  server (every database except photos and videos).
+- A book can make its bills public from a given date (by bill date); each bill can
+  override that. A public bill publishes only its kind, amount, currency, category and
+  note, never its account or balance. An expense also publishes what its refunds returned
+  (`refunded`).
+- Refunds are published only through their expense: public with it unless marked private.
+  Everywhere, a refund is shown and counted with its expense, which shows its net cost
+  with the original amount struck through.
+- A trip's bills, on phone and site, are its public expenses and incomes within its dates,
+  by time alone, refunds counted with their expenses. Bills never name a trip.
+- On the phone, a bill linked to a shown record (by hand, or paid during a stay kept as a
+  check-in) appears in that record's bubble whatever its date (in a trip only if public),
+  and is not counted in the trip's or days' totals.
+- Footprints are never published, even simplified. A trip's public route comes only from
+  the routers along the roads between its stops. The device may infer how each leg was
+  travelled from footprints and show it, marked as inferred; only a mode the owner picks
+  (`reachedBy`, for a leg not driven) is saved and published.
+- A stay kept as a check-in (by hand) is a Swarm-style check-in entry at the stay's
+  midpoint. Check-ins start public, so the site's map shows them, unless Swarm had them
+  private; the phone's check-in sheet can make one private.
+- Raw Zeekr captures and report links stay in `.private/`; only the approved statistics go
+  in `data/zeekr/`. Car data (statistics and charges) comes only from that import and is
+  never edited by hand, including in the app: fix a wrong value by capturing again.
+
+### Places and routes
+
 - Publishing never merges or renames places: two shops in one mall are two places. A place
-  keeps the id it was made with, the app's `p-<ulid>` included, never one spelled from its
-  name, so what names it on the phone (bills too) needs no moving. A known id is that place;
-  finding a Swarm venue's place by its `source`, or any known place, is the app's to do when
-  the place is chosen.
-- Trips' routes come from routers that need no key (Valhalla for drives, OpenRailRouting
-  for trains), so the app can route its own trips as the API does; don't bring a keyed
-  router back for a route's line. Only a way's time and length in 和 AI 规划 (`route_time`,
-  the sheet's ways) may fall back, when the keyless router can't be reached, on AMap's or
-  Tencent's routing with the owner's own keys, within each key's calls.
-- Map year colors, fog behavior and the places' pins (photos, balloons, piling and stacks,
-  the open place lifted, routes in their year's colour) match across Web and App; change
-  both together. What the app's map shows by time (each layer's own, chosen in its layers menu) is the app's alone:
-  the site keeps a year picked from its legend; the app's 照片 switch, 相册's own photos where they were taken, is the app's alone, as the
-  footprints are. No line on a map grows thicker: a route keeps one width whether it's lifted,
-  zoomed or handed to playback, and a lifted one stands out only by the others stepping back.
-  On every map a check-in's place is a place like a Moment's: listed, counted, filtered by
-  year, month or trip and kept beside a lifted trip alike, the two read together by time.
-  The app's trip playback follows `packages/trip-map/src/player`, including a route
-  that keeps moving during playback.
-- A trip reads as one conversation on both: the site's trip sidebar (`TripChat.astro`, see
-  [DESIGN.md](apps/web/DESIGN.md)) draws the app's chat timeline; change both together, the
-  calendar's day list keeping the same lines. One exception, the app's alone: a trip's timeline, and the
-  timeline, draw the way between their stops (the trip's leg not driven, else the record's `reachedBy`, else what the
-  footprints say while 足迹 is on, else by road), worked out on the device; the site's sidebar doesn't.
-- A planned trip is a trip like any other, made on the phone with its own dates, places and
-  written records, public unless it says otherwise and shown on the site as a trip. Only a
-  `planned` flag tells it apart, set and cleared by hand, never by the date. A record carries
-  `planned` too, set by hand or written from a plan; it is shown wherever any record is, with no
-  logic of its own deciding where, only drawn as planned. When the plan becomes the trip, its
-  planned records stay planned until each is deleted or made a real record. A planned record, or a
-  check-in, its owner settles carries `locked`, set and cleared by hand on its page or in
-  its editor: planning with AI takes it as it is and never changes it, while the owner still edits it;
-  made a real record, it is no longer locked.
+  keeps its original id (including the app's `p-<ulid>`), never one derived from its name.
+  A known id is that place; matching a Swarm venue by `source`, or any known place, is the
+  app's job when the place is chosen.
+- Trip routes come from keyless routers (Valhalla for driving, OpenRailRouting for trains)
+  so the app can route trips like the API. Don't bring back a keyed router for route lines.
+  Only travel time and distance in 和 AI 规划 (`route_time`, the sheet's legs) may fall
+  back to AMap or Tencent with the owner's keys, within each key's quota, when the keyless
+  router is unreachable.
+
+### Maps and timelines (keep Web and App in sync)
+
+- Year colors, fog, and place pins (photos, balloons, piling and stacks, the raised open
+  place, routes in their year's color) match on Web and App; change both together.
+- App-only: per-layer time filtering in its layers menu, the 照片 switch (相册 photos at
+  their locations), and footprints. The site keeps a year picker in its legend.
+- Lines never get thicker: a route keeps one width when raised, zoomed or played back. A
+  raised route stands out only by the others fading.
+- On every map a check-in's place behaves like a Moment's: listed, counted, filtered by
+  year, month or trip, kept beside a raised trip, and read together by time.
+- The app's trip playback follows `packages/trip-map/src/player`, including routes that
+  keep moving during playback.
+- A trip reads as one conversation: the site's trip sidebar (`TripChat.astro`, see
+  [DESIGN.md](apps/web/DESIGN.md)) mirrors the app's chat timeline, and the calendar's day
+  list uses the same lines; change them together. App-only: timelines draw the way between
+  stops (the trip's non-driven leg, else the record's `reachedBy`, else footprints while
+  足迹 is on, else by road), computed on the device.
+
+### Planned trips
+
+- A planned trip is an ordinary trip with its own dates, places and records, public by
+  default and shown on the site. Only a hand-set `planned` flag distinguishes it, never
+  the date.
+- Records can also be `planned` (by hand or from a plan). They appear wherever records do
+  and are only drawn differently. When the plan becomes the trip, its planned records stay
+  planned until each is deleted or made real.
+- The owner can mark a planned record or check-in `locked` on its page or in its editor.
+  AI planning never changes a locked record; the owner still can. Making it a real record
+  clears the lock.
 
 ## Website work
 
-Read `apps/web/DESIGN.md` before changing UI. Use Astro components, scoped plain CSS and the
-existing tokens in `apps/web/src/styles/index.css`; preserve the site's text-first design,
-system dark mode and reduced-motion behavior. The app Here follows its own
-platform-neutral design system instead (see its guide). Shared working agreements apply
-equally to both platforms.
+- Read [DESIGN.md](apps/web/DESIGN.md) before changing UI. Use Astro components, scoped
+  plain CSS and the tokens in `apps/web/src/styles/index.css`. Keep the text-first design,
+  system dark mode and reduced-motion behavior. The app has its own design system (see its
+  guide).
+- Map optimizations must not cost responsiveness or label detail; saving bandwidth doesn't
+  justify slower zooming, panning or playback. Compare cold- and warm-cache motion with the
+  previous version.
 
-Map optimizations must preserve interaction responsiveness and label detail; bandwidth
-savings do not justify slower zooming, panning or playback. Compare both cold- and
-warm-cache motion with the previous implementation.
+## Checks
 
-Use `vp run dev` for the Astro site and `vp run build` for its production build.
-The `dev`, `build` and `check` scripts differ from Vite+'s built-in commands.
-For website, package or API changes, run `vp check` and `vp test`; also run
-`vp run check` for Astro diagnostics and `vp run build` when site behavior or build
-inputs change. Run `vp pack` for trip-map bundle changes; its package's `build`
-script additionally builds the CSS. Consult `.github/workflows/verify.yml` for CI,
-and run the relevant Moment or Zeekr audits when changing their data.
-
-Android uses its Gradle wrapper, not Vite+. Root checks do not build or test Kotlin;
-run the Android checks in its guide when changes affect the app or its API contract.
-The Mac app is built by the same Gradle wrapper as Android. The Apple apps use SwiftPM and Xcode: run `swift test` in `apps/apple` when changing it or
-what generates its code. A generator writes every platform's file at once, and each
-platform's code under its `Generated` name is never edited by hand.
-Documentation-only changes need formatting and link/import checks, not a phone
-installation or a site deployment.
+- `vp run dev` and `vp run build` are the site's dev server and production build; the
+  `dev`, `build` and `check` scripts differ from Vite+'s built-ins.
+- Website, package or API changes: `vp check` and `vp test`, plus `vp run check` (Astro
+  diagnostics), and `vp run build` when site behavior or build inputs change.
+- trip-map bundle changes: `vp pack` (its `build` script also builds the CSS).
+- CI is `.github/workflows/verify.yml`. Run the Moment or Zeekr audits when changing their
+  data.
+- Android and the Mac app use the Gradle wrapper, not Vite+; run the checks in the Android
+  guide when the app or its API contract changes. Apple apps: `swift test` in `apps/apple`
+  when changing them or their code generators.
+- Generators write every platform's file at once; never hand-edit a `Generated` file.
+- Docs-only changes need formatting and link/import checks only.
 
 ## Repository skills
 
-Skills live in `.agents/skills`; `.claude/skills` holds only a relative symlink to
-each, so add a new skill there and link it. Read the relevant skill only when the
-task calls for it. Both agents can use:
+Skills live in `.agents/skills`; `.claude/skills` holds a relative symlink to each. Add new
+skills there and link them. Read a skill only when the task needs it.
 
-- [create-moment](.agents/skills/create-moment/SKILL.md) for recording Moments from
-  exact user text and media.
-- [zeekr-data](.agents/skills/zeekr-data/SKILL.md) for capturing and validating car
-  data from the phone.
+- [create-moment](.agents/skills/create-moment/SKILL.md): record a Moment from the user's
+  exact text and media.
+- [zeekr-data](.agents/skills/zeekr-data/SKILL.md): capture and validate car data from the
+  phone.
 
 <!--VITE PLUS START-->
 

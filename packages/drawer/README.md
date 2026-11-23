@@ -1,11 +1,10 @@
 # @hyoban/drawer
 
-[Base UI](https://base-ui.com/react/components/drawer)'s Drawer without React: one popup
-opened and closed from script, swiped away (or between snap points) with a mouse, a pen
-or a finger, nested over another drawer, with the state Base UI renders written onto the
-elements as the same data attributes and CSS variables. [styles.css](src/styles.css) is
-[shadcn/ui](https://ui.shadcn.com/docs/components/drawer)'s Drawer (base-nova) as plain
-CSS over them.
+[Base UI](https://base-ui.com/react/components/drawer)'s Drawer without React: a popup
+opened and closed from script, swiped away (or between snap points) by mouse, pen or touch,
+and nestable. It writes Base UI's state onto the elements as the same data attributes and CSS
+variables. [styles.css](src/styles.css) is [shadcn/ui](https://ui.shadcn.com/docs/components/drawer)'s
+Drawer (base-nova) as plain CSS over them.
 
 ```html
 <div data-drawer-backdrop hidden></div>
@@ -31,20 +30,20 @@ const drawer = createDrawer({
 })
 ```
 
-- **Popup**: a `<dialog>` is shown with `showModal()` while `modal` (the default), and any
-  other element by its `hidden`. It's swiped from anywhere but `data-drawer-content` with a
-  mouse, and from anywhere with a finger: a scroller in the way scrolls first, until its
-  edge. `data-swipe-ignore` keeps an element out of it (`="x"` on a vertical drawer hands
-  it only sideways drags).
-- **Closing**: Escape, a press outside, a `data-drawer-close` button or a swipe, each
-  through `onOpenChange(open, details)`, where `details.cancel()` keeps it open.
-- **Snap points** (up or down only): a number up to 1 is a share of the viewport's height,
-  above 1 pixels, or a `'px'` / `'rem'` string. `data-expanded` at 1.
-- **Nesting**: `parent` (a drawer, or a function asked as it opens) steps that drawer back
-  while this one is open, as shadcn's stack.
-- **Scroll area**: `createScrollArea({ viewport, root })` hides an element's own scrollbar
-  and draws shadcn's over its edge in `root` (a drawer's popup, say), the thumb dragged,
-  the track pressed, a wheel over it scrolling. The thumb's colour is `--scroll-area-thumb`.
+- **Popup**: a `<dialog>` opens with `showModal()` while `modal` (the default); any other
+  element toggles `hidden`. A mouse swipes from anywhere but `data-drawer-content`; a finger
+  from anywhere, though a scroller in the way scrolls first, until its edge.
+  `data-swipe-ignore` excludes an element (`="x"` on a vertical drawer lets it take only
+  sideways drags).
+- **Closing**: Escape, a press outside, a `data-drawer-close` button or a swipe, each through
+  `onOpenChange(open, details)`; `details.cancel()` keeps it open.
+- **Snap points** (up or down only): a number up to 1 is a share of the viewport height,
+  above 1 is pixels, or a `'px'` / `'rem'` string. `data-expanded` is set at 1.
+- **Nesting**: `parent` (a drawer, or a function called on open) steps that drawer back while
+  this one is open, like shadcn's stack.
+- **Scroll area**: `createScrollArea({ viewport, root })` hides an element's scrollbar and
+  draws shadcn's over its edge inside `root` (e.g. a drawer's popup), with a draggable thumb,
+  a pressable track and wheel scrolling over it. Thumb colour: `--scroll-area-thumb`.
 
 ## The port
 
@@ -59,22 +58,21 @@ Each source file says at its top which upstream files it comes from.
 | `src/snap-points.ts` | Base UI `drawer/root/useDrawerSnapPoints`                                                                                                                              |
 | `src/styles.css`     | shadcn/ui `styles/base-nova/drawer` and `styles/base-nova/scroll-area` (their Tailwind classes, written out as CSS)                                                    |
 
-What changed on the way:
+Differences from upstream:
 
-- One function on DOM elements instead of React parts and context: the parts are found by
-  the elements passed in (`data-drawer-*` marks them for the stylesheet), and nesting is
-  the `parent` option instead of rendering one Root in another.
-- A drag moves the popup through the CSS variables alone, never an inline `transform`.
-- Opening and closing are the `<dialog>` element's own (`showModal()`, its `cancel`) or
-  the `hidden` attribute, instead of Floating UI's focus manager and portals.
-- The look reads colours from `--drawer-*` variables instead of shadcn's theme, and sits
-  in `@layer drawer` and `:where()` so a page overrides it without trying.
+- One function over DOM elements instead of React parts and context. Parts are the elements
+  passed in (`data-drawer-*` marks them for the stylesheet); nesting is the `parent` option.
+- A drag moves the popup only through CSS variables, never an inline `transform`.
+- Opening and closing use `<dialog>` (`showModal()`, its `cancel`) or `hidden`, not Floating
+  UI's focus manager and portals.
+- Colours come from `--drawer-*` variables instead of shadcn's theme. Styles sit in
+  `@layer drawer` and `:where()`, so any page rule overrides them.
 - Left out: `Drawer.SwipeArea` (swiping one open from the edge), `Drawer.Indent`, the
   virtual keyboard handling, and focus trapping for anything but a modal `<dialog>`.
 
 ## License
 
 MIT, see [LICENSE](LICENSE). Base UI (Copyright (c) 2019 Material-UI SAS) and shadcn/ui
-(Copyright (c) 2023 shadcn) are MIT too; their notices are in
-[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and the source files, and go with any copy
-of this code, a bundle of it included.
+(Copyright (c) 2023 shadcn) are MIT too. Their notices are in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and the source files, and must accompany any
+copy of this code, bundles included.
