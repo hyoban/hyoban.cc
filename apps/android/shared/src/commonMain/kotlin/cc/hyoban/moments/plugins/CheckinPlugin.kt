@@ -15,6 +15,13 @@ import cc.hyoban.moments.ui.design.AppIcons
 /** Swarm's check-ins brought in from its export, on or off. */
 val AppContainer.swarm: cc.hyoban.moments.data.swarm.SwarmImport get() = Plugins.registry.own(Services.swarm, this)
 
+/**
+ * The check-ins the screens show, as the host's `shownMoments`: all of them, or in 演示模式 only the
+ * public's; one flow for the container, made as it is first asked for, whatever modules are on.
+ */
+val AppContainer.shownCheckins: kotlinx.coroutines.flow.StateFlow<cc.hyoban.moments.data.things.Checkins>
+    get() = Plugins.registry.own(Services.shownCheckins, this)
+
 /** 签到: check-ins, from Swarm or a stay kept as one. */
 object CheckinPlugin : Plugin {
     override val module = Module.CHECKIN
@@ -28,6 +35,12 @@ object CheckinPlugin : Plugin {
                 mediaDirectory = java.io.File(container.localStore.root, "media"),
                 scope = container.scope,
             )
+        }
+        provide(Services.shownCheckins) { container ->
+            val settings = container.settings
+            val checkins = container.repository.checkins
+            kotlinx.coroutines.flow.combine(checkins, androidx.compose.runtime.snapshotFlow { settings.demo }) { all, demo -> shown(all, demo) }
+                .stateIn(container.scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, shown(checkins.value, settings.demo))
         }
         add(Points.searchKinds, CheckinsSearch)
         add(Points.placeAlone, CheckinPlaceAlone)
@@ -55,6 +68,10 @@ object CheckinPlugin : Plugin {
                 .stateIn(container.scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, container.shownCheckins.value.all.map(::CheckinMapStop))
         }
     }
+
+    /** In 演示模式 the private check-ins are left out; otherwise they are all shown as they are. */
+    private fun shown(checkins: cc.hyoban.moments.data.things.Checkins, demo: Boolean) =
+        if (demo) cc.hyoban.moments.data.things.Checkins(checkins.all.filterNot { it.private }) else checkins
 
     private val stops = java.util.WeakHashMap<AppContainer, kotlinx.coroutines.flow.StateFlow<List<cc.hyoban.moments.ui.map.MapStop>>>()
 }

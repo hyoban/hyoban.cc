@@ -105,6 +105,9 @@ object Points {
 
     /** What draws over 地图's atlas and its panel (the phone's footprints). */
     val mapOverlays = Point<MapOverlay>("map-overlays")
+
+    /** What it keeps in the device's private folder, and what of it the phone's WebDAV backup carries ([KeptFiles]). */
+    val kept = Point<KeptFiles>("kept")
 }
 
 /** The services plugins give themselves and each other, every device's; which plugin gives each is the device's. */
@@ -126,6 +129,9 @@ object Services {
 
     /** Where planning with AI searches Xiaohongshu's notes: the phone's website session; none on the Mac. */
     val noteSearch = Service<cc.hyoban.moments.data.ai.NoteSearch>("note-search")
+
+    /** The check-ins the screens show: all of them, or in 演示模式 only the public's; the check-ins' own. */
+    val shownCheckins = Service<StateFlow<cc.hyoban.moments.data.things.Checkins>>("shown-checkins")
 }
 
 /** Where planning with AI searches Xiaohongshu's notes on this device, or null where none is given. */

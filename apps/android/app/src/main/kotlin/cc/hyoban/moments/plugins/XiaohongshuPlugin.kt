@@ -7,6 +7,8 @@ import cc.hyoban.moments.data.ai.PlanArgs
 import cc.hyoban.moments.data.ai.PlanLookup
 import cc.hyoban.moments.data.ai.PlanNeeds
 import cc.hyoban.moments.data.ai.PlanTool
+import cc.hyoban.moments.ui.NoteSignIn
+import cc.hyoban.moments.ui.screen
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
@@ -19,11 +21,22 @@ import kotlinx.serialization.json.putJsonObject
 val cc.hyoban.moments.PhoneContainer.noteSearch: cc.hyoban.moments.xiaohongshu.Xiaohongshu
     get() = Plugins.registry.own(Services.noteSearch, this) as cc.hyoban.moments.xiaohongshu.Xiaohongshu
 
-/** Xiaohongshu's notes for 和 AI 规划 (`search_notes`), on the phone, which reads its website once the owner signs in. */
-object XiaohongshuPlugin : Plugin {
+/**
+ * Xiaohongshu's notes for 和 AI 规划 (`search_notes`), on the phone, which reads its website once
+ * the owner signs in on its page (`NoteSignIn`, a page of 我's, opened from 和 AI 规划's group).
+ */
+object XiaohongshuPlugin : Plugin, PhonePageSet {
     override fun Contributions.contribute() {
         provide(Services.noteSearch) { cc.hyoban.moments.xiaohongshu.Xiaohongshu((it as cc.hyoban.moments.PhoneContainer).appContext) }
         add(Points.planTools, NoteSearchTool { it.container?.noteSearch })
+        add(Points.pages, object : PageSet {
+            override fun owns(route: Any) = route == NoteSignIn
+        })
+        add(PhonePoints.pages, this@XiaohongshuPlugin)
+    }
+
+    override fun androidx.navigation.NavGraphBuilder.pages(pages: PhonePages) {
+        screen<NoteSignIn> { cc.hyoban.moments.xiaohongshu.XiaohongshuSignInScreen(pages.container.noteSearch, onBack = pages.back) }
     }
 }
 

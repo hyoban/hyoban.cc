@@ -1,9 +1,9 @@
 package cc.hyoban.moments.publish
 
+import cc.hyoban.moments.plugins.HostChannels
+
 import cc.hyoban.moments.res.*
 import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -89,7 +89,6 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
 
     companion object {
         private const val NAME = "publish"
-        private const val CHANNEL = "publishing"
         private const val PROGRESS_ID = 1
         private const val RESULT_ID = 2
         private const val NOTIFICATION_EVERY_MS = 1_000L
@@ -122,11 +121,8 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         private fun isNetwork(error: Exception) = error is IOException && error !is HttpException && error !is NoTokenException
 
         private fun channel(context: Context): String {
-            val manager = context.getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(
-                NotificationChannel(CHANNEL, textOf(Res.string.notification_channel_publishing), NotificationManager.IMPORTANCE_LOW),
-            )
-            return CHANNEL
+            HostChannels.publishing.create(context)
+            return HostChannels.publishing.id
         }
 
         /** Opens the app, on whatever page it was left. */

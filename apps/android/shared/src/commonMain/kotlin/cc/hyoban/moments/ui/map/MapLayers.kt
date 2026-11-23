@@ -51,14 +51,14 @@ data class MapLayer(
     val toggle: () -> Unit,
 )
 
-/** Where a layer a module brings stands in 地图's layers menu: after which of the map's own. */
-enum class LayerSlot { AFTER_PLACES, AFTER_PHOTOS }
+/** Where a layer a plugin brings stands in 地图's layers menu: after the places, after the routes (the photos), or after the photos. */
+enum class LayerSlot { AFTER_PLACES, AFTER_ROUTES, AFTER_PHOTOS }
 
 /**
- * Every layer 地图 draws, in the menu's order: the places, then what the modules that are on
- * bring after them (签到's check-ins), the trips' routes, 相册's photos, then what the modules
- * bring after those (足迹's footprints, while the device records [footprints]), and the fog,
- * which [toggleFog] sweeps on and off.
+ * Every layer 地图 draws, in the menu's order: the places, then what the plugins that are on
+ * bring after them (签到's check-ins), the trips' routes, then what they bring after those (the
+ * photo sources' photos, `MapPhotosPlugin`'s), then after the photos (足迹's footprints, while the
+ * device records [footprints]), and the fog, which [toggleFog] sweeps on and off.
  */
 fun atlasLayers(settings: Settings, footprints: Boolean, toggleFog: () -> Unit): List<MapLayer> {
     val own = cc.hyoban.moments.plugins.Plugins.registry.on(cc.hyoban.moments.plugins.Points.mapLayers, settings::isOn).mapNotNull { it.layer(settings, footprints) }
@@ -67,8 +67,7 @@ fun atlasLayers(settings: Settings, footprints: Boolean, toggleFog: () -> Unit):
         MapLayer(Res.string.map_layer_places, AppIcons.Map, settings.mapPlaces, "layer_places", TimedLayer.PLACES) { settings.changeMapPlaces(!settings.mapPlaces) },
     ) + at(LayerSlot.AFTER_PLACES) + listOf(
         MapLayer(Res.string.legend_trips, AppIcons.Route, settings.mapRoutes, "layer_routes", TimedLayer.ROUTES) { settings.changeMapRoutes(!settings.mapRoutes) },
-        MapLayer(Res.string.map_photos, AppIcons.Photos, settings.mapPhotos, "layer_photos", TimedLayer.PHOTOS) { settings.changeMapPhotos(!settings.mapPhotos) },
-    ) + at(LayerSlot.AFTER_PHOTOS) + listOf(
+    ) + at(LayerSlot.AFTER_ROUTES) + at(LayerSlot.AFTER_PHOTOS) + listOf(
         MapLayer(Res.string.map_layer_fog, AppIcons.Fog, settings.mapFog, "layer_fog", TimedLayer.FOG, toggle = toggleFog),
     )
 }

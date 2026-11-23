@@ -1,9 +1,9 @@
 package cc.hyoban.moments.update
 
+import cc.hyoban.moments.plugins.UpdateChannels
+
 import cc.hyoban.moments.res.*
 import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -36,7 +36,6 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
 
     companion object {
         private const val DAILY = "update-daily"
-        private const val CHANNEL = "updates"
         private const val NOTIFICATION_ID = 7301
 
         /** Checks once a day on a network while [on], else not. */
@@ -58,9 +57,7 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
             ) {
                 return
             }
-            context.getSystemService(NotificationManager::class.java).createNotificationChannel(
-                NotificationChannel(CHANNEL, textOf(Res.string.update_channel), NotificationManager.IMPORTANCE_DEFAULT),
-            )
+            UpdateChannels.updates.create(context)
             val open = PendingIntent.getActivity(
                 context,
                 NOTIFICATION_ID,
@@ -68,7 +65,7 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
-            val notification = NotificationCompat.Builder(context, CHANNEL)
+            val notification = NotificationCompat.Builder(context, UpdateChannels.updates.id)
                 .setSmallIcon(R.drawable.ic_notification_update)
                 .setContentTitle(textOf(Res.string.update_notification_title, release.version))
                 .setContentText(textOf(Res.string.update_notification_text))

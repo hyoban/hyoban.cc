@@ -16,6 +16,8 @@ object FootprintsPlugin : Plugin {
 
     override fun Contributions.contribute() {
         add(Points.modules, ModuleCard(Module.FOOTPRINTS, Res.string.footprints_title, icon))
+        // The phone's footprints and its connection reminders go into its WebDAV backup, never anywhere else.
+        add(Points.kept, KeptFiles(databases = listOf(FOOTPRINTS_DATABASE), files = listOf(CONNECTION_REMINDERS_FILE, COMPANION_CONNECTIONS_FILE)))
         add(Points.pages, object : PageSet {
             override fun owns(route: Any) = route == FootprintSettings
             override fun routeOf(link: AppLink): Any? = when (link.host) {

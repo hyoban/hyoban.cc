@@ -32,8 +32,6 @@ import cc.hyoban.moments.ui.CameraSettings
 import cc.hyoban.moments.ui.GalleryAlbums
 import cc.hyoban.moments.ui.SideKeySettings
 import cc.hyoban.moments.ui.design.AppIcons
-import cc.hyoban.moments.ui.picker.GalleryAccess
-import cc.hyoban.moments.ui.picker.LocalMedia
 import cc.hyoban.moments.ui.screen
 import cc.hyoban.moments.ui.settings.RestoreDialog
 import cc.hyoban.moments.ui.settings.SettingsGroupSpec
@@ -61,6 +59,8 @@ internal object AutoBillPlugin : Plugin, SettingsGroup, SideKeyActions, Backgrou
         add(Points.settingsGroups, this@AutoBillPlugin)
         add(PhonePoints.sideKeys, this@AutoBillPlugin)
         add(PhonePoints.background, this@AutoBillPlugin)
+        add(PhonePoints.needs, *AutoBillNeeds.all.toTypedArray())
+        add(PhonePoints.channels, AutoBillChannels.payments)
     }
 
     @Composable override fun group(container: AppContainer, nav: SettingsPageNav): SettingsGroupSpec = cc.hyoban.moments.ui.ledger.autoBillGroup()
@@ -86,6 +86,8 @@ internal object BackupPlugin : Plugin, SettingsGroup, StartWork {
     override fun Contributions.contribute() {
         add(Points.settingsGroups, this@BackupPlugin)
         add(PhonePoints.starts, this@BackupPlugin)
+        // Its own sign-in stays out of the backups it makes.
+        add(Points.kept, KeptFiles(left = listOf("webdav-password")))
     }
 
     @Composable
@@ -127,6 +129,8 @@ internal object UpdatePlugin : Plugin, SettingsGroup, StartWork {
     override fun Contributions.contribute() {
         add(Points.settingsGroups, this@UpdatePlugin)
         add(PhonePoints.starts, this@UpdatePlugin)
+        add(PhonePoints.needs, *UpdateNeeds.all.toTypedArray())
+        add(PhonePoints.channels, UpdateChannels.updates)
     }
 
     @Composable
@@ -147,14 +151,17 @@ internal object GalleryPlugin : Plugin, MeRowItem, PhonePageSet {
     override fun Contributions.contribute() {
         add(Points.photoSources, cc.hyoban.moments.ui.picker.GalleryPhotoSources)
         add(PhonePoints.meRows, this@GalleryPlugin)
+        // Where its photos were taken, read again from the gallery, so not backed up.
+        add(Points.kept, KeptFiles(left = listOf("gallery-places.tsv")))
         add(PhonePoints.pages, this@GalleryPlugin)
+        add(PhonePoints.needs, *GalleryNeeds.all.toTypedArray())
     }
 
     @Composable
     override fun row(container: PhoneContainer, nav: MeNav): SettingsRow? {
         val context = LocalContext.current
         // While the gallery may be read.
-        if (remember { LocalMedia.access(context) } == GalleryAccess.NONE) return null
+        if (!remember { GalleryNeeds.photos.given(context) }) return null
         return SettingsRow.Page(
             AppIcons.Folder, stringResource(Res.string.albums_title), "settings_albums",
             supporting = galleryAlbumsSummary().takeIf { it.isNotEmpty() },
@@ -175,6 +182,7 @@ internal object SideKeyPlugin : Plugin, MeRowItem, PhonePageSet, StartWork {
         add(PhonePoints.meRows, this@SideKeyPlugin)
         add(PhonePoints.pages, this@SideKeyPlugin)
         add(PhonePoints.starts, this@SideKeyPlugin)
+        add(PhonePoints.needs, *SideKeyNeeds.all.toTypedArray())
     }
 
     @Composable
@@ -211,8 +219,12 @@ object CameraPlugin : Plugin, MeRowItem, PhonePageSet, StartWork {
     override fun Contributions.contribute() {
         add(Points.photoSources, cc.hyoban.moments.ui.picker.CameraPhotoSources)
         add(PhonePoints.meRows, this@CameraPlugin)
+        // The pairing is the phone's own, out of the backup.
+        add(Points.kept, KeptFiles(left = listOf("camera.json")))
         add(PhonePoints.pages, this@CameraPlugin)
         add(PhonePoints.starts, this@CameraPlugin)
+        add(PhonePoints.needs, *CameraNeeds.all.toTypedArray())
+        add(PhonePoints.channels, CameraChannels.location)
     }
 
     @Composable
@@ -281,6 +293,8 @@ internal object SharePlugin : Plugin, MeRowItem {
  */
 internal object NasPhone : Plugin {
     override fun Contributions.contribute() {
+        // Its password stays out of the backup.
+        add(Points.kept, KeptFiles(left = listOf("nas-password")))
         provide(Services.nas) {
             val context = (it as PhoneContainer).appContext
             cc.hyoban.moments.nas.Nas(

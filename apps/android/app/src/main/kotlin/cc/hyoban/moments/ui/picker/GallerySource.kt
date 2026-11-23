@@ -8,7 +8,6 @@ import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.local.MotionPhotos
 import cc.hyoban.moments.ui.viewer.VideoPlayback
 import cc.hyoban.moments.ui.viewer.VideoWaiting
-import android.Manifest
 import android.app.Activity
 import android.content.Context
 import androidx.compose.ui.graphics.ImageBitmap
@@ -80,7 +79,7 @@ import java.time.ZoneId
 @Composable
 internal fun rememberGallery(gallery: GallerySource, deletion: Deletion, onFallback: () -> Unit): GallerySource {
     val ask = rememberPermissionAsk(
-        LocalMedia.permissions + Manifest.permission.ACCESS_MEDIA_LOCATION,
+        cc.hyoban.moments.plugins.GalleryNeeds.photos.permissions,
         PermissionWords(
             AppIcons.Photos,
             stringResource(Res.string.permission_gallery_title),
@@ -91,7 +90,7 @@ internal fun rememberGallery(gallery: GallerySource, deletion: Deletion, onFallb
                 PermissionFact(AppIcons.Shield, stringResource(Res.string.permission_photo_candidate)),
             ),
         ),
-        isGranted = { LocalMedia.access(it) != GalleryAccess.NONE },
+        isGranted = { cc.hyoban.moments.plugins.GalleryNeeds.photos.given(it) },
         onDecline = onFallback,
     ) { granted ->
         gallery.checkAccess()

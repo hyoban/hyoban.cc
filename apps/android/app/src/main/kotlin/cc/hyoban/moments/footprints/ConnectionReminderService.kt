@@ -1,5 +1,7 @@
 package cc.hyoban.moments.footprints
 
+import cc.hyoban.moments.plugins.FootprintChannels
+
 import cc.hyoban.moments.plugins.footprints
 import cc.hyoban.moments.res.*
 import org.jetbrains.compose.resources.StringResource
@@ -62,7 +64,7 @@ class ConnectionReminderService : Service() {
     override fun onCreate() {
         super.onCreate()
         live = this
-        notifications.createNotificationChannel(NotificationChannel(WATCH_CHANNEL, textOf(Res.string.connection_automation_title), NotificationManager.IMPORTANCE_LOW))
+        FootprintChannels.connectionWatch.create(this)
         notifications.cancel(2302) // Remove any pre-upgrade confirmation notification.
         scope.launch {
             for (event in events) try { event() }
@@ -393,7 +395,7 @@ class ConnectionReminderService : Service() {
         Intent(this, MainActivity::class.java).setAction(Intent.ACTION_VIEW).setData("moments://map".toUri()),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-    private fun watchNotification(message: StringResource) = NotificationCompat.Builder(this, WATCH_CHANNEL)
+    private fun watchNotification(message: StringResource) = NotificationCompat.Builder(this, FootprintChannels.connectionWatch.id)
         .setSmallIcon(R.drawable.ic_notification_connections).setContentTitle(textOf(Res.string.connection_automation_title))
         .setContentText(textOf(message)).setContentIntent(openMap()).setOngoing(true).setOnlyAlertOnce(true).build()
 
@@ -433,7 +435,6 @@ class ConnectionReminderService : Service() {
         /** The warm-up outlasts the wait, so GNSS is still on when recording asks for fixes. */
         private const val WARMUP_OVERLAP_MS = 10_000L
         private const val IDENTITY_TIMEOUT_MS = 10_000L
-        private const val WATCH_CHANNEL = "connection-watch"
         private const val WATCH_ID = 2301
         private var live: ConnectionReminderService? = null
         private val _status = MutableStateFlow<StringResource?>(null)

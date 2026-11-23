@@ -13,8 +13,6 @@ import cc.hyoban.moments.ui.design.ModalBottomSheet
 import cc.hyoban.moments.ui.design.AlertDialog
 import cc.hyoban.moments.ui.design.FilterChip
 import cc.hyoban.moments.ui.design.TextButton
-import android.Manifest
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -214,11 +212,7 @@ fun FootprintsOnMap(
     var askBackground by rememberSaveable { mutableStateOf(false) }
     val prefs = remember { context.getSharedPreferences("permissions", android.content.Context.MODE_PRIVATE) }
     val requested = remember {
-        buildList {
-            add(Manifest.permission.ACCESS_FINE_LOCATION)
-            add(Manifest.permission.ACCESS_COARSE_LOCATION)
-            if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
-        }.toTypedArray()
+        cc.hyoban.moments.plugins.FootprintNeeds.location.permissions + cc.hyoban.moments.plugins.FootprintNeeds.notifications.permissions
     }
     val permissions = cc.hyoban.moments.ui.components.rememberPermissionAsk(
         requested,
@@ -232,14 +226,14 @@ fun FootprintsOnMap(
                 cc.hyoban.moments.ui.design.PermissionFact(AppIcons.Bell, stringResource(Res.string.onboarding_fp_notification)),
             ),
         ),
-        isGranted = { RecordingService.hasPreciseLocation(it) },
+        isGranted = { cc.hyoban.moments.plugins.FootprintNeeds.location.given(it) },
         onDecline = { pendingAction = null },
     ) { granted ->
         val action = pendingAction
         pendingAction = null
         if (granted && action != null) {
             control(action)
-            if (!context.granted(Manifest.permission.ACCESS_BACKGROUND_LOCATION) && !prefs.getBoolean("told_background", false)) {
+            if (!cc.hyoban.moments.plugins.FootprintNeeds.background.given(context) && !prefs.getBoolean("told_background", false)) {
                 prefs.edit().putBoolean("told_background", true).apply()
                 askBackground = true
             }

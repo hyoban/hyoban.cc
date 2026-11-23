@@ -72,6 +72,12 @@ object PhonePoints {
 
     /** Pages in the phone's navigation, each by its route. */
     val pages = Point<PhonePageSet>("phone-pages")
+
+    /** What it needs of the phone, permissions or system settings, which its pages list and ask for. */
+    val needs = Point<PhoneNeed>("phone-needs")
+
+    /** The notification channels it posts in. */
+    val channels = Point<PhoneChannel>("channels")
 }
 
 /** Where a row on 我 goes: among what is kept here, under the changes, or among the settings under 设置. */
@@ -128,6 +134,13 @@ object PhonePlugins {
     /** The side key actions [action] is one of, with its module, or null for one of the side keys' own. */
     fun sideKeyOwner(action: String?): Contribution<SideKeyActions>? =
         registry.contributions(PhonePoints.sideKeys).firstOrNull { action != null && action in it.item.actions }
+
+    /** What [plugin] needs of the phone, in the order it declared them. */
+    fun needsOf(plugin: Plugin): List<PhoneNeed> =
+        registry.contributions(PhonePoints.needs).filter { it.plugin === plugin }.map { it.item }
+
+    /** Every notification channel the app posts in: the host's own, then the plugins', whatever is on. */
+    fun channels(): List<PhoneChannel> = HostChannels.all + registry.all(PhonePoints.channels)
 
     /** Every plugin's work started with the app, in their order, [container] just made. */
     fun started(context: Context, container: PhoneContainer) {
@@ -227,19 +240,23 @@ private fun monthExpense(ledger: Ledger): Pair<Long, String>? {
     return spent
 }
 
-private object FootprintsPhone : Plugin, MeRowItem, ImportGroup, BackgroundWork, PhonePageSet, MapOverlay, OnboardingStep {
+internal object FootprintsPhone : Plugin, MeRowItem, ImportGroup, BackgroundWork, PhonePageSet, MapOverlay, OnboardingStep {
     override val module = Module.FOOTPRINTS
 
     override fun Contributions.contribute() {
         // GPS tracks stay on this phone, private; none of them publish.
         provide(Services.footprints) { cc.hyoban.moments.footprints.FootprintStore((it as PhoneContainer).appContext) }
         add(PhonePoints.meRows, this@FootprintsPhone)
+        // Its diagnostics stay on the phone, out of the backup.
+        add(Points.kept, KeptFiles(left = listOf("footprint-diagnostics")))
         add(Points.imports, this@FootprintsPhone)
         add(PhonePoints.heat, FootprintsHeat)
         add(PhonePoints.pages, this@FootprintsPhone)
         add(Points.mapOverlays, this@FootprintsPhone)
         add(Points.onboardingSteps, this@FootprintsPhone)
         add(PhonePoints.background, this@FootprintsPhone)
+        add(PhonePoints.needs, *FootprintNeeds.all.toTypedArray())
+        add(PhonePoints.channels, *FootprintChannels.all.toTypedArray())
     }
 
     @Composable override fun row(container: PhoneContainer, nav: MeNav): SettingsRow? {

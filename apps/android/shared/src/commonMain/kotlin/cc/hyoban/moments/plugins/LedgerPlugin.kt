@@ -25,6 +25,8 @@ object LedgerPlugin : Plugin {
 
     override fun Contributions.contribute() {
         add(Points.modules, ModuleCard(Module.LEDGER, Res.string.me_ledger, icon))
+        // The phone's ledger, out of Android's backup, goes whole into its WebDAV backup, which the Mac reads.
+        add(Points.kept, KeptFiles(databases = listOf(LEDGER_DATABASE)))
         add(Points.searchKinds, BillsSearch)
         add(Points.momentSections, LedgerSection)
         add(Points.composerParts, BillComposer)

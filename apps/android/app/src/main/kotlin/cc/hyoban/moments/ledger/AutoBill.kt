@@ -4,7 +4,6 @@ import cc.hyoban.moments.plugins.ledger
 import cc.hyoban.moments.data.money.formatCents
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.data.spec.Module
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -18,6 +17,7 @@ import cc.hyoban.moments.MainActivity
 import cc.hyoban.moments.MomentsApplication
 import cc.hyoban.moments.R
 import cc.hyoban.moments.accessibility.ShareAccessibilityService
+import cc.hyoban.moments.plugins.AutoBillChannels
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,10 +28,6 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 object AutoBill {
     private const val PREFS = "auto-bill"
-    /** High importance, so a payment pops up over the payment app; a channel's can't be raised once made. */
-    private const val CHANNEL = "ledger-payments-alert"
-    /** The first, at default importance, only ever on a phone it was tried on. */
-    private const val OLD_CHANNEL = "ledger-payments"
     private const val TAG = "AutoBill"
     private val enabledState = MutableStateFlow<Boolean?>(null)
 
@@ -93,10 +89,9 @@ object AutoBill {
         val open = PendingIntent.getActivity(context, id,
             Intent(context, MainActivity::class.java).setAction(Intent.ACTION_VIEW).setData(link),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        manager.deleteNotificationChannel(OLD_CHANNEL)
-        manager.createNotificationChannel(NotificationChannel(CHANNEL, textOf(Res.string.auto_bill_channel), NotificationManager.IMPORTANCE_HIGH))
+        AutoBillChannels.payments.create(context)
         val amount = "¥" + formatCents(payment.amount)
-        val notification = NotificationCompat.Builder(context, CHANNEL)
+        val notification = NotificationCompat.Builder(context, AutoBillChannels.payments.id)
             .setSmallIcon(R.drawable.ic_notification_bill)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setPriority(NotificationCompat.PRIORITY_HIGH)

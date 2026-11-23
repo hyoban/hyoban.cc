@@ -25,6 +25,7 @@ class PhonePicker(private val context: Context) : PickerDevice {
 /** The gallery, one for 相册, 选照片 and 地图's photos alike, listed first. */
 object GalleryPhotoSources : PhotoSources {
     override val order = 0
+    override val placesPhotos = true
 
     @Volatile private var made: GallerySource? = null
 

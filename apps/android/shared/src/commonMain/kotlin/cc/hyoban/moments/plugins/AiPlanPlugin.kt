@@ -60,6 +60,8 @@ object AiPlanPlugin : Plugin, SettingsGroup {
 
     override fun Contributions.contribute() {
         add(Points.settingsGroups, this@AiPlanPlugin)
+        // The plans' conversations stay on the device and in its WebDAV backup.
+        add(Points.kept, KeptFiles(files = listOf(cc.hyoban.moments.PLAN_CHATS_FILE)))
     }
 
     @Composable

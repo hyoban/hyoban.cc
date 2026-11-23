@@ -1,7 +1,11 @@
 package cc.hyoban.moments.camera
 
+import cc.hyoban.moments.plugins.CameraNeeds
+import cc.hyoban.moments.plugins.CameraPlugin
+import cc.hyoban.moments.plugins.PhoneNeed
+import cc.hyoban.moments.plugins.PhonePlugins
+
 import cc.hyoban.moments.res.*
-import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.os.Build
@@ -30,7 +34,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
@@ -38,9 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cc.hyoban.moments.footprints.BackgroundAllowances
 import cc.hyoban.moments.ui.components.PermissionAsk
-import cc.hyoban.moments.ui.components.openAppSettings
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.PermissionWords
@@ -76,8 +77,8 @@ fun CameraSettingsScreen(onBack: () -> Unit) {
     var failed by remember { mutableStateOf(false) }
     var unpairing by remember { mutableStateOf(false) }
     // What the phone allows, read again on coming back from the system's settings.
-    var needs by remember { mutableStateOf(Needs.read(context)) }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { needs = Needs.read(context) }
+    var needs by remember { mutableStateOf(readNeeds(context)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { needs = readNeeds(context) }
     val scope = rememberCoroutineScope()
 
     // The device list's answer: chosen, the association comes to the callback below; left, nothing does.
@@ -97,7 +98,7 @@ fun CameraSettingsScreen(onBack: () -> Unit) {
         }
     }
     val ask = rememberCameraPermissionAsk(
-        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+        CameraNeeds.location.permissions,
         listOf(
             PermissionFact(AppIcons.Bluetooth, stringResource(Res.string.permission_camera_bluetooth)),
             PermissionFact(AppIcons.Pin, stringResource(Res.string.permission_camera_location)),
@@ -163,7 +164,7 @@ private fun Unpaired(supported: Boolean, failed: Boolean, onPair: () -> Unit) {
 }
 
 @Composable
-private fun Paired(camera: PairedCamera, status: CameraStatus, needs: Needs, onUnpair: () -> Unit) {
+private fun Paired(camera: PairedCamera, status: CameraStatus, needs: List<Pair<PhoneNeed, Boolean>>, onUnpair: () -> Unit) {
     val context = LocalContext.current
     val last = status.lastSent?.let {
         stringResource(Res.string.camera_last_sent, DateUtils.getRelativeTimeSpanString(it, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS))
@@ -184,22 +185,14 @@ private fun Paired(camera: PairedCamera, status: CameraStatus, needs: Needs, onU
             CameraLink.setSendLocation(context, !camera.sendLocation)
         },
     )))
-    val (bluetooth, background, battery) = needs
     // Given, a need only says so; not yet, it opens the system's settings for it.
-    fun need(given: Boolean, icon: ImageVector, title: String, supporting: String, tag: String, onClick: () -> Unit) =
-        if (given) SettingsRow.Action(icon, title, tag, supporting = supporting, onClick = onClick)
-        else SettingsRow.External(icon, title, tag, supporting = supporting, onClick = onClick)
-    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.camera_needs), null, listOf(
-        need(bluetooth, AppIcons.Bluetooth, stringResource(Res.string.camera_need_bluetooth),
-            stringResource(if (bluetooth) Res.string.camera_allowed else Res.string.camera_need_bluetooth_off),
-            "camera_need_bluetooth") { if (!bluetooth) context.openAppSettings() },
-        need(background, AppIcons.Pin, stringResource(Res.string.camera_need_location),
-            stringResource(if (background) Res.string.camera_allowed else Res.string.camera_need_location_off),
-            "camera_need_location") { if (!background) context.openAppSettings() },
-        need(battery, AppIcons.Refresh, stringResource(Res.string.camera_need_battery),
-            stringResource(if (battery) Res.string.camera_allowed else Res.string.camera_need_battery_off),
-            "camera_need_battery") { if (!battery) BackgroundAllowances.requestUnrestrictedBattery(context) },
-    )))
+    SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.camera_needs), null, needs.map { (need, given) ->
+        val title = stringResource(need.title)
+        val supporting = stringResource(checkNotNull(if (given) need.allowed else need.why))
+        val onClick = { if (!given) need.open(context) }
+        if (given) SettingsRow.Action(need.icon, title, need.key, supporting = supporting, onClick = onClick)
+        else SettingsRow.External(need.icon, title, need.key, supporting = supporting, onClick = onClick)
+    }))
     Box(Modifier.padding(start = Space.gutter, top = Space.xl)) {
         TextButton(onClick = onUnpair, modifier = Modifier.testTag("camera_unpair")) {
             Text(stringResource(Res.string.camera_unpair), color = tokens.danger)
@@ -207,16 +200,9 @@ private fun Paired(camera: PairedCamera, status: CameraStatus, needs: Needs, onU
     }
 }
 
-/** What sending the camera its location needs of the phone, each given or not. */
-private data class Needs(val bluetooth: Boolean, val backgroundLocation: Boolean, val unrestrictedBattery: Boolean) {
-    companion object {
-        fun read(context: Context) = Needs(
-            CameraLink.bluetoothAllowed(context),
-            CameraLink.backgroundLocationAllowed(context),
-            BackgroundAllowances.unrestrictedBattery(context),
-        )
-    }
-}
+/** What sending the camera its location needs of the phone, as the camera's plugin declares it, each given or not. */
+private fun readNeeds(context: Context): List<Pair<PhoneNeed, Boolean>> =
+    PhonePlugins.needsOf(CameraPlugin).filter { it.listed }.map { it to it.given(context) }
 
 /**
  * Asks for what reaching the camera takes (Bluetooth and its Wi‑Fi) and [more], with the sheet
@@ -229,7 +215,7 @@ internal fun rememberCameraPermissionAsk(
     onDecline: () -> Unit = {},
     onResult: (Boolean) -> Unit,
 ): PermissionAsk = rememberPermissionAsk(
-    arrayOf(Manifest.permission.BLUETOOTH_CONNECT, *CameraLink.wifiPermissions, *more),
+    arrayOf(*CameraNeeds.bluetooth.permissions, *CameraNeeds.wifi.permissions, *more),
     PermissionWords(
         AppIcons.CameraBody,
         stringResource(Res.string.permission_camera_title),
@@ -237,7 +223,7 @@ internal fun rememberCameraPermissionAsk(
         stringResource(Res.string.permission_not_now),
         facts,
     ),
-    isGranted = CameraLink::transferAllowed,
+    isGranted = { CameraNeeds.bluetooth.given(it) && CameraNeeds.wifi.given(it) },
     onDecline = onDecline,
     onResult = onResult,
 )

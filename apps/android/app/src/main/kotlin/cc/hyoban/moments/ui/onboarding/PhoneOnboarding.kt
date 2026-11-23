@@ -4,10 +4,7 @@ import cc.hyoban.moments.res.*
 import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.settings.importSources
 import cc.hyoban.moments.data.spec.Module
-import android.Manifest
-import android.content.Intent
 import android.os.Build
-import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -48,10 +45,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import cc.hyoban.moments.PhoneContainer
+import cc.hyoban.moments.plugins.FootprintNeeds
+import cc.hyoban.moments.plugins.PhoneNeed
 import cc.hyoban.moments.footprints.BackgroundAllowances
 import cc.hyoban.moments.Setting
 import cc.hyoban.moments.footprints.RecordingService
@@ -59,8 +57,6 @@ import cc.hyoban.moments.ui.components.AppColors
 import cc.hyoban.moments.ui.components.LocalTopClearance
 import cc.hyoban.moments.ui.components.PageWidth
 import cc.hyoban.moments.ui.components.SubPage
-import cc.hyoban.moments.ui.components.hasPermission
-import cc.hyoban.moments.ui.components.openAppSettings
 import cc.hyoban.moments.ui.design.AppIcons
 import cc.hyoban.moments.ui.design.AppTheme
 import cc.hyoban.moments.ui.design.Button
@@ -99,20 +95,18 @@ fun PhoneOnboardingFootprints(container: PhoneContainer, onBack: () -> Unit, onD
 internal fun Footprints(container: PhoneContainer, onBack: () -> Unit, onBackground: () -> Unit, onDone: () -> Unit) {
     val context = LocalContext.current
     val permissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-        if (!RecordingService.hasPreciseLocation(context)) return@rememberLauncherForActivityResult onDone()
+        if (!FootprintNeeds.location.given(context)) return@rememberLauncherForActivityResult onDone()
         container.scope.launch {
             try { RecordingService.control(context, "daily_on") }
             catch (e: CancellationException) { throw e }
             catch (e: Exception) { android.util.Log.w("Footprints", "Could not start recording", e) }
         }
-        if (context.hasPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) onDone() else onBackground()
+        if (FootprintNeeds.background.given(context)) onDone() else onBackground()
     }
     StepPage(stringResource(Res.string.onboarding_footprints), onBack, subtitle = stringResource(Res.string.onboarding_footprints_line), actions = {
         Button(
             onClick = {
-                val asked = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-                if (Build.VERSION.SDK_INT >= 33) asked += Manifest.permission.POST_NOTIFICATIONS
-                permissions.launch(asked.toTypedArray())
+                permissions.launch(FootprintNeeds.location.permissions + FootprintNeeds.notifications.permissions)
             },
             modifier = Modifier.fillMaxWidth().testTag("onboarding_footprints_on"),
         ) { Text(stringResource(Res.string.onboarding_fp_on)) }
@@ -140,15 +134,15 @@ private fun Fact(icon: ImageVector, text: String) {
 @Composable
 internal fun Background(onBack: () -> Unit, onDone: () -> Unit) {
     val context = LocalContext.current
-    var background by remember { mutableStateOf(context.hasPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) }
-    var notifying by remember { mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled()) }
-    var live by remember { mutableStateOf(BackgroundAllowances.liveUpdates(context)) }
-    var battery by remember { mutableStateOf(BackgroundAllowances.unrestrictedBattery(context)) }
+    var background by remember { mutableStateOf(FootprintNeeds.background.given(context)) }
+    var notifying by remember { mutableStateOf(FootprintNeeds.notifications.given(context)) }
+    var live by remember { mutableStateOf(FootprintNeeds.live.given(context)) }
+    var battery by remember { mutableStateOf(FootprintNeeds.battery.given(context)) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        background = context.hasPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        notifying = NotificationManagerCompat.from(context).areNotificationsEnabled()
-        live = BackgroundAllowances.liveUpdates(context)
-        battery = BackgroundAllowances.unrestrictedBattery(context)
+        background = FootprintNeeds.background.given(context)
+        notifying = FootprintNeeds.notifications.given(context)
+        live = FootprintNeeds.live.given(context)
+        battery = FootprintNeeds.battery.given(context)
     }
     StepPage(stringResource(Res.string.onboarding_footprints), onBack, actions = {
         Button(onClick = onDone, modifier = Modifier.fillMaxWidth().testTag("onboarding_done")) { Text(stringResource(Res.string.onboarding_done)) }
@@ -156,7 +150,7 @@ internal fun Background(onBack: () -> Unit, onDone: () -> Unit) {
         val rows = buildList<Segment> {
             add { shapes ->
                 SegmentedListItem(
-                    onClick = { context.openAppSettings() },
+                    onClick = { FootprintNeeds.background.open(context) },
                     shapes = shapes,
                     colors = segmentColors(),
                     leadingContent = {
@@ -171,7 +165,7 @@ internal fun Background(onBack: () -> Unit, onDone: () -> Unit) {
             add { shapes ->
                 SegmentedListItem(
                     onClick = {
-                        if (!notifying) context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName))
+                        if (!notifying) FootprintNeeds.notifications.open(context)
                     },
                     shapes = shapes,
                     colors = segmentColors(),
@@ -184,14 +178,10 @@ internal fun Background(onBack: () -> Unit, onDone: () -> Unit) {
                 ) { Text(stringResource(Res.string.onboarding_notifications)) }
             }
             if (Build.VERSION.SDK_INT >= 36 && notifying) add { shapes ->
-                AllowanceRow(AppIcons.Stream, Res.string.footprints_needs_live, Res.string.footprints_needs_live_note, live, shapes, "onboarding_live") {
-                    BackgroundAllowances.openLiveUpdates(context)
-                }
+                AllowanceRow(FootprintNeeds.live, live, shapes, "onboarding_live")
             }
             add { shapes ->
-                AllowanceRow(AppIcons.BatteryCharging, Res.string.footprints_needs_battery, Res.string.footprints_needs_battery_note, battery, shapes, "onboarding_battery") {
-                    BackgroundAllowances.requestUnrestrictedBattery(context)
-                }
+                AllowanceRow(FootprintNeeds.battery, battery, shapes, "onboarding_battery")
             }
             if (BackgroundAllowances.autoStartSettings) add { shapes ->
                 SegmentedListItem(
@@ -209,19 +199,20 @@ internal fun Background(onBack: () -> Unit, onDone: () -> Unit) {
     }
 }
 
-/** A system allowance on the footprints' last step: allowed, it is checked and does nothing; otherwise it opens the system's settings. */
+/** A system allowance on the footprints' last step, as the footprints declare it: allowed, it is checked and does nothing; otherwise it opens the system's settings. */
 @Composable
-private fun AllowanceRow(icon: ImageVector, title: StringResource, off: StringResource, allowed: Boolean, shapes: cc.hyoban.moments.ui.design.ListItemShapes, tag: String, onOpen: () -> Unit) {
+private fun AllowanceRow(need: PhoneNeed, allowed: Boolean, shapes: cc.hyoban.moments.ui.design.ListItemShapes, tag: String) {
+    val context = LocalContext.current
     SegmentedListItem(
-        onClick = { if (!allowed) onOpen() },
+        onClick = { if (!allowed) need.open(context) },
         shapes = shapes,
         colors = segmentColors(),
-        leadingContent = { Icon(icon, contentDescription = null) },
-        supportingContent = if (allowed) null else { { Text(stringResource(off)) } },
+        leadingContent = { Icon(need.icon, contentDescription = null) },
+        supportingContent = if (allowed) null else { { Text(stringResource(checkNotNull(need.why))) } },
         trailingContent = {
             if (allowed) Icon(AppIcons.Check, contentDescription = stringResource(Res.string.onboarding_allowed), tint = tokens.accent)
             else Icon(AppIcons.External, contentDescription = null, modifier = Modifier.size(20.dp))
         },
         modifier = Modifier.testTag(tag),
-    ) { Text(stringResource(title)) }
+    ) { Text(stringResource(need.title)) }
 }

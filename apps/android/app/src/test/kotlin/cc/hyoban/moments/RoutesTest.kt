@@ -36,6 +36,13 @@ class RoutesTest {
         assertEquals(LedgerHome(1), allowedRoute(LedgerHome(1)) { true })
     }
 
+    @Test fun `Xiaohongshu's sign-in is a page of 我's, its plugin's, of no module`() {
+        Plugins.install(cc.hyoban.moments.plugins.PhonePlugins.all)
+        assertNull(moduleOf(cc.hyoban.moments.ui.NoteSignIn))
+        assertEquals(listOf(cc.hyoban.moments.ui.Preferences, cc.hyoban.moments.ui.NoteSignIn), cc.hyoban.moments.ui.pagesOf(cc.hyoban.moments.ui.NoteSignIn))
+        assertEquals(cc.hyoban.moments.ui.NoteSignIn, allowedRoute(cc.hyoban.moments.ui.NoteSignIn) { false })
+    }
+
     @Test fun `every module has one plugin`() {
         assertEquals(Module.entries.size, Plugins.registry.all(cc.hyoban.moments.plugins.Points.modules).size)
         assertEquals(Module.entries.toList(), Plugins.inSpecOrder.map { it.module })

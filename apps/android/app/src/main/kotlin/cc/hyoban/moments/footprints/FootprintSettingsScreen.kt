@@ -1,6 +1,8 @@
 package cc.hyoban.moments.footprints
 
 import cc.hyoban.moments.plugins.footprints
+import cc.hyoban.moments.plugins.FootprintsPhone
+import cc.hyoban.moments.plugins.PhonePlugins
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
 import android.content.ActivityNotFoundException
@@ -93,47 +95,15 @@ fun FootprintSettingsScreen(container: PhoneContainer, onBack: () -> Unit) {
 @Composable
 private fun NeedsSettings() {
     val context = LocalContext.current
-    fun read() = listOf(
-        BackgroundAllowances.notifications(context),
-        !RecordingService.hasPreciseLocation(context) || context.granted(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-        !ActivityTransitions.enabled(context) || ActivityTransitions.permitted(context),
-        BackgroundAllowances.liveUpdates(context),
-        BackgroundAllowances.unrestrictedBattery(context),
-    )
-    var state by androidx.compose.runtime.remember { mutableStateOf(read()) }
-    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { state = read() }
-    val (notifying, background, activity, live, battery) = state
-    val rows = buildList<SettingsRow> {
-        if (!notifying) add(
-            SettingsRow.External(AppIcons.Bell, stringResource(Res.string.onboarding_notifications), "footprints_needs_notifications",
-                supporting = stringResource(Res.string.footprints_needs_notifications)) {
-                BackgroundAllowances.openNotifications(context)
-            },
-        )
-        if (!live) add(
-            SettingsRow.External(AppIcons.Stream, stringResource(Res.string.footprints_needs_live), "footprints_needs_live",
-                supporting = stringResource(Res.string.footprints_needs_live_note)) {
-                BackgroundAllowances.openLiveUpdates(context)
-            },
-        )
-        if (!battery) add(
-            SettingsRow.External(AppIcons.BatteryCharging, stringResource(Res.string.footprints_needs_battery), "footprints_needs_battery",
-                supporting = stringResource(Res.string.footprints_needs_battery_note)) {
-                BackgroundAllowances.requestUnrestrictedBattery(context)
-            },
-        )
-        if (!background) add(
-            SettingsRow.External(AppIcons.Locate, stringResource(Res.string.footprints_needs_location), "footprints_needs_location",
-                supporting = stringResource(Res.string.footprints_needs_location_note)) {
-                context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
-            },
-        )
-        if (!activity) add(
-            SettingsRow.External(AppIcons.Walk, stringResource(Res.string.footprints_needs_activity), "footprints_needs_activity",
-                supporting = stringResource(Res.string.footprints_needs_activity_note)) {
-                context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri()))
-            },
-        )
+    // As the footprints' plugin declares them, in its order.
+    val needs = androidx.compose.runtime.remember { PhonePlugins.needsOf(FootprintsPhone).filter { it.listed } }
+    fun read() = needs.map { it.missing(context) }
+    var missing by androidx.compose.runtime.remember { mutableStateOf(read()) }
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { missing = read() }
+    val rows = needs.filterIndexed { index, _ -> missing[index] }.map { need ->
+        SettingsRow.External(need.icon, stringResource(need.title), need.key, supporting = need.why?.let { stringResource(it) }) {
+            need.open(context)
+        }
     }
     SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.footprints_needs), null, rows))
 }

@@ -1,11 +1,14 @@
 package cc.hyoban.moments.sidekey
 
+import cc.hyoban.moments.plugins.PhonePlugins
+import cc.hyoban.moments.plugins.SideKeyNeeds
+import cc.hyoban.moments.plugins.SideKeyPlugin
+
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.LocalSettings
 import cc.hyoban.moments.data.spec.Module
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -93,9 +96,7 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
         secondary = stringResource(Res.string.permission_not_now),
         onPrimary = {
             explaining = false
-            val intent = context.packageManager.getLaunchIntentForPackage("moe.shizuku.privileged.api")
-            if (intent != null) context.startActivity(intent)
-            else Toast.makeText(context, textOf(Res.string.side_key_shizuku_missing), Toast.LENGTH_LONG).show()
+            SideKeyNeeds.shizuku.open(context)
         },
         onDismiss = { explaining = false },
         tag = "permission_side_key",
@@ -109,21 +110,20 @@ internal fun SideKeySettingsScreen(onBack: () -> Unit) {
                         // Off or listening, the switch says so; only what's in the way is written.
                         supporting = state.phase.takeIf { it != SideKeyPhase.OFF && it != SideKeyPhase.RUNNING }?.let { stringResource(it.label) }) {
                         // Turned on with Shizuku or the service still missing, the sheet says what it needs first (35).
-                        if (!config.enabled && (!connected || runCatching { !Shizuku.pingBinder() || Shizuku.checkSelfPermission() != android.content.pm.PackageManager.PERMISSION_GRANTED }.getOrDefault(true))) explaining = true
+                        if (!config.enabled && (!connected || !SideKeyNeeds.shizuku.given(context))) explaining = true
                         SideKeys.setEnabled(!config.enabled)
                     },
                 )))
                 // What it needs, each with where it stands, the way to the system's own settings at its end.
                 SettingsGroupView(SettingsGroupSpec(stringResource(Res.string.side_key_needs), null, buildList<SettingsRow> {
-                    add(SettingsRow.External(AppIcons.Accessibility, stringResource(Res.string.side_key_service), "sidekey_accessibility",
-                        supporting = stringResource(if (connected) Res.string.side_key_service_on else Res.string.side_key_service_off)) {
-                        context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                    })
-                    add(SettingsRow.External(AppIcons.Key, stringResource(Res.string.side_key_shizuku), "sidekey_shizuku") {
-                        val intent = context.packageManager.getLaunchIntentForPackage("moe.shizuku.privileged.api")
-                        if (intent != null) context.startActivity(intent)
-                        else Toast.makeText(context, textOf(Res.string.side_key_shizuku_missing), Toast.LENGTH_LONG).show()
-                    })
+                    // As its plugin declares them; one with words for where it stands says so.
+                    PhonePlugins.needsOf(SideKeyPlugin).forEach { need ->
+                        val words = if (need.allowed == null && need.why == null) null
+                            else if (if (need === SideKeyNeeds.accessibility) connected else need.given(context)) need.allowed else need.why
+                        add(SettingsRow.External(need.icon, stringResource(need.title), need.key, supporting = words?.let { stringResource(it) }) {
+                            need.open(context)
+                        })
+                    }
                     if (state.phase == SideKeyPhase.NEEDS_PERMISSION) add(SettingsRow.Action(AppIcons.Check, stringResource(Res.string.side_key_grant), "sidekey_grant") {
                         try { Shizuku.requestPermission(712) }
                         catch (_: Exception) { Toast.makeText(context, textOf(Res.string.side_key_needs_shizuku), Toast.LENGTH_LONG).show() }

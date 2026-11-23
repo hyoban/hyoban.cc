@@ -2,11 +2,6 @@ package cc.hyoban.moments.ui.ledger
 
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
-import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -16,8 +11,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import org.jetbrains.compose.resources.stringResource
-import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
+import cc.hyoban.moments.plugins.AutoBillNeeds
+import cc.hyoban.moments.plugins.AutoBillPlugin
+import cc.hyoban.moments.plugins.PhonePlugins
+import cc.hyoban.moments.ui.components.hasPermission
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.hyoban.moments.R
@@ -36,13 +33,13 @@ internal fun autoBillGroup(): SettingsGroupSpec {
     val context = LocalContext.current
     val enabled by AutoBill.enabledFlow(context).collectAsStateWithLifecycle()
     val connected by ShareAccessibilityService.connected.collectAsStateWithLifecycle()
-    var notifying by remember { mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled()) }
+    var notifying by remember { mutableStateOf(AutoBillNeeds.notifications.given(context)) }
     LifecycleResumeEffect(Unit) {
-        notifying = NotificationManagerCompat.from(context).areNotificationsEnabled()
+        notifying = AutoBillNeeds.notifications.given(context)
         onPauseOrDispose {}
     }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        notifying = NotificationManagerCompat.from(context).areNotificationsEnabled()
+        notifying = AutoBillNeeds.notifications.given(context)
     }
     val on = enabled == true
     // Turned on without the accessibility service, the sheet says what it reads first (35).
@@ -61,7 +58,7 @@ internal fun autoBillGroup(): SettingsGroupSpec {
         primary = stringResource(Res.string.permission_open_settings),
         external = true,
         secondary = stringResource(Res.string.permission_not_now),
-        onPrimary = { explaining = false; context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
+        onPrimary = { explaining = false; AutoBillNeeds.service.open(context) },
         onDismiss = { explaining = false },
         tag = "permission_auto_bill",
     )
@@ -70,24 +67,22 @@ internal fun autoBillGroup(): SettingsGroupSpec {
             SettingsRow.Switch(AppIcons.Receipt, stringResource(Res.string.auto_bill_label), "auto_bill", on, stringResource(Res.string.auto_bill_note)) {
                 AutoBill.setEnabled(context, !on)
                 if (!on && !connected) explaining = true
-                if (!on && Build.VERSION.SDK_INT >= 33 &&
-                    ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                    permission.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
+                if (!on) AutoBillNeeds.notifications.permissions.firstOrNull { !context.hasPermission(it) }?.let(permission::launch)
             },
         )
-        if (on && !connected) add(
-            SettingsRow.Action(AppIcons.Accessibility, stringResource(Res.string.share_assist_enable_service), "auto_bill_service",
-                supporting = stringResource(Res.string.auto_bill_service_note)) {
-                context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-            },
-        )
-        if (on && !notifying) add(
-            SettingsRow.Action(AppIcons.BellOff, stringResource(Res.string.auto_bill_notifications), "auto_bill_notifications",
-                supporting = stringResource(Res.string.auto_bill_notifications_note)) {
-                context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName))
-            },
-        )
+        // What it still needs, as its plugin declares them, in their order.
+        if (on) PhonePlugins.needsOf(AutoBillPlugin).forEach { need ->
+            val given = when (need) {
+                AutoBillNeeds.service -> connected
+                AutoBillNeeds.notifications -> notifying
+                else -> need.given(context)
+            }
+            if (!given) add(
+                SettingsRow.Action(need.icon, stringResource(need.title), need.key, supporting = need.why?.let { stringResource(it) }) {
+                    need.open(context)
+                },
+            )
+        }
     }
     return SettingsGroupSpec(stringResource(Res.string.auto_bill_title_group), null, rows)
 }

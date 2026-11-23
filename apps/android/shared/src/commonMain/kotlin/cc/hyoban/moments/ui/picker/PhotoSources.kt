@@ -23,6 +23,9 @@ interface PhotoSources {
      * and 选照片's map; [listed] the page's own sources, where it has them, to take its own from.
      */
     @Composable fun places(container: AppContainer, deletion: Deletion, listed: List<PhotoSource>?): List<Places> = emptyList()
+
+    /** Whether it has [places] on this device, so 地图 offers its photos layer. */
+    val placesPhotos: Boolean get() = false
 }
 
 /**
@@ -38,6 +41,7 @@ internal fun photoSources(settings: cc.hyoban.moments.Settings): List<PhotoSourc
 /** The NAS's photos, listed after the device's own. */
 object NasPhotoSources : PhotoSources {
     override val order = 30
+    override val placesPhotos = true
 
     @Composable
     override fun sources(container: AppContainer, deletion: Deletion, onFallback: () -> Unit, onRefused: () -> Unit): List<PhotoSource> =

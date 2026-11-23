@@ -107,9 +107,6 @@ class Updates(private val context: Context) {
         return true
     }
 
-    /** Whether the system lets the app hand it an APK to install (安装未知应用). */
-    val canInstall get() = context.packageManager.canRequestPackageInstalls()
-
     /** Downloads [release], checks it is this app's next version signed with its key, and hands it to the system's installer. */
     suspend fun install(release: Release) = lock.withLock {
         _state.value = _state.value.copy(downloading = 0f, failure = null)

@@ -1,10 +1,10 @@
 package cc.hyoban.moments.camera
 
+import cc.hyoban.moments.plugins.CameraChannels
+
 import cc.hyoban.moments.res.*
 import android.annotation.SuppressLint
 import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
@@ -152,7 +152,6 @@ class CameraLocationService : Service() {
 
     companion object {
         private const val NOTIFICATION = 7301
-        private const val CHANNEL = "camera_location"
         private const val FIX_INTERVAL_MS = 5_000L
         const val SEND_INTERVAL_MS = 10_000L
         private const val FRESH_MS = 15_000L
@@ -169,12 +168,11 @@ class CameraLocationService : Service() {
         }
 
         private fun notification(context: Context, name: String?): Notification {
-            val manager = context.getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(NotificationChannel(CHANNEL, textOf(Res.string.camera_channel), NotificationManager.IMPORTANCE_LOW))
+            CameraChannels.location.create(context)
             val open = PendingIntent.getActivity(context, 0,
                 Intent(Intent.ACTION_VIEW, "moments://camera".toUri(), context, MainActivity::class.java),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-            return NotificationCompat.Builder(context, CHANNEL)
+            return NotificationCompat.Builder(context, CameraChannels.location.id)
                 .setSmallIcon(R.drawable.ic_notification_camera)
                 .setContentTitle(textOf(Res.string.camera_sending))
                 .setContentText(name ?: textOf(Res.string.camera_title))

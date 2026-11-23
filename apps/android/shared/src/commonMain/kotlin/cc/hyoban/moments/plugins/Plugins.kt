@@ -35,6 +35,7 @@ object Plugins {
         MapKeysPlugin,
         AiPlanPlugin,
         PlanningPlugin,
+        MapPhotosPlugin,
     )
 
     private val sharedOnly by lazy { Registry(shared) }

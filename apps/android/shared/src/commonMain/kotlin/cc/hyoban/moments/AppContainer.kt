@@ -121,7 +121,7 @@ abstract class AppContainer(
         cc.hyoban.moments.data.trips.TravelCache.open(File(private, TRAVEL_CACHE_FILE))
     }
     protected val api = MomentsApi(baseUrl = { settings.apiUrl.value }, token = { settings.apiToken.value })
-    val repository = MomentsRepository(CopyStore(File(private, "copy.db"), driver), api, local = localStore, writer = api, outside = outside)
+    val repository = MomentsRepository(CopyStore(File(private, COPY_DATABASE), driver), api, local = localStore, writer = api, outside = outside)
 
     /** Opens what the device's file picker chose: a file's path or `file:` URI here, the phone's content address there. */
     open fun openSource(source: String): java.io.InputStream =
@@ -143,14 +143,6 @@ abstract class AppContainer(
         }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, shown(repository.moments.value, repository.trips.value, settings.demo, repository::isTripPrivate))
     val shownMoments: StateFlow<List<MomentRecord>> = shown.map { it.moments }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, shown.value.moments)
     val shownTrips: StateFlow<List<cc.hyoban.moments.data.spec.TripRecord>> = shown.map { it.trips }.stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, shown.value.trips)
-
-    /** The check-ins the screens show, as [shownMoments]: all of them, or in demo mode only the public's. */
-    val shownCheckins: StateFlow<cc.hyoban.moments.data.things.Checkins> =
-        kotlinx.coroutines.flow.combine(repository.checkins, snapshotFlow { settings.demo }) { checkins, demo -> shownCheckins(checkins, demo) }
-            .stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, shownCheckins(repository.checkins.value, settings.demo))
-
-    private fun shownCheckins(checkins: cc.hyoban.moments.data.things.Checkins, demo: Boolean) =
-        if (demo) cc.hyoban.moments.data.things.Checkins(checkins.all.filterNot { it.private }) else checkins
 
     /**
      * The legs of each trip the API won't route, by trip id: with an API, only one made on the
@@ -516,6 +508,9 @@ abstract class AppContainer(
 /** How long a trip's legs stay put before the phone routes them, so an edit in progress asks nothing. */
 /** Where the plans' conversations are kept, in the device's private folder, and named so in its backup. */
 const val PLAN_CHATS_FILE = "plan-chats.json"
+
+/** The copy of the API's records, row for row, in the device's private folder and the phone's backup: the host's own. */
+const val COPY_DATABASE = "copy.db"
 
 /** The routers' answers of how long and far a way is, kept on the device. */
 const val TRAVEL_CACHE_FILE = "travel-times.json"

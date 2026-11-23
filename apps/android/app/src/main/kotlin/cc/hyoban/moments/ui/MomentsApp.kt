@@ -1,6 +1,5 @@
 package cc.hyoban.moments.ui
 
-import cc.hyoban.moments.plugins.noteSearch
 import cc.hyoban.moments.res.*
 import org.jetbrains.compose.resources.StringResource
 import cc.hyoban.moments.ui.design.edgeBlur
@@ -705,9 +704,6 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                 screen<SyncSettings> {
                                     SyncScreen(container, onBack = back, navigate = { navController.navigate(it) })
                                 }
-                                screen<NoteSignIn> {
-                                    cc.hyoban.moments.xiaohongshu.XiaohongshuSignInScreen(container.noteSearch, onBack = back)
-                                }
                                 screen<Imports> {
                                     cc.hyoban.moments.ui.settings.ImportScreen(container, onBack = back)
                                 }
@@ -1036,9 +1032,9 @@ fun pagesOf(route: Any): List<Any> {
 private fun tabOf(route: Any): Any = when (route) {
     Feed, Atlas, Album, Preferences -> route
     is Trip, is TripEdit, is TripPlay, is PlaceMoments -> Atlas
-    SyncSettings, NoteSignIn, Imports, SideKeySettings, CameraSettings, GalleryAlbums, Items, Homes, Changes, is Things -> Preferences
-    // The modules' own pages are 我's.
-    else -> if (cc.hyoban.moments.plugins.Plugins.moduleOf(route) != null) Preferences else Feed
+    SyncSettings, Imports, SideKeySettings, CameraSettings, GalleryAlbums, Items, Homes, Changes, is Things -> Preferences
+    // The plugins' own pages are 我's.
+    else -> if (cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.Points.pages).any { it.owns(route) }) Preferences else Feed
 }
 
 /** The link that opens 初次打开 again. */

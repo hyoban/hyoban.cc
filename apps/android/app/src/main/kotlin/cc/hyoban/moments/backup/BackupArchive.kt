@@ -2,24 +2,35 @@ package cc.hyoban.moments.backup
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import cc.hyoban.moments.plugins.HOST_KEPT
+import cc.hyoban.moments.plugins.KeptFiles
+import cc.hyoban.moments.plugins.Plugins
+import cc.hyoban.moments.plugins.Points
 import java.io.File
 import java.time.LocalDateTime
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
-// What a backup holds: every database the app keeps and the files beside them, in one zip,
+// What a backup holds: every database and file the plugins say they keep for it (`Points.kept`)
+// and the host's copy of the records, then `local/`, in one zip,
 // the photos and videos left out. Each database is copied whole by SQLite itself (VACUUM
 // INTO), so a write made while it is read leaves the copy as it was before or after, never
 // half of each. Restoring unpacks a backup beside the app's files and puts it in place the
 // next time the app starts, before anything opens them; what it replaced is kept aside.
 
 object BackupArchive {
-    /** The databases, by their names in `noBackupFilesDir`: the ledger, the footprints and the copy of the API's records. */
-    private val DATABASES = listOf("ledger.sqlite", "footprints.sqlite", "copy.db")
+    /** What the plugins keep for the backup, every one whatever modules are on, in their order, and the host's after them. */
+    private val kept: List<KeptFiles> get() = Plugins.registry.all(Points.kept) + HOST_KEPT
+
+    /** The databases, by their names in `noBackupFilesDir`, as the plugins declare them: the ledger, the footprints and the copy of the API's records. */
+    internal val databaseNames: List<String> get() = kept.flatMap { it.databases }
 
     /** The footprints' reminders and companions, and the plans' conversations, kept as JSON beside the databases. */
-    private val FILES = listOf("connection-reminders.json", "companion-connections.json", cc.hyoban.moments.PLAN_CHATS_FILE)
+    internal val fileNames: List<String> get() = kept.flatMap { it.files }
+
+    /** The databases' and files' entries, in the order a backup holds them, before `local/`. */
+    internal val entries: List<String> get() = (databaseNames + fileNames).map { "databases/$it" }
 
     /** The directory of `local/` that holds the photos and videos, which a backup leaves out. */
     private const val MEDIA = "media"
@@ -41,14 +52,14 @@ object BackupArchive {
         scratch.mkdirs()
         try {
             ZipOutputStream(into.outputStream().buffered()).use { zip ->
-                for (name in DATABASES) {
+                for (name in databaseNames) {
                     val source = File(context.noBackupFilesDir, name).takeIf(File::isFile) ?: continue
                     val copy = File(scratch, name)
                     snapshot(source, copy)
                     zip.add("databases/$name", copy)
                     copy.delete()
                 }
-                for (name in FILES) {
+                for (name in fileNames) {
                     File(context.noBackupFilesDir, name).takeIf(File::isFile)?.let { zip.add("databases/$name", it) }
                 }
                 val local = File(context.filesDir, "local")
@@ -76,12 +87,15 @@ object BackupArchive {
     /** The files SQLite keeps beside a database. */
     private val SIDE = listOf("-wal", "-shm", "-journal")
 
+    /** What a restore moves aside in `noBackupFilesDir` before putting a backup in place: each database and file, with SQLite's beside it. */
+    internal val replacedFiles: List<String> get() = (databaseNames + fileNames).flatMap { name -> listOf(name) + SIDE.map { name + it } }
+
     /**
      * Where an entry of a backup goes, as a path under the restore: a database or file the app
      * keeps, or a file of `local/` outside its photos and videos; null for anything else.
      */
     fun restoredPath(entry: String): String? {
-        if (entry.startsWith("databases/")) return entry.takeIf { it.removePrefix("databases/") in DATABASES + FILES }
+        if (entry.startsWith("databases/")) return entry.takeIf { it.removePrefix("databases/") in databaseNames + fileNames }
         if (!entry.startsWith("local/") || entry.endsWith("/") || entry.contains('\\')) return null
         val parts = entry.removePrefix("local/").split('/')
         if (parts.any { it.isEmpty() || it == "." || it == ".." } || parts.first() == MEDIA) return null
@@ -104,7 +118,7 @@ object BackupArchive {
                     file.parentFile?.mkdirs()
                     file.outputStream().use { input.copyTo(it) }
                     if (entry.time > 0) file.setLastModified(entry.time)
-                    if (path.removePrefix("databases/") in DATABASES) databases++
+                    if (path.removePrefix("databases/") in databaseNames) databases++
                 }
             }
             check(databases > 0) { "Not a backup of the app" }
@@ -135,9 +149,7 @@ object BackupArchive {
                 replaced.mkdirs()
                 File(replaced, READY).createNewFile()
             }
-            for (name in DATABASES + FILES) {
-                for (file in listOf(name) + SIDE.map { name + it }) aside(File(data, file), File(replaced, "databases/$file"))
-            }
+            for (file in replacedFiles) aside(File(data, file), File(replaced, "databases/$file"))
             local.listFiles()?.filter { it.name != MEDIA }?.forEach { aside(it, File(replaced, "local/${it.name}")) }
             File(replaced, ASIDE).createNewFile()
         }

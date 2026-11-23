@@ -197,8 +197,8 @@ class PhoneBackup(prefs: Prefs, secrets: File, private val folder: File, private
     }
 
     private companion object {
-        const val LEDGER = "ledger.sqlite"
-        const val FOOTPRINTS = "footprints.sqlite"
+        const val LEDGER = cc.hyoban.moments.plugins.LEDGER_DATABASE
+        const val FOOTPRINTS = cc.hyoban.moments.plugins.FOOTPRINTS_DATABASE
 
         /** The name of the backup read last, beside its databases. */
         const val MADE = "backup-name"

@@ -1,9 +1,8 @@
 package cc.hyoban.moments.ui.settings
 
+import cc.hyoban.moments.plugins.UpdateNeeds
 import cc.hyoban.moments.res.*
 import android.content.Context
-import android.content.Intent
-import android.provider.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,7 +10,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import org.jetbrains.compose.resources.stringResource
-import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,7 +44,7 @@ fun updateGroup(updates: Updates, scope: CoroutineScope): SettingsGroupSpec {
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         if (inSettings) {
             inSettings = false
-            if (updates.canInstall) latest?.let(install)
+            if (UpdateNeeds.install.given(context)) latest?.let(install)
         }
     }
     val daily = SettingsRow.Switch(AppIcons.Clock, stringResource(Res.string.update_auto), "update_auto", auto, stringResource(Res.string.update_auto_note)) {
@@ -67,7 +65,7 @@ fun updateGroup(updates: Updates, scope: CoroutineScope): SettingsGroupSpec {
         ) {
             when {
                 downloading != null -> Unit
-                updates.canInstall -> install(release)
+                UpdateNeeds.install.given(context) -> install(release)
                 else -> explaining = true
             }
         }
@@ -87,7 +85,7 @@ fun updateGroup(updates: Updates, scope: CoroutineScope): SettingsGroupSpec {
         onPrimary = {
             explaining = false
             inSettings = true
-            context.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, "package:${context.packageName}".toUri()))
+            UpdateNeeds.install.open(context)
         },
         onDismiss = { explaining = false },
         tag = "permission_install",

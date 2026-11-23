@@ -79,7 +79,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   (`footprints`, `FootprintsPhone`'s store, the Mac's footprints section the backup's), the NAS's
   client (`nas`, the device's NAS part, `NasPhone` and `NasMac`), Swarm's import (`swarm`,
   `CheckinPlugin`'s) and Xiaohongshu's notes (`noteSearch`, the phone's `XiaohongshuPlugin`'s, none on
-  the Mac). Each is made once per container, by its provider from the container, the first time
+  the Mac), and the check-ins 演示模式 leaves shown (`shownCheckins`, `CheckinPlugin`'s, read with `own`
+  as `container.shownCheckins`). Each is made once per container, by its provider from the container, the first time
   it is asked for, and kept there. Its own plugin, and what must work with its module off, asks
   with `registry.own`; the others and the host ask with `registry.service`, null while the
   provider's module is off. Each has an extension property beside its plugin
@@ -94,14 +95,22 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   (`ChangeSection`) and the lines on 发布更改 of each part it owns (`PartDiff`, by the part's key; one it
   never changes on the phone still brings one, saying nothing), the tools 和 AI 规划's model may look things up
   with (`PlanTool`: each as it is sent, what the instructions say of it, whether it is offered now, and
-  how it reads and does a call), its group on a settings page (`SettingsGroup`, by `SettingsPage` and
+  how it reads and does a call), what it keeps in the device's private folder and what of it the
+  phone's WebDAV backup carries (`KeptFiles`: its databases and files, and what it leaves out), its group on a settings page (`SettingsGroup`, by `SettingsPage` and
   `order`: 同步与来源's after the API's own, the ledger's settings), its way to start and its step in
   初次打开, what it draws over the map, and its `TimelineJoin`: the records, stops, day figures and day-map marks it joins
   to the timeline's, a trip's, a place's and a day's Moments, check-ins first, then bills, then charges
   taking the bill at their time), `PhonePoints` in `:app` (its row on 我, among what is kept here or, by its `order`, among the settings,
   its pages in the navigation, its side key actions, its heatmap widget sources, its background work on
-  and off, and what it starts with the app) and `DesktopPoints` in `:desktop` (its sidebar
-  section and its pages). Add a point only once two plugins bring to it. Device features are phone plugins with no module
+  and off, and what it starts with the app, what it needs of the phone (`PhoneNeed`: the permissions or system setting, the
+  words that name it and say why, how to check it and where it is given), which its own pages list and
+  ask for by `PhonePlugins.needsOf`, and the notification channels it posts in (`PhoneChannel`)) and `DesktopPoints` in `:desktop` (its sidebar
+  section and its pages). Add a point only once two plugins bring to it. A channel's id, name and importance never change once shipped, and
+  `NotificationChannelsTest` keeps them as they are; each is created just before its first notification,
+  never all at app start, so the system lists only what has posted. The host's own channels (publishing)
+  are `HostChannels`, no plugin's. A page of a plugin with no module (`XiaohongshuPlugin`'s `NoteSignIn`) is still
+  owned through `Points.pages`, so it is one of 我's pages, and registered through `PhonePoints.pages`; the
+  host's navigation names none of the plugins' pages. Device features are phone plugins with no module
   (the gallery, 相机, 侧键, 准备图文's albums, the WebDAV backup, updates; 自动记账 the ledger's): each
   returns null for its row where the phone lacks what it needs, so 我 checks nothing itself. A settings
   group is read by its module alone, never its plugin's own switch, which may be its first row. `suggest_plan` is the planner's own; every lookup it offers is a
@@ -165,6 +174,11 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   would go: `adb uninstall`, `pm clear`, a reinstall after `INSTALL_FAILED_UPDATE_INCOMPATIBLE`
   (fix the signing instead), a downgrade (`install -d`), deleting or overwriting the app's
   files, or running a new database migration on the phone before it has passed on a copy.
+- What a plugin keeps in `noBackupFilesDir` it declares in `Points.kept`: the ledger's and the footprints'
+  databases, the footprints' two JSON files and the plans' chats go into the WebDAV backup (`BackupArchive`)
+  and back on restore, in the plugins' order with the host's `copy.db` after them; secrets, caches and the
+  device's own pairing are declared as left out. `BackupTest` fails for a file kept there that no plugin
+  declares.
 - The phone is usually on wireless adb. Take its serial from `adb devices`, leaving out
   `emulator-*`, and never start the emulator while the phone is there. If the phone is
   locked or adb has dropped, say so instead of working around it.
@@ -287,7 +301,10 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   (`MapLayersMenu`, the times `MapTime`), and nowhere else: a new layer gets its row there, its
   time following every layer's unless given its own, never a button, legend or panel switch of its
   own; the map shows only what is chosen (the time pills). The footprints' time is chosen there too,
-  never in their panel.
+  never in their panel. 地图's 照片 row is `MapPhotosPlugin`'s, one for every photo source that knows where its
+  photos were taken (`PhotoSources.placesPhotos`), at `LayerSlot.AFTER_ROUTES`; the places, the routes and
+  the fog are the host's own rows, and a plugin's layer stands by its `LayerSlot`, not by the registry's
+  order. The photos' heaps and their sheet are still drawn by `MapScreen` while the layer is on.
 - The map's year colours are the tokens' `YearColors`, the same as `packages/trip-map/src/theme.ts`, and the
   fog is the site's `packages/trip-map/src/map/fog-layer.ts`. The ledger's charts are drawn on a
   Compose `Canvas` (`ui/ledger/Charts.kt`), not with a chart library.
@@ -386,8 +403,8 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   Instagram's caption is missing from `uiautomator dump` but reaches the service; its
   view ids are full names (`com.instagram.android:id/…`), and an empty caption reads out
   its hint as its text.
-- 演示模式 (`Settings.demo`) hides what is private everywhere, the widgets included: screens read `container.shownMoments`, `shownCheckins` and
-  `shownTrips`, not the repository's, so a new screen keeps to it.
+- 演示模式 (`Settings.demo`) hides what is private everywhere, the widgets included: screens read `container.shownMoments` and `shownTrips`, the host's,
+  and `shownCheckins`, the check-in plugin's service, not the repository's, so a new screen keeps to it.
 - Trip discovery marks a trip out by check-ins at the saved places chosen as home (家), leaving
   and coming back, never by guessing where home is; a check-in at home is public or private as
   that check-in says, like any other. It uses general distance and time thresholds, never
@@ -422,7 +439,7 @@ SDK configured in `local.properties` (`sdk.dir=…`).
   reads only (no taps, typing or posting), a few pages a search and never faster than one a second and a
   half, and sends the model what the notes say; its session stays out of Android's backups. Don't send it more, or apply its
   suggestions without that tap. Its conversations stay on the device, in its WebDAV backup (`plan-chats.json`,
-  `BackupArchive`), and nowhere else.
+  declared by `AiPlanPlugin` in `Points.kept`), and nowhere else.
 - Beyond the services named here, the app's one request of its own is for updates: the feed of this
   repository's GitHub releases (not GitHub's API, whose limit without a token a shared proxy uses up) and the APK it installs (`update/`), with nothing of the phone's.
 - No keys in the build (README, Elsewhere): a service that needs a key takes the owner's own,

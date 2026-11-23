@@ -2,7 +2,6 @@ package cc.hyoban.moments.footprints
 
 import cc.hyoban.moments.res.*
 import cc.hyoban.moments.ui.design.AppIcons
-import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
@@ -23,7 +22,7 @@ internal fun ActivityRecognitionSettings() {
     val status by ActivityTransitions.status.collectAsState()
     fun change(value: Boolean) { enabled = value; ActivityTransitions.setEnabled(context, value) }
     val permission = cc.hyoban.moments.ui.components.rememberPermissionAsk(
-        arrayOf(Manifest.permission.ACTIVITY_RECOGNITION),
+        cc.hyoban.moments.plugins.FootprintNeeds.activity.permissions,
         cc.hyoban.moments.ui.components.PermissionWords(
             AppIcons.Walk,
             stringResource(Res.string.permission_activity_title),
