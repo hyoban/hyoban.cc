@@ -161,7 +161,7 @@ even when starting from the repository root.
   [DESIGN.md](apps/web/DESIGN.md)) draws the app's chat timeline; change both together, the
   calendar's day list keeping the same lines. One exception, the app's alone: a trip's timeline, and the
   timeline, draw the way between their stops (the trip's leg not driven, else the record's `reachedBy`, else what the
-  footprints say, else by road), worked out on the device; the site's sidebar doesn't.
+  footprints say while 足迹 is on, else by road), worked out on the device; the site's sidebar doesn't.
 - A planned trip is a trip like any other, made on the phone with its own dates, places and
   written records, public unless it says otherwise and shown on the site as a trip. Only a
   `planned` flag tells it apart, set and cleared by hand, never by the date. A record carries

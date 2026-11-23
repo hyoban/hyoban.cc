@@ -1,6 +1,5 @@
 package cc.hyoban.moments.ui.trips
 
-import cc.hyoban.moments.plugins.footprints
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -96,10 +95,13 @@ fun rememberLegLines(
             nextDayOnly,
         )
     }
-    val kept by container.footprints.revision.collectAsStateWithLifecycle()
+    // The footprints only while their module is on: off, a way gone is by road, as with none recorded.
+    val settings = cc.hyoban.moments.ui.LocalSettings.current
+    val footprints = cc.hyoban.moments.plugins.Plugins.dayTracks(container) { settings.isOn(it) }
+    val kept = footprints?.revision?.collectAsStateWithLifecycle()?.value ?: 0L
     val scope = rememberCoroutineScope()
-    return remember(legs, trips, kept) {
-        LegLines(legs) { leg, track, openDay -> LegRow(container, leg, track, openDay, trips, kept, scope) }
+    return remember(legs, trips, kept, footprints) {
+        LegLines(legs) { leg, track, openDay -> LegRow(container, footprints, leg, track, openDay, trips, kept, scope) }
     }
 }
 
@@ -109,7 +111,7 @@ fun rememberLegLines(
  * footprints between its stops measure it.
  */
 @Composable
-private fun LegRow(container: AppContainer, leg: TripLeg, track: RecordLine.Track?, openDay: (() -> Unit)?, trips: List<TripRecord>, kept: Long, scope: CoroutineScope) {
+private fun LegRow(container: AppContainer, footprints: cc.hyoban.moments.footprints.Footprints?, leg: TripLeg, track: RecordLine.Track?, openDay: (() -> Unit)?, trips: List<TripRecord>, kept: Long, scope: CoroutineScope) {
     val trip = trips.firstOrNull { leg.fromAt.isNotEmpty() && isInTrip(it, leg.fromAt) && isInTrip(it, leg.stop.at) }
     val noted = trip?.straightLegs?.firstOrNull { it.from == leg.fromPlace && it.to == leg.stop.place }?.let { Way.of(it.by.name.lowercase()) }
     val said = Way.of(leg.stop.reachedBy)
@@ -117,15 +119,15 @@ private fun LegRow(container: AppContainer, leg: TripLeg, track: RecordLine.Trac
     // A planned way, or one still to come, is worked out by the routers; one gone, by the footprints alone.
     val planned = leg.stop.planned || trip?.planned == true || isAhead(leg.stop.at)
     val asked = "${leg.stop.key}@${span?.first}-${span?.last}@$kept"
-    val reading = !planned && span != null
+    val reading = !planned && span != null && footprints != null
     LaunchedEffect(asked, reading) {
-        if (!reading || asked in GoneWays.known) return@LaunchedEffect
+        if (!reading || footprints == null || asked in GoneWays.known) return@LaunchedEffect
         GoneWays.known[asked] = withContext(Dispatchers.Default) {
-            val points = container.footprints.points(TrackSelection(from = span.first, to = span.last))
-            inferWay(points, container.footprints.activities(span.first, span.last), leg.from, leg.to) to cc.hyoban.moments.data.trips.measureWay(points)
+            val points = footprints.points(TrackSelection(from = span.first, to = span.last))
+            inferWay(points, footprints.activities(span.first, span.last), leg.from, leg.to) to cc.hyoban.moments.data.trips.measureWay(points)
         }
     }
-    val read = GoneWays.known[asked]
+    val read = GoneWays.known[asked].takeIf { reading }
     val guess = read?.first.takeIf { noted == null && said == null && !planned }
     val way = noted ?: said ?: guess ?: Way.DRIVE
     // How long and far: the footprints' line's own, else the routers' for a planned one, else the footprints' between the stops.
