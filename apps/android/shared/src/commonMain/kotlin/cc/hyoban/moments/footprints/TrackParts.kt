@@ -1,5 +1,6 @@
 package cc.hyoban.moments.footprints
 
+import kotlin.math.abs
 import kotlin.math.max
 
 /** How a move went, told from its speeds alone: the samples carry no activity. */
@@ -12,7 +13,7 @@ sealed interface TrackPart {
     val points: List<TrackPoint>
 }
 
-/** Where the track kept within [STAY_RADIUS_M] for [STAY_MIN_MS] or longer, pauses included. */
+/** Where the track kept within [STAY_RADIUS_M] for [STAY_MIN_MS] or longer, pauses included, without the walk in or out. */
 data class TrackStay(override val start: Long, override val end: Long, override val points: List<TrackPoint>) : TrackPart {
     val latitude get() = points.sumOf { it.latitude } / points.size
     val longitude get() = points.sumOf { it.longitude } / points.size
@@ -65,11 +66,12 @@ fun trackParts(points: List<TrackPoint>, activities: List<ActivityChange> = empt
     while (i < points.size) {
         var j = i
         while (j + 1 < points.size && distanceMetres(points[i], points[j + 1]) <= STAY_RADIUS_M) j++
-        if (points[j].time - points[i].time >= STAY_MIN_MS) {
-            // The move ends where the stay begins, so the two meet on the map.
-            parts += moves(points.subList(moveStart, i + 1), hints)
-            parts += TrackStay(points[i].time, points[j].time, points.subList(i, j + 1))
-            moveStart = j
+        val (from, to) = if (points[j].time - points[i].time >= STAY_MIN_MS) stillCore(points, i, j) else i to i
+        if (points[to].time - points[from].time >= STAY_MIN_MS) {
+            // The walk in and out stays with the moves, which end and begin where the stay does.
+            parts += moves(points.subList(moveStart, from + 1), hints)
+            parts += TrackStay(points[from].time, points[to].time, points.subList(from, to + 1))
+            moveStart = to
             i = j + 1
         } else i++
     }
@@ -83,6 +85,23 @@ fun trackParts(points: List<TrackPoint>, activities: List<ActivityChange> = empt
         else merged += part
     }
     return merged
+}
+
+/**
+ * The part of points [i]..[j] between the first and last stillness lasting [STILL_MIN_MS]: what
+ * lies outside it was measured moving (walking in, or setting off), and only a trusted speed says
+ * so. A fix with no trusted speed counts as still.
+ */
+private fun stillCore(points: List<TrackPoint>, i: Int, j: Int): Pair<Int, Int> {
+    fun still(k: Int) = (trustedSpeed(points[k]) ?: 0.0) < MOVING_SPEED
+    fun lasting(k: Int, step: Int): Boolean {
+        var end = k
+        while (end + step in i..j && still(end + step)) end += step
+        return abs(points[end].time - points[k].time) >= STILL_MIN_MS
+    }
+    val from = (i..j).firstOrNull { still(it) && lasting(it, 1) } ?: return i to i
+    val to = (j downTo from).first { still(it) && (lasting(it, -1) || it == from) }
+    return from to to
 }
 
 private class Run(val mode: TravelMode, val from: Int, var to: Int)
@@ -215,6 +234,10 @@ private fun modeOf(chunk: List<TrackPoint>, hint: TravelMode?): TravelMode {
 
 const val STAY_RADIUS_M = 120.0
 const val STAY_MIN_MS = 5 * 60_000L
+/** Metres per second below which a fix is still; a slow walk goes about 0.8. */
+private const val MOVING_SPEED = 0.5
+/** A stay starts and ends with stillness this long, not a fix paused at a crossing. */
+private const val STILL_MIN_MS = 30_000L
 private const val CHUNK_MS = 60_000L
 private const val MIN_RUN_MS = 2 * 60_000L
 private const val DRIVE_PAUSE_MS = 5 * 60_000L

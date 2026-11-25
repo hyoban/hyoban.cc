@@ -74,4 +74,38 @@ class TrackPartsTest {
         val onFoot = listOf(ActivityChange(-60_000, 7, entering = true))
         assertEquals(listOf(TravelMode.DRIVE), trackParts(fast, onFoot).filterIsInstance<TrackMove>().map { it.mode })
     }
+
+    @Test fun theWalkInAndOutIsDrawnNotStayed() {
+        val walkIn = leg(0, 600, 5.0)
+        val stay = still(605_000, 600, walkIn.last().longitudeMetres())
+        val walkOut = leg(1_210_000, 600, 5.0, walkIn.last().longitudeMetres())
+        val points = walkIn + stay + walkOut
+        val parts = trackParts(points)
+        val stayed = parts.filterIsInstance<TrackStay>().single()
+        assertEquals(stay.first().time, stayed.start)
+        assertEquals(stay.last().time, stayed.end)
+        val moves = parts.filterIsInstance<TrackMove>()
+        assertEquals(listOf(walkIn.first().time to stay.first().time, stay.last().time to walkOut.last().time), moves.map { it.start to it.end })
+        // Every walking fix is on a line.
+        val drawn = footprintDrawing(points, parts).lines.flatMap { it.second }.map { it.time }.toSet()
+        assertTrue((walkIn + walkOut).all { it.time in drawn })
+    }
+
+    @Test fun aMomentAtACrossingDoesNotStartTheStay() {
+        val walkIn = leg(0, 600, 5.0)
+        val crossing = still(605_000, 10, walkIn.last().longitudeMetres())
+        val onward = leg(620_000, 60, 5.0, walkIn.last().longitudeMetres())
+        val stay = still(685_000, 600, onward.last().longitudeMetres())
+        val stayed = trackParts(walkIn + crossing + onward + stay).filterIsInstance<TrackStay>().single()
+        assertEquals(stay.first().time, stayed.start)
+    }
+
+    @Test fun walkingRoundInOnePlaceIsNoStay() {
+        // Back and forth along 80 metres for ten minutes, never still.
+        val laps = (0..120).map { i ->
+            val along = (i * 7.0) % 160.0
+            TrackPoint(i * 5_000L, 31.0, 121.0 + (if (along > 80) 160 - along else along) / 95_000, 5.0, speed = 1.4, speedAccuracy = 0.5)
+        }
+        assertTrue(trackParts(laps).none { it is TrackStay })
+    }
 }

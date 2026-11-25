@@ -95,7 +95,8 @@ synced or published; they leave the phone only in the WebDAV backup.
   GPS when stationary, waking on significant motion, network positions or backoff probes.
   活动识别增强 adds activity transitions as wake-ups.
 - Raw fixes are stored as received. `TrackRefiner` derives the drawn line and GPX, and
-  `TrackParts` splits it into stays and moves (walk, ride, drive). A stay can be kept as a
+  `TrackParts` splits it into stays and moves (walk, ride, drive). A stay begins and ends where
+  the fixes' speeds go still, so walking in and out is a move. A stay can be kept as a
   place or a check-in.
 - 连接自动控制 starts and pauses recording by chosen Wi-Fi networks and Bluetooth devices.
 - Diagnostics are rotating JSONL files in `noBackupFilesDir/footprint-diagnostics/`, never
