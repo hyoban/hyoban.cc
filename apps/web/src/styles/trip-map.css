@@ -1,0 +1,4 @@
+/* Declare the layer order here in case the map loads before the site stylesheet. */
+@layer base, components;
+
+@import '@hyoban/trip-map/styles.css';
