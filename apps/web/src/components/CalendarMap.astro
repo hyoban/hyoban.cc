@@ -1,6 +1,6 @@
 ---
 import { getTripPath } from '@/trip-path'
-import '@hyoban/trip-map/styles.css'
+import '@/styles/trip-map.css'
 import '@/styles/trip-chat.css'
 import '@/styles/checkin-entry.css'
 
@@ -1343,6 +1343,8 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
     max-height: none;
     margin: 0;
     padding: 0;
+    /* Keep the header in place while the form scrolls. */
+    overflow: clip;
     color: var(--color-tx);
 
     &:not([open]) {
@@ -1403,6 +1405,8 @@ const image = pageTrip ? `/trip/${pageTrip.id}/og.jpg` : await getPageCardPath(A
 
   /* A radio as a card: the whole of it picks, the one picked in the text's colour. */
   .trip-map-settings__choice {
+    /* Anchor the hidden radio so focusing it scrolls the form. */
+    position: relative;
     display: grid;
     padding: 0.625rem 0.75rem;
     border: 1px solid var(--color-border);

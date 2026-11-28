@@ -68,6 +68,9 @@ The page's layout (where the drawer and trip panel sit, how they look) is yours.
 renders the insides of the panel, the stage and the shortcut panel, and finds everything else
 by its `data-trip-map-*` attribute.
 
+Mapbox's CSS uses the `components` layer. If the site puts its reset in `base`, declare
+`@layer base, components;` before loading the map stylesheet.
+
 The drawer, the lists and the settings are drawers ([`@hyoban/drawer`](../drawer), bundled
 in): they slide in from the right, or up from the bottom below 48rem, and swipe back the same
 way. Mark a sheet's scrolling part `data-drawer-content` so a mouse selects text there instead
@@ -212,6 +215,9 @@ without geolocation, `aria-busy` while looking, and on failure its `title` says 
 Settings are remembered in the browser and applied at once. Until set, a device too slow for
 Standard (a software renderer, 2 GB of memory or less, or a CPU about five times slower than a
 fast laptop's) gets `classic`, and a map 48rem wide or less gets `mercator`.
+
+The form scrolls under the header. Position visually hidden radios within their labels so
+moving focus to a radio scrolls the form.
 
 The form's fields, by name:
 
