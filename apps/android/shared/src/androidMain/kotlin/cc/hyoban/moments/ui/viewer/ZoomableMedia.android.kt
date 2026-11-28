@@ -12,10 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
@@ -52,6 +54,27 @@ actual fun ZoomableMedia(
 ) {
     val shape = still.shape
     val thumb = still.thumb
+    // Coil reads a Bitmap but not Compose's ImageBitmap: until the original comes, the
+    // thumbnail stands in as one, so it zooms and the zoom can fetch the original.
+    val model = (still.model ?: thumb)?.let { if (it is ImageBitmap) it.asAndroidBitmap() else it }
+    // A new model (a camera's original replacing its thumbnail) gets a zoom of its own: the last
+    // one's would place the original by the thumbnail's size for its first frames, too large and
+    // off centre, then nowhere, before fitting it.
+    key(model) { ZoomableModel(still, model, contentDescription, onZoom, onTap, onHold, overlay) }
+}
+
+@Composable
+private fun ZoomableModel(
+    still: ViewedStill,
+    model: Any?,
+    contentDescription: String?,
+    onZoom: (Boolean) -> Unit,
+    onTap: () -> Unit,
+    onHold: ((Boolean) -> Unit)?,
+    overlay: @Composable () -> Unit,
+) {
+    val shape = still.shape
+    val thumb = still.thumb
     val zoom = rememberZoomableState(ZoomSpec(maxZoomFactor = MAX_ZOOM))
     val image = rememberZoomableImageState(zoom)
     val zoomed = (zoom.zoomFraction ?: 0f) > 0.01f
@@ -73,14 +96,21 @@ actual fun ZoomableMedia(
             },
         contentAlignment = Alignment.Center,
     ) {
-        if (!image.isImageDisplayed) {
+        // The thumbnail stays under it until the model has been drawn where it belongs.
+        var covered by remember { mutableStateOf(false) }
+        val placed = image.isImageDisplayed && zoom.contentTransformation.isSpecified
+        LaunchedEffect(placed) {
+            if (placed) {
+                withFrameNanos {}
+                withFrameNanos {}
+                covered = true
+            }
+        }
+        if (!covered) {
             thumb?.let {
                 Image(it, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.aspectRatio(shape))
             }
         }
-        // Coil reads a Bitmap but not Compose's ImageBitmap: until the original comes, the
-        // thumbnail stands in as one, so it zooms and the zoom can fetch the original.
-        val model = (still.model ?: thumb)?.let { if (it is ImageBitmap) it.asAndroidBitmap() else it }
         if (model == null && still.failed == null) Spinner(color = MediaOverlay.content)
         if (model != null) ZoomableAsyncImage(
             model,
