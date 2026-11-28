@@ -15,6 +15,13 @@ import android.os.SystemClock
 import android.text.format.Formatter
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,14 +31,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +48,7 @@ import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cc.hyoban.moments.camera.CameraConnection
 import cc.hyoban.moments.camera.CameraLink
 import cc.hyoban.moments.camera.CameraPhoto
 import cc.hyoban.moments.camera.CameraStore
@@ -61,56 +68,47 @@ import cc.hyoban.moments.ui.theme.MediaOverlay
 import cc.hyoban.moments.ui.theme.Space
 import cc.hyoban.moments.ui.theme.tokens
 import cc.hyoban.moments.ui.viewer.PhotoDetails
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 
 /**
- * The paired camera's card, reached only once it is listed, and kept until the page closes, when
- * the phone leaves the camera's network. Refused its permissions, [onRefused] goes back to the gallery.
+ * The paired camera's card, reached only once it is listed. It connects when shown, and the
+ * connection outlives the page ([CameraConnection]) until Here goes to the background. Refused its
+ * permissions, [onRefused] goes back to the gallery.
  */
 @Composable
 internal fun rememberCamera(deletion: Deletion, onRefused: () -> Unit): CameraSource {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val paired = CameraStore.camera.collectAsStateWithLifecycle()
     val camera = remember {
         val supported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && CameraLink.supported(context)
-        CameraSource(context.applicationContext, scope, deletion, paired, supported)
+        CameraSource(context.applicationContext, deletion, paired, supported)
     }
     val ask = rememberCameraPermissionAsk(
         emptyArray(),
         listOf(PermissionFact(AppIcons.Wifi, stringResource(Res.string.permission_camera_wifi))),
         onDecline = onRefused,
-    ) { granted -> if (granted) camera.connect() else onRefused() }
+    ) { granted -> if (granted) camera.connect(again = false) else onRefused() }
     SideEffect { camera.ask = { ask() } }
-    DisposableEffect(camera) { onDispose { camera.close() } }
     return camera
 }
 
 internal class CameraSource(
     private val context: Context,
-    private val scope: CoroutineScope,
     private val deletion: Deletion,
     private val pairedState: State<PairedCamera?>,
     private val supported: Boolean,
 ) : PhotoSource {
     val paired get() = pairedState.value
-    var transfer by mutableStateOf<CameraTransfer?>(null)
-        private set
+    val transfer: CameraTransfer?
+        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) CameraConnection.transfer else null
     var ask: () -> Unit = {}
     val listing = CameraListing(this)
     override val home get() = listing
 
-    fun connect() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            transfer?.close()
-            transfer = CameraTransfer(context).also { scope.launch { it.connect() } }
-        }
-    }
-
-    fun close() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) transfer?.close()
+    /** Connects unless connected or on the way; [again] starts over, as after a failure. */
+    fun connect(again: Boolean = true) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) CameraConnection.connect(context, again)
     }
 
     @Composable
@@ -199,16 +197,20 @@ internal data class CameraListing(val camera: CameraSource) : Listing {
     @Composable
     override fun count(shown: List<Pick>) = (camera.state() as? CameraTransfer.State.Ready)?.photos?.size
 
-    override fun opened() {
-        if (camera.transfer == null) camera.ask()
-    }
 
     @Composable
     override fun Body(shown: List<Pick>, grid: @Composable ((@Composable () -> Unit)?, (() -> Unit)?) -> Unit) {
         when (val s = camera.state()) {
-            null, is CameraTransfer.State.Connecting -> Steps((s as? CameraTransfer.State.Connecting)?.step ?: CameraTransfer.Step.WIFI_ON)
+            null, is CameraTransfer.State.Connecting -> {
+                // Shown unconnected, at first or back from the background: it connects.
+                if (s == null) LaunchedEffect(Unit) { camera.ask() }
+                Steps((s as? CameraTransfer.State.Connecting)?.step ?: CameraTransfer.Step.WIFI_ON)
+            }
             is CameraTransfer.State.Failed -> Failed(AppIcons.CameraBody, s.reason, Res.string.camera_failed_note) { camera.connect() }
-            is CameraTransfer.State.Ready -> grid(null, null)
+            is CameraTransfer.State.Ready -> {
+                val saving = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) camera.transfer?.saving else null
+                grid(saving?.let { { Saving(it.at, it.of) } }, null)
+            }
         }
     }
 }
@@ -228,8 +230,49 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
     override fun badge() = if (photo.raw) BadgeKind.Raw else null
 
     @Composable
-    override fun description() =
-        stringResource(if (photo.raw) Res.string.camera_raw_description else Res.string.camera_photo_description, photo.name)
+    override fun description(): String {
+        val what = stringResource(if (photo.raw) Res.string.camera_raw_description else Res.string.camera_photo_description, photo.name)
+        return when (saveState()) {
+            SaveState.SAVING -> stringResource(Res.string.camera_tile_saving, what)
+            SaveState.SAVED -> stringResource(Res.string.camera_tile_saved, what)
+            null -> what
+        }
+    }
+
+    private enum class SaveState { SAVING, SAVED }
+
+    /** Whether it is being saved to the camera's album, or is there. */
+    private fun saveState(): SaveState? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
+        val transfer = source.transfer ?: return null
+        return when {
+            transfer.savingNow?.key == photo.key -> SaveState.SAVING
+            transfer.saved(photo) -> SaveState.SAVED
+            else -> null
+        }
+    }
+
+    /** Being saved to the camera's album, a ring filling as it comes down; saved, a check. */
+    @Composable
+    override fun Corner(modifier: Modifier) {
+        val state = saveState() ?: return
+        Box(modifier.size(20.dp).background(MediaOverlay.control, CircleShape), contentAlignment = Alignment.Center) {
+            if (state == SaveState.SAVED) {
+                Icon(AppIcons.Check, contentDescription = null, tint = MediaOverlay.content, modifier = Modifier.size(14.dp))
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val done = source.transfer?.savingDone ?: 0L
+                val color = MediaOverlay.content
+                Canvas(Modifier.size(14.dp)) {
+                    val line = 2.dp.toPx()
+                    val inset = Offset(line / 2, line / 2)
+                    val arc = Size(size.width - line, size.height - line)
+                    drawArc(color.copy(alpha = 0.3f), 0f, 360f, useCenter = false, topLeft = inset, size = arc, style = Stroke(line))
+                    val part = if (photo.size > 0) (done.toFloat() / photo.size).coerceIn(0f, 1f) else 0f
+                    drawArc(color, -90f, 360f * part, useCenter = false, topLeft = inset, size = arc, style = Stroke(line, cap = StrokeCap.Round))
+                }
+            }
+        }
+    }
 
     @Composable
     override fun place() = photo.name
@@ -237,38 +280,50 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
     @Composable
     override fun rememberDetails(): PhotoDetails? {
         val cardName = stringResource(Res.string.picker_camera_card)
+        val context = LocalContext.current
+        val saved = albumCopy()
         val original = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.transfer?.originalOf(photo)?.file else null
-        return produceState<PhotoDetails?>(null, key, original) {
+        return produceState<PhotoDetails?>(null, key, saved, original) {
             val base = PhotoDetails(
                 takenAt = photo.captured?.atZone(ZoneId.systemDefault())?.toOffsetDateTime(),
                 name = photo.name, format = PhotoDetails.format(photo.mime, photo.name), bytes = photo.size, album = cardName,
             )
-            value = if (original != null) PhotoDetails.read(base) { original.inputStream() } else base
+            value = when {
+                saved != null -> PhotoDetails.read(base) { context.contentResolver.openInputStream(saved)!! }
+                original != null -> PhotoDetails.read(base) { original.inputStream() }
+                else -> base
+            }
         }.value
     }
 
     override fun infoNote(details: PhotoDetails?) =
         Res.string.picker_info_camera_note.takeIf { details?.make == null && details?.focal == null }
 
-    /** Its original, once the viewer is still on it, so swiping past doesn't queue downloads. */
+    /** Its copy in the camera's album on the phone, once saved there. */
+    private fun albumCopy(): Uri? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.transfer?.inAlbum(photo) else null
+
+    /** Its original, once the viewer is still on it, so swiping past doesn't queue downloads; none while the album has it. */
     override fun settled(reading: ReadAhead) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         val transfer = source.transfer ?: return
-        if (photo.photo) transfer.loadOriginal(photo)
+        if (photo.photo && albumCopy() == null) transfer.loadOriginal(photo)
     }
 
     /** Then those either side of the one rested on. */
     override fun ahead(from: ViewedMedia, reading: ReadAhead) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         val transfer = source.transfer ?: return
-        (from as? CameraPick)?.let { transfer.prefetch(photo, after = it.photo) }
+        if (albumCopy() == null) (from as? CameraPick)?.let { transfer.prefetch(photo, after = it.photo) }
     }
 
-    /** Its thumbnail enlarged until its original is down in the cache, then the original in tiles. */
+    /**
+     * Its copy in the album on the phone, read as a photo there is; else its thumbnail enlarged until
+     * its original is down in the cache, then the original in tiles.
+     */
     @Composable
     override fun rememberStill(active: Boolean, deep: Boolean): ViewedStill {
         val thumb by rememberThumb(this)
-        val file = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.transfer?.originalOf(photo)?.file else null
+        val file = albumCopy() ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.transfer?.originalOf(photo)?.file else null
         return ViewedStill(thumb?.let { it.width.toFloat() / it.height } ?: 1.5f, thumb = thumb, model = file)
     }
 
@@ -278,7 +333,7 @@ internal data class CameraPick(val photo: CameraPhoto, override val source: Came
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         val transfer = source.transfer ?: return
         val original = transfer.originalOf(photo)
-        if (photo.photo && original != null && original.file == null) Loading(original) { transfer.loadOriginal(photo) }
+        if (photo.photo && albumCopy() == null && original != null && original.file == null) Loading(original) { transfer.loadOriginal(photo) }
     }
 }
 
@@ -305,6 +360,16 @@ private fun Steps(step: CameraTransfer.Step) {
         }
         Text(stringResource(Res.string.camera_join_note), style = AppTheme.typography.caption, color = tokens.tx2, modifier = Modifier.padding(top = Space.s))
     }
+}
+
+/** How far saving the card to the camera's album is, over the photos until it is done. */
+@Composable
+private fun Saving(at: Int, of: Int) {
+    Text(
+        stringResource(Res.string.camera_saving, CameraTransfer.SAVED_NAME, at, of),
+        style = AppTheme.typography.caption, color = tokens.tx2,
+        modifier = Modifier.padding(horizontal = Space.gutter, vertical = Space.s),
+    )
 }
 
 /** How far an original is: the spinner, how much is down of how much, and how fast; or that it failed, to try again. */

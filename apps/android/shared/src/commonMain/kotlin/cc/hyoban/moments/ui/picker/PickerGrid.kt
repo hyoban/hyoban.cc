@@ -318,6 +318,7 @@ fun Grid(
                             AppIcons.Cloud, contentDescription = stringResource(Res.string.album_in_moment), tint = MediaOverlay.content,
                             modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp).size(16.dp),
                         )
+                        else if (!byMonth) pick.Corner(Modifier.align(Alignment.BottomEnd).padding(6.dp))
                         // The circle chooses it, its target the corner's 48dp; by the month there is
                         // no room for one, and what is chosen only keeps its number.
                         if (byMonth) {

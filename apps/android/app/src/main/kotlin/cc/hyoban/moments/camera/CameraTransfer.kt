@@ -7,6 +7,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import androidx.exifinterface.media.ExifInterface
 import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.net.Network
@@ -72,8 +74,10 @@ data class CameraPhoto(internal val content: Ptp.Content, internal val file: Ptp
  * Taking photos off the paired camera, for 选照片: the camera's Wi‑Fi switched on over
  * Bluetooth, the phone joined to it for this alone (its other traffic keeps to the network it
  * was on), one session in remote control with transfer listing the card as contents, the chosen
- * photos saved to the gallery's Here album, and a photo deleted from the card in place.
- * [close] leaves the camera's network.
+ * photos saved to the gallery's Here album, and a photo deleted from the card in place. While
+ * connected, every photo on the card not yet in the gallery's a7C II album is saved there too
+ * ([saving]), and what the album has that the card no longer does goes to the phone's bin, so the
+ * album follows the card. [close] leaves the camera's network.
  */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class CameraTransfer(private val context: Context) {
@@ -222,8 +226,101 @@ class CameraTransfer(private val context: Context) {
                 contents.flatMap { c -> c.files.filter { it.photo || it.raw }.map { CameraPhoto(c, it) } }
                     .sortedWith(compareByDescending<CameraPhoto> { it.captured }.thenByDescending { it.name }),
             )
+            saveAll()
         }
         relisting?.join()
+    }
+
+    /** How far saving the card to the a7C II album is: the [at]th of [of] under way. */
+    data class Saving(val at: Int, val of: Int)
+
+    /** While the card is being saved to the a7C II album, how far; null otherwise. */
+    var saving by mutableStateOf<Saving?>(null)
+        private set
+    private var savingAll: Job? = null
+    /** Asked again while saving: the card is read for what came since once this round is done. */
+    private var savingMore = false
+    /** Tried this visit, saved or not, so one that fails isn't tried over and over. */
+    private val tried = mutableSetOf<String>()
+    /** What of the card the a7C II album has, by [CameraPhoto.kept], to its address there, as last read and saved since. */
+    private val inAlbum = mutableStateMapOf<String, Uri>()
+    /** The photo being saved to the a7C II album, and how much of it is down. */
+    var savingNow by mutableStateOf<CameraPhoto?>(null)
+        private set
+    var savingDone by mutableLongStateOf(0L)
+        private set
+
+    /** Whether [photo] is in the a7C II album. */
+    fun saved(photo: CameraPhoto) = photo.kept in inAlbum
+
+    /** [photo]'s copy in the a7C II album, read as any photo on the phone is. */
+    fun inAlbum(photo: CameraPhoto): Uri? = inAlbum[photo.kept]
+
+    /** What the a7C II album holds, by name and size as [CameraPhoto.kept] has them, to its gallery IDs. */
+    private fun albumKept(): Map<String, Long> {
+        val kept = mutableMapOf<String, Long>()
+        context.contentResolver.query(
+            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
+            arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.SIZE),
+            "${MediaStore.Images.Media.RELATIVE_PATH} = ?", arrayOf(SAVED), null,
+        )?.use { while (it.moveToNext()) kept["${it.getString(1)}:${it.getLong(2)}"] = it.getLong(0) }
+        return kept
+    }
+
+    /**
+     * Moves what the album has and the card doesn't to the phone's bin, where the gallery keeps it 30
+     * days; what is left of the album. One the app didn't save (before a reinstall) it may not move and stays.
+     */
+    private fun followCard(have: Map<String, Long>, card: List<CameraPhoto>): Map<String, Long> {
+        val onCard = card.map { it.kept }.toSet()
+        val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val binned = have.filter { (kept, id) ->
+            kept !in onCard && runCatching {
+                context.contentResolver.update(ContentUris.withAppendedId(collection, id), ContentValues().apply { put(MediaStore.MediaColumns.IS_TRASHED, 1) }, null, null) > 0
+            }.onFailure { Log.w(TAG, "camera: album photo not moved to the bin", it) }.getOrDefault(false)
+        }.keys
+        return have - binned
+    }
+
+    /**
+     * Saves every photo on the card (no RAWs) not yet in the a7C II album, newest first, one turn
+     * on the camera each, so what the owner asks for meanwhile goes between them.
+     */
+    private fun saveAll() {
+        if (savingAll?.isActive == true) {
+            savingMore = true
+            return
+        }
+        savingAll = scope.launch {
+            try {
+                do {
+                    savingMore = false
+                    val card = (_state.value as? State.Ready)?.photos ?: break
+                    val have = withContext(Dispatchers.IO) { followCard(albumKept(), card) }
+                    val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                    inAlbum.keys.retainAll(have.keys)
+                    have.forEach { (kept, id) -> inAlbum[kept] = ContentUris.withAppendedId(collection, id) }
+                    val left = card.filter { it.photo && it.key !in tried && it.kept !in have }
+                    left.forEachIndexed { index, photo ->
+                        saving = Saving(index + 1, left.size)
+                        tried += photo.key
+                        if (!onCard(photo)) return@forEachIndexed
+                        savingDone = 0L
+                        savingNow = photo
+                        try {
+                            inAlbum[photo.kept] = withContext(Dispatchers.IO) { saveTo(photo, SAVED) { savingDone = it } }
+                        } catch (e: Exception) {
+                            if (e is CancellationException) throw e
+                            Log.w(TAG, "camera: not saved to the album", e)
+                        } finally {
+                            savingNow = null
+                        }
+                    }
+                } while (savingMore)
+            } finally {
+                saving = null
+            }
+        }
     }
 
     suspend fun thumbnail(photo: CameraPhoto): Bitmap? {
@@ -236,7 +333,7 @@ class CameraTransfer(private val context: Context) {
                 val session = session ?: return@withLock null
                 withContext(Dispatchers.IO) { runCatching { session.thumb(photo.content, photo.file) }.getOrNull()?.also { keptThumbs.put(photo.kept, it) } }
             }
-            val bitmap = bytes?.let { withContext(Dispatchers.Default) { BitmapFactory.decodeByteArray(it, 0, it.size)?.let(::withoutBars) } }
+            val bitmap = bytes?.let { withContext(Dispatchers.Default) { BitmapFactory.decodeByteArray(it, 0, it.size)?.let(::withoutBars)?.let { b -> upright(b, it) } } }
             bitmap?.let { thumbs.put(photo.key, it) }
             result.complete(bitmap)
             return bitmap
@@ -244,6 +341,17 @@ class CameraTransfer(private val context: Context) {
             result.complete(null)
             fetching.remove(photo.key)
         }
+    }
+
+    /**
+     * [bitmap] turned as its [jpeg]'s EXIF says, as the camera keeps a portrait photo's thumbnail
+     * on its side, so the viewer has the photo's shape before its original comes.
+     */
+    private fun upright(bitmap: Bitmap, jpeg: ByteArray): Bitmap {
+        val degrees = runCatching { ExifInterface(jpeg.inputStream()).rotationDegrees }.getOrDefault(0)
+        if (degrees == 0) return bitmap
+        val turn = Matrix().apply { postRotate(degrees.toFloat()) }
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, turn, true)
     }
 
     /** A 3:2 photo's thumbnail without the black bars the camera fits it into 4:3 with. */
@@ -338,34 +446,41 @@ class CameraTransfer(private val context: Context) {
         photos.mapIndexed { index, photo ->
             progress(index, 0f)
             withContext(Dispatchers.IO) {
-                existing(photo) ?: cached(photo)?.let { local ->
-                    // One already looked at full size is copied from the cache rather than read again.
-                    save(photo) { out, _ -> local.inputStream().use { it.copyTo(out) } }
-                } ?: camera.withLock {
-                    val session = session ?: throw IOException("not connected")
-                    save(photo) { out, cancelled ->
-                        session.download(photo.content, photo.file, out, { done -> progress(index, if (photo.size > 0) done.toFloat() / photo.size else 1f) }, cancelled)
-                    }
-                }
+                // One the a7C II album already has is added from there.
+                existing(photo, SAVED) ?: saveTo(photo, ALBUM) { done -> progress(index, if (photo.size > 0) done.toFloat() / photo.size else 1f) }
             }
         }.also { progress(photos.size, 0f) }
 
-    private fun existing(photo: CameraPhoto): Uri? {
+    /**
+     * [photo] in [album]: the copy there, else one copied from the cache if it was looked at full
+     * size, else one read from the camera.
+     */
+    private suspend fun saveTo(photo: CameraPhoto, album: String, progress: (Long) -> Unit = {}): Uri =
+        existing(photo, album) ?: cached(photo)?.let { local ->
+            save(photo, album) { out, _ -> local.inputStream().use { it.copyTo(out) } }
+        } ?: camera.withLock {
+            // Saved meanwhile by whoever had the camera before.
+            existing(photo, album)?.let { return@withLock it }
+            val session = session ?: throw IOException("not connected")
+            save(photo, album) { out, cancelled -> session.download(photo.content, photo.file, out, progress, cancelled) }
+        }
+
+    private fun existing(photo: CameraPhoto, album: String): Uri? {
         val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         context.contentResolver.query(
             collection, arrayOf(MediaStore.Images.Media._ID),
             "${MediaStore.Images.Media.DISPLAY_NAME} = ? AND ${MediaStore.Images.Media.SIZE} = ? AND ${MediaStore.Images.Media.RELATIVE_PATH} = ?",
-            arrayOf(photo.name, photo.size.toString(), ALBUM), null,
+            arrayOf(photo.name, photo.size.toString(), album), null,
         )?.use { if (it.moveToFirst()) return ContentUris.withAppendedId(collection, it.getLong(0)) }
         return null
     }
 
-    private suspend fun save(photo: CameraPhoto, write: (OutputStream, cancelled: () -> Boolean) -> Unit): Uri {
+    private suspend fun save(photo: CameraPhoto, album: String, write: (OutputStream, cancelled: () -> Boolean) -> Unit): Uri {
         val resolver = context.contentResolver
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, photo.name)
             put(MediaStore.Images.Media.MIME_TYPE, photo.mime)
-            put(MediaStore.Images.Media.RELATIVE_PATH, ALBUM)
+            put(MediaStore.Images.Media.RELATIVE_PATH, album)
             photo.captured?.let { put(MediaStore.Images.Media.DATE_TAKEN, it.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()) }
             put(MediaStore.Images.Media.IS_PENDING, 1)
         }
@@ -400,6 +515,7 @@ class CameraTransfer(private val context: Context) {
             deleted.forEach { thumbs.remove(it.key); loading.remove(it.key) }
             withContext(Dispatchers.IO) { deleted.forEach { originals.remove(it.kept); keptThumbs.remove(it.kept) } }
             _state.value = State.Ready(left)
+            saveAll()
         }
         return true
     }
@@ -414,14 +530,18 @@ class CameraTransfer(private val context: Context) {
         Thread { s?.close() }.start()
     }
 
-    private companion object {
+    companion object {
+        /** The album the card is saved to, as the gallery names it. */
+        const val SAVED_NAME = "a7C II"
         /** The camera's own address on its network, when its routes don't say. */
-        const val DEFAULT_HOST = "192.168.122.1"
-        const val HOST_TIMEOUT_MS = 4_000
-        const val ADDRESS_WAIT_MS = 8_000L
-        const val WIFI_ON_TIMEOUT_MS = 20_000L
+        private const val DEFAULT_HOST = "192.168.122.1"
+        private const val HOST_TIMEOUT_MS = 4_000
+        private const val ADDRESS_WAIT_MS = 8_000L
+        private const val WIFI_ON_TIMEOUT_MS = 20_000L
         /** With the system's question the first time. */
-        const val JOIN_TIMEOUT_MS = 90_000L
-        val ALBUM = Environment.DIRECTORY_PICTURES + "/Here/"
+        private const val JOIN_TIMEOUT_MS = 90_000L
+        private val ALBUM = Environment.DIRECTORY_PICTURES + "/Here/"
+        /** Where everything on the card is saved while connected, named for the camera. */
+        private val SAVED = Environment.DIRECTORY_PICTURES + "/$SAVED_NAME/"
     }
 }

@@ -1509,6 +1509,9 @@
     <string name="camera_chosen">Chosen</string>
     <string name="camera_raw_kept">RAW stays on the camera</string>
     <string name="camera_loading">%1$s of %2$s · %3$s/s</string>
+    <string name="camera_saving">Saving to %1$s · %2$d of %3$d</string>
+    <string name="camera_tile_saving">%1$s, saving to the album</string>
+    <string name="camera_tile_saved">%1$s, saved to the album</string>
     <string name="camera_delete">Delete</string>
     <string name="camera_delete_title">Delete this photo?</string>
     <string name="camera_delete_body">%1$s is deleted from the camera's card and can't be brought back. Its RAW goes too.</string>

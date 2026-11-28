@@ -201,6 +201,9 @@ interface Pick : cc.hyoban.moments.ui.viewer.ViewedMedia {
     /** What its tile's badge says it holds: a video and its length, a live photo, or RAW. */
     @Composable fun badge(): cc.hyoban.moments.ui.components.BadgeKind?
 
+    /** Drawn in its tile's bottom corner when it isn't in a Moment: a camera photo being saved, or saved. */
+    @Composable fun Corner(modifier: Modifier) {}
+
     /** What TalkBack says of its tile, and of the photo in the viewer. */
     @Composable override fun description(): String
 

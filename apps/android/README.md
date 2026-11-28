@@ -119,6 +119,17 @@ rock3r/CameraSync; ekutner/camera-gps-link; Asdoos/SonyGpsApp; UbiquitousBear/sh
   credentials (CC06, CC07). The app joins with `WifiNetworkSpecifier` and opens PTP/IP on
   port 15740: `SDIO_OpenSession` 0x9210 mode 2, content list 0x923C, thumbnails 0x923E, data
   0x923D in 4 MiB pieces, delete 0x9250, events 0xC234 (card changed) and 0xC240 (deleted).
+- **Staying connected.** Once the card in 选照片 has connected, the connection
+  (`CameraConnection`) outlives the page and is released only when Here goes to the background;
+  the card connects again when it is next shown.
+- **Saving the card.** While the camera is connected, every photo on it (no RAWs)
+  not yet in the gallery's `Pictures/a7C II` album is saved there, newest first, matched by
+  name and size, so one deleted from the album comes back next time. The album follows the card:
+  whatever it has that the card doesn't (deleted, formatted, another card) goes to the phone's
+  bin, restorable there for 30 days. A tile shows a filling
+  ring while its photo is saved and a check once the album has it; the viewer then reads the
+  album's copy as it reads any photo on the phone. Photos added to a Moment
+  come from that album when it has them, else go to `Pictures/Here`.
 
 ## NAS
 
