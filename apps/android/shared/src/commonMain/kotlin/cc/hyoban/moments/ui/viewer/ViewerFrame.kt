@@ -134,6 +134,11 @@ fun ViewerFrame(
     var chrome by rememberSaveable { mutableStateOf(true) }
     // The shown one's info beside or under it (PhotoInfo), swiped up or opened from the bar.
     var showInfo by rememberSaveable { mutableStateOf(false) }
+    // Put away however it goes, the bars come back with it, so the viewer's actions are there again.
+    fun hideInfo() {
+        showInfo = false
+        chrome = true
+    }
     // How far the photo has been dragged up or down, read only where it is drawn, so a drag
     // moves pixels rather than rebuilding the screen every frame.
     var drag by remember { mutableFloatStateOf(0f) }
@@ -184,14 +189,14 @@ fun ViewerFrame(
         LaunchedEffect(back) {
             snapshotFlow { back.progress }.collect { drag = it * fadeOver }
         }
-        BackHandler(enabled = showInfo) { showInfo = false }
+        BackHandler(enabled = showInfo) { hideInfo() }
         // Upright the info comes up under the photo; on its side it opens beside it. It is a sheet,
         // dragged down (on its side, out to the end) by its handle, or by what it holds once that
         // is at its top, as every sheet is.
         val panelHeight = maxHeight * 0.55f
         val panelWidth = 360.dp
         val panelTravel = with(density) { (if (sideways) panelWidth else panelHeight).toPx() }
-        val panel = rememberSheetDrag(onSettled = { to -> if (to > 0f) showInfo = false })
+        val panel = rememberSheetDrag(onSettled = { to -> if (to > 0f && showInfo) hideInfo() })
         LaunchedEffect(showInfo, panelTravel) {
             val to = if (showInfo) 0f else panelTravel
             val first = panel.position.isNaN()
@@ -231,7 +236,7 @@ fun ViewerFrame(
                         val up = info != null && drag < 0f && (-drag > closeAt / 2 || velocity < -1500f)
                         when {
                             up || (showInfo && drag > 0f) -> {
-                                showInfo = up
+                                if (up) showInfo = true else hideInfo()
                                 animate(drag, 0f, initialVelocity = velocity) { value, _ -> drag = value }
                             }
                             drag > 0f && (drag > closeAt || velocity > 2000f) -> onClose()
@@ -242,7 +247,8 @@ fun ViewerFrame(
             userScrollEnabled = !zoomed,
             key = key,
         ) { index ->
-            page(index, { if (pager.currentPage == index) zoomed = it }) { chrome = !chrome }
+            // With the info up, a tap on the photo puts it away rather than hiding the bars behind it.
+            page(index, { if (pager.currentPage == index) zoomed = it }) { if (showInfo) hideInfo() else chrome = !chrome }
         }
 
         val motion = AppTheme.motionScheme
