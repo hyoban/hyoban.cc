@@ -53,6 +53,7 @@ enum class SettingsPane(val title: StringResource, val icon: ImageVector) {
     General(Res.string.settings_general, AppIcons.Settings),
     Items(Res.string.items_title, AppIcons.Eye),
     Homes(Res.string.homes_title, AppIcons.Home),
+    AlignTimes(Res.string.align_times_title, AppIcons.Clock),
     Sync(Res.string.sync_title, AppIcons.CloudSync),
     Import(Res.string.import_title, AppIcons.Download),
 }

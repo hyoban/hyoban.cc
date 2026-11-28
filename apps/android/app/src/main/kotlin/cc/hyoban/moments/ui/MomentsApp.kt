@@ -696,6 +696,7 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                             ),
                                             items = { navController.navigate(Items) },
                                             homes = { navController.navigate(Homes) },
+                                            alignTimes = { navController.navigate(AlignTimes) },
                                             sync = { navController.navigate(SyncSettings) },
                                             imports = { navController.navigate(Imports) },
                                         ),
@@ -712,6 +713,9 @@ fun MomentsApp(container: PhoneContainer, pages: List<Any> = listOf(Feed)) {
                                 }
                                 screen<Homes> {
                                     cc.hyoban.moments.ui.settings.HomesScreen(container, onBack = back)
+                                }
+                                screen<AlignTimes> {
+                                    cc.hyoban.moments.ui.settings.AlignTimesScreen(container, onBack = back)
                                 }
                                 screen<Things> { entry ->
                                     val route = entry.toRoute<Things>()
@@ -1032,7 +1036,7 @@ fun pagesOf(route: Any): List<Any> {
 private fun tabOf(route: Any): Any = when (route) {
     Feed, Atlas, Album, Preferences -> route
     is Trip, is TripEdit, is TripPlay, is PlaceMoments -> Atlas
-    SyncSettings, Imports, SideKeySettings, CameraSettings, GalleryAlbums, Items, Homes, Changes, is Things -> Preferences
+    SyncSettings, Imports, SideKeySettings, CameraSettings, GalleryAlbums, Items, Homes, AlignTimes, Changes, is Things -> Preferences
     // The plugins' own pages are 我's.
     else -> if (cc.hyoban.moments.plugins.Plugins.registry.all(cc.hyoban.moments.plugins.Points.pages).any { it.owns(route) }) Preferences else Feed
 }
@@ -1056,6 +1060,7 @@ fun routeOf(link: Uri): Any? {
         "import" -> Imports
         "items" -> Items
         "homes" -> Homes
+        "align-times" -> AlignTimes
         "side-key" -> SideKeySettings
         "camera" -> CameraSettings
         "albums" -> GalleryAlbums

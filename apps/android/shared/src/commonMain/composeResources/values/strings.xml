@@ -107,6 +107,16 @@
     <string name="trip_suggestion_add">把%1$s添加为旅程</string>
     <string name="trip_suggestion_ongoing">进行中</string>
     <string name="message_trip_added">已添加旅程「%1$s」</string>
+    <string name="align_times_title">对齐时间</string>
+    <string name="align_times_note">照片和足迹</string>
+    <string name="align_times_finding">正在对照照片和足迹</string>
+    <string name="align_times_none">时间都已对齐</string>
+    <string name="align_times_moments">动态 · 照片的时间</string>
+    <string name="align_times_checkins">签到 · 足迹的停留</string>
+    <string name="align_times_change">%1$s → %2$s</string>
+    <plurals name="align_times_apply">
+        <item quantity="other">对齐 %1$d 项</item>
+    </plurals>
     <string name="homes_title">家</string>
     <string name="homes_add">添加家</string>
     <string name="homes_note">出门时在家签到一次，回来再签到一次：中间到过 50 公里以外，或在 30 公里以外过了夜，就是一段可能的旅程。</string>

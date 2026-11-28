@@ -308,7 +308,7 @@ abstract class AppContainer(
 
     /** [media]'s published still at a thumbnail's size, to compare how it looks; null for one not published or not read. */
     @OptIn(org.jetbrains.compose.resources.ExperimentalResourceApi::class)
-    private suspend fun smallStill(media: cc.hyoban.moments.data.spec.MomentMedia): androidx.compose.ui.graphics.ImageBitmap? {
+    suspend fun smallStill(media: cc.hyoban.moments.data.spec.MomentMedia): androidx.compose.ui.graphics.ImageBitmap? {
         val url = mediaUrls.still(media, 320)?.takeIf { it.startsWith("https://") || it.startsWith("http://") } ?: return null
         return runCatching {
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -347,6 +347,12 @@ abstract class AppContainer(
      */
     suspend fun saveEntry(entry: kotlinx.serialization.json.JsonObject, place: Pair<String, Place>?) {
         repository.saveEntry(entry, place)
+        recordsChanged()
+    }
+
+    /** Keeps [entries] together as [saveEntry] keeps each (对齐时间), the widgets drawn again once. */
+    suspend fun saveEntries(entries: Collection<kotlinx.serialization.json.JsonObject>) {
+        repository.saveEntries(entries)
         recordsChanged()
     }
 

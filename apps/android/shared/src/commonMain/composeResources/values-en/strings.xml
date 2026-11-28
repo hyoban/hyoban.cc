@@ -113,6 +113,17 @@
     <string name="trip_suggestion_add">Add %1$s as a trip</string>
     <string name="trip_suggestion_ongoing">Under way</string>
     <string name="message_trip_added">Added the trip %1$s</string>
+    <string name="align_times_title">Align times</string>
+    <string name="align_times_note">Photos and footprints</string>
+    <string name="align_times_finding">Checking photos and footprints</string>
+    <string name="align_times_none">Every time already matches</string>
+    <string name="align_times_moments">Moments · photo times</string>
+    <string name="align_times_checkins">Check-ins · footprint stays</string>
+    <string name="align_times_change">%1$s → %2$s</string>
+    <plurals name="align_times_apply">
+        <item quantity="one">Align %1$d record</item>
+        <item quantity="other">Align %1$d records</item>
+    </plurals>
     <string name="homes_title">Home</string>
     <string name="homes_add">Add a home</string>
     <string name="homes_note">Check in at home when you leave and again when you’re back: if you went more than 50 km away in between, or spent a night more than 30 km away, it’s a possible trip.</string>

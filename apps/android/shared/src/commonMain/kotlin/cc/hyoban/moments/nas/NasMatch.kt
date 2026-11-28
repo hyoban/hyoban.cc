@@ -207,3 +207,41 @@ suspend fun Nas.matchMoments(
 
 /** How many thumbnails are read at once while matching. */
 private const val AT_ONCE = 6
+
+/**
+ * When each of [moments]' photos and videos that says no time of its own was taken, as the NAS
+ * has it, by the Moment's uid and then the photo's: a linked one by its link, found on its
+ * Moment's day and those either side or else anywhere on the timeline; the rest as 关联已发布的照片
+ * would find them ([matchMoments]), without linking them.
+ */
+suspend fun Nas.takenTimes(
+    moments: List<MomentRecord>,
+    still: suspend (MomentMedia) -> ImageBitmap?,
+    progress: (NasMatch.Stage, Int, Int) -> Unit = { _, _, _ -> },
+): Map<String, Map<String, LocalDateTime>> {
+    val untimed = moments.mapNotNull { moment -> moment.copy(media = moment.media.filter { it.takenAt == null }).takeIf { it.media.isNotEmpty() } }
+    if (untimed.isEmpty()) return emptyMap()
+    val times = mutableMapOf<String, MutableMap<String, LocalDateTime>>()
+    val note = { moment: String, media: String, taken: LocalDateTime? -> if (taken != null) times.getOrPut(moment) { mutableMapOf() }[media] = taken }
+    matchMoments(untimed, still, progress).forEach { (moment, photos) -> photos.forEach { (media, photo) -> note(moment, media, photo.taken) } }
+
+    val linked = untimed.flatMap { moment -> moment.media.mapNotNull { media -> media.nas?.let { Triple(moment, media, it.id) } } }
+    if (linked.isEmpty()) return times
+    var offset = 0
+    val starts = timelineDays().associate { day -> day.day to (offset to day).also { offset += day.count } }
+    val read = mutableMapOf<LocalDate, Map<Long, NasPhoto>>()
+    val missed = linked.filter { (moment, media, id) ->
+        val day = runCatching { LocalDate.parse(moment.occurredAt.take(10)) }.getOrNull() ?: return@filter true
+        val near = listOf(day.minusDays(1), day, day.plusDays(1)).firstNotNullOfOrNull { each ->
+            read.getOrPut(each) { starts[each]?.let { (start, listed) -> dayPhotos(listed, start).associateBy { it.id } }.orEmpty() }[id]
+        }
+        note(moment.uid, media.uid, near?.taken)
+        near == null
+    }
+    // A Moment whose day is off by more than that, its photo's day read from the whole timeline.
+    if (missed.isNotEmpty()) {
+        val every = everyPhoto().associateBy { it.id }
+        missed.forEach { (moment, media, id) -> note(moment.uid, media.uid, every[id]?.taken) }
+    }
+    return times
+}

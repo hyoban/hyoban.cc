@@ -90,6 +90,10 @@ object Items
 @Serializable
 object Homes
 
+/** 对齐时间: records set to the time their photos or the footprints' stays say. */
+@Serializable
+object AlignTimes
+
 /** 导入: Swarm, iCost and GPX files brought in, each where it belongs. */
 @Serializable
 object Imports

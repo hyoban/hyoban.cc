@@ -248,6 +248,7 @@ private fun ApplicationScope.SettingsWindow(container: DesktopContainer, shell: 
                         SettingsPane.Items -> ItemsScreen(container, close)
                         SettingsPane.Sync -> SyncScreen(container, close)
                         SettingsPane.Homes -> cc.hyoban.moments.ui.settings.HomesScreen(container, close)
+                        SettingsPane.AlignTimes -> cc.hyoban.moments.ui.settings.AlignTimesScreen(container, close)
                         SettingsPane.Import -> cc.hyoban.moments.ui.settings.ImportScreen(container, close)
                     }
                 }

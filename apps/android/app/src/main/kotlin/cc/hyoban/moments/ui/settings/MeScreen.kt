@@ -78,6 +78,7 @@ class MeRoutes(
     val modules: MeNav,
     val items: () -> Unit,
     val homes: () -> Unit,
+    val alignTimes: () -> Unit,
     val sync: () -> Unit,
     val imports: () -> Unit,
 )
@@ -121,6 +122,11 @@ fun MeScreen(container: PhoneContainer, routes: MeRoutes) {
                 AppIcons.Home, stringResource(Res.string.homes_title), "settings_homes",
                 supporting = homesSummary(container),
                 onClick = routes.homes,
+            ),
+            15 to SettingsRow.Page(
+                AppIcons.Clock, stringResource(Res.string.align_times_title), "settings_align_times",
+                supporting = stringResource(Res.string.align_times_note),
+                onClick = routes.alignTimes,
             ),
             20 to SettingsRow.Page(
                 AppIcons.CloudSync, stringResource(Res.string.sync_title), "settings_sync",

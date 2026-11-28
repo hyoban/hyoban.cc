@@ -379,6 +379,29 @@ class MomentsRepository(
         }
     }
 
+    /** Keeps [given] as [saveEntry] keeps each, written out once for them all (对齐时间). */
+    suspend fun saveEntries(given: Collection<kotlinx.serialization.json.JsonObject>) = lock.withLock {
+        checkNotNull(local) { "No store for the phone's changes" }
+        if (given.isEmpty()) return@withLock
+        withContext(io) {
+            var changed = changedEntries
+            val befores = mutableListOf<Pair<kotlinx.serialization.json.JsonObject?, String>>()
+            for (each in given) {
+                val uid = each.entryUid
+                val stored = copyEntries[uid]
+                val before = changed[uid]
+                val entry = keepBill(each, before ?: stored)
+                changed = if (stored != null && JsonObjectsEqualApartFrom(stored, entry, "updatedAt")) changed - uid else changed + (uid to entry)
+                befores += before to uid
+            }
+            setChanges(changed, removedEntries - given.map { it.entryUid }.toSet())
+            befores.forEach { (before, uid) -> letGo(before, changedEntries[uid]) }
+            followBounds()
+            publishPlaces()
+            publish()
+        }
+    }
+
     private fun keepBill(entry: kotlinx.serialization.json.JsonObject, was: kotlinx.serialization.json.JsonObject?): kotlinx.serialization.json.JsonObject {
         if (checkinOf(entry) == null) return entry
         val parts = entry["parts"] as? kotlinx.serialization.json.JsonObject ?: return entry

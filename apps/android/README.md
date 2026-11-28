@@ -43,6 +43,10 @@ Pages each have a `moments://` link; see `routeOf` in `ui/MomentsApp.kt`.
   with only a place, a check-in. Time and place come from the first photo's EXIF. Place names
   come from AMap or Tencent (owner's keys) in China, else Photon, else the system geocoder;
   GCJ-02 points are converted back to WGS 84 inside the areas in `gcj-area.json`.
+- **对齐时间** (我, `ui/settings/AlignTimesScreen.kt`) lists records to reset in one go: Moments to
+  their photos' earliest to latest time (a photo without one takes the NAS's, by its link or as
+  关联已发布的照片 would match it), check-ins to the footprint stay they fall in within 300 m.
+  The chosen ones become unpublished changes.
 - **打码.** Newly picked photos get faces and Chinese license plates covered by default (ML
   Kit, on device). Saving writes an upright JPEG with the patches drawn in and no motion clip
   or gain map; the gallery's original is untouched.
