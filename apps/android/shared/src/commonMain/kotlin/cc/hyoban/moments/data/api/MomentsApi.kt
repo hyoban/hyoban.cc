@@ -1,5 +1,6 @@
 package cc.hyoban.moments.data.api
 
+import cc.hyoban.moments.data.await
 import cc.hyoban.moments.data.Http
 import cc.hyoban.moments.data.HttpException
 import cc.hyoban.moments.data.copy.CopyRow
@@ -148,7 +149,7 @@ class MomentsApi(
 
     override suspend fun uploaded(momentUid: String, mediaUid: String, part: UploadPart): String? = withContext(io) {
         val path = "/v2/entries/$momentUid/media/$mediaUid/${part.path}"
-        client.newCall(authorized(path).head().build()).execute().use { response ->
+        client.newCall(authorized(path).head().build()).await().use { response ->
             when {
                 response.code == 404 -> null
                 response.isSuccessful -> response.header("ETag")?.trim('"')
@@ -199,7 +200,7 @@ class MomentsApi(
     /** A write with the token; its answer's body, or an [ApiException] with what the API said. */
     private suspend fun write(method: String, path: String, body: RequestBody, client: OkHttpClient = this.client): String = withContext(io) {
         val request = authorized(path).method(method, body).header("Accept", "application/json").build()
-        client.newCall(request).execute().use { response ->
+        client.newCall(request).await().use { response ->
             val text = response.body?.string().orEmpty()
             if (!response.isSuccessful) throw ApiException(response.code, errorOf(text) ?: "$method $path answered ${response.code}")
             text

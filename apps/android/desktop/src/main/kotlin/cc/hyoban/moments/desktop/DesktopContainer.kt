@@ -57,7 +57,7 @@ class DesktopContainer(val root: File) : AppContainer(
     override fun enqueuePublish() {
         publish = scope.launch(Dispatchers.IO) {
             try {
-                runPublish {}
+                runPublish()
                 reportPublished()
             } catch (error: kotlinx.coroutines.CancellationException) {
                 throw error

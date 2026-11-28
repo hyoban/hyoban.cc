@@ -130,6 +130,8 @@ class PhoneContainer private constructor(
 
     override fun cancelPublishWork() = PublishWorker.cancel(appContext)
 
+    override fun publishWorkWaiting() = PublishWorker.waiting(appContext)
+
     override suspend fun revertOutside(bills: List<BillChange>) {
         for (change in bills) {
             val visibility = change.undo() ?: continue

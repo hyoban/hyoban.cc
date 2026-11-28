@@ -45,6 +45,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.launch
 
 /**
@@ -182,8 +187,15 @@ abstract class AppContainer(
     /** Starts publishing as the device runs work that outlasts its pages, which then calls [runPublish]. */
     protected abstract fun enqueuePublish()
 
-    /** Stops the publishing [enqueuePublish] started. */
+    /** Stops the publishing [enqueuePublish] started, and any try of it still to come. */
     protected abstract fun cancelPublishWork()
+
+    /**
+     * Whether the device's publishing work waits to run again, as after a dropped link, read
+     * from the work itself so it holds after the app was stopped; a device whose publishing
+     * runs only while it is open has none.
+     */
+    protected open fun publishWorkWaiting(): Flow<Boolean> = flowOf(false)
 
     /** Puts back each of [bills] going public or private, which the device's own ledger keeps. */
     protected open suspend fun revertOutside(bills: List<BillChange>) {}
@@ -365,45 +377,80 @@ abstract class AppContainer(
     /** Whether the app may write to the API: it has one, and the owner's token. */
     val canPublish get() = settings.connected
 
-    /** How far publishing the changes has got, done of total, while it runs. */
+    /** How far the run publishing now has got; only that run writes it ([publishRun]). */
     private val _publishing = MutableStateFlow<PublishProgress?>(null)
 
-    /** How far publishing the changes has got, while it runs, so the pages say so whenever they're opened. */
-    val publishing: StateFlow<PublishProgress?> = _publishing.asStateFlow()
+    /**
+     * The publishing run that may say how far it has got: a run cancelled, whose last bytes
+     * may still be on their way, says nothing more, so the pages and the notification never
+     * show two runs' figures.
+     */
+    private var publishRun = 0
+    private val publishState = Any()
+
+    /** Held by the run publishing, so one started again waits for a cancelled one to stop. */
+    private val publishLock = Mutex()
+
+    /**
+     * How far publishing the changes has got, while it runs or its work waits to run again,
+     * so the pages say so whenever they're opened. The one source of publishing's progress:
+     * the changes' page, the timeline's card and the phone's notification all read it.
+     */
+    val publishing: StateFlow<PublishProgress?> by lazy {
+        combine(_publishing, publishWorkWaiting()) { running, waiting ->
+            running ?: if (waiting) PublishProgress(0, repository.pending.value.size) else null
+        }.stateIn(scope, SharingStarted.Eagerly, _publishing.value)
+    }
+
+    /** Says how far [run] has got, unless it was cancelled or another run took over. */
+    private fun showPublishing(run: Int, progress: PublishProgress?) = synchronized(publishState) {
+        if (publishRun == run) _publishing.value = progress
+    }
 
     /**
      * Publishes every change kept on the phone, as the device's work does it, past the page
      * that asked and the app being left; the only way the app changes the site.
      */
     fun publishPending() {
-        if (_publishing.value != null) return
-        _publishing.value = PublishProgress(0, repository.pending.value.size)
+        if (_publishing.value != null || publishing.value != null) return
+        showPublishing(synchronized(publishState) { ++publishRun }, PublishProgress(0, repository.pending.value.size))
         enqueuePublish()
     }
 
-    /** Publishing itself, for the device's work: the changes once the phone's copy is read, [onProgress] hearing how far it has got. */
-    suspend fun runPublish(onProgress: (PublishProgress) -> Unit) {
+    /**
+     * Publishing itself, for the device's work: the changes once the phone's copy is read. A
+     * run started while a cancelled one still stops waits for it, then sends only what is
+     * left: originals the API already has are not uploaded again. When it fails with an error
+     * [retried] says the work will try again for, the page goes on saying it publishes.
+     */
+    suspend fun runPublish(retried: (Exception) -> Boolean = { false }) = publishLock.withLock {
         repository.loaded.first { it }
-        _publishing.value = PublishProgress(0, repository.pending.value.size)
+        val run = synchronized(publishState) { ++publishRun }
+        showPublishing(run, PublishProgress(0, repository.pending.value.size))
+        var waits = false
         try {
-            repository.publishPending {
-                _publishing.value = it
-                onProgress(it)
-            }
+            repository.publishPending { showPublishing(run, it) }
             // The copy takes what was published from the rows, as D1 now has it.
             refreshAll()
+        } catch (error: Exception) {
+            waits = error !is kotlinx.coroutines.CancellationException && retried(error)
+            throw error
         } finally {
-            _publishing.value = null
+            if (!waits) showPublishing(run, null)
             recordsChanged()
         }
     }
 
     /** Stops publishing, running or waiting for the network; the changes not yet sent stay on the phone. */
     fun cancelPublish() {
-        if (_publishing.value == null) return
+        val running = publishing.value != null
+        synchronized(publishState) {
+            publishRun++
+            _publishing.value = null
+        }
+        // Always, so a try still to come is dropped even when nothing says it publishes.
         cancelPublishWork()
-        _publishing.value = null
-        say(textOf(Res.string.message_publish_cancelled))
+        if (running) say(textOf(Res.string.message_publish_cancelled))
     }
 
     /**
@@ -411,7 +458,7 @@ abstract class AppContainer(
      * site's records as the site has them, and each bill going public or private as it was.
      */
     fun clearChanges() {
-        if (_publishing.value != null) return
+        if (publishing.value != null) return
         scope.launch {
             repository.clearChanges()
             revertOutside(repository.pending.value.outside.bills)

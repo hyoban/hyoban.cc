@@ -2,9 +2,14 @@ package cc.hyoban.moments.data
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
+import kotlin.coroutines.resumeWithException
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -54,4 +59,25 @@ object Http {
                 Tagged(response.body?.string() ?: throw IOException("GET $url answered without a body"), response.header("ETag"))
             }
         }
+}
+
+/**
+ * The answer to this call, cancelled with the coroutine waiting for it: a blocking `execute()`
+ * goes on sending however long its link takes after whoever asked for it has stopped, as
+ * publishing's uploads did once cancelled. The caller closes the response.
+ */
+suspend fun Call.await(): Response = suspendCancellableCoroutine { continuation ->
+    continuation.invokeOnCancellation { cancel() }
+    enqueue(
+        object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                // One answered as the caller stopped is closed, not left holding its connection.
+                continuation.resume(response) { _, value, _ -> value.close() }
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                if (continuation.isActive) continuation.resumeWithException(e)
+            }
+        },
+    )
 }

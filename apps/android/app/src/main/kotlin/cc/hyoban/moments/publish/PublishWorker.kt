@@ -33,7 +33,9 @@ import cc.hyoban.moments.ui.format.failureReason
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import androidx.work.WorkInfo
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
@@ -43,7 +45,8 @@ import java.util.concurrent.TimeUnit
 // Publishing runs as WorkManager's work rather than in the app's own scope, so leaving the
 // app, or the system stopping it, doesn't stop it: it is a foreground service while it runs,
 // its notification saying how far it has got, and a link that drops waits for the network
-// and goes on, the originals already sent not sent again.
+// and goes on, the originals already sent not sent again. Cancelling it drops the try still
+// to come and stops the uploads under way.
 
 /** Publishes every change kept on the phone, as [cc.hyoban.moments.PhoneContainer.publishPending] asks. */
 class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
@@ -61,21 +64,23 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         // Asked while the app is on screen, as it is when publishing is tapped; a retry the
         // system starts in the background may not be let in, and runs as plain work instead.
         runCatching { setForeground(getForegroundInfo()) }
-        val progress = MutableStateFlow<PublishProgress?>(null)
+        // The same figures as the pages, from the one run that may say how far it has got.
         // The system takes a few updates a second at most; one a second says as much.
         val shown = launch {
-            progress.filterNotNull().sample(NOTIFICATION_EVERY_MS).collect { runCatching { setForeground(foregroundInfo(context, it, cancelIntent())) } }
+            container.publishing.filterNotNull().sample(NOTIFICATION_EVERY_MS).collect { runCatching { setForeground(foregroundInfo(context, it, cancelIntent())) } }
         }
+        val retried = { error: Exception -> isNetwork(error) && runAttemptCount + 1 < TRIES }
         try {
-            container.runPublish { progress.value = it }
+            container.runPublish(retried)
             container.reportPublished()
             notifyResult(context, textOf(Res.string.notification_published), null)
             Result.success()
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            if (isNetwork(error) && runAttemptCount + 1 < TRIES) {
-                notifyResult(context, textOf(Res.string.notification_publish_waiting), null)
+            if (retried(error)) {
+                // The try to come can be stopped from here as well as from the changes' page.
+                notifyResult(context, textOf(Res.string.notification_publish_waiting), null, cancelIntent())
                 Result.retry()
             } else {
                 container.reportPublishFailed(error)
@@ -115,7 +120,14 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
          */
         fun cancel(context: Context) {
             WorkManager.getInstance(context).cancelUniqueWork(NAME)
+            NotificationManagerCompat.from(context).cancel(RESULT_ID)
         }
+
+        /** Whether the publish waits to run again, as after a dropped link, even once the app was stopped meanwhile. */
+        fun waiting(context: Context): Flow<Boolean> =
+            WorkManager.getInstance(context).getWorkInfosForUniqueWorkFlow(NAME).map { works ->
+                works.any { it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.BLOCKED }
+            }
 
         /** A dropped or stalled link, which the next try may get through, not what the API said. */
         private fun isNetwork(error: Exception) = error is IOException && error !is HttpException && error !is NoTokenException
@@ -150,7 +162,7 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         }
 
         /** How it went, left in the shade, when the app may post there. */
-        private fun notifyResult(context: Context, title: String, text: String?) {
+        private fun notifyResult(context: Context, title: String, text: String?, cancel: PendingIntent? = null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                 ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
             ) {
@@ -161,6 +173,7 @@ class PublishWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                 .setContentTitle(title)
                 .setContentText(text)
                 .setContentIntent(openApp(context))
+                .apply { if (cancel != null) addAction(0, textOf(Res.string.action_cancel_publish), cancel) }
                 .setAutoCancel(true)
                 .build()
             NotificationManagerCompat.from(context).notify(RESULT_ID, notification)
